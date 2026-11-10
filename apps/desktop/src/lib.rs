@@ -98,6 +98,7 @@ mod survey_baseline_marks;
 mod impact_window;
 mod readjustment_window;
 mod ortho_compare_window;
+mod ortho_seamlines_window;
 mod ortho_window;
 mod overlap_window;
 mod register_window;
@@ -444,6 +445,8 @@ mod readjustment_window_tests;
 mod brand_tests;
 #[cfg(test)]
 mod ortho_compare_window_tests;
+#[cfg(test)]
+mod ortho_seamlines_window_tests;
 #[cfg(test)]
 mod ortho_seam_polygons_tests;
 #[cfg(test)]

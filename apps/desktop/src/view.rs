@@ -2207,6 +2207,7 @@ impl App {
             Asking::Readjustment => self.readjustment_view(),
             Asking::Ortho => self.ortho_view(),
             Asking::OrthoCompare => self.ortho_compare_view(),
+            Asking::OrthoSeamlines => self.ortho_seamlines_view(),
             Asking::Overlap => self.overlap_view(),
             Asking::Register => self.register_view(),
             Asking::SheetContours => self.sheet_contours_view(),

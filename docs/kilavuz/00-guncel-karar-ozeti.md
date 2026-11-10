@@ -638,6 +638,12 @@
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
+- **Birleşme çizgisi ve mozaik elemanlarının KentOS'ta kurulması (10 Kasım 2026; MAP-12, [ADR 4700](../../docs/adr/4700-orthophoto-seamline-polygons-built.md)).**
+  Yeni `cad.orthophoto.seamlines`: iki ortofotonun birleşme çizgisi ve mozaik elemanları (TUCBS Ortogörüntü), eşit uzaklık
+  (Voronoi; Pan ve ark. 2009, düz kesimler kesin) ya da radyometrik fark (en büyük farkın en küçüğü, sonra en az maliyet;
+  arama bandı, geçilmeyecek alanlar); tek geri alma adımında Mozaik elemanları katmanına. Raster › Birleşme çizgisi.
+  Terimler: birleşme çizgisi, mozaik elemanı, ayak izi (TUCBS “ayakizi”), kayıklık; Ortofoto karşılaştırması'nın “dikiş”
+  sözleri de değişti. Mevzuat çizginin yerine kural koymaz (BÖHHBÜY m. 67(6)). CAD + CBS.
 - **Tarifin katmanının saydamlığı, türü ve Yazdır'ı (10 Kasım 2026; MAP-20, [ADR 4440](../../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
   İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz), türünü ve Yazdır'ını taşır; Tariften üret
   eklediği katmana verir. Çizimin nesnesini katmanının türü tutmuyorsa `layer_geometry_mismatch`, plan da. Harita + Yol.

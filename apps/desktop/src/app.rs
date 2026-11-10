@@ -444,6 +444,8 @@ pub enum Dialog {
     Ortho,
     /// Ortofoto karşılaştırması (ortho_compare_window.rs, docs/adr/1780); its state is `App::ortho_compare`.
     OrthoCompare,
+    /// Dikiş çokgenleri (ortho_seamlines_window.rs, docs/adr/4700); its state is `App::ortho_seamlines`.
+    OrthoSeamlines,
     /// Tarama uyumu (overlap_window.rs, docs/adr/1500); its state is `App::overlap`.
     Overlap,
     /// Tarama kaydı (register_window.rs, docs/adr/1800); its state is `App::register`.
@@ -890,6 +892,7 @@ pub enum Message {
     Readjustment(crate::readjustment_window::Event),
     Ortho(crate::ortho_window::Event),
     OrthoCompare(crate::ortho_compare_window::Event),
+    OrthoSeamlines(crate::ortho_seamlines_window::Event),
     Overlap(crate::overlap_window::Event),
     Register(crate::register_window::Event),
     SheetContours(crate::sheet_contours_window::Event),
@@ -1581,6 +1584,7 @@ pub struct App {
     pub(crate) readjustment: crate::readjustment_window::State,
     pub(crate) ortho: crate::ortho_window::State,
     pub(crate) ortho_compare: crate::ortho_compare_window::State,
+    pub(crate) ortho_seamlines: crate::ortho_seamlines_window::State,
     pub(crate) overlap: crate::overlap_window::State,
     pub(crate) register: crate::register_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
@@ -2063,6 +2067,7 @@ impl App {
             readjustment: Default::default(),
             ortho: Default::default(),
             ortho_compare: Default::default(),
+            ortho_seamlines: Default::default(),
             overlap: Default::default(),
             register: Default::default(),
             sheet_contours: Default::default(),
@@ -2898,6 +2903,7 @@ impl App {
             Message::Readjustment(event) => return self.readjustment_event(event),
             Message::Ortho(event) => return self.ortho_event(event),
             Message::OrthoCompare(event) => return self.ortho_compare_event(event),
+            Message::OrthoSeamlines(event) => return self.ortho_seamlines_event(event),
             Message::Overlap(event) => return self.overlap_event(event),
             Message::Register(event) => return self.register_event(event),
             Message::SheetContours(event) => return self.sheet_contours_event(event),
@@ -3798,6 +3804,7 @@ impl App {
             "readjustment.distribute" => return self.open_readjustment(),
             "raster.accuracy" => return self.open_ortho(),
             "raster.compare" => return self.open_ortho_compare(),
+            "raster.seamlines" => return self.open_ortho_seamlines(),
             "pointcloud.overlap" => return self.open_overlap(),
             "pointcloud.register" => return self.open_register(),
             "terrain.sheetContours" => return self.open_sheet_contours(),

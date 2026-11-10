@@ -238,6 +238,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-12 / ADR 4460: web'in `cad.orthophoto.compare` işleyicisinde dikiş çokgenlerinin ortak sınırı boyunca ölçüm
   (`seam.polygons`, `seam.shared`; cad.orthophoto.compare.json'un 11 yeni durumu) ve web Ortofoto karşılaştırması'nda
   Seçili çokgenleri al.
+- MAP-12 / ADR 4700: web'de `cad.orthophoto.seamlines` işleyicisi (cad.orthophoto.seamlines.json'un 44 durumu; çekirdek
+  `ops::seamlines` WASM'den), Raster › Birleşme çizgisi penceresi ve web Ortofoto karşılaştırması'nın yeni sözleri
+  (Kayıklık ölçümü, Birleşme çizgisi, Seçili mozaik elemanlarını al).
 - MAP-20 / ADR 4440: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin katmanının
   saydamlığı, karışım kipi, türü ve Yazdır'ı; türün tutmadığı nesnenin planda reddi (graph'ın 23, produce'un 64 ortak
   durumu) ve web İş grafiği'nin Tariften üret'i.

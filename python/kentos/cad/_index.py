@@ -187,6 +187,7 @@ COMMANDS: dict[str, Any] = {
     "cad.options.query": options.query,
     "cad.orthophoto.check": orthophoto.check,
     "cad.orthophoto.compare": orthophoto.compare,
+    "cad.orthophoto.seamlines": orthophoto.seamlines,
     "cad.parameters.edit": parameters.edit,
     "cad.parcels.boundaries": parcels.boundaries,
     "cad.parcels.check": parcels.check,

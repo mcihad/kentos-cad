@@ -4739,6 +4739,20 @@ OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
+class OrthoSeamMethod(_StrEnum):
+    """How the seam is drawn through the overlap (docs/adr/4700).
+
+    - ``voronoi``: Equally far from the two images' own parts (the area Voronoi diagram with overlap).
+    - ``radiometry``: The least-difference path between the Voronoi seam's ends (the bottleneck, then the least cost).
+    """
+    VORONOI = "voronoi"
+    RADIOMETRY = "radiometry"
+
+
+OrthoSeamMethodName = Literal["voronoi", "radiometry"]
+"""The names of :class:`OrthoSeamMethod`, for a plain string."""
+
+
 class OrthoSubpixel(_StrEnum):
     """How a place's peak is refined to a fraction of a pixel (docs/adr/3260): `parabola` (none given, docs/adr/2460) through
     the peak and its two neighbours each way; `bicubic` by the second image itself resampled with cubic convolution
@@ -63564,6 +63578,72 @@ class OrthoSeamAsk(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoSeamDifference(_Model):
+    """The radiometric seam's differences (docs/adr/4700), in the images' values: the largest along the path (the
+    bottleneck no path between the ends goes under), the mean along it and over every searched cell; the path's cells,
+    the searched cells and a cell's side on the ground (metres).
+    Attributes:
+        bottleneck: Unit: 1.
+        mean: Unit: 1.
+        searched_mean: Unit: 1.
+        cells: Unit: count.
+        searched: Unit: count.
+        size: Unit: length.
+    """
+    bottleneck: float
+    mean: float
+    searched_mean: float
+    cells: int
+    searched: int
+    size: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["bottleneck"] = float(self.bottleneck)
+        out["mean"] = float(self.mean)
+        out["searchedMean"] = float(self.searched_mean)
+        out["cells"] = self.cells
+        out["searched"] = self.searched
+        out["size"] = float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamDifference:
+        return cls(
+            bottleneck=float(data["bottleneck"]),
+            mean=float(data["mean"]),
+            searched_mean=float(data["searchedMean"]),
+            cells=data["cells"],
+            searched=data["searched"],
+            size=float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamEnd(_Model):
+    """A seam's end (docs/adr/4700): where the two footprints' boundaries cross (`crossing`), or on a stretch the two
+    share (`shared`: the union's outer boundary), the point of it equally far from the two images' own parts.
+    Attributes:
+        at: Unit: system.
+    """
+    at: list[float]
+    kind: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamEnd:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            kind=data["kind"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OrthoSeamLine(_Model):
     """The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and
     how many of them lie outside the overlap (not measured).
@@ -63592,6 +63672,42 @@ class OrthoSeamLine(_Model):
             length=float(data["length"]),
             places=data["places"],
             outside=data["outside"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamPolygon(_Model):
+    """An image's seamline polygon: the raster's persistent id, its ring (east, north; counter-clockwise, closed back to
+    its start by its last edge), its area, the part of the overlap it keeps (m²), and the object written (execute).
+    Attributes:
+        ring: Unit: system.
+        area: Unit: area.
+        kept: Unit: area.
+    """
+    image: str
+    ring: list[list[float]]
+    area: float
+    kept: float
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["image"] = self.image
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        out["area"] = float(self.area)
+        out["kept"] = float(self.kept)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamPolygon:
+        return cls(
+            image=data["image"],
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            area=float(data["area"]),
+            kept=float(data["kept"]),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -63936,6 +64052,144 @@ class OrthophotoCompared(_Model):
             passed=data.get("passed", UNSET),
             seam=UNSET if "seam" not in data else None if data["seam"] is None else OrthoSeam.from_json(data["seam"]),
             second_check=UNSET if "secondCheck" not in data else None if data["secondCheck"] is None else OrthophotoChecked.from_json(data["secondCheck"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoSeamlines(_Model):
+    """Input of `cad.orthophoto.seamlines` v1 (plan/map-cad.md MAP-12, docs/adr/4700): two orthophotos (rasters'
+    persistent ids; the first's polygon is written first), their footprints (areas or closed polylines of straight
+    edges, convex; none: each raster's extent), the method, and for Voronoi the spacing of a curved stretch's points
+    (metres; none: 1), for radiometry the cell's side in the first image's pixels (none: 1) and the corridor round the
+    Voronoi seam the path keeps to (metres; none: the whole overlap). `folder`: where a raster's relative file is looked
+    for (radiometry reads the pixels). `avoid` (radiometry): a layer whose areas the seam keeps out of. `layer`: the
+    layer's id the polygons are written on; none: `mozaik-elemanlari` (“Mozaik elemanları”), made in the same undo step
+    when missing.
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`first`, `second`); `invalid_input`
+    (one raster twice; `step` not above zero; `cell` outside 1..=64; `corridor` not above zero; `cell`, `corridor` or
+    `avoid` with Voronoi; a footprint twice, not in the drawing, not an area or a closed polyline, of arcs, holes or parts, not
+    convex; no overlap, one footprint inside the other, an overlap whose boundary changes hands more than twice; for
+    radiometry no cell to search, too many pixels, no path between the ends); `layer_not_found` (`layer`, `avoid`),
+    `layer_locked`;
+    `invalid_revision`, `revision_conflict`; the files' (`invalid_file_path`, `file_not_found`, `import_unreadable`).
+    Attributes:
+        avoid: Radiometry: a layer whose areas (and closed polylines) the seam keeps out of, as buildings and bridges (USGS:
+            a seam does not cut a roof): a cell with a pixel centre inside one is not searched.
+        cell: Radiometry: a cell's side in the first image's pixels. Unit: count.
+        corridor: Radiometry: how far from the Voronoi seam a searched cell's centre may lie. Unit: length.
+        footprints: The two images' footprints' persistent ids, in the images' order; none: each raster's extent.
+        step: Voronoi: a curved stretch's points every `step` metres along the line from the seam's start to its end. Unit: length.
+    """
+    first: str
+    second: str
+    avoid: str | None | Unset = UNSET
+    cell: int | None | Unset = UNSET
+    corridor: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    folder: str | None | Unset = UNSET
+    footprints: list[str] | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    method: OrthoSeamMethod | OrthoSeamMethodName = OrthoSeamMethod.VORONOI
+    step: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["first"] = self.first
+        out["second"] = self.second
+        if self.avoid is not UNSET:
+            out["avoid"] = self.avoid
+        if self.cell is not UNSET:
+            out["cell"] = self.cell
+        if self.corridor is not UNSET:
+            out["corridor"] = None if self.corridor is None else float(self.corridor)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        if self.footprints is not UNSET:
+            out["footprints"] = None if self.footprints is None else list(self.footprints)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        out["method"] = _enum_out(self.method)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoSeamlines:
+        return cls(
+            first=data["first"],
+            second=data["second"],
+            avoid=data.get("avoid", UNSET),
+            cell=data.get("cell", UNSET),
+            corridor=UNSET if "corridor" not in data else None if data["corridor"] is None else float(data["corridor"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            folder=data.get("folder", UNSET),
+            footprints=UNSET if "footprints" not in data else None if data["footprints"] is None else list(data["footprints"]),
+            layer=data.get("layer", UNSET),
+            method=_enum_in(OrthoSeamMethod, data["method"]) if "method" in data else OrthoSeamMethod.VORONOI,
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoSeamlinesBuilt(_Model):
+    """Output of `cad.orthophoto.seamlines` v1: the method, the overlap (its ring and area), the seam from its start to its
+    end (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for
+    radiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.
+    Attributes:
+        overlap: Unit: system.
+        overlap_area: Unit: area.
+        seam: Unit: system.
+        length: Unit: length.
+    """
+    method: OrthoSeamMethod | OrthoSeamMethodName
+    overlap: list[list[float]]
+    overlap_area: float
+    seam: list[list[float]]
+    length: float
+    ends: list[OrthoSeamEnd]
+    polygons: list[OrthoSeamPolygon]
+    layer: str
+    notes: list[str]
+    revision: str
+    difference: OrthoSeamDifference | None | Unset = UNSET
+    opened: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["overlap"] = [[float(e1) for e1 in e0] for e0 in self.overlap]
+        out["overlapArea"] = float(self.overlap_area)
+        out["seam"] = [[float(e1) for e1 in e0] for e0 in self.seam]
+        out["length"] = float(self.length)
+        out["ends"] = [e0.to_json() for e0 in self.ends]
+        out["polygons"] = [e0.to_json() for e0 in self.polygons]
+        out["layer"] = self.layer
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else self.difference.to_json()
+        if self.opened is not UNSET:
+            out["opened"] = self.opened
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoSeamlinesBuilt:
+        return cls(
+            method=_enum_in(OrthoSeamMethod, data["method"]),
+            overlap=[[float(e1) for e1 in e0] for e0 in data["overlap"]],
+            overlap_area=float(data["overlapArea"]),
+            seam=[[float(e1) for e1 in e0] for e0 in data["seam"]],
+            length=float(data["length"]),
+            ends=[OrthoSeamEnd.from_json(e0) for e0 in data["ends"]],
+            polygons=[OrthoSeamPolygon.from_json(e0) for e0 in data["polygons"]],
+            layer=data["layer"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else OrthoSeamDifference.from_json(data["difference"]),
+            opened=data.get("opened", UNSET),
         )
 
 
@@ -136192,7 +136446,12 @@ __all__ = [
     "OrthoRules",
     "OrthoSeam",
     "OrthoSeamAsk",
+    "OrthoSeamDifference",
+    "OrthoSeamEnd",
     "OrthoSeamLine",
+    "OrthoSeamMethod",
+    "OrthoSeamMethodName",
+    "OrthoSeamPolygon",
     "OrthoSeamShared",
     "OrthoStats",
     "OrthoSubpixel",
@@ -136201,6 +136460,8 @@ __all__ = [
     "OrthophotoChecked",
     "OrthophotoCompare",
     "OrthophotoCompared",
+    "OrthophotoSeamlines",
+    "OrthophotoSeamlinesBuilt",
     "OverlapCell",
     "OverlapControl",
     "OverlapControlStats",

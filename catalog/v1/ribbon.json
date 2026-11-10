@@ -6363,6 +6363,10 @@
        "size": "small"
       },
       {
+       "command": "raster.seamlines",
+       "size": "small"
+      },
+      {
        "command": "processing.run.raster.cog",
        "size": "small"
       },

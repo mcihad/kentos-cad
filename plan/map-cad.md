@@ -43,7 +43,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460 | türeyen nesnenin kaynağa izi (MAP-01 kararı); dikiş çokgenlerinin KentOS'ta kurulması (Voronoi, radyometri) | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan faydalı ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
@@ -1585,6 +1585,23 @@ parçanın başından adım aralıklı, her yer parçasıyla; cevapta `seam.shar
 ortak sınır çizilmiş hattın kendisiyken yerler hat durumununki, öbür sıra, iki parça, 0,4 mm; ortak kenarlar ve
 santimetrelik örneklemeyle okuyan Python testi, MCP; Ortofoto karşılaştırması'nda Seçili çokgenleri al. Açık: türeyen
 nesnenin izi (MAP-01 kararı), dikiş çokgenlerinin KentOS'ta kurulması.
+
+**10 Kasım 2026, dokuzuncu tur — birleşme çizgisinin ve mozaik elemanlarının KentOS'ta kurulması ([ADR 4700](../docs/adr/4700-orthophoto-seamline-polygons-built.md)).**
+Kapsam: **CAD + CBS** (raster). Terimler TUCBS Ortogörüntü'den (RG 09.07.2020) ve BÖHHBÜY m. 67(6)'dan: birleşme çizgisi
+(seamline), mozaik elemanı (görüntünün mozaikte kullanılan bölümü), ayak izi (TUCBS'de “ayakizi”; kapsama alanı sınırlayıcı
+dikdörtgendir), radyometrik fark, kayıklık; sahibin düzeltmesiyle Ortofoto karşılaştırması'nın “dikiş” sözleri de değişti
+(Kayıklık ölçümü, Birleşme çizgisi, Seçili mozaik elemanlarını al). Dayanak: ArcGIS Pro Build Seamlines, Pan ve ark. 2009
+(örtüşmeli alan Voronoi diyagramı, dörtgen örtüşmede AEFC), Chon ve ark. 2010 (önce en büyük farkın en küçüğü, sonra
+Dijkstra); mevzuat: BÖHHBÜY m. 67(6) ortak alanda radyometrik düzeltme ister, çizginin yerine kural koymaz; TUCBS'nin mozaik
+elemanları örtüşmez ve görüntü kaynaklıdır; USGS/ASPRS: çizgi çatıyı kesmez. Kanıtlanan: yeni `cad.orthophoto.seamlines`
+iki ortofotonun birleşme çizgisini ve mozaik elemanlarını kurar (ayak izleri raster sınırları ya da dışbükey alanlar):
+eşit uzaklık (Voronoi) çizgisi iki görüntünün kendi bölgelerinden eşit uzak (düz kesimler kesin, parabol kesimi aralıkla;
+uçlar sınırların kesiştiği ya da ortak sınırdaki eşit uzak nokta); radyometrik fark çizgisi eşit uzaklık uçları arasında
+en büyük farkı en küçük, sonra en az maliyetli hücre yolu (hücre, arama bandı, geçilmeyecek alanlar: bina); iki eleman tek
+geri alma adımında Mozaik elemanları katmanına, `Görüntü` özniteliğiyle. 44 bağımsız durum (dönüm yerleri başvuruda yoğun
+tarama ve ikiye bölmeyle, KentOS'ta doğruların kesişimiyle), çekirdek testleri, Python (yazılan elemanlar Ortofoto
+karşılaştırması'nın ortak sınırında çizginin kendisi), MCP, masaüstü Raster › Birleşme çizgisi. Açık: ikiden çok görüntünün
+birleşme çizgisi ağı, kenar algılama, NoData'dan faydalı ayak izi; türeyen nesnenin izi sahip kararını bekler.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

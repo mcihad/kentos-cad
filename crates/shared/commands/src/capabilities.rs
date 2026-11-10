@@ -2531,6 +2531,14 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Mozaik birleşme çizgisi (plan/map-cad.md MAP-12, docs/adr/4700).
+    Entry {
+        id: "cad.orthophoto.seamlines",
+        // The radiometric seam's image files: invalid_file_path, file_not_found, import_unreadable.
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
     // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
     Entry {
         id: "cad.readjustment.distribute",

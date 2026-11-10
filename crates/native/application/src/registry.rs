@@ -75,6 +75,7 @@ use crate::readjustment_scope;
 use crate::readjustment_sheets;
 use crate::orthophoto_check;
 use crate::orthophoto_compare;
+use crate::orthophoto_seamlines;
 use crate::pointcloud_overlap;
 use crate::pointcloud_register;
 use crate::addresses_compare;
@@ -619,6 +620,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_ORTHOPHOTO_COMPARE => {
                 $then!(orthophoto_compare, kentos_commands::OrthophotoCompare)
+            }
+            kentos_commands::CAD_ORTHOPHOTO_SEAMLINES => {
+                $then!(orthophoto_seamlines, kentos_commands::OrthophotoSeamlines)
             }
             kentos_commands::CAD_POINTCLOUDS_OVERLAP => {
                 $then!(pointcloud_overlap, kentos_commands::PointCloudsOverlap)

@@ -22,7 +22,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// A raster of the input, checked: its id and ground sampling distance (the square root of a pixel's area).
-fn raster(doc: &Document, uid: &str, path: &str) -> Result<(Uuid, f64), Stop> {
+pub(crate) fn raster(doc: &Document, uid: &str, path: &str) -> Result<(Uuid, f64), Stop> {
     let uid = uid.trim();
     if !checks::is_uid_text(uid) {
         return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
@@ -158,7 +158,7 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
         // Along a seam line (docs/adr/2860): its length, its places in the overlap and those outside it.
         let where_ = match &s.line {
             Some(l) => format!(
-                "dikiş hattı boyunca ({:.2} m) örtüşmede {} yer, {} yer örtüşmenin dışında",
+                "birleşme çizgisi boyunca ({:.2} m) örtüşmede {} yer, {} yer örtüşmenin dışında",
                 l.length,
                 s.patches.len(),
                 l.outside
@@ -166,7 +166,7 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
             // docs/adr/4460: along the seamline polygons' shared boundary: its length and parts.
             None => match &s.shared {
                 Some(sh) => format!(
-                    "dikiş çokgenlerinin ortak sınırı boyunca ({:.2} m, {} parça) örtüşmede {} yer, {} yer örtüşmenin dışında",
+                    "mozaik elemanlarının ortak sınırı boyunca ({:.2} m, {} parça) örtüşmede {} yer, {} yer örtüşmenin dışında",
                     sh.length,
                     sh.parts.len(),
                     s.patches.len(),
@@ -181,7 +181,7 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
             _ => "parabolle",
         };
         notes.push(format!(
-            "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, {refined}).",
+            "Kayıklık ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, {refined}).",
             s.ok,
             s.low,
             s.edge,

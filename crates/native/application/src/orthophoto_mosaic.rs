@@ -35,10 +35,10 @@ pub(crate) fn rings(doc: &Document, uid: &str, path: &str) -> Result<Vec<Vec<[f6
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
-        .ok_or_else(|| fail(format!("“{uid}” kimlikli dikiş çokgeni çizimde yok."), path))?;
+        .ok_or_else(|| fail(format!("“{uid}” kimlikli mozaik elemanı çizimde yok."), path))?;
     let straight = |b: &Option<Vec<f64>>| b.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
     let ring = |pts: &[kentos_commands::Vec2]| -> Vec<[f64; 2]> { pts.iter().map(|v| [v.x, v.y]).collect() };
-    let arcs = || fail(format!("“{uid}” dikiş çokgeninin yaylı kenarı var; kenarları düz olmalı."), path);
+    let arcs = || fail(format!("“{uid}” mozaik elemanının yaylı kenarı var; kenarları düz olmalı."), path);
     match e {
         Entity::Polygon(p) => {
             let mut out = Vec::new();
@@ -64,7 +64,7 @@ pub(crate) fn rings(doc: &Document, uid: &str, path: &str) -> Result<Vec<Vec<[f6
             }
             Ok(vec![ring(&p.pts)])
         }
-        _ => Err(fail(format!("“{uid}” bir alan ya da kapalı çoklu çizgi değil; dikiş çokgeni olamaz."), path)),
+        _ => Err(fail(format!("“{uid}” bir alan ya da kapalı çoklu çizgi değil; mozaik elemanı olamaz."), path)),
     }
 }
 
@@ -182,7 +182,7 @@ pub(crate) fn shared_of(doc: &Document, polygons: &[String; 2]) -> Result<Vec<Ve
     let runs = shared(&a, &b, TOLERANCE);
     if runs.is_empty() {
         return Err(fail(
-            "İki dikiş çokgeninin ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki görüntünün dikiş çokgenlerini verin.".into(),
+            "İki mozaik elemanının ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki görüntünün mozaik elemanlarını verin.".into(),
             "seam.polygons",
         ));
     }

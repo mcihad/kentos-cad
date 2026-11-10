@@ -8444,6 +8444,22 @@
    "tests": 0
   },
   {
+   "id": "raster.seamlines",
+   "kind": "command",
+   "title": "Mozaik birleşme çizgisi…",
+   "level": "semantic",
+   "via": [
+    "cad.orthophoto.seamlines"
+   ],
+   "operation": null,
+   "python": "kentos.cad.orthophoto.seamlines",
+   "mcp": "cad.orthophoto.seamlines",
+   "note": "Pencere iki ortofotonun birleşme çizgisini ve mozaik elemanlarını cad.orthophoto.seamlines'ın planıyla gösterir, Mozaik elemanlarını çiz komutun execute'uyla tek geri alma adımında yazar (ADR 4700).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.stac",
    "kind": "command",
    "title": "STAC'ta ara",

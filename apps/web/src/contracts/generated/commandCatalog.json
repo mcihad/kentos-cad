@@ -59030,7 +59030,7 @@
       "id": "cad.orthophoto.compare",
       "version": 1,
       "title": "Ortofoto karşılaştırması",
-      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaikteki dikiş çokgenleri (alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı dikiş çokgeni, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok).",
+      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaik elemanları (TUCBS Ortogörüntü; görüntünün mozaikte kullanılan bölümü: alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı mozaik elemanı, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok).",
       "aliases": [
         "ortofotokarsilastir",
         "mozaikkayiklik",
@@ -59330,6 +59330,350 @@
             "known": "gnss",
             "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
             "secondPoints": "okuma-2026"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.orthophoto.seamlines",
+      "version": 1,
+      "title": "Mozaik birleşme çizgisi",
+      "summary": "İki ortofotonun (raster; first, second) mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (TUCBS Ortogörüntü: mozaik elemanı görüntünün mozaikte kullanılan bölümüdür, elemanlar örtüşmez; ArcGIS Pro'nun Build Seamlines'ı gibi). Ayak izleri rasterlerin sınırı ya da verilen alanlardır (footprints: alan ya da düz kenarlı kapalı çoklu çizgi, dışbükey). method voronoi, eşit uzaklık (ilk değer; Pan ve ark. 2009, örtüşmeli alan Voronoi diyagramı): örtüşmenin bir noktası kendi bölgesi (ayak izinin öbürününkinin dışında kalan bölümü) daha yakın olan görüntüye düşer; birleşme çizgisi iki bölgeden eşit uzak noktalardır: en yakın öğeleri iki kenar (ya da iki köşe, ya da kenarın doğrusundaki köşe) olan parçası düz (açıortay) ve yalnız dönüm noktaları yazılır; köşe ile kenar arasındaki eğri parçasının noktaları kirişe dik doğrularda step metrede bir (ilk değer 1). Uçlar iki sınırın kesiştiği yerler ya da ortak sınırın iki bölgeden eşit uzak noktasıdır (ends: crossing, shared). method radiometry, radyometrik fark (Chon, Kim, Lin 2010): ızgara birinci görüntünün cell × cell pikselidir (ilk değer 1); pikselin farkı ortak bantların mutlak farklarının en büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik evrişimiyle birincinin piksel merkezinde okunur); hücrenin farkı piksellerininkilerin en büyüğü. Hücre bütün pikselleri örtüşmede ve okunur, merkezi eşit uzaklık çizgisine corridor (arama bandı) metreden yakın (verilirse) ve hiçbir pikseli avoid katmanının alanlarında (geçilmeyecek alanlar: bina, köprü; USGS) değilse aranır. Eşit uzaklık çizgisinin uçlarına en yakın aranan hücreler arasında önce en büyük farkı en küçük yol, sonra onu aşmayan hücrelerde en az maliyetli yol (hareketin boyu × (1 + iki hücrenin farklarının ortalaması); 8 komşu); çizgi başlangıç, yolun dönen hücrelerinin merkezleri ve bitiştir. difference: en büyük fark, yolun ve aranan hücrelerin ortalaması, hücre sayıları, hücrenin yerdeki boyu. Mozaik elemanlarının halkaları: birincininki kendi sınırında bitişten başlangıca, sonra birleşme çizgisi; ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat yönünün tersine); ikisi de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı (öznitelikleri Görüntü: rasterin kimliği, Yöntem) layer katmanına tek geri alma adımında (“Mozaik elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik elemanları”) aynı adımda açılır (opened). Sonuç Ortofoto karşılaştırması'nın seam.polygons'ına doğrudan verilir (ADR 4460). BÖHHBÜY birleşme çizgisinin yerine kural koymaz; m. 67(6) ortak alanda radyometrik düzeltme ve ±2·YÖA kayıklık ister. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (first, second); invalid_input (aynı raster iki kez; step, cell (1..64), corridor; voronoi ile cell, corridor ya da avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi değil, yaylı, delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün içinde, sınır ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok piksel, iki uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found (layer, avoid), layer_locked; invalid_revision, revision_conflict; invalid_file_path, file_not_found, import_unreadable (görüntünün dosyası).",
+      "aliases": [
+        "birlesmecizgisi",
+        "mozaikelemani",
+        "seamline",
+        "buildseamlines"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.orthophoto.seamlines` v1 (plan/map-cad.md MAP-12, docs/adr/4700): two orthophotos (rasters'\npersistent ids; the first's polygon is written first), their footprints (areas or closed polylines of straight\nedges, convex; none: each raster's extent), the method, and for Voronoi the spacing of a curved stretch's points\n(metres; none: 1), for radiometry the cell's side in the first image's pixels (none: 1) and the corridor round the\nVoronoi seam the path keeps to (metres; none: the whole overlap). `folder`: where a raster's relative file is looked\nfor (radiometry reads the pixels). `avoid` (radiometry): a layer whose areas the seam keeps out of. `layer`: the\nlayer's id the polygons are written on; none: `mozaik-elemanlari` (“Mozaik elemanları”), made in the same undo step\nwhen missing.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`first`, `second`); `invalid_input`\n(one raster twice; `step` not above zero; `cell` outside 1..=64; `corridor` not above zero; `cell`, `corridor` or\n`avoid` with Voronoi; a footprint twice, not in the drawing, not an area or a closed polyline, of arcs, holes or parts, not\nconvex; no overlap, one footprint inside the other, an overlap whose boundary changes hands more than twice; for\nradiometry no cell to search, too many pixels, no path between the ends); `layer_not_found` (`layer`, `avoid`),\n`layer_locked`;\n`invalid_revision`, `revision_conflict`; the files' (`invalid_file_path`, `file_not_found`, `import_unreadable`).",
+        "properties": {
+          "avoid": {
+            "description": "Radiometry: a layer whose areas (and closed polylines) the seam keeps out of, as buildings and bridges (USGS:\na seam does not cut a roof): a cell with a pixel centre inside one is not searched.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cell": {
+            "description": "Radiometry: a cell's side in the first image's pixels.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "corridor": {
+            "description": "Radiometry: how far from the Voronoi seam a searched cell's centre may lie.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "first": {
+            "type": "string"
+          },
+          "folder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "footprints": {
+            "description": "The two images' footprints' persistent ids, in the images' order; none: each raster's extent.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "method": {
+            "$ref": "#/$defs/OrthoSeamMethod",
+            "default": "voronoi"
+          },
+          "second": {
+            "type": "string"
+          },
+          "step": {
+            "description": "Voronoi: a curved stretch's points every `step` metres along the line from the seam's start to its end.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "first",
+          "second"
+        ],
+        "title": "OrthophotoSeamlines",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.seamlines` v1: the method, the overlap (its ring and area), the seam from its start to its\nend (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for\nradiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.",
+        "properties": {
+          "difference": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeamDifference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ends": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamEnd"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "method": {
+            "$ref": "#/$defs/OrthoSeamMethod"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "overlap": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          },
+          "overlapArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "polygons": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamPolygon"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "seam": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          }
+        },
+        "required": [
+          "method",
+          "overlap",
+          "overlapArea",
+          "seam",
+          "length",
+          "ends",
+          "polygons",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoSeamlinesBuilt",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.seamlines` v1: the method, the overlap (its ring and area), the seam from its start to its\nend (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for\nradiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.",
+        "properties": {
+          "difference": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeamDifference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ends": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamEnd"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "method": {
+            "$ref": "#/$defs/OrthoSeamMethod"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "overlap": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          },
+          "overlapArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "polygons": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamPolygon"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "seam": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          }
+        },
+        "required": [
+          "method",
+          "overlap",
+          "overlapArea",
+          "seam",
+          "length",
+          "ends",
+          "polygons",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoSeamlinesBuilt",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_raster",
+          "crs_mismatch",
+          "invalid_input",
+          "layer_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki ortofotonun sınırlarından eşit uzaklık (Voronoi) birleşme çizgisi",
+          "input": {
+            "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+            "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+          }
+        },
+        {
+          "title": "Radyometrik fark, binalardan geçmeden, eşit uzaklık çizgisinden en çok 5 m",
+          "input": {
+            "avoid": "bina",
+            "corridor": 5.0,
+            "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+            "method": "radiometry",
+            "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
           }
         }
       ]
@@ -165852,6 +166196,75 @@
       ],
       "type": "object"
     },
+    "OrthoSeamDifference": {
+      "description": "The radiometric seam's differences (docs/adr/4700), in the images' values: the largest along the path (the\nbottleneck no path between the ends goes under), the mean along it and over every searched cell; the path's cells,\nthe searched cells and a cell's side on the ground (metres).",
+      "properties": {
+        "bottleneck": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "cells": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "searched": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "searchedMean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "size": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "bottleneck",
+        "mean",
+        "searchedMean",
+        "cells",
+        "searched",
+        "size"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamEnd": {
+      "description": "A seam's end (docs/adr/4700): where the two footprints' boundaries cross (`crossing`), or on a stretch the two\nshare (`shared`: the union's outer boundary), the point of it equally far from the two images' own parts.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "kind"
+      ],
+      "type": "object"
+    },
     "OrthoSeamLine": {
       "description": "The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and\nhow many of them lie outside the overlap (not measured).",
       "properties": {
@@ -165881,6 +166294,65 @@
         "length",
         "places",
         "outside"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamMethod": {
+      "description": "How the seam is drawn through the overlap (docs/adr/4700).",
+      "oneOf": [
+        {
+          "const": "voronoi",
+          "description": "Equally far from the two images' own parts (the area Voronoi diagram with overlap).",
+          "type": "string"
+        },
+        {
+          "const": "radiometry",
+          "description": "The least-difference path between the Voronoi seam's ends (the bottleneck, then the least cost).",
+          "type": "string"
+        }
+      ]
+    },
+    "OrthoSeamPolygon": {
+      "description": "An image's seamline polygon: the raster's persistent id, its ring (east, north; counter-clockwise, closed back to\nits start by its last edge), its area, the part of the overlap it keeps (m²), and the object written (execute).",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "image": {
+          "type": "string"
+        },
+        "kept": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "ring": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "system"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "image",
+        "ring",
+        "area",
+        "kept"
       ],
       "type": "object"
     },
