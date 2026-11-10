@@ -1,6 +1,7 @@
 //! `cad.entities.grade` v1 (plan/map-cad.md MAP-06, docs/adr/1290): Eğimle kot ver. The range's elevations from the
 //! shared core (`ops::grade`) written to the object's vertices in one undo step; the others keep theirs. The shared
-//! cases are `fixtures/commands/v1/cad.entities.grade.json`.
+//! cases are `fixtures/commands/v1/cad.entities.grade.json`. Docs/adr/4980: the range lies on any part's outer ring or
+//! hole (`part`, `ring`), as `cad.entities.drape`'s.
 //!
 //! docs/adr/3380: the high or low point (`ahead` and `back`, the core's `peak`). A vertex added inside an edge splits
 //! it (an arc's halves keep its circle; a line becomes a polyline, as Köşe ekle makes it); its measure (M) and the
@@ -28,17 +29,67 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 /// A path: its vertices, bulges and elevations.
 type Path = (Vec<Vec2>, Option<Vec<f64>>, Vec<Option<f64>>);
 
-/// The object's path (a line's two ends).
-fn path_of(e: &Entity) -> Option<Path> {
+/// The object's path (a line's two ends); a polyline's or an area's ring `at` (part, ring; docs/adr/4980).
+fn path_of(e: &Entity, at: (usize, usize)) -> Option<Path> {
     let v = |p: &kentos_commands::Vec2| Vec2::new(p.x, p.y);
+    let ring = |pts: &[kentos_commands::Vec2], bulges: &Option<Vec<f64>>, zs: &Option<Vec<Option<f64>>>| -> Path {
+        let zs = zs.clone().unwrap_or_else(|| vec![None; pts.len()]);
+        (pts.iter().map(v).collect(), bulges.clone(), zs)
+    };
     match e {
-        Entity::Line(l) => Some((vec![v(&l.a), v(&l.b)], None, vec![l.za, l.zb])),
-        Entity::Polyline(p) | Entity::Polygon(p) => {
-            let zs = p.zs.clone().unwrap_or_else(|| vec![None; p.pts.len()]);
-            Some((p.pts.iter().map(v).collect(), p.bulges.clone(), zs))
-        }
+        Entity::Line(l) if at == (0, 0) => Some((vec![v(&l.a), v(&l.b)], None, vec![l.za, l.zb])),
+        Entity::Polyline(p) | Entity::Polygon(p) => Some(match at {
+            (0, 0) => ring(&p.pts, &p.bulges, &p.zs),
+            (0, h) => p.holes.as_ref()?.get(h - 1).map(|r| ring(&r.pts, &r.bulges, &r.zs))?,
+            (k, 0) => p.parts.as_ref()?.get(k - 1).map(|q| ring(&q.pts, &q.bulges, &q.zs))?,
+            (k, h) => {
+                let q = p.parts.as_ref()?.get(k - 1)?;
+                q.holes.as_ref()?.get(h - 1).map(|r| ring(&r.pts, &r.bulges, &r.zs))?
+            }
+        }),
         _ => None,
     }
+}
+
+/// The ring `at` of a polyline or an area to write: its vertices, bulges and elevations (docs/adr/4980).
+#[allow(clippy::type_complexity)]
+fn ring_mut(
+    p: &mut PathEntity,
+    (part, ring): (usize, usize),
+) -> Option<(&mut Vec<kentos_commands::Vec2>, &mut Option<Vec<f64>>, &mut Option<Vec<Option<f64>>>)> {
+    match (part, ring) {
+        (0, 0) => Some((&mut p.pts, &mut p.bulges, &mut p.zs)),
+        (0, h) => p.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs)),
+        (k, 0) => p.parts.as_mut()?.get_mut(k - 1).map(|q| (&mut q.pts, &mut q.bulges, &mut q.zs)),
+        (k, h) => {
+            let q = p.parts.as_mut()?.get_mut(k - 1)?;
+            q.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs))
+        }
+    }
+}
+
+/// Why the object has no ring `at`: the field and the words (docs/adr/4980, as `cad.entities.drape`'s).
+fn no_ring(e: &Entity, (part, ring): (usize, usize)) -> Stop {
+    let (at, why) = match e {
+        Entity::Line(_) => (
+            if part != 0 { "part" } else { "ring" },
+            "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.".to_owned(),
+        ),
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            let parts = 1 + p.parts.as_ref().map_or(0, Vec::len);
+            if part >= parts {
+                ("part", format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok."))
+            } else {
+                let holes = match part {
+                    0 => p.holes.as_ref().map_or(0, Vec::len),
+                    k => p.parts.as_ref().and_then(|q| q.get(k - 1)).and_then(|q| q.holes.as_ref()).map_or(0, Vec::len),
+                };
+                ("ring", format!("{part}. parçanın {holes} deliği var: {ring}. halka yok (0 dış halka, 1'den delikler)."))
+            }
+        }
+        _ => ("uid", "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.".to_owned()),
+    };
+    fail(codes::WRONG_PLACE, why, at)
 }
 
 /// What the range's end is given by: the core's target, or the high or low point's two grades.
@@ -83,14 +134,24 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
     else {
         return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{}” kimlikli nesne çizimde yok.", input.uid), "uid"));
     };
-    let Some((pts, bulges, zs)) = path_of(e) else {
+    if !matches!(e, Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)) {
         return Err(fail(codes::NOT_A_PATH, "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.".into(), "uid"));
+    }
+    let at = (input.part as usize, input.ring as usize);
+    let Some((pts, bulges, zs)) = path_of(e, at) else {
+        return Err(no_ring(e, at));
     };
     let (from, to) = (input.from as usize, input.to as usize);
     if !(from < to && to < pts.len()) {
+        let whose = if at == (0, 0) { "nesnenin".to_owned() } else { format!("{}. parçanın {}. halkasının", at.0, at.1) };
         return Err(fail(
             codes::WRONG_PLACE,
-            format!("Köşe aralığı {}–{} olamaz: nesnenin {} köşesi var (0'dan), başlangıç bitişten önce olmalı.", input.from, input.to, pts.len()),
+            format!(
+                "Köşe aralığı {}–{} olamaz: {whose} {} köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+                input.from,
+                input.to,
+                pts.len()
+            ),
             "to",
         ));
     }
@@ -112,7 +173,9 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
                     for (k, v) in g.zs.iter().enumerate() {
                         z[from + k] = Some(*v);
                     }
-                    p.zs = Some(z);
+                    if let Some((_, _, ring_zs)) = ring_mut(p, at) {
+                        *ring_zs = Some(z);
+                    }
                 }
                 _ => {}
             }
@@ -140,7 +203,7 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
                     "back",
                 ),
             })?;
-            let (next, index, inserted) = peaked(e, &zs, from, &g);
+            let (next, index, inserted) = peaked(e, at, &zs, from, &g);
             let point = GradedPoint {
                 index: index as u32,
                 inserted,
@@ -177,21 +240,30 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
     Ok((slot, next, out))
 }
 
-/// The object through its high or low point: the range's elevations, a vertex added inside an edge (its bulges split,
-/// a line made a polyline), the measures and widths carried; the point's vertex after it and whether it was added.
-fn peaked(e: &Entity, zs: &[Option<f64>], from: usize, g: &kentos_geometry_core::ops::grade::Peaked) -> (Entity, usize, bool) {
+/// The object through its high or low point: the range's elevations on the ring `at` (docs/adr/4980), a vertex added
+/// inside an edge (its bulges split, a line made a polyline), the measures and widths carried; the point's vertex after
+/// it and whether it was added.
+fn peaked(
+    e: &Entity,
+    at: (usize, usize),
+    zs: &[Option<f64>],
+    from: usize,
+    g: &kentos_geometry_core::ops::grade::Peaked,
+) -> (Entity, usize, bool) {
     let mut z: Vec<Option<f64>> = zs.to_vec();
     for (k, v) in g.zs.iter().enumerate() {
         z[from + k] = Some(*v);
     }
     let (edge, halves) = match g.at {
         PeakAt::Edge { edge, bulges } => (edge, bulges),
-        PeakAt::Vertex(at) => {
+        PeakAt::Vertex(vertex) => {
             let mut next = e.clone();
-            if let Entity::Polyline(p) | Entity::Polygon(p) = &mut next {
-                p.zs = Some(z);
+            if let Entity::Polyline(p) | Entity::Polygon(p) = &mut next
+                && let Some((_, _, ring_zs)) = ring_mut(p, at)
+            {
+                *ring_zs = Some(z);
             }
-            return (next, at, false);
+            return (next, vertex, false);
         }
     };
     let point = kentos_commands::Vec2 { x: g.p.x, y: g.p.y };
@@ -211,15 +283,22 @@ fn peaked(e: &Entity, zs: &[Option<f64>], from: usize, g: &kentos_geometry_core:
         }),
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let mut q = p.clone();
-            q.pts.insert(edge + 1, point);
-            q.bulges = q.bulges.take().map(|mut b| {
-                b.resize(p.pts.len(), 0.0);
-                b[edge] = halves[0];
-                b.insert(edge + 1, halves[1]);
-                b
-            });
-            q.zs = Some(z);
+            if let Some((pts, bulges, ring_zs)) = ring_mut(&mut q, at) {
+                let n = pts.len();
+                pts.insert(edge + 1, point);
+                *bulges = bulges.take().map(|mut b| {
+                    b.resize(n, 0.0);
+                    b[edge] = halves[0];
+                    b.insert(edge + 1, halves[1]);
+                    b
+                });
+                *ring_zs = Some(z);
+            }
+            // The measures and widths come again by the carrying rules below.
             q.ms = None;
+            for part in q.parts.iter_mut().flatten() {
+                part.ms = None;
+            }
             q.widths = None;
             if matches!(e, Entity::Polygon(_)) { Entity::Polygon(q) } else { Entity::Polyline(q) }
         }

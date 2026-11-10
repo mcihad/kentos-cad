@@ -12,9 +12,9 @@
 //!
 //! docs/adr/3780: Hedef Referanstan raises or lowers the object whole from a reference point, by `cad.entities.raise`
 //! (grade_reference.rs); Hedef is the form's first row. docs/adr/4180: Hedef Yüzeyden gives the vertices the project's
-//! terrain surface's heights, by `cad.entities.drape` (grade_surface.rs). docs/adr/4980: Yüzeyden's range may lie on
-//! any ring of a multi-part object (Halka, or the ring Sahneden seç's first click is nearest); the window numbers that
-//! ring's vertices and marks it.
+//! terrain surface's heights, by `cad.entities.drape` (grade_surface.rs). docs/adr/4980: the range (Eğim, Bitiş kotu,
+//! Yüksek/alçak nokta and Yüzeyden's Aralık) may lie on any ring of a multi-part object or one with holes (Halka, or the
+//! ring Sahneden seç's first click is nearest); the window numbers that ring's vertices and marks it.
 
 use iced::widget::Column;
 use iced::{Element, Task};
@@ -167,6 +167,8 @@ impl App {
             uid: s.uid.clone(),
             from: (s.from.max(1.0) as u32) - 1,
             to: (s.to.max(1.0) as u32) - 1,
+            part: s.ring.0,
+            ring: s.ring.1,
             start: Some(s.start),
             end: (s.target != Target::Grade).then_some(s.end),
             grade: (s.target == Target::Grade).then_some(s.percent / 100.0),
@@ -349,7 +351,7 @@ impl App {
     /// The ring the window works on: its vertices and bulges (see `grade_vertices`).
     fn grade_ring(&self) -> (Vec<kentos_commands::Vec2>, Option<Vec<f64>>) {
         let Some(e) = self.grade_object() else { return (Vec::new(), None) };
-        let at = if self.grade.target == Target::Surface { self.grade.ring } else { (0, 0) };
+        let at = if self.grade.target == Target::Reference { (0, 0) } else { self.grade.ring };
         crate::grade_surface::rings(e).into_iter().find(|r| r.0 == at).map_or((Vec::new(), None), |r| (r.1, r.2))
     }
 
@@ -435,8 +437,8 @@ impl App {
             self.reference_picked(p, reach);
             return true;
         }
-        // Yüzeyden's range starts on whichever ring the click is nearest (docs/adr/4980); its end on the same ring.
-        if end == Pick::Start && self.grade.target == Target::Surface {
+        // The range starts on whichever ring the click is nearest (docs/adr/4980); its end on the same ring.
+        if end == Pick::Start {
             let rings = self.grade_object().map(crate::grade_surface::rings).unwrap_or_default();
             let nearest = rings
                 .iter()
@@ -503,6 +505,8 @@ impl App {
             let (form, lines, ready) = self.surface_form(form);
             return frame(Column::new().spacing(12).push(form).push(words::summary(lines)), ready);
         }
+        // Docs/adr/4980: the ring the range is on, when the object has more than one.
+        let form = self.ring_field(form);
         let form = form
             .field(
                 "Başlangıç köşesi",
@@ -515,8 +519,9 @@ impl App {
             )
             .field("Bitiş köşesi", NumberInput::new(s.to, |v| msg(Event::To(v))).step(1.0).decimals(0).width(BOX))
             .help(format!(
-                "Köşeler 1'den {}'e, Koordinat listesindeki gibi; Sahneden seç iki tıkla alır: başlangıç{}, bitiş{}.",
-                s.vertices,
+                "Köşeler 1'den {}'e{}, Koordinat listesindeki gibi; Sahneden seç iki tıkla alır: başlangıç{}, bitiş{}.",
+                pts.len(),
+                self.ring_place(),
                 at(s.from),
                 at(s.to)
             ))

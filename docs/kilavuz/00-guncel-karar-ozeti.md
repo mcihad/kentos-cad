@@ -644,10 +644,10 @@
 - **Topoloji bulgusunun Öznitelikler'den işaretlenmesi (10 Kasım 2026; MAP-07, [ADR 4600](../../docs/adr/4600-topology-findings-marked-from-attributes.md)).**
   Öznitelikler › Topoloji: Gerekçe satırı ve bulgunun durumu açılır listede (`cad.topology.exceptions`); çoklu seçimde
   bulgular duruma göre sayılır. Komut değişmedi. Harita + CBS.
-- **Yüzeyden kot ver'de aralığın parçası ve halkası (11 Kasım 2026; MAP-06, [ADR 4980](../../docs/adr/4980-drape-range-on-any-part-and-ring.md)).**
-  `cad.entities.drape`'in `range`'i `part` ve `ring` alır: çok parçalı nesnenin herhangi bir parçasının dış halkası ya
-  da deliği; öbür halkalar olduğu gibi; olmayan parça ya da delik `wrong_place`. Eğimle kot ver › Yüzeyden › Aralık ›
-  Halka; Sahneden seç'in ilk tıklaması halkayı seçer. CAD (Harita + Yol).
+- **Eğimle kot ver'de ve Yüzeyden kot ver'de aralığın parçası ve halkası (11 Kasım 2026; MAP-06, [ADR 4980](../../docs/adr/4980-range-on-any-part-and-ring.md)).**
+  `cad.entities.grade` ve `cad.entities.drape`'in `range`'i `part` ve `ring` alır: çok parçalı nesnenin herhangi bir
+  parçasının dış halkası ya da deliği; öbür halkalar olduğu gibi; olmayan parça ya da delik `wrong_place`. Eğimle kot
+  ver › Halka; Sahneden seç'in ilk tıklaması halkayı seçer. CAD (Harita + Yol).
 - **Yüzeyden kot ver'de göreli kot ve aralık (10 Kasım 2026; MAP-06, [ADR 4580](../../docs/adr/4580-drape-relative-height-and-range.md)).**
   `cad.entities.drape`'in `offset`'i (yüzeyin kotu artı fark) ve `range`'i (tek nesnenin köşe aralığı, dış halka; kırık
   noktası yalnız aradaki kenarlarda); yeni `wrong_place`. Eğimle kot ver › Yüzeyden › Kot farkı ve Aralık. Kotlar yüzeye

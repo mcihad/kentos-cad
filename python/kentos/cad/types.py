@@ -35068,14 +35068,15 @@ class EntitiesFlattened(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class EntitiesGrade(_Model):
-    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
-    outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
+    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`) on the ring
+    `ring` of the part `part` (docs/adr/4980, as `DrapeRange`'s: both 0 when absent, the first part's outer ring), the
+    start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
     or, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being
     `end` or else the end vertex's own.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`),
-    `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
+    (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or
+    `from` ≥ `to`), `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
     alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
     and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
     two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
@@ -35086,6 +35087,8 @@ class EntitiesGrade(_Model):
         back: The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end). Unit: grade.
         end: Unit: elevation.
         grade: Unit: grade.
+        part: Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+        ring: Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
         start: Unit: elevation.
     """
     uid: str
@@ -35096,6 +35099,8 @@ class EntitiesGrade(_Model):
     end: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
     start: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -35113,6 +35118,10 @@ class EntitiesGrade(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         if self.start is not UNSET:
             out["start"] = None if self.start is None else float(self.start)
         return out
@@ -35128,6 +35137,8 @@ class EntitiesGrade(_Model):
             end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )
 

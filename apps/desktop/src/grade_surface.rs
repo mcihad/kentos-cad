@@ -112,6 +112,23 @@ impl App {
         }
     }
 
+    /// Halka (docs/adr/4980): the ring the range is on, a row only when the object has more than one.
+    pub(crate) fn ring_field<'a>(&'a self, form: Form<'a, Message>) -> Form<'a, Message> {
+        let all = self.grade_object().map(rings).unwrap_or_default();
+        if all.len() < 2 {
+            return form;
+        }
+        let at = self.grade.ring;
+        let choices = all.iter().map(|r| (format!("{}:{}", r.0.0, r.0.1), ring_name(r.0))).collect();
+        form.field("Halka", fields::select_owned(choices, &format!("{}:{}", at.0, at.1), |id| msg(Event::Ring(id))))
+    }
+
+    /// The ring's name for the vertices' help line, “ (2. parça, 1. delik)”; nothing for an object of one ring.
+    pub(crate) fn ring_place(&self) -> String {
+        let many = self.grade_object().map(rings).is_some_and(|r| r.len() > 1);
+        if many { format!(" ({})", ring_name(self.grade.ring)) } else { String::new() }
+    }
+
     /// Yüzeyden's rows: the surface and the break points; the summary's lines; whether Uygula may go.
     pub(crate) fn surface_form<'a>(&'a self, form: Form<'a, Message>) -> (Form<'a, Message>, Vec<Element<'a, Message>>, bool) {
         let s = &self.grade;
@@ -143,15 +160,8 @@ impl App {
         // Docs/adr/4580: the range's two vertices, as Eğimle kot ver's own (Sahneden seç takes them by two clicks).
         if s.partial {
             // Docs/adr/4980: the ring, when the object has more than one.
-            let all = self.grade_object().map(rings).unwrap_or_default();
-            let place = if all.len() > 1 { format!(" ({})", ring_name(s.ring)) } else { String::new() };
-            if all.len() > 1 {
-                let choices = all.iter().map(|r| (format!("{}:{}", r.0.0, r.0.1), ring_name(r.0))).collect();
-                form = form.field(
-                    "Halka",
-                    fields::select_owned(choices, &format!("{}:{}", s.ring.0, s.ring.1), |id| msg(Event::Ring(id))),
-                );
-            }
+            let place = self.ring_place();
+            form = self.ring_field(form);
             form = form
                 .field(
                     "Başlangıç köşesi",

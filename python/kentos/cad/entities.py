@@ -2817,6 +2817,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -2849,6 +2851,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end: Unit: elevation.
             expected_revision:
             grade: Unit: grade.
+            part: Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+            ring: Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
             start: Unit: elevation.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -2871,6 +2875,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ), request_id=request_id, expected=expected)
 
@@ -2887,6 +2893,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
     ) -> EntitiesGraded:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -2901,6 +2909,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ))
 
@@ -2917,6 +2927,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -2931,6 +2943,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ))
 
@@ -2947,6 +2961,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -2966,6 +2982,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ), op=op, request_id=request_id, expected=expected)
 

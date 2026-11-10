@@ -57596,7 +57596,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's\nouter ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;\nor, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being\n`end` or else the end vertex's own.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`),\n`invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`\nalone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given\nand the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the\ntwo grades parallel, or meeting outside the range or at its start or end), `layer_locked`.",
+        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`) on the ring\n`ring` of the part `part` (docs/adr/4980, as `DrapeRange`'s: both 0 when absent, the first part's outer ring), the\nstart's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;\nor, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being\n`end` or else the end vertex's own.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or\n`from` ≥ `to`), `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`\nalone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given\nand the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the\ntwo grades parallel, or meeting outside the range or at its start or end), `layer_locked`.",
         "properties": {
           "ahead": {
             "description": "The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up).",
@@ -57644,6 +57644,20 @@
               "null"
             ],
             "x-unit": "grade"
+          },
+          "part": {
+            "description": "Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "ring": {
+            "description": "Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
           },
           "start": {
             "format": "double",

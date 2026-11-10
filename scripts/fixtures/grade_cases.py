@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.entities.grade` (Eğimle kot ver; plan/map-cad.md MAP-06, docs/adr/1290), without KentOS
-code.
+"""The shared cases of `cad.entities.grade` (Eğimle kot ver; plan/map-cad.md MAP-06, docs/adr/1290, 3380 and
+4980), without KentOS code.
 
     python3 scripts/fixtures/grade_cases.py           # writes fixtures/commands/v1/cad.entities.grade.json
     python3 scripts/fixtures/grade_cases.py --check   # writes nothing; compares
@@ -10,13 +10,18 @@ chord, an arc edge with bulge b its arc: θ = 4·atan|b|, r = chord / (2·sin(θ
 start) / L or the one given; each vertex start + g·s, the last the end as given (or start + g·L); the start is the one
 given, else the vertex's own elevation. Vertices outside the range keep theirs.
 
-The high or low point (docs/adr/3380, Civil 3D's Insert High/Low Elevation Point), by hand: the line from the start
+The high or low point (docs/adr/3380), by hand: the line from the start
 rising `ahead` and the line from the end rising `back` towards the start meet at s = (end − start + back·L) / (ahead +
 back); none when the grades are parallel or s is not strictly inside (0, L). On the edge holding s at the fraction t of
 its length: t within 10⁻⁹ of an end is that vertex (none when it is the range's start or end), else a new vertex there:
 on a straight edge the chord's point, on an arc the start's radius turned by t of the arc's angle about the centre (the
 centre on the chord's left normal at r·cos(θ/2), θ = 4·atan(b) signed), the halves' bulges tan(t·θ/4) and
 tan((1 − t)·θ/4). Vertices up to s take start + ahead·d, after it end + back·(L − d); the point start + ahead·s.
+
+Docs/adr/4980: the range lies on the ring `ring` (0 the outer one, 1 on the holes) of the part `part` (0 the object's own
+vertices, 1 on `parts` in order), both 0 when absent; the rules above on that ring alone, every other ring left. No such
+part or ring: `wrong_place` on `part` or `ring`; a range past the ring's vertices: `wrong_place` on `to`, naming the
+ring.
 """
 
 import copy
@@ -53,7 +58,15 @@ AREA = {"kind": "polygon", "id": 3, "layerId": "tasarim", "attrs": {}, "pts": [P
 LOCKED = {"kind": "polyline", "id": 4, "layerId": "kilitli", "attrs": {}, "pts": [P(0, 300), P(10, 300)],
           "zs": [10.0, None]}
 TEXT = {"kind": "text", "id": 5, "layerId": "tasarim", "attrs": {}, "text": "Kot", "p": P(0, 400), "height": 2.0, "rotation": 0.0}
-ENTS = [POLY, LINE, AREA, LOCKED, TEXT]
+# Docs/adr/4980: a two-part area, each part with a hole; a two-part polyline whose second part has elevations.
+ISLAND = {"kind": "polygon", "id": 6, "layerId": "tasarim", "attrs": {}, "pts": [P(300, 0), P(340, 0), P(340, 30),
+                                                                                P(300, 30)],
+          "holes": [{"pts": [P(310, 10), P(330, 10), P(330, 20), P(310, 20)]}],
+          "parts": [{"pts": [P(400, 0), P(440, 0), P(440, 30), P(400, 30)],
+                     "holes": [{"pts": [P(410, 10), P(430, 10), P(430, 20), P(410, 20)]}]}]}
+TWO = {"kind": "polyline", "id": 7, "layerId": "tasarim", "attrs": {}, "pts": [P(0, 500), P(40, 500)],
+       "parts": [{"pts": [P(0, 520), P(40, 520), P(80, 540)], "bulges": [0.0, 0.25, 0.0], "zs": [700.0, None, 702.0]}]}
+ENTS = [POLY, LINE, AREA, LOCKED, TEXT, ISLAND, TWO]
 
 
 def setup():
@@ -74,15 +87,23 @@ def edge(a, b, bulge):
     return c / (2.0 * math.sin(t / 2.0)) * t
 
 
-def path(e):
+def ring_of(e, at):
+    """The ring `at` (part, ring) of a polyline or an area (docs/adr/4980): the dict holding its pts, bulges, zs."""
+    part, ring = at
+    owner = e if part == 0 else e["parts"][part - 1]
+    return owner if ring == 0 else owner["holes"][ring - 1]
+
+
+def path(e, at=(0, 0)):
     if e["kind"] == "line":
         return [e["a"], e["b"]], [0.0], [e.get("za"), e.get("zb")]
-    n = len(e["pts"])
-    return e["pts"], e.get("bulges", [0.0] * n), e.get("zs", [None] * n)
+    r = ring_of(e, at)
+    n = len(r["pts"])
+    return r["pts"], r.get("bulges", [0.0] * n), r.get("zs", [None] * n)
 
 
-def graded(e, frm, to, start=None, end=None, grade=None):
-    pts, bulges, zs = path(e)
+def graded(e, frm, to, start=None, end=None, grade=None, at=(0, 0)):
+    pts, bulges, zs = path(e, at)
     s0 = start if start is not None else zs[frm]
     along = [0.0]
     for i in range(frm, to):
@@ -121,9 +142,9 @@ class NoPoint(Exception):
         self.why, self.along, self.length = why, along, length
 
 
-def peaked(e, frm, to, start=None, end=None, ahead=None, back=None):
+def peaked(e, frm, to, start=None, end=None, ahead=None, back=None, at=(0, 0)):
     """The object through its high or low point and the command's answer, by the rule above."""
-    pts, bulges, zs = path(e)
+    pts, bulges, zs = path(e, at)
     s0 = start if start is not None else zs[frm]
     z1 = end if end is not None else zs[to]
     lens = [edge(pts[i], pts[i + 1], bulges[i] if i < len(bulges) else 0.0) for i in range(frm, to)]
@@ -170,12 +191,13 @@ def peaked(e, frm, to, start=None, end=None, ahead=None, back=None):
             new.append(z1 + back * (L - d))
     kind = "high" if ahead > 0 and back > 0 else "low" if ahead < 0 and back < 0 else "break"
     after = copy.deepcopy(e)
+    ring = ring_of(after, at) if e["kind"] != "line" else None
     all_zs = list(zs) if e["kind"] != "line" else [e.get("za"), e.get("zb")]
     for j, v in enumerate(new):
         all_zs[frm + j] = v
     if at_vertex is not None:
         index, inserted, out_zs = at_vertex, False, new
-        after["zs"] = all_zs
+        ring["zs"] = all_zs
     else:
         index, inserted = i + 1, True
         out_zs = new[:k + 1] + [z] + new[k + 1:]
@@ -184,25 +206,30 @@ def peaked(e, frm, to, start=None, end=None, ahead=None, back=None):
             after = {"kind": "polyline", "id": e["id"], "layerId": e["layerId"], "attrs": e["attrs"],
                      "pts": [e["a"], p, e["b"]], "zs": all_zs}
         else:
-            after["pts"] = pts[:i + 1] + [p] + pts[i + 1:]
-            if "bulges" in e:
+            ring["pts"] = pts[:i + 1] + [p] + pts[i + 1:]
+            if "bulges" in ring:
                 bs = list(bulges)
-                after["bulges"] = bs[:i] + halves + bs[i + 1:]
-            after["zs"] = all_zs
+                ring["bulges"] = bs[:i] + halves + bs[i + 1:]
+            ring["zs"] = all_zs
     point = {"index": index, "inserted": inserted, "along": d_at, "x": p["x"], "y": p["y"], "z": z, "kind": kind}
     out = {"length": L, "start": s0, "end": z1, "grade": ahead, "zs": out_zs, "back": back, "point": point}
     return after, out
 
 
-def peak_ok(name, slot, frm, to, op="execute", **kw):
+def where(at):
+    """The input's part and ring (docs/adr/4980), absent when 0."""
+    return {k: v for k, v in (("part", at[0]), ("ring", at[1])) if v}
+
+
+def peak_ok(name, slot, frm, to, op="execute", at=(0, 0), **kw):
     """A high or low point case; coordinates within 10⁻⁶ m (two computations of a point near 4 400 000 m)."""
     e = ENTS[slot - 1]
-    after, out = peaked(e, frm, to, **kw)
-    input_ = {"uid": uid(slot), "from": frm, "to": to, **{k: v for k, v in kw.items() if v is not None}}
+    after, out = peaked(e, frm, to, at=at, **kw)
+    input_ = {"uid": uid(slot), "from": frm, "to": to, **where(at), **{k: v for k, v in kw.items() if v is not None}}
     result = {"status": "completed", "output": dict(out, revision="$current"), "warnings": []}
     if op != "execute":
         return {"name": name, "steps": [{"op": op, "input": input_, "result": result, "expect": SAME, "within": 1e-6}]}
-    keys = ["kind", "pts", "bulges", "zs", "a", "b", "za", "zb"]
+    keys = ["kind", "pts", "bulges", "zs", "a", "b", "za", "zb", "holes", "parts"]
     return {"name": name, "steps": [
         {"op": "execute", "input": input_, "result": result, "within": 1e-6,
          "expect": {"revision": "changed", "canUndo": True, "fields": {str(slot): {k: after.get(k) for k in keys}}}},
@@ -223,10 +250,10 @@ def outside_message(slot, frm, to, **kw):
     raise AssertionError("a point")
 
 
-def ok(name, slot, frm, to, op="execute", **kw):
+def ok(name, slot, frm, to, op="execute", at=(0, 0), **kw):
     e = ENTS[slot - 1]
-    g = graded(e, frm, to, **kw)
-    input_ = {"uid": uid(slot), "from": frm, "to": to, **{k: v for k, v in kw.items() if v is not None}}
+    g = graded(e, frm, to, at=at, **kw)
+    input_ = {"uid": uid(slot), "from": frm, "to": to, **where(at), **{k: v for k, v in kw.items() if v is not None}}
     out = dict(g, revision="$current")
     if op == "validate":
         result = {"status": "completed", "output": None, "warnings": []}
@@ -239,10 +266,13 @@ def ok(name, slot, frm, to, op="execute", **kw):
         after["za"], after["zb"] = g["zs"][0], g["zs"][1]
         fields = {"za": after["za"], "zb": after["zb"]}
     else:
-        zs = list(e.get("zs", [None] * len(e["pts"])))
+        ring = ring_of(after, at)
+        zs = list(ring.get("zs", [None] * len(ring["pts"])))
         for k, v in enumerate(g["zs"]):
             zs[frm + k] = v
-        fields = {"zs": zs}
+        ring["zs"] = zs
+        # The ring's own field, or the whole holes or parts it is in (docs/adr/4980).
+        fields = {"zs": zs} if at == (0, 0) else {k: after.get(k) for k in ("zs", "holes", "parts")}
     return {"name": name, "steps": [
         {"op": "execute", "input": input_, "result": result, "within": 1e-9,
          "expect": {"revision": "changed", "canUndo": True, "fields": {str(slot): fields}}},
@@ -316,6 +346,24 @@ def cases():
         refused("Kesişme bitişte: uçlar sayılmaz", {"uid": uid(1), "from": 0, "to": 2, "end": 854.375, "ahead": 0.0625,
                                                     "back": 0.03125},
                 "no_intersection", outside_message(1, 0, 2, end=854.375, ahead=0.0625, back=0.03125), "back"),
+        # Çok parçalı nesne (ADR 4980).
+        ok("İkinci parçanın dış halkası, eğimle: öbür halkalar olduğu gibi", 6, 0, 2, start=100.0, grade=0.02,
+           at=(1, 0)),
+        ok("İkinci parçanın deliği, bitiş kotuyla", 6, 1, 3, start=101.0, end=101.6, at=(1, 1)),
+        ok("İlk parçanın deliği: plan yazmaz", 6, 0, 3, op="plan", start=99.0, grade=-0.01, at=(0, 1)),
+        peak_ok("Çoklu çizginin ikinci parçasında yüksek nokta: yaylı kenara köşe eklenir, ilk parça olduğu gibi", 7, 0, 2,
+                ahead=0.05, back=0.03, at=(1, 0)),
+        refused("Olmayan parça", {"uid": uid(6), "from": 0, "to": 1, "part": 2, "start": 100.0, "grade": 0.01},
+                "wrong_place", "Nesnenin 2 parçası var (0'dan): 2. parça yok.", "part"),
+        refused("Olmayan delik", {"uid": uid(6), "from": 0, "to": 1, "part": 1, "ring": 2, "start": 100.0,
+                                  "grade": 0.01},
+                "wrong_place", "1. parçanın 1 deliği var: 2. halka yok (0 dış halka, 1'den delikler).", "ring"),
+        refused("Çizginin ikinci halkası yok", {"uid": uid(2), "from": 0, "to": 1, "ring": 1, "grade": 0.01},
+                "wrong_place", "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.", "ring"),
+        refused("Delikte aralık köşelerin dışında", {"uid": uid(6), "from": 2, "to": 4, "part": 1, "ring": 1,
+                                                    "start": 100.0, "grade": 0.01},
+                "wrong_place", "Köşe aralığı 2–4 olamaz: 1. parçanın 1. halkasının 4 köşesi var (0'dan), başlangıç "
+                "bitişten önce olmalı.", "to"),
         {"name": "Beklenen sürüm eski: çatışma", "steps": [{"op": "execute", "input": {
             "uid": uid(1), "from": 0, "to": 1, "grade": 0.01, "expectedRevision": "7"}, "result": {
             "status": "conflict", "error": {"code": "revision_conflict", "message":
@@ -327,7 +375,7 @@ def cases():
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.entities.grade", "commandVersion": 1,
-           "title": "Eğimle kot ver", "note": "ADR 1290, 3380. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay "
+           "title": "Eğimle kot ver", "note": "ADR 1290, 3380, 4980. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay "
            "boyu, kotlar, yüksek/alçak noktanın yeri ve yayın yarıları elle; KentOS kodu yok.", "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
