@@ -1,4 +1,4 @@
-# M29 (docs/adr/3029): Planlı Alanlar İmar Yönetmeliği 4's areas in a units schedule, in the real window, on the
+# M29 (docs/adr/8029): Planlı Alanlar İmar Yönetmeliği 4's areas in a units schedule, in the real window, on the
 # building paiy_area_tests keeps (`KENTOS_PAIY_OUT`): 15 × 6 m, two independent units and the common stair hall, shared
 # equally; on Mimari at 1440 × 900. Bölüm çizelgesi from Komut ara: BB net, BB brüt, ortak alan payı and BB genel brüt.
 fit KentOS Mimari — Yeni proje

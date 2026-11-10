@@ -4,7 +4,7 @@ Sahibin sözü (7 Kasım 2026): “mouse ile kullanmak ile kod testleri arasınd
 (`kentos-cad kullan`, `snapshot`, `cargo test … traces`) Iced olaylarını uygulamaya doğrudan verir. Gerçek kullanımda
 devreye giren şeyler orada yoktur: işletim sisteminin imleci, gerçek pencere, sahibin ayarları (açık tema, Kenet ve
 Izgara açık), Başlangıç penceresi, şerit. Bu dizin uygulamayı gerçek pencerede, gerçek fare ve klavye olaylarıyla
-sınar ([ADR 3000](../../../docs/adr/3000-real-window-acceptance.md)).
+sınar ([ADR 8000](../../../docs/adr/8000-real-window-acceptance.md)).
 
 ## Nasıl çalışır
 

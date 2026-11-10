@@ -1,4 +1,4 @@
-# M28 (docs/adr/3028): Doğrama kodları in the real window, on the 2+1 apartment the acceptance test keeps
+# M28 (docs/adr/8028): Doğrama kodları in the real window, on the 2+1 apartment the acceptance test keeps
 # (`KENTOS_ACCEPTANCE_OUT`, acceptance_flat_tests.rs) opened on Mimari at 1440 × 900, 13 px text. Etiket ▾ shows the new
 # item; started from Komut ara, the codes are drawn at the openings with the card's list of types before anything is
 # written; Enter writes them and tags every door and window, the code over 90/210, beside its wall, clear of the swings

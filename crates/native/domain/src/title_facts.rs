@@ -1,12 +1,12 @@
-//! Pafta başlığının çizimden okunanları (docs/adr/3037; M37): what the first sheet's table of Planlı Alanlar İmar
+//! Pafta başlığının çizimden okunanları (docs/adr/8037; M37): what the first sheet's table of Planlı Alanlar İmar
 //! Yönetmeliği 57(10) and the MO title block read of the drawing itself, never typed on a sheet. A sheet reads them as
 //! `@` values after the drawing's own variables, so a variable of the same name the user wrote wins.
 //!
-//! - From İmar durumu (docs/adr/3030): the parcel's area, the plan's emsal and TAKS, the floors' area the emsal
+//! - From İmar durumu (docs/adr/8030): the parcel's area, the plan's emsal and TAKS, the floors' area the emsal
 //!   counts (emsale konu alan), the footprint (taban alanı), and every storey's rooms (yapı inşaat alanı; a single
 //!   building's is also the parcel's total).
 //! - From the storeys: how many above ±0.00 and below it have rooms (kat adedi, bodrum kat adedi).
-//! - From the building program (docs/adr/3031): the independent units and their uses (konut, ticaret, büro …).
+//! - From the building program (docs/adr/8031): the independent units and their uses (konut, ticaret, büro …).
 
 use std::collections::BTreeSet;
 
@@ -45,7 +45,7 @@ fn use_of(nature: Option<&str>) -> String {
 }
 
 impl Document {
-    /// What the drawing says of itself for a title block (docs/adr/3037), each with its `@` name; a value the drawing
+    /// What the drawing says of itself for a title block (docs/adr/8037), each with its `@` name; a value the drawing
     /// does not hold (no İmar durumu, no building program) is left out, so the sheet says it is missing.
     pub fn title_facts(&self) -> Vec<TitleFact> {
         let mut out = Vec::new();

@@ -1,4 +1,4 @@
-"""What a real-window scenario asks of the hand (docs/adr/3000): clicks, keystrokes (every key of a chord), typed
+"""What a real-window scenario asks of the hand (docs/adr/8000): clicks, keystrokes (every key of a chord), typed
 values and their letters, pointer moves, wheel notches, tool starts; and the Keystroke-Level Model's time.
 
 KLM operators and times as Kieras gives them ("Using the Keystroke-Level Model to Estimate Execution Times", after

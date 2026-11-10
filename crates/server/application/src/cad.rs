@@ -430,7 +430,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
-        // The file's rules (docs/adr/3041 §1); the drawing's only.
+        // The file's rules (docs/adr/8041 §1); the drawing's only.
         Beam(x) => {
             if in_block {
                 return Err("Blok tanımında kiriş olamaz".into());

@@ -81,7 +81,7 @@ pub fn apply_boundary(store: &mut Store, scope: &Viewport) {
     store.set_scope_visible(Some(inside));
 }
 
-/// The walls and openings the phase view `view` hides (docs/adr/3039 §2): they join no wall and cut none, as a design
+/// The walls and openings the phase view `view` hides (docs/adr/8039 §2): they join no wall and cut none, as a design
 /// option not shown (docs/adr/0788 §4), so a phase's plan draws its walls as they stand in it: a new door cut into an
 /// existing wall leaves the existing plan's wall whole, a window closed up leaves the new plan's wall whole, a wall
 /// pulled down takes its corners with it.

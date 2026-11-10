@@ -9,7 +9,7 @@ Writes fixtures/commands/v1/cad.templates.apply.json; `--check` compares and wri
   apply's own reference, `standards_cases.py`); the library's blocks whose names the drawing has not, in the library's
   order; one undo step “Mimari şablonu”;
 - the unit (the call's, else ADR 0346's centimetres: this old call keeps them although the package is metres and 1:100
-  since docs/adr/3007) written to a drawing without objects; a drawing with objects keeps its
+  since docs/adr/8007) written to a drawing without objects; a drawing with objects keeps its
   own, said by `template_unit_kept` when they differ; the plot scale the template's; its levels the drawing has not (by
   id or name), in order; its space method when the drawing sets none; KentOS's wall styles the project has not;
 - its sheets the book has not, by id, in order.

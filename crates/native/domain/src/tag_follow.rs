@@ -122,7 +122,7 @@ impl Document {
             Op::Update { before, after } => crate::space_follow::is_source(&before.entity) || crate::space_follow::is_source(&after.entity),
             _ => false,
         });
-        // A slab moves the floors and ceilings of the rooms over and under it (docs/adr/3040 §3).
+        // A slab moves the floors and ceilings of the rooms over and under it (docs/adr/8040 §3).
         let slabs = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => matches!(&*s.entity, Entity::Slab(_)),
             Op::Update { before, after } => {

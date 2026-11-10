@@ -848,59 +848,59 @@ pub const SCHEMA_WITH_ROAD_CLOUD_HEIGHTS: u32 = 202;
 pub const SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS: u32 = 203;
 /// Schema 204 (docs/adr/1041): a volume approval's `sources` and `algorithm`, what its figures were computed from.
 pub const SCHEMA_WITH_ROAD_APPROVAL_SOURCES: u32 = 204;
-/// Schema 205 (docs/adr/3012): the project's plan cut height (`settings.arch.cutHeight`).
-pub const SCHEMA_WITH_PLAN_CUT: u32 = 205;
-/// Schema 206 (docs/adr/3013): how the project's plan lines are weighted (`settings.arch.lineGroups`).
-pub const SCHEMA_WITH_LINE_GROUPS: u32 = 206;
-/// Schema 207 (docs/adr/3027): a tag framed by an ellipse round its first line (a room's number, Mimarlar Odası's).
-pub const SCHEMA_WITH_ELLIPSE_TAGS: u32 = 207;
-/// Schema 208 (docs/adr/3028): a door or window type's joinery code (`settings.arch.openingTypes[].code`) and a tag
+/// Schema 217 (docs/adr/8012): the project's plan cut height (`settings.arch.cutHeight`).
+pub const SCHEMA_WITH_PLAN_CUT: u32 = 217;
+/// Schema 218 (docs/adr/8013): how the project's plan lines are weighted (`settings.arch.lineGroups`).
+pub const SCHEMA_WITH_LINE_GROUPS: u32 = 218;
+/// Schema 219 (docs/adr/8027): a tag framed by an ellipse round its first line (a room's number, Mimarlar Odası's).
+pub const SCHEMA_WITH_ELLIPSE_TAGS: u32 = 219;
+/// Schema 220 (docs/adr/8028): a door or window type's joinery code (`settings.arch.openingTypes[].code`) and a tag
 /// naming it or an opening's size (`{code}`, `{size}`).
-pub const SCHEMA_WITH_OPENING_CODES: u32 = 208;
-/// Schema 209 (docs/adr/3029): a units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (BB net, brüt, ortak alan
+pub const SCHEMA_WITH_OPENING_CODES: u32 = 220;
+/// Schema 221 (docs/adr/8029): a units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (BB net, brüt, ortak alan
 /// payı, genel brüt).
-pub const SCHEMA_WITH_PAIY_AREAS: u32 = 209;
-/// Schema 210 (docs/adr/3030): the parcel's zoning (`settings.arch.zoning`: its area, emsal and TAKS) and a brief's
+pub const SCHEMA_WITH_PAIY_AREAS: u32 = 221;
+/// Schema 222 (docs/adr/8030): the parcel's zoning (`settings.arch.zoning`: its area, emsal and TAKS) and a brief's
 /// floor area ratio count (`program.briefs[].emsal`).
-pub const SCHEMA_WITH_ZONING: u32 = 210;
-/// Schema 211 (docs/adr/3031): kat irtifakı: annexes (`program.units[].kind` `annex`, `annexOf`), a unit's nature and
+pub const SCHEMA_WITH_ZONING: u32 = 222;
+/// Schema 223 (docs/adr/8031): kat irtifakı: annexes (`program.units[].kind` `annex`, `annexOf`), a unit's nature and
 /// value factor, the land shares' whole (`program.landTotal`) and a units schedule's kat irtifakı fields.
-pub const SCHEMA_WITH_LAND_SHARES: u32 = 211;
-/// Schema 212 (docs/adr/3032): the site plan (`settings.arch.site`: the parcel, its edges' kinds and setbacks, ±0.00's
+pub const SCHEMA_WITH_LAND_SHARES: u32 = 223;
+/// Schema 224 (docs/adr/8032): the site plan (`settings.arch.site`: the parcel, its edges' kinds and setbacks, ±0.00's
 /// elevation, the setback line).
-pub const SCHEMA_WITH_SITE_PLAN: u32 = 212;
-/// Schema 213 (docs/adr/3034): the municipality's regulation the audit reads (`settings.arch.localRules`).
-pub const SCHEMA_WITH_LOCAL_RULES: u32 = 213;
-/// Schema 214 (docs/adr/3035): the building's sprinkler system (`settings.arch.sprinklers`).
-pub const SCHEMA_WITH_SPRINKLERS: u32 = 214;
-/// Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı (a table's source `parking`, `shelter`).
-pub const SCHEMA_WITH_PROVISION_TABLES: u32 = 215;
-/// Schema 216 (docs/adr/3038): Mahal listesi: a space's sill's, stair's and railing's finishes (`finishes.sill`,
+pub const SCHEMA_WITH_SITE_PLAN: u32 = 224;
+/// Schema 225 (docs/adr/8034): the municipality's regulation the audit reads (`settings.arch.localRules`).
+pub const SCHEMA_WITH_LOCAL_RULES: u32 = 225;
+/// Schema 226 (docs/adr/8035): the building's sprinkler system (`settings.arch.sprinklers`).
+pub const SCHEMA_WITH_SPRINKLERS: u32 = 226;
+/// Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı (a table's source `parking`, `shelter`).
+pub const SCHEMA_WITH_PROVISION_TABLES: u32 = 227;
+/// Schema 228 (docs/adr/8038): Mahal listesi: a space's sill's, stair's and railing's finishes (`finishes.sill`,
 /// `stair`, `railing`) and a spaces schedule's room list columns (`sillFinish`, `stairFinish`, `railingFinish`,
 /// `doors`, `windows`).
-pub const SCHEMA_WITH_ROOM_LIST: u32 = 216;
-/// Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value (`openingTypes[].material`,
+pub const SCHEMA_WITH_ROOM_LIST: u32 = 228;
+/// Schema 229 (docs/adr/8038): a door or window type's frame and leaves and its U value (`openingTypes[].material`,
 /// `uValue`).
-pub const SCHEMA_WITH_OPENING_SPECS: u32 = 217;
-/// Schema 218 (docs/adr/3039): a door's or window's own phase (`phase` of an opening), a new door cut into an existing
+pub const SCHEMA_WITH_OPENING_SPECS: u32 = 229;
+/// Schema 230 (docs/adr/8039): a door's or window's own phase (`phase` of an opening), a new door cut into an existing
 /// wall or an existing window closed up.
-pub const SCHEMA_WITH_OPENING_PHASES: u32 = 218;
-/// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view (`renovation`), the project's `phaseView` or a named view's
+pub const SCHEMA_WITH_OPENING_PHASES: u32 = 230;
+/// Schema 231 (docs/adr/8039 §5): the Tadilat projesi view (`renovation`), the project's `phaseView` or a named view's
 /// recipe's `phase`.
-pub const SCHEMA_WITH_RENOVATION_VIEW: u32 = 219;
-/// Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure (`layers` of a slab: kaplama, şap, yalıtım
+pub const SCHEMA_WITH_RENOVATION_VIEW: u32 = 231;
+/// Schema 232 (docs/adr/8040 §2): a slab's layers besides its structure (`layers` of a slab: kaplama, şap, yalıtım
 /// over it, sıva under it).
-pub const SCHEMA_WITH_SLAB_LAYERS: u32 = 220;
-/// Schema 221 (docs/adr/3040 §3): a room's floor offset (`floorOffset`, Döşeme kot farkı) and suspended ceiling
+pub const SCHEMA_WITH_SLAB_LAYERS: u32 = 232;
+/// Schema 233 (docs/adr/8040 §3): a room's floor offset (`floorOffset`, Döşeme kot farkı) and suspended ceiling
 /// (`suspendedCeiling`, Asma tavan).
-pub const SCHEMA_WITH_ROOM_HEIGHTS: u32 = 221;
-/// Schema 222 (docs/adr/3041 §1): beams (`beam`), the drawing's only.
-pub const SCHEMA_WITH_BEAMS: u32 = 222;
-/// Schema 223 (docs/adr/3041 §2): a column's material (`material` of a column).
-pub const SCHEMA_WITH_COLUMN_MATERIAL: u32 = 223;
-/// Schema 224 (docs/adr/3041 §3): a beam's role (`role`: lintel, bond beam) and its base over its storey's floor
+pub const SCHEMA_WITH_ROOM_HEIGHTS: u32 = 233;
+/// Schema 234 (docs/adr/8041 §1): beams (`beam`), the drawing's only.
+pub const SCHEMA_WITH_BEAMS: u32 = 234;
+/// Schema 235 (docs/adr/8041 §2): a column's material (`material` of a column).
+pub const SCHEMA_WITH_COLUMN_MATERIAL: u32 = 235;
+/// Schema 236 (docs/adr/8041 §3): a beam's role (`role`: lintel, bond beam) and its base over its storey's floor
 /// (`baseOffset`).
-pub const SCHEMA_WITH_BEAM_ROLES: u32 = 224;
+pub const SCHEMA_WITH_BEAM_ROLES: u32 = 236;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 

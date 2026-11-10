@@ -1,4 +1,4 @@
-//! Planı ölçülendir (docs/adr/3026; ADV-16): one command dimensions the plan of Etkin kat, as Mimarlar Odası İstanbul
+//! Planı ölçülendir (docs/adr/8026; ADV-16): one command dimensions the plan of Etkin kat, as Mimarlar Odası İstanbul
 //! Büyükkent Şubesi's "Mimari Proje Çizim ve Sunuş Standartları" (2015) asks.
 //!
 //! - **Outside:** the building's four sides, each with its chains: in an ön proje three (cephe hareketleri, taşıyıcı
@@ -11,7 +11,7 @@
 //!   `cad.dimensions.interior`, the faces it crosses. The cuts are placed as few as can be: the rooms taken by their
 //!   far side, a cut put as far along each room as it can go and still serve it.
 //! - The command's plans are drawn before anything is written; Enter (or a click) writes them, one undo step, on the
-//!   dimensions' layer (MM-XXXX-OLCU with the layer key, docs/adr/3008).
+//!   dimensions' layer (MM-XXXX-OLCU with the layer key, docs/adr/8008).
 
 use kentos_commands::{
     CommandResult, DimensionSetFace, DimensionSetOpenings, DimensionSetReference, DimensionSetRow,

@@ -2,7 +2,7 @@
 import type { BeamRole } from "./BeamRole";
 
 /**
- * A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length and its concrete's volume. A beam's
+ * A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length and its concrete's volume. A beam's
  * volume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the
  * slab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,
  * in their wall, is the whole.

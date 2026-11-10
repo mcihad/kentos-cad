@@ -211,24 +211,24 @@ impl SlabTool {
             attrs: None,
             bound: (self.bind && seed.is_some()).then_some(true),
             space: None,
-            // Its layers are picked in Öznitelikler (docs/adr/3040 §2).
+            // Its layers are picked in Öznitelikler (docs/adr/8040 §2).
             layers: None,
         }
     }
 
-    /// The layer kind of the slab the tool writes: by its material (docs/adr/3008).
+    /// The layer kind of the slab the tool writes: by its material (docs/adr/8008).
     fn layer_kind(&self) -> crate::arch_layer::Kind {
         crate::arch_layer::Kind::Slab(self.material.clone())
     }
 
     fn create_input(&self, slab: NewSlab, cx: &Context<'_>) -> SlabsCreate {
-        // The view's tadilat durumu (docs/adr/3039 §3).
+        // The view's tadilat durumu (docs/adr/8039 §3).
         let slab = NewSlab {
             arch: cx.phased(slab.arch.clone()),
             ..slab
         };
         SlabsCreate {
-            // The slab's layer (docs/adr/3008).
+            // The slab's layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&self.layer_kind(), cx),
             slabs: vec![slab],
             color: cx.draft.color_text(),
@@ -633,7 +633,7 @@ impl Tool for SlabTool {
                 };
                 self.edge_width = None;
             }
-            // Kalınlık is E in every Mimari tool (docs/adr/3003); Kenar moved to N.
+            // Kalınlık is E in every Mimari tool (docs/adr/8003); Kenar moved to N.
             "E" => self.ask = Some(Ask::Thickness),
             "F" => self.ask = Some(Ask::Offset),
             "Ö" => self.ask = Some(Ask::EdgeOffset),

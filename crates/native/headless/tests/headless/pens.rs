@@ -1,4 +1,4 @@
-//! Kalem hiyerarşisi on paper (docs/adr/3009): a building's walls, a door and a window on a 1:50 sheet, written as PDF
+//! Kalem hiyerarşisi on paper (docs/adr/8009): a building's walls, a door and a window on a 1:50 sheet, written as PDF
 //! and read back. What is cut (the walls' faces, wide) is drawn at the walls' pen; the door's frame and leaf at the
 //! door's; its swing, the window's glass and the boundaries inside a wall at half (ISO 128-23's narrow line, Table 2's
 //! 1:2). Before, every piece of an opening had the opening's one weight.

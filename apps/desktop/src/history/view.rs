@@ -1,6 +1,6 @@
 //! Komut geçmişi with the calls (docs/adr/0284): the log's lines and the
 //! calls in the order they came; a call is its title, its input in words (a
-//! Mimari command's said as a designer says it, docs/adr/3004), what it wrote
+//! Mimari command's said as a designer says it, docs/adr/8004), what it wrote
 //! or why it wrote nothing, its warnings, and its buttons (Ayrıntı: the
 //! command, its fields and its Python; Python copied, the replay input copied
 //! or saved).
@@ -79,7 +79,7 @@ impl App {
         let size = typography::caption();
         let height = LineHeight::Relative(1.5);
         let row_now = self.row_now(entry);
-        // What a Mimari command did, said without ids; its fields and the command go to Ayrıntı (docs/adr/3004).
+        // What a Mimari command did, said without ids; its fields and the command go to Ayrıntı (docs/adr/8004).
         let said = |command: Option<&str>, input: Option<&serde_json::Value>| -> Option<String> {
             summary::summary(command?, input?, &self.summary_names())
         };
@@ -259,7 +259,7 @@ impl App {
     }
 
     /// What a row's summary names things by: the open drawing's levels, opening types and wall styles, and its
-    /// format (docs/adr/3004).
+    /// format (docs/adr/8004).
     fn summary_names(&self) -> Names<'_> {
         let doc = self.document.as_ref();
         let settings = doc.map(|d| d.model.settings());

@@ -70,13 +70,13 @@ pub struct Window {
     asking: Option<String>,
     /// The project's materials a component may be bound to (docs/adr/0791).
     materials: Vec<ArchMaterial>,
-    /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks (docs/adr/3006).
+    /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks (docs/adr/8006).
     closing: bool,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/3006).
+    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/8006).
     Close,
     Answer(crate::unsaved_close::Answer),
     Choose(Option<String>),
@@ -147,7 +147,7 @@ impl Window {
         self.asking.is_some()
     }
 
-    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/3006).
+    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/8006).
     pub(crate) fn closing(&self) -> bool {
         self.closing
     }
@@ -755,7 +755,7 @@ impl App {
         .searchable(false);
         let top = row![
             container(words::field("Ad", name, None)).width(Fill),
-            // A wall's width is its Kalınlık, as the tool, its panel and Öznitelikler say (docs/adr/3003).
+            // A wall's width is its Kalınlık, as the tool, its panel and Öznitelikler say (docs/adr/8003).
             container(words::field("Kalınlık", width, Some(width_hint))).width(Fill),
             container(words::field("Şematik dolgu", fill, None)).width(Fill),
         ]

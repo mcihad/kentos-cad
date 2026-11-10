@@ -123,7 +123,7 @@ pub fn store_for_viewport(
     }
     // The design options not shown (docs/adr/0788 §4): neither drawn, picked nor snapped to; their walls join
     // nothing and their openings cut nothing. A paper map's phase view hides walls and openings so too
-    // (docs/adr/3039 §2).
+    // (docs/adr/8039 §2).
     let options: Vec<f64> = doc
         .option_out()
         .into_iter()

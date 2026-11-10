@@ -5,7 +5,7 @@ use kentos_native_application::{ExecutionContext,spaces,spaces_create,spaces_edi
 use serde_json::json;
 
 /// The answer without what docs/adr/0722 §5 added (a room's baseboard, its rule's sentence, the totals' baseboard
-/// length, the floor changes) and with its volume's words as they were before docs/adr/3040 §3 named the height the
+/// length, the floor changes) and with its volume's words as they were before docs/adr/8040 §3 named the height the
 /// inside height: the frozen answers predate both, and everything else must stay as it was.
 fn before_0722(mut v: serde_json::Value) -> serde_json::Value {
     const SENTENCE: &str = "; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür";

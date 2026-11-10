@@ -815,13 +815,13 @@ impl SurveySettings {
 }
 
 impl ProjectSettings {
-    /// The share of its own pen a plan at 1:`scale` draws an object with (docs/adr/3013): the project's Mimari line
+    /// The share of its own pen a plan at 1:`scale` draws an object with (docs/adr/8013): the project's Mimari line
     /// groups, else 1.
     pub fn pens_at(&self, scale: f64) -> f64 {
         self.arch.as_ref().map_or(1.0, |a| a.pens_at(scale))
     }
 
-    /// The plan's cut height, metres (docs/adr/3012): the project's Mimari setting, else [`crate::PLAN_CUT_HEIGHT`].
+    /// The plan's cut height, metres (docs/adr/8012): the project's Mimari setting, else [`crate::PLAN_CUT_HEIGHT`].
     pub fn plan_cut(&self) -> f64 {
         self.arch
             .as_ref()

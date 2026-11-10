@@ -387,8 +387,8 @@ impl crate::api::json::Flat for Spec {
 }
 
 /// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper; the
-/// plan's cut height above the floor, metres (docs/adr/3012), which decides what of its openings is cut; and the share
-/// of their own pen the model's lines are drawn with at that scale (docs/adr/3013: the project's line groups, 1 when
+/// plan's cut height above the floor, metres (docs/adr/8012), which decides what of its openings is cut; and the share
+/// of their own pen the model's lines are drawn with at that scale (docs/adr/8013: the project's line groups, 1 when
 /// each object keeps its own).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct View {
@@ -398,7 +398,7 @@ pub struct View {
     pub pens: f64,
 }
 
-/// Beyond 1:`SIMPLE_BEYOND` a schematic view draws the simplest (docs/adr/3010, 3011): a door its leaf, a window its
+/// Beyond 1:`SIMPLE_BEYOND` a schematic view draws the simplest (docs/adr/8010, 8011): a door its leaf, a window its
 /// glass, a stair and a ramp without railings or numbers, a column without its words, a slab's edge its outer line,
 /// furniture its outline. 1:200 is beyond it, 1:100 and 1:150 are not.
 pub const SIMPLE_BEYOND: f64 = 150.0;
@@ -620,7 +620,7 @@ pub fn component_hatch(pattern: &str, size: f64, angle: f64, scale: f64) -> Opti
     })
 }
 
-/// The pattern a wall's layer draws as TS 5319's insulation symbol fitted to its thickness (docs/adr/3014): SN55, one
+/// The pattern a wall's layer draws as TS 5319's insulation symbol fitted to its thickness (docs/adr/8014): SN55, one
 /// zigzag between the layer's two sides, each vee as wide as half the layer is thick, its points on both faces; not a
 /// pattern tiled at a size of its own (Revit's Insulation, Archicad's fills fitted to a skin). Elsewhere (a hatch of its
 /// own) SN55 tiles as the library's rows.
@@ -629,7 +629,7 @@ pub const FITTED_INSULATION: &str = "SN55";
 /// At most this many points in one zigzag: a layer longer than that many vees draws its first ones.
 const ZIGZAG_POINTS: usize = 4000;
 
-/// A layer thinner than this on paper (mm) draws no zigzag (docs/adr/3014): at 1:200 a 5 cm insulation is 0.25 mm and
+/// A layer thinner than this on paper (mm) draws no zigzag (docs/adr/8014): at 1:200 a 5 cm insulation is 0.25 mm and
 /// its vees would be a smudge; at 1:50 it is 1 mm. TS 5319's note: the representation goes by the drawing's scale.
 pub const ZIGZAG_MIN_MM: f64 = 1.0;
 
@@ -672,7 +672,7 @@ fn along(line: &[Vec2], s: f64) -> Option<Vec2> {
     None
 }
 
-/// TS 5319's SN55 between a layer's sides (docs/adr/3014): for each stretch of the first side, points every half its
+/// TS 5319's SN55 between a layer's sides (docs/adr/8014): for each stretch of the first side, points every half its
 /// thickness along it, every other one moved to its foot on the second side; the thickness is measured at the stretch's
 /// middle. None for a stretch with no second side beside it, or thinner than `least`.
 fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
@@ -746,7 +746,7 @@ fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> P
     }
 }
 
-/// A boundary between two materials (docs/adr/3009): ISO 128-23's narrow line (01.1.1), half the wall's pen, unless its
+/// A boundary between two materials (docs/adr/8009): ISO 128-23's narrow line (01.1.1), half the wall's pen, unless its
 /// component's edge gives a weight of its own.
 fn boundary(shape: Shape, edge: Option<&ComponentEdge>) -> Piece {
     let mut p = piece(shape, None, edge);
@@ -873,7 +873,7 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
             let Some(fill) = c.hatch.as_ref().filter(|_| shown(c)) else {
                 continue;
             };
-            // TS 5319's insulation fitted to the layer (docs/adr/3014): a zigzag between its sides, the narrow line.
+            // TS 5319's insulation fitted to the layer (docs/adr/8014): a zigzag between its sides, the narrow line.
             if fill.pattern.eq_ignore_ascii_case(FITTED_INSULATION)
                 && let (Some(first), Some(second)) = (d.lines.get(k), d.lines.get(k + 1))
             {
@@ -1072,7 +1072,7 @@ mod tests {
 
     #[test]
     fn the_faces_take_the_whole_pen_and_the_boundaries_between_materials_half() {
-        // docs/adr/3009: ISO 128-23 draws the outline of what is cut wide (01.2.1) and a boundary between materials
+        // docs/adr/8009: ISO 128-23 draws the outline of what is cut wide (01.2.1) and a boundary between materials
         // narrow (01.1.1), half the wide (Table 2).
         let p = [v(0.0, 0.0), v(5.0, 0.0)];
         let got = pieces(

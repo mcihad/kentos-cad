@@ -239,11 +239,11 @@ pub struct PieceStroke {
     pub pattern: Option<String>,
     pub scale: Option<f64>,
     pub transparency: Option<f64>,
-    /// The line's share of its object's pen (docs/adr/3009): ISO 128-23's narrow line is half its wide one, so a door's
+    /// The line's share of its object's pen (docs/adr/8009): ISO 128-23's narrow line is half its wide one, so a door's
     /// swing, a window's glass and a wall's boundaries between materials are drawn at 0.5 of the object's weight,
     /// whatever gives that weight (its layer, its own, a view's pen). None: the whole pen.
     pub weight_scale: Option<f64>,
-    /// A symbol drawn over its object, as a hatch is (docs/adr/3014: TS 5319's insulation zigzag in a wall's layer):
+    /// A symbol drawn over its object, as a hatch is (docs/adr/8014: TS 5319's insulation zigzag in a wall's layer):
     /// drawn and picked with it, never snapped to. Its corners every few centimetres would take the pointer from the
     /// wall's faces and axis.
     pub symbol: bool,
@@ -288,14 +288,14 @@ pub struct Blocks {
     /// Their variants by block id and values (`Params::key`); emptied when it grows past `MAX_VARIANTS`.
     variants: Arc<Mutex<HashMap<String, Arc<Flat>>>>,
     /// The furniture: definitions whose library card's category is under "Mobilya/", drawn as their outline beyond
-    /// 1:150 schematic (docs/adr/3011, [`outline_pieces`]).
+    /// 1:150 schematic (docs/adr/8011, [`outline_pieces`]).
     furniture: Arc<HashSet<String>>,
 }
 
 /// The library card category furniture is filed under (catalog/v1/blocks: Mobilya/Yatak, Mobilya/Oturma …).
 pub const FURNITURE_CATEGORY: &str = "Mobilya/";
 
-/// A furniture insert's pieces as its simplest view draws them (docs/adr/3011): the closed pieces round the whole, a
+/// A furniture insert's pieces as its simplest view draws them (docs/adr/8011): the closed pieces round the whole, a
 /// bed's frame without its pillows, a sofa's without its cushions; a closed piece is kept when its box is at least half
 /// the pieces' box both ways. Pieces none of which goes round the whole are kept as they are.
 pub fn outline_pieces(pieces: Vec<Piece>, font: crate::text::Font) -> Vec<Piece> {
@@ -366,7 +366,7 @@ impl Blocks {
         }
     }
 
-    /// The same definitions, `ids` the furniture among them (docs/adr/3011).
+    /// The same definitions, `ids` the furniture among them (docs/adr/8011).
     pub fn with_furniture(mut self, ids: impl IntoIterator<Item = String>) -> Blocks {
         self.furniture = Arc::new(ids.into_iter().collect());
         self

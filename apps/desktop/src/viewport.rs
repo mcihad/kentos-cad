@@ -813,7 +813,7 @@ impl Viewport {
                     for &id in &level_looks.faded {
                         p.fade(id);
                     }
-                    // Seen from another level (docs/adr/3012, step 3): the store's look; a change of it builds again.
+                    // Seen from another level (docs/adr/8012, step 3): the store's look; a change of it builds again.
                     for &id in level_looks.upper.iter().chain(&level_looks.overhead) {
                         p.drawn_across(id);
                     }

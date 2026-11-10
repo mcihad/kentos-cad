@@ -258,7 +258,7 @@ pub fn value_start(press: &KeyPress) -> Option<char> {
 /// An option letter of the running command: a letter, upper-cased the Turkish
 /// way (the web's `CommandLine.intercept`). Shift and Caps Lock change nothing:
 /// an option reads its letter in either case, as AutoCAD's do (“You can enter
-/// uppercase or lowercase letters”, docs/adr/3003). Shift+E was Uzat's chord
+/// uppercase or lowercase letters”, docs/adr/8003). Shift+E was Uzat's chord
 /// even while the wall waited for E. Ctrl, Alt and the logo key make a chord.
 pub fn option_letter(press: &KeyPress) -> Option<String> {
     let m = press.modifiers;
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(option_letter(&dotless).as_deref(), Some("I"));
         let i = press(ch("i"), Code::Quote, Modifiers::empty(), Some("i"));
         assert_eq!(option_letter(&i).as_deref(), Some("İ"));
-        // Shift (or Caps Lock) types the same option (docs/adr/3003): Shift+E is the wall's E, not Uzat.
+        // Shift (or Caps Lock) types the same option (docs/adr/8003): Shift+E is the wall's E, not Uzat.
         let shift_e = press(ch("E"), Code::KeyE, Modifiers::SHIFT, Some("E"));
         assert_eq!(option_letter(&shift_e).as_deref(), Some("E"));
         let shift_i = press(ch("İ"), Code::Quote, Modifiers::SHIFT, Some("İ"));

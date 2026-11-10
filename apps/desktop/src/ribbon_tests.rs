@@ -399,7 +399,7 @@ fn tip_screens() {
     save(&mut snapshot, &app, "3-menu");
 }
 
-/// A drop-down's rows do not say its name again (docs/adr/3039 §0): under Tadilat ▾ “Mevcut durum”, not “Tadilat:
+/// A drop-down's rows do not say its name again (docs/adr/8039 §0): under Tadilat ▾ “Mevcut durum”, not “Tadilat:
 /// Mevcut durum”; the same under Kat görünümü ▾. The words that are left are never empty, and a title that only
 /// starts with the name's letters keeps them.
 #[test]

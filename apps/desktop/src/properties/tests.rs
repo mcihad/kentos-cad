@@ -1308,9 +1308,9 @@ fn a_revolving_doors_drum_and_a_pocket_doors_lip_are_written_from_the_rows() {
     assert_eq!(fields(&app).build.and_then(|b| b.lip), Some(0.03), "{:?}", warned(&app));
 }
 
-// ── docs/adr/3039: an opening's own phase ─────────────────────────────
+// ── docs/adr/8039: an opening's own phase ─────────────────────────────
 
-/// A door's or window's own phase (docs/adr/3039 §1): Tadilat durumu ▾ says its wall's while it has none (“Duvarınki
+/// A door's or window's own phase (docs/adr/8039 §1): Tadilat durumu ▾ says its wall's while it has none (“Duvarınki
 /// (Mevcut)”), picked writes its own through `cad.openings.edit` in one step (İptal: its hole closed up, Mimarlar
 /// Odası's word), and Duvarınki gives it its wall's again.
 #[test]
@@ -4027,7 +4027,7 @@ fn a_selection_past_the_limit_shows_its_size_and_no_editors() {
     assert!(rows(&app).iter().all(|(t, _)| t != "Büyük seçim"));
 }
 
-/// A building element's own section comes first, named for it, its main rows at its top (docs/adr/3005, plan S18): a
+/// A building element's own section comes first, named for it, its main rows at its top (docs/adr/8005, plan S18): a
 /// wall's Kalınlık was under the eight rows every object has and its own joins.
 #[test]
 fn a_walls_own_section_comes_first_with_its_main_rows_on_top() {
@@ -4047,7 +4047,7 @@ fn a_walls_own_section_comes_first_with_its_main_rows_on_top() {
     assert!(line > 1);
 }
 
-/// A wall without a height of its own (docs/adr/3040 §1): its Yükseklik says where its height comes from and the
+/// A wall without a height of its own (docs/adr/8040 §1): its Yükseklik says where its height comes from and the
 /// number: its storey's, else under the slab over it; a slab of the storey above drawn, 15 cm thick, it is 2.850.
 #[test]
 fn a_wall_s_height_row_says_it_stops_under_the_slab_over_it() {
@@ -4111,7 +4111,7 @@ fn noted(app: &App, label: &str) -> (String, Option<String>) {
     )
 }
 
-/// A room's floor, asma tavan and inside height (docs/adr/3040 §3): under the 1. kat's Ara kat slab the ground storey's
+/// A room's floor, asma tavan and inside height (docs/adr/8040 §3): under the 1. kat's Ara kat slab the ground storey's
 /// room is 2.76 to the slab's plaster; 2 cm lower, 2.78; an asma tavan at 2.50 is its inside height, and what is typed
 /// as its inside height then moves the asma tavan; taken away, the slab again.
 #[test]
@@ -4202,7 +4202,7 @@ fn a_room_s_floor_asma_tavan_and_inside_height_are_its_rows() {
     assert_eq!(noted(&app, "İç yükseklik").0, "2.760");
 }
 
-/// A slab's layers (docs/adr/3040 §2): Katmanlar picks a build-up whole (Ara kat döşemesi: kaplama 2, şap 5 over the
+/// A slab's layers (docs/adr/8040 §2): Katmanlar picks a build-up whole (Ara kat döşemesi: kaplama 2, şap 5 over the
 /// concrete, sıva 2 under), each layer's thickness is typed in its row, 0 takes it away; Toplam kalınlık adds them.
 #[test]
 fn a_slab_s_layers_are_picked_whole_and_typed_one_by_one() {

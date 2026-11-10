@@ -592,7 +592,7 @@ fn content_keyboard_cycle_and_visible_choice_end_template_prompt() {
             "Döşeme kotu",
             "Tavan kotu",
             "Açıklık ve boyut",
-            // Mimarlar Odası's door and window tag (docs/adr/3028).
+            // Mimarlar Odası's door and window tag (docs/adr/8028).
             "Doğrama kodu ve ölçü",
             if tool == "tag" {
                 "Türe göre"

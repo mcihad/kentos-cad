@@ -1,4 +1,4 @@
-# M20 (docs/adr/3020): the snap marker in a building's words, in the real window, on malzeme.kcad (headless
+# M20 (docs/adr/8020): the snap marker in a building's words, in the real window, on malzeme.kcad (headless
 # scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text. A room (Duvar ▾ › Dikdörtgen duvar) and a partition
 # in it (Duvar ▾ › Duvar) are drawn; Duvar again, the pointer on the partition's face's middle ("Orta nokta · Duvar
 # yüzü") and its end ("Uç nokta · Duvar yüzü").

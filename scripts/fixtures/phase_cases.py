@@ -5,7 +5,7 @@ Writes fixtures/arch/v1/phases.json; `--check` compares and writes nothing.
 
 - The table: in Tümü every phase as it is; Mevcut durum: existing and demolish as they are, new and temporary hidden;
   Yıkım planı: existing as it is, demolish dashed, new and temporary hidden; Yeni durum: existing faded, demolish
-  hidden, new as it is, temporary dashed; Tadilat projesi (docs/adr/3039 §5): existing and new as they are (the store
+  hidden, new as it is, temporary dashed; Tadilat projesi (docs/adr/8039 §5): existing and new as they are (the store
   hatches new), demolish and temporary dashed. An object without a phase is as it is in every view.
 - A look on an object: hidden, it is not drawn; dashed, its own line type `dashed` and no line pattern of its own;
   faded, its own transparency 0.6, or its own when that is more.

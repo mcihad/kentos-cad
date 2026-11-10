@@ -1,4 +1,4 @@
-//! Mahal adları (docs/adr/3033, 3036): a room's kind by its name or use, as the regulations read rooms — the wet rooms,
+//! Mahal adları (docs/adr/8033, 8036): a room's kind by its name or use, as the regulations read rooms — the wet rooms,
 //! the kitchen, the passages, the living room and the bedrooms; a unit's nature a dwelling's or not; a stair's room.
 //! One reading for Mimari denetim's Mevzuat group, the escape routes and the parking and shelter tables.
 
@@ -96,7 +96,7 @@ pub fn kind_of(name: Option<&str>, usage: Option<&str>) -> Option<RoomKind> {
     }
 }
 
-/// The words a room people pass through is called by (geçiş mahalleri, docs/adr/3028): a door between one and a room is
+/// The words a room people pass through is called by (geçiş mahalleri, docs/adr/8028): a door between one and a room is
 /// the room's.
 const PASSAGES: [&str; 7] = [
     "KORIDOR", "HOL", "ANTRE", "GIRIS", "SAHANLIK", "MERDIVEN", "GECIT",
@@ -110,7 +110,7 @@ pub fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
         .any(|w| PASSAGES.contains(&w.as_str()))
 }
 
-/// Whether a unit's nature is a dwelling's (Daire, Mesken, Konut, Ev) or not given (docs/adr/3033).
+/// Whether a unit's nature is a dwelling's (Daire, Mesken, Konut, Ev) or not given (docs/adr/8033).
 pub fn dwelling_nature(nature: Option<&str>) -> bool {
     nature.is_none_or(|n| {
         let n = fold(n);
@@ -136,7 +136,7 @@ pub fn stair_name(name: Option<&str>, usage: Option<&str>) -> bool {
     })
 }
 
-/// Which of PAİY 28's inside heights a room's name or use asks (docs/adr/3040 §3).
+/// Which of PAİY 28's inside heights a room's name or use asks (docs/adr/8040 §3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HeightClass {
     /// An inhabited room (28/4): 2.60 m.

@@ -1,4 +1,4 @@
-//! Grafik doğrama listesi (docs/adr/3038 §6; M38): the drawing's door and window types side by side, each with its
+//! Grafik doğrama listesi (docs/adr/8038 §6; M38): the drawing's door and window types side by side, each with its
 //! joinery code, its elevation as Türkiye draws one (the opening lines start at the hinge side's corners and meet at
 //! the middle of the handle side: İTÜ MIM 244, *Mimari Teknik Çizim İlkeleri* Şekil 1b; the British convention is the
 //! other way round), its rough size (90/210), its sill height, how it opens, its frame and leaves, its U value and how
@@ -401,7 +401,7 @@ impl Document {
         rows
     }
 
-    /// The joinery list's block as the drawing's types give it (docs/adr/3038 §6): its top left at its base point,
+    /// The joinery list's block as the drawing's types give it (docs/adr/8038 §6): its top left at its base point,
     /// bands of six types one under another.
     pub fn joinery_list_block(&self) -> BlockDefinition {
         let rows = self.joinery_rows();
@@ -548,7 +548,7 @@ impl Document {
         }
     }
 
-    /// The joinery list after `ops` (docs/adr/3038 §6), applied: when the drawing keeps the list and the step changed a
+    /// The joinery list after `ops` (docs/adr/8038 §6), applied: when the drawing keeps the list and the step changed a
     /// type or an opening, the list's block written again in the step.
     pub(crate) fn follow_joinery(&mut self, ops: &[Op]) -> Vec<Op> {
         let touched = ops.iter().any(|op| match op {

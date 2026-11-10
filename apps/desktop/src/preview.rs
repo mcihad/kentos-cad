@@ -34,7 +34,7 @@ pub struct FieldView<'a> {
     pub token: u64,
     pub at: Vec2,
     pub hint: String,
-    /// Uzunluk, Açı or Semt, Sapma: the lock the number is for; a tool's setting (Kalınlık, Hiza, docs/adr/3018);
+    /// Uzunluk, Açı or Semt, Sapma: the lock the number is for; a tool's setting (Kalınlık, Hiza, docs/adr/8018);
     /// none for a point.
     pub label: Option<&'a str>,
     /// The locks held, as the chips say them; the first is the length's when `length_first`.

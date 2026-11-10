@@ -1,4 +1,4 @@
-# M33 (docs/adr/3033): Mimari › Denetim on the acceptance apartment in the real window at 1440 × 900: the Mevzuat group
+# M33 (docs/adr/8033): Mimari › Denetim on the acceptance apartment in the real window at 1440 × 900: the Mevzuat group
 # says its doors are narrower than PAİY 39/1 asks since 13.8.2025 (0.76 m clear at the 90 doors, 0.86 m at the entrance).
 fit KentOS Mimari — Daire
 wait 3000

@@ -1,4 +1,4 @@
-//! Esc on the wall chain (docs/adr/3001): the segments already drawn are kept as Enter keeps them and the tool stays
+//! Esc on the wall chain (docs/adr/8001): the segments already drawn are kept as Enter keeps them and the tool stays
 //! for the next chain, as Revit's first Esc ends a chain and AutoCAD keeps what was drawn; the next Esc leaves. Before
 //! this, Esc dropped every segment without a word. The expected walls are the points the hand gave, never a tool run.
 

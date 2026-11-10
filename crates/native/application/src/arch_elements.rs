@@ -1,4 +1,4 @@
-//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create`, `cad.ramps.create` and `cad.beams.create` (docs/adr/3041
+//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create`, `cad.ramps.create` and `cad.beams.create` (docs/adr/8041
 //! §1) v1 (docs/adr/0343 §4, plan/cad.md
 //! `CAD-ARCH-31`–`36`): grids, columns, stairs and ramps on a named layer, each call one undo step named for its kind
 //! (“Aks”, “Kolon”, “Merdiven”, “Rampa”). The tools preview the plan's objects and write through `execute`; Python and
@@ -40,7 +40,7 @@ pub const GRID_STEP: &str = "Aks";
 pub const COLUMN_STEP: &str = "Kolon";
 pub const STAIR_STEP: &str = "Merdiven";
 pub const RAMP_STEP: &str = "Rampa";
-/// A beam's undo step (docs/adr/3041 §1).
+/// A beam's undo step (docs/adr/8041 §1).
 pub const BEAM_STEP: &str = "Kiriş";
 
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
@@ -1343,12 +1343,12 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
     )
 }
 
-/// A lintel's height when its tool is not told (docs/adr/3041 §3): 20 cm, over TBDY 2018 11.5.3's least 150 mm.
+/// A lintel's height when its tool is not told (docs/adr/8041 §3): 20 cm, over TBDY 2018 11.5.3's least 150 mm.
 pub const LINTEL_HEIGHT: f64 = 0.20;
-/// How far a lintel sits on the wall beyond each jamb (docs/adr/3041 §3): TBDY 2018 11.5.3's least, 200 mm.
+/// How far a lintel sits on the wall beyond each jamb (docs/adr/8041 §3): TBDY 2018 11.5.3's least, 200 mm.
 pub const LINTEL_BEARING: f64 = 0.20;
 
-/// A lintel over opening `o` (docs/adr/3041 §3): on its wall's axis across its jambs and `bearing` beyond each, as wide
+/// A lintel over opening `o` (docs/adr/8041 §3): on its wall's axis across its jambs and `bearing` beyond each, as wide
 /// as the wall is thick at its jambs, `height` high, its underside at the opening's head over its storey's floor (its
 /// own, else a door's 2.10 and a window's 2.20, the joinery list's), on its wall's level. None for an opening without
 /// its jambs (broken) or a host.
@@ -1401,7 +1401,7 @@ pub fn lintel_over(
     })
 }
 
-/// `cad.beams.create`'s check (docs/adr/3041 §1): each beam's numbers, its fields, its level.
+/// `cad.beams.create`'s check (docs/adr/8041 §1): each beam's numbers, its fields, its level.
 fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<Checked, Stop> {
     if input.beams.is_empty() {
         return Err(fail(

@@ -199,7 +199,7 @@ pub(super) fn faces_of(
     Ok(usage_of(&lists(book, inputs, sheets)?, inputs)?.faces())
 }
 
-/// A CMYK JPEG in an archival file (docs/adr/3037): its colours have no profile there (PDF/A-2 6.2.4.3).
+/// A CMYK JPEG in an archival file (docs/adr/8037): its colours have no profile there (PDF/A-2 6.2.4.3).
 fn cmyk_refused(p: &Picture, pdfa: bool, what: &str) -> Result<()> {
     if pdfa && matches!(p.kind, PictureKind::Jpeg { components: 4, .. }) {
         return Err(SheetError::at(
@@ -645,7 +645,7 @@ pub(super) fn document_audited(
         .kids(page_refs.iter().copied())
         .count(page_refs.len() as i32);
 
-    // An archival file's metadata and output profile (docs/adr/3037), among the objects its id is the digest of.
+    // An archival file's metadata and output profile (docs/adr/8037), among the objects its id is the digest of.
     let meta = meta_of(book, inputs, sheets);
     let described = super::archive::Described {
         title: meta.title.clone(),

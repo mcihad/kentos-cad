@@ -33,6 +33,6 @@ rampArea?: number, rampRailingLength?: number,
  */
 stairArea?: number, stairRailingLength?: number, stairRisers?: number, 
 /**
- * The beams', lintels' and bond beams' concrete (docs/adr/3041 §3).
+ * The beams', lintels' and bond beams' concrete (docs/adr/8041 §3).
  */
 beamVolume?: number, };

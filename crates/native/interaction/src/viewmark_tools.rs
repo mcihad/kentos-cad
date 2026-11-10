@@ -184,7 +184,7 @@ impl ViewMarkTool {
             }
         }
         Some(ViewMarksCreate {
-            // The symbols' layer (docs/adr/3008).
+            // The symbols' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Symbol, cx),
             marks: vec![NewViewMark {
                 form: self.form,

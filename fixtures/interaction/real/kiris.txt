@@ -1,4 +1,4 @@
-# M41 1. bölüm (docs/adr/3041 §1): the two-storey building with its rooms and the 1. kat's Ara kat slab. The wall between
+# M41 1. bölüm (docs/adr/8041 §1): the two-storey building with its rooms and the 1. kat's Ara kat slab. The wall between
 # Salon and Merdiven holü first stops under the slab (2.780). Mimari › Kiriş with Numara K101: a beam over that wall, one
 # over the next wall (K102) and one across the Salon (K103), each dashed with "K10n 25/50" beside it. K103 selected:
 # Üst kot 2.930, Alt kot 2.430. The wall under K101 now stops under it: 2.430, "Kirişin altına kadar".

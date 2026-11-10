@@ -15,7 +15,7 @@ natively and through WASM: `hatchPatterns`, `hatchPaints`,
 - Library (§2): the patterns' families in paper millimetres, unturned; e is
   1/8 inch (3.175 mm); a 45° line through (k·e·√2, 0) lies k·e under the one
   through the origin. ISO 128's line types (W100: d = 1 mm) as horizontal
-  families 5 mm apart. TS 5319's symbols (docs/adr/3014) after its figure, in
+  families 5 mm apart. TS 5319's symbols (docs/adr/8014) after its figure, in
   millimetres; SN55 tiled as zigzag rows h = 2 high with vees p = 2 wide, a
   row h apart: its rising sides at atan2(h, p/2) through the origin and its
   falling sides at the negative angle through (p/2, h), each line's next
@@ -120,7 +120,7 @@ def library():
 
 
 def ts_symbols():
-    """TS 5319's SN symbols (docs/adr/3014), written from the ADR."""
+    """TS 5319's SN symbols (docs/adr/8014), written from the ADR."""
     ts = lambda name, d, lines: {"name": name, "group": "ts", "description": d, "lines": lines}
     mm = lambda d: (d * math.sqrt(2.0), 0.0)
     h, p = 2.0, 2.0

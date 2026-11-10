@@ -1,9 +1,9 @@
-//! Hesap tabloları (docs/adr/3037 §3; M37): the calculation tables a permit set's “Mimari hesap raporu” sheet shows
+//! Hesap tabloları (docs/adr/8037 §3; M37): the calculation tables a permit set's “Mimari hesap raporu” sheet shows
 //! (Planlı Alanlar İmar Yönetmeliği 57(2)(a); the digital project regulation's EK-2 2.8.1: TAKS, emsal, otopark,
 //! sığınak … hesapları): Metrekare cetveli, Emsal ve TAKS, Kat irtifakı, Otopark and Sığınak hesabı. The drawing's own
 //! live table of each is taken as it is; one it lacks is made beside the drawing, under the others, at the plot
-//! scale's table height (the same tables Metraj ▾ places by hand, docs/adr/3029–3031, 3036). The room list (Mahal
-//! listesi, docs/adr/3038) is found and made the same way; it is a sheet of its own (EK-2 LS/MHL).
+//! scale's table height (the same tables Metraj ▾ places by hand, docs/adr/8029–8031, 8036). The room list (Mahal
+//! listesi, docs/adr/8038) is found and made the same way; it is a sheet of its own (EK-2 LS/MHL).
 
 use kentos_commands::{
     CommandResult, EntitiesCreate, Entity, NewObject, ScheduleColumn, ScheduleField,
@@ -54,7 +54,7 @@ fn kind_of(source: &TableSource) -> Option<Kind> {
     }
 }
 
-/// The drawing's table of `kind`, the last made; the joinery list's insert (docs/adr/3038 §6).
+/// The drawing's table of `kind`, the last made; the joinery list's insert (docs/adr/8038 §6).
 fn found(doc: &Document, kind: Kind) -> Option<[f64; 4]> {
     if kind == Kind::JoineryList {
         return doc
@@ -234,7 +234,7 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
     let wanted = [
         // The room list first (MO: mahal listesi before the parking calculation); a sheet of its own.
         (Kind::RoomList, "Mahal listesi", rooms),
-        // The joinery list (docs/adr/3038 §6): a sheet of its own at 1/50.
+        // The joinery list (docs/adr/8038 §6): a sheet of its own at 1/50.
         (Kind::JoineryList, "Doğrama listesi", joinery),
         (Kind::Areas, "Metrekare cetveli", rooms),
         (Kind::Zoning, "Emsal ve TAKS", zoning),

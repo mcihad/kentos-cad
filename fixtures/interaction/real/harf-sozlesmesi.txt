@@ -1,4 +1,4 @@
-# M4: harf sözleşmesi ve terimler (docs/adr/3003). Duvar çizerken imleç Açı; Shift+E duvarın Kalınlık'ı; seçeneği
+# M4: harf sözleşmesi ve terimler (docs/adr/8003). Duvar çizerken imleç Açı; Shift+E duvarın Kalınlık'ı; seçeneği
 # olmayan harf (l: Çizgi) duvarı bırakmaz; merdivende e Genişlik; mahal ve kapının istem ve panel adları; duvarın
 # Öznitelikleri.
 # Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/harf-sozlesmesi.txt .run/gui-evidence/mimari-m4/sonra --modul mimari

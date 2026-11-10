@@ -5,7 +5,7 @@
 //! - Its frame round the words with a pad of `PAD × h`: a circle round their box, a hexagon (the box with a point each
 //!   side as deep as half its height times tan 30°), a rectangle, a rectangle with quarter-circle corners of half its
 //!   lesser half-size, or none. Words that are empty still have a frame as wide as `h`, so the tag can be seen and picked.
-//! - An ellipse (docs/adr/3027; Mimarlar Odası: "numara elips içinde yazılır") rounds the first line only, through its
+//! - An ellipse (docs/adr/8027; Mimarlar Odası: "numara elips içinde yazılır") rounds the first line only, through its
 //!   padded box's corners (its half axes √2 × (half the line's width + pad) and √2 × (h / 2 + pad)); the lines under it
 //!   go down far enough to clear it by `0.2 h` (`ELLIPSE_GAP`): a room's number in its ellipse, its name and area below.
 //! - Its leader: from where the line to the point it ties to leaves the frame (a frameless tag's box) to that point;

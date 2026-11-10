@@ -98,7 +98,7 @@ type ScaledKey = (
     kentos_sheet::units::Mdeg,
     // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
     Option<(u64, u64, i32, i32)>,
-    // A map showing a phase other than the drawing's (docs/adr/3039 §2).
+    // A map showing a phase other than the drawing's (docs/adr/8039 §2).
     Option<kentos_commands::PhaseView>,
 );
 
@@ -183,7 +183,7 @@ impl SheetMaps {
         let scale = view.scale;
         let annotation = view.annotation_denominator();
         // A map showing a phase other than the drawing's joins and cuts its walls as that phase stands
-        // (docs/adr/3039 §2).
+        // (docs/adr/8039 §2).
         let drawn = drawing
             .model
             .settings()
@@ -207,7 +207,7 @@ impl SheetMaps {
             unscoped,
             main.ghost_total(),
             // A level's plan showing the stairs under it from above (docs/adr/0724 §4) or the slabs over it dashed
-            // (docs/adr/3012, step 3).
+            // (docs/adr/8012, step 3).
             level
                 .filter(|l| kentos_plot::layers::shows_from_above(&drawing.model, l))
                 .map(|l| (l.id.clone(), l.below)),
@@ -1521,7 +1521,7 @@ impl App {
                 date: kentos_sheet_ui::text::today(),
                 crs_name: crs.clone().unwrap_or_default(),
                 // The drawing's own variables, read after the book's (docs/adr/0214 §2.3), and what the drawing says
-                // of itself for a title block (docs/adr/3037), read once a change of the drawing.
+                // of itself for a title block (docs/adr/8037), read once a change of the drawing.
                 variables: doc.map_or_else(Vec::new, |d| {
                     let key = Some((d.session, d.model.generation()));
                     let mut cached = self.sheet_drawing_variables.borrow_mut();
@@ -2295,7 +2295,7 @@ mod tests {
         assert_eq!(spatial.ghost_total(), 1);
     }
 
-    /// docs/adr/3039 §2: a map on the screen showing a phase other than the drawing's draws from a copy whose walls
+    /// docs/adr/8039 §2: a map on the screen showing a phase other than the drawing's draws from a copy whose walls
     /// are cut as that phase stands; the drawing (Mevcut durum: the window's hole, not the new door's) stays as it is.
     #[test]
     fn a_map_with_its_own_phase_draws_a_copy_cut_as_it_stands() {

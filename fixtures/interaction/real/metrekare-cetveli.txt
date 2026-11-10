@@ -1,4 +1,4 @@
-# M29 part 2 (docs/adr/3029): Metrekare cetveli in the real window, on the two-storey building paiy_area_tests keeps
+# M29 part 2 (docs/adr/8029): Metrekare cetveli in the real window, on the two-storey building paiy_area_tests keeps
 # (`KENTOS_PAIY_OUT`): each storey 15 × 6 m, two units and the stair hall, one common area on both storeys; on Mimari at
 # 1440 × 900. Metraj ▾ shows the new item; Metrekare cetveli lists each storey's units and common area with their
 # regulation gross and net, the total the building's.

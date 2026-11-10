@@ -1,4 +1,4 @@
-//! Kiriş (docs/adr/3041 §1, §3): a beam, a lintel or a bond beam, its Tür (T).
+//! Kiriş (docs/adr/8041 §1, §3): a beam, a lintel or a bond beam, its Tür (T).
 //!
 //! - Kiriş: its axis clicked point by point, its band previewed as the plan will draw it; Enter or a quick right click
 //!   writes it. 25/50 centred until changed: TBDY 2018 7.4.1.1's least web is 25 cm, a usual depth 50.
@@ -7,7 +7,7 @@
 //! - Lento: a door or a window clicked, a lintel over it: as wide as its wall, its Oturma beyond each jamb (TBDY 2018
 //!   11.5.3: at least 20 cm), its Yükseklik high (at least 15 cm; 20 until changed), at the opening's head.
 //!
-//! Each on Etkin kat, on its EK-4 layer (MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL; docs/adr/3008), its number from
+//! Each on Etkin kat, on its EK-4 layer (MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL; docs/adr/8008), its number from
 //! Numara and the next the next one (K101 → K102).
 
 use kentos_commands::{BeamRole, BeamsCreate, Entity, NewBeam, WallJustify};
@@ -146,7 +146,7 @@ impl BeamTool {
         }
     }
 
-    /// A lintel over the opening `slot` (docs/adr/3041 §3); none for another object or an opening it cannot sit on.
+    /// A lintel over the opening `slot` (docs/adr/8041 §3); none for another object or an opening it cannot sit on.
     fn lintel(&self, slot: Slot, cx: &Context<'_>) -> Option<NewBeam> {
         let Some(Entity::Opening(o)) = cx.doc.get(slot) else {
             return None;
@@ -225,7 +225,7 @@ impl BeamTool {
         }
     }
 
-    /// Writes `beam` on its layer, opened with it when missing (docs/adr/3008); says what it wrote.
+    /// Writes `beam` on its layer, opened with it when missing (docs/adr/8008); says what it wrote.
     fn write(&mut self, beam: NewBeam, cx: &mut Context<'_>) {
         let size = kentos_commands::BeamFields {
             width: beam.width,

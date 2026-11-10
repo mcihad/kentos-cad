@@ -172,12 +172,12 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
             annotation: o.annotation.clone(),
             // A local drawing has no heights' system: they rest on nothing but itself.
             heights: o.heights.clone().filter(|_| !crs.is_local()),
-            // A building's project starts on its ground floor (docs/adr/3007): the first wall has a level.
+            // A building's project starts on its ground floor (docs/adr/8007): the first wall has a level.
             arch: (cad && o.cad_work == Some(CadWork::Architecture)).then(|| ArchSettings {
                 levels: vec![ground_floor()],
-                // Plan cut 1.20 m over the floor (docs/adr/3012; İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
+                // Plan cut 1.20 m over the floor (docs/adr/8012; İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
                 cut_height: Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT),
-                // Its lines by the scale's line group (docs/adr/3013; TS 88-23 / ISO 128-23 Tablo 2).
+                // Its lines by the scale's line group (docs/adr/8013; TS 88-23 / ISO 128-23 Tablo 2).
                 line_groups: Some(kentos_contracts::LineGroups::ByScale),
                 ..ArchSettings::default()
             }),
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn a_mimari_project_starts_on_its_ground_floor_and_no_other_work_has_levels() {
-        // docs/adr/3007: the first wall of a new building had no level.
+        // docs/adr/8007: the first wall of a new building had no level.
         let made = |cad_work: Option<CadWork>| {
             new_project(&NewProject {
                 name: "Konut".into(),
@@ -622,12 +622,12 @@ mod tests {
         };
         let arch = made(Some(CadWork::Architecture)).expect("a building's settings");
         assert_eq!(arch.levels, vec![ground_floor()]);
-        // Its plan cut 1.20 m over the floor (docs/adr/3012).
+        // Its plan cut 1.20 m over the floor (docs/adr/8012).
         assert_eq!(
             arch.cut_height,
             Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT)
         );
-        // And its lines by the scale (docs/adr/3013).
+        // And its lines by the scale (docs/adr/8013).
         assert_eq!(
             arch.line_groups,
             Some(kentos_contracts::LineGroups::ByScale)

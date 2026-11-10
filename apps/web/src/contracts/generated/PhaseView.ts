@@ -2,6 +2,6 @@
 
 /**
  * Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;
- * Tadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.
+ * Tadilat projesi (docs/adr/8039 §5) every state with Mimarlar Odası's three techniques.
  */
 export type PhaseView = "all" | "existing" | "demolition" | "proposed" | "renovation";

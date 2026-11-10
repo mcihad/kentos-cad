@@ -214,7 +214,7 @@ pub(crate) fn changed(
     n.head = f.head;
     n.depth = f.depth;
     n.build = f.build;
-    // The type's own: its frame and leaves and its U value (docs/adr/3038); the openings do not keep them.
+    // The type's own: its frame and leaves and its U value (docs/adr/8038); the openings do not keep them.
     if let Some(m) = &c.material {
         n.material = m
             .as_ref()

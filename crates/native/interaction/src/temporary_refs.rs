@@ -86,7 +86,7 @@ pub enum Switch {
         bond: Option<Uuid>,
     },
     /// A wall's clear distance written as a permanent dimension from `from` (on the wall's face) to `to` (on the face
-    /// it meets), each end bound to its face: it follows the walls (docs/adr/3019; Revit's “make this temporary
+    /// it meets), each end bound to its face: it follows the walls (docs/adr/8019; Revit's “make this temporary
     /// dimension permanent”). Written, not a session choice.
     Permanent { from: Vec2, to: Vec2 },
 }

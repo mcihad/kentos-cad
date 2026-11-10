@@ -27,7 +27,7 @@ pub struct Discover {
 impl Discover {
     fn request(&self, cx: &Context<'_>) -> SpacesDiscover {
         SpacesDiscover {
-            // The spaces' layer (docs/adr/3008).
+            // The spaces' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Space, cx),
             sources: self.sources.sources(),
             scope: Some(self.level.scope()),

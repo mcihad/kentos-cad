@@ -50,12 +50,12 @@ pub struct Field {
     pub at: Vec2,
     /// What the text is: a point, or a lock's value (docs/adr/0166 §6).
     pub mode: Option<LockAsk>,
-    /// A setting of the running tool the text writes instead (docs/adr/3018): Duvar's Kalınlık or Hiza, after the
+    /// A setting of the running tool the text writes instead (docs/adr/8018): Duvar's Kalınlık or Hiza, after the
     /// locks in Tab's order.
     pub setting: Option<FieldSetting>,
 }
 
-/// The running tool's setting the value field writes (docs/adr/3018), as the tool's settings pane shows it.
+/// The running tool's setting the value field writes (docs/adr/8018), as the tool's settings pane shows it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldSetting {
     pub key: &'static str,
@@ -64,7 +64,7 @@ pub struct FieldSetting {
     pub value: String,
     /// A choice's words (Sol, Orta, Sağ); none for a value typed.
     pub choices: Vec<String>,
-    /// The choices offered, any text taken too (a room's name, docs/adr/3021).
+    /// The choices offered, any text taken too (a room's name, docs/adr/8021).
     pub open: bool,
 }
 
@@ -949,7 +949,7 @@ impl App {
             return Task::none();
         }
         // 3. ↓ over the drawing: the value field opens on the running tool's first setting beside the cursor
-        // (docs/adr/3018), as AutoCAD's dynamic input shows a command's options; a room's sizes or Duvar's Hiza are
+        // (docs/adr/8018), as AutoCAD's dynamic input shows a command's options; a room's sizes or Duvar's Hiza are
         // typed without a click. Tab stays the snap candidates' (there is nearly always one: the grid's).
         if press.named() == Some(Named::ArrowDown)
             && !press.modifiers.control()
@@ -988,7 +988,7 @@ impl App {
             if press.repeat {
                 return Task::none();
             }
-            // A letter that is not the running command's option does not end it (docs/adr/3003).
+            // A letter that is not the running command's option does not end it (docs/adr/8003).
             if let Some(why) = self.letter_keeps_command(&press, &chord, id) {
                 self.warn(why);
                 return Task::none();
@@ -1014,7 +1014,7 @@ impl App {
         }
     }
 
-    /// Why a letter's shortcut does not start its tool now (docs/adr/3003): a command runs, the letter is not one
+    /// Why a letter's shortcut does not start its tool now (docs/adr/8003): a command runs, the letter is not one
     /// of its options (those come first, step 3) and the tool would end it, losing its points, the wall chain or the
     /// stair taken so far. AutoCAD reads letters typed during a command as the command's input and never starts
     /// another one by them; a KentOS letter did, so E pressed for a stair's width (G then) started Esnet. The
@@ -1062,7 +1062,7 @@ impl App {
                     field.text.pop();
                 }
             }
-            // Tab never loses the typed value: it locks it (docs/adr/0166 §6), or writes a setting (docs/adr/3018).
+            // Tab never loses the typed value: it locks it (docs/adr/0166 §6), or writes a setting (docs/adr/8018).
             Some(Named::Tab) => self.tab_field(),
             // A choice's setting: the next or the one before, written at once (Hiza: Sol, Orta, Sağ).
             Some(named @ (Named::ArrowUp | Named::ArrowDown))
@@ -1177,7 +1177,7 @@ impl App {
             return;
         };
         let text = js_trim(&field.text).to_owned();
-        // A setting's field (docs/adr/3018): what was typed is written, then the next setting; after the last the
+        // A setting's field (docs/adr/8018): what was typed is written, then the next setting; after the last the
         // length again while a lock holds, else the point.
         if let Some(setting) = field.setting {
             if !self.apply_setting(&setting, &text) {
@@ -1225,7 +1225,7 @@ impl App {
                 }
             }
             Some(mode) => {
-                // A direction, locked or left empty: the tool's settings come next (docs/adr/3018). Any field left
+                // A direction, locked or left empty: the tool's settings come next (docs/adr/8018). Any field left
                 // empty is passed over, nothing locked: Tab goes round the fields as AutoCAD's dynamic input does.
                 let direction = matches!(mode, LockAsk::Angle | LockAsk::Deflection);
                 if !text.is_empty() && !self.lock_typed(mode, &text) {
@@ -1255,7 +1255,7 @@ impl App {
         }
     }
 
-    /// The running tool's settings the value field offers after its locks (docs/adr/3018).
+    /// The running tool's settings the value field offers after its locks (docs/adr/8018).
     pub(crate) fn field_settings(&self) -> Vec<FieldSetting> {
         self.session
             .cursor_settings(&self.format())
@@ -1324,7 +1324,7 @@ impl App {
             };
             match found.as_slice() {
                 [one] => (*one).clone(),
-                // An open choice takes what was typed (a room's name, docs/adr/3021).
+                // An open choice takes what was typed (a room's name, docs/adr/8021).
                 [] if setting.open => text.to_owned(),
                 [] => {
                     self.warn(format!(
@@ -1462,7 +1462,7 @@ impl App {
         };
         let text = js_trim(&field.text).to_owned();
         self.refresh_value_preview();
-        // A setting's field (docs/adr/3018): Enter writes it and the field goes; the pointer goes on drawing.
+        // A setting's field (docs/adr/8018): Enter writes it and the field goes; the pointer goes on drawing.
         if let Some(setting) = field.setting.clone() {
             if !self.apply_setting(&setting, &text) {
                 self.field = Some(field);
@@ -1976,7 +1976,7 @@ mod value_field_tests {
     }
 }
 
-/// The running tool's settings in the value field after its locks (docs/adr/3018): Duvar's Kalınlık and Hiza, Tab
+/// The running tool's settings in the value field after its locks (docs/adr/8018): Duvar's Kalınlık and Hiza, Tab
 /// from one to the next, Enter writing and closing, a choice by the start of its word or the arrows.
 #[cfg(test)]
 mod cursor_settings_tests {

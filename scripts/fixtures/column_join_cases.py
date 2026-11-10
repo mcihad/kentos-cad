@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""A column in the walls it stands in (docs/adr/3041 §2), from the ADR's rules, in exact fractions, without KentOS code.
+"""A column in the walls it stands in (docs/adr/8041 §2), from the ADR's rules, in exact fractions, without KentOS code.
 
 Writes fixtures/walls/v1/column-joins.json; `--check` compares and writes nothing. The shared core's test
 (`kentos-geometry-core`, tests/all/column_joins.rs) reads it and must give the same lines, caps, band areas and looks.
 
 The walls here are straight, drawn eastwards and centred on their paths (y = c); their layers are given from the left
-face, the +y side. The columns are rectangles square to the axes. The rules, as ADR 3041 §2 gives them:
+face, the +y side. The columns are rectangles square to the axes. The rules, as ADR 8041 §2 gives them:
 
 - A wall's lines are its boundaries: the left face c + w/2, each layer's thickness further right, the right face
   c − w/2. Its caps are the segments across its ends, its bands the rectangles between consecutive lines.

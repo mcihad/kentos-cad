@@ -701,12 +701,12 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     (
         "cad.beams.create",
         "invalid_attribute",
-        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2, ADR 3041 §1)",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2, ADR 8041 §1)",
     ),
     (
         "cad.beams.create",
         "attribute_required",
-        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2, ADR 3041 §1)",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2, ADR 8041 §1)",
     ),
     (
         "cad.spaces.create",

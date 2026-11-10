@@ -38,7 +38,7 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
 
 /// Whether a schedule reads the project's settings a step's `ops` change (docs/adr/0795): a units schedule the
 /// program and the levels, a spaces schedule with a program field the program; a door and window schedule and the room
-/// list's doors and windows the project's opening types (their names and joinery codes, docs/adr/3028, 3038).
+/// list's doors and windows the project's opening types (their names and joinery codes, docs/adr/8028, 8038).
 fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
     let program = ops
         .iter()
@@ -46,8 +46,8 @@ fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
     let settings = ops
         .iter()
         .any(|op| matches!(op, Op::TemplateSettings { .. }));
-    // Emsal ve TAKS tablosu (docs/adr/3030): the program's briefs count the rooms; the levels are its rows. Otopark and
-    // Sığınak hesabı (docs/adr/3036): the program's units are their rows.
+    // Emsal ve TAKS tablosu (docs/adr/8030): the program's briefs count the rooms; the levels are its rows. Otopark and
+    // Sığınak hesabı (docs/adr/8036): the program's units are their rows.
     if t.source.as_ref().is_some_and(TableSource::of_regulation) {
         return program || settings;
     }
@@ -284,7 +284,7 @@ impl Document {
             let rows = self.blocks_schedule(names, by.as_deref(), columns);
             self.take_rows(&mut out, rows);
         }
-        // Emsal ve TAKS tablosu (docs/adr/3030), Otopark and Sığınak hesabı (docs/adr/3036): their rows, alignments,
+        // Emsal ve TAKS tablosu (docs/adr/8030), Otopark and Sığınak hesabı (docs/adr/8036): their rows, alignments,
         // and bold and warning cells.
         if let Some(source) = t.source.as_ref().filter(|s| s.of_regulation()) {
             let written = match source {
@@ -387,7 +387,7 @@ impl Document {
     }
 
     /// Emsal ve TAKS tablosu after the project's settings changed, or a step was undone or redone past them
-    /// (docs/adr/3030): its cells written again from the zoning they now hold, as the view marks and the derived tags
+    /// (docs/adr/8030): its cells written again from the zoning they now hold, as the view marks and the derived tags
     /// are, without another undo step (the settings keep none).
     pub(crate) fn refresh_zoning_tables(&mut self) -> usize {
         if !self.store.has_computed_tables() {
@@ -462,7 +462,7 @@ impl Document {
             // the drawing's objects only the objects of its kinds (docs/adr/0344 §3).
             let reads_drawing = !t.fields.is_empty()
                 || matches!(t.source, Some(TableSource::Blocks { .. }))
-                // Emsal ve TAKS tablosu (docs/adr/3030): the rooms (a wall moved moves its rooms in the same step).
+                // Emsal ve TAKS tablosu (docs/adr/8030): the rooms (a wall moved moves its rooms in the same step).
                 || (t.source.as_ref().is_some_and(TableSource::of_regulation)
                     && (options_changed || ["space", "polyline", "polygon"].iter().any(|k| kinds.contains(k))))
                 || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)))

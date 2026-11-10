@@ -1,4 +1,4 @@
-//! Mimari denetim's fixtures group (docs/adr/3025; ADV-12): the room in front of a fixture that a person using it
+//! Mimari denetim's fixtures group (docs/adr/8025; ADV-12): the room in front of a fixture that a person using it
 //! needs, its use zone, taken (net geçiş).
 //!
 //! - **The zone** is its block's “Boşluk zarfı” (docs/adr/0702: klozet önünde 80 × 60 cm, lavabo önünde 80 × 70 cm, duş

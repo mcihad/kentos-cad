@@ -315,7 +315,7 @@ pub enum TableSource {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
         units: Vec<Vec<String>>,
-        /// Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has
+        /// Kat kat (docs/adr/8029; `.kcad` schema 221): a units schedule's row for each group on each storey it has
         /// rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
@@ -325,15 +325,15 @@ pub enum TableSource {
     /// they were written from (the sources' digests, the rows' keys, the cells last extracted); written again by
     /// Tabloyu güncelle, never at every step (a drawing it reads is a file).
     Extraction(Box<crate::extraction::ExtractionSource>),
-    /// Emsal ve TAKS tablosu (docs/adr/3030; `.kcad` schema 210): the parcel's zoning against the drawing as PAİY 57/3
+    /// Emsal ve TAKS tablosu (docs/adr/8030; `.kcad` schema 222): the parcel's zoning against the drawing as PAİY 57/3
     /// asks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the
     /// drawing's, the construction area) and each storey's area counted in and out; written again by the document at
     /// every step and when the project's settings change.
     Zoning {},
-    /// Otopark hesabı (docs/adr/3036; `.kcad` schema 215): the independent units' parking need by Otopark Yönetmeliği
+    /// Otopark hesabı (docs/adr/8036; `.kcad` schema 227): the independent units' parking need by Otopark Yönetmeliği
     /// Ek-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.
     Parking {},
-    /// Sığınak hesabı (docs/adr/3036; `.kcad` schema 215): the units' shelter people by Sığınak Yönetmeliği 8/a against
+    /// Sığınak hesabı (docs/adr/8036; `.kcad` schema 227): the units' shelter people by Sığınak Yönetmeliği 8/a against
     /// the drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.
     Shelter {},
 }
@@ -355,7 +355,7 @@ impl TableSource {
         }
     }
 
-    /// Whether the document writes its rows from the project (docs/adr/3030, 3036): Emsal ve TAKS, Otopark and Sığınak
+    /// Whether the document writes its rows from the project (docs/adr/8030, 8036): Emsal ve TAKS, Otopark and Sığınak
     /// hesabı; they name no objects.
     pub fn of_regulation(&self) -> bool {
         matches!(
@@ -704,7 +704,7 @@ impl TableShape<'_> {
                     return Some(("source", words));
                 }
             }
-            // Emsal ve TAKS tablosu (docs/adr/3030), Otopark and Sığınak hesabı (docs/adr/3036): their rows are the
+            // Emsal ve TAKS tablosu (docs/adr/8030), Otopark and Sığınak hesabı (docs/adr/8036): their rows are the
             // document's; they name nothing.
             Some(TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}) => {}
             Some(s) if s.objects().is_empty() || s.objects().len() > MAX_SOURCE_OBJECTS => {

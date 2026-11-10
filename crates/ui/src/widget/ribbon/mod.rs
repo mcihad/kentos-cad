@@ -136,7 +136,7 @@ struct Tab<'a, Message> {
     on_press: Message,
     /// Bağlamsal sekmenin sayısı (ör. seçili nesneler); varsa sekme bağlamsaldır.
     count: Option<String>,
-    /// A narrow strip keeps it in sight, open or not: a module program's own tab (docs/adr/3005).
+    /// A narrow strip keeps it in sight, open or not: a module program's own tab (docs/adr/8005).
     pinned: bool,
 }
 
@@ -273,7 +273,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
     }
 
     /// A tab a narrow strip keeps in sight even when another is open, as the open and contextual tabs are: a module
-    /// program's own tab (Mimari's Mimari), never put into the ⋯ menu (docs/adr/3005).
+    /// program's own tab (Mimari's Mimari), never put into the ⋯ menu (docs/adr/8005).
     pub fn pinned_tab(mut self, label: impl IntoFragment<'a>, selected: bool, on_press: Message) -> Self {
         self.tabs.push(Tab {
             label: label.into_fragment(),
@@ -422,7 +422,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             .get(selected)
             .map(|t| t.label.to_string())
             .unwrap_or_default();
-        // Each tab as data: a narrow strip is built for the width it gets (docs/adr/3005).
+        // Each tab as data: a narrow strip is built for the width it gets (docs/adr/8005).
         let specs: Vec<TabSpec<Message>> = tabs
             .into_iter()
             .enumerate()
@@ -701,7 +701,7 @@ fn tab_face<'a, Message: 'a>(
     .into()
 }
 
-/// A tab of the strip as data, so a narrow strip can be built again for its width (docs/adr/3005).
+/// A tab of the strip as data, so a narrow strip can be built again for its width (docs/adr/8005).
 struct TabSpec<Message> {
     label: String,
     selected: bool,
@@ -765,7 +765,7 @@ fn tab_element<'a, Message: Clone + 'a>(spec: &TabSpec<Message>, collapsed: bool
 }
 
 /// The strip for `width`: every tab when they fit; else the open and contextual tabs, the leading others that fit and
-/// a ⋯ menu of the rest before the contextual tabs; a strip narrower still scrolls to its open tab (docs/adr/3005).
+/// a ⋯ menu of the rest before the contextual tabs; a strip narrower still scrolls to its open tab (docs/adr/8005).
 fn fitted_tabs<'a, Message: Clone + 'a>(
     specs: &[TabSpec<Message>],
     collapsed: bool,

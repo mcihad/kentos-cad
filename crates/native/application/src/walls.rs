@@ -294,9 +294,9 @@ pub fn view_at(
     kentos_geometry_core::geom::wall::View {
         detail: kentos_formats::walls::detail(detail),
         scale,
-        // The project's plan cut height (docs/adr/3012).
+        // The project's plan cut height (docs/adr/8012).
         cut: settings.plan_cut(),
-        // The model's lines at the scale's line group (docs/adr/3013).
+        // The model's lines at the scale's line group (docs/adr/8013).
         pens: settings.pens_at(scale),
     }
 }

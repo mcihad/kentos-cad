@@ -2,7 +2,7 @@
 //! existing definitions, preview differences and group metadata with model/sheets undo.
 //! Absent settingsMode retains ADR 0346 v1 behaviour for existing automation; its settings
 //! remain outside undo and its legacy fixture/output contract is unchanged, centimetres and 1:50 included although
-//! the package itself is metres and 1:100 since docs/adr/3007.
+//! the package itself is metres and 1:100 since docs/adr/8007.
 
 use kentos_commands::{
     BlockEditOperation, BlocksEdit, CommandResult, CommandWarning, DrawingUnit,
@@ -186,7 +186,7 @@ fn write(
     let mut s = doc.settings().clone();
     let empty = doc.entities().next().is_none();
     // The call without settingsMode keeps ADR 0346's centimetres and 1:50 (docs/adr/0659); the explicit modes take
-    // the package's own, metres and 1:100 since docs/adr/3007.
+    // the package's own, metres and 1:100 since docs/adr/8007.
     let unit = input
         .unit
         .unwrap_or(if safe { t.unit } else { LEGACY_TEMPLATE_UNIT });

@@ -2,7 +2,7 @@
   "format": "kentos.moduleNames/1",
   "module": "mimari",
   "title": "Mimari adları (komut satırı)",
-  "source": "KentOS Mimari'nin kendi yazılan adları (docs/adr/3002). Yalnız KentOS Mimari'de geçerlidir ve orada KentOS'un ortak adlarından önce gelir. İki harfli adlar Revit'in en az iki tuşluk kısayol ilkesini Türkçe adlarla uygular; harfleri KentOS'ta başka bir anlamı olmayanlardan seçildi. Uzun adlar bir mimarın söylediği sözcüklerdir.",
+  "source": "KentOS Mimari'nin kendi yazılan adları (docs/adr/8002). Yalnız KentOS Mimari'de geçerlidir ve orada KentOS'un ortak adlarından önce gelir. İki harfli adlar Revit'in en az iki tuşluk kısayol ilkesini Türkçe adlarla uygular; harfleri KentOS'ta başka bir anlamı olmayanlardan seçildi. Uzun adlar bir mimarın söylediği sözcüklerdir.",
   "names": [
     { "name": "PENCERE", "command": "tool.window", "overrides": "tool.zoomWindow", "why": "Mimari'de pencere bir yapı elemanıdır; Pencere yakınlaştır Z tuşu ve PENCEREBUYUT adıyla kalır." },
     { "name": "DU", "command": "tool.wall" },

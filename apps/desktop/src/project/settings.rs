@@ -207,11 +207,11 @@ pub struct State {
     arch_detail: Option<kentos_commands::WallDetail>,
     /// Mimari: the spaces' measurement method (docs/adr/0342 §1).
     arch_method: Option<kentos_commands::SpaceMethod>,
-    /// Mimari: the plan's cut height as typed, metres (docs/adr/3012); empty: 1.10.
+    /// Mimari: the plan's cut height as typed, metres (docs/adr/8012); empty: 1.10.
     arch_cut: String,
-    /// Mimari: how the plan's lines are weighted (docs/adr/3013); none: every object its own pen.
+    /// Mimari: how the plan's lines are weighted (docs/adr/8013); none: every object its own pen.
     arch_lines: Option<kentos_commands::LineGroups>,
-    /// Mimari: the parcel's zoning as typed (docs/adr/3030).
+    /// Mimari: the parcel's zoning as typed (docs/adr/8030).
     arch_zoning: super::arch::ZoningTexts,
     /// Kotlar ve epok as typed (docs/adr/0519 §5; heights.rs); Kaydet writes them through `cad.settings.set`.
     heights: super::heights::Texts,
@@ -278,15 +278,15 @@ pub enum Event {
     SelectLevelUsers,
     ArchDetail(Option<kentos_commands::WallDetail>),
     ArchMethod(Option<kentos_commands::SpaceMethod>),
-    /// Mimari: the plan's cut height typed (docs/adr/3012).
+    /// Mimari: the plan's cut height typed (docs/adr/8012).
     ArchCut(String),
-    /// İmar durumu's field typed (docs/adr/3030).
+    /// İmar durumu's field typed (docs/adr/8030).
     ArchZoning(super::arch::ZoningField, String),
-    /// Mimari: Çizgi kalınlıkları chosen (docs/adr/3013).
+    /// Mimari: Çizgi kalınlıkları chosen (docs/adr/8013).
     ArchLines(Option<kentos_commands::LineGroups>),
-    /// İmar durumu's Yerel imar yönetmeliği chosen (docs/adr/3034).
+    /// İmar durumu's Yerel imar yönetmeliği chosen (docs/adr/8034).
     ArchLocalRules(Option<kentos_commands::LocalRules>),
-    /// Yangın güvenliği's sprinkler system switched (docs/adr/3035).
+    /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
     ArchSprinklers(bool),
     RoomChoices(super::arch::ChoiceEvent),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).

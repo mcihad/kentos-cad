@@ -1,7 +1,7 @@
 //! Proje ayarları › Mimari (docs/adr/0339 §3, §6): the project's levels, a row each (Ad, Kot, Kat yüksekliği; up,
 //! down, delete; Kat ekle), and the detail the walls are drawn at (Ölçeğe göre, Şematik, Uygulama, Ayrıntılı). What
 //! does not hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch`,
-//! which keeps a level a wall names. A level's height changed moves the levels above by as much (docs/adr/3040 §1): the
+//! which keeps a level a wall names. A level's height changed moves the levels above by as much (docs/adr/8040 §1): the
 //! storeys sit on each other, and the walls under the slab of the one above follow.
 
 use iced::widget::{Column, button, container, row};
@@ -81,15 +81,15 @@ const DETAILS: [(Option<WallDetail>, &str); 4] = [
     (Some(WallDetail::Detailed), "Ayrıntılı"),
 ];
 
-/// Çizgi kalınlıkları (docs/adr/3013): the line groups by the scale, or every object its own pen (written as nothing).
+/// Çizgi kalınlıkları (docs/adr/8013): the line groups by the scale, or every object its own pen (written as nothing).
 const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
     (Some(kentos_commands::LineGroups::ByScale), "Ölçeğe göre"),
     (None, "Nesnenin kendi kalınlığı"),
 ];
 
-/// İmar durumu as typed (docs/adr/3030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
-/// elevation, m (the site plan's, docs/adr/3032); the municipality's regulation chosen (docs/adr/3034); whether the
-/// building has a sprinkler system (Yangın güvenliği, docs/adr/3035).
+/// İmar durumu as typed (docs/adr/8030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
+/// elevation, m (the site plan's, docs/adr/8032); the municipality's regulation chosen (docs/adr/8034); whether the
+/// building has a sprinkler system (Yangın güvenliği, docs/adr/8035).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningTexts {
     pub parcel: String,
@@ -100,7 +100,7 @@ pub struct ZoningTexts {
     pub sprinklers: bool,
 }
 
-/// Yerel imar yönetmeliği's choices (docs/adr/3034): none, or a municipality's.
+/// Yerel imar yönetmeliği's choices (docs/adr/8034): none, or a municipality's.
 const LOCAL_RULES: [(Option<kentos_commands::LocalRules>, &str); 2] = [
     (None, "Yok (yalnız Planlı Alanlar İmar Yönetmeliği)"),
     (
@@ -163,7 +163,7 @@ impl ZoningTexts {
     }
 }
 
-/// İmar durumu (docs/adr/3030): the three fields and, when the drawing has a zoning, its ratios: each line's words,
+/// İmar durumu (docs/adr/8030): the three fields and, when the drawing has a zoning, its ratios: each line's words,
 /// value and whether it passes its limit.
 pub(super) fn zoning_view<'a>(
     t: &'a ZoningTexts,
@@ -227,7 +227,7 @@ pub(super) fn zoning_view<'a>(
     super::group::<Message>("İmar durumu", body)
 }
 
-/// Yangın güvenliği (docs/adr/3035): whether the building has a sprinkler system, the fire regulation's escape
+/// Yangın güvenliği (docs/adr/8035): whether the building has a sprinkler system, the fire regulation's escape
 /// distances read by it.
 pub(super) fn fire_view<'a>(
     t: &'a ZoningTexts,
@@ -324,7 +324,7 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
     }
 }
 
-/// Row `i`'s height now read as a number moves the levels at or above its top by the change (docs/adr/3040 §1): a
+/// Row `i`'s height now read as a number moves the levels at or above its top by the change (docs/adr/8040 §1): a
 /// storey's height and the elevations above it stay one stack, as Türkiye's sections give them (±0.00, +3.00, +6.00).
 /// A level whose elevation does not read stays; a height that does not read moves nothing until it does.
 fn stack(rows: &mut [Row], i: usize) {
@@ -366,9 +366,9 @@ pub fn read(
     choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
     let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
-    // ±0.00's elevation (docs/adr/3032): the site plan's, the rest of it kept as the project has it.
+    // ±0.00's elevation (docs/adr/8032): the site plan's, the rest of it kept as the project has it.
     let datum = number(&zoning.datum).map_err(|()| "±0,00 kotu bir sayı olmalı.".to_owned())?;
-    // The municipality's regulation the audit reads (docs/adr/3034) and the sprinkler system (docs/adr/3035).
+    // The municipality's regulation the audit reads (docs/adr/8034) and the sprinkler system (docs/adr/8035).
     let local_rules = zoning.local;
     let sprinklers = zoning.sprinklers;
     let site = {
@@ -395,9 +395,9 @@ pub fn read(
     let arch = ArchSettings {
         levels,
         detail,
-        // The plan's cut height (docs/adr/3012); empty: 1.10.
+        // The plan's cut height (docs/adr/8012); empty: 1.10.
         cut_height,
-        // How its lines are weighted (docs/adr/3013); none: every object its own pen.
+        // How its lines are weighted (docs/adr/8013); none: every object its own pen.
         line_groups: lines,
         space_method,
         phase_view: None,
@@ -431,9 +431,9 @@ pub fn read(
         options: choices.map_or_else(Vec::new, |a| a.options.clone()),
         // And their combinations (docs/adr/0808).
         option_combos: choices.map_or_else(Vec::new, |a| a.option_combos.clone()),
-        // The parcel's zoning (docs/adr/3030).
+        // The parcel's zoning (docs/adr/8030).
         zoning,
-        // The site plan (docs/adr/3032): its parcel and edges are Parsel's, ±0.00 this form's.
+        // The site plan (docs/adr/8032): its parcel and edges are Parsel's, ±0.00 this form's.
         site,
         local_rules,
         sprinklers,
@@ -791,7 +791,7 @@ mod tests {
         .unwrap()
     }
 
-    /// A storey's height changed moves the levels above by as much (docs/adr/3040 §1), typed away and again too; a
+    /// A storey's height changed moves the levels above by as much (docs/adr/8040 §1), typed away and again too; a
     /// level below stays.
     #[test]
     fn a_storey_s_height_moves_the_levels_above() {
@@ -826,7 +826,7 @@ mod tests {
         );
     }
 
-    /// Planın kesme yüksekliği as typed (docs/adr/3012): a comma or a point, empty the default, outside 0.30–3.00 m or
+    /// Planın kesme yüksekliği as typed (docs/adr/8012): a comma or a point, empty the default, outside 0.30–3.00 m or
     /// not a number Kaydet waits.
     #[test]
     fn the_cut_height_is_read_as_typed_and_held_to_its_range() {
@@ -877,7 +877,7 @@ mod tests {
         }
     }
 
-    /// Çizgi kalınlıkları (docs/adr/3013): Ölçeğe göre writes the line groups, Nesnenin kendi kalınlığı nothing (an old
+    /// Çizgi kalınlıkları (docs/adr/8013): Ölçeğe göre writes the line groups, Nesnenin kendi kalınlığı nothing (an old
     /// drawing stays as it was).
     #[test]
     fn the_line_groups_are_written_only_by_the_scale() {

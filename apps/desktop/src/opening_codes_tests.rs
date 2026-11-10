@@ -1,4 +1,4 @@
-//! Doğrama kodları (M28, docs/adr/3028): the acceptance apartment's doors and windows get Mimarlar Odası's joinery
+//! Doğrama kodları (M28, docs/adr/8028): the acceptance apartment's doors and windows get Mimarlar Odası's joinery
 //! codes, one for each type (K01 the four inner doors, GK01 the entrance, P01 the four 120 windows, P02 the 60 one),
 //! and their tags write the code over the size, beside their walls and clear of the swings and of each other; one undo
 //! takes it all back.
@@ -218,7 +218,7 @@ fn an_untyped_door_in_the_outer_wall_gets_a_type_and_gk01() {
     assert!(tag.starts_with("GK01\n90/"), "{tag}");
 }
 
-/// Mahale göre (M28, docs/adr/3028): Açıklıkları numarala gives each door its room's number (the room it opens into),
+/// Mahale göre (M28, docs/adr/8028): Açıklıkları numarala gives each door its room's number (the room it opens into),
 /// each window its room's, with -A, -B … where a room has more than one; K for the doors, P for the windows; the numbers
 /// show before Enter; one undo takes them back.
 #[cfg(unix)]

@@ -2,7 +2,7 @@
 import type { SlabLayerKind } from "./SlabLayerKind";
 
 /**
- * A slab's layer measured (docs/adr/3040 §2): its kind, its thickness, its net area (the slab's) and its volume.
+ * A slab's layer measured (docs/adr/8040 §2): its kind, its thickness, its net area (the slab's) and its volume.
  */
 export type SlabLayerRow = { kind: SlabLayerKind, material?: string, thickness: number, 
 /**

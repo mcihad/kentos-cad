@@ -1,4 +1,4 @@
-# Line groups by the scale (docs/adr/3013): the 1:200 sheet of the drawing headless scales.rs keeps with
+# Line groups by the scale (docs/adr/8013): the 1:200 sheet of the drawing headless scales.rs keeps with
 # KENTOS_SCALE_PDF_DIR (cizgi-grubu.kcad: a 5 × 4 m ring of 25 cm walls at 0.5 mm, a door and a window at 0.25 mm,
 # sheets at 1:200, 1:100, 1:50 and 1:20), opened with the file: "KentOS Mimari — Çizgi grubu". The A-101 tab opens the
 # 1:200 sheet; eight wheel turns in at its centre bring the building close. A new Mimari project weighs its lines by the

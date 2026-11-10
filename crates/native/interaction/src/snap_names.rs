@@ -1,4 +1,4 @@
-//! What a snap stands on, in a building's words (docs/adr/3020; Vectorworks' SmartCursor cues): a wall's face, its
+//! What a snap stands on, in a building's words (docs/adr/8020; Vectorworks' SmartCursor cues): a wall's face, its
 //! core's face, the boundary between two of its layers, its axis or its base line; an opening's middle or its jamb.
 //! The snap marker says it after the snap's kind: “Orta nokta · Duvar yüzü”, “Uç nokta · Açıklık kenarı”.
 //!

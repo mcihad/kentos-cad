@@ -355,7 +355,7 @@ PLACES = ["number", "type", "form", "width", "height", "sill", "head", "name", "
           "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation", "netArea",
           "roughWidth", "unitWidth", "leafWidth", "clearWidth", "typeVersion",
           "unit", "target", "targetDiff", "operation", "leaves", "drum", "pocket", "tracks", "panels", "share", "gross",
-          # An opening's type's joinery code and its size in centimetres (docs/adr/3028).
+          # An opening's type's joinery code and its size in centimetres (docs/adr/8028).
           "code", "size"]
 TEMPLATES = {"opening": "{number}", "space": "{number}\n{name}\n{area}", "column": "{tag}", "grid": "{label}",
              "wall": "{style}", "stair": "{risers}", "ramp": "{slope}", "insert": "{attr:NO}"}

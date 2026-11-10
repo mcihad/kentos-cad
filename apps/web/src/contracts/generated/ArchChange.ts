@@ -115,12 +115,12 @@ slope?: number | null,
 base?: number | null, 
 /**
  * A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
- * base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/3041 §3): a
+ * base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/8041 §3): a
  * lintel's or a bond beam's; null: it hangs from its slab again.
  */
 baseOffset?: number | null, 
 /**
- * A beam's height (docs/adr/3041 §1).
+ * A beam's height (docs/adr/8041 §1).
  */
 height?: number, 
 /**
@@ -132,11 +132,11 @@ justify?: WallJustify,
  */
 offset?: number, 
 /**
- * A beam's role (docs/adr/3041 §3): a beam, a lintel or a bond beam.
+ * A beam's role (docs/adr/8041 §3): a beam, a lintel or a bond beam.
  */
 role?: BeamRole, 
 /**
- * A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
+ * A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.
  */
 material?: string | null, 
 /**

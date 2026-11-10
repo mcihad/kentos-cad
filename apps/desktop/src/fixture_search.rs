@@ -1,4 +1,4 @@
-//! Donatı araması (docs/adr/3024; ADV-12): KentOS's library's furniture and fixtures (Islak hacim, Mobilya, Mutfak)
+//! Donatı araması (docs/adr/8024; ADV-12): KentOS's library's furniture and fixtures (Islak hacim, Mobilya, Mutfak)
 //! found in Komut ara by their names, tags and categories, and by the words people say for them (karyola, tuvalet,
 //! eviye, duşakabin …; the Bloklar panel's search knows the words too). Enter on one takes that one block in, unless
 //! the drawing has it, and starts Blok ekle with it: in KentOS Mimari Duvara hizala is on (docs/adr/0702), so a click
@@ -104,7 +104,7 @@ pub(crate) fn meant(query: &str) -> Vec<String> {
     out
 }
 
-/// Whether a block's name or tags hold one of the words `query` means (the Bloklar panel's search, docs/adr/3024).
+/// Whether a block's name or tags hold one of the words `query` means (the Bloklar panel's search, docs/adr/8024).
 pub(crate) fn names_it(query: &str, name: &str, tags: &[String]) -> bool {
     let words = meant(query);
     let name = fold_turkish(name);
@@ -156,7 +156,7 @@ pub(crate) fn detail(f: &Fixture) -> String {
 }
 
 impl App {
-    /// A fixture of the library placed (docs/adr/3024): the drawing's block of its name, or the library's definition
+    /// A fixture of the library placed (docs/adr/8024): the drawing's block of its name, or the library's definition
     /// taken in alone (Blokları al, one undo step); Blok ekle starts with it.
     pub(crate) fn place_fixture(&mut self, name: &str) -> iced::Task<crate::app::Message> {
         let Some(doc) = self.document.as_ref() else {

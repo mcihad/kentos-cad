@@ -227,7 +227,7 @@ fn chosen_of(
     }
 }
 
-/// The layer a library fixture goes on (docs/adr/3024; docs/adr/3008 had left blocks on the active layer): by its
+/// The layer a library fixture goes on (docs/adr/8024; docs/adr/8008 had left blocks on the active layer): by its
 /// card's category, Mobilya MM-TEFR-MOBILYA, Islak hacim MM-TEFR-VITRIFIYE, Mutfak MM-TEFR-MUTFAK (Mutfak dizisi's).
 /// None for another block (a symbol, a title block, the drawing's own): it stays on the active layer.
 pub fn fixture_kind(def: &kentos_commands::BlockDefinition) -> Option<crate::arch_layer::Kind> {
@@ -501,7 +501,7 @@ impl BlockInsert {
         attrs: Option<std::collections::BTreeMap<String, String>>,
         cx: &mut Context<'_>,
     ) {
-        // A library fixture on its tefriş layer (docs/adr/3024), opened with it in its undo step; another block on
+        // A library fixture on its tefriş layer (docs/adr/8024), opened with it in its undo step; another block on
         // the active layer.
         let Some(kind) = cx.doc.block(block).and_then(fixture_kind) else {
             let input = self.insert_input(block, p, turn, attrs, cx);
@@ -780,7 +780,7 @@ impl Tool for BlockInsert {
 
     /// The pane's rows (docs/adr/0726 §4): the block, its size and unit, a dynamic block's sizes and views, the
     /// factors, the turn, Aynala and Duvara hizala.
-    /// A library fixture's tefriş layer (docs/adr/3024): the panel's Katman says it.
+    /// A library fixture's tefriş layer (docs/adr/8024): the panel's Katman says it.
     fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
         cx.memory
             .block_insert

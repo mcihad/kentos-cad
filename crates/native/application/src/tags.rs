@@ -11,7 +11,7 @@
 //!
 //! A tag's words and the point it ties to are written as the document writes them; its place, when not given, is its
 //! object's point for a space, else 4 times its words' height above it. The interactive tools give an opening's tag
-//! its place clear of the walls, the swings and the other tags (`opening_places`, docs/adr/3028).
+//! its place clear of the walls, the swings and the other tags (`opening_places`, docs/adr/8028).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -87,7 +87,7 @@ fn tag_of(
     })
 }
 
-/// Where the tags of the openings `of` go (docs/adr/3028; ADV-16's “etiketler hiçbir çizginin üstüne binmez”): each
+/// Where the tags of the openings `of` go (docs/adr/8028; ADV-16's “etiketler hiçbir çizginin üstüne binmez”): each
 /// beside its wall, clear of the walls, columns and fixtures, the doors' swings, the drawing's tags and the ones placed
 /// before it; with `content`, `shape` and `size` as the tags will have them. The interactive tools give these to
 /// `cad.tags.create` as the tags' `at`; the command's own place, for Python and agents, stays docs/adr/0344's.
@@ -129,7 +129,7 @@ pub fn opening_places(
     out
 }
 
-/// A tag's frame's half width and half height on the drawing at the project's scale (docs/adr/3028): its words' box
+/// A tag's frame's half width and half height on the drawing at the project's scale (docs/adr/8028): its words' box
 /// and pad, a hexagon's points, a circle's radius, an ellipse round its first line.
 fn tag_half(doc: &Document, t: &TagFields) -> (f64, f64) {
     use kentos_geometry_core::entity::Shape;
@@ -152,7 +152,7 @@ fn tag_half(doc: &Document, t: &TagFields) -> (f64, f64) {
     }
 }
 
-/// What an opening's tag must keep clear of (docs/adr/3028; ADV-16's “etiketler hiçbir çizginin üstüne binmez”): the
+/// What an opening's tag must keep clear of (docs/adr/8028; ADV-16's “etiketler hiçbir çizginin üstüne binmez”): the
 /// walls, columns and fixtures, the doors' swings, the dimensions' lines and values and the tags' frames, the drawing's
 /// and those placed before. Read once, when the first opening's tag asks.
 #[derive(Default)]

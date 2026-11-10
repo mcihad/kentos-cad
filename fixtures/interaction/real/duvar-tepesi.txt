@@ -1,4 +1,4 @@
-# M40 1. bölüm (docs/adr/3040 §1): a two-storey building (15 × 6 m, no slab). The ground storey's partition at 5 m:
+# M40 1. bölüm (docs/adr/8040 §1): a two-storey building (15 × 6 m, no slab). The ground storey's partition at 5 m:
 # its height floor to floor. On 1. kat a slab by the walls' outer faces (Döşeme, 15 cm); back on the ground storey the
 # partition stops under it. Proje ayarları › Mimari: the ground storey 3.00 → 3.24, the storey above follows as it is
 # typed; saved, the partition follows.

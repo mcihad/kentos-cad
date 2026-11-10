@@ -1,6 +1,6 @@
-//! Tadilat lejantı (docs/adr/3039 §5): Mimarlar Odası's renovation legend placed at a click, its top left corner at
+//! Tadilat lejantı (docs/adr/8039 §5): Mimarlar Odası's renovation legend placed at a click, its top left corner at
 //! the cursor: mevcut a plain outline, ilave hatched, iptal dashed (`kentos_domain::renovation_legend`). The block and
-//! its insert are one undo step “Tadilat lejantı”, on the legends' layer (docs/adr/3008).
+//! its insert are one undo step “Tadilat lejantı”, on the legends' layer (docs/adr/8008).
 
 use kentos_commands::{BlocksInsert, CommandResult};
 use kentos_domain::joinery_list::extent;

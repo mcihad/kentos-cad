@@ -1,4 +1,4 @@
-//! Donatı araması (M24, docs/adr/3024): "lavabo" typed in Komut ara, Enter, a click by a wall: the washbasin taken in
+//! Donatı araması (M24, docs/adr/8024): "lavabo" typed in Komut ara, Enter, a click by a wall: the washbasin taken in
 //! alone, its back on the wall's face, its front toward the room. Three actions, ADV-12's first acceptance (before:
 //! Donatı ▾, Kitaplık, the panel's search, a double click, H, a click).
 
@@ -139,7 +139,7 @@ fn lavabo_enter_and_a_click_by_a_wall_place_the_washbasin_against_it() {
         "turned {}",
         insert.rotation
     );
-    // On the tefriş layer of sanitary ware, opened with it (docs/adr/3008's key): one undo takes both.
+    // On the tefriş layer of sanitary ware, opened with it (docs/adr/8008's key): one undo takes both.
     let layer = |app: &App, id: &str| {
         let doc = &app.document.as_ref().expect("a drawing").model;
         doc.layers().get(id).map(|l| l.name.clone())
@@ -162,7 +162,7 @@ fn the_other_programs_keep_duvara_hizala_off() {
     assert!(!app.memory.block_to_wall);
 }
 
-/// Mimari denetim's Donatılar (M25, docs/adr/3025) on a 2.0 × 1.6 m bathroom: a wall-hung WC (its block's “Boşluk
+/// Mimari denetim's Donatılar (M25, docs/adr/8025) on a 2.0 × 1.6 m bathroom: a wall-hung WC (its block's “Boşluk
 /// zarfı” 80 × 60 in front), a washbasin of the older blocks (KentOS's 80 × 70 in front of it) whose zone takes the WC,
 /// and a door in the west wall whose leaf opens into the WC's zone, its fix the door turned.
 #[test]

@@ -1,4 +1,4 @@
-# M30 (docs/adr/3030): İmar durumu typed in Proje ayarları › Mimari, the Emsal ve TAKS badge in the status bar, the
+# M30 (docs/adr/8030): İmar durumu typed in Proje ayarları › Mimari, the Emsal ve TAKS badge in the status bar, the
 # İmar durumu rows in Öznitelikler and Emsal ve TAKS tablosu placed from Metraj ▾, in the real window at 1440 × 900, on
 # the building paiy_area_tests keeps (15 × 6 m, three rooms, no zoning). 300 m², emsal 1,50, TAKS 0,40: emsal 0,30,
 # TAKS 0,30; the table lists PAİY 57/3's values; a 200 m² parcel passes TAKS: the table's TAKS and footprint red and

@@ -3,11 +3,11 @@
 //! - An opening: its number, type (its style), form, width, height (head − sill, with a head), sill (absent 0), head,
 //!   area (width × height), and its wall's style, level and phase.
 //! - A space: its number, name, usage, area and perimeter (its rings', holes off), height (its inside height: its
-//!   finished floor to its ceiling, docs/adr/3040 §3), volume (area × height), its floor's and ceiling's elevations.
+//!   finished floor to its ceiling, docs/adr/8040 §3), volume (area × height), its floor's and ceiling's elevations.
 //! - A column: its tag, place, type and width. A grid: its label. A stair: its risers. A ramp: its slope (given, else
 //!   its rise over its sloped length). An insert: its block's name as its type.
 //! - A wall: its style (as type and style), its width (as thickness and width), its base line's length, height (its
-//!   own, else concrete to concrete within its storey, docs/adr/3040 §1–2), net face area (length × height less its
+//!   own, else concrete to concrete within its storey, docs/adr/8040 §1–2), net face area (length × height less its
 //!   openings' areas) and volume (net face × width).
 //! - Each: its level's name and phase, its attribute by name.
 //!
@@ -169,7 +169,7 @@ impl Document {
         w: &kentos_contracts::WallFields,
     ) -> (f64, Option<f64>) {
         let length = bulge_path_length(&core(&w.pts), w.bulges.as_deref(), w.closed);
-        // Up to the slab over it within its storey (docs/adr/3040 §1).
+        // Up to the slab over it within its storey (docs/adr/8040 §1).
         let height = self.wall_height(w);
         let openings: f64 = uid
             .map(|u| {
@@ -209,7 +209,7 @@ impl Document {
                     "type" | "style" => {
                         text(&x.style).map(|_| Text(self.opening_type_name(x.style.as_deref())))
                     }
-                    // Its type's joinery code and its size, width over height in centimetres (docs/adr/3028).
+                    // Its type's joinery code and its size, width over height in centimetres (docs/adr/8028).
                     "code" => x
                         .style
                         .as_deref()
@@ -257,7 +257,7 @@ impl Document {
                         )),
                     }),
                     "level" => wall.and_then(|w| self.level_name(&w.arch)).map(Text),
-                    // Its own phase first (docs/adr/3039 §1), its wall's otherwise.
+                    // Its own phase first (docs/adr/8039 §1), its wall's otherwise.
                     "phase" => x.phase.map(|p| Text(p.label().to_owned())).or_else(|| {
                         wall.and_then(|w| w.arch.phase)
                             .map(|p| Text(p.label().to_owned()))
@@ -269,7 +269,7 @@ impl Document {
                 let x = &s.space;
                 let areas = core_areas(&x.parts);
                 let area = kentos_geometry_core::geom::space::area(&areas);
-                // Its finished floor to its ceiling (docs/adr/3040 §3).
+                // Its finished floor to its ceiling (docs/adr/8040 §3).
                 let height = self.room_height(x);
                 match place {
                     "number" => text(&x.number),
@@ -336,7 +336,7 @@ impl Document {
                     "baseFinish" => text(&x.finishes.base),
                     "wallFinish" => text(&x.finishes.wall),
                     "ceilingFinish" => text(&x.finishes.ceiling),
-                    // The room list's (docs/adr/3038): its sills', its stair's and its railings' finishes, the doors and
+                    // The room list's (docs/adr/8038): its sills', its stair's and its railings' finishes, the doors and
                     // the windows that serve it.
                     "sillFinish" => text(&x.finishes.sill),
                     "stairFinish" => text(&x.finishes.stair),
@@ -368,7 +368,7 @@ impl Document {
                     "tag" => text(&x.tag),
                     "place" => text(&x.place),
                     "type" => text(&x.kind),
-                    // Its size as its plan writes it (docs/adr/3041 §2): 30/50, Ø40.
+                    // Its size as its plan writes it (docs/adr/8041 §2): 30/50, Ø40.
                     "size" => Some(Text(x.size_text())),
                     "width" => Some(Length(x.width)),
                     "level" => self.level_name(&x.arch).map(Text),
@@ -462,7 +462,7 @@ impl Document {
     }
 
     /// The box a fixture's block draws as the insert places it (docs/adr/0772 §5): its four corners; none when its
-    /// block draws nothing. What the insert's visibility state hides is no part of it (docs/adr/3025): a WC's
+    /// block draws nothing. What the insert's visibility state hides is no part of it (docs/adr/8025): a WC's
     /// “Boşluk zarfı” outline, hidden in its “Sade” state, made its body 60 cm deeper and a door struck the air in
     /// front of it.
     pub fn fixture_footprint(
@@ -475,7 +475,7 @@ impl Document {
         Some(placed_box(b, i, corners))
     }
 
-    /// A fixture's use zone as its block draws it (docs/adr/3025, 0702): the outline its visibility state
+    /// A fixture's use zone as its block draws it (docs/adr/8025, 0702): the outline its visibility state
     /// “Boşluk zarfı” shows and its first state hides, as the insert places it; none when its block draws none.
     pub fn fixture_zone(
         &self,
@@ -759,7 +759,7 @@ fn placed_box(
 mod tests {
     use crate::wall_height::tests::document;
 
-    /// A column's tag writes its size as its plan does (docs/adr/3041 §2): `{tag} {size}` of a 30/50 column "S1 30/50",
+    /// A column's tag writes its size as its plan does (docs/adr/8041 §2): `{tag} {size}` of a 30/50 column "S1 30/50",
     /// of a round 40 cm one "S2 Ø40".
     #[test]
     fn a_column_s_tag_writes_its_size() {

@@ -14,7 +14,7 @@ use kentos_ui::{
     widget::{Dialog, Switch},
 };
 use std::{path::PathBuf, time::Duration};
-/// The PDF/A switch's words (docs/adr/3037).
+/// The PDF/A switch's words (docs/adr/8037).
 pub(crate) const ARCHIVE_LABEL: &str = "PDF/A-2 arşiv biçimi (e-PYS teslimi)";
 
 #[derive(Clone, Debug)]
@@ -65,7 +65,7 @@ pub enum Event {
     Move(usize, i32),
     Separate(bool),
     Resources(bool),
-    /// PDF/A-2b (docs/adr/3037).
+    /// PDF/A-2b (docs/adr/8037).
     Archive(bool),
     Naming(String),
     Name(String),
@@ -623,7 +623,7 @@ impl App {
                 .label("Her pafta ayrı PDF")
                 .into()
             });
-            // The archival file the 2026 digital project regulation asks a drawing as (docs/adr/3037).
+            // The archival file the 2026 digital project regulation asks a drawing as (docs/adr/8037).
             body = body.push(if busy {
                 Element::from(Switch::<Message>::disabled(s.input.pdfa).label(ARCHIVE_LABEL))
             } else {

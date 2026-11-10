@@ -1,4 +1,4 @@
-//! Odayı büyüt (docs/adr/3023; ADV-11 "Odayı büyütme"): a selected room shows a grip on each of its straight edges
+//! Odayı büyüt (docs/adr/8023; ADV-11 "Odayı büyütme"): a selected room shows a grip on each of its straight edges
 //! that stands on a wall's face, a pair of arrowheads square to the edge at its middle. Dragged, or clicked and placed
 //! with the next click, the wall behind the edge follows the pointer square to itself: Duvarı kaydır's plan
 //! (`cad.walls.edit`, `shift`; docs/adr/0790 §1) with its bonds, what is joined to the wall following and the rooms'

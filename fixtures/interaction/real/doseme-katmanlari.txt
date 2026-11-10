@@ -1,4 +1,4 @@
-# M40 2. bölüm (docs/adr/3040 §2): the two-storey building; on 1. kat a slab by the walls' outer faces. Picked from a
+# M40 2. bölüm (docs/adr/8040 §2): the two-storey building; on 1. kat a slab by the walls' outer faces. Picked from a
 # window round the storey (Öznitelikler › Döşeme (1)): Katmanlar Yalnız taşıyıcı → Ara kat döşemesi (kaplama 2, şap 5
 # over the concrete, sıva 2 under). The ground storey's partition stops under the concrete; Metraj › Döşemeler measures
 # each layer.

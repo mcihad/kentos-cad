@@ -1,4 +1,4 @@
-//! Tadilat lejantı (docs/adr/3039 §5): Mimarlar Odası's example legend for a renovation project ("Projede mevcut, iptal
+//! Tadilat lejantı (docs/adr/8039 §5): Mimarlar Odası's example legend for a renovation project ("Projede mevcut, iptal
 //! ve ilaveler üç farklı teknikle ifade edilmelidir"): its title, then three boxes and their words, mevcut a plain
 //! outline, ilave hatched at 45°, iptal dashed. One block of the drawing, named by the digital project regulation's
 //! EK-2 Tablo 4.4 (`MM-XXXX-TADILATLEJANTI`); its sizes are paper millimetres at the drawing's plot scale: texts 2.5 mm,
@@ -21,7 +21,7 @@ pub const TITLE: &str = "Tadilat lejantı";
 pub const WORDS: [&str; 3] = ["Mevcut", "İlave", "İptal"];
 
 impl Document {
-    /// The legend's block at the drawing's plot scale (docs/adr/3039 §5): its top left at its base point.
+    /// The legend's block at the drawing's plot scale (docs/adr/8039 §5): its top left at its base point.
     pub fn renovation_legend_block(&self) -> BlockDefinition {
         // Model metres per paper millimetre.
         let mm = self.settings().plot_scale.max(1.0) / 1000.0;

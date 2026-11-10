@@ -42,7 +42,7 @@ impl App {
                 3 => Length::FillPortion(5),
                 _ => Length::FillPortion(2),
             };
-            // A column dragged wider keeps its width (docs/adr/3034): a regulation finding ends with its article.
+            // A column dragged wider keeps its width (docs/adr/8034): a regulation finding ends with its article.
             let width = self.arch_audit.columns[i].map_or(share, Length::Fixed);
             let column = TableColumn::new(*title).width(width);
             if i == 0 {

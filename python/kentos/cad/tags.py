@@ -167,7 +167,7 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
     mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda
     {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). Mahalin
     floorElevation değeri bitmiş döşemesinin kotudur (kendi döşeme kot farkı, yoksa
-    altındaki döşemenin üstü, yoksa katın kotu; docs/adr/3040 §3); ceilingElevation
+    altındaki döşemenin üstü, yoksa katın kotu; docs/adr/8040 §3); ceilingElevation
     tavanının kotudur (asma tavan, yazılan iç yükseklik ya da üst döşemenin sıvalı
     altı). Katın döşemeden döşemeye yüksekliği tavan sayılmaz; katı bilinmeyen mahalde
     ikisi, tavanı bilinmeyende ceilingElevation boş yazılır. Kot yazımı diğer uzunluklar
@@ -230,7 +230,7 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
         satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada
         {slope}, blokta {attr:NO}). Mahalin floorElevation değeri bitmiş döşemesinin kotudur
         (kendi döşeme kot farkı, yoksa altındaki döşemenin üstü, yoksa katın kotu;
-        docs/adr/3040 §3); ceilingElevation tavanının kotudur (asma tavan, yazılan iç
+        docs/adr/8040 §3); ceilingElevation tavanının kotudur (asma tavan, yazılan iç
         yükseklik ya da üst döşemenin sıvalı altı). Katın döşemeden döşemeye yüksekliği
         tavan sayılmaz; katı bilinmeyen mahalde ikisi, tavanı bilinmeyende ceilingElevation
         boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve basamağındadır.

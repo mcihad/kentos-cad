@@ -300,7 +300,7 @@ impl App {
                 .collect();
             blocks.push((count, group(category, rows)));
         }
-        // This program's own names (module_names.rs, docs/adr/3002): KentOS Mimari's DU, KP, PN, MH …
+        // This program's own names (module_names.rs, docs/adr/8002): KentOS Mimari's DU, KP, PN, MH …
         if let Some(names) = self.module_names() {
             // The group's name finds the whole group (“mimari”).
             let whole = fold_turkish(names.title).contains(&query);

@@ -1,4 +1,4 @@
-# M35 (docs/adr/3035), 1920 × 1080: Mimari › Denetim › Mevzuat on an office storey (buro-yangin.kcad from
+# M35 (docs/adr/8035), 1920 × 1080: Mimari › Denetim › Mevzuat on an office storey (buro-yangin.kcad from
 # fire_escape_tests): BYKHY 32/4 and Ek-5/B (offices beyond 15 m one way), 4/i (the corridor's dead end), 33/6-b (an
 # office with no door), 33/1 (a 0.90 m stair for 76 people, a 1.00 m corridor), 39/2 (a meeting room of 63 people with
 # one door, a storey with one exit).

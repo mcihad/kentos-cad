@@ -378,7 +378,7 @@ fn written(
         (Entity::Space(s), F::BaseFinish) => s.space.finishes.base = text(),
         (Entity::Space(s), F::WallFinish) => s.space.finishes.wall = text(),
         (Entity::Space(s), F::CeilingFinish) => s.space.finishes.ceiling = text(),
-        // The room list's (docs/adr/3038).
+        // The room list's (docs/adr/8038).
         (Entity::Space(s), F::SillFinish) => s.space.finishes.sill = text(),
         (Entity::Space(s), F::StairFinish) => s.space.finishes.stair = text(),
         (Entity::Space(s), F::RailingFinish) => s.space.finishes.railing = text(),
@@ -408,7 +408,7 @@ fn written(
 }
 
 /// `program` with `value` written to its groups `ids`' field `field` (docs/adr/0795): a number, a name, a recorded area
-/// in the project's area unit, a share weight, a nature (docs/adr/3031); refused by the program's own rule.
+/// in the project's area unit, a share weight, a nature (docs/adr/8031); refused by the program's own rule.
 fn program_written(
     doc: &Document,
     mut program: kentos_commands::BuildingProgram,
@@ -439,7 +439,7 @@ fn program_written(
             ScheduleField::Name => u.name = text.clone(),
             ScheduleField::RecordedArea => u.recorded_area = area,
             ScheduleField::ShareWeight => u.share_weight = text.as_ref().map(|t| t.replace(',', ".")),
-            // Niteliği (docs/adr/3031): the program's, written to it.
+            // Niteliği (docs/adr/8031): the program's, written to it.
             ScheduleField::Nature => u.nature = text.clone(),
             _ => {
                 return Err(fail(

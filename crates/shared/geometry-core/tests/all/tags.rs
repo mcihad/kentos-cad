@@ -74,7 +74,7 @@ fn tags_draw_as_the_reference_says() {
                 ],
                 want,
             ) => {
-                // docs/adr/3027: round the first line.
+                // docs/adr/8027: round the first line.
                 assert_eq!(want["kind"], "ellipse", "{name}");
                 close(m.x, &want["c"][0], name);
                 close(m.y, &want["c"][1], name);

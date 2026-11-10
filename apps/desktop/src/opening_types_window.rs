@@ -108,13 +108,13 @@ pub struct Window {
     pub nominal: String,
     pub size_by: OpeningSizeBy,
     pub operation: OpeningOperation,
-    /// Its frame and leaves and its U value as typed (docs/adr/3038).
+    /// Its frame and leaves and its U value as typed (docs/adr/8038).
     pub material: String,
     pub u_value: String,
     pub typed: Vec<(OpeningTypeField, String)>,
     /// What the change typed would do; its refusal's words when refused.
     pub preview: Option<Result<OpeningTypesEdited, String>>,
-    /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/3006).
+    /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/8006).
     pub closing: bool,
 }
 
@@ -126,7 +126,7 @@ pub enum Event {
     SizeBy(OpeningSizeBy),
     Operation(OpeningOperation),
     Field(OpeningTypeField, String),
-    /// Kasa ve kanat, U değeri (docs/adr/3038).
+    /// Kasa ve kanat, U değeri (docs/adr/8038).
     Material(String),
     UValue(String),
     /// Yeni tip ▾: a type of this form from KentOS's first of it; none: a copy of the chosen type.
@@ -152,7 +152,7 @@ fn length_text(f: &Format, v: &Value) -> String {
 
 /// What the window's report line says about `r`.
 pub(crate) fn report_words(r: &OpeningTypeReport) -> String {
-    // Only the type's frame and leaves or its U value changed (docs/adr/3038): no opening changes, none is counted.
+    // Only the type's frame and leaves or its U value changed (docs/adr/8038): no opening changes, none is counted.
     if r.fields.is_empty()
         && r.applied.is_empty()
         && r.kept.is_empty()
@@ -476,7 +476,7 @@ impl App {
                 )));
             }
         }
-        // Its frame and leaves and its U value (docs/adr/3038): the type's own, written when they differ.
+        // Its frame and leaves and its U value (docs/adr/8038): the type's own, written when they differ.
         let material = w.material.trim();
         if material != t.material.as_deref().unwrap_or_default() {
             top.insert(
@@ -825,7 +825,7 @@ impl App {
         Task::none()
     }
 
-    /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/3006).
+    /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/8006).
     fn opening_types_unapplied(&self) -> bool {
         self.opening_types.as_ref().is_some_and(|w| {
             self.opening_type_change().is_some()
@@ -1029,7 +1029,7 @@ impl App {
         if t.form != OpeningForm::Opening {
             cells.push(words::field("Açılış", operation, None));
         }
-        // The joinery list's (docs/adr/3038): its frame and leaves, its U value (a window's above 1,8 is a finding of
+        // The joinery list's (docs/adr/8038): its frame and leaves, its U value (a window's above 1,8 is a finding of
         // TS 825:2024).
         if matches!(t.form, OpeningForm::Door | OpeningForm::Window) {
             let material = kentos_ui::widget::text_field(

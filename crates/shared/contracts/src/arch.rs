@@ -323,7 +323,7 @@ impl WallReference {
 
     pub fn label(self) -> &'static str {
         match self {
-            // Said as an architect says them (docs/adr/3003): the drawn line is the wall's taban çizgisi (as Duvar's
+            // Said as an architect says them (docs/adr/8003): the drawn line is the wall's taban çizgisi (as Duvar's
             // description), a finish face its kaplama yüzü; “Yol” and “bitmiş yüz” were Path and Finish Face word for word.
             WallReference::Path => "Taban çizgisi",
             WallReference::Center => "Eksen",
@@ -411,7 +411,7 @@ impl ArchPhase {
 }
 
 /// Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;
-/// Tadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.
+/// Tadilat projesi (docs/adr/8039 §5) every state with Mimarlar Odası's three techniques.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -423,7 +423,7 @@ pub enum PhaseView {
     Existing,
     Demolition,
     Proposed,
-    /// Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.
+    /// Tadilat projesi (docs/adr/8039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.
     Renovation,
 }
 
@@ -443,7 +443,7 @@ pub enum PhaseLook {
 /// The transparency a faded object is drawn at.
 pub const PHASE_FADED: f64 = 0.6;
 
-/// How the Tadilat projesi view marks an object (docs/adr/3039 §5; Mimarlar Odası: "Projede mevcut, iptal ve ilaveler
+/// How the Tadilat projesi view marks an object (docs/adr/8039 §5; Mimarlar Odası: "Projede mevcut, iptal ve ilaveler
 /// üç farklı teknikle ifade edilmelidir"): mevcut a plain outline, ilave hatched, iptal dashed. A door or window closed
 /// up in a wall that stays is that wall's infill (ilave); a new one cut into a wall that stays shows the wall it removes
 /// dashed.
@@ -506,7 +506,7 @@ impl PhaseView {
             (PhaseView::Proposed, P::Demolish) => L::Hidden,
             (PhaseView::Proposed, P::New) => L::Shown,
             (PhaseView::Proposed, P::Temporary) => L::Dashed,
-            // Mimarlar Odası's technique (docs/adr/3039 §5): the store hatches ilave and fills a closed opening.
+            // Mimarlar Odası's technique (docs/adr/8039 §5): the store hatches ilave and fills a closed opening.
             (PhaseView::Renovation, P::Existing | P::New) => L::Shown,
             (PhaseView::Renovation, P::Demolish | P::Temporary) => L::Dashed,
         }
@@ -1216,7 +1216,7 @@ pub struct ArchLevel {
     pub height: Option<f64>,
 }
 
-/// A new Mimari project's level (docs/adr/3007): Zemin kat at ±0.00, 3.00 m floor to floor, the Mimari template's
+/// A new Mimari project's level (docs/adr/8007): Zemin kat at ±0.00, 3.00 m floor to floor, the Mimari template's
 /// first level (`catalog/v1/templates/mimari.json`). Within PAİY 28(1)'s 3.60 m for a dwelling's storey, and a slab with
 /// its floor leaves more than 28(4)'s 2.60 m clear height. A project began with no level: the first wall had none.
 pub fn ground_floor() -> ArchLevel {
@@ -1298,14 +1298,14 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<WallDetail>,
-    /// The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a
+    /// The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
     /// window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
     /// writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cut_height: Option<f64>,
-    /// How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the
+    /// How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
     /// plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
     /// line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
     /// own pen whatever the scale. A new Mimari project writes `byScale`.
@@ -1377,29 +1377,29 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionCombo>>", optional))]
     pub option_combos: Vec<crate::OptionCombo>,
-    /// İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
+    /// İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
     /// ratio and the coverage are read against. Absent: none given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zoning: Option<Zoning>,
-    /// Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the
+    /// Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
     /// absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub site: Option<SitePlan>,
-    /// Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
+    /// Yerel imar yönetmeliği (docs/adr/8034; `.kcad` schema 225): the municipality's regulation Mimari denetim's
     /// Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub local_rules: Option<LocalRules>,
-    /// Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the
+    /// Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
     /// fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub sprinklers: bool,
 }
 
-/// A municipality's own regulation (docs/adr/3034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
+/// A municipality's own regulation (docs/adr/8034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
 /// 69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the
 /// national value is said as a conflict the administration decides; both are named where they differ.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1428,7 +1428,7 @@ impl LocalRules {
     }
 }
 
-/// A parcel edge's kind (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
+/// A parcel edge's kind (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1483,7 +1483,7 @@ impl SiteEdgeKind {
     }
 }
 
-/// A parcel edge (docs/adr/3032): its kind and the plan's own setback where the plan gives one, m.
+/// A parcel edge (docs/adr/8032): its kind and the plan's own setback where the plan gives one, m.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1503,10 +1503,10 @@ fn is_side(k: &SiteEdgeKind) -> bool {
     *k == SiteEdgeKind::Side
 }
 
-/// The largest number of parcel edges a site plan keeps (docs/adr/3032).
+/// The largest number of parcel edges a site plan keeps (docs/adr/8032).
 pub const MAX_SITE_EDGES: usize = 1000;
 
-/// Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
+/// Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
 /// polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
 /// past the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on
 /// the parcel and the storeys.
@@ -1588,7 +1588,7 @@ impl SitePlan {
     }
 }
 
-/// İmar durumu (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
+/// İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
 /// emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
 /// gives it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1640,7 +1640,7 @@ impl Zoning {
     }
 }
 
-/// How a room counts for the floor area ratio (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
+/// How a room counts for the floor area ratio (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1681,7 +1681,7 @@ impl EmsalCount {
     }
 }
 
-/// How a room counts for the floor area ratio by its name and use when its brief does not say (docs/adr/3030): the
+/// How a room counts for the floor area ratio by its name and use when its brief does not say (docs/adr/8030): the
 /// words of Planlı Alanlar İmar Yönetmeliği 22/1's rooms (otopark, sığınak, mescit, galeri, kapıcı, tesisat, kazan,
 /// depo …) exempt; 5/8's fire stairs and halls outside the 30 %; every other room in.
 pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
@@ -1729,10 +1729,10 @@ pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
     }
 }
 
-/// The plan's cut height a new Mimari project starts with, metres (docs/adr/3012).
+/// The plan's cut height a new Mimari project starts with, metres (docs/adr/8012).
 pub const NEW_PROJECT_CUT_HEIGHT: f64 = 1.2;
 
-/// How the plan's lines are weighted (docs/adr/3013).
+/// How the plan's lines are weighted (docs/adr/8013).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1747,7 +1747,7 @@ pub enum LineGroups {
 }
 
 /// TS 88-23 / ISO 128-23's line groups (Tablo 2) by the scale a plan is drawn at, as the owner chose them
-/// (docs/adr/3013): up to 1:`scale`, the group's wide line, mm; its narrow line is half. A scale between two takes
+/// (docs/adr/8013): up to 1:`scale`, the group's wide line, mm; its narrow line is half. A scale between two takes
 /// the group of the next smaller one up to it, as Revit's model line weights do ("applied to the associated scale and
 /// larger scales until the next range"): 1:75 draws as 1:100, 1:150 and 1:500 as 1:200.
 pub const LINE_GROUPS: [(f64, f64); 4] = [
@@ -1757,7 +1757,7 @@ pub const LINE_GROUPS: [(f64, f64); 4] = [
     (f64::INFINITY, 0.25),
 ];
 
-/// The group an object's own pen is read in (docs/adr/3013): its width on a 1:50 plan, the tools' 0.5 mm wall and
+/// The group an object's own pen is read in (docs/adr/8013): its width on a 1:50 plan, the tools' 0.5 mm wall and
 /// 0.25 mm opening.
 pub const LINE_GROUP_BASE: f64 = 0.5;
 
@@ -1773,17 +1773,17 @@ pub fn line_group(scale: f64) -> f64 {
 pub const CUT_HEIGHT_RANGE: (f64, f64) = (0.3, 3.0);
 
 impl ArchSettings {
-    /// The plan's cut height, metres (docs/adr/3012): its own, else [`crate::PLAN_CUT_HEIGHT`].
+    /// The plan's cut height, metres (docs/adr/8012): its own, else [`crate::PLAN_CUT_HEIGHT`].
     pub fn plan_cut(&self) -> f64 {
         self.cut_height.unwrap_or(crate::PLAN_CUT_HEIGHT)
     }
 
-    /// Whether it says its own plan cut height (KCAD 205, docs/adr/3012).
+    /// Whether it says its own plan cut height (KCAD 217, docs/adr/8012).
     pub fn has_plan_cut(&self) -> bool {
         self.cut_height.is_some()
     }
 
-    /// The share of its own pen a plan at 1:`scale` draws an object with (docs/adr/3013): its line group's against
+    /// The share of its own pen a plan at 1:`scale` draws an object with (docs/adr/8013): its line group's against
     /// 1:50's while the lines go by the scale ([`LineGroups::ByScale`]), else 1.
     pub fn pens_at(&self, scale: f64) -> f64 {
         match self.line_groups {
@@ -1792,27 +1792,27 @@ impl ArchSettings {
         }
     }
 
-    /// Whether it says how its lines are weighted (KCAD 206, docs/adr/3013).
+    /// Whether it says how its lines are weighted (KCAD 218, docs/adr/8013).
     pub fn has_line_groups(&self) -> bool {
         self.line_groups.is_some()
     }
 
-    /// Whether it gives the parcel's zoning (KCAD 210, docs/adr/3030).
+    /// Whether it gives the parcel's zoning (KCAD 222, docs/adr/8030).
     pub fn has_zoning(&self) -> bool {
         self.zoning.is_some()
     }
 
-    /// Whether it gives a site plan (KCAD 212, docs/adr/3032).
+    /// Whether it gives a site plan (KCAD 224, docs/adr/8032).
     pub fn has_site(&self) -> bool {
         self.site.is_some()
     }
 
-    /// Whether it names a municipality's regulation (KCAD 213, docs/adr/3034).
+    /// Whether it names a municipality's regulation (KCAD 225, docs/adr/8034).
     pub fn has_local_rules(&self) -> bool {
         self.local_rules.is_some()
     }
 
-    /// Whether it says the building has a sprinkler system (KCAD 214, docs/adr/3035).
+    /// Whether it says the building has a sprinkler system (KCAD 226, docs/adr/8035).
     pub fn has_sprinklers(&self) -> bool {
         self.sprinklers
     }
@@ -1849,12 +1849,12 @@ impl ArchSettings {
         !self.opening_types.is_empty()
     }
 
-    /// Whether a door or window type has a joinery code (KCAD 208, docs/adr/3028).
+    /// Whether a door or window type has a joinery code (KCAD 220, docs/adr/8028).
     pub fn has_opening_codes(&self) -> bool {
         self.opening_types.iter().any(|t| t.code.is_some())
     }
 
-    /// Whether a door or window type says its frame and leaves or its U value (KCAD 217, docs/adr/3038).
+    /// Whether a door or window type says its frame and leaves or its U value (KCAD 229, docs/adr/8038).
     pub fn has_opening_specs(&self) -> bool {
         self.opening_types.iter().any(crate::OpeningType::has_specs)
     }
@@ -2139,7 +2139,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             components: vec![
                 plaster(0.02, "İç sıva"),
                 component("Tuğla", None, Standard, Some(("ANSI31", 1.0, None)), 1),
-                // TS 5319's SN55 fitted to the layer: a zigzag between its sides (docs/adr/3014).
+                // TS 5319's SN55 fitted to the layer: a zigzag between its sides (docs/adr/8014).
                 component(
                     "Isı yalıtımı",
                     Some(0.05),
@@ -2170,7 +2170,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             name: "Gazbeton 20".into(),
             components: vec![
                 plaster(0.02, "Sıva"),
-                // TS 5319's SN48, lightweight concrete (docs/adr/3014).
+                // TS 5319's SN48, lightweight concrete (docs/adr/8014).
                 component("Gazbeton", None, Standard, Some(("SN48", 1.0, None)), 1),
                 plaster(0.02, "Sıva"),
             ],
@@ -2403,7 +2403,7 @@ mod tests {
 mod plan_cut_tests {
     use super::*;
 
-    /// The plan's cut height (docs/adr/3012): its own, else 1.10; outside 0.30–3.00 m it does not hold.
+    /// The plan's cut height (docs/adr/8012): its own, else 1.10; outside 0.30–3.00 m it does not hold.
     #[test]
     fn the_plan_cut_is_its_own_else_one_ten_and_held_to_its_range() {
         let mut a = ArchSettings::default();
@@ -2428,7 +2428,7 @@ mod plan_cut_tests {
         assert_eq!(json, serde_json::json!({ "cutHeight": 1.2 }));
     }
 
-    /// docs/adr/3013: TS 88-23 / ISO 128-23's groups by the scale; an object's pen read as its 1:50 width.
+    /// docs/adr/8013: TS 88-23 / ISO 128-23's groups by the scale; an object's pen read as its 1:50 width.
     #[test]
     fn the_line_group_goes_by_the_scale_only_when_asked() {
         let wide: Vec<f64> = [10.0, 20.0, 30.0, 50.0, 75.0, 100.0, 150.0, 200.0, 500.0]

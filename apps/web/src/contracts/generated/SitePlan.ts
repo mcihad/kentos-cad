@@ -2,7 +2,7 @@
 import type { SiteEdge } from "./SiteEdge";
 
 /**
- * Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
+ * Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
  * polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
  * past the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on
  * the parcel and the storeys.

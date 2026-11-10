@@ -88,7 +88,7 @@ fn names(
             "naming",
         ));
     }
-    // `{@ad}`: a variable's value (docs/adr/3037), the sheet's, else its book's, else the drawing's (the digital project
+    // `{@ad}`: a variable's value (docs/adr/8037), the sheet's, else its book's, else the drawing's (the digital project
     // regulation's file names: `{@proje_kodu}_{@bina_kodu}_MM_XXXX_{@dosya_turu}_…`).
     let mut bare = String::new();
     let mut tail = input.naming.as_str();
@@ -155,7 +155,7 @@ fn names(
                 name if name.starts_with('@') => {
                     let fold = |s: &str| kentos_sheet::expr::fold(s);
                     let want = fold(&name[1..]);
-                    // An unanswered question gives way, as on the sheet (docs/adr/3037).
+                    // An unanswered question gives way, as on the sheet (docs/adr/8037).
                     let found = sheet
                         .variables
                         .iter()
@@ -260,7 +260,7 @@ pub(crate) const JOURNAL: &str = "devam.json";
 pub(crate) const JOURNAL_FORMAT: &str = "kentos.publish-resume/1";
 
 /// The options `yayin.json` records: what an update compares before it carries a page (docs/adr/1320 §3); `pdfa` only
-/// when on (docs/adr/3037).
+/// when on (docs/adr/8037).
 fn published_options(input: &PublishSheets) -> serde_json::Value {
     let mut o = serde_json::json!({"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers});
     if input.pdfa {
@@ -272,7 +272,7 @@ fn published_options(input: &PublishSheets) -> serde_json::Value {
 /// The options a resumed publication must share with the one it goes on from.
 fn journal_options(input: &PublishSheets) -> serde_json::Value {
     let mut o = serde_json::json!({"mode":input.mode,"naming":input.naming,"name":input.name,"dpi":input.dpi,"geo":input.geo,"layers":input.layers,"resources":input.resources,"drawing":input.drawing});
-    // Written only when on, so a journal from before PDF/A (docs/adr/3037) still goes on.
+    // Written only when on, so a journal from before PDF/A (docs/adr/8037) still goes on.
     if input.pdfa {
         o["pdfa"] = serde_json::Value::Bool(true);
     }
@@ -385,7 +385,7 @@ pub(crate) fn digests(
     let mut out = Vec::with_capacity(chosen.len());
     for id in chosen {
         stopped(progress)?;
-        // A page's digest is its content's, archival or not (docs/adr/3037).
+        // A page's digest is its content's, archival or not (docs/adr/8037).
         let opts = kentos_sheet::pdf::PdfOptions { sheets: vec![id.clone()], geo, layers, pdfa: false };
         let got = match kentos_plot::book::book_pdf_captured(&neutral, std::slice::from_ref(id), Some(opts), None) {
             Ok(pdf) => pdf.pages.first().map(|p| p.digest.clone()).ok_or_else(|| ("pdf_no_page".to_owned(), "Sayfa yazılmadı.".to_owned())),
@@ -670,7 +670,7 @@ fn work(
         });
         match kentos_plot::book::book_pdf_captured(&captured,sheets,Some(opts),page_progress.as_ref()) {
             Ok(pdf) => {
-                // An archival file read back by the PDF reader's PDF/A-2 rules before it is delivered (docs/adr/3037):
+                // An archival file read back by the PDF reader's PDF/A-2 rules before it is delivered (docs/adr/8037):
                 // a broken rule blocks the publication, never a file that only says it is PDF/A.
                 if input.pdfa {
                     let read = kentos_formats::pdf::pdfa::pdfa2_report(&pdf.bytes);

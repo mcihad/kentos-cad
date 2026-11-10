@@ -376,7 +376,7 @@ pub struct SchedulesCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub total: Option<bool>,
-    /// Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
+    /// Kat kat (docs/adr/8029): a units schedule's rows storey by storey, each group's areas the storey's part.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub by_level: Option<bool>,
@@ -455,7 +455,7 @@ pub struct ScheduleChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub total: Option<bool>,
-    /// Kat kat (docs/adr/3029): a units schedule's rows storey by storey.
+    /// Kat kat (docs/adr/8029): a units schedule's rows storey by storey.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub by_level: Option<bool>,

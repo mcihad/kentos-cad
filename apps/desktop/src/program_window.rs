@@ -25,7 +25,7 @@
 //! group still names is not removed (the window says which, and so does the command). Ortak alan payı picks the rule the
 //! common areas are shared out by (`kentos.share/1`); Durum shows each unit's net, share and gross after Denetle.
 //!
-//! Kat irtifakı (docs/adr/3031): a group's nature (Niteliği: daire, dükkân, iş bürosu …), an annex's unit (Bölümü), an
+//! Kat irtifakı (docs/adr/8031): a group's nature (Niteliği: daire, dükkân, iş bürosu …), an annex's unit (Bölümü), an
 //! independent unit's value factor in the land shares (Değer katsayısı) and the land shares' whole (Arsa payı paydası,
 //! empty: the parcel's area).
 
@@ -82,7 +82,7 @@ impl std::fmt::Display for Tab {
     }
 }
 
-/// A group being edited: its number and recorded area as typed; its nature and value factor too (docs/adr/3031).
+/// A group being edited: its number and recorded area as typed; its nature and value factor too (docs/adr/8031).
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitRow {
     unit: ProgramUnit,
@@ -136,7 +136,7 @@ pub struct Window {
     units: Vec<UnitRow>,
     briefs: Vec<BriefRow>,
     version: String,
-    /// Arsa payı paydası as typed (docs/adr/3031); empty: the parcel's area.
+    /// Arsa payı paydası as typed (docs/adr/8031); empty: the parcel's area.
     land_total: String,
     /// The rest of the program as the project has it (buildings, clearances).
     kept: BuildingProgram,
@@ -144,7 +144,7 @@ pub struct Window {
     running: Option<Running>,
     next: u64,
     said: Option<(Kind, String)>,
-    /// The program as this window would write it untouched: what closing compares with (docs/adr/3006). The rows
+    /// The program as this window would write it untouched: what closing compares with (docs/adr/8006). The rows
     /// keep numbers as text, so the project's own program may not come back byte for byte.
     opened: Option<Result<BuildingProgram, String>>,
     /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks.
@@ -171,7 +171,7 @@ pub enum Event {
     UnitName(usize, String),
     UnitKind(usize, UnitKind),
     UnitArea(usize, String),
-    /// Kat irtifakı (docs/adr/3031): a group's nature, an annex's unit, a unit's value factor, the land shares' whole.
+    /// Kat irtifakı (docs/adr/8031): a group's nature, an annex's unit, a unit's value factor, the land shares' whole.
     UnitNature(usize, String),
     UnitAnnexOf(usize, Option<String>),
     UnitFactor(usize, String),
@@ -190,7 +190,7 @@ pub enum Event {
     Checked(u64, Arc<CommandResult<ProgramChecked>>),
     Cancel,
     Save,
-    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/3006).
+    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/8006).
     Close,
     Answer(crate::unsaved_close::Answer),
 }
@@ -241,12 +241,12 @@ impl Window {
         w
     }
 
-    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/3006).
+    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/8006).
     pub(crate) fn closing(&self) -> bool {
         self.closing
     }
 
-    /// Whether the window holds a change Kaydet has not written (docs/adr/3006).
+    /// Whether the window holds a change Kaydet has not written (docs/adr/8006).
     fn unsaved(&self) -> bool {
         self.opened.as_ref().is_some_and(|opened| *opened != self.program())
     }
@@ -460,7 +460,7 @@ impl App {
                 }
             }
             Event::UnitKind(i, k) => {
-                // An annex belongs to a unit (docs/adr/3031): the first independent unit until another is chosen.
+                // An annex belongs to a unit (docs/adr/8031): the first independent unit until another is chosen.
                 let first = w
                     .units
                     .iter()
@@ -1008,7 +1008,7 @@ impl App {
                 None,
             ));
         }
-        // Kat irtifakı (docs/adr/3031): an annex's unit; an independent unit's value factor in the land shares.
+        // Kat irtifakı (docs/adr/8031): an annex's unit; an independent unit's value factor in the land shares.
         if r.unit.kind == UnitKind::Annex {
             let units: Vec<&UnitRow> = w
                 .units

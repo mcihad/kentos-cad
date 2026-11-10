@@ -1,4 +1,4 @@
-//! Metraj › Kirişler (docs/adr/3041 §3): a beam's concrete is what hangs under the slab it carries, so the slab's volume
+//! Metraj › Kirişler (docs/adr/8041 §3): a beam's concrete is what hangs under the slab it carries, so the slab's volume
 //! and the beam's are not the same concrete twice; a lintel's and a bond beam's, in their walls, is the whole.
 use super::wall_contours::completed;
 use kentos_domain::Document;

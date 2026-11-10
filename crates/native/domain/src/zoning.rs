@@ -1,4 +1,4 @@
-//! Emsal and TAKS (docs/adr/3030; ADV-22, M30): the drawing's floor area ratio and coverage against the parcel's
+//! Emsal and TAKS (docs/adr/8030; ADV-22, M30): the drawing's floor area ratio and coverage against the parcel's
 //! zoning, as Planlı Alanlar İmar Yönetmeliği reads them.
 //!
 //! - **Each room's gross** is its outer contour (4/ğ-1's rule, room by room): its outer-face outline less every other
@@ -52,7 +52,7 @@ pub struct ZoningReport {
     /// Each storey's rooms, in the project's order of its storeys; the rooms on none last.
     pub levels: Vec<ZoningLevel>,
     /// The footprint's outline: the ground storey's rooms it counts, their contours together (the site plan's oturum,
-    /// docs/adr/3032).
+    /// docs/adr/8032).
     pub footprint_shape: Vec<Area>,
 }
 
@@ -73,7 +73,7 @@ impl ZoningLevel {
     }
 }
 
-/// Emsal ve TAKS tablosu's cells (docs/adr/3030): the rows, each column's alignment and the bold and warning cells.
+/// Emsal ve TAKS tablosu's cells (docs/adr/8030): the rows, each column's alignment and the bold and warning cells.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningTable {
     pub rows: Vec<Vec<String>>,
@@ -157,7 +157,7 @@ fn bounds(areas: &[Area]) -> Option<[f64; 4]> {
 }
 
 impl Document {
-    /// The drawing's emsal and TAKS against the parcel's zoning (docs/adr/3030); none without a zoning.
+    /// The drawing's emsal and TAKS against the parcel's zoning (docs/adr/8030); none without a zoning.
     pub fn zoning_report(&self) -> Option<ZoningReport> {
         let zoning = self.settings().arch.as_ref()?.zoning?;
         Some(self.zoning_measured(Some(zoning)))
@@ -330,14 +330,14 @@ impl Document {
         out
     }
 
-    /// The building's footprint as the ratios count it (docs/adr/3032): its area and outline, with or without a zoning.
+    /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.
     pub fn footprint(&self) -> (f64, Vec<Area>) {
         let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
         let r = self.zoning_measured(zoning);
         (r.footprint, r.footprint_shape)
     }
 
-    /// Emsal ve TAKS tablosu's cells (docs/adr/3030), as PAİY 57/3 asks the approved project to show them: what the
+    /// Emsal ve TAKS tablosu's cells (docs/adr/8030), as PAİY 57/3 asks the approved project to show them: what the
     /// zoning allows beside what the drawing has and what is left (in the warning colour past a limit), then each
     /// storey's area counted in and out and their total. Areas in the project's area unit and decimals, ratios with
     /// two; “—” for what the zoning does not give (none at all: the storeys' areas alone are numbers).
@@ -474,7 +474,7 @@ impl Document {
             area(r.construction()),
             String::new(),
         ]);
-        // Vaziyet planı (docs/adr/3032): each kind of edge's garden distance beside the footprint's nearest, the trees
+        // Vaziyet planı (docs/adr/8032): each kind of edge's garden distance beside the footprint's nearest, the trees
         // (23/6) and ±0.00.
         if let Some(site) = self.site_report() {
             // Metres with two decimals, as the regulation writes them (“5.00 metre”), whatever the drawing's unit.

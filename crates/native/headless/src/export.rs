@@ -85,7 +85,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let before_options = entities.len();
     entities.retain(|e| !option_out.contains(&kentos_domain::Slot(e.base().id)));
     let left_out_options = before_options - entities.len();
-    // The tadilat görünümü (docs/adr/3039 §4), as design options: DXF gets the drawing as it shows. What the view hides
+    // The tadilat görünümü (docs/adr/8039 §4), as design options: DXF gets the drawing as it shows. What the view hides
     // is not written and is said; an opening not written cuts no wall, a wall not written joins none, so the walls are
     // as that state stands. Tümü writes everything, each object on its state's layer.
     let view = doc
@@ -315,7 +315,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         layouts,
         // The project's own detail for its walls (docs/adr/0339 §4); absent: by the scale.
         wall_detail: settings.arch.as_ref().and_then(|a| a.detail),
-        // The project's plan cut height (docs/adr/3012); absent: 1.10.
+        // The project's plan cut height (docs/adr/8012); absent: 1.10.
         cut_height: settings.arch.as_ref().and_then(|a| a.cut_height),
         uids,
         annotations: Default::default(),

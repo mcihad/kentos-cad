@@ -200,7 +200,7 @@ fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
     );
 }
 
-/// A type's frame and leaves and its U value (M38, docs/adr/3038): typed in the window, kept on the type; a window
+/// A type's frame and leaves and its U value (M38, docs/adr/8038): typed in the window, kept on the type; a window
 /// above TS 825:2024's 1,8 W/m²K is Mevzuat's finding, at or below it none.
 #[test]
 fn a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it() {

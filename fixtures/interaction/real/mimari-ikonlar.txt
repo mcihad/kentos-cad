@@ -1,4 +1,4 @@
-# M16 (docs/adr/3016): Mimari's icons in the real window, the drawing malzeme.kcad (headless scales.rs keeps it)
+# M16 (docs/adr/8016): Mimari's icons in the real window, the drawing malzeme.kcad (headless scales.rs keeps it)
 # opened on Mimari's tab (the layout copy's ribbonTab is "arch") at 1440 × 900, 13 px text: Mahal ▾'s three room
 # tools, Düzenle ▾'s fourteen seldom used commands and Çizelge ▾'s six schedules, each with its own icon.
 fit KentOS Mimari — Malzeme

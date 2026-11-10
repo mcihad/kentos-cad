@@ -4,7 +4,7 @@
     "id": "sys:mimari-ruhsat",
     "revision": 1,
     "name": "Mimari pafta (MO anteti)",
-    "description": "Mimarlar Odası çizim ve sunuş esaslarına göre mimari pafta: sağda 180 mm'lik sütunda kuzey oku, açıklamalar, aşağıdan yukarı dolan revizyon tablosu ve sağ alt köşede pafta başlığı (müellif, sicil ve BTB no, iş, pafta, ölçek, tarih, pafta ve blok no, tasarlayan, çizen, kontrol eden, M harfi). Antet bilgileri paftaya sorulmaz, çizimin değişkenlerinden ve kendisinden okunur (docs/adr/3037).",
+    "description": "Mimarlar Odası çizim ve sunuş esaslarına göre mimari pafta: sağda 180 mm'lik sütunda kuzey oku, açıklamalar, aşağıdan yukarı dolan revizyon tablosu ve sağ alt köşede pafta başlığı (müellif, sicil ve BTB no, iş, pafta, ölçek, tarih, pafta ve blok no, tasarlayan, çizen, kontrol eden, M harfi). Antet bilgileri paftaya sorulmaz, çizimin değişkenlerinden ve kendisinden okunur (docs/adr/8037).",
     "category": "mimari",
     "tags": [
       "mimari",

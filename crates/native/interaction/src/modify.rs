@@ -58,7 +58,7 @@ pub trait Stages {
     /// Sees what the session remembers and the project's units at every
     /// event, for a prompt that shows them while picking.
     fn see(&mut self, _cx: &Context<'_>) {}
-    /// The layer kind of what the stages write (docs/adr/3008; `Tool::layer_kind`).
+    /// The layer kind of what the stages write (docs/adr/8008; `Tool::layer_kind`).
     fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
         None
     }

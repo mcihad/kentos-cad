@@ -166,7 +166,7 @@ place: Array<Vec2>,
  */
 broken?: OpeningBreak, 
 /**
- * Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
+ * Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
  * its wall's.
  */
 phase?: ArchPhase, };

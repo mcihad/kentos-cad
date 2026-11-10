@@ -110,7 +110,7 @@ pub fn slab_pieces(s: &kentos_contracts::SlabEntity) -> Vec<kentos_contracts::En
     slab_pieces_of(s, None)
 }
 
-/// [`slab_pieces`] as a drawing at `view` shows them (docs/adr/3011): beyond 1:150 schematic its edge's outer lines
+/// [`slab_pieces`] as a drawing at `view` shows them (docs/adr/8011): beyond 1:150 schematic its edge's outer lines
 /// alone, as the walls beside it are drawn.
 pub fn slab_pieces_in(
     s: &kentos_contracts::SlabEntity,

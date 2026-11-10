@@ -1078,7 +1078,7 @@ impl App {
                 self.dialog = Some(Dialog::WallStyles);
             }
             // An editor with its own save: Esc is its Kapat, which asks when changes would go; over the question, Esc
-            // is Vazgeç (docs/adr/3006). It threw the changes away.
+            // is Vazgeç (docs/adr/8006). It threw the changes away.
             Some(Dialog::WallStyles) => {
                 use crate::wall_styles::Event;
                 self.dialog = Some(Dialog::WallStyles);

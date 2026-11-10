@@ -1,5 +1,5 @@
 """Drives the X display in $DISPLAY with real input events (XTEST), like a hand on the mouse and keyboard
-(scripts/usage/real/README.md, docs/adr/3000). `driver.py SCENARIO OUT_DIR`.
+(scripts/usage/real/README.md, docs/adr/8000). `driver.py SCENARIO OUT_DIR`.
 
 Scenario lines, one per line; a line starting with '#' and anything after ' #' is a comment:
   fit TITLE               the window of this title over the whole screen, keyboard given to it (no window manager)

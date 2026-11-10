@@ -19,7 +19,7 @@ impl App {
         if !(self.command_expanded && self.bottom_tab == BottomTab::Audit) || self.arch_audit_stale() {
             return None;
         }
-        // A chosen fixture finding's use zone (docs/adr/3025), dashed in the danger colour: what is taken.
+        // A chosen fixture finding's use zone (docs/adr/8025), dashed in the danger colour: what is taken.
         let zones = self.arch_audit_zones();
         let fixes = self.arch_audit_fix_preview();
         match (fixes, zones.is_empty()) {
@@ -35,7 +35,7 @@ impl App {
         }
     }
 
-    /// The chosen fixtures findings' use zones (docs/adr/3025): each its fixture's zone, outlined dashed in the danger
+    /// The chosen fixtures findings' use zones (docs/adr/8025): each its fixture's zone, outlined dashed in the danger
     /// colour.
     fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke> {
         use kentos_commands::ArchAuditCheck;

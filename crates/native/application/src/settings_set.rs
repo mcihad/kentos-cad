@@ -42,7 +42,7 @@ fn levelled_kind(e: &Entity) -> Option<usize> {
         Entity::Ramp(_) => Some(6),
         // A slab names its level as its own (docs/adr/0722 §1); said last so the older refusals read the same.
         Entity::Slab(_) => Some(8),
-        // A beam likewise (docs/adr/3041 §1).
+        // A beam likewise (docs/adr/8041 §1).
         Entity::Beam(_) => Some(9),
         _ => None,
     }

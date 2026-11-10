@@ -107,7 +107,7 @@ pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Op
         edge_length,
         excluded: s.excluded,
         rule,
-        // Its layers on its net area (docs/adr/3040 §2): kaplama and sıva by area, şap and yalıtım by volume too.
+        // Its layers on its net area (docs/adr/8040 §2): kaplama and sıva by area, şap and yalıtım by volume too.
         layers: s
             .layers
             .over

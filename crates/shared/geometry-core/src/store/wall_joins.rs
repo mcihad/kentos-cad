@@ -58,7 +58,7 @@ impl Store {
     }
 
     /// Object `id` put as `now`, or removed (none): a column where it was and where it is cuts the walls again and
-    /// takes its look again (docs/adr/3041 §2); any other kind changes nothing here.
+    /// takes its look again (docs/adr/8041 §2); any other kind changes nothing here.
     pub(super) fn note_column(&mut self, id: f64, now: Option<&Shape>) {
         let key = id.to_bits();
         let foot = match now {
@@ -82,7 +82,7 @@ impl Store {
         }
     }
 
-    /// Wall `item`'s drawing `d` cut by the columns on its level that reach it (docs/adr/3041 §2); none when none does.
+    /// Wall `item`'s drawing `d` cut by the columns on its level that reach it (docs/adr/8041 §2); none when none does.
     fn cut_by_columns(&self, item: &super::Item, d: &crate::geom::wall::Drawn) -> Option<crate::geom::wall::Drawn> {
         let Shape::Wall { wall, .. } = &item.shape else {
             return None;
@@ -98,7 +98,7 @@ impl Store {
     }
 
     /// The columns standing where the walls changed (`dirty`; `all`: every column) take their look again from the walls
-    /// on their level they meet, and are expanded again (docs/adr/3041 §2).
+    /// on their level they meet, and are expanded again (docs/adr/8041 §2).
     fn settle_columns(&mut self, dirty: &[Bounds], all: bool) {
         let grow = JOIN_TOLERANCE;
         let keys: Vec<u64> = self
@@ -233,7 +233,7 @@ impl Store {
         self.option_out.is_empty()
     }
 
-    /// The Tadilat projesi view's marks (docs/adr/3039 §5); none: another view. Every wall and opening is pieced again.
+    /// The Tadilat projesi view's marks (docs/adr/8039 §5); none: another view. Every wall and opening is pieced again.
     pub fn set_renovation(&mut self, marks: Option<super::Renovation>) {
         if marks == self.renovation {
             return;
@@ -285,7 +285,7 @@ impl Store {
                 at, width, opening, ..
             } = &it.shape
             {
-                // Its hole and a pocket door's cavities (docs/adr/0777 §2), cut at the view's height (docs/adr/3012).
+                // Its hole and a pocket door's cavities (docs/adr/0777 §2), cut at the view's height (docs/adr/8012).
                 by_wall
                     .entry(w.to_bits())
                     .or_default()
@@ -317,7 +317,7 @@ impl Store {
         match (shape, self.wall_drawn.get(&id.to_bits())) {
             (Shape::Wall { pts, wall, .. }, Some(d)) => {
                 let b = entity_bounds_in(shape, self.font);
-                // Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline (no solid fill), ilave its body hatched.
+                // Tadilat projesi (docs/adr/8039 §5): mevcut a plain outline (no solid fill), ilave its body hatched.
                 let pieces = match &self.renovation {
                     Some(r) => {
                         let plain = wall::Spec {
@@ -347,7 +347,7 @@ impl Store {
                     }
                     None => wall::pieces_of(d, pts, wall, view),
                 };
-                // At the view's line group (docs/adr/3013).
+                // At the view's line group (docs/adr/8013).
                 let pieces = self.with_line_group(shape, pieces, view);
                 self.expanded_of(pieces, b)
             }
@@ -480,7 +480,7 @@ impl Store {
             let (key, slot, _, _) = walls[i];
             match d {
                 Some(d) => {
-                    // Cut where the columns on its level stand (docs/adr/3041 §2); the whole kept for their looks.
+                    // Cut where the columns on its level stand (docs/adr/8041 §2); the whole kept for their looks.
                     let cut = self.slots[slot as usize]
                         .as_ref()
                         .and_then(|it| self.cut_by_columns(it, &d));

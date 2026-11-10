@@ -7,7 +7,7 @@
 //! - The walls on the space's level whose left or right face lies on the side (parallel, within 1 mm) cover the
 //!   stretch their straight segments' ends project onto; a stretch no face covers is open (`open`).
 //! - Its height is the space's inside height when its ceiling is known: its finished floor to its asma tavan, its height
-//!   typed or the slab over it's plastered underside (docs/adr/3040 §3); else the lowest of its walls' tops over its
+//!   typed or the slab over it's plastered underside (docs/adr/8040 §3); else the lowest of its walls' tops over its
 //!   floor (a wall's own height, else up to the slab over it within its storey, else its level's: §1); else not known:
 //!   only the floor line is drawn. A wall lower than it draws its top across its stretch.
 //! - An opening of one of those walls draws its jambs where its points on the side's face project, from its sill (absent:
@@ -171,7 +171,7 @@ pub(crate) fn draw(
     let settings = doc.settings();
     let h = PAPER * settings.plot_scale;
     let level = s.space.arch.level.clone();
-    // Its floor and its ceiling (docs/adr/3040 §3): its walls' tops are measured from its floor.
+    // Its floor and its ceiling (docs/adr/8040 §3): its walls' tops are measured from its floor.
     let room = doc.room_height(&s.space);
     let floor = doc.room_floor(&s.space).0;
     // The sides: every outer ring's edges, part by part.
@@ -368,7 +368,7 @@ pub(crate) fn draw(
                     left,
                     lo,
                     hi,
-                    // Up to the slab over it within its storey (docs/adr/3040 §1), over the room's floor (§3).
+                    // Up to the slab over it within its storey (docs/adr/8040 §1), over the room's floor (§3).
                     height: doc.wall_height(f).map(|h| doc.wall_foot(f) + h - floor),
                 });
             }
@@ -379,7 +379,7 @@ pub(crate) fn draw(
                 side_walls.push(f.wall.clone());
             }
         }
-        // Its inside height when its ceiling is known (docs/adr/3040 §3); else its walls' lowest top.
+        // Its inside height when its ceiling is known (docs/adr/8040 §3); else its walls' lowest top.
         let height = room
             .filter(kentos_domain::RoomHeight::ceiling_known)
             .map(|h| h.inside())

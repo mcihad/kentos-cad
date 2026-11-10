@@ -1,4 +1,4 @@
-# M39 part 1b (docs/adr/3039 §3): the survey flat in Yeni durum; a door placed into the existing wall between Salon and
+# M39 part 1b (docs/adr/8039 §3): the survey flat in Yeni durum; a door placed into the existing wall between Salon and
 # Yatak odası 1 takes İlave; Mevcut durum then leaves it out.
 fit KentOS Mimari — Daire
 wait 3000

@@ -370,7 +370,7 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
         out.push(explain_part(
             Part {
                 part: "lineWeight",
-                // Çizgi kalınlığı, as Öznitelikler names it: a wall's Kalınlık is its width (docs/adr/3003).
+                // Çizgi kalınlığı, as Öznitelikler names it: a wall's Kalınlık is its width (docs/adr/8003).
                 label: "Çizgi kalınlığı",
                 own: base.line_weight.map(weight),
                 layer: weight(node.style.line_weight),

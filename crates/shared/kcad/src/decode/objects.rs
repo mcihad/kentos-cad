@@ -399,9 +399,9 @@ pub(super) struct Features {
     pub(super) road_cloud_conversions: bool,
     /// Schema 197: a volume approval's sources and algorithm (docs/adr/1041).
     pub(super) road_approval_sources: bool,
-    /// Schema 205 (docs/adr/3012): the project's plan cut height.
+    /// Schema 217 (docs/adr/8012): the project's plan cut height.
     pub(super) plan_cut: bool,
-    /// Schema 206 (docs/adr/3013): how the project's plan lines are weighted.
+    /// Schema 218 (docs/adr/8013): how the project's plan lines are weighted.
     pub(super) line_groups: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
@@ -427,33 +427,33 @@ pub(super) struct Features {
     pub(super) opening_codes: bool,
     pub(super) paiy_areas: bool,
     pub(super) zoning: bool,
-    /// Schema 211 (docs/adr/3031): kat irtifakı's program fields and schedule columns.
+    /// Schema 223 (docs/adr/8031): kat irtifakı's program fields and schedule columns.
     pub(super) land_shares: bool,
-    /// Schema 212 (docs/adr/3032): the site plan.
+    /// Schema 224 (docs/adr/8032): the site plan.
     pub(super) site_plan: bool,
-    /// Schema 213 (docs/adr/3034): the municipality's regulation.
+    /// Schema 225 (docs/adr/8034): the municipality's regulation.
     pub(super) local_rules: bool,
-    /// Schema 214 (docs/adr/3035): the building's sprinkler system.
+    /// Schema 226 (docs/adr/8035): the building's sprinkler system.
     pub(super) sprinklers: bool,
-    /// Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
+    /// Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
     pub(super) provision_tables: bool,
-    /// Schema 216 (docs/adr/3038): the room list's finishes and columns.
+    /// Schema 228 (docs/adr/8038): the room list's finishes and columns.
     pub(super) room_list: bool,
-    /// Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value.
+    /// Schema 229 (docs/adr/8038): a door or window type's frame and leaves and its U value.
     pub(super) opening_specs: bool,
-    /// Schema 218 (docs/adr/3039): a door's or window's own phase.
+    /// Schema 230 (docs/adr/8039): a door's or window's own phase.
     pub(super) opening_phases: bool,
-    /// Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
+    /// Schema 232 (docs/adr/8040 §2): a slab's layers besides its structure.
     pub(super) slab_layers: bool,
-    /// Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan.
+    /// Schema 233 (docs/adr/8040 §3): a room's floor offset and asma tavan.
     pub(super) room_heights: bool,
-    /// Schema 222 (docs/adr/3041 §1): beams.
+    /// Schema 234 (docs/adr/8041 §1): beams.
     pub(super) beams: bool,
-    /// Schema 223 (docs/adr/3041 §2): a column's material.
+    /// Schema 235 (docs/adr/8041 §2): a column's material.
     pub(super) column_material: bool,
-    /// Schema 224 (docs/adr/3041 §3): a beam's role and base.
+    /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
     pub(super) beam_roles: bool,
-    /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
+    /// Schema 231 (docs/adr/8039 §5): the Tadilat projesi view.
     pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
@@ -1393,7 +1393,7 @@ pub(super) fn object(
     if kind == Kind::Slab && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında döşeme olamaz"));
     }
-    // Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/3041 §1).
+    // Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/8041 §1).
     if kind == Kind::Beam && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
     }
@@ -2025,9 +2025,9 @@ pub(super) fn object(
                     || (has.tags && matches!(v, TableSource::Schedule { .. }))
                     // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
                     || (has.extraction && matches!(v, TableSource::Extraction(_)))
-                    // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
+                    // Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu.
                     || (has.zoning && matches!(v, TableSource::Zoning {}))
-                    // Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
+                    // Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
                     || (has.provision_tables && matches!(v, TableSource::Parking {} | TableSource::Shelter {}));
                 // Schema 131 (docs/adr/0733): a schedule's fixtures, new fields, type filter, headings and subtotals.
                 if !has.fixtures
@@ -2040,22 +2040,22 @@ pub(super) fn object(
                         "çizelgenin donatısı, yeni alanları, tür süzgeci, başlığı ve ara toplamı şema 131'den beri yazılır",
                     ));
                 }
-                // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
+                // Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu.
                 if !has.zoning && matches!(v, TableSource::Zoning {}) {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "emsal ve TAKS tablosunun kaynağı şema 210'dan beri yazılır",
+                        "emsal ve TAKS tablosunun kaynağı şema 222'den beri yazılır",
                     ));
                 }
-                // Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
+                // Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
                 if !has.provision_tables
                     && matches!(v, TableSource::Parking {} | TableSource::Shelter {})
                 {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "otopark ve sığınak hesabı tablolarının kaynağı şema 215'ten beri yazılır",
+                        "otopark ve sığınak hesabı tablolarının kaynağı şema 227'den beri yazılır",
                     ));
                 }
                 // Schema 182 (docs/adr/1030 §6): a data extraction table.
@@ -2566,72 +2566,72 @@ pub(super) fn object(
             "döner merdivenin bükümü (bulges) şema 117 ister",
         ));
     }
-    // Schema 218 (docs/adr/3039): a door's or window's own phase.
+    // Schema 230 (docs/adr/8039): a door's or window's own phase.
     if matches!(&entity, Entity::Opening(o) if o.opening.phase.is_some()) && !has.opening_phases {
         return Err(r.fail(
             Code::UnknownField,
-            "kapı ve pencerenin kendi tadilat durumu (phase) şema 218 ister",
+            "kapı ve pencerenin kendi tadilat durumu (phase) şema 230 ister",
         ));
     }
-    // Schema 224 (docs/adr/3041 §3): a beam's role and base.
+    // Schema 236 (docs/adr/8041 §3): a beam's role and base.
     if kentos_contracts::needs_beam_roles(&entity) && !has.beam_roles {
         return Err(r.fail(
             Code::UnknownField,
-            "kirişin türü (role) ve kattan yüksekliği (baseOffset) şema 224 ister",
+            "kirişin türü (role) ve kattan yüksekliği (baseOffset) şema 236 ister",
         ));
     }
-    // Schema 223 (docs/adr/3041 §2): a column's material.
+    // Schema 235 (docs/adr/8041 §2): a column's material.
     if matches!(&entity, Entity::Column(c) if c.column.material.is_some()) && !has.column_material {
-        return Err(r.fail(Code::UnknownField, "kolonun malzemesi (material) şema 223 ister"));
+        return Err(r.fail(Code::UnknownField, "kolonun malzemesi (material) şema 235 ister"));
     }
-    // Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan.
+    // Schema 233 (docs/adr/8040 §3): a room's floor offset and asma tavan.
     if kentos_contracts::needs_room_heights(&entity) && !has.room_heights {
         return Err(r.fail(
             Code::UnknownField,
-            "mahalin döşeme kot farkı (floorOffset) ve asma tavanı (suspendedCeiling) şema 221 ister",
+            "mahalin döşeme kot farkı (floorOffset) ve asma tavanı (suspendedCeiling) şema 233 ister",
         ));
     }
-    // Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
+    // Schema 232 (docs/adr/8040 §2): a slab's layers besides its structure.
     if matches!(&entity, Entity::Slab(s) if !s.slab.layers.is_empty()) && !has.slab_layers {
         return Err(r.fail(
             Code::UnknownField,
-            "döşemenin katmanları (layers) şema 220 ister",
+            "döşemenin katmanları (layers) şema 232 ister",
         ));
     }
-    // Schema 216 (docs/adr/3038): the room list's finishes and a spaces schedule's room list columns.
+    // Schema 228 (docs/adr/8038): the room list's finishes and a spaces schedule's room list columns.
     if kentos_contracts::needs_room_list(&entity) && !has.room_list {
         return Err(r.fail(
             Code::UnknownField,
             "mahalin denizlik, merdiven ve korkuluk kaplamaları ve çizelgenin mahal listesi sütunları (sillFinish, \
-             stairFinish, railingFinish, doors, windows) şema 216 ister",
+             stairFinish, railingFinish, doors, windows) şema 228 ister",
         ));
     }
-    // Schema 211 (docs/adr/3031): a units schedule's kat irtifakı fields; before it none was a field.
+    // Schema 223 (docs/adr/8031): a units schedule's kat irtifakı fields; before it none was a field.
     if kentos_contracts::needs_land_shares(&entity) && !has.land_shares {
         return Err(r.fail(
             Code::UnknownField,
-            "çizelgenin kat irtifakı sütunları (nature, annexNet, annexGross, annexes, totalGross, landShare) şema 211 ister",
+            "çizelgenin kat irtifakı sütunları (nature, annexNet, annexGross, annexes, totalGross, landShare) şema 223 ister",
         ));
     }
-    // Schema 209 (docs/adr/3029): a units schedule's regulation areas; before it none was a field.
+    // Schema 221 (docs/adr/8029): a units schedule's regulation areas; before it none was a field.
     if kentos_contracts::needs_paiy_areas(&entity) && !has.paiy_areas {
         return Err(r.fail(
             Code::UnknownField,
-            "çizelgenin yönetmelik alanı sütunları (paiyNet, paiyGross, paiyShare, generalGross) şema 209 ister",
+            "çizelgenin yönetmelik alanı sütunları (paiyNet, paiyGross, paiyShare, generalGross) şema 221 ister",
         ));
     }
-    // Schema 208 (docs/adr/3028): a tag naming an opening's joinery code or size; before it neither was a place.
+    // Schema 220 (docs/adr/8028): a tag naming an opening's joinery code or size; before it neither was a place.
     if kentos_contracts::needs_opening_codes(&entity) && !has.opening_codes {
         return Err(r.fail(
             Code::UnknownField,
-            "etiketin doğrama kodu ya da ölçü yeri ({code}, {size}) şema 208 ister",
+            "etiketin doğrama kodu ya da ölçü yeri ({code}, {size}) şema 220 ister",
         ));
     }
-    // Schema 207 (docs/adr/3027): a tag framed by an ellipse; before it a tag's frame was one of five.
+    // Schema 219 (docs/adr/8027): a tag framed by an ellipse; before it a tag's frame was one of five.
     if kentos_contracts::needs_ellipse_tags(&entity) && !has.ellipse_tags {
         return Err(r.fail(
             Code::UnknownField,
-            "etiketin elips çerçevesi (ellipse) şema 207 ister",
+            "etiketin elips çerçevesi (ellipse) şema 219 ister",
         ));
     }
     // Schema 153 (docs/adr/0807): an XOX slide; before it three sliding leaves did not part to both sides.

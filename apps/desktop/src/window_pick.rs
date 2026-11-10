@@ -1,4 +1,4 @@
-//! Çizimden seç (docs/adr/3006): a window that works on the selection steps aside while objects are picked on the
+//! Çizimden seç (docs/adr/8006): a window that works on the selection steps aside while objects are picked on the
 //! drawing, then opens again as it was. Oda modülleri and Tasarım seçenekleri said "Seçimden tanımla" and "Seçimi
 //! ekle" but, modal, let no selection change while open. AutoCAD's Block Definition does the same: "Select Objects —
 //! closes the Block Definition dialog box temporarily while you select the objects … press Enter to return to the

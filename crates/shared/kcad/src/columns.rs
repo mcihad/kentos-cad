@@ -1543,7 +1543,7 @@ impl Packer {
             // A view mark (docs/adr/0345 §1): its fields as one JSON text.
             Entity::ViewMark(e) => self.text(&serde_json::to_value(&e.mark).unwrap_or_default().to_string()),
             Entity::Slab(e) => self.text(&serde_json::to_value(&e.slab).unwrap_or_default().to_string()),
-            // A beam (docs/adr/3041 §1): its fields as one JSON text.
+            // A beam (docs/adr/8041 §1): its fields as one JSON text.
             Entity::Beam(e) => self.text(&serde_json::to_value(&e.beam).unwrap_or_default().to_string()),
             // A space (docs/adr/0342 §1): its source as one JSON text.
             Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {

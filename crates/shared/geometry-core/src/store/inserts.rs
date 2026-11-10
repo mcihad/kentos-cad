@@ -481,7 +481,7 @@ fn many_objects_put_on_several_cores_make_the_same_store() {
     }
 }
 
-/// Furniture follows the store's view (docs/adr/3011): its outline alone beyond 1:150 schematic, whole at 1:100 and
+/// Furniture follows the store's view (docs/adr/8011): its outline alone beyond 1:150 schematic, whole at 1:100 and
 /// 1:50; a block that is not furniture is whole at every view; another view's pieces are the same as the store's at it.
 #[test]
 fn furniture_is_its_outline_in_the_simplest_view() {

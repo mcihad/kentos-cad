@@ -201,7 +201,7 @@ impl Casework {
     fn request(&self, path: &[Vec2], side: CaseworkSide, cx: &Context<'_>) -> CaseworkRun {
         let n = path.len();
         let mut run = CaseworkRun {
-            // The units' layer (docs/adr/3008).
+            // The units' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Casework, cx),
             from: points::wire(path[0]),
             through: (n > 2).then(|| path[1..n - 1].iter().map(|p| points::wire(*p)).collect()),

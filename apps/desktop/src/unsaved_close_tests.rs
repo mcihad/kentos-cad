@@ -1,4 +1,4 @@
-//! Closing Mimari's editors (docs/adr/3006): a click beside them, × and Esc ask when they hold unsaved changes and
+//! Closing Mimari's editors (docs/adr/8006): a click beside them, × and Esc ask when they hold unsaved changes and
 //! close at once when they do not; F1 closes on Esc over its search box; Çizimden seç steps a window aside and brings
 //! it back.
 

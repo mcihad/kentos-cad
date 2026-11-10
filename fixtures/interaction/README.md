@@ -9,7 +9,7 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 
 İz, iki uygulamanın kullanım davranışının ortak referansıdır.
 
-**Gerçek pencere senaryoları** (`real/`, [ADR 3000](../../docs/adr/3000-real-window-acceptance.md)). Buradaki izler
+**Gerçek pencere senaryoları** (`real/`, [ADR 8000](../../docs/adr/8000-real-window-acceptance.md)). Buradaki izler
 uygulamaya olayları doğrudan verir; gerçek imleç, gerçek pencere, sahibin ayarları ve şerit devrede değildir. `real/`'deki
 senaryolar uygulamayı görünmez bir X ekranında gerçek fare ve klavye olaylarıyla kullanır
 (`scripts/usage/real/session.sh`; biçim `scripts/usage/real/README.md`).

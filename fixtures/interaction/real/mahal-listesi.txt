@@ -1,4 +1,4 @@
-# M38 (docs/adr/3038), 1920 × 1080: the acceptance apartment (gercek/daire.kcad from acceptance_flat_tests), Mimari.
+# M38 (docs/adr/8038), 1920 × 1080: the acceptance apartment (gercek/daire.kcad from acceptance_flat_tests), Mimari.
 # Doğrama kodları; the Salon selected and its five finishes typed in Öznitelikler; Çizelge ▾ › Mahal listesi placed
 # at 0,-12; Ruhsat takımı with the particulars; UP-01 left out (no İmar durumu here), the rest published.
 fit KentOS Mimari — Daire

@@ -1,4 +1,4 @@
-# M34 (docs/adr/3034), 1920 × 1080 (KENTOS_REAL_SIZE): Mimari › Denetim on a four-storey building of two flats
+# M34 (docs/adr/8034), 1920 × 1080 (KENTOS_REAL_SIZE): Mimari › Denetim on a four-storey building of two flats
 # (bina.kcad from regulation_audit_tests): its common stair, its ramp, its air shaft and light well, a first-floor
 # window and the missing elevator read by PAİY 30/12, 31, 32, 34 and 38. Then Proje ayarları › Mimari › İmar durumu ›
 # Yerel imar yönetmeliği: Sivas; Denetle again: Sivas's 1.30 m stair binds with PAİY's 1.20 m beside it, the air shaft

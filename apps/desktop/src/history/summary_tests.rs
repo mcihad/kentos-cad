@@ -1,4 +1,4 @@
-//! Komut geçmişi's Mimari summaries (docs/adr/3004), read from the command fixtures' inputs: each Mimari command says
+//! Komut geçmişi's Mimari summaries (docs/adr/8004), read from the command fixtures' inputs: each Mimari command says
 //! what it did in Turkish, without an id; the row's details (Ayrıntı) say the fields, without an id either.
 
 use serde_json::{Value, json};
@@ -132,7 +132,7 @@ fn an_opening_is_said_by_its_types_name() {
     assert_eq!(said.as_deref(), Some(format!("{} · uçtan 0.500 m", builtin.name).as_str()));
 }
 
-/// The Kapı tool sends no type for the form's first one of KentOS's own: the row says the form (docs/adr/3004).
+/// The Kapı tool sends no type for the form's first one of KentOS's own: the row says the form (docs/adr/8004).
 #[test]
 fn an_opening_without_a_type_is_said_by_its_form() {
     for (form, word) in [("door", "kapı"), ("window", "pencere"), ("niche", "niş")] {

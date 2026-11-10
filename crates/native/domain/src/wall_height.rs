@@ -1,4 +1,4 @@
-//! A wall's height (docs/adr/3040 §1; M40, ADV-18). Its own when it has one; else up to the underside of the slab over
+//! A wall's height (docs/adr/8040 §1; M40, ADV-18). Its own when it has one; else up to the underside of the slab over
 //! it, never past its storey's height (floor to floor); without a slab over it, its storey's height, as before.
 //!
 //! - A masonry wall is built from the floor to the slab over it (the unit price books pay "the wall as built"). Drawn
@@ -11,7 +11,7 @@
 //! - Its foot is its level's floor (the level's elevation; none without a level: 0); with a floor slab under it, that
 //!   slab's structure's top: the masonry is laid on the concrete before the screed and the finish (§2). Its top is the
 //!   slab over it's structure's underside: the ceiling's plaster covers both.
-//! - A beam over it (docs/adr/3041 §1) is its top as a slab is: a beam whose band holds the middle of its path, its
+//! - A beam over it (docs/adr/8041 §1) is its top as a slab is: a beam whose band holds the middle of its path, its
 //!   underside more than 10 cm over its foot; the lowest of the slabs' and the beams' undersides.
 //! - A beam's top is where it hangs: the structure's top of the slab over its storey at the middle of its axis (within
 //!   its storey), else its storey's top; its offset added. Its underside is its top less its height.
@@ -62,7 +62,7 @@ impl Document {
     }
 
     /// What the wall stops under when it is not its own height nor its storey's: the slab over it or a beam over it
-    /// (docs/adr/3041 §1).
+    /// (docs/adr/8041 §1).
     pub fn wall_top_from(&self, w: &WallFields) -> Option<WallTop> {
         if w.height.is_some() {
             return None;
@@ -85,7 +85,7 @@ impl Document {
     }
 
     /// The lowest underside, of the beams whose band holds `at`, more than [`OVER`] above `foot`. A lintel and a bond
-    /// beam sit in the wall, which runs on round them (docs/adr/3041 §3): only a beam of the frame stops it.
+    /// beam sit in the wall, which runs on round them (docs/adr/8041 §3): only a beam of the frame stops it.
     fn beam_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
         self.entities()
             .filter_map(|e| match e {
@@ -98,10 +98,10 @@ impl Document {
             .min_by(f64::total_cmp)
     }
 
-    /// A beam's top, metres over ±0.00 (docs/adr/3041 §1): the structure's top of the slab over its storey at the
+    /// A beam's top, metres over ±0.00 (docs/adr/8041 §1): the structure's top of the slab over its storey at the
     /// middle of its axis (its underside over its storey's floor, its top within its storey), else its storey's top;
     /// its offset added. None without either. One with a base over its storey's floor (a lintel at its opening's head,
-    /// docs/adr/3041 §3) sits there: its top that and its height over the floor.
+    /// docs/adr/8041 §3) sits there: its top that and its height over the floor.
     pub fn beam_top(&self, b: &BeamFields) -> Option<f64> {
         let (floor, storey) = self.storey_of(&b.arch);
         if let Some(base) = b.base_offset {
@@ -119,7 +119,7 @@ impl Document {
         Some(slab.or(storey.map(|h| floor + h))? + b.offset)
     }
 
-    /// The structure's thickness of the slab a beam hangs from (docs/adr/3041 §3), within its height: the part of it the
+    /// The structure's thickness of the slab a beam hangs from (docs/adr/8041 §3), within its height: the part of it the
     /// slab's volume holds. None for one that sits at its base or hangs from no slab.
     pub fn beam_slab(&self, b: &BeamFields) -> Option<f64> {
         if b.base_offset.is_some() || b.role != kentos_contracts::BeamRole::Beam {
@@ -198,7 +198,7 @@ impl Document {
     }
 }
 
-/// What a wall stops under (docs/adr/3040 §1, 3041 §1).
+/// What a wall stops under (docs/adr/8040 §1, 3041 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WallTop {
     Slab,
@@ -368,7 +368,7 @@ pub(crate) mod tests {
         assert_eq!(doc.wall_height(&wall("zemin", 12.0, 16.0, None)), Some(3.0));
     }
 
-    /// With layers (docs/adr/3040 §2): the wall is laid on its floor slab's concrete (under kaplama 2 + şap 5) and stops
+    /// With layers (docs/adr/8040 §2): the wall is laid on its floor slab's concrete (under kaplama 2 + şap 5) and stops
     /// under the concrete of the slab over it (over its sıva): 2.78 − (−0.07) = 2.85.
     #[test]
     fn a_wall_runs_from_concrete_to_concrete() {
@@ -388,7 +388,7 @@ pub(crate) mod tests {
         assert!((top - 3.07).abs() < 1e-9, "{top}");
     }
 
-    /// A beam over the wall (docs/adr/3041 §1): it hangs from the slab over its storey (its structure's top, 3.00) and
+    /// A beam over the wall (docs/adr/8041 §1): it hangs from the slab over its storey (its structure's top, 3.00) and
     /// the wall stops under it, 3.00 − 0.50 = 2.50; out of its band the slab's 2.85; without the slab it hangs from its
     /// storey's top; its offset moves it.
     #[test]
@@ -418,7 +418,7 @@ pub(crate) mod tests {
         let bare = document(serde_json::json!([beam(-0.5, 6.0, serde_json::json!({"offset": -0.05}))]));
         let b = bare.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
         assert!((b - 2.45).abs() < 1e-9, "{b}");
-        // A lintel (docs/adr/3041 §3) sits at its base, 2.10 to 2.30 over the floor, in the wall: the wall runs on to the
+        // A lintel (docs/adr/8041 §3) sits at its base, 2.10 to 2.30 over the floor, in the wall: the wall runs on to the
         // slab (2.85).
         let lintel = document(serde_json::json!([
             slab("k1", -1.0, 10.0, 0.15, 0.0),

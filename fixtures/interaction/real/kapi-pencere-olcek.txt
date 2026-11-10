@@ -1,4 +1,4 @@
-# M11 (docs/adr/3010): a door and a window on the 11 × 8 m outer walls, seen near and far. The screen's scale picks
+# M11 (docs/adr/8010): a door and a window on the 11 × 8 m outer walls, seen near and far. The screen's scale picks
 # the walls' detail and the openings follow it: at Home (1 m = 60.6 px, 1:62, Uygulama) the frame's sides show; two
 # wheel turns out (1:113, Şematik) the door is its leaf and swing, the window three lines jamb to jamb; five in (1:25,
 # Ayrıntılı) every part. At 1:113 the 6 cm frame is under 2 px and merges with the wall's end: the picture is the

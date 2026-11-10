@@ -20,16 +20,16 @@ recordedArea?: number,
  */
 shareWeight?: string, 
 /**
- * Niteliği (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
+ * Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
  * what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
  */
 nature?: string, 
 /**
- * An annex's independent unit (docs/adr/3031): the id of the group of kind `unit` it is allocated to.
+ * An annex's independent unit (docs/adr/8031): the id of the group of kind `unit` it is allocated to.
  */
 annexOf?: string, 
 /**
- * An independent unit's value factor in the land shares (docs/adr/3031; Kat Mülkiyeti Kanunu 3: values by
+ * An independent unit's value factor in the land shares (docs/adr/8031; Kat Mülkiyeti Kanunu 3: values by
  * location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
  */
 landFactor?: string, };

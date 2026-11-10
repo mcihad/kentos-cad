@@ -199,7 +199,7 @@ impl GridTool {
     fn made(&self, cx: &Context<'_>) -> Option<GridsCreate> {
         let at = self.hover?;
         let mut input = GridsCreate {
-            // The axes' layer (docs/adr/3008).
+            // The axes' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Grid, cx),
             grids: Vec::new(),
             series: None,
@@ -623,7 +623,7 @@ impl ColumnTool {
             rotation: (self.turn != 0.0).then_some(self.turn),
             tag: None,
             // Its inside darkened, as Mimarlar Odası asks of a bearing element on a plan (§14.5.3 i); at 1:20 its
-            // concrete is TS 5319's SN46 instead (docs/adr/3014).
+            // concrete is TS 5319's SN46 instead (docs/adr/8014).
             fill: Some(true),
             // Etkin kat (docs/adr/0713).
             arch: cx.new_arch(),
@@ -638,7 +638,7 @@ impl ColumnTool {
         cx: &Context<'_>,
     ) -> ColumnsCreate {
         ColumnsCreate {
-            // The columns' layer (docs/adr/3008).
+            // The columns' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Column, cx),
             columns,
             crossings,
@@ -1047,7 +1047,7 @@ pub struct FlightTool {
     risers: u32,
     tread: f64,
     cut: Option<f64>,
-    /// Whether Kesme yüksekliği was given (K): else the tool takes the project's plan cut height (docs/adr/3012).
+    /// Whether Kesme yüksekliği was given (K): else the tool takes the project's plan cut height (docs/adr/8012).
     cut_given: bool,
     numbering: bool,
     /// The last flight ends at the last riser, a ramp's where its slope says (else where it was clicked).
@@ -1336,7 +1336,7 @@ impl FlightTool {
         pts
     }
 
-    /// A stair's or a ramp's layer kind (docs/adr/3008).
+    /// A stair's or a ramp's layer kind (docs/adr/8008).
     fn layer_kind(&self) -> crate::arch_layer::Kind {
         if self.ramp {
             crate::arch_layer::Kind::Ramp
@@ -1345,7 +1345,7 @@ impl FlightTool {
         }
     }
 
-    /// Writes the walking line `pts` on its layer, opened with it when missing (docs/adr/3008): written when the
+    /// Writes the walking line `pts` on its layer, opened with it when missing (docs/adr/8008): written when the
     /// drawing changed.
     fn write_run(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
         crate::arch_layer::writing(&self.layer_kind(), cx, |_, cx| {
@@ -1363,7 +1363,7 @@ impl FlightTool {
         cx: &mut Context<'_>,
         write: bool,
     ) -> (Vec<Entity>, Option<String>, Vec<String>) {
-        // The stair's or ramp's layer (docs/adr/3008).
+        // The stair's or ramp's layer (docs/adr/8008).
         let layer_id = crate::arch_layer::planned(&self.layer_kind(), cx);
         let color = cx.draft.color_text();
         let line_weight = cx.draft.line_weight;
@@ -1576,7 +1576,7 @@ impl FlightTool {
         let words = upper_tr(js_trim(value));
         let length = |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
         match key {
-            // Genişlik is E in every Mimari tool (docs/adr/3003); G is Geri.
+            // Genişlik is E in every Mimari tool (docs/adr/8003); G is Geri.
             "E" => length(cx).map(|v| self.width = v).is_some(),
             "H" if words.is_empty() || words.starts_with("GEN") => {
                 self.landing = None;
@@ -1747,7 +1747,7 @@ impl Tool for FlightTool {
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
-        // A stair's cut line where the project's plan is cut (docs/adr/3012), unless one was given.
+        // A stair's cut line where the project's plan is cut (docs/adr/8012), unless one was given.
         if !self.ramp && !self.cut_given {
             self.cut = Some(cx.doc.settings().plan_cut());
         }

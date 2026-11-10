@@ -1,12 +1,12 @@
 """Writes fixtures/interaction/real/daire-2p1.txt: the 2+1 flat of fixtures/interaction/v1/acceptance-flat.json done
-as a hand does it in the real window (docs/adr/3000): tools from the Mimari ribbon, values in the tool panel's
+as a hand does it in the real window (docs/adr/8000): tools from the Mimari ribbon, values in the tool panel's
 fields, points with the mouse, snapping and grid as the owner's settings have them. The trace's world metres
 become screen pixels of the view Home gives after the outer walls (measured on 7 November 2026 in a 1440×900
 screen: 1 m = 66.47 px, the plan's (0, 0) at (160.4, 741.4)); a changed layout moves them, so measure again.
-Since M8 (docs/adr/3007) a new project has Zemin kat, so the wall tools' panels start with a Kat row: Ölçülü bölme's
+Since M8 (docs/adr/8007) a new project has Zemin kat, so the wall tools' panels start with a Kat row: Ölçülü bölme's
 fields are 29 px lower and its Uçlar menu opens upwards; the outer walls take Dış duvar 25 (0.25 m) by default and
 the partitions are given İç duvar 15 from the Stil menu (measured again on 7 November 2026, evening). Since M9
-(docs/adr/3008) the Mimari tools' panels have a Katman row too: every field is a row (29 px) lower again, and Stil's
+(docs/adr/8008) the Mimari tools' panels have a Katman row too: every field is a row (29 px) lower again, and Stil's
 menu opens upwards.
 `python3 scripts/usage/real/scenario_2p1.py`"""
 import pathlib
@@ -85,7 +85,7 @@ a("key Escape"); a("key Home"); a("wait 800"); a("shot r11-cizelgeler")
 
 if __name__ == "__main__":
     path = pathlib.Path(__file__).resolve().parents[3] / "fixtures/interaction/real/daire-2p1.txt"
-    head = ["# 2+1 daire gerçek pencerede (docs/adr/3000; üretici scripts/usage/real/scenario_2p1.py).",
+    head = ["# 2+1 daire gerçek pencerede (docs/adr/8000; üretici scripts/usage/real/scenario_2p1.py).",
             "# Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/daire-2p1.txt .run/gui-evidence/gercek-2p1 --modul mimari"]
     path.write_text("\n".join(head + L) + "\n", encoding="utf-8")
     print(path, len(L), "satır")

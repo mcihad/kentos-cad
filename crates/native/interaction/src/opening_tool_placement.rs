@@ -190,7 +190,7 @@ impl OpeningTool {
         if let Some(m) = kentos_native_application::opening_placement::measure(cx.doc, o) {
             self.placement
                 .info
-                // The opening's width, as its panel names it (docs/adr/3003); “Duvar · En” read as the wall's.
+                // The opening's width, as its panel names it (docs/adr/8003); “Duvar · En” read as the wall's.
                 .push(format!("Genişlik {}", f.length(m.width)));
             self.placement.info.push(format!(
                 "Net köşe payı: Baş {} · Son {}",

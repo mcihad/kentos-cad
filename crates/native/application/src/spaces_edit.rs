@@ -115,7 +115,7 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.base {
         f.finishes.base.clone_from(v);
     }
-    // The room list's finishes (docs/adr/3038).
+    // The room list's finishes (docs/adr/8038).
     if let Some(v) = &c.sill {
         f.finishes.sill.clone_from(v);
     }

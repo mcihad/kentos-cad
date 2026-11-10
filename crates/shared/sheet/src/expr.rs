@@ -51,7 +51,7 @@ impl Scope {
             {
                 return Some(v);
             }
-            // A question left unanswered gives way (docs/adr/3037): a sheet's empty `@ada` reads the book's or the
+            // A question left unanswered gives way (docs/adr/8037): a sheet's empty `@ada` reads the book's or the
             // drawing's, and an empty variable a built-in value of its name; with none it stays unanswered.
             let mut unanswered = None;
             for vars in [&self.sheet, &self.project] {

@@ -1,4 +1,4 @@
-//! A module's own typed names (docs/adr/3002): names that mean the module's work in its own program and come there
+//! A module's own typed names (docs/adr/8002): names that mean the module's work in its own program and come there
 //! before the names the whole of KentOS shares. KentOS Mimari's are `catalog/v1/names-mimari.json`:
 //! - PENCERE is the window tool there; Pencere yakınlaştır keeps Z and PENCEREBUYUT.
 //! - Two-letter names for the main tools: DU Duvar, KP Kapı, PN Pencere, MH Mahal …
@@ -194,7 +194,7 @@ impl App {
         of(self.program?)
     }
 
-    /// A name typed in the command line that is one of this program's own (docs/adr/3002): its command runs,
+    /// A name typed in the command line that is one of this program's own (docs/adr/8002): its command runs,
     /// before KentOS's shared names and the AutoCAD profile. A model of the user's by that name still comes first.
     pub(crate) fn run_module_name(&mut self, text: &str) -> Option<Task<Message>> {
         let name = *self.module_names()?.find(text)?;

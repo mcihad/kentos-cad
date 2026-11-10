@@ -1,4 +1,4 @@
-//! Which ribbon tabs a narrow strip shows (docs/adr/3005). The open tab and the contextual tabs (the selection's: Duvar,
+//! Which ribbon tabs a narrow strip shows (docs/adr/8005). The open tab and the contextual tabs (the selection's: Duvar,
 //! Açıklık …) always show; the other tabs show from the left while they fit, the rest go into the ⋯ menu that stands
 //! before the contextual tabs. A strip that scrolled to its open tab hid the leading tabs with nothing to say so: at
 //! 1100 px and 18 px text Dosya, Giriş, Ekle and Açıklama were off the screen behind a 4 px scroll bar. Fluent's rule:

@@ -1,4 +1,4 @@
-//! PDF/A-2 denetimi (docs/adr/3037, M37): the ISO 19005-2 rules a sheet file can break, read back from its bytes.
+//! PDF/A-2 denetimi (docs/adr/8037, M37): the ISO 19005-2 rules a sheet file can break, read back from its bytes.
 //!
 //! The 2026 digital project regulation asks a drawing as a PDF/A file (RG 5.8.2026/33331 Md. 4/2). This is KentOS's own
 //! reading of the clauses its sheet writer touches, not a certification: it says what it read and found, by clause.
@@ -610,7 +610,7 @@ mod tests {
         assert_eq!(date_parts("D:20261109"), Some([2026, 11, 9, 0, 0, 0, 0]));
     }
 
-    /// A tool: every PDF in `KENTOS_PDFA_DIR` (a delivery folder) read by these rules (docs/adr/3037).
+    /// A tool: every PDF in `KENTOS_PDFA_DIR` (a delivery folder) read by these rules (docs/adr/8037).
     #[test]
     #[ignore]
     fn pdfa_files() {

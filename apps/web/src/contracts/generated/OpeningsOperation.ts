@@ -15,7 +15,7 @@ import type { WallEnd } from "./WallEnd";
  */
 export type OpeningsOperation = { "kind": "set" } & OpeningChange | { "kind": "move", by?: number, at?: number, } | { "kind": "flip", what: OpeningFlip, } | { "kind": "rehost", to: string, point?: Vec2, } | { "kind": "replaceType", from?: string, to: string, level?: string | null, } | { "kind": "detach" } | { "kind": "push", fields?: Array<OpeningTypeField>, } | { "kind": "refresh" } | { "kind": "reset", fields?: Array<OpeningTypeField>, } | { "kind": "renumber", prefix: string, start: number, form?: OpeningForm, 
 /**
- * Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens
+ * Mahale göre (docs/adr/8028): each opening `prefix` and its room's number instead (a door's the room it opens
  * into, else its other side's; another's the room on either side), and when that room has more than one of
  * them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
  */

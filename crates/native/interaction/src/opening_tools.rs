@@ -273,7 +273,7 @@ impl OpeningTool {
         true
     }
 
-    /// The layer kind of the opening the tool places now: its type's form (docs/adr/3008).
+    /// The layer kind of the opening the tool places now: its type's form (docs/adr/8008).
     fn layer_kind(&self) -> crate::arch_layer::Kind {
         crate::arch_layer::Kind::opening(self.kind_def().map_or(self.form, |t| t.form))
     }
@@ -292,7 +292,7 @@ impl OpeningTool {
         let measured = span.is_none() && !self.middle;
         let (operation, leaves, build) = self.door_input();
         Some(OpeningsCreate {
-            // The opening's layer by its form (docs/adr/3008).
+            // The opening's layer by its form (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&self.layer_kind(), cx),
             openings: vec![NewOpening {
                 host,
@@ -321,7 +321,7 @@ impl OpeningTool {
                 operation,
                 leaves,
                 build,
-                // Its own tadilat durumu when the view's is not its wall's (docs/adr/3039 §3): a door drawn in Yeni
+                // Its own tadilat durumu when the view's is not its wall's (docs/adr/8039 §3): a door drawn in Yeni
                 // durum into an existing wall is İlave.
                 phase: cx.drawn_phase().filter(|p| {
                     cx.doc
@@ -409,7 +409,7 @@ impl OpeningTool {
         }
     }
 
-    /// Yerleştirme as the panel reads it (docs/adr/3003): O centres the opening, Uçtan uzaklık sets its distance.
+    /// Yerleştirme as the panel reads it (docs/adr/8003): O centres the opening, Uçtan uzaklık sets its distance.
     fn placement_word(&self) -> &'static str {
         if self.middle {
             "Ortala"
@@ -1014,7 +1014,7 @@ pub struct OpeningEditTool {
     start: u32,
     /// What Numarala waits for: the prefix (true) or the first number.
     asking: Option<bool>,
-    /// Mahale göre (docs/adr/3028): each opening its room's number, a door K, a window P, a bare opening B.
+    /// Mahale göre (docs/adr/8028): each opening its room's number, a door K, a window P, a bare opening B.
     by_room: bool,
     hover: Option<(Slot, Vec2)>,
     drawn: Preview,
@@ -1165,7 +1165,7 @@ impl OpeningEditTool {
 
     fn see(&mut self, cx: &Context<'_>) {
         let mut out = Preview::default();
-        // Numarala: the numbers to come beside the openings before Enter (docs/adr/3028).
+        // Numarala: the numbers to come beside the openings before Enter (docs/adr/8028).
         if self.action == Action::Number && self.asking.is_none() {
             for (uids, operation) in self.number_runs(cx) {
                 let input = OpeningsEdit {
@@ -1377,7 +1377,7 @@ impl Tool for OpeningEditTool {
             None => match key.as_str() {
                 "Ö" | "O" if !self.by_room => self.asking = Some(true),
                 "B" if !self.by_room => self.asking = Some(false),
-                // Mahale göre on or off (docs/adr/3028).
+                // Mahale göre on or off (docs/adr/8028).
                 "M" => {
                     self.by_room = !self.by_room;
                     self.see(cx);

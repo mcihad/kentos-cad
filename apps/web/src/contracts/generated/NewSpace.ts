@@ -36,17 +36,17 @@ method?: SpaceMethod,
  */
 columns?: SpaceColumns, number?: string, name?: string, usage?: string, arch?: ArchInfo, 
 /**
- * Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/3040
+ * Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/8040
  * §3).
  */
 height?: number, 
 /**
- * Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/3040 §3); absent: the top of the floor
+ * Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/8040 §3); absent: the top of the floor
  * slab under it, else its storey's floor.
  */
 floorOffset?: number, 
 /**
- * Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/3040 §3); absent: none.
+ * Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/8040 §3); absent: none.
  */
 suspendedCeiling?: number, finishes?: SpaceFinishes, 
 /**

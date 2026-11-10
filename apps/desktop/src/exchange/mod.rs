@@ -162,7 +162,7 @@ pub enum Window {
     /// Atlası PDF yap (docs/adr/0534); boxed: the plan it holds.
     AtlasExport(Box<atlas_export::State>),
     SheetPublish(Box<sheet_publish::State>),
-    /// Ruhsat takımı (docs/adr/3037): the particulars asked once, then the set and its publication.
+    /// Ruhsat takımı (docs/adr/8037): the particulars asked once, then the set and its publication.
     PermitSet(Box<permit_set::State>),
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),

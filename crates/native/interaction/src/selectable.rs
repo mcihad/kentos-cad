@@ -45,7 +45,7 @@ pub const KINDS: [&str; 28] = [
     "viewmark",
     // Last, so a filter saved before keeps its bits (docs/adr/0722).
     "slab",
-    // After it for the same reason (docs/adr/3041 §1).
+    // After it for the same reason (docs/adr/8041 §1).
     "beam",
 ];
 

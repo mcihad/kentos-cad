@@ -1297,7 +1297,7 @@ impl Audit<'_> {
         out
     }
 
-    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a beam (docs/adr/3041 §1), a stair, a ramp
+    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a beam (docs/adr/8041 §1), a stair, a ramp
     /// or a room separator on no level or on one the project lacks; each fixed by giving it `level`
     /// (`cad.levels.assign`) unless locked.
     fn levels(&self, level: Option<&ArchLevel>) -> Vec<ArchAuditFinding> {
@@ -1854,7 +1854,7 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
-    // The doors (docs/adr/0772 §5), the fixtures (docs/adr/3025) and the regulation (docs/adr/3033) only when asked by
+    // The doors (docs/adr/0772 §5), the fixtures (docs/adr/8025) and the regulation (docs/adr/8033) only when asked by
     // name: an older call's findings stay as they were. Denetim's panel asks for every group by name.
     let asked = |c: ArchAuditCheck| {
         input.checks.contains(&c)
@@ -1919,10 +1919,10 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
                 },
             ),
             ArchAuditCheck::Program => crate::program_check::findings(doc),
-            // Mevzuat (docs/adr/3033): each finding naming its article.
+            // Mevzuat (docs/adr/8033): each finding naming its article.
             ArchAuditCheck::Regulation => crate::regulation_audit::findings(doc, |code, message, repair, slots, at, rule, offer| {
                 let uids = slots.iter().map(|s| audit.uid(*s)).collect();
-                // A stair's or a ramp's fix (docs/adr/3034): cad.arch.edit on it, not on a locked layer.
+                // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer.
                 let fix = offer.zip(slots.first()).and_then(|(o, s)| {
                     let e = doc.get(*s)?;
                     (!audit.locked(e)).then(|| {

@@ -245,7 +245,7 @@ impl App {
             self.shown_tab()
         };
         // A narrow window fits its tabs to the strip, whatever tab is open: the tabs that do not fit go into a ⋯ menu,
-        // the open, contextual and the program's own tab stay in sight (docs/adr/3005). Only an architecture tab did,
+        // the open, contextual and the program's own tab stay in sight (docs/adr/8005). Only an architecture tab did,
         // so kentos-cad's fourteen tabs ran off the window at 1100 px with the selection's Duvar out of sight.
         if self.window_size.width < typography::scaled(1200.0) {
             ribbon = ribbon.scrolling_tabs(typography::scaled(160.0));
@@ -730,7 +730,7 @@ impl App {
     }
 
     /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips; and the
-    /// selected rooms' edge grips (Odayı büyüt, docs/adr/3023), drawn as a linear parameter's pair of arrowheads square
+    /// selected rooms' edge grips (Odayı büyüt, docs/adr/8023), drawn as a linear parameter's pair of arrowheads square
     /// to the edge.
     fn param_grip_marks(&self) -> Vec<kentos_geometry_core::block_dynamic::ParamGrip> {
         use kentos_geometry_core::block_dynamic::{GripKind, ParamGrip};
@@ -808,7 +808,7 @@ impl App {
                         token: f.token,
                         at: f.at,
                         hint: match (&f.setting, f.mode) {
-                            // A setting's field (docs/adr/3018): what it holds now, a choice's words.
+                            // A setting's field (docs/adr/8018): what it holds now, a choice's words.
                             (Some(s), _) if s.choices.is_empty() && s.value.trim().is_empty() => {
                                 "Enter uygular · Tab sonraki · Esc kapatır".to_owned()
                             }
@@ -827,7 +827,7 @@ impl App {
                             (None, None) if self.session.tool_id() == "fillet" => {
                                 "Yarıçap · ör. 25cm · Enter uygular".to_owned()
                             },
-                            // The tool's settings beside the cursor are a Tab away (docs/adr/3018).
+                            // The tool's settings beside the cursor are a Tab away (docs/adr/8018).
                             (None, None) => {
                                 let settings: Vec<String> = self.field_settings().into_iter().map(|s| s.label).collect();
                                 if settings.is_empty() {
@@ -1685,7 +1685,7 @@ impl App {
             if let Some(cell) = self.level_cell(fit < 7) {
                 bar = bar.separator().push(cell);
             }
-            // Emsal ve TAKS (docs/adr/3030): while the project has a zoning; the limits while there is room, the
+            // Emsal ve TAKS (docs/adr/8030): while the project has a zoning; the limits while there is room, the
             // ratios alone until the lamps go compact, then its icon (and “!” past a limit) as Kat's.
             if let Some(cell) = crate::zoning_badge::cell(self, (fit < 7).then_some(fit < 2)) {
                 bar = bar.separator().push(cell);
@@ -1900,7 +1900,7 @@ impl App {
             if let Some(words) = self.level_words() {
                 width += SEPARATOR + if fit < 7 { cell(&words, true) } else { 35.0 };
             }
-            // Emsal ve TAKS (docs/adr/3030), its limits while there is room, its icon and a “!” once tight.
+            // Emsal ve TAKS (docs/adr/8030), its limits while there is room, its icon and a “!” once tight.
             if let Some((words, _)) = crate::zoning_badge::words(&doc.model, fit < 2) {
                 width += SEPARATOR
                     + if fit < 7 {
@@ -2410,7 +2410,7 @@ impl App {
             .collect()
     }
 
-    /// A row of the command line's list with this program's own names (module_names.rs, docs/adr/3002).
+    /// A row of the command line's list with this program's own names (module_names.rs, docs/adr/8002).
     fn module_line(&self, id: &'static str, line: LineCommand<'static>) -> LineCommand<'static> {
         match self.module_names() {
             Some(names) => names.line(id, line),
@@ -2630,8 +2630,8 @@ pub(crate) fn hex_color(text: &str) -> Color {
     Color::from_rgb8(0x9a, 0xa0, 0xa6)
 }
 
-/// A module program's own ribbon tab: kept in sight on a narrow strip (docs/adr/3005), and the one a new project opens
-/// on (docs/adr/3007). KentOS Mimari's Mimari.
+/// A module program's own ribbon tab: kept in sight on a narrow strip (docs/adr/8005), and the one a new project opens
+/// on (docs/adr/8007). KentOS Mimari's Mimari.
 pub(crate) fn program_tab(module: kentos_launch::Module) -> Option<&'static str> {
     match module {
         kentos_launch::Module::Architecture => Some("arch"),

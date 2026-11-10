@@ -66,7 +66,7 @@ fn a_rooms_outline_on_a_walls_face_does_not_take_a_click_in_the_wall() {
     assert_eq!(s.hits(Vec2::new(E + 4.70, N + 3.0), tol), vec![2.0, 3.0]);
 }
 
-/// docs/adr/3023: a room is picked on its floor, as its net area, so it can be selected for its edge grips; a line
+/// docs/adr/8023: a room is picked on its floor, as its net area, so it can be selected for its edge grips; a line
 /// drawn in it goes first (edges before areas).
 #[test]
 fn a_click_on_a_rooms_floor_picks_the_room_and_a_line_in_it_first() {

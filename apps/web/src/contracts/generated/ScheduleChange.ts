@@ -8,6 +8,6 @@ import type { ScheduleSort } from "./ScheduleSort";
  */
 export type ScheduleChange = { columns?: Array<ScheduleColumn>, filter?: ScheduleFilter | null, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, 
 /**
- * Kat kat (docs/adr/3029): a units schedule's rows storey by storey.
+ * Kat kat (docs/adr/8029): a units schedule's rows storey by storey.
  */
 byLevel?: boolean, };

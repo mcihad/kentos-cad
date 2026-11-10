@@ -278,7 +278,7 @@ fn pictures_go_in_as_images_with_their_masks() {
     );
 }
 
-/// PDF/A-2b (docs/adr/3037): the ifraz sheet (its faces, its map's layers as optional content, a geographic viewport)
+/// PDF/A-2b (docs/adr/8037): the ifraz sheet (its faces, its map's layers as optional content, a geographic viewport)
 /// with a picture and its soft mask, written archival, reads back as PDF/A-2 by the PDF reader's rules; the same sheet
 /// written plainly lacks the metadata and the output intent; a CMYK JPEG is refused by name.
 #[test]

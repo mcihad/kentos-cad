@@ -1,4 +1,4 @@
-//! Parsel (docs/adr/3032; ADV-22, M32): a closed line or a polygon of the drawing made the site plan's parcel, each of
+//! Parsel (docs/adr/8032; ADV-22, M32): a closed line or a polygon of the drawing made the site plan's parcel, each of
 //! its edges given its kind (Yan bahçe, Ön bahçe, Arka bahçe, Kamusal alan), and the setback line (yapı yaklaşma
 //! sınırı) the document keeps drawn as a dashed closed line.
 //!
@@ -7,7 +7,7 @@
 //! half a metre for each storey past four) and the footprint's distance to it, the setback line shown as it will be;
 //! Enter writes them. Started on a project with a parcel, it takes it up with its kinds.
 //!
-//! Ölçüler (Ö, on by default; docs/adr/3032 §2) draws the site plan's marks with them, in the same undo step: an aligned
+//! Ölçüler (Ö, on by default; docs/adr/8032 §2) draws the site plan's marks with them, in the same undo step: an aligned
 //! dimension from the footprint's nearest point to each edge, a level mark ±0.00 in the footprint's middle and, with
 //! ±0.00's elevation, “±0.00 = +1285.40” under it. Each carries the attribute `Vaziyet`; run again, the tool takes the
 //! old marks away before it draws the new ones.
@@ -25,7 +25,7 @@ pub const ID: &str = "siteParcel";
 pub const LABEL: &str = "Parsel";
 /// The setback line's colour: the plan's own red for an approach line.
 pub const ENVELOPE_COLOR: &str = "#d32f2f";
-/// The attribute the site plan's marks carry (docs/adr/3032 §2): what the tool takes away before drawing them again.
+/// The attribute the site plan's marks carry (docs/adr/8032 §2): what the tool takes away before drawing them again.
 pub const MARK_ATTR: &str = "Vaziyet";
 
 /// The next kind a click gives an edge.
@@ -89,7 +89,7 @@ impl ParcelTool {
         Self::default()
     }
 
-    /// The site plan's marks (docs/adr/3032 §2): the old ones taken away, a distance dimension for each edge the
+    /// The site plan's marks (docs/adr/8032 §2): the old ones taken away, a distance dimension for each edge the
     /// footprint stands apart from, ±0.00 in the footprint's middle and its elevation under it; how many drawn.
     fn draw_marks(report: &kentos_domain::site::SiteReport, cx: &mut Context<'_>) -> Option<usize> {
         let old: Vec<kentos_domain::Slot> = cx
@@ -402,7 +402,7 @@ impl ParcelTool {
         }
         let mut settings = cx.doc.settings().clone();
         let arch = settings.arch.get_or_insert_with(Default::default);
-        // A project without a zoning takes the parcel's drawn area as its own (docs/adr/3030).
+        // A project without a zoning takes the parcel's drawn area as its own (docs/adr/8030).
         if arch.zoning.is_none() {
             arch.zoning = Some(kentos_commands::Zoning {
                 parcel_area: report.area,

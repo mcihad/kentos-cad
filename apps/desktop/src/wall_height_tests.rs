@@ -1,4 +1,4 @@
-//! Duvar tepeleri (docs/adr/3040 §1; M40, ADV-18's first acceptance): the two-storey building, its first storey's floor
+//! Duvar tepeleri (docs/adr/8040 §1; M40, ADV-18's first acceptance): the two-storey building, its first storey's floor
 //! slab drawn, 15 cm: the ground storey's walls stop under it (2.85 of 3.00) in Metraj; the ground storey made 3.24 in
 //! Proje ayarları › Mimari, the storey above moves up with its slab and the walls follow (3.09). The storey above has no
 //! slab over it: its walls stay floor to floor.
@@ -117,7 +117,7 @@ fn the_walls_stop_under_the_slab_over_them_and_follow_their_storey_s_height() {
     let after = walls(&mut app);
     assert_eq!(heights(&after, "zemin"), [3.09], "the walls follow");
     assert_eq!(heights(&after, "k1"), [3.0]);
-    // Döşeme katmanları (docs/adr/3040 §2): the slab over them a storey's floor (kaplama 2 + şap 5 over its concrete,
+    // Döşeme katmanları (docs/adr/8040 §2): the slab over them a storey's floor (kaplama 2 + şap 5 over its concrete,
     // sıva 2 under): the walls stop under its concrete, 3.24 − 0.07 − 0.15 = 3.02; the ground storey's floor slab
     // drawn too, the same build-up: they stand on its concrete, 7 cm lower: 3.09 again, concrete to concrete.
     let layers = kentos_commands::slab_build_ups()
@@ -167,7 +167,7 @@ fn the_walls_stop_under_the_slab_over_them_and_follow_their_storey_s_height() {
     );
 }
 
-/// A room's interior elevation (docs/adr/3040 §3): the two-storey building, the 1. kat's floor slab Ara kat (kaplama 2,
+/// A room's interior elevation (docs/adr/8040 §3): the two-storey building, the 1. kat's floor slab Ara kat (kaplama 2,
 /// şap 5 over 15 cm of concrete, sıva 2 under): the ground storey's room found from its walls is drawn to its ceiling's
 /// plaster, 2.76 (its walls run 2.78 to the concrete over its finished floor); the room over it, on the slab's finish,
 /// has no ceiling known and is drawn to its walls' tops, the next floor: 3.00.

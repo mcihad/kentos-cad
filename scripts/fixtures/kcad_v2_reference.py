@@ -1620,7 +1620,7 @@ def table_parts(e):
         return e
     e = dict(e)
     # Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects as a block schedule; schema 182's data
-    # extraction table too (docs/adr/1030 §6), schema 210's Emsal ve TAKS tablosu (docs/adr/3030).
+    # extraction table too (docs/adr/1030 §6), schema 222's Emsal ve TAKS tablosu (docs/adr/8030).
     if src["kind"] in ("blocks", "schedule", "extraction", "zoning", "parking", "shelter"):
         assert src.get("names", [None]), "boş ad listesi yazılmaz"
         e["schedule"] = e.pop("source")
@@ -1766,7 +1766,7 @@ KINDS = {
     "viewmark": {"viewmark": (opaque, True)},
     # Schema 123 (docs/adr/0722): a slab; its fields as one map.
     "slab": {"slab": (opaque, True)},
-    # Schema 222 (docs/adr/3041 §1): a beam; its fields as one map.
+    # Schema 234 (docs/adr/8041 §1): a beam; its fields as one map.
     "beam": {"beam": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
@@ -2626,36 +2626,36 @@ def document(d):
         # A volume approval's sources and algorithm (docs/adr/1041).
         schema = max(schema, 204)
     if (d.get("settings", {}).get("arch") or {}).get("cutHeight") is not None:
-        # The project's plan cut height (docs/adr/3012).
-        schema = max(schema, 205)
+        # The project's plan cut height (docs/adr/8012).
+        schema = max(schema, 217)
     if (d.get("settings", {}).get("arch") or {}).get("lineGroups") is not None:
-        # How the project's plan lines are weighted (docs/adr/3013).
-        schema = max(schema, 206)
+        # How the project's plan lines are weighted (docs/adr/8013).
+        schema = max(schema, 218)
     if any(e["kind"] == "tag" and e.get("shape") == "ellipse"
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
-        # A tag framed by an ellipse (docs/adr/3027).
-        schema = max(schema, 207)
+        # A tag framed by an ellipse (docs/adr/8027).
+        schema = max(schema, 219)
     if (any("code" in t for t in (d["settings"].get("arch") or {}).get("openingTypes") or [])
             or any(e["kind"] == "tag" and ("{code}" in e.get("content", "") or "{size}" in e.get("content", ""))
                    or e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
                    and any(isinstance(c, dict) and c.get("field") == "code" for c in e["source"].get("columns", []))
                    for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
         # A door or window type's joinery code, a tag naming it or an opening's size, a schedule's Kod column
-        # (docs/adr/3028).
-        schema = max(schema, 208)
+        # (docs/adr/8028).
+        schema = max(schema, 220)
     if any(e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
            and (e["source"].get("byLevel")
                 or any(isinstance(c, dict) and c.get("field") in ("paiyNet", "paiyGross", "paiyShare", "generalGross")
                        for c in e["source"].get("columns", [])))
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
-        # A units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (docs/adr/3029).
-        schema = max(schema, 209)
+        # A units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (docs/adr/8029).
+        schema = max(schema, 221)
     if ((d.get("settings", {}).get("arch") or {}).get("zoning") is not None
             or any("emsal" in b for b in ((d.get("settings", {}).get("arch") or {}).get("program") or {}).get("briefs", []))
             or any(e["kind"] == "table" and (e.get("source") or {}).get("kind") == "zoning"
                    for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
-        # The parcel's zoning, a brief's floor area ratio count, Emsal ve TAKS tablosu (docs/adr/3030).
-        schema = max(schema, 210)
+        # The parcel's zoning, a brief's floor area ratio count, Emsal ve TAKS tablosu (docs/adr/8030).
+        schema = max(schema, 222)
     program = (d.get("settings", {}).get("arch") or {}).get("program") or {}
     if ("landTotal" in program
             or any(u.get("kind") == "annex" or any(k in u for k in ("nature", "annexOf", "landFactor"))
@@ -2665,56 +2665,56 @@ def document(d):
                                                                        "totalGross", "landShare")
                            for c in e["source"].get("columns", []))
                    for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
-        # Kat irtifakı: annexes, a unit's nature and value factor, the land shares' whole, their columns (docs/adr/3031).
-        schema = max(schema, 211)
+        # Kat irtifakı: annexes, a unit's nature and value factor, the land shares' whole, their columns (docs/adr/8031).
+        schema = max(schema, 223)
     if (d.get("settings", {}).get("arch") or {}).get("site") is not None:
-        # The site plan: the parcel, its edges, ±0.00's elevation, the setback line (docs/adr/3032).
-        schema = max(schema, 212)
+        # The site plan: the parcel, its edges, ±0.00's elevation, the setback line (docs/adr/8032).
+        schema = max(schema, 224)
     if (d.get("settings", {}).get("arch") or {}).get("localRules") is not None:
-        # The municipality's regulation the audit reads (docs/adr/3034).
-        schema = max(schema, 213)
+        # The municipality's regulation the audit reads (docs/adr/8034).
+        schema = max(schema, 225)
     if (d.get("settings", {}).get("arch") or {}).get("sprinklers"):
-        # The building's sprinkler system (docs/adr/3035).
-        schema = max(schema, 214)
+        # The building's sprinkler system (docs/adr/8035).
+        schema = max(schema, 226)
     if any(e["kind"] == "table" and (e.get("source") or {}).get("kind") in ("parking", "shelter")
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
-        # Otopark and Sığınak hesabı (docs/adr/3036).
-        schema = max(schema, 215)
+        # Otopark and Sığınak hesabı (docs/adr/8036).
+        schema = max(schema, 227)
     if any((e["kind"] == "space" and any(k in (e.get("finishes") or {}) for k in ("sill", "stair", "railing")))
            or (e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
                and any(isinstance(c, dict) and c.get("field") in ("sillFinish", "stairFinish", "railingFinish",
                                                                   "doors", "windows")
                        for c in e["source"].get("columns", [])))
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
-        # Mahal listesi: a space's sill's, stair's and railing's finishes and its columns (docs/adr/3038).
-        schema = max(schema, 216)
+        # Mahal listesi: a space's sill's, stair's and railing's finishes and its columns (docs/adr/8038).
+        schema = max(schema, 228)
     if any("material" in t or "uValue" in t for t in (d["settings"].get("arch") or {}).get("openingTypes") or []):
-        # A door or window type's frame and leaves and its U value (docs/adr/3038).
-        schema = max(schema, 217)
+        # A door or window type's frame and leaves and its U value (docs/adr/8038).
+        schema = max(schema, 229)
     if any(e["kind"] == "opening" and "phase" in e
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
-        # A door's or window's own phase (docs/adr/3039).
-        schema = max(schema, 218)
+        # A door's or window's own phase (docs/adr/8039).
+        schema = max(schema, 230)
     if ((d["settings"].get("arch") or {}).get("phaseView") == "renovation"
             or any((v.get("recipe") or {}).get("phase") == "renovation" for v in d["settings"].get("namedViews", []))):
-        # The Tadilat projesi view (docs/adr/3039 §5).
-        schema = max(schema, 219)
+        # The Tadilat projesi view (docs/adr/8039 §5).
+        schema = max(schema, 231)
     if any(e["kind"] == "slab" and e.get("layers")
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
-        # A slab's layers besides its structure (docs/adr/3040 §2).
-        schema = max(schema, 220)
+        # A slab's layers besides its structure (docs/adr/8040 §2).
+        schema = max(schema, 232)
     if any(e["kind"] == "space" and ("floorOffset" in e or "suspendedCeiling" in e) for e in d["entities"]):
-        # A room's floor offset and asma tavan (docs/adr/3040 §3).
-        schema = max(schema, 221)
+        # A room's floor offset and asma tavan (docs/adr/8040 §3).
+        schema = max(schema, 233)
     if any(e["kind"] == "beam" for e in d["entities"]):
-        # A beam (docs/adr/3041 §1).
-        schema = max(schema, 222)
+        # A beam (docs/adr/8041 §1).
+        schema = max(schema, 234)
     if any(e["kind"] == "column" and "material" in e for e in d["entities"]):
-        # A column's material (docs/adr/3041 §2).
-        schema = max(schema, 223)
+        # A column's material (docs/adr/8041 §2).
+        schema = max(schema, 235)
     if any(e["kind"] == "beam" and ("role" in e or "baseOffset" in e) for e in d["entities"]):
-        # A beam's role or its base over its storey's floor (docs/adr/3041 §3).
-        schema = max(schema, 224)
+        # A beam's role or its base over its storey's floor (docs/adr/8041 §3).
+        schema = max(schema, 236)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3590,7 +3590,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-225.kcad"] = container(root(cmap(parts), version=uint(225)))
+    files["schema-version-237.kcad"] = container(root(cmap(parts), version=uint(237)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6308,36 +6308,36 @@ def build():
     assert ad.count(b"\x67version\x18\xcc") == 1, "an approval's sources are schema 204"
     out["road-approval-sources.kcad"] = container(ad)
     out["broken/road-approval-sources-in-schema-203.kcad"] = container(ad.replace(b"\x67version\x18\xcc", b"\x67version\x18\xcb"))
-    # Schema 205 (docs/adr/3012): the project's plan cut height; schema 204 refuses it as unknown.
+    # Schema 217 (docs/adr/8012): the project's plan cut height; schema 216 refuses it as unknown.
     cut = document(load("plan-cut.json"))
-    assert cut.count(b"\x67version\x18\xcd") == 1, "a plan cut height is schema 205"
+    assert cut.count(b"\x67version\x18\xd9") == 1, "a plan cut height is schema 217"
     out["plan-cut.kcad"] = container(cut)
-    out["broken/plan-cut-in-schema-204.kcad"] = container(cut.replace(b"\x67version\x18\xcd", b"\x67version\x18\xcc"))
+    out["broken/plan-cut-in-schema-216.kcad"] = container(cut.replace(b"\x67version\x18\xd9", b"\x67version\x18\xd8"))
     # A height outside 0,3–3 m is refused (a typo of centimetres for metres, 120 for 1,2).
     far = copy.deepcopy(load("plan-cut.json"))
     far["settings"]["arch"]["cutHeight"] = 120.0
     out["broken/plan-cut-out-of-range.kcad"] = container(document(far))
-    # Schema 206 (docs/adr/3013): how the project's plan lines are weighted; schema 205 refuses it as unknown.
+    # Schema 218 (docs/adr/8013): how the project's plan lines are weighted; schema 217 refuses it as unknown.
     groups = document(load("line-groups.json"))
-    assert groups.count(b"\x67version\x18\xce") == 1, "line groups are schema 206"
+    assert groups.count(b"\x67version\x18\xda") == 1, "line groups are schema 218"
     out["line-groups.kcad"] = container(groups)
-    out["broken/line-groups-in-schema-205.kcad"] = container(groups.replace(b"\x67version\x18\xce", b"\x67version\x18\xcd"))
+    out["broken/line-groups-in-schema-217.kcad"] = container(groups.replace(b"\x67version\x18\xda", b"\x67version\x18\xd9"))
     # Only own and byScale are line groups.
     odd = copy.deepcopy(load("line-groups.json"))
     odd["settings"]["arch"]["lineGroups"] = "thick"
     out["broken/line-groups-unknown.kcad"] = container(document(odd))
-    # Schema 207 (docs/adr/3027): a tag framed by an ellipse; schema 206 refuses it as unknown.
+    # Schema 219 (docs/adr/8027): a tag framed by an ellipse; schema 218 refuses it as unknown.
     ellipse = document(load("ellipse-tags.json"))
-    assert ellipse.count(b"\x67version\x18\xcf") == 1, "an ellipse tag is schema 207"
+    assert ellipse.count(b"\x67version\x18\xdb") == 1, "an ellipse tag is schema 219"
     out["ellipse-tags.kcad"] = container(ellipse)
-    out["broken/ellipse-tags-in-schema-206.kcad"] = container(ellipse.replace(b"\x67version\x18\xcf", b"\x67version\x18\xce"))
-    # Schema 208 (docs/adr/3028): a door type K01 and a window type P01 with their joinery codes and a tag writing the
-    # door's code and size; schema 207 refuses them as unknown, two types of one code and a code not starting with a
+    out["broken/ellipse-tags-in-schema-218.kcad"] = container(ellipse.replace(b"\x67version\x18\xdb", b"\x67version\x18\xda"))
+    # Schema 220 (docs/adr/8028): a door type K01 and a window type P01 with their joinery codes and a tag writing the
+    # door's code and size; schema 219 refuses them as unknown, two types of one code and a code not starting with a
     # letter too.
     coded = document(load("opening-codes.json"))
-    assert coded.count(b"\x67version\x18\xd0") == 1, "joinery codes are schema 208"
+    assert coded.count(b"\x67version\x18\xdc") == 1, "joinery codes are schema 220"
     out["opening-codes.kcad"] = container(coded)
-    out["broken/opening-codes-in-schema-207.kcad"] = container(coded.replace(b"\x67version\x18\xd0", b"\x67version\x18\xcf"))
+    out["broken/opening-codes-in-schema-219.kcad"] = container(coded.replace(b"\x67version\x18\xdc", b"\x67version\x18\xdb"))
 
     def code_bad(name, change):
         d = load("opening-codes.json")
@@ -6345,101 +6345,101 @@ def build():
         out["broken/opening-codes-" + name + ".kcad"] = container(document(d))
     code_bad("twice", lambda d: d["settings"]["arch"]["openingTypes"][1].update(code="k01"))
     code_bad("digit-first", lambda d: d["settings"]["arch"]["openingTypes"][0].update(code="1K"))
-    # Schema 209 (docs/adr/3029): a units schedule with the regulation's areas; schema 208 refuses it as unknown.
+    # Schema 221 (docs/adr/8029): a units schedule with the regulation's areas; schema 220 refuses it as unknown.
     paiy = document(load("paiy-areas.json"))
-    assert paiy.count(b"\x67version\x18\xd1") == 1, "the regulation's areas are schema 209"
+    assert paiy.count(b"\x67version\x18\xdd") == 1, "the regulation's areas are schema 221"
     out["paiy-areas.kcad"] = container(paiy)
-    out["broken/paiy-areas-in-schema-208.kcad"] = container(paiy.replace(b"\x67version\x18\xd1", b"\x67version\x18\xd0"))
-    # Schema 210 (docs/adr/3030): the parcel's zoning; schema 209 refuses it as unknown, a parcel of no area too.
+    out["broken/paiy-areas-in-schema-220.kcad"] = container(paiy.replace(b"\x67version\x18\xdd", b"\x67version\x18\xdc"))
+    # Schema 222 (docs/adr/8030): the parcel's zoning; schema 221 refuses it as unknown, a parcel of no area too.
     zoned = document(load("zoning.json"))
-    assert zoned.count(b"\x67version\x18\xd2") == 1, "the zoning is schema 210"
+    assert zoned.count(b"\x67version\x18\xde") == 1, "the zoning is schema 222"
     out["zoning.kcad"] = container(zoned)
-    out["broken/zoning-in-schema-209.kcad"] = container(zoned.replace(b"\x67version\x18\xd2", b"\x67version\x18\xd1"))
+    out["broken/zoning-in-schema-221.kcad"] = container(zoned.replace(b"\x67version\x18\xde", b"\x67version\x18\xdd"))
     flat = load("zoning.json")
     flat["settings"]["arch"]["zoning"]["parcelArea"] = 0.0
     out["broken/zoning-no-parcel.kcad"] = container(document(flat))
-    # Emsal ve TAKS tablosu is schema 210 on its own, the project without a zoning.
+    # Emsal ve TAKS tablosu is schema 222 on its own, the project without a zoning.
     bare = load("zoning.json")
     del bare["settings"]["arch"]["zoning"]
     bare = document(bare)
-    assert bare.count(b"\x67version\x18\xd2") == 1, "the zoning table is schema 210"
-    out["broken/zoning-table-in-schema-209.kcad"] = container(bare.replace(b"\x67version\x18\xd2", b"\x67version\x18\xd1"))
-    # Schema 211 (docs/adr/3031): kat irtifakı; schema 210 refuses it as unknown, an annex without its unit too.
+    assert bare.count(b"\x67version\x18\xde") == 1, "the zoning table is schema 222"
+    out["broken/zoning-table-in-schema-221.kcad"] = container(bare.replace(b"\x67version\x18\xde", b"\x67version\x18\xdd"))
+    # Schema 223 (docs/adr/8031): kat irtifakı; schema 222 refuses it as unknown, an annex without its unit too.
     land = document(load("land-shares.json"))
-    assert land.count(b"\x67version\x18\xd3") == 1, "kat irtifakı is schema 211"
+    assert land.count(b"\x67version\x18\xdf") == 1, "kat irtifakı is schema 223"
     out["land-shares.kcad"] = container(land)
-    out["broken/land-shares-in-schema-210.kcad"] = container(land.replace(b"\x67version\x18\xd3", b"\x67version\x18\xd2"))
+    out["broken/land-shares-in-schema-222.kcad"] = container(land.replace(b"\x67version\x18\xdf", b"\x67version\x18\xde"))
     loose = load("land-shares.json")
     del loose["settings"]["arch"]["program"]["units"][-1]["annexOf"]
     out["broken/land-shares-annex-without-unit.kcad"] = container(document(loose))
-    # Schema 212 (docs/adr/3032): the site plan; schema 211 refuses it as unknown, a negative setback too.
+    # Schema 224 (docs/adr/8032): the site plan; schema 223 refuses it as unknown, a negative setback too.
     site = document(load("site-plan.json"))
-    assert site.count(b"\x67version\x18\xd4") == 1, "the site plan is schema 212"
+    assert site.count(b"\x67version\x18\xe0") == 1, "the site plan is schema 224"
     out["site-plan.kcad"] = container(site)
-    out["broken/site-plan-in-schema-211.kcad"] = container(site.replace(b"\x67version\x18\xd4", b"\x67version\x18\xd3"))
+    out["broken/site-plan-in-schema-223.kcad"] = container(site.replace(b"\x67version\x18\xe0", b"\x67version\x18\xdf"))
     short = load("site-plan.json")
     short["settings"]["arch"]["site"]["edges"][2]["setback"] = -1.0
     out["broken/site-plan-negative-setback.kcad"] = container(document(short))
-    # Schema 213 (docs/adr/3034): the municipality's regulation; schema 212 refuses it as unknown.
+    # Schema 225 (docs/adr/8034): the municipality's regulation; schema 224 refuses it as unknown.
     local = document(load("local-rules.json"))
-    assert local.count(b"\x67version\x18\xd5") == 1, "the local regulation is schema 213"
+    assert local.count(b"\x67version\x18\xe1") == 1, "the local regulation is schema 225"
     out["local-rules.kcad"] = container(local)
-    out["broken/local-rules-in-schema-212.kcad"] = container(local.replace(b"\x67version\x18\xd5", b"\x67version\x18\xd4"))
-    # Schema 214 (docs/adr/3035): the building's sprinkler system; schema 213 refuses it as unknown.
+    out["broken/local-rules-in-schema-224.kcad"] = container(local.replace(b"\x67version\x18\xe1", b"\x67version\x18\xe0"))
+    # Schema 226 (docs/adr/8035): the building's sprinkler system; schema 225 refuses it as unknown.
     sprinklers = document(load("sprinklers.json"))
-    assert sprinklers.count(b"\x67version\x18\xd6") == 1, "the sprinkler system is schema 214"
+    assert sprinklers.count(b"\x67version\x18\xe2") == 1, "the sprinkler system is schema 226"
     out["sprinklers.kcad"] = container(sprinklers)
-    out["broken/sprinklers-in-schema-213.kcad"] = container(sprinklers.replace(b"\x67version\x18\xd6", b"\x67version\x18\xd5"))
-    # Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı; schema 214 refuses them as unknown.
+    out["broken/sprinklers-in-schema-225.kcad"] = container(sprinklers.replace(b"\x67version\x18\xe2", b"\x67version\x18\xe1"))
+    # Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı; schema 226 refuses them as unknown.
     provision = document(load("provision-tables.json"))
-    assert provision.count(b"\x67version\x18\xd7") == 1, "the parking and shelter tables are schema 215"
+    assert provision.count(b"\x67version\x18\xe3") == 1, "the parking and shelter tables are schema 227"
     out["provision-tables.kcad"] = container(provision)
-    out["broken/provision-tables-in-schema-214.kcad"] = container(provision.replace(b"\x67version\x18\xd7", b"\x67version\x18\xd6"))
-    # Schema 216 (docs/adr/3038): Mahal listesi; schema 215 refuses its finishes and columns as unknown.
+    out["broken/provision-tables-in-schema-226.kcad"] = container(provision.replace(b"\x67version\x18\xe3", b"\x67version\x18\xe2"))
+    # Schema 228 (docs/adr/8038): Mahal listesi; schema 227 refuses its finishes and columns as unknown.
     room_list = document(load("room-list.json"))
-    assert room_list.count(b"\x67version\x18\xd8") == 1, "the room list is schema 216"
+    assert room_list.count(b"\x67version\x18\xe4") == 1, "the room list is schema 228"
     out["room-list.kcad"] = container(room_list)
-    out["broken/room-list-in-schema-215.kcad"] = container(room_list.replace(b"\x67version\x18\xd8", b"\x67version\x18\xd7"))
-    # Schema 217 (docs/adr/3038): a type's frame and leaves and its U value; schema 216 refuses them as unknown.
+    out["broken/room-list-in-schema-227.kcad"] = container(room_list.replace(b"\x67version\x18\xe4", b"\x67version\x18\xe3"))
+    # Schema 229 (docs/adr/8038): a type's frame and leaves and its U value; schema 228 refuses them as unknown.
     specs = document(load("opening-specs.json"))
-    assert specs.count(b"\x67version\x18\xd9") == 1, "a type's frame and U value are schema 217"
+    assert specs.count(b"\x67version\x18\xe5") == 1, "a type's frame and U value are schema 229"
     out["opening-specs.kcad"] = container(specs)
-    out["broken/opening-specs-in-schema-216.kcad"] = container(specs.replace(b"\x67version\x18\xd9", b"\x67version\x18\xd8"))
-    # Schema 218 (docs/adr/3039): a door's or window's own phase; schema 217 refuses it as unknown.
+    out["broken/opening-specs-in-schema-228.kcad"] = container(specs.replace(b"\x67version\x18\xe5", b"\x67version\x18\xe4"))
+    # Schema 230 (docs/adr/8039): a door's or window's own phase; schema 229 refuses it as unknown.
     phases = document(load("opening-phases.json"))
-    assert phases.count(b"\x67version\x18\xda") == 1, "an opening's own phase is schema 218"
+    assert phases.count(b"\x67version\x18\xe6") == 1, "an opening's own phase is schema 230"
     out["opening-phases.kcad"] = container(phases)
-    out["broken/opening-phases-in-schema-217.kcad"] = container(phases.replace(b"\x67version\x18\xda", b"\x67version\x18\xd9"))
-    # Schema 219 (docs/adr/3039 §5): the Tadilat projesi view; schema 218 refuses the value.
+    out["broken/opening-phases-in-schema-229.kcad"] = container(phases.replace(b"\x67version\x18\xe6", b"\x67version\x18\xe5"))
+    # Schema 231 (docs/adr/8039 §5): the Tadilat projesi view; schema 230 refuses the value.
     renovation = document(load("renovation-view.json"))
-    assert renovation.count(b"\x67version\x18\xdb") == 1, "the Tadilat projesi view is schema 219"
+    assert renovation.count(b"\x67version\x18\xe7") == 1, "the Tadilat projesi view is schema 231"
     out["renovation-view.kcad"] = container(renovation)
-    out["broken/renovation-view-in-schema-218.kcad"] = container(renovation.replace(b"\x67version\x18\xdb", b"\x67version\x18\xda"))
-    # Schema 220 (docs/adr/3040 §2): a slab's layers; schema 219 refuses them.
+    out["broken/renovation-view-in-schema-230.kcad"] = container(renovation.replace(b"\x67version\x18\xe7", b"\x67version\x18\xe6"))
+    # Schema 232 (docs/adr/8040 §2): a slab's layers; schema 231 refuses them.
     layered = document(load("slab-layers.json"))
-    assert layered.count(b"\x67version\x18\xdc") == 1, "a slab's layers are schema 220"
+    assert layered.count(b"\x67version\x18\xe8") == 1, "a slab's layers are schema 232"
     out["slab-layers.kcad"] = container(layered)
-    out["broken/slab-layers-in-schema-219.kcad"] = container(layered.replace(b"\x67version\x18\xdc", b"\x67version\x18\xdb"))
-    # Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan; schema 220 refuses them.
+    out["broken/slab-layers-in-schema-231.kcad"] = container(layered.replace(b"\x67version\x18\xe8", b"\x67version\x18\xe7"))
+    # Schema 233 (docs/adr/8040 §3): a room's floor offset and asma tavan; schema 232 refuses them.
     heights = document(load("room-heights.json"))
-    assert heights.count(b"\x67version\x18\xdd") == 1, "a room's floor offset and asma tavan are schema 221"
+    assert heights.count(b"\x67version\x18\xe9") == 1, "a room's floor offset and asma tavan are schema 233"
     out["room-heights.kcad"] = container(heights)
-    out["broken/room-heights-in-schema-220.kcad"] = container(heights.replace(b"\x67version\x18\xdd", b"\x67version\x18\xdc"))
-    # Schema 222 (docs/adr/3041 §1): beams; schema 221 does not know the kind.
+    out["broken/room-heights-in-schema-232.kcad"] = container(heights.replace(b"\x67version\x18\xe9", b"\x67version\x18\xe8"))
+    # Schema 234 (docs/adr/8041 §1): beams; schema 233 does not know the kind.
     beams = document(load("beams.json"))
-    assert beams.count(b"\x67version\x18\xde") == 1, "beams are schema 222"
+    assert beams.count(b"\x67version\x18\xea") == 1, "beams are schema 234"
     out["beams.kcad"] = container(beams)
-    out["broken/beams-in-schema-221.kcad"] = container(beams.replace(b"\x67version\x18\xde", b"\x67version\x18\xdd"))
-    # Schema 223 (docs/adr/3041 §2): a column's material; schema 222 refuses it.
+    out["broken/beams-in-schema-233.kcad"] = container(beams.replace(b"\x67version\x18\xea", b"\x67version\x18\xe9"))
+    # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
-    assert material.count(b"\x67version\x18\xdf") == 1, "a column's material is schema 223"
+    assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"
     out["column-material.kcad"] = container(material)
-    out["broken/column-material-in-schema-222.kcad"] = container(material.replace(b"\x67version\x18\xdf", b"\x67version\x18\xde"))
-    # Schema 224 (docs/adr/3041 §3): a beam's role and base; schema 223 refuses them.
+    out["broken/column-material-in-schema-234.kcad"] = container(material.replace(b"\x67version\x18\xeb", b"\x67version\x18\xea"))
+    # Schema 236 (docs/adr/8041 §3): a beam's role and base; schema 235 refuses them.
     roles = document(load("beam-roles.json"))
-    assert roles.count(b"\x67version\x18\xe0") == 1, "a beam's role and base are schema 224"
+    assert roles.count(b"\x67version\x18\xec") == 1, "a beam's role and base are schema 236"
     out["beam-roles.kcad"] = container(roles)
-    out["broken/beam-roles-in-schema-223.kcad"] = container(roles.replace(b"\x67version\x18\xe0", b"\x67version\x18\xdf"))
+    out["broken/beam-roles-in-schema-235.kcad"] = container(roles.replace(b"\x67version\x18\xec", b"\x67version\x18\xeb"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

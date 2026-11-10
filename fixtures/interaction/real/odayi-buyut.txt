@@ -1,4 +1,4 @@
-# M23 (docs/adr/3023): Odayı büyüt in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on Mimari
+# M23 (docs/adr/8023): Odayı büyüt in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on Mimari
 # at 1440 × 900, 13 px text. Oda draws a room; a click on its floor selects it and each of its edges shows a grip (a
 # pair of arrowheads). Resting on the right one tells what it does; clicked, it follows the pointer: the card says
 # the room's inner size and area; a click there moves the wall and the room grows. Ctrl+Z puts it back in one step;

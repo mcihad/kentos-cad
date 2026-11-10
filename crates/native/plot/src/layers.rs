@@ -151,7 +151,7 @@ pub fn level_looks(
 }
 
 /// Whether a map of `level` shows a stair of the level under it from above (docs/adr/0724 §4) or a slab of the level
-/// over it dashed (docs/adr/3012, step 3): then it draws from a store whose level view is the map's.
+/// over it dashed (docs/adr/8012, step 3): then it draws from a store whose level view is the map's.
 pub fn shows_from_above(
     doc: &kentos_domain::Document,
     level: &kentos_sheet::kinds::MapLevel,

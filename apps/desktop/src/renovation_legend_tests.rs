@@ -1,4 +1,4 @@
-//! Tadilat lejantı (docs/adr/3039 §5): Mimarlar Odası's legend placed at a typed point, one block MM-XXXX-TADILATLEJANTI
+//! Tadilat lejantı (docs/adr/8039 §5): Mimarlar Odası's legend placed at a typed point, one block MM-XXXX-TADILATLEJANTI
 //! on the legends' layer: its title, its three words, a plain box, a hatched one, a dashed one, at the plot scale's
 //! paper sizes; one undo step.
 

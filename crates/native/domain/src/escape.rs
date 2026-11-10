@@ -1,4 +1,4 @@
-//! Kaçış yolları (docs/adr/3035; ADV-23, M35): the walking routes Binaların Yangından Korunması Hakkında Yönetmelik
+//! Kaçış yolları (docs/adr/8035; ADV-23, M35): the walking routes Binaların Yangından Korunması Hakkında Yönetmelik
 //! (BYKHY) measures — 4/u (a storey's farthest point to its nearest storey exit), 32/4, 32/6, 33/6-b, 48/2, 48/4.
 //!
 //! - **Rooms** are a storey's spaces that are neither voids nor outdoor; their net outlines (inner faces) bound the walk.
@@ -56,7 +56,7 @@ pub struct ExitRoute {
     pub exits: usize,
 }
 
-/// A room's escape (docs/adr/3035).
+/// A room's escape (docs/adr/8035).
 #[derive(Clone, Debug, PartialEq)]
 pub struct RoomEscape {
     pub room: Slot,
@@ -369,7 +369,7 @@ fn length(path: &[V]) -> f64 {
     path.windows(2).map(|w| dist(w[0], w[1])).sum()
 }
 
-/// The storeys' escape routes (docs/adr/3035).
+/// The storeys' escape routes (docs/adr/8035).
 pub fn escape(doc: &Document) -> Escape {
     let program = doc.program();
     let mut search = SpaceSearch::new(doc);

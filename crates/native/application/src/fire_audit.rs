@@ -1,4 +1,4 @@
-//! Yangın kaçışı (docs/adr/3035; ADV-23, M35): Binaların Yangından Korunması Hakkında Yönetmelik (BYKHY) read on the
+//! Yangın kaçışı (docs/adr/8035; ADV-23, M35): Binaların Yangından Korunması Hakkında Yönetmelik (BYKHY) read on the
 //! drawing's escape routes (`kentos_domain::escape`), in Mimari denetim's Mevzuat group.
 //!
 //! - **Kaçış uzaklığı (32/4, Ek-5/B):** a room that is no dwelling's, from its farthest point (40 cm in, 32/6) to the
@@ -30,7 +30,7 @@ use crate::regulation_audit::{
     Article, Bound, Limit, Said, Source, has, is, kind_of, metres, said, shaft_of, words,
 };
 
-/// The rule set read (docs/adr/3035): the regulation and its last amendment.
+/// The rule set read (docs/adr/8035): the regulation and its last amendment.
 pub const RULE_SET: &str = "BYKHY (19.12.2007/26735; son değişiklik 1.7.2025/32943)";
 
 const ORIGINAL: &str = "19.12.2007/26735";
@@ -311,7 +311,7 @@ fn level_height(levels: &[&kentos_commands::ArchLevel], i: usize) -> f64 {
     levels[i].height.or(next).unwrap_or(3.0)
 }
 
-/// A walk the fire rules measured (docs/adr/3035 §2): its points from the start, its length, the measure read against
+/// A walk the fire rules measured (docs/adr/8035 §2): its points from the start, its length, the measure read against
 /// its limit (the whole walk, its one-way part or a corridor's dead end) and whether it breaks it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Walk {
@@ -326,12 +326,12 @@ pub struct Walk {
     pub over: bool,
 }
 
-/// The fire rules' findings (docs/adr/3035), each said through `push(said, slots, at)`.
+/// The fire rules' findings (docs/adr/8035), each said through `push(said, slots, at)`.
 pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V)) {
     assess(doc, push, &mut Vec::new());
 }
 
-/// The walks the fire rules measure, every storey's (docs/adr/3035 §2).
+/// The walks the fire rules measure, every storey's (docs/adr/8035 §2).
 pub fn walks(doc: &Document) -> Vec<Walk> {
     let mut out = Vec::new();
     assess(doc, &mut |_, _, _| {}, &mut out);
@@ -451,7 +451,7 @@ fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut 
             areas,
         });
     }
-    // A dwelling building: a dwelling unit, or bedrooms without a program (docs/adr/3033).
+    // A dwelling building: a dwelling unit, or bedrooms without a program (docs/adr/8033).
     let dwelling_building = dwellings > 0
         || (units.is_empty()
             && doc.entities().any(|e| {

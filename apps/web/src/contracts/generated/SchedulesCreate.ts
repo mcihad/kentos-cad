@@ -19,7 +19,7 @@ export type SchedulesCreate = { layerId: string, at: Vec2, of: ScheduleOf,
  */
 columns?: Array<ScheduleColumn>, filter?: ScheduleFilter, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, 
 /**
- * Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
+ * Kat kat (docs/adr/8029): a units schedule's rows storey by storey, each group's areas the storey's part.
  */
 byLevel?: boolean, 
 /**

@@ -132,7 +132,7 @@ pub const WIPEOUT_LABEL: &str = "Maske";
 /// Dik kapat with the first and the last edge parallel (docs/adr/0166 §4).
 pub const NO_SQUARE_CLOSE: &str = "Dik kapatılamıyor: ilk kenar ile son kenar paralel.";
 
-/// What Esc says when it ends a wall chain and keeps it (docs/adr/3001).
+/// What Esc says when it ends a wall chain and keeps it (docs/adr/8001).
 pub fn esc_kept(segments: usize) -> String {
     format!("Esc zinciri bitirdi: çizilen {segments} parça duvar kaldı. Araçtan çıkmak için yeniden Esc, geri almak için Ctrl+Z.")
 }
@@ -255,8 +255,8 @@ enum Spec {
     },
 }
 
-/// Kapanınca mahal (docs/adr/3022): the space of the loop just closed, seeded at the point inside it farthest from its
-/// sides (the pole: an L-shaped room's middle may be outside it), on Etkin kat and the spaces' layer (docs/adr/3008);
+/// Kapanınca mahal (docs/adr/8022): the space of the loop just closed, seeded at the point inside it farthest from its
+/// sides (the pole: an L-shaped room's middle may be outside it), on Etkin kat and the spaces' layer (docs/adr/8008);
 /// its net area, or none (and why, said) when refused.
 fn write_loop_room(pts: &[Vec2], bulges: &[f64], cx: &mut Context<'_>) -> Option<f64> {
     use crate::arch_layer::Kind;
@@ -490,7 +490,7 @@ impl Path {
         self.wall_drawn = wall::drawn(&pts, &bulges, false, cx);
     }
 
-    /// Duvar's chips as they stand; Kapanınca mahal last (docs/adr/3022).
+    /// Duvar's chips as they stand; Kapanınca mahal last (docs/adr/8022).
     fn wall_chips(&self, prompt: Prompt) -> Prompt {
         let style = wall::chosen_in(&self.memory, &self.wall_offer);
         wall::chips(prompt, &self.memory, &self.format, style).option_with(
@@ -512,7 +512,7 @@ impl Path {
         };
         bulges.push(closing);
         let length = bulge_path_length(&pts, Some(&bulges), true);
-        // Kapanınca mahal (docs/adr/3022): the loop's room written with it, one undo step; a refused room takes the
+        // Kapanınca mahal (docs/adr/8022): the loop's room written with it, one undo step; a refused room takes the
         // wall back too.
         let room = cx.memory.wall_room;
         let group = room.then(|| cx.doc.begin_group("Duvar ve mahal"));
@@ -1196,7 +1196,7 @@ impl Path {
                     self.redraw_wall(cx);
                     return true;
                 }
-                // Kapanınca mahal on or off (docs/adr/3022).
+                // Kapanınca mahal on or off (docs/adr/8022).
                 if key == "M" {
                     cx.memory.wall_room = !cx.memory.wall_room;
                     self.see(cx);
@@ -1925,7 +1925,7 @@ impl Path {
 }
 
 impl Tool for Path {
-    /// Duvar writes on its style's layer (docs/adr/3008).
+    /// Duvar writes on its style's layer (docs/adr/8008).
     fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
         (self.separator_level.is_none() && self.shape.id() == crate::wall::ID)
             .then(|| crate::wall::layer_kind(cx))
@@ -2221,11 +2221,11 @@ impl Tool for Path {
         }
         if self.shape != Shape::Wall { return Vec::new(); }
         let mut rows = crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format);
-        // Kapanınca mahal (docs/adr/3022): Kapat writes the loop's room too.
+        // Kapanınca mahal (docs/adr/8022): Kapat writes the loop's room too.
         rows.push(crate::tool_settings::Setting::toggle("M", "Kapanınca mahal", self.memory.wall_room));
         rows
     }
-    /// Duvar's Kalınlık and Hiza in the value field after its locks (docs/adr/3018).
+    /// Duvar's Kalınlık and Hiza in the value field after its locks (docs/adr/8018).
     fn cursor_settings(&self) -> &'static [&'static str] {
         if self.shape == Shape::Wall && self.separator_level.is_none() { &["E", "H"] } else { &[] }
     }
@@ -2483,7 +2483,7 @@ impl Tool for Path {
         !self.pts.is_empty() && self.option("G", cx)
     }
 
-    /// Esc on a wall chain (docs/adr/3001): a question asked is left first; then the segments already drawn are written
+    /// Esc on a wall chain (docs/adr/8001): a question asked is left first; then the segments already drawn are written
     /// as Enter writes them and the tool stays for the next chain, as Revit's first Esc ends a chain and AutoCAD keeps
     /// what was drawn. The next Esc leaves. A chain without a finished segment has nothing to keep.
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
@@ -2569,7 +2569,7 @@ impl Tool for Path {
                     lines.push(format!("Alan {}", format.area(area)));
                 }
                 // Duvar: the loop so far, to the cursor and back to its first corner, on the walls' path
-                // (docs/adr/3022): what Kapat would close.
+                // (docs/adr/8022): what Kapat would close.
                 if self.shape == Shape::Wall && self.separator_level.is_none() && pts.len() >= 3 {
                     let area = bulge_ring_area(&pts, Some(&bulges)).abs();
                     lines.push(format!("Döngü alanı {}", format.area(area)));

@@ -1,4 +1,4 @@
-//! Kaçış yolları (docs/adr/3035 §2; M35): the active storey's escape walks drawn as Mimari denetim's fire rules measure
+//! Kaçış yolları (docs/adr/8035 §2; M35): the active storey's escape walks drawn as Mimari denetim's fire rules measure
 //! them (Binaların Yangından Korunması Hakkında Yönetmelik): from each room's farthest point, 40 cm in from its walls
 //! (32/6), to its nearest storey exit; a flat's from its farthest point to its door (48/2) and from its door to the
 //! exit (48/4). Each walk says what it measured against its limit; red when it breaks it, green when it keeps it, grey

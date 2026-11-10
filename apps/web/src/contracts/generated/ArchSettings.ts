@@ -22,13 +22,13 @@ import type { Zoning } from "./Zoning";
  */
 export type ArchSettings = { levels?: Array<ArchLevel>, detail?: WallDetail, 
 /**
- * The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a
+ * The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
  * window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
  * writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
  */
 cutHeight?: number, 
 /**
- * How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the
+ * How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
  * plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
  * line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
  * own pen whatever the scale. A new Mimari project writes `byScale`.
@@ -92,22 +92,22 @@ options?: Array<OptionSet>,
  */
 optionCombos?: Array<OptionCombo>, 
 /**
- * İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
+ * İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
  * ratio and the coverage are read against. Absent: none given.
  */
 zoning?: Zoning, 
 /**
- * Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the
+ * Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
  * absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
  */
 site?: SitePlan, 
 /**
- * Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
+ * Yerel imar yönetmeliği (docs/adr/8034; `.kcad` schema 225): the municipality's regulation Mimari denetim's
  * Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
  */
 localRules?: LocalRules, 
 /**
- * Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the
+ * Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
  * fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
  */
 sprinklers?: boolean, };

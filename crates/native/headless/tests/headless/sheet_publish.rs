@@ -217,7 +217,7 @@ fn drawing_set_publication_names_and_manifest_use_literal_captured_metadata() {
     std::fs::remove_dir_all(root).unwrap();
 }
 
-/// PDF/A-2b (docs/adr/3037): a separate-file publication with `pdfa` delivers every sheet as a file the PDF reader's
+/// PDF/A-2b (docs/adr/8037): a separate-file publication with `pdfa` delivers every sheet as a file the PDF reader's
 /// PDF/A-2 rules pass, and records the option; the same publication without it delivers plain PDFs.
 #[test]
 fn an_archival_publication_delivers_pdf_a_2_files() {

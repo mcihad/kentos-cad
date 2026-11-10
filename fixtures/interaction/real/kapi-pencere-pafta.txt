@@ -1,4 +1,4 @@
-# M11 (docs/adr/3010) on a sheet, as a hand does it: the 11 × 8 m walls, a door and a window, a sheet from the + beside
+# M11 (docs/adr/8010) on a sheet, as a hand does it: the 11 × 8 m walls, a door and a window, a sheet from the + beside
 # Model (Mimari pafta, its map at the project's 1:100), then the map's Ölçek set to 50 and to 200. Each time Sığdır,
 # then eight wheel turns in over the door and the window: 1:100 the door's leaf and swing and the window's three lines
 # jamb to jamb; 1:50 the frame's sides too; 1:200 the leaf and the glass alone.

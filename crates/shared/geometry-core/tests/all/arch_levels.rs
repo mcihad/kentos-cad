@@ -1,4 +1,4 @@
-//! Columns, stairs, ramps, slab edges and furniture by the drawing's scale (docs/adr/3011): beyond 1:150 schematic the
+//! Columns, stairs, ramps, slab edges and furniture by the drawing's scale (docs/adr/8011): beyond 1:150 schematic the
 //! simplest, at 1:100 as they were drawn, from 1:50 with a column's size and a stair's risers in words. Their tools'
 //! previews and the reference cases keep the whole (`arch::pieces`).
 
@@ -216,7 +216,7 @@ fn a_slab_edge_is_its_outer_line_at_1_200() {
     // The ring and the run's outer line; the inner line and the two ends are left out.
     assert_eq!(slab::pieces_in(&parts, &look, SIMPLE).len(), 2);
     assert_eq!(whole, 5);
-    // Seen from the level under it (docs/adr/3012, step 3): its ring alone, at every level, its parapet left out.
+    // Seen from the level under it (docs/adr/8012, step 3): its ring alone, at every level, its parapet left out.
     let over = Look {
         overhead: true,
         ..look

@@ -202,7 +202,7 @@ pub fn outline_paths(s: &Shape, out: &mut Vec<f64>) {
             }
         }
         // Its drawing at 1:100 but its words (docs/adr/0343 §2): a grid's line and bubbles, a column's outline, a
-        // beam's band (docs/adr/3041 §1), a stair's or ramp's band, treads and arrow.
+        // beam's band (docs/adr/8041 §1), a stair's or ramp's band, treads and arrow.
         Shape::Grid { .. }
         | Shape::Column { .. }
         | Shape::Beam { .. }

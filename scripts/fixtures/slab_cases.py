@@ -229,7 +229,7 @@ LAYER = {"finish": "Kaplama", "screed": "Şap", "insulation": "Isı yalıtımı"
 
 
 def layers_of(given):
-    """A slab's layers as the document keeps them (docs/adr/3040 §2): each side only when it has a layer."""
+    """A slab's layers as the document keeps them (docs/adr/8040 §2): each side only when it has a layer."""
     given = given or {}
     return {side: [dict(lay) for lay in given[side]] for side in ("over", "under") if given.get(side)}
 

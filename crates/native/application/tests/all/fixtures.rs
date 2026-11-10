@@ -1246,8 +1246,8 @@ impl Input for kentos_commands::RampsCreate {
 }
 
 impl Input for kentos_commands::BeamsCreate {
-    /// `beams[0].width`, `.height`, `.offset`, `.baseOffset` (docs/adr/3041 §3), `.pts[k].x` and `.y`, `lineWeight`
-    /// (docs/adr/3041 §1).
+    /// `beams[0].width`, `.height`, `.offset`, `.baseOffset` (docs/adr/8041 §3), `.pts[k].x` and `.y`, `lineWeight`
+    /// (docs/adr/8041 §1).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1585,7 +1585,7 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.ends" => c.ends.as_mut().and_then(Option::as_mut),
                 "operation.legs[0]" => c.legs.as_mut().map(|l| &mut l[0]),
                 "operation.legs[1]" => c.legs.as_mut().map(|l| &mut l[1]),
-                // A beam's (docs/adr/3041 §1).
+                // A beam's (docs/adr/8041 §1).
                 "operation.height" => c.height.as_mut(),
                 "operation.offset" => c.offset.as_mut(),
                 _ => None,

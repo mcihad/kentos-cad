@@ -2572,7 +2572,7 @@ codes! {
     INVALID_STAIR = "invalid_stair", Failed, false, "Merdivenin alanları bir merdiven tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, rıht ve basamak, rıht sayısı 1–400.";
     /// A ramp's fields that make none.
     INVALID_RAMP = "invalid_ramp", Failed, false, "Rampanın alanları bir rampa tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, sonlu yükseklik.";
-    /// A beam's fields that make none (docs/adr/3041 §1).
+    /// A beam's fields that make none (docs/adr/8041 §1).
     INVALID_BEAM = "invalid_beam", Failed, false, "Kirişin alanları bir kiriş tanımlamıyor: en az iki noktalı eksen, sıfırdan büyük genişlik ve yükseklik, sınırları içinde kot farkı.";
     /// An object that is no grid where a grid is asked.
     NOT_A_GRID = "not_a_grid", Failed, false, "Nesne aks değil.";
@@ -2699,14 +2699,14 @@ codes! {
     /// A door narrower in clear than the project rule the audit was given (docs/adr/0772 §5): a rule.
     ARCH_DOOR_CLEAR_NARROW = "arch_door_clear_narrow", Warning, false, "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı).";
     /// A fixture's use zone (its block's “Boşluk zarfı”, or KentOS's for its older sanitary blocks) taken by a wall, a
-    /// column or another fixture (docs/adr/3025): passage.
+    /// column or another fixture (docs/adr/8025): passage.
     ARCH_FIXTURE_ZONE_BLOCKED = "arch_fixture_zone_blocked", Warning, false, "Donatının önündeki kullanım alanına bir duvar, kolon ya da başka bir donatı giriyor (net geçiş).";
     PAIY_ROOM_AREA_BELOW = "paiy_room_area_below", Warning, false, "Konuttaki piyesin net alanı Planlı Alanlar İmar Yönetmeliği 29/1'in en azından küçük.";
     PAIY_ROOM_WIDTH_BELOW = "paiy_room_width_below", Warning, false, "Konuttaki piyesin dar kenarı (net eni) Planlı Alanlar İmar Yönetmeliği 29/1'in en azından dar.";
     PAIY_ROOM_MISSING = "paiy_room_missing", Warning, false, "Konutta Planlı Alanlar İmar Yönetmeliği 29/1'in istediği piyeslerden biri yok.";
     PAIY_CORRIDOR_NARROW = "paiy_corridor_narrow", Warning, false, "Hol ya da koridorun net eni Planlı Alanlar İmar Yönetmeliği 29/3'ün 1,20 metresinden dar.";
     PAIY_STOREY_HEIGHT_OVER = "paiy_storey_height_over", Warning, false, "Konut bölgesinde kat yüksekliği Planlı Alanlar İmar Yönetmeliği 28/1-c'nin en çoğunu aşıyor.";
-    /// A room's inside height under PAİY 28/4–6's (docs/adr/3040 §3).
+    /// A room's inside height under PAİY 28/4–6's (docs/adr/8040 §3).
     PAIY_INSIDE_HEIGHT_BELOW = "paiy_inside_height_below", Warning, false, "Mahalin iç yüksekliği Planlı Alanlar İmar Yönetmeliği 28/4–6'nın en azından az (iskân edilen mahalde 2,60; ıslak hacim, kiler, geçit ve teknik mahalde 2,20 metre).";
     PAIY_DOOR_HEIGHT_BELOW = "paiy_door_height_below", Warning, false, "Kapı yüksekliği Planlı Alanlar İmar Yönetmeliği 39/1-a'nın 2,10 metresinden az.";
     PAIY_DOOR_WIDTH_BELOW = "paiy_door_width_below", Warning, false, "Kapının net genişliği Planlı Alanlar İmar Yönetmeliği 39/1-b, c'nin en azından dar.";
@@ -2733,9 +2733,9 @@ codes! {
     SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
     SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";
     SHELTER_HEIGHT_LOW = "shelter_height_low", Warning, false, "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az.";
-    /// A window type's U value above TS 825:2024's (docs/adr/3038).
+    /// A window type's U value above TS 825:2024's (docs/adr/8038).
     WINDOW_U_HIGH = "window_u_high", Warning, false, "Pencere tipinin ısıl geçirgenliği (U) TS 825:2024'ün tavsiye edilen 1,8 W/m²K değerinden yüksek.";
-    /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
+    /// A door's leaf opening into a fixture's use zone (docs/adr/8025): passage.
     ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
     RAMP_SLOPE_OVER_PROFILE = "ramp_slope_over_profile", Warning, false, "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor.";

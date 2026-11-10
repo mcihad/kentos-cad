@@ -564,7 +564,7 @@ fn defs(shape: &Shape) -> Defs {
             ]);
             others.push(Other::Num(ramp.slope.unwrap_or(-1.0)));
         }
-        // Its axis, its sizes, where its middle lies and its number (docs/adr/3041 §1).
+        // Its axis, its sizes, where its middle lies and its number (docs/adr/8041 §1).
         Shape::Beam { pts, beam } => {
             comps.push(path(pts, None));
             lengths.extend([beam.width, beam.middle, beam.height]);

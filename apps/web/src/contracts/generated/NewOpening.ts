@@ -84,7 +84,7 @@ inset?: number, number?: string, attrs?: { [key in string]: string },
  */
 build?: OpeningBuild, 
 /**
- * Its own tadilat durumu (docs/adr/3039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
+ * Its own tadilat durumu (docs/adr/8039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
  * Absent: its wall's.
  */
 phase?: ArchPhase, };

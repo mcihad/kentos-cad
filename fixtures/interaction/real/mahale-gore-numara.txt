@@ -1,4 +1,4 @@
-# M28 part 2 (docs/adr/3028): Açıklıkları numarala's Mahale göre in the real window, on the 2+1 apartment the
+# M28 part 2 (docs/adr/8028): Açıklıkları numarala's Mahale göre in the real window, on the 2+1 apartment the
 # acceptance test keeps, on Mimari at 1440 × 900, 13 px text. Before Enter the tool shows the numbers to come: K1 … in
 # the walls' order, then with M each opening its room's number (a door the room it serves, K; a window P; -A, -B where a
 # room has more than one); Enter writes them, the schedule's No column fills; Hepsini etiketle then writes them.

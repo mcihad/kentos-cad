@@ -154,8 +154,8 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                 .collect();
             (of.label().to_owned(), heads, rows)
         }
-        // Emsal ve TAKS tablosu (docs/adr/3030): its rows worked out again, its words as the drawing shows them.
-        // Otopark and Sığınak hesabı (docs/adr/3036) alike.
+        // Emsal ve TAKS tablosu (docs/adr/8030): its rows worked out again, its words as the drawing shows them.
+        // Otopark and Sığınak hesabı (docs/adr/8036) alike.
         Some(TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}) => {
             let written = match &t.source {
                 Some(TableSource::Parking {}) => doc.parking_table(),

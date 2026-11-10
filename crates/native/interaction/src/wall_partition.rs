@@ -61,7 +61,7 @@ impl Partition {
                 _ => PartitionExtent::Source,
             },
             wall: WallsCreate {
-                // The wall's layer (docs/adr/3008).
+                // The wall's layer (docs/adr/8008).
                 layer_id: crate::arch_layer::planned(&wall::layer_kind(cx), cx),
                 walls: vec![NewWall {
                     pts: vec![],

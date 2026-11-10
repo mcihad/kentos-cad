@@ -47,10 +47,10 @@ pub struct WorkTemplate {
 
 /// The unit `cad.templates.apply` without settingsMode writes when it is given none: ADR 0346's v1 call, kept for
 /// existing automation (docs/adr/0659), writes centimetres as the package had them then. The package itself is metres
-/// since docs/adr/3007 (a new Mimari project's unit); only an explicit settingsMode reads it.
+/// since docs/adr/8007 (a new Mimari project's unit); only an explicit settingsMode reads it.
 pub const LEGACY_TEMPLATE_UNIT: DrawingUnit = DrawingUnit::Cm;
 
-/// The plot scale the same old call writes: 1:50, as the package had it then; the package's is 1:100 (docs/adr/3007).
+/// The plot scale the same old call writes: 1:50, as the package had it then; the package's is 1:100 (docs/adr/8007).
 pub const LEGACY_TEMPLATE_PLOT_SCALE: f64 = 50.0;
 
 /// KentOS's templates, by name.
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn the_mimari_package_starts_where_a_new_mimari_project_does() {
-        // docs/adr/3007: the package was cm and 1:50 while a new Mimari project is metres and 1:100 (ADR 0626).
+        // docs/adr/8007: the package was cm and 1:50 while a new Mimari project is metres and 1:100 (ADR 0626).
         let t = builtin_template("mimari").expect("KentOS's template");
         assert_eq!((t.unit, t.plot_scale), (DrawingUnit::M, 100.0));
         assert_eq!(t.levels[0], crate::ground_floor());

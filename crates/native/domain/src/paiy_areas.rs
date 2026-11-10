@@ -1,4 +1,4 @@
-//! The areas Planlı Alanlar İmar Yönetmeliği's article 4 defines for an independent unit (docs/adr/3029; ADV-22, M29),
+//! The areas Planlı Alanlar İmar Yönetmeliği's article 4 defines for an independent unit (docs/adr/8029; ADV-22, M29),
 //! each group of the building program's measured from the drawing:
 //!
 //! - **BB brüt alanı** (4/ğ-1): the area its outer contour encloses, the exterior wall's outer face on the façade and
@@ -10,9 +10,9 @@
 //!   faces are the plastered ones and the article's 2.5 cm allowance is not taken off again.
 //! - **Ortak alan payı** and **BB genel brüt alanı** (4/ğ-2): the common areas' gross shared out by the program's rule
 //!   (`kentos.share/1`, docs/adr/0784), over the units' total gross areas; the unit's total gross and its part.
-//! - **BB toplam brüt alanı** (4/ğ-4; docs/adr/3031): the unit's gross and its annexes' (groups of kind `annex`, Kat
+//! - **BB toplam brüt alanı** (4/ğ-4; docs/adr/8031): the unit's gross and its annexes' (groups of kind `annex`, Kat
 //!   Mülkiyeti Kanunu 2/a, 6): an annex is measured as a group of its own and summed into its unit.
-//! - **Arsa payı** (docs/adr/3031; `kentos.land/1`): the units' land shares by their total gross and value factors.
+//! - **Arsa payı** (docs/adr/8031; `kentos.land/1`): the units' land shares by their total gross and value factors.
 //!
 //! A room drawn by its outline (no seed) cannot be measured to another line: its own rings stand for all three.
 
@@ -33,7 +33,7 @@ pub struct PaiyGroup {
     pub share: Option<f64>,
     /// Each storey's part of its gross and net, in the order the rooms first stand on them (the metrekare cetveli's).
     pub levels: Vec<(Option<String>, f64, f64)>,
-    /// An independent unit's annexes' gross and net areas summed (docs/adr/3031); 0 for another group.
+    /// An independent unit's annexes' gross and net areas summed (docs/adr/8031); 0 for another group.
     pub annex_gross: f64,
     pub annex_net: f64,
 }
@@ -75,7 +75,7 @@ fn measured(search: &mut SpaceSearch<'_>, s: &SpaceFields, method: SpaceMethod) 
 }
 
 impl Document {
-    /// Each group of the building program with rooms, its article-4 areas (docs/adr/3029), in the program's order.
+    /// Each group of the building program with rooms, its article-4 areas (docs/adr/8029), in the program's order.
     pub fn paiy_areas(&self) -> Vec<(String, PaiyGroup)> {
         let program = self.program();
         if program.units.is_empty() {
@@ -197,7 +197,7 @@ impl Document {
                 out[*k].1.levels.push((level.clone(), g, net));
             }
         }
-        // Each independent unit's annexes (docs/adr/3031), summed into it.
+        // Each independent unit's annexes (docs/adr/8031), summed into it.
         for u in program
             .units
             .iter()
@@ -233,7 +233,7 @@ impl Document {
         out
     }
 
-    /// Arsa payı (docs/adr/3031; Kat Mülkiyeti Kanunu 3, 12/a): the independent units' land shares by their total gross
+    /// Arsa payı (docs/adr/8031; Kat Mülkiyeti Kanunu 3, 12/a): the independent units' land shares by their total gross
     /// and value factors, over the program's whole, else the parcel's area; none without units; the words when they
     /// cannot be given.
     pub fn land_shares(&self) -> Result<Option<kentos_contracts::LandShares>, String> {

@@ -231,7 +231,7 @@ pub enum SelectKind {
     ViewMark,
     /// Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
     Slab,
-    /// Kiriş (docs/adr/3041 §1); after it for the same reason.
+    /// Kiriş (docs/adr/8041 §1); after it for the same reason.
     Beam,
 }
 

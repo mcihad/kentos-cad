@@ -41,7 +41,7 @@ excluded?: boolean,
  */
 bound?: SlabBound, 
 /**
- * Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
+ * Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
  * structure alone, its top the finished floor.
  */
 layers?: SlabLayers, };

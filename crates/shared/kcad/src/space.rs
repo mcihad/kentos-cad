@@ -29,10 +29,10 @@ pub(crate) struct SpaceRest {
     pub arch: ArchInfo,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
-    /// Schema 221 (docs/adr/3040 §3).
+    /// Schema 233 (docs/adr/8040 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub floor_offset: Option<f64>,
-    /// Schema 221 (docs/adr/3040 §3).
+    /// Schema 233 (docs/adr/8040 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub suspended_ceiling: Option<f64>,
     #[serde(default, skip_serializing_if = "SpaceFinishes::is_empty")]

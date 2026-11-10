@@ -41,11 +41,11 @@ pub fn source_words(t: &TableEntity) -> String {
         Some(TableSource::Schedule { of, members, .. }) => {
             format!("{}: {} satır, nesnelerinden", of.label(), members.len())
         }
-        // Emsal ve TAKS tablosu (docs/adr/3030).
+        // Emsal ve TAKS tablosu (docs/adr/8030).
         Some(TableSource::Zoning {}) => {
             "Emsal ve TAKS tablosu: imar durumundan ve mahallerden".to_owned()
         }
-        // Otopark and Sığınak hesabı (docs/adr/3036).
+        // Otopark and Sığınak hesabı (docs/adr/8036).
         Some(TableSource::Parking {}) => "Otopark hesabı: bina programından ve otopark mahallerinden".to_owned(),
         Some(TableSource::Shelter {}) => "Sığınak hesabı: bina programından ve sığınak mahallerinden".to_owned(),
         // Veri çıkarımı (docs/adr/1030 §6): its recipe, the drawings it reads besides this one.
@@ -148,7 +148,7 @@ impl crate::app::App {
         self.place_table(geometry, "Revizyon listesi");
     }
 
-    /// Emsal ve TAKS tablosu (`arch.zoningTable`, docs/adr/3030): the parcel's zoning against the drawing as PAİY 57/3
+    /// Emsal ve TAKS tablosu (`arch.zoningTable`, docs/adr/8030): the parcel's zoning against the drawing as PAİY 57/3
     /// asks the approved project to show it, placed from the cursor; the document keeps it at every step and when
     /// Proje ayarları change. Without a zoning, where it is typed, and Proje ayarları open on Mimari.
     pub(crate) fn place_zoning_table(&mut self) {
@@ -189,7 +189,7 @@ impl crate::app::App {
         self.place_table(geometry, "Emsal ve TAKS tablosu");
     }
 
-    /// Otopark hesabı and Sığınak hesabı (docs/adr/3036): a live table from the building program's units, placed at the
+    /// Otopark hesabı and Sığınak hesabı (docs/adr/8036): a live table from the building program's units, placed at the
     /// cursor; a project without units is told where they are given.
     pub(crate) fn place_provision_table(&mut self, source: kentos_commands::TableSource) {
         let Some(doc) = &self.document else {

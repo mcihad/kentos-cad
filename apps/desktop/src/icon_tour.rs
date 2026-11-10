@@ -115,7 +115,7 @@ const SCENES: [Scene; 52] = [
     on_sheet("pafta-sira", "Sıra", Open::Caption),
     on_sheet("pafta-disa", "Dışa aktar", Open::Caption),
     on_sheet("pafta-oge", "Harita", Open::Menu),
-    // Mimari's lists and its panels' ▾ (docs/adr/3015, 3016): the building's every icon, one list after another.
+    // Mimari's lists and its panels' ▾ (docs/adr/8015, 8016): the building's every icon, one list after another.
     scene("mimari-duvar", Some("Mimari"), "Duvar", Open::Caption),
     scene("mimari-bosluk", Some("Mimari"), "Boşluk", Open::Arrow),
     scene("mimari-aks", Some("Mimari"), "Aks", Open::Arrow),

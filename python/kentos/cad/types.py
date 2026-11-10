@@ -109,7 +109,7 @@ UNITS: dict[str, str] = {
     "L/h": "Litre bölü saat: rölantide yakıt.",
     "kg/L": "Kilogram bölü litre: yakıtın litresinin salımı.",
     "volume/h": "Saatte hacim: üretim.",
-    "W/m2K": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/3038).",
+    "W/m2K": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038).",
 }
 
 
@@ -365,8 +365,8 @@ class ArchAuditCheck(_StrEnum):
     - ``casework``: Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).
     - ``doors``: Doors (docs/adr/0772 §5): a leaf's sweep clashing (physical), a use zone taken (passage), a net clear width
     - ``program``: The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,
-    - ``fixtures``: Fixtures (docs/adr/3025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older
-    - ``regulation``: Mevzuat (docs/adr/3033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,
+    - ``fixtures``: Fixtures (docs/adr/8025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older
+    - ``regulation``: Mevzuat (docs/adr/8033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -845,7 +845,7 @@ BatchOnErrorName = Literal["stop", "continue"]
 
 
 class BeamRole(_StrEnum):
-    """What a beam is (docs/adr/3041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or
+    """What a beam is (docs/adr/8041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or
     a bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).
     """
     BEAM = "beam"
@@ -2287,7 +2287,7 @@ EmptyResultName = Literal["keep", "clear"]
 
 
 class EmsalCount(_StrEnum):
-    """How a room counts for the floor area ratio (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
+    """How a room counts for the floor area ratio (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
 
     - ``included``: Emsale dahil: the floors' area (katlar alanı).
     - ``exempt``: Emsal harici (22/1): out of it, but together at most 30 % of the parcel's emsal area (5/8); what passes goes in.
@@ -3689,7 +3689,7 @@ LineEndName = Literal["start", "end"]
 
 
 class LineGroups(_StrEnum):
-    """How the plan's lines are weighted (docs/adr/3013).
+    """How the plan's lines are weighted (docs/adr/8013).
 
     - ``own``: Every object at its own pen, whatever the scale (absent: the same).
     - ``byScale``: The line group of the scale the plan is drawn at ([`line_group`]).
@@ -3780,7 +3780,7 @@ LinearRefDefineOperationName = Literal["set", "remove"]
 
 
 class LocalRules(_StrEnum):
-    """A municipality's own regulation (docs/adr/3034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
+    """A municipality's own regulation (docs/adr/8034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
     69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the
     national value is said as a conflict the administration decides; both are named where they differ.
 
@@ -5336,13 +5336,13 @@ PenCategoryName = Literal["walls", "openings", "columns", "slabs", "spaces", "di
 
 class PhaseView(_StrEnum):
     """Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;
-    Tadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.
+    Tadilat projesi (docs/adr/8039 §5) every state with Mimarlar Odası's three techniques.
 
     - ``all``
     - ``existing``
     - ``demolition``
     - ``proposed``
-    - ``renovation``: Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.
+    - ``renovation``: Tadilat projesi (docs/adr/8039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.
     """
     ALL = "all"
     EXISTING = "existing"
@@ -6378,7 +6378,7 @@ class ScheduleField(_StrEnum):
     - ``railingFinish``
     - ``doors``
     - ``windows``
-    - ``code``: An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.
+    - ``code``: An opening's type's joinery code (docs/adr/8028; KCAD schema 220): grouped by it, the joinery list.
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
     - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
@@ -6393,9 +6393,9 @@ class ScheduleField(_StrEnum):
     - ``gross``: A space's unit's gross area: its own rooms and its share.
     - ``tracks``: A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its
     - ``unitKind``: A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and
-    - ``paiyNet``: Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its
-    - ``nature``: Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:
-    - ``sillFinish``: Mahal listesi (docs/adr/3038; `.kcad` schema 216; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window
+    - ``paiyNet``: Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/8029; `.kcad` schema 221): its
+    - ``nature``: Kat irtifakı (docs/adr/8031; `.kcad` schema 223): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:
+    - ``sillFinish``: Mahal listesi (docs/adr/8038; `.kcad` schema 228; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window
     """
     NUMBER = "number"
     TYPE = "type"
@@ -6551,7 +6551,7 @@ class SelectKind(_StrEnum):
     - ``tag``: Etiket (docs/adr/0344 §5).
     - ``viewMark``: Görünüm işareti (docs/adr/0345 §5).
     - ``slab``: Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
-    - ``beam``: Kiriş (docs/adr/3041 §1); after it for the same reason.
+    - ``beam``: Kiriş (docs/adr/8041 §1); after it for the same reason.
     """
     POINT = "point"
     LINE = "line"
@@ -6753,7 +6753,7 @@ SinkModeName = Literal["new", "addTables", "replaceTables"]
 
 
 class SiteEdgeKind(_StrEnum):
-    """A parcel edge's kind (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
+    """A parcel edge's kind (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
 
     - ``side``: Yan bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-b, ç).
     - ``front``: Ön bahçe, a road's edge: at least 5.00 m (23/1-a).
@@ -6827,7 +6827,7 @@ SlabFaceName = Literal["outline", "room"]
 
 
 class SlabLayerKind(_StrEnum):
-    """What a layer of a slab besides its structure is (docs/adr/3040 §2): TS 825's floor build-up (a storey's floor: its
+    """What a layer of a slab besides its structure is (docs/adr/8040 §2): TS 825's floor build-up (a storey's floor: its
     finish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY
     4(1)(ıı)'s "taban döşeme kaplaması", the plaster its "tavan kaplaması".
 
@@ -7585,7 +7585,7 @@ class TagShape(_StrEnum):
     - ``rectangle``
     - ``rounded``
     - ``none``
-    - ``ellipse``: Round the first line only (docs/adr/3027): a room's number in its ellipse, its name and area below, as
+    - ``ellipse``: Round the first line only (docs/adr/8027): a room's number in its ellipse, its name and area below, as
     """
     CIRCLE = "circle"
     HEXAGON = "hexagon"
@@ -7984,7 +7984,7 @@ class UnitKind(_StrEnum):
     - ``unit``: Bağımsız bölüm: a flat, a shop, an office; its own spaces summed for it alone.
     - ``common``: Ortak alan: a shared corridor, stairs, a shaft; summed apart, never into a unit's total.
     - ``outdoor``: Dış alan: a garden, a car park; summed apart.
-    - ``annex``: Eklenti (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,
+    - ``annex``: Eklenti (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,
     """
     UNIT = "unit"
     COMMON = "common"
@@ -15743,16 +15743,16 @@ class ArchAuditFinding(_Model):
             `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
             `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
             `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
-            `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
+            `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/8025); the regulation group's
             `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
-            `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033),
-            `paiy_inside_height_below` (docs/adr/3040 §3),
+            `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/8033),
+            `paiy_inside_height_below` (docs/adr/8040 §3),
             `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
             `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
             `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
-            (docs/adr/3034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
-            `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/3035); `parking_short`,
-            `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/3036).
+            (docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+            `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
+            `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -15762,8 +15762,8 @@ class ArchAuditFinding(_Model):
         lapsed: Marked as left on purpose, but the finding changed since: open again.
         nature: A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
         note: The exception's note.
-        rule: A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
-            regulation's (docs/adr/3034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
+        rule: A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
+            regulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
     """
     key: str
     check: ArchAuditCheck | ArchAuditCheckName
@@ -16185,15 +16185,15 @@ class ArchSettings(_Model):
         active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
             level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
-        cut_height: The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a
+        cut_height: The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm). Unit: length.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
-        line_groups: How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the
+        line_groups: How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
             plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
             line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
             own pen whatever the scale. A new Mimari project writes `byScale`.
-        local_rules: Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
+        local_rules: Yerel imar yönetmeliği (docs/adr/8034; `.kcad` schema 225): the municipality's regulation Mimari denetim's
             Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
         materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
@@ -16202,15 +16202,15 @@ class ArchSettings(_Model):
         options: The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
-        site: Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the
+        site: Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
             absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
         space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
         space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
         space_usages: Suggested room usages in project order, never a mandatory classification.
-        sprinklers: Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the
+        sprinklers: Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
             fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
-        zoning: İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
+        zoning: İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
             ratio and the coverage are read against. Absent: none given.
     """
     active_level: str | None | Unset = UNSET
@@ -18182,7 +18182,7 @@ class BatchRowRan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class BeamEntity(Entity):
-    """A beam (docs/adr/3041 §1).
+    """A beam (docs/adr/8041 §1).
     Attributes:
         id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
@@ -18191,7 +18191,7 @@ class BeamEntity(Entity):
         height: Its height (kiriş yüksekliği), metres: its top to its underside, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
-        base_offset: Its underside's height over its storey's floor, metres (docs/adr/3041 §3): a lintel's at its opening's head;
+        base_offset: Its underside's height over its storey's floor, metres (docs/adr/8041 §3): a lintel's at its opening's head;
             absent: it hangs from where its top is (a beam's). Not with an offset. Unit: length.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
@@ -18213,7 +18213,7 @@ class BeamEntity(Entity):
             absent: 0. Unit: elevation.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
-        role: What it is (docs/adr/3041 §3): a beam (absent), a lintel or a bond beam.
+        role: What it is (docs/adr/8041 §3): a beam (absent), a lintel or a bond beam.
         symbol: Library symbol overriding the layer's style.
         tag: Its number ("K101").
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -18332,7 +18332,7 @@ class BeamEntity(Entity):
 
 @dataclass(kw_only=True, slots=True)
 class BeamRow(_Model):
-    """A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length and its concrete's volume. A beam's
+    """A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length and its concrete's volume. A beam's
     volume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the
     slab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,
     in their wall, is the whole.
@@ -18389,7 +18389,7 @@ class BeamRow(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class BeamsCreate(_Model):
-    """Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/3041 §1): beams on a named layer, as one undo step.
+    """Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/8041 §1): beams on a named layer, as one undo step.
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_beam`, `level_not_found`, `invalid_line_weight`,
     `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
@@ -20157,7 +20157,7 @@ class Bounds(_Model):
 class BuildingProgram(_Model):
     """A building's program (docs/adr/0773, `.kcad` schema 138).
     Attributes:
-        land_total: Arsa payı paydası (docs/adr/3031; `.kcad` schema 211): the whole the land shares are written over; none: the
+        land_total: Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
             parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed. Unit: count.
         share_rule: How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
         version: The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.
@@ -22720,7 +22720,7 @@ class ColumnEntity(Entity):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
-        material: Its material (docs/adr/3041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
+        material: Its material (docs/adr/8041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
             are one section, hatched alike with no line between them.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
@@ -56935,17 +56935,17 @@ class NetworkTurns(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class NewBeam(_Model):
-    """One beam to draw (docs/adr/3041 §1): its fields, and its attributes.
+    """One beam to draw (docs/adr/8041 §1): its fields, and its attributes.
     Attributes:
         pts: Its axis: straight stretches from point to point. Unit: length.
         width: Its web's width (gövde genişliği). Unit: length.
         height: Its height, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
-        base_offset: Its underside's height over its storey's floor (docs/adr/3041 §3): a lintel's at its opening's head; absent: it
+        base_offset: Its underside's height over its storey's floor (docs/adr/8041 §3): a lintel's at its opening's head; absent: it
             hangs (a beam's). Not with an offset. Unit: length.
         justify: How it lies on its axis; absent: centred.
         material: Its material; absent: Betonarme.
         offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top); absent: 0. Unit: elevation.
-        role: What it is (docs/adr/3041 §3): absent a beam; a lintel; a bond beam.
+        role: What it is (docs/adr/8041 §3): absent a beam; a lintel; a bond beam.
         tag: Its number ("K101").
     """
     pts: list[Vec2]
@@ -57012,7 +57012,7 @@ class NewColumn(_Model):
         grids: The two grids it stands where they cross, by their persistent ids; it follows them.
         legs: An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
             depth; only with `shape` L, which needs them. Unit: length.
-        material: Its material (docs/adr/3041 §2); absent: Betonarme.
+        material: Its material (docs/adr/8041 §2); absent: Betonarme.
         rotation: Its turn, radians counter-clockwise. Unit: rad.
         tag: Absent: from `tagStart` on, else none.
         type: Its type's name.
@@ -57273,7 +57273,7 @@ class NewOpening(_Model):
         inset: A flue's distance from its face to its cavity, metres; absent: centred in its wall. Unit: length.
         leaves: Unit: count.
         middle: With `point`: centred on the edge of the base line the point is by (duvar ortası).
-        phase: Its own tadilat durumu (docs/adr/3039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
+        phase: Its own tadilat durumu (docs/adr/8039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
             Absent: its wall's.
         point: A point by the wall (the click): its centre goes where the base line passes nearest it. Unit: length.
         side: The side it opens to (a niche's or flue's face). Absent: the side `point` is on, else the left.
@@ -57478,7 +57478,7 @@ class NewSlab(_Model):
         edge_offset: Every edge of its outline moved by this much, out of it when positive (a slab under the walls, a cantilever),
             in when negative; at most 10 m either way. Unit: length.
         excluded: Left out of the quantities' totals.
-        layers: Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
+        layers: Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
         offset: Its top above its level's elevation (negative: below); absent: 0. Unit: elevation.
         parts: Its outline drawn: one part or more, each an outer ring and its holes.
         seed: A point: its outline found from the walls round it, those of its level (every wall when it has none). Unit: length.
@@ -57586,16 +57586,16 @@ class NewSpace(_Model):
     """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
     Attributes:
         columns: Physical column deduction; absent keeps legacy wall-only areas.
-        floor_offset: Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/3040 §3); absent: the top of the floor
+        floor_offset: Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/8040 §3); absent: the top of the floor
             slab under it, else its storey's floor. Unit: elevation.
-        height: Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/3040
+        height: Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/8040
             §3). Unit: elevation.
         method: What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
         parts: Its boundary drawn, when no seed is given.
         scope: Persistent source scope for a seeded room; drawn rooms use project only.
         seed: A point inside it: its boundary is found from the walls round it. Unit: length.
         sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
-        suspended_ceiling: Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/3040 §3); absent: none. Unit: elevation.
+        suspended_ceiling: Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/8040 §3); absent: none. Unit: elevation.
         unit: The building program's group it joins, by its id (docs/adr/0773); absent: none.
         void: A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
     """
@@ -59008,7 +59008,7 @@ class OpeningEntity(Entity):
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         overrides: The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.
-        phase: Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
+        phase: Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
             its wall's.
         show_swing: The swing's arc is drawn. Absent: it is.
         side: The side it opens to. Absent: the path's left.
@@ -59477,21 +59477,21 @@ class OpeningType(_Model):
         name: What it is called (K01): unique in the project, case aside.
         version: Each change gives it the next; an opening that took an older one is behind (eski sürüm). Unit: count.
         width: The rough opening, metres (an opening's `width`). Unit: length.
-        code: Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+        code: Its joinery code (docs/adr/8028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
             door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
-            unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).
+            unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).
         depth: Unit: length.
         frame: Unit: length.
         head: Unit: elevation.
         leaves: Unit: count.
-        material: Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+        material: Its frame's and leaves' make (kasa ve kanat; docs/adr/8038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
             odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
-            (KCAD schema 217).
+            (KCAD schema 229).
         sill: Unit: elevation.
         source: Where it came from: the office library's name it was taken from; absent: made in this project.
         swing: Unit: deg.
         u_value: Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
-            825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217). Unit: W/m2K.
+            825:2024's 1.8 is a finding (docs/adr/8038). Above 0, at most 10; absent: not said (KCAD schema 229). Unit: W/m2K.
     """
     id: str
     name: str
@@ -59580,12 +59580,12 @@ class OpeningTypeChange(_Model):
         frame: The frame's width at each jamb, metres; null: none. Unit: length.
         head: Unit: elevation.
         leaves: Unit: count.
-        material: Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.
+        material: Its frame's and leaves' make (kasa ve kanat, docs/adr/8038); null: not said.
         nominal: Its nominal size instead of the rough opening: the rough opening follows from it, its fitting gap and frame
             (after them, when they change too), and `build.sizeBy` becomes the width it names.
         sill: Unit: elevation.
         swing: Degrees; null: 90. Unit: deg.
-        u_value: Its thermal transmittance, W/m²K (docs/adr/3038); null: not said. Unit: W/m2K.
+        u_value: Its thermal transmittance, W/m²K (docs/adr/8038); null: not said. Unit: W/m2K.
         unset: The construction's fields taken away.
         width: The rough opening, metres. Unit: length.
     """
@@ -71228,10 +71228,10 @@ class ProgramUnit(_Model):
     """A group of spaces: an independent unit, a common area or an outdoor area.
     Attributes:
         number: Its number, as the project writes it (“D1”, “1”, “Ortak”); one per group.
-        annex_of: An annex's independent unit (docs/adr/3031): the id of the group of kind `unit` it is allocated to.
-        land_factor: An independent unit's value factor in the land shares (docs/adr/3031; Kat Mülkiyeti Kanunu 3: values by
+        annex_of: An annex's independent unit (docs/adr/8031): the id of the group of kind `unit` it is allocated to.
+        land_factor: An independent unit's value factor in the land shares (docs/adr/8031; Kat Mülkiyeti Kanunu 3: values by
             location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
-        nature: Niteliği (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
+        nature: Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
             what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
         recorded_area: Its recorded (official) area, m², as the user gave it (a deed's, a permit's): read beside the measured one,
             never written by a measurement. Unit: area.
@@ -73153,9 +73153,9 @@ class PublishSheets(_Model):
         dpi: None preserves each page's own physical raster setting. Unit: dpi.
         name: One PDF's leaf name; .pdf is appended when missing.
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
-            {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value
+            {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/8037; one without a value
             refuses with naming_value_missing). Collisions get a stable numeric suffix.
-        pdfa: PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a
+        pdfa: PDF/A-2b (ISO 19005-2; docs/adr/8037): every file archival, as the 2026 digital project regulation asks a
             drawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
         previous: An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
@@ -73416,7 +73416,7 @@ class QuantityTotals(_Model):
         openings: Unit: count.
         opening_area: Unit: area.
         baseboard_length: The rooms' baseboards, metres (docs/adr/0722 §5). Unit: length.
-        beam_volume: The beams', lintels' and bond beams' concrete (docs/adr/3041 §3). Unit: volume.
+        beam_volume: The beams', lintels' and bond beams' concrete (docs/adr/8041 §3). Unit: volume.
         parapet_length: Unit: length.
         railing_length: The railings' and parapets' length along the slabs' free sides, metres. Unit: length.
         ramp_area: The ramps' plan area and their railings' length (docs/adr/0723 §3). Unit: area.
@@ -80325,7 +80325,7 @@ class SchedulesCreate(_Model):
     the desktop also `slots_exhausted`. Warning: `layer_hidden`.
     Attributes:
         at: Unit: length.
-        by_level: Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
+        by_level: Kat kat (docs/adr/8029): a units schedule's rows storey by storey, each group's areas the storey's part.
         columns: Absent: the kind's columns.
         height: Its words' height, metres; absent: the project's table height at its plot scale. Unit: length.
         line_weight: Unit: paper-mm.
@@ -82266,8 +82266,8 @@ class SettingsSet(_Model):
       old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and
       `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
       (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans
-      are cut at (docs/adr/3012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or
-      absent: every object its own pen) how its lines are weighted (docs/adr/3013);
+      are cut at (docs/adr/8012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or
+      absent: every object its own pen) how its lines are weighted (docs/adr/8013);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -84010,7 +84010,7 @@ class SinkTable(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SiteEdge(_Model):
-    """A parcel edge (docs/adr/3032): its kind and the plan's own setback where the plan gives one, m.
+    """A parcel edge (docs/adr/8032): its kind and the plan's own setback where the plan gives one, m.
     Attributes:
         setback: Unit: length.
     """
@@ -84035,7 +84035,7 @@ class SiteEdge(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SitePlan(_Model):
-    """Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
+    """Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
     polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
     past the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on
     the parcel and the storeys.
@@ -84166,7 +84166,7 @@ class SlabEntity(Entity):
         excluded: Left out of the quantities' totals: listed, not summed.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
-        layers: Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
+        layers: Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
             structure alone, its top the finished floor.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
@@ -84304,7 +84304,7 @@ class SlabEntity(Entity):
 
 @dataclass(kw_only=True, slots=True)
 class SlabLayer(_Model):
-    """A layer of a slab besides its structure (docs/adr/3040 §2).
+    """A layer of a slab besides its structure (docs/adr/8040 §2).
     Attributes:
         thickness: Metres, above 0 and at most 1. Unit: length.
         material: What it is made of (Seramik, Laminat parke …); absent: not said.
@@ -84332,7 +84332,7 @@ class SlabLayer(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SlabLayerRow(_Model):
-    """A slab's layer measured (docs/adr/3040 §2): its kind, its thickness, its net area (the slab's) and its volume.
+    """A slab's layer measured (docs/adr/8040 §2): its kind, its thickness, its net area (the slab's) and its volume.
     Attributes:
         thickness: Unit: length.
         area: The slab's net area, m². Unit: area.
@@ -84367,7 +84367,7 @@ class SlabLayerRow(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SlabLayers(_Model):
-    """A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the
+    """A slab's layers besides its structure (its `thickness`, docs/adr/8040 §2), each list from the top: those over the
     structure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of
     the first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).
     """
@@ -84401,7 +84401,7 @@ class SlabRow(_Model):
         volume: `netArea` × thickness, m³. Unit: volume.
         edge_length: Its edge's runs' length, metres. Unit: length.
         excluded: Listed, not summed.
-        layers: Its layers besides its structure (docs/adr/3040 §2), over it then under it, each measured on its net area;
+        layers: Its layers besides its structure (docs/adr/8040 §2), over it then under it, each measured on its net area;
             `volume` is the structure's.
         offset: Its top above its level's elevation. Unit: elevation.
         top: Its top's elevation: its level's elevation and its offset; none when its level has none. Unit: elevation.
@@ -85894,7 +85894,7 @@ class SpaceBrief(_Model):
         adjacent: Usages one of its neighbours (a wall or an opening between) should have, each.
         area_max: Unit: area.
         area_min: Unit: area.
-        emsal: How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and
+        emsal: How its rooms count for the floor area ratio (docs/adr/8030; `.kcad` schema 222). Absent: by their name and
             use (`emsal_by_use`).
         min_passage: The least net passage: the widest a body may be and still go between all the space's doors (a corridor's). Unit: length.
         min_width: The least net width: the largest circle inside the space, its diameter. Unit: length.
@@ -86007,10 +86007,10 @@ class SpaceEntity(Entity):
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         columns: Physical columns to deduct, within the same semantic level (no level: all).
-        floor_offset: Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;
+        floor_offset: Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;
             a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor. Unit: elevation.
         height: Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
-            first. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3). Unit: elevation.
+            first. Absent: up to the slab over it, else its storey's top (docs/adr/8040 §3). Unit: elevation.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -86027,7 +86027,7 @@ class SpaceEntity(Entity):
         scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
         sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
-        suspended_ceiling: Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,
+        suspended_ceiling: Asma tavan (docs/adr/8040 §3, `.kcad` schema 233): its suspended ceiling's underside over its finished floor,
             metres; its inside height. Absent: none. Unit: elevation.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -86184,15 +86184,15 @@ class SpaceFields(_Model):
     Attributes:
         parts: Its boundary: one part or more, each an outer ring and its holes.
         columns: Physical columns to deduct, within the same semantic level (no level: all).
-        floor_offset: Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;
+        floor_offset: Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;
             a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor. Unit: elevation.
         height: Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
-            first. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3). Unit: elevation.
+            first. Absent: up to the slab over it, else its storey's top (docs/adr/8040 §3). Unit: elevation.
         method: What its rings stand for. Absent: the walls' inner faces.
         scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
         sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
-        suspended_ceiling: Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,
+        suspended_ceiling: Asma tavan (docs/adr/8040 §3, `.kcad` schema 233): its suspended ceiling's underside over its finished floor,
             metres; its inside height. Absent: none. Unit: elevation.
         unit: The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor
             area of the building's program, by its id. Absent: none.
@@ -86280,13 +86280,13 @@ class SpaceFields(_Model):
 @dataclass(kw_only=True, slots=True)
 class SpaceFinishes(_Model):
     """A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room
-    list's others (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's
+    list's others (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's
     treads' and risers', and its handrails' and railings'.
     Attributes:
         base: The skirting's finish (`.kcad` schema 131).
-        railing: Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 216).
-        sill: Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 216).
-        stair: Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 216).
+        railing: Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 228).
+        sill: Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 228).
+        stair: Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 228).
     """
     base: str | None | Unset = UNSET
     ceiling: str | None | Unset = UNSET
@@ -86455,10 +86455,10 @@ class SpaceRow(_Model):
             valid geometry, included in totals. Absent for every valid boundary.
         by_method: A space from the walls: its area by each method, m². Unit: area.
         columns: Persistent column policy; omitted for legacy/ignore rows.
-        height: Its inside height (PAİY 4(1)(ıı), docs/adr/3040 §3): its finished floor to its ceiling (its asma tavan, its
+        height: Its inside height (PAİY 4(1)(ıı), docs/adr/8040 §3): its finished floor to its ceiling (its asma tavan, its
             height typed, the slab over it); without one, its storey's top. Unit: elevation.
         sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
-        suspended_ceiling_area: Its asma tavan's area, m² (docs/adr/3040 §3): its net area; none without one. Unit: area.
+        suspended_ceiling_area: Its asma tavan's area, m² (docs/adr/8040 §3): its net area; none without one. Unit: area.
         void: A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.
         volume: Unit: volume.
     """
@@ -86931,7 +86931,7 @@ class SpacesPlan(_Model):
 class SpacesQuantified(_Model):
     """Output of `cad.spaces.quantities` v1 (its plan's too).
     Attributes:
-        beams: The beams, lintels and bond beams (docs/adr/3041 §3).
+        beams: The beams, lintels and bond beams (docs/adr/8041 §3).
         materials: The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
             order, then the text ones in the drawing's.
         ramps: The ramps (docs/adr/0723 §3).
@@ -105570,7 +105570,7 @@ class XyzExported(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class Zoning(_Model):
-    """İmar durumu (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
+    """İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
     emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
     gives it.
     Attributes:
@@ -105962,7 +105962,7 @@ class SetArchOperation(ArchOperation):
         anchor: A column's anchor (docs/adr/0725 §2): its reference point stays, its body moves round it.
         base: A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2). Unit: elevation.
         base_offset: A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
-            base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/3041 §3): a
+            base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/8041 §3): a
             lintel's or a bond beam's; null: it hangs from its slab again. Unit: elevation.
         bubble_size: A grid's; null: 8 mm. Unit: paper-mm.
         bubbles: A grid's.
@@ -105970,7 +105970,7 @@ class SetArchOperation(ArchOperation):
         depth: A column's; null: its width. Unit: length.
         ends: A grid's gapped end segments, millimetres on paper (docs/adr/0725 §5); null: the whole grid. Unit: paper-mm.
         fill: A column's.
-        height: A beam's height (docs/adr/3041 §1). Unit: length.
+        height: A beam's height (docs/adr/8041 §1). Unit: length.
         height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
             risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
         justify: A beam's justification on its axis.
@@ -105978,7 +105978,7 @@ class SetArchOperation(ArchOperation):
         landing: A stair's or a ramp's; null: the width. Unit: length.
         legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
-        material: A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
+        material: A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.
         numbering: A stair's.
         offset: A beam's top over where it hangs. Unit: elevation.
         phase: Any kind's.
@@ -105987,7 +105987,7 @@ class SetArchOperation(ArchOperation):
         rise: A ramp's. Unit: elevation.
         riser_height: A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1). Unit: length.
         risers: A stair's. Unit: count.
-        role: A beam's role (docs/adr/3041 §3): a beam, a lintel or a bond beam.
+        role: A beam's role (docs/adr/8041 §3): a beam, a lintel or a bond beam.
         rotation: A column's, about its reference point. Unit: rad.
         shape: A column's; another than L drops its legs.
         slope: A ramp's. Unit: percent.
@@ -116469,7 +116469,7 @@ class RenameOpeningTypesOperation(OpeningTypesOperation):
 
 @dataclass(kw_only=True, slots=True)
 class CodeOpeningTypesOperation(OpeningTypesOperation):
-    """Doğrama kodu (docs/adr/3028): the type's joinery code set, or taken away (null); every opening of the type and
+    """Doğrama kodu (docs/adr/8028): the type's joinery code set, or taken away (null); every opening of the type and
     its tag read it.
     """
     TAG_VALUE: ClassVar[str] = "code"
@@ -116492,7 +116492,7 @@ class CodeOpeningTypesOperation(OpeningTypesOperation):
 
 @dataclass(kw_only=True, slots=True)
 class CodesOpeningTypesOperation(OpeningTypesOperation):
-    """Doğrama kodları (docs/adr/3028): each type the drawing's doors, windows and bare openings follow that has no
+    """Doğrama kodları (docs/adr/8028): each type the drawing's doors, windows and bare openings follow that has no
     code gets the next of its kind, counted from 01 in the order the drawing first has it: K a door, GK a door with
     a room on one side only (the building's outer wall), P a window, B a bare opening. An opening following no
     project type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a
@@ -116592,7 +116592,7 @@ class SetOpeningsOperation(OpeningsOperation):
         inset: A flue's distance from its face to its cavity, metres; null: centred. Unit: length.
         leaves: Unit: count.
         number: Its mark; null: none.
-        phase: Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:
+        phase: Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up; null:
             its wall's.
         sill: Unit: elevation.
         swing: Degrees; null: 90. Unit: deg.
@@ -116856,7 +116856,7 @@ class RenumberOpeningsOperation(OpeningsOperation):
     """Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every
     opening of the form `form` (all forms: absent).
     Attributes:
-        by_room: Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens
+        by_room: Mahale göre (docs/adr/8028): each opening `prefix` and its room's number instead (a door's the room it opens
             into, else its other side's; another's the room on either side), and when that room has more than one of
             them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
         start: Unit: count.
@@ -121539,7 +121539,7 @@ class CellScheduleOperation(ScheduleOperation):
 class SetScheduleOperation(ScheduleOperation):
     """Its columns, filter, sort, grouping or total changed; its rows written again.
     Attributes:
-        by_level: Kat kat (docs/adr/3029): a units schedule's rows storey by storey.
+        by_level: Kat kat (docs/adr/8029): a units schedule's rows storey by storey.
     """
     TAG_VALUE: ClassVar[str] = "set"
     by_level: bool | None | Unset = UNSET
@@ -122260,7 +122260,7 @@ class SetSlabsOperation(SlabsOperation):
     """Değiştir: the fields given, on every slab named.
     Attributes:
         edge: Its edge's kind and width; null: no edge.
-        layers: Its layers besides its structure, all of them (docs/adr/3040 §2); empty lists take them away.
+        layers: Its layers besides its structure, all of them (docs/adr/8040 §2); empty lists take them away.
         offset: Unit: elevation.
         thickness: Unit: length.
     """
@@ -122708,13 +122708,13 @@ class SetSpacesOperation(SpacesOperation):
     Attributes:
         base: The skirting's finish (Süpürgelik, docs/adr/0733 §3).
         columns: Physical column deduction; absent keeps legacy wall-only areas.
-        floor_offset: Döşeme kot farkı (docs/adr/3040 §3); null: the floor slab under it, else its storey's floor. Unit: elevation.
+        floor_offset: Döşeme kot farkı (docs/adr/8040 §3); null: the floor slab under it, else its storey's floor. Unit: elevation.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
         scope: Source scope to keep for later wall/column updates; unassigned requires clearing level.
-        sill: The room list's finishes (docs/adr/3038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
+        sill: The room list's finishes (docs/adr/8038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
         sources: Explicit UUIDs; null clears the list and restores scope/level search.
-        suspended_ceiling: Asma tavan: its height over the finished floor (docs/adr/3040 §3); null: none. Unit: elevation.
+        suspended_ceiling: Asma tavan: its height over the finished floor (docs/adr/8040 §3); null: none. Unit: elevation.
         unit: The building program's group, by its id (docs/adr/0773); null: out of any.
         void: A void or a room again (docs/adr/0708).
     """
@@ -124142,7 +124142,7 @@ class ScheduleTableSource(TableSource):
     takes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again
     by the document at every step, which writes `members` too: each data row's objects by their persistent ids.
     Attributes:
-        by_level: Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has
+        by_level: Kat kat (docs/adr/8029; `.kcad` schema 221): a units schedule's row for each group on each storey it has
             rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
         units: A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without
             spaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.
@@ -124239,7 +124239,7 @@ class ExtractionTableSource(TableSource):
 
 @dataclass(kw_only=True, slots=True)
 class ZoningTableSource(TableSource):
-    """Emsal ve TAKS tablosu (docs/adr/3030; `.kcad` schema 210): the parcel's zoning against the drawing as PAİY 57/3
+    """Emsal ve TAKS tablosu (docs/adr/8030; `.kcad` schema 222): the parcel's zoning against the drawing as PAİY 57/3
     asks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the
     drawing's, the construction area) and each storey's area counted in and out; written again by the document at
     every step and when the project's settings change.
@@ -124257,7 +124257,7 @@ class ZoningTableSource(TableSource):
 
 @dataclass(kw_only=True, slots=True)
 class ParkingTableSource(TableSource):
-    """Otopark hesabı (docs/adr/3036; `.kcad` schema 215): the independent units' parking need by Otopark Yönetmeliği
+    """Otopark hesabı (docs/adr/8036; `.kcad` schema 227): the independent units' parking need by Otopark Yönetmeliği
     Ek-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.
     """
     TAG_VALUE: ClassVar[str] = "parking"
@@ -124273,7 +124273,7 @@ class ParkingTableSource(TableSource):
 
 @dataclass(kw_only=True, slots=True)
 class ShelterTableSource(TableSource):
-    """Sığınak hesabı (docs/adr/3036; `.kcad` schema 215): the units' shelter people by Sığınak Yönetmeliği 8/a against
+    """Sığınak hesabı (docs/adr/8036; `.kcad` schema 227): the units' shelter people by Sığınak Yönetmeliği 8/a against
     the drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.
     """
     TAG_VALUE: ClassVar[str] = "shelter"

@@ -94,7 +94,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id:
             at: Unit: length.
             of:
-            by_level: Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
+            by_level: Kat kat (docs/adr/8029): a units schedule's rows storey by storey, each group's areas the storey's part.
             color:
             columns: Absent: the kind's columns.
             expected_revision:

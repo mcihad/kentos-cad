@@ -1,4 +1,4 @@
-//! Otopark ve sığınak hesapları (docs/adr/3036; ADV-22, M36): what the building's independent units ask by the parking
+//! Otopark ve sığınak hesapları (docs/adr/8036; ADV-22, M36): what the building's independent units ask by the parking
 //! and the shelter regulations, beside what the drawing gives.
 //!
 //! - **Otopark (Otopark Yönetmeliği 8, Ek-1):** a dwelling by its gross area (BB brüt, 8/3): under 80 m² one place for
@@ -14,8 +14,8 @@
 //!   drawing's shelter: the rooms named Sığınak, their net area. A toilet and a washbasin each for women and men for
 //!   every hundred people, one more past fifty; two exits and a kitchen niche of 2.30 m² in a shelter over 100 m².
 //!
-//! The gross area is the regulation areas' (docs/adr/3029); the area a shop, an office or a shelter counts by is read
-//! as that gross too (the floor area ratio's own area is the zoning table's, docs/adr/3030). A table is the drawing's
+//! The gross area is the regulation areas' (docs/adr/8029); the area a shop, an office or a shelter counts by is read
+//! as that gross too (the floor area ratio's own area is the zoning table's, docs/adr/8030). A table is the drawing's
 //! measure, not an approval; a municipality's parking plan may ask more (8/2).
 
 use kentos_contracts::{CellRange, CellStyle, Entity, TableAlign, UnitKind};
@@ -51,7 +51,7 @@ pub struct ParkingRow {
     pub need: f64,
 }
 
-/// The building's parking (docs/adr/3036).
+/// The building's parking (docs/adr/8036).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ParkingReport {
     pub rows: Vec<ParkingRow>,
@@ -84,7 +84,7 @@ pub struct ShelterRow {
     pub persons: u32,
 }
 
-/// The building's shelter (docs/adr/3036).
+/// The building's shelter (docs/adr/8036).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ShelterReport {
     pub rows: Vec<ShelterRow>,
@@ -181,7 +181,7 @@ impl Document {
             .collect()
     }
 
-    /// Otopark hesabı (docs/adr/3036): the units' need by Ek-1 against the drawing's places.
+    /// Otopark hesabı (docs/adr/8036): the units' need by Ek-1 against the drawing's places.
     pub fn parking_report(&self) -> ParkingReport {
         let program = self.program();
         let areas = self.paiy_areas();
@@ -235,7 +235,7 @@ impl Document {
         }
     }
 
-    /// Sığınak hesabı (docs/adr/3036): the units' people by Sığınak Yönetmeliği 8/a against the drawing's shelter.
+    /// Sığınak hesabı (docs/adr/8036): the units' people by Sığınak Yönetmeliği 8/a against the drawing's shelter.
     pub fn shelter_report(&self) -> ShelterReport {
         let program = self.program();
         let areas = self.paiy_areas();
@@ -305,7 +305,7 @@ impl Document {
         }
     }
 
-    /// Otopark hesabı's rows (docs/adr/3036): each unit's need, the total rounded up, the drawing's places (in the
+    /// Otopark hesabı's rows (docs/adr/8036): each unit's need, the total rounded up, the drawing's places (in the
     /// warning colour when fewer) and the electric cars' places.
     pub fn parking_table(&self) -> ZoningTable {
         let r = self.parking_report();
@@ -378,7 +378,7 @@ impl Document {
         }
     }
 
-    /// Sığınak hesabı's rows (docs/adr/3036): each unit's people, the total and the net area it asks, the drawing's
+    /// Sığınak hesabı's rows (docs/adr/8036): each unit's people, the total and the net area it asks, the drawing's
     /// shelter (in the warning colour when smaller), the toilets and the exits, or why none is asked.
     pub fn shelter_table(&self) -> ZoningTable {
         let r = self.shelter_report();

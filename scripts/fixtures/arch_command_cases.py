@@ -985,7 +985,7 @@ def column_fields(n, tag, at):
         c["tag"] = tag
     if n.get("fill"):
         c["fill"] = True
-    # Its material (docs/adr/3041 §2); absent: Betonarme.
+    # Its material (docs/adr/8041 §2); absent: Betonarme.
     if n.get("material") is not None:
         c["material"] = n["material"]
     if n.get("grids") is not None:
@@ -1432,14 +1432,14 @@ def ramps_create(d, inp, conflict=False):
 
 
 def beam_fields(n):
-    """A beam as the document keeps it (docs/adr/3041 §1): its axis and sizes; its justification, offset, number,
+    """A beam as the document keeps it (docs/adr/8041 §1): its axis and sizes; its justification, offset, number,
     material and level only when not their defaults."""
     f = {"pts": n["pts"], "width": n["width"], "height": n["height"]}
     if n.get("justify", "center") != "center":
         f["justify"] = n["justify"]
     if n.get("offset") is not None and n["offset"] != 0.0:
         f["offset"] = n["offset"]
-    # Its role and its base over its storey's floor (docs/adr/3041 §3).
+    # Its role and its base over its storey's floor (docs/adr/8041 §3).
     if n.get("role", "beam") != "beam":
         f["role"] = n["role"]
     if n.get("baseOffset") is not None:
@@ -1875,7 +1875,7 @@ def column_cases():
         ("aks kesişimlerinin hepsine kolon (paralel akslar atlanır)", {"layerId": "kolon", "crossings": {"grids": [uid_of(1), uid_of(2), uid_of(3), uid_of(4)], "width": 0.3, "depth": 0.5, "fill": True}, "tagStart": "S1"}),
         ("kesişimlerde yuvarlak kolon, aksın dışındaki kesişim atlanır", {"layerId": "kolon", "crossings": {"grids": [uid_of(7), uid_of(3), uid_of(5)], "shape": "round", "width": 0.5}}),
         ("tek kolon ve kesişimler birlikte", {"layerId": "kolon", "columns": [{"at": P(9, 9), "width": 0.25}], "crossings": {"grids": [uid_of(2), uid_of(4)], "width": 0.3}}),
-        # Its material (docs/adr/3041 §2).
+        # Its material (docs/adr/8041 §2).
         ("çelik kolon", col([{"at": P(4, 4), "width": 0.3, "material": "Çelik"}])),
     ]:
         c.add(name, [create_step(Drawing(), COLUMNS, "execute", inp)])
@@ -2161,7 +2161,7 @@ def beam(**kw):
 
 
 def beam_cases():
-    """docs/adr/3041 §1: beams written as given, their defaults left out; their refusals."""
+    """docs/adr/8041 §1: beams written as given, their defaults left out; their refusals."""
     c = Cases()
     life(c, BEAMS, beam(tag="K101", arch={"level": "zemin"}), "Zemin katın tavanında 25/50 kiriş")
     for name, inp in [
@@ -2172,7 +2172,7 @@ def beam_cases():
         ("tadilatta ilave kiriş", beam(arch={"level": "kat-1", "phase": "new"})),
         ("iki kiriş tek adımda", {"layerId": "cizim", "beams": [beam()["beams"][0], beam(pts=[P(5, 50), P(5, 55)], tag="K103")["beams"][0]]}),
         ("renkli ve kalın kiriş", {**beam(), "color": "#cc3300", "lineWeight": 0.35}),
-        # Lintels and bond beams (docs/adr/3041 §3).
+        # Lintels and bond beams (docs/adr/8041 §3).
         ("kapının başında lento: kattan yüksekliğiyle", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, tag="L101")),
         ("duvarın içinde hatıl", beam(width=0.2, height=0.2, role="bondBeam", baseOffset=1.0, tag="H101")),
         ("kirişin varsayılan türü yazılmaz", beam(role="beam")),
@@ -2391,9 +2391,9 @@ FIELDS = [  # wire name, kinds, nullable
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
-    # A beam's (docs/adr/3041 §1).
+    # A beam's (docs/adr/8041 §1).
     ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False), ("role", ("beam",), False),
-    # A column's or a beam's (docs/adr/3041 §2).
+    # A column's or a beam's (docs/adr/8041 §2).
     ("material", ("column", "beam"), True),
     ("level", ("grid", "column", "stair", "ramp", "beam"), True), ("phase", ("grid", "column", "stair", "ramp", "beam"), True),
 ]
@@ -2611,7 +2611,7 @@ def edit_cases():
     c.add("Değiştir: kolonun biçimi, ölçüleri, dönüşü, türü, etiketi ve dolgusu", [made, one(d, [uid_of(k)], {"kind": "set", "shape": "round", "width": 0.45, "rotation": 0.3, "type": "Çelik", "tag": "S4", "fill": True})])
     d, made, k = with_column(depth=0.6, type="Betonarme")
     c.add("Değiştir: null kolonun boyunu ve türünü kaldırır", [made, one(d, [uid_of(k)], {"kind": "set", "depth": None, "type": None})])
-    # A column's material (docs/adr/3041 §2): null back to Betonarme.
+    # A column's material (docs/adr/8041 §2): null back to Betonarme.
     d, made, k = with_column(material="Çelik")
     c.add("Değiştir: kolonun malzemesi; null Betonarme'ye döndürür", [made, one(d, [uid_of(k)], {"kind": "set", "material": "Ahşap"}),
                                                                        one(d, [uid_of(k)], {"kind": "set", "material": None})])
@@ -2622,7 +2622,7 @@ def edit_cases():
     d = Drawing()
     c.add("Değiştir: rampanın eğimi uymayınca uyarı", [one(d, [uid_of(9)], {"kind": "set", "slope": 8.0})])
 
-    # A beam's fields (docs/adr/3041 §1).
+    # A beam's fields (docs/adr/8041 §1).
     def with_beam(**kw):
         d = Drawing()
         made = create_step(d, BEAMS, "execute", beam(**kw), with_command=True)
@@ -2637,7 +2637,7 @@ def edit_cases():
           [made, one(d, [uid_of(k)], {"kind": "set", "justify": "center", "offset": 0.0, "tag": None, "material": None})])
     d, made, k = with_beam()
     c.add("Değiştir: kirişin katı ve tadilat durumu", [made, one(d, [uid_of(k)], {"kind": "set", "level": "zemin", "phase": "existing"})])
-    # Its role and base (docs/adr/3041 §3): a beam made a lintel at 2.10; null base and the beam's role back.
+    # Its role and base (docs/adr/8041 §3): a beam made a lintel at 2.10; null base and the beam's role back.
     d, made, k = with_beam()
     c.add("Değiştir: kirişi lentoya çevirir, kattan yüksekliğiyle",
           [made, one(d, [uid_of(k)], {"kind": "set", "role": "lintel", "baseOffset": 2.1, "height": 0.2})])
@@ -2746,7 +2746,7 @@ def files():
         "cad.stairs.create.design.json": document(STAIRS, "Merdiven yükseklikten: rıht sayısı ve yüksekliği, kesme yüksekliği, yola sığdırma, tek sahanlıklı U; retler (ADR 0704)", design_cases()),
         "cad.stairs.create.curved.json": document(STAIRS, "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)", curved_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
-        "cad.beams.create.json": document(BEAMS, "Kiriş: eksen, genişlik, yükseklik, hiza, kot farkı, numara, malzeme; doğrulama, plan, yazma, geri alma; retler (ADR 3041 §1)", beam_cases()),
+        "cad.beams.create.json": document(BEAMS, "Kiriş: eksen, genişlik, yükseklik, hiza, kot farkı, numara, malzeme; doğrulama, plan, yazma, geri alma; retler (ADR 8041 §1)", beam_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),
         "cad.stairs.create.levels.json": document(STAIRS, "Merdiven katın yüksekliğine bağlı: rıhtları katın yüksekliğinden, kat değişince izler; değiştir, bağı kaldır; döner merdivenin merkez direği; retler (ADR 0724 §1, §3)", stair_level_cases()),

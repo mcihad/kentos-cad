@@ -625,7 +625,7 @@ fn builtins(book: &SheetBook, sheet: &Sheet, inputs: &RenderInputs, scope: &mut 
             scope.builtin("sayfa_sayisi", VarValue::Number(f64::from(count)));
         }
     }
-    // The drawing set's identity (docs/adr/3037): a title block reads its number, title and revision, never asks them.
+    // The drawing set's identity (docs/adr/8037): a title block reads its number, title and revision, never asks them.
     let info = sheet.drawing_info.clone().unwrap_or_default();
     scope.builtin("pafta_no", text(&info.number));
     scope.builtin(

@@ -2,7 +2,7 @@
 import type { SlabLayerKind } from "./SlabLayerKind";
 
 /**
- * A layer of a slab besides its structure (docs/adr/3040 §2).
+ * A layer of a slab besides its structure (docs/adr/8040 §2).
  */
 export type SlabLayer = { kind: SlabLayerKind, 
 /**

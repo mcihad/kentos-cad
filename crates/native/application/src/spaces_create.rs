@@ -132,7 +132,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
                 &format!("{at}.height"),
             )?;
         }
-        // Its floor offset and asma tavan (docs/adr/3040 §3).
+        // Its floor offset and asma tavan (docs/adr/8040 §3).
         for (v, name, field) in [
             (n.floor_offset, "Döşeme kot farkı", "floorOffset"),
             (n.suspended_ceiling, "Asma tavan", "suspendedCeiling"),

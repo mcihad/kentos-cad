@@ -38,7 +38,7 @@ fn opening_changing_policy_and_cancelling_a_template_write_nothing() {
         session,
         mode: TemplateSettingsMode::Template,
     }));
-    // The package's: metres and 1:100, a new Mimari project's (docs/adr/3007).
+    // The package's: metres and 1:100, a new Mimari project's (docs/adr/8007).
     let w = app.arch_template.as_ref().unwrap();
     assert_eq!(w.plan.unit, kentos_commands::DrawingUnit::M);
     assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 100.);
@@ -198,7 +198,7 @@ fn a_projected_cad_previews_and_applies_the_office_scale_in_metres() {
 
 #[test]
 fn the_window_says_the_package_as_its_data_has_it() {
-    // The texts said “cm / 1:50” and “1:50 / 1:20 oranlarıyla” by hand (docs/adr/3007).
+    // The texts said “cm / 1:50” and “1:50 / 1:20 oranlarıyla” by hand (docs/adr/8007).
     let p = super::Package::read();
     assert_eq!(p.settings, "m / 1:100");
     assert_eq!((p.levels, p.sheets), (2, 3));

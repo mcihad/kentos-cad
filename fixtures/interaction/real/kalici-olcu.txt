@@ -1,4 +1,4 @@
-# M19 (docs/adr/3019): a temporary distance made permanent in the real window, on malzeme.kcad (headless scales.rs
+# M19 (docs/adr/8019): a temporary distance made permanent in the real window, on malzeme.kcad (headless scales.rs
 # keeps it) opened on Mimari at 1440 × 900, 13 px text. A room is drawn (Duvar ▾ › Dikdörtgen duvar) and a partition in
 # it (Duvar ▾ › Duvar); the partition selected shows its clear distances, a padlock above each number and a + below.
 # The left + writes the distance as a dimension bound to both faces; the partition then moved by its right distance

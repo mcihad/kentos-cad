@@ -14,7 +14,7 @@ measured advances (the first face's, `paragraph_cases.py` reads them from the da
 - Its leader: from where the line to the point it ties to leaves the frame (a circle its radius; else the nearest
   crossing with the frame's sides, a rounded frame's and none's its rectangle's) to that point; none when the point is
   inside.
-- An ellipse (docs/adr/3027) rounds the first line only: its middle the first line's, its half axes √2 (w₁/2 + pad) and
+- An ellipse (docs/adr/8027) rounds the first line only: its middle the first line's, its half axes √2 (w₁/2 + pad) and
   √2 (h/2 + pad) (w₁ the first line's width, never under h), the larger the major axis; the lines under it go down by
   max(0, eb + 0.2 h − (1.5 h − h/2)); the leader leaves the box ±max(ea, w/2 + pad) across, from the ellipse's top to
   the lower of its bottom and the last line's bottom less the pad.

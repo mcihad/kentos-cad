@@ -81,7 +81,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.rise.is_some(), "rise", RAMP);
     add(c.slope.is_some(), "slope", RAMP);
     add(c.base.is_some(), "base", RAMP);
-    // A ramp's base over its level (docs/adr/0723 §2), a beam's underside over its storey's floor (docs/adr/3041 §3).
+    // A ramp's base over its level (docs/adr/0723 §2), a beam's underside over its storey's floor (docs/adr/8041 §3).
     add(c.base_offset.is_some(), "baseOffset", RAMP_BEAM);
     add(c.height.is_some(), "height", BEAM);
     add(c.justify.is_some(), "justify", BEAM);
@@ -190,7 +190,7 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             if let Some(v) = c.fill {
                 f.fill = v;
             }
-            // Its material (docs/adr/3041 §2); null: Betonarme again.
+            // Its material (docs/adr/8041 §2); null: Betonarme again.
             if let Some(v) = &c.material {
                 f.material.clone_from(v);
             }
@@ -257,7 +257,7 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
                 f.railings = v;
             }
         }
-        // A beam's (docs/adr/3041 §1).
+        // A beam's (docs/adr/8041 §1).
         Entity::Beam(b) => {
             let f = &mut b.beam;
             if let Some(v) = c.width {
@@ -272,7 +272,7 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             if let Some(v) = c.offset {
                 f.offset = v;
             }
-            // Its role and its base (docs/adr/3041 §3); null base: it hangs again.
+            // Its role and its base (docs/adr/8041 §3); null base: it hangs again.
             if let Some(v) = c.role {
                 f.role = v;
             }

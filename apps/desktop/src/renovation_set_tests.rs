@@ -1,4 +1,4 @@
-//! Tadilat takımı (docs/adr/3039 §6; PAİY 4(1)(dddd), 58; Mimarlar Odası: "Projede mevcut, iptal ve ilaveler üç farklı
+//! Tadilat takımı (docs/adr/8039 §6; PAİY 4(1)(dddd), 58; Mimarlar Odası: "Projede mevcut, iptal ve ilaveler üç farklı
 //! teknikle ifade edilmelidir"): Ruhsat takımı of a tadilat draws each storey three times, as it stands, with its
 //! changes in the three techniques and as it will stand, each map linked to the set's named view of that state; the site
 //! plan to Tadilat projesi at its own scale. EK-2's sequence counts the three on; made again, the views are renewed.
@@ -72,7 +72,7 @@ fn tadilat(app: &mut App) {
     );
 }
 
-/// The rooms the tadilat changes said so (docs/adr/3039 §6; docs/adr/0798 §3): the left flat's Salon, the stair hall
+/// The rooms the tadilat changes said so (docs/adr/8039 §6; docs/adr/0798 §3): the left flat's Salon, the stair hall
 /// and the right flat's Salon İptal; in their places Yeni durum's rooms (İlave), bounded by the walls that stand after:
 /// the left flat's Salon and Mutfak either side of the partition, the stair hall and the right Salon one room.
 fn restated(app: &mut App) {
@@ -137,7 +137,7 @@ fn a_tadilat_set_draws_each_storey_as_it_stands_with_its_changes_and_as_it_will(
     );
     tadilat(&mut app);
     assert!(permit_set::renovates(model(&app)));
-    // Its rooms say nothing of it: these would keep on the sheets a wall that is not there (docs/adr/3039 §6).
+    // Its rooms say nothing of it: these would keep on the sheets a wall that is not there (docs/adr/8039 §6).
     assert_eq!(
         permit_set::rooms_to_restate(model(&app)),
         ["Salon", "Merdiven evi", "Salon"]
@@ -296,7 +296,7 @@ fn a_tadilat_set_draws_each_storey_as_it_stands_with_its_changes_and_as_it_will(
     );
 }
 
-/// Ruhsat takımı's box (docs/adr/3039 §6): ticked when the drawing is a tadilat, the set said a tadilat's, its files
+/// Ruhsat takımı's box (docs/adr/8039 §6): ticked when the drawing is a tadilat, the set said a tadilat's, its files
 /// in a folder of their own.
 #[test]
 fn the_window_ticks_tadilat_projesi_for_a_tadilat_and_says_so() {
@@ -327,7 +327,7 @@ fn the_window_ticks_tadilat_projesi_for_a_tadilat_and_says_so() {
         said.starts_with("Ruhsat takımı (tadilat projesi): 10 pafta (UP-01 … UP-10)"),
         "{said}"
     );
-    // The rooms the tadilat changes but that do not say so, by name (docs/adr/3039 §6).
+    // The rooms the tadilat changes but that do not say so, by name (docs/adr/8039 §6).
     assert!(
         said.contains(
             "Tadilatta değişen ama İptal yapılmamış mahaller: Salon, Merdiven evi, Salon."

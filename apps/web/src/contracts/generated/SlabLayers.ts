@@ -2,7 +2,7 @@
 import type { SlabLayer } from "./SlabLayer";
 
 /**
- * A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the
+ * A slab's layers besides its structure (its `thickness`, docs/adr/8040 §2), each list from the top: those over the
  * structure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of
  * the first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).
  */

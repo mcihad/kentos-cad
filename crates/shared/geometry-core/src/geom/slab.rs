@@ -41,13 +41,13 @@ impl Run {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Look {
     pub edge: Option<Edge>,
-    /// Drawn as the plan of the level under its own shows it (docs/adr/3012, step 3): its rings alone, dashed and
+    /// Drawn as the plan of the level under its own shows it (docs/adr/8012, step 3): its rings alone, dashed and
     /// narrow ([`OVERHEAD_PEN`]), its edge left out. A view's, never read from nor written to JSON (as a stair's
     /// `upper`).
     pub overhead: bool,
 }
 
-/// The share of its pen a slab of the level above is drawn with on the plan under it (docs/adr/3012, step 3): ISO
+/// The share of its pen a slab of the level above is drawn with on the plan under it (docs/adr/8012, step 3): ISO
 /// 128-23's dashed narrow line (02.1) for what is hidden or over the cut, half the wide line.
 pub const OVERHEAD_PEN: f64 = 0.5;
 
@@ -304,7 +304,7 @@ pub fn edge_pieces(edge: &Edge) -> Vec<Shape> {
     edge_pieces_with(edge, true)
 }
 
-/// [`edge_pieces`], its inner lines and a parapet's ends only when `inner` (docs/adr/3011: not beyond 1:150
+/// [`edge_pieces`], its inner lines and a parapet's ends only when `inner` (docs/adr/8011: not beyond 1:150
 /// schematic, as a stair draws no railings there).
 fn edge_pieces_with(edge: &Edge, inner_too: bool) -> Vec<Shape> {
     let mut out = Vec::new();
@@ -353,7 +353,7 @@ pub fn pieces(parts: &[Area], look: &Look) -> Vec<Shape> {
     out
 }
 
-/// [`pieces`] as a view draws them (docs/adr/3011): beyond 1:150 schematic its edge is its outer lines alone.
+/// [`pieces`] as a view draws them (docs/adr/8011): beyond 1:150 schematic its edge is its outer lines alone.
 pub fn pieces_in(parts: &[Area], look: &Look, view: crate::geom::wall::View) -> Vec<Shape> {
     let mut out: Vec<Shape> = parts
         .iter()

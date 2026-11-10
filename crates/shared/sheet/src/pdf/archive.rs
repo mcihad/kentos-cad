@@ -1,4 +1,4 @@
-//! PDF/A-2b (ISO 19005-2, level B; docs/adr/3037, M37): what an archival sheet file adds to the writer's document.
+//! PDF/A-2b (ISO 19005-2, level B; docs/adr/8037, M37): what an archival sheet file adds to the writer's document.
 //!
 //! The 2026 digital project regulation (RG 5.8.2026/33331, Md. 4/2 and 8/2) asks every 2-D project drawing as a PDF/A
 //! file, one file a sheet, and does not say which part. Part 2 is the one that keeps a CAD sheet's layers (optional
@@ -293,7 +293,7 @@ mod tests {
             ]
         );
         assert_eq!(srgb_icc(), p, "the same bytes every time");
-        // For a colour management library to read it (docs/adr/3037 measured it with Little CMS).
+        // For a colour management library to read it (docs/adr/8037 measured it with Little CMS).
         if let Ok(out) = std::env::var("KENTOS_ICC_OUT") {
             std::fs::write(out, &p).unwrap();
         }

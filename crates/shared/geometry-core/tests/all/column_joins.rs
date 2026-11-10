@@ -1,4 +1,4 @@
-//! A column in the walls it stands in (docs/adr/3041 §2) against the independent reference's cases
+//! A column in the walls it stands in (docs/adr/8041 §2) against the independent reference's cases
 //! (fixtures/walls/v1/column-joins.json, scripts/fixtures/column_join_cases.py, exact fractions): each wall's lines in
 //! their pieces and its caps (every end within 1e-9), its bands' areas, and each column's look: whether it is one
 //! section with a wall's layer of its material, that layer's pattern and the wall's fill, and how much of its outline

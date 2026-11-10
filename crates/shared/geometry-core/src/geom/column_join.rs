@@ -1,4 +1,4 @@
-//! A column in the walls it stands in (docs/adr/3041 §2).
+//! A column in the walls it stands in (docs/adr/8041 §2).
 //!
 //! A wall on the column's level is cut where the column stands: its lines, caps, recesses and closures keep their parts
 //! outside the column, its layers' bands and its body lose what the column covers. A brick wall stops at the column's
@@ -330,7 +330,7 @@ fn area_of(a: &Area) -> f64 {
     ring_area(&a.outer.pts).abs() - a.holes.iter().map(|h| ring_area(&h.pts).abs()).sum::<f64>()
 }
 
-/// `d` cut by the columns `feet` standing in it (docs/adr/3041 §2); none when none of them reaches it.
+/// `d` cut by the columns `feet` standing in it (docs/adr/8041 §2); none when none of them reaches it.
 pub fn cut(d: &Drawn, feet: &[&Foot]) -> Option<Drawn> {
     if feet.is_empty() {
         return None;
@@ -409,7 +409,7 @@ pub fn cut(d: &Drawn, feet: &[&Foot]) -> Option<Drawn> {
     changed.then_some(out)
 }
 
-/// The look a column takes from the walls it stands in (docs/adr/3041 §2): the layer of its material it meets.
+/// The look a column takes from the walls it stands in (docs/adr/8041 §2): the layer of its material it meets.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Joined {
     /// The wall's schematic fill (its `fill`), drawn over the column in the schematic view as over the wall.
@@ -458,7 +458,7 @@ fn covers(foot: &Foot, body: &Body) -> bool {
 /// A look found: the wall's fill and its layer's hatch, least detail and turn ([`Joined`]'s).
 type Look = (Option<String>, Option<(ComponentFill, Detail, f64)>);
 
-/// What column `foot` takes from the walls `walls` on its level (docs/adr/3041 §2); none when it meets no layer of its
+/// What column `foot` takes from the walls `walls` on its level (docs/adr/8041 §2); none when it meets no layer of its
 /// material. The first such layer in the walls' order gives its hatch and fill.
 pub fn joined(foot: &Foot, walls: &[WallAt<'_>]) -> Option<Joined> {
     let mut look: Option<Look> = None;

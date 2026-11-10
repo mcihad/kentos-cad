@@ -104,7 +104,7 @@ def cases():
             inp['unit'] = 'm'
         rows.append({'name': f'Koordinat sisteminin metre birimi / {mode}', 'setup': doc,
                      'steps': [step(doc, inp, op) for op in ('plan', 'validate', 'execute')]})
-    # The package is metres since docs/adr/3007: a coordinate system takes it with no unit given.
+    # The package is metres since docs/adr/8007: a coordinate system takes it with no unit given.
     doc = T.setup(objects=True)
     doc['settings']['srid'] = 5256
     inp = {'name': 'mimari', 'settingsMode': 'template'}

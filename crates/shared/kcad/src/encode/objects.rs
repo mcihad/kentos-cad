@@ -564,7 +564,7 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("slab", Val::Json(serde_json::to_value(&e.slab).unwrap_or_default())));
             }
-            // A beam (docs/adr/3041 §1): its fields as one map; only the drawing's.
+            // A beam (docs/adr/8041 §1): its fields as one map; only the drawing's.
             Entity::Beam(e) => {
                 if uid.is_none() {
                     self.path.push(Seg::Name(kind));
@@ -1100,7 +1100,7 @@ impl<'d> Encoder<'d> {
                         // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON; schema 80's
                         // schedule of the drawing's objects too (docs/adr/0344 §3).
                         // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
-                        // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
+                        // Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu.
                         TableSource::Blocks { .. }
                         | TableSource::Schedule { .. }
                         | TableSource::Extraction(_)

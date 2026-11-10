@@ -1,4 +1,4 @@
-# M27 (docs/adr/3027): EK-3 room numbers and Mimarlar Odası's ellipse room tags in the real window, on malzeme.kcad
+# M27 (docs/adr/8027): EK-3 room numbers and Mimarlar Odası's ellipse room tags in the real window, on malzeme.kcad
 # (headless scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text. Oda draws four rooms (each its walls,
 # room and tag); Mahal numarala from Komut ara, E turns EK-3 on: the storey's rooms numbered K00_001_001 … clockwise
 # from north, shown before Enter; Hepsini etiketle, B to Elips içinde numara and E to Yenile: the rooms' tags framed

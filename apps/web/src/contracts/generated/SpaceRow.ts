@@ -30,12 +30,12 @@ void?: boolean,
  */
 area: number, perimeter: number, 
 /**
- * Its inside height (PAİY 4(1)(ıı), docs/adr/3040 §3): its finished floor to its ceiling (its asma tavan, its
+ * Its inside height (PAİY 4(1)(ıı), docs/adr/8040 §3): its finished floor to its ceiling (its asma tavan, its
  * height typed, the slab over it); without one, its storey's top.
  */
 height?: number, volume?: number, 
 /**
- * Its asma tavan's area, m² (docs/adr/3040 §3): its net area; none without one.
+ * Its asma tavan's area, m² (docs/adr/8040 §3): its net area; none without one.
  */
 suspendedCeilingArea?: number, 
 /**

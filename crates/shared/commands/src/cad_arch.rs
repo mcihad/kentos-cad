@@ -25,7 +25,7 @@ pub const CAD_STAIRS_CREATE: &str = "cad.stairs.create";
 pub const CAD_STAIRS_CREATE_VERSION: u32 = 1;
 pub const CAD_RAMPS_CREATE: &str = "cad.ramps.create";
 pub const CAD_RAMPS_CREATE_VERSION: u32 = 1;
-/// Beams (docs/adr/3041 §1).
+/// Beams (docs/adr/8041 §1).
 pub const CAD_BEAMS_CREATE: &str = "cad.beams.create";
 pub const CAD_BEAMS_CREATE_VERSION: u32 = 1;
 pub const CAD_ARCH_EDIT: &str = "cad.arch.edit";
@@ -425,7 +425,7 @@ pub struct NewColumn {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<bool>,
-    /// Its material (docs/adr/3041 §2); absent: Betonarme.
+    /// Its material (docs/adr/8041 §2); absent: Betonarme.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
@@ -809,7 +809,7 @@ pub struct RampsPlan {
     pub revision: String,
 }
 
-/// One beam to draw (docs/adr/3041 §1): its fields, and its attributes.
+/// One beam to draw (docs/adr/8041 §1): its fields, and its attributes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -834,11 +834,11 @@ pub struct NewBeam {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: Option<f64>,
-    /// What it is (docs/adr/3041 §3): absent a beam; a lintel; a bond beam.
+    /// What it is (docs/adr/8041 §3): absent a beam; a lintel; a bond beam.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub role: Option<crate::BeamRole>,
-    /// Its underside's height over its storey's floor (docs/adr/3041 §3): a lintel's at its opening's head; absent: it
+    /// Its underside's height over its storey's floor (docs/adr/8041 §3): a lintel's at its opening's head; absent: it
     /// hangs (a beam's). Not with an offset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -860,7 +860,7 @@ pub struct NewBeam {
     pub attrs: Option<BTreeMap<String, String>>,
 }
 
-/// Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/3041 §1): beams on a named layer, as one undo step.
+/// Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/8041 §1): beams on a named layer, as one undo step.
 ///
 /// Refusals, in this order: `no_objects`, `not_finite`, `invalid_beam`, `level_not_found`, `invalid_line_weight`,
 /// `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
@@ -1094,7 +1094,7 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<Option<f64>>,
     /// A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
-    /// base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/3041 §3): a
+    /// base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/8041 §3): a
     /// lintel's or a bond beam's; null: it hangs from its slab again.
     #[serde(
         default,
@@ -1105,7 +1105,7 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base_offset: Option<Option<f64>>,
-    /// A beam's height (docs/adr/3041 §1).
+    /// A beam's height (docs/adr/8041 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1119,11 +1119,11 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: Option<f64>,
-    /// A beam's role (docs/adr/3041 §3): a beam, a lintel or a bond beam.
+    /// A beam's role (docs/adr/8041 §3): a beam, a lintel or a bond beam.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub role: Option<crate::BeamRole>,
-    /// A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
+    /// A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.
     #[serde(
         default,
         with = "crate::cad_properties::nullable",

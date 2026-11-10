@@ -1,4 +1,4 @@
-//! Ruhsat takımı (M37, docs/adr/3037): a two-storey building of four flats on a 400 m² parcel; its particulars given
+//! Ruhsat takımı (M37, docs/adr/8037): a two-storey building of four flats on a 400 m² parcel; its particulars given
 //! once, the set made in MO's order on the MO sheet, PAİY 57(10)'s table reading the drawing, and the set published as
 //! PDF/A-2 files named by the digital project regulation's EK-2.
 
@@ -149,7 +149,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         );
     }
     let doc = &mut app.document.as_mut().expect("a drawing").model;
-    // The calculation tables the drawing lacks, made beside it (docs/adr/3037 §3).
+    // The calculation tables the drawing lacks, made beside it (docs/adr/8037 §3).
     let tables = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
     let labels: Vec<&str> = tables.iter().map(|t| t.label).collect();
     assert_eq!(
@@ -168,7 +168,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         .filter(|e| matches!(e, kentos_commands::Entity::Table(_)))
         .count();
     assert_eq!(made_tables, 6);
-    // The room list a sheet of its own (docs/adr/3038): EK-2's Liste, Mahal listesi.
+    // The room list a sheet of its own (docs/adr/8038): EK-2's Liste, Mahal listesi.
     assert_eq!(
         tables.iter().map(|t| t.list).collect::<Vec<_>>(),
         [Some("MHL"), None, None, None, None, None]
@@ -263,7 +263,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
             "{want} in the title block: {plan:?}"
         );
     }
-    // The room list's sheet (docs/adr/3038): its own paper, no caption, no scale, EK-2 LS/MHL.
+    // The room list's sheet (docs/adr/8038): its own paper, no caption, no scale, EK-2 LS/MHL.
     let list = texts(&app, &made[4].sheet);
     for want in [
         "Mahal listesi",

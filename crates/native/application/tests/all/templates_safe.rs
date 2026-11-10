@@ -107,7 +107,7 @@ fn explicit_template_policy_changes_only_shown_settings_and_undo_restores_them()
     let before = doc.to_snapshot_v2();
     let request = input(&doc, "template");
     let plan = done(templates_apply::plan_in(&doc, &request));
-    // The package's own: metres and 1:100, a new Mimari project's (docs/adr/3007).
+    // The package's own: metres and 1:100, a new Mimari project's (docs/adr/8007).
     assert_eq!(plan.unit, DrawingUnit::M);
     assert_eq!(plan.review.as_ref().unwrap().previous_unit, DrawingUnit::Cm);
     assert_eq!(plan.review.as_ref().unwrap().plot_scale, 100.);
@@ -123,7 +123,7 @@ fn explicit_template_policy_changes_only_shown_settings_and_undo_restores_them()
 }
 #[test]
 fn the_call_without_a_policy_keeps_adr_0346s_centimetres_and_1_50() {
-    // docs/adr/3007 moved the package to metres and 1:100; the old automation call writes what it always wrote.
+    // docs/adr/8007 moved the package to metres and 1:100; the old automation call writes what it always wrote.
     let fixture: Value = serde_json::from_str(include_str!(
         "../../../../../fixtures/commands/v1/cad.templates.apply.review.json"
     ))

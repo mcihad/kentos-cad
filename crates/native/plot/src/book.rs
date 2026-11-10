@@ -99,7 +99,7 @@ pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
             epsg: facts.epsg,
             epoch: facts.epoch,
             // The drawing's own variables, read after the book's (docs/adr/0214 §2.3), and what the drawing says of
-            // itself for a title block (docs/adr/3037).
+            // itself for a title block (docs/adr/8037).
             variables: crate::inputs::drawing_variables(doc),
         },
         capabilities: Capabilities {
@@ -152,7 +152,7 @@ type ScaledKey = (
     kentos_sheet::units::Mdeg,
     // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
     Option<(u64, u64, i32, i32)>,
-    // A map showing a phase other than the drawing's (docs/adr/3039 §2): its walls joined and cut as it stands; the
+    // A map showing a phase other than the drawing's (docs/adr/8039 §2): its walls joined and cut as it stands; the
     // view's name.
     Option<&'static str>,
 );
@@ -251,13 +251,13 @@ impl<'a> MapDrawer<'a> {
         let at = m.view.scale.max(1e-6);
         let annotation = m.view.annotation_denominator();
         // A level's plan showing the stairs under it from above (docs/adr/0724 §4) or the slabs over it dashed
-        // (docs/adr/3012, step 3) wants a store of its own.
+        // (docs/adr/8012, step 3) wants a store of its own.
         let upper = m
             .level
             .as_ref()
             .filter(|l| crate::layers::shows_from_above(doc, l));
         // A map showing a phase other than the drawing's (docs/adr/0774 §3) joins and cuts its walls as that phase
-        // stands (docs/adr/3039 §2): a new door in an existing wall is no hole in the existing plan.
+        // stands (docs/adr/8039 §2): a new door in an existing wall is no hole in the existing plan.
         let drawn = doc
             .settings()
             .arch
@@ -731,7 +731,7 @@ mod phase_tests {
     }
 
     /// A map showing a phase other than the drawing's (docs/adr/0774 §3) draws from a copy of its own whose walls are
-    /// joined and cut as that phase stands (docs/adr/3039 §2): the drawing shows Mevcut durum (the window's hole, not
+    /// joined and cut as that phase stands (docs/adr/8039 §2): the drawing shows Mevcut durum (the window's hole, not
     /// the new door's), the map Yeni durum (the door's hole, the window closed up).
     #[test]
     fn a_map_with_its_own_phase_cuts_its_walls_as_that_phase_stands() {
@@ -791,7 +791,7 @@ mod phase_tests {
         assert_eq!(holes(spatial.store(), wall), vec![(3.4, 4.6), (5.1, 5.7)]);
     }
 
-    /// A map showing a view other than the drawing's leaves out on paper what that view hides (docs/adr/3039 §6): the
+    /// A map showing a view other than the drawing's leaves out on paper what that view hides (docs/adr/8039 §6): the
     /// drawing in Tümü, a new wall (layer `yeni`) is not drawn in Mevcut durum, a wall pulled down (layer `iptal`) not in
     /// Yeni durum; in Tümü both are.
     #[test]
@@ -884,7 +884,7 @@ mod phase_tests {
             proposed.contains(&"yeni".to_owned()),
             "Yeni durum: {proposed:?}"
         );
-        // Tadilat projesi (docs/adr/3039 §5): the wall pulled down dashed on paper too, the others not.
+        // Tadilat projesi (docs/adr/8039 §5): the wall pulled down dashed on paper too, the others not.
         let m: kentos_sheet::display::MapPrim = serde_json::from_value(serde_json::json!({
             "item": "m1",
             "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
@@ -912,7 +912,7 @@ mod phase_tests {
                 stroked.len(),
             )
         };
-        // The wall's lines dashed; the room pulled down left out (docs/adr/3039 §6): the plan names the rooms as they
+        // The wall's lines dashed; the room pulled down left out (docs/adr/8039 §6): the plan names the rooms as they
         // will be, and its outline over the wall's faces drew them as one solid line (two dashes out of step).
         let (d, n) = dashed("iptal");
         assert!(n > 0 && d == n, "İptal dashed: {d} of {n}");

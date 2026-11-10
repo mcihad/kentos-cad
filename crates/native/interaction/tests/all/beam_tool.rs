@@ -1,4 +1,4 @@
-//! Kiriş aracı (docs/adr/3041 §1): two clicks and Enter write a beam on its axis at the tool's size, on the
+//! Kiriş aracı (docs/adr/8041 §1): two clicks and Enter write a beam on its axis at the tool's size, on the
 //! load-bearing beams' layer (MM-TASI-KIRIS), its number from Numara and the next beam the next number (K101 → K102),
 //! as the column tool's; the tool stays for the next beam.
 
@@ -25,7 +25,7 @@ fn newest_beam(b: &Bench) -> kentos_commands::BeamEntity {
 #[test]
 fn two_clicks_write_a_beam_and_the_next_takes_the_next_number() {
     let mut b = bench();
-    // Katman anahtarları on (docs/adr/3008): each kind on its own layer.
+    // Katman anahtarları on (docs/adr/8008): each kind on its own layer.
     b.memory.layer_keys = true;
     b.start("beam");
     assert!(b.run(|s, cx| s.configure("N", "K101", cx)));
@@ -106,7 +106,7 @@ fn wall_with_door() -> (Bench, kentos_domain::Slot) {
     (b, door)
 }
 
-/// Lento (docs/adr/3041 §3): Tür Lento, a click on the door puts a lintel over it: on the wall's axis from 20 cm before
+/// Lento (docs/adr/8041 §3): Tür Lento, a click on the door puts a lintel over it: on the wall's axis from 20 cm before
 /// its jamb to 20 cm past the other (TBDY 2018 11.5.3), as wide as the wall, 20 cm high, its underside at the door's
 /// head, on MM-LENT-GENEL, numbered L101; a click on bare wall writes nothing and says so.
 #[test]
@@ -142,7 +142,7 @@ fn a_click_on_a_door_puts_a_lintel_over_it() {
     assert_eq!(b.last_text(), Some(said.as_str()));
 }
 
-/// Hatıl (docs/adr/3041 §3): drawn as a beam, 20/20 at 1.00 m over its storey's floor, on MM-HATL-GENEL.
+/// Hatıl (docs/adr/8041 §3): drawn as a beam, 20/20 at 1.00 m over its storey's floor, on MM-HATL-GENEL.
 #[test]
 fn a_bond_beam_is_drawn_as_a_beam_at_its_height() {
     let mut b = bench();

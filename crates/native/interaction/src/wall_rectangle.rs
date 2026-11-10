@@ -23,7 +23,7 @@ use crate::{Tool, wall};
 
 pub const ID: &str = "wallRectangle";
 pub const LABEL: &str = "Dikdörtgen duvar";
-/// Oda (docs/adr/3021): the same rectangle of walls, its room (a space seeded at its middle) and the room's tag
+/// Oda (docs/adr/8021): the same rectangle of walls, its room (a space seeded at its middle) and the room's tag
 /// written with them, one undo step.
 pub const ROOM_ID: &str = "room";
 pub const ROOM_LABEL: &str = "Oda";
@@ -39,7 +39,7 @@ enum Ask {
     Reference,
 }
 
-/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on. Said plainly (docs/adr/3003):
+/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on. Said plainly (docs/adr/8003):
 /// Benimse, “adopt” word for word, told the owner nothing.
 const ADOPT: &str = "Var olanı kullan";
 const DRAW: &str = "Ayrıca çiz";
@@ -61,7 +61,7 @@ pub struct WallRectangle {
     own: bool,
     /// The walls the plan adopts, drawn marked.
     adopted: Vec<Stroke>,
-    /// Oda: its room and tag are written with the walls (docs/adr/3021).
+    /// Oda: its room and tag are written with the walls (docs/adr/8021).
     room: bool,
     /// The room's name, from the project's names or typed; none: unnamed.
     room_name: Option<String>,
@@ -74,7 +74,7 @@ impl WallRectangle {
         Self::default()
     }
 
-    /// Oda: the walls, their room and its tag (docs/adr/3021).
+    /// Oda: the walls, their room and its tag (docs/adr/8021).
     pub fn room() -> Self {
         Self {
             room: true,
@@ -113,9 +113,9 @@ impl WallRectangle {
         }
     }
 
-    /// The room inside the walls just written (docs/adr/3021): its space seeded at the rectangle's middle, named as
+    /// The room inside the walls just written (docs/adr/8021): its space seeded at the rectangle's middle, named as
     /// chosen, on the walls' storey, and the space's tag (its kind's template and frame), each on its layer
-    /// (docs/adr/3008). False, and why said, when either is refused.
+    /// (docs/adr/8008). False, and why said, when either is refused.
     fn write_room(&self, a: Vec2, b: Vec2, cx: &mut Context<'_>) -> bool {
         use crate::arch_layer::Kind;
         let space = kentos_commands::NewSpace {
@@ -179,7 +179,7 @@ impl WallRectangle {
             .and_then(|s| fixed_width(&s.components))
             .is_some();
         WallsRectangle {
-            // The walls' layer (docs/adr/3008).
+            // The walls' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&wall::layer_kind(cx), cx),
             frame: match self.size {
                 Some((length, width)) => RectangleFrame::Size {
@@ -486,7 +486,7 @@ impl Tool for WallRectangle {
             .size
             .map(|(l, w)| format!("{} × {}", self.format.length_bare(l), self.format.length(w)));
         let prompt = Prompt::new(self.label(), text);
-        // Oda's room name first: what the room is (docs/adr/3021).
+        // Oda's room name first: what the room is (docs/adr/8021).
         let prompt = if self.room {
             prompt.option_with("Mahal adı", "A", self.room_name.as_deref().unwrap_or(NO_NAME))
         } else {
@@ -527,7 +527,7 @@ impl Tool for WallRectangle {
         taken
     }
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
-        // Oda's name (docs/adr/3021): unnamed, then the project's room names.
+        // Oda's name (docs/adr/8021): unnamed, then the project's room names.
         if key == "A" && self.room {
             let chosen = self.room_name.as_deref().unwrap_or(NO_NAME);
             return std::iter::once(NO_NAME.to_owned())
@@ -575,7 +575,7 @@ impl Tool for WallRectangle {
         use crate::tool_settings::{Setting, wall_rows};
         let mut rows = wall_rows(&self.seen, &self.styles, format);
         rows.retain(|r| matches!(r.key, "S" | "E"));
-        // Oda's room name (docs/adr/3021).
+        // Oda's room name (docs/adr/8021).
         if self.room {
             rows.insert(
                 0,
@@ -607,7 +607,7 @@ impl Tool for WallRectangle {
         rows
     }
     /// The room's sizes, the wall's Kalınlık and what the sizes measure in the value field after its locks
-    /// (docs/adr/3018): "4,20 × 3,60 bir yatak odası" typed beside the cursor.
+    /// (docs/adr/8018): "4,20 × 3,60 bir yatak odası" typed beside the cursor.
     fn cursor_settings(&self) -> &'static [&'static str] {
         if self.room {
             &["B", "A", "E", "R"]

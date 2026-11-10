@@ -1,4 +1,4 @@
-# M35 §2 (docs/adr/3035), 1920 × 1080: Mimari › Proje ▾ › Kaçış yolları from Menülerde ara on the eight-storey dwelling
+# M35 §2 (docs/adr/8035), 1920 × 1080: Mimari › Proje ▾ › Kaçış yolları from Menülerde ara on the eight-storey dwelling
 # (konut-yangin.kcad): flat “1” 22,00 m inside (20 m) and 26,15 m from its door (15 m one way) red, flat “2” green.
 fit KentOS Mimari — Yeni proje
 wait 3000

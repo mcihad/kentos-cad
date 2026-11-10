@@ -95,7 +95,7 @@ uids?: { [key in number]: EntityId },
  */
 wallDetail?: WallDetail, 
 /**
- * The plan's cut height, metres (docs/adr/3012): the project's own; absent: [`crate::PLAN_CUT_HEIGHT`]. What it
+ * The plan's cut height, metres (docs/adr/8012): the project's own; absent: [`crate::PLAN_CUT_HEIGHT`]. What it
  * cuts takes its hole out of its wall; a window over it is written dashed, its wall whole.
  */
 cutHeight?: number, };

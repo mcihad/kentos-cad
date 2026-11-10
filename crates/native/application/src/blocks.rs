@@ -171,7 +171,7 @@ pub fn core_blocks_in(blocks: &[Arc<BlockDefinition>], font: kentos_geometry_cor
             .collect(),
         font,
     )
-    // Furniture is drawn as its outline beyond 1:150 schematic (docs/adr/3011): its library card says it is.
+    // Furniture is drawn as its outline beyond 1:150 schematic (docs/adr/8011): its library card says it is.
     .with_furniture(blocks.iter().filter_map(|b| {
         let category = b.card.as_ref()?.category.as_deref()?;
         category

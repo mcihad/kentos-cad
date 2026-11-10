@@ -1,6 +1,6 @@
 #!/bin/bash
 # Real window: kentos-cad in an invisible X screen (Xvfb), a scenario played with real mouse and keyboard
-# events (XTEST), pictures taken from that screen (scripts/usage/real/README.md, docs/adr/3000).
+# events (XTEST), pictures taken from that screen (scripts/usage/real/README.md, docs/adr/8000).
 #   scripts/usage/real/session.sh SCENARIO.txt OUT_DIR [app arguments, e.g. --modul mimari]
 # The app runs in a fresh home of its own with a copy of the owner's settings: the owner's ~/.config, recovery
 # copies and recent files are never written.

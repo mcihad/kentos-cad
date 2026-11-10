@@ -209,7 +209,7 @@ impl App {
                     || b.attributes
                         .iter()
                         .any(|a| name_key(&a.tag).contains(&query))
-                    // The words people say for it: karyola a bed, tuvalet a toilet (docs/adr/3024).
+                    // The words people say for it: karyola a bed, tuvalet a toilet (docs/adr/8024).
                     || crate::fixture_search::names_it(
                         &self.blocks_panel.query,
                         &b.name,

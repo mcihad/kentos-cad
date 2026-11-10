@@ -876,16 +876,16 @@ küçük harf, rakam, nokta ve tire, en çok 64 harf). İkisi de isteğe bağlı
 Yazıcı 204'ü bir onay bunlardan birini taşıyınca seçer; 203 ve öncesi alanları `unknown_field` sayar
 (`broken/road-approval-sources-in-schema-203.kcad`). Örnek `road-approval-sources.json/.kcad`.
 
-**Şema 205** (ADR 3012; ADV-15): mimari ayarların (`arch`) haritasına projenin planlarının kesildiği yüksekliği
+**Şema 217** (ADR 8012; ADV-15): mimari ayarların (`arch`) haritasına projenin planlarının kesildiği yüksekliği
 ekler: `cutHeight` (metre, float, 0,3 ile 3 arası; değilse `bad_value`, `broken/plan-cut-out-of-range.kcad`). Yoksa
-plan 1,10 m'den kesilir (ADR 0719); yeni Mimari projesi 1,20 yazar. Yazıcı 205'i ayar bir kesme yüksekliği taşıyınca
-seçer; 204 ve öncesi alanı `unknown_field` sayar (`broken/plan-cut-in-schema-204.kcad`). Örnek `plan-cut.json/.kcad`.
+plan 1,10 m'den kesilir (ADR 0719); yeni Mimari projesi 1,20 yazar. Yazıcı 217'yi ayar bir kesme yüksekliği taşıyınca
+seçer; 216 ve öncesi alanı `unknown_field` sayar (`broken/plan-cut-in-schema-216.kcad`). Örnek `plan-cut.json/.kcad`.
 
-**Şema 206** (ADR 3013): mimari ayarların (`arch`) haritasına planın çizgilerinin nasıl ağırlıklandırıldığını ekler:
+**Şema 218** (ADR 8013): mimari ayarların (`arch`) haritasına planın çizgilerinin nasıl ağırlıklandırıldığını ekler:
 `lineGroups` (numaralı metin: `own` her nesne kendi kaleminde, `byScale` TS 88-23 / ISO 128-23 çizgi grubu ölçeğe göre;
 başkası `bad_value`, `broken/line-groups-unknown.kcad`). Yoksa her nesne kendi kalemindedir; yeni Mimari projesi
-`byScale` yazar. Yazıcı 206'yı ayar `lineGroups` taşıyınca seçer; 205 ve öncesi alanı `unknown_field` sayar
-(`broken/line-groups-in-schema-205.kcad`). Örnek `line-groups.json/.kcad`.
+`byScale` yazar. Yazıcı 218'i ayar `lineGroups` taşıyınca seçer; 217 ve öncesi alanı `unknown_field` sayar
+(`broken/line-groups-in-schema-217.kcad`). Örnek `line-groups.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

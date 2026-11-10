@@ -363,7 +363,7 @@ impl Overlay {
                         bond: bond.as_ref().map(|b| b.id),
                     },
                 ));
-                // Across from the padlock, the + that makes it a permanent dimension bound to both faces (docs/adr/3019).
+                // Across from the padlock, the + that makes it a permanent dimension bound to both faces (docs/adr/8019).
                 let keep = Vec2::new(text_at.x - nx * height * 1.9, text_at.y - ny * height * 1.9);
                 self.preview.markers.push(Marker {
                     at: keep,
@@ -899,7 +899,7 @@ pub fn effect_lines(
 }
 
 /// A room's area before and after a move: “Mahal 1 Salon: 12,00 m² → 14,00 m²” (Odayı büyüt's card too,
-/// docs/adr/3023).
+/// docs/adr/8023).
 pub(crate) fn space_line(space: &kentos_commands::SpaceAreaChange, f: &Format) -> String {
     let name = [space.number.as_str(), space.name.as_str()]
         .iter()
@@ -936,8 +936,8 @@ pub(crate) fn count_lines(e: &kentos_commands::WallEffects, joined: usize) -> Ve
         .collect()
 }
 
-/// The + beside a wall's clear distance (docs/adr/3019): the distance written as a permanent dimension, one undo step,
-/// on the drawing's dimension layer (KentOS Mimari's MM-XXXX-OLCU, opened with it, docs/adr/3008). It is
+/// The + beside a wall's clear distance (docs/adr/8019): the distance written as a permanent dimension, one undo step,
+/// on the drawing's dimension layer (KentOS Mimari's MM-XXXX-OLCU, opened with it, docs/adr/8008). It is
 /// `cad.dimensions.interior`'s cut (ADR 0711) from just inside the wall's face to just inside the face it meets: one
 /// dimension, each end bound to its face by the cut rule, so moving either wall changes its value.
 pub fn make_permanent(switch: crate::temporary_refs::Switch, cx: &mut Context<'_>) {

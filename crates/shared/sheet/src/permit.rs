@@ -1,10 +1,10 @@
-//! Ruhsat takımı (docs/adr/3037, M37): a phase's architectural set of sheets made from the MO sheet
+//! Ruhsat takımı (docs/adr/8037, M37): a phase's architectural set of sheets made from the MO sheet
 //! (`sys:mimari-ruhsat`) in the order the Mimarlar Odası's presentation standard gives: the project's information sheet
 //! (Planlı Alanlar İmar Yönetmeliği 57(10)'s table and the set's live list), the site plan, then the storeys' plans from
 //! the lowest up. Each sheet is numbered on its phase's code (`UP-01` …) and answers the digital project regulation's
 //! file name fields (RG 5.8.2026/33331 EK-2: its type, kind, storey or place and sequence); the title block reads the
 //! rest from the drawing (its variables and what it says of itself), never asked again sheet by sheet. A plan's map may
-//! be linked to a named view (docs/adr/3039 §6): a tadilat set's storey drawn as it stands, with the Mimarlar Odası's
+//! be linked to a named view (docs/adr/8039 §6): a tadilat set's storey drawn as it stands, with the Mimarlar Odası's
 //! three techniques and as it will stand, each by its view's recipe.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -77,7 +77,7 @@ pub enum PageKind {
     /// A storey's plan.
     Plan,
     /// The calculation tables (EK-2 2.8.1, “Mimari hesap raporu”): a locked map on each, at the plot scale. A list
-    /// sheet (Mahal listesi, docs/adr/3038) is one too: its table, uncaptioned, on a paper of its own.
+    /// sheet (Mahal listesi, docs/adr/8038) is one too: its table, uncaptioned, on a paper of its own.
     Tables,
 }
 
@@ -96,14 +96,14 @@ pub struct Page {
     pub place: String,
     /// The tables a calculation sheet shows: their names and boxes, metres.
     pub views: Vec<(String, [f64; 4])>,
-    /// Its own paper (a list's, docs/adr/3038); none: the set's.
+    /// Its own paper (a list's, docs/adr/8038); none: the set's.
     pub paper: Option<PaperChoice>,
     /// Its tables each under a caption with its scale (the calculation sheet's); a list's is not: its title block
     /// names it and a list has no scale.
     pub captioned: bool,
-    /// A list drawn to scale (the joinery list's elevations at 1/50, docs/adr/3038): its title block says its scale.
+    /// A list drawn to scale (the joinery list's elevations at 1/50, docs/adr/8038): its title block says its scale.
     pub scaled: bool,
-    /// The named view its map is linked to (docs/adr/3039 §6): the view's recipe gives the map its tadilat view and its
+    /// The named view its map is linked to (docs/adr/8039 §6): the view's recipe gives the map its tadilat view and its
     /// scale, the map keeps its storey; none: the map draws the drawing as it is shown.
     pub link: Option<kentos_contracts::NamedView>,
 }
@@ -169,7 +169,7 @@ impl Page {
         }
     }
 
-    /// This page with its map linked to `view` (docs/adr/3039 §6): the named view's recipe gives the map its tadilat
+    /// This page with its map linked to `view` (docs/adr/8039 §6): the named view's recipe gives the map its tadilat
     /// view and its scale; the map keeps its storey.
     pub fn linked(self, view: kentos_contracts::NamedView) -> Page {
         Page {
@@ -199,7 +199,7 @@ impl Page {
 
     /// A list sheet (EK-2 Tablo 2.12 Liste, LS): `views` (name, box) at `scale` on `paper`, its file `kind` (Tablo
     /// 2.13: MHL a mahal listesi, MMC the joinery list's drawing), titled `title`; `scaled` when what it shows is drawn
-    /// to scale (docs/adr/3038).
+    /// to scale (docs/adr/8038).
     pub fn list(
         title: &str,
         kind: &'static str,
@@ -226,7 +226,7 @@ impl Page {
     }
 }
 
-/// A table's box `b` (metres) with 1.5 mm of paper around it at 1/`scale` (docs/adr/3038): a map exactly the table's
+/// A table's box `b` (metres) with 1.5 mm of paper around it at 1/`scale` (docs/adr/8038): a map exactly the table's
 /// box clipped its outer lines (the room list's right edge was not printed).
 pub fn padded(b: [f64; 4], scale: u32) -> [f64; 4] {
     let pad = 1.5 * f64::from(scale) / 1000.0;
@@ -271,7 +271,7 @@ pub const NOTES: &str = "1. Ölçüler santimetre, kotlar metre cinsindendir.\n2
                          projeleriyle birlikte değerlendirilir.\n3. Uygulamada ölçüler yerinde doğrulanır; çizim \
                          üzerinden ölçü alınmaz.";
 
-/// The drawing's variables a set's title block and information table read (docs/adr/3037): name, label and the value a
+/// The drawing's variables a set's title block and information table read (docs/adr/8037): name, label and the value a
 /// drawing that lacks it gets; none: it must be given (the sheet says it is missing).
 pub const PARTICULARS: [(&str, &str, Option<&str>); 27] = [
     ("proje_adi", "İşin adı", None),
@@ -368,7 +368,7 @@ pub struct PermitSheets {
     pub made: Vec<Made>,
 }
 
-/// The first sheet's items (docs/adr/3037): PAİY 57(10)'s table (with 57(3)'s floor area ratio, footprint and units) and
+/// The first sheet's items (docs/adr/8037): PAİY 57(10)'s table (with 57(3)'s floor area ratio, footprint and units) and
 /// the set's live list, in the map's place on `paper`.
 fn info_items(paper: &PaperChoice, subset: &[String], sheets: usize) -> Result<Vec<Item>> {
     let [w, h] = map_room(paper.paper).unwrap_or([190.0, 257.0]);
@@ -475,7 +475,7 @@ fn drop_items(sheet: &mut crate::Sheet, gone: &dyn Fn(&String) -> bool) {
 
 /// The set's sheets of `pages` on `paper` made from `template` (the MO sheet), `ids` giving each sheet its ids from a
 /// suggested sheet id; numbered on from `phase`'s code's first number no sheet has, in one change. Without `north` (a
-/// project with no coordinate system) the north arrow is left out, as the CAD profile hides it (docs/adr/3037).
+/// project with no coordinate system) the north arrow is left out, as the CAD profile hides it (docs/adr/8037).
 pub fn permit_sheets(
     book: &SheetBook,
     template: &Template,
@@ -551,7 +551,7 @@ pub fn permit_sheets(
             .or_insert(0);
         *n += 1;
         let text = |v: &str| VarValue::Text(v.to_owned());
-        // A list's own paper (docs/adr/3038), else the set's.
+        // A list's own paper (docs/adr/8038), else the set's.
         let paper = page.paper.clone().unwrap_or_else(|| paper.clone());
         let options = InstanceOptions {
             paper: Some(paper.clone()),
@@ -575,7 +575,7 @@ pub fn permit_sheets(
                     name: "sira_no".into(),
                     value: text(&format!("{:02}", *n)),
                 },
-                // The drawing's notes, not the template's (an unanswered question gives way, docs/adr/3037).
+                // The drawing's notes, not the template's (an unanswered question gives way, docs/adr/8037).
                 VariableValue {
                     name: "notlar".into(),
                     value: VarValue::Null,
@@ -617,7 +617,7 @@ pub fn permit_sheets(
                 let template_map = sheet.items.iter().find(|i| i.id == map_item).cloned();
                 drop_items(sheet, &|id: &String| *id == map_item);
                 if !page.captioned && !page.scaled {
-                    // A list has no scale (docs/adr/3038): its title block says so.
+                    // A list has no scale (docs/adr/8038): its title block says so.
                     sheet.variables.push(crate::model::Variable {
                         name: "olcek".into(),
                         label: "Ölçek".into(),
@@ -692,7 +692,7 @@ pub fn permit_sheets(
                     }
                     // A set's scale is its phase's: locked, as a detail's is (docs/adr/1090 §2).
                     m.view_locked = true;
-                    // A tadilat set's plan shows its view's state (docs/adr/3039 §6): the camera and the scale the
+                    // A tadilat set's plan shows its view's state (docs/adr/8039 §6): the camera and the scale the
                     // view's, the storey the map's.
                     if let Some(view) = &page.link {
                         m.source = crate::viewport::Source::ViewLink { view: view.clone() };

@@ -1,4 +1,4 @@
-//! Vaziyet planı (docs/adr/3032; ADV-22, M32): the parcel's garden distances as Planlı Alanlar İmar Yönetmeliği 23 sets
+//! Vaziyet planı (docs/adr/8032; ADV-22, M32): the parcel's garden distances as Planlı Alanlar İmar Yönetmeliği 23 sets
 //! them, the building's footprint (oturum) against them, the setback line (yapı yaklaşma sınırı) the document keeps, the
 //! trees (23/6) and ±0.00.
 //!
@@ -8,7 +8,7 @@
 //!   3 m at the side and the back with half a metre for each storey past four (23/1-a…ç).
 //! - **The storeys** for that increase (23/1-d): the storeys standing on or above ±0.00, their heights summed and
 //!   divided by 3, a remainder over 2.50 m one storey more.
-//! - **The footprint** is the ground storey's rooms' contours together (the TAKS's, docs/adr/3030); each edge's drawn
+//! - **The footprint** is the ground storey's rooms' contours together (the TAKS's, docs/adr/8030); each edge's drawn
 //!   distance is the nearest the footprint comes to it, 0 when it crosses it.
 //! - **The setback line:** the parcel less every point nearer an edge than its distance (a band along each edge with
 //!   round ends), so a corner keeps both distances.
@@ -36,7 +36,7 @@ pub struct SiteEdgeReport {
     pub required: f64,
     /// The nearest the footprint comes, m; none without a footprint.
     pub drawn: Option<f64>,
-    /// Where: the footprint's point and the edge's (the site plan's distance dimension, docs/adr/3032 §2).
+    /// Where: the footprint's point and the edge's (the site plan's distance dimension, docs/adr/8032 §2).
     pub near: Option<(Vec2, Vec2)>,
 }
 
@@ -47,7 +47,7 @@ impl SiteEdgeReport {
     }
 }
 
-/// The site plan read against the drawing (docs/adr/3032).
+/// The site plan read against the drawing (docs/adr/8032).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SiteReport {
     /// The parcel's corners, anticlockwise.
@@ -201,7 +201,7 @@ impl Document {
         (ring.len() >= 3).then_some(ring)
     }
 
-    /// The site plan of the settings read against the drawing (docs/adr/3032); none without one or without its parcel.
+    /// The site plan of the settings read against the drawing (docs/adr/8032); none without one or without its parcel.
     pub fn site_report(&self) -> Option<SiteReport> {
         let site = self.settings().arch.as_ref()?.site.clone()?;
         self.site_report_for(&site)
@@ -327,7 +327,7 @@ impl Document {
         )
     }
 
-    /// The setback line the site plan keeps (docs/adr/3032) written again where the parcel, the storeys or the
+    /// The setback line the site plan keeps (docs/adr/8032) written again where the parcel, the storeys or the
     /// footprint moved it: the op that does, none when it stands; the line taken to its closed form.
     pub(crate) fn site_envelope_update(&self) -> Option<Op> {
         let site = self.settings().arch.as_ref()?.site.clone()?;
@@ -356,7 +356,7 @@ impl Document {
         })
     }
 
-    /// The setback line after a step (docs/adr/3032): written again in it when the step touched the parcel, a room or
+    /// The setback line after a step (docs/adr/8032): written again in it when the step touched the parcel, a room or
     /// a wall (a room follows its walls in the same step) or the storeys.
     pub(crate) fn follow_site(&mut self, ops: &[Op]) -> Vec<Op> {
         let Some(site) = self.settings().arch.as_ref().and_then(|a| a.site.as_ref()) else {
@@ -393,7 +393,7 @@ impl Document {
         }
     }
 
-    /// The setback line after the settings changed or a step was undone (docs/adr/3032), without another undo step.
+    /// The setback line after the settings changed or a step was undone (docs/adr/8032), without another undo step.
     pub(crate) fn refresh_site(&mut self) -> usize {
         match self.site_envelope_update() {
             Some(op) => {

@@ -301,7 +301,7 @@ impl PenCategory {
         match self {
             PenCategory::Walls => "Duvarlar",
             PenCategory::Openings => "Kapı ve pencereler",
-            // Beams too (docs/adr/3041 §1): the bearing frame draws with one pen.
+            // Beams too (docs/adr/8041 §1): the bearing frame draws with one pen.
             PenCategory::Columns => "Kolon ve kirişler",
             PenCategory::Stairs => "Merdiven ve rampalar",
             PenCategory::Slabs => "Döşemeler",

@@ -605,7 +605,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "window" => "Pencere",
         "wipeout" => "Maske",
         "z" => "Kot",
-        // The fields Mimari's commands send, which the row said in English (docs/adr/3004).
+        // The fields Mimari's commands send, which the row said in English (docs/adr/8004).
         "adopt" => "Ortak duvar",
         "arch" => "Mimari",
         "bubbleSize" => "Balon boyu",
@@ -743,7 +743,7 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
             if let Some(p) = point(v) {
                 return p;
             }
-            // An object's tag in Turkish too (`distance` is uzaklık, docs/adr/3004).
+            // An object's tag in Turkish too (`distance` is uzaklık, docs/adr/8004).
             let head = tag(map).map(|(k, t)| (k, enum_word(k, t).unwrap_or(t)));
             if !deep {
                 return head.map_or_else(|| format!("{} alan", map.len()), |(_, t)| t.to_owned());
@@ -767,7 +767,7 @@ fn label(key: &str) -> String {
     field_name(key).map_or_else(|| key.to_owned(), str::to_owned)
 }
 
-/// A field's name for its value: a wall's `by` is how far it moves, elsewhere `by` is a way (docs/adr/3004).
+/// A field's name for its value: a wall's `by` is how far it moves, elsewhere `by` is a way (docs/adr/8004).
 fn label_of(key: &str, v: &Value) -> String {
     if key == "by" && v.is_number() {
         return "Miktar".to_owned();
@@ -775,7 +775,7 @@ fn label_of(key: &str, v: &Value) -> String {
     label(key)
 }
 
-/// An object's id, as the journal keeps it (`0192f5a1-6000-…`, `$uid:source`): never shown (docs/adr/3004).
+/// An object's id, as the journal keeps it (`0192f5a1-6000-…`, `$uid:source`): never shown (docs/adr/8004).
 fn is_id(s: &str) -> bool {
     if s.starts_with("$uid") {
         return true;
@@ -786,7 +786,7 @@ fn is_id(s: &str) -> bool {
         && parts.iter().all(|p| p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
-/// A tag or a choice said in Turkish: `left` is sol, `clear` net (docs/adr/3004).
+/// A tag or a choice said in Turkish: `left` is sol, `clear` net (docs/adr/8004).
 fn enum_word(key: &str, s: &str) -> Option<&'static str> {
     let keyed = matches!(
         key,
@@ -879,7 +879,7 @@ pub(crate) fn inputs_for(
         );
     }
     let words = inputs(input, layer);
-    // A wall's width is its Kalınlık (docs/adr/3003, 3004).
+    // A wall's width is its Kalınlık (docs/adr/8003, 8004).
     if command.is_some_and(|c| c.starts_with("cad.walls.")) {
         return words.replace("Genişlik:", "Kalınlık:").replace("genişlik ", "kalınlık ");
     }

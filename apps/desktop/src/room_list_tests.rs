@@ -1,6 +1,6 @@
-//! Mahal listesi (M38, docs/adr/3038): the acceptance apartment's room list, storey by storey under the storey's
+//! Mahal listesi (M38, docs/adr/8038): the acceptance apartment's room list, storey by storey under the storey's
 //! heading; each room's finishes as Öznitelikler wrote them, the doors and windows serving it by their joinery codes
-//! (the room Doğrama kodları numbers them by, docs/adr/3028); the list's own cells write the rooms; one undo.
+//! (the room Doğrama kodları numbers them by, docs/adr/8028); the list's own cells write the rooms; one undo.
 
 use serde_json::{Value, json};
 
@@ -49,7 +49,7 @@ fn room(app: &App, name: &str) -> String {
 fn the_apartment_s_room_list_says_each_room_s_finishes_doors_and_windows() {
     let (mut app, _dir) = crate::acceptance_flat_tests::opened("mahal-listesi");
     let _ = crate::acceptance_flat_tests::drawn(&mut app);
-    // Doğrama kodları first (docs/adr/3028): K01 the inner doors, GK01 the entrance, P01 and P02 the windows.
+    // Doğrama kodları first (docs/adr/8028): K01 the inner doors, GK01 the entrance, P01 and P02 the windows.
     let _ = app.update(Message::Run("tool.openingCodes"));
     let _ = app.submit_line("");
     // The salon's finishes, as Öznitelikler writes them (one change each).
@@ -115,7 +115,7 @@ fn the_apartment_s_room_list_says_each_room_s_finishes_doors_and_windows() {
             .map(|r| (r[7].clone(), r[8].clone()))
             .unwrap_or_else(|| panic!("{name} in the list: {got:?}"))
     };
-    // Each door and window in the room it serves (docs/adr/3028's rule): the entrance the corridor's, the bathroom
+    // Each door and window in the room it serves (docs/adr/8028's rule): the entrance the corridor's, the bathroom
     // both doors (the corridor's and the second bedroom's, which opens into it), its 60 window P02.
     assert_eq!(by_name("Yatak odası 1"), ("K01".into(), "P01".into()));
     assert_eq!(by_name("Yatak odası 2"), (String::new(), "P01".into()));

@@ -118,7 +118,7 @@ impl Document {
     fn schedule_takes(&self, e: &Entity, filter: Option<&ScheduleFilter>) -> bool {
         let Some(f) = filter else { return true };
         let arch = match e {
-            // An opening's own phase first (docs/adr/3039 §1), its wall's otherwise.
+            // An opening's own phase first (docs/adr/8039 §1), its wall's otherwise.
             Entity::Opening(o) => self.tag_target(&o.opening.host).and_then(|w| match w {
                 Entity::Wall(w) => Some(kentos_contracts::ArchInfo {
                     phase: o.opening.phase.or(w.wall.arch.phase),
@@ -214,7 +214,7 @@ impl Document {
         }
     }
 
-    /// A units schedule's rows storey by storey (docs/adr/3029; the metrekare cetveli's, PAİY 57/2-a): each of the
+    /// A units schedule's rows storey by storey (docs/adr/8029; the metrekare cetveli's, PAİY 57/2-a): each of the
     /// project's storeys in its order, then the rooms on none; on each, the program's groups with rooms there, in the
     /// program's order. A row's storey is its own, its rooms those on it, its regulation gross and net the storey's
     /// part; the areas a unit has as a whole (its share, general gross, recorded area, target) are left to the whole
@@ -419,7 +419,7 @@ impl Document {
                 }
             }
         }
-        // Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029) and kat irtifakı's (docs/adr/3031), worked out once
+        // Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/8029) and kat irtifakı's (docs/adr/8031), worked out once
         // when a column asks; the land shares too.
         let paiy = columns
             .iter()
@@ -513,7 +513,7 @@ impl Document {
                     ScheduleField::GeneralGross if u.kind == UnitKind::Unit => {
                         pa.and_then(|g| g.general()).map(ArchValue::Area)
                     }
-                    // Kat irtifakı (docs/adr/3031): the nature, the annexes and the total gross, the land share.
+                    // Kat irtifakı (docs/adr/8031): the nature, the annexes and the total gross, the land share.
                     ScheduleField::Nature => u.nature.clone().map(ArchValue::Text),
                     // A unit without annexes leaves their areas empty, not 0.
                     ScheduleField::AnnexNet
@@ -583,7 +583,7 @@ impl Document {
         self.schedule_rows_by(of, columns, filter, sort, group, total, false)
     }
 
-    /// [`Self::schedule_rows`], a units schedule's storey by storey when `by_level` (docs/adr/3029).
+    /// [`Self::schedule_rows`], a units schedule's storey by storey when `by_level` (docs/adr/8029).
     #[allow(clippy::too_many_arguments)]
     pub fn schedule_rows_by(
         &self,
@@ -600,7 +600,7 @@ impl Document {
         let shares = (of != ScheduleOf::Units && columns.iter().any(|c| c.field.is_share()))
             .then(|| self.program_shares().map(|(_, parts)| parts))
             .flatten();
-        // The rooms' doors and windows (docs/adr/3038): every opening's room, worked out once for the schedule.
+        // The rooms' doors and windows (docs/adr/8038): every opening's room, worked out once for the schedule.
         let openings = (of == ScheduleOf::Spaces
             && columns
                 .iter()
@@ -674,7 +674,7 @@ impl Document {
                 units: Vec::new(),
             });
         }
-        // A storey sorts by its elevation, the lowest first, not by its name (docs/adr/3038: the room list storey by
+        // A storey sorts by its elevation, the lowest first, not by its name (docs/adr/8038: the room list storey by
         // storey; Mimarlar Odası's order, planlar en alt kattan): Bodrum, Zemin kat, 1. kat.
         let storeys: Vec<String> = {
             let mut l = self

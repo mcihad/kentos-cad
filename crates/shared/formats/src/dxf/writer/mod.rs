@@ -672,7 +672,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
 }
 
 /// An object on an EK-4 layer has its hatches on that layer's "-T" (the 2026 Dijital Hazırlama Yönetmeliği's EK-4
-/// 4.14.5; docs/adr/3008): MM-DUVA-TUGLA's brick hatch on MM-DUVA-TUGLA-T, a layer the file gets beside it (the
+/// 4.14.5; docs/adr/8008): MM-DUVA-TUGLA's brick hatch on MM-DUVA-TUGLA-T, a layer the file gets beside it (the
 /// drawing's Tarama look). Objects on other layers keep their hatches with them, as before.
 fn hatches_aside(
     out: &mut DxfWriteInput,
@@ -711,7 +711,7 @@ fn hatches_aside(
     pieces
 }
 
-/// An object with a tadilat durumu has its pieces on its layer's state layer (docs/adr/3039 §4;
+/// An object with a tadilat durumu has its pieces on its layer's state layer (docs/adr/8039 §4;
 /// `kentos_contracts::ek4_state_layer`): a wall to be removed on MM-DUVA-TUGLA-IPTAL, drawn dashed (Mimarlar Odası's iptal
 /// technique), its hatch on MM-DUVA-TUGLA-IPTAL-T; a new door on MM-KAPI-GENEL-ILAVE. The layers the file gets beside
 /// their layers, as AutoCAD's renovation layers do; freezing *-IPTAL shows the state after the works. The object with
@@ -838,13 +838,13 @@ fn plain_walls(
         detail: crate::walls::detail(detail),
         scale,
         cut: input.cut_height.unwrap_or(kentos_contracts::PLAN_CUT_HEIGHT),
-        // A DXF line keeps its object's own weight (docs/adr/3013): a plot style gives AutoCAD its weight by scale.
+        // A DXF line keeps its object's own weight (docs/adr/8013): a plot style gives AutoCAD its weight by scale.
         pens: 1.0,
     };
     let mut out = input.clone();
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);
     let mut left = 0;
-    // Each object's tadilat durumu (docs/adr/3039 §4): its own, an opening's else its wall's.
+    // Each object's tadilat durumu (docs/adr/8039 §4): its own, an opening's else its wall's.
     let by_id: std::collections::HashMap<u32, &kentos_contracts::Entity> =
         input.entities.iter().map(|e| (e.base().id, e)).collect();
     let by_uid: std::collections::HashMap<String, &kentos_contracts::Entity> = input

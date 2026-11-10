@@ -465,7 +465,7 @@ pub fn pieces_with(parts: &[Area], spec: &Spec, scale: f64, label: bool) -> Vec<
     pieces_in(parts, spec, None, scale, label)
 }
 
-/// [`pieces_with`] as a view draws them (docs/adr/3011): a slab's edge at the view's level.
+/// [`pieces_with`] as a view draws them (docs/adr/8011): a slab's edge at the view's level.
 pub fn pieces_with_view(
     parts: &[Area],
     spec: &Spec,

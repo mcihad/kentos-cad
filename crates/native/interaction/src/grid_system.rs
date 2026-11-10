@@ -255,7 +255,7 @@ impl GridSystemTool {
         };
         let sign = if self.clockwise { -1.0 } else { 1.0 };
         Some(GridsCreate {
-            // The axes' layer (docs/adr/3008).
+            // The axes' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Grid, cx),
             grids: Vec::new(),
             series: None,

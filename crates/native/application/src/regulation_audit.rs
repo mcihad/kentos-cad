@@ -1,4 +1,4 @@
-//! Mevzuat denetimi (docs/adr/3033, 3034; ADV-23, M33–M34): Planlı Alanlar İmar Yönetmeliği's rules measured on the
+//! Mevzuat denetimi (docs/adr/8033, 8034; ADV-23, M33–M34): Planlı Alanlar İmar Yönetmeliği's rules measured on the
 //! drawing, each finding saying what it measured, the limit, the article and the gazette it stands in.
 //!
 //! - **Piyesler (29/1):** each dwelling has a living room (narrow side 3.00 m, net 12.0 m²), a bedroom (2.50 m, 9.00
@@ -12,7 +12,7 @@
 //! - **Kat yüksekliği (28/1-c):** in a dwelling area at most 3.60 m floor to floor, 4.00 m in a building of three
 //!   storeys or fewer above its basements; read only when the project is plainly a dwelling's (a dwelling unit or a
 //!   bedroom).
-//! - **İç yükseklik (28/4–6, docs/adr/3040 §3):** a named room's finished floor to its ceiling (its asma tavan, its
+//! - **İç yükseklik (28/4–6, docs/adr/8040 §3):** a named room's finished floor to its ceiling (its asma tavan, its
 //!   height typed, the slab over it's plastered underside; without one, floor to floor: a bound over it): an inhabited
 //!   room at least 2.60 m; a wet room, a pantry or store, the room under a stair and a passage 2.20 m (28/5); a garage,
 //!   a boiler room and a technical room 2.20 m (28/6). Not read: outdoor rooms, shelters, shafts, attics, rooms with
@@ -21,7 +21,7 @@
 //!   1.00 m at an independent unit's, 0.90 m elsewhere. A door with no room on one side is an entrance: the building's
 //!   when it has a common area or more than one unit, else its only unit's; a door between a unit's room and a common
 //!   area is that unit's entrance.
-//! - **Merdivenler (31, docs/adr/3034):** a common stair's flight and landings at least 1.20 m in a dwelling building,
+//! - **Merdivenler (31, docs/adr/8034):** a common stair's flight and landings at least 1.20 m in a dwelling building,
 //!   1.50 m in another; a stair inside a dwelling unit 1.00 m. A stair is a unit's when the room it stands in is; outside
 //!   every room of its level it is the building's outdoor steps, whose flight 31/1-a does not measure. The riser at most
 //!   0.16 m, 0.18 m where the building has an elevator; 2a+b 0.60–0.64 m, the tread at least 0.27 m, a curved stair's
@@ -63,29 +63,29 @@ use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::region::inside_area;
 use serde_json::json;
 
-/// The rule set's name: the regulation and its last amendment read (docs/adr/3033, 3034).
+/// The rule set's name: the regulation and its last amendment read (docs/adr/8033, 8034).
 pub const RULE_SET: &str = "PAİY (3.7.2017/30113; son değişiklik 1.7.2026/33297)";
 
-/// Sivas İmar Yönetmeliği's gazette (docs/adr/3034).
+/// Sivas İmar Yönetmeliği's gazette (docs/adr/8034).
 pub const SIVAS_GAZETTE: &str = "10.11.2022/32009";
 
 /// The regulation's own gazette, for an article never amended.
 const ORIGINAL: &str = "3.7.2017/30113";
 
-/// Whose rule an article is (docs/adr/3034).
+/// Whose rule an article is (docs/adr/8034).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Source {
     /// Planlı Alanlar İmar Yönetmeliği.
     Paiy,
     /// Sivas Belediyesi İmar Yönetmeliği.
     Sivas,
-    /// Binaların Yangından Korunması Hakkında Yönetmelik (docs/adr/3035).
+    /// Binaların Yangından Korunması Hakkında Yönetmelik (docs/adr/8035).
     Bykhy,
-    /// Otopark Yönetmeliği (docs/adr/3036).
+    /// Otopark Yönetmeliği (docs/adr/8036).
     Otopark,
-    /// Sığınak Yönetmeliği (docs/adr/3036).
+    /// Sığınak Yönetmeliği (docs/adr/8036).
     Siginak,
-    /// TS 825:2024 Binalarda ısı yalıtım kuralları, binding by Tebliğ MHGM-2025/1 (docs/adr/3038).
+    /// TS 825:2024 Binalarda ısı yalıtım kuralları, binding by Tebliğ MHGM-2025/1 (docs/adr/8038).
     Ts825,
 }
 
@@ -197,7 +197,7 @@ pub const SIVAS_ELEVATOR_ARTICLE: Article = Article::sivas("34/1");
 pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
-/// (docs/adr/3035).
+/// (docs/adr/8035).
 pub const CODES: [&str; 31] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
@@ -232,7 +232,7 @@ pub const CODES: [&str; 31] = [
     codes::SHELTER_HEIGHT_LOW,
 ];
 
-/// A fix a finding offers (docs/adr/3034): `cad.arch.edit`'s operation on its first object (a stair, a ramp) and the
+/// A fix a finding offers (docs/adr/8034): `cad.arch.edit`'s operation on its first object (a stair, a ramp) and the
 /// words its button says.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fix {
@@ -256,7 +256,7 @@ pub fn limits(kind: RoomKind) -> (f64, Option<f64>) {
     }
 }
 
-/// A void's or a shaft's kind by its name or use (docs/adr/3034).
+/// A void's or a shaft's kind by its name or use (docs/adr/8034).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShaftKind {
     /// Işıklık, aydınlık (32/2).
@@ -305,7 +305,7 @@ fn technical(name: Option<&str>, usage: Option<&str>) -> bool {
         || (is(&w, "SU") && has(&w, "DEPO"))
 }
 
-/// Whether a unit's nature is a dwelling's (or not given): the escape routes' rule (docs/adr/3033, 3035).
+/// Whether a unit's nature is a dwelling's (or not given): the escape routes' rule (docs/adr/8033, 8035).
 fn dwelling(nature: Option<&str>) -> bool {
     kentos_domain::escape::dwelling_nature(nature)
 }
@@ -378,7 +378,7 @@ pub struct Limit {
     pub article: Article,
 }
 
-/// A measure read against the national limit and the local regulation's (docs/adr/3034).
+/// A measure read against the national limit and the local regulation's (docs/adr/8034).
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Verdict {
     Kept,
@@ -426,7 +426,7 @@ pub(crate) struct Said {
     pub(crate) binding: Option<Limit>,
 }
 
-/// One measure read (docs/adr/3034): `subject` and the measure, its limit, `qual` after them and the article; the other
+/// One measure read (docs/adr/8034): `subject` and the measure, its limit, `qual` after them and the article; the other
 /// layer's limit beside it where it differs (“… < 1.30 m — Sivas 31/1-a; PAİY 31/1-a: 1.20 m”); a conflict under
 /// `regulation_conflict` with both and who decides.
 #[allow(clippy::too_many_arguments)]
@@ -566,7 +566,7 @@ enum StairIn {
     Outside,
 }
 
-/// The regulation group's findings (docs/adr/3033, 3034), each made by `finding(code, message, repair, slots, at, rule,
+/// The regulation group's findings (docs/adr/8033, 8034), each made by `finding(code, message, repair, slots, at, rule,
 /// fix)`.
 pub fn findings(
     doc: &Document,
@@ -632,7 +632,7 @@ pub fn findings(
         if x.void || outdoor || x.broken.is_some() || shaft.is_some() {
             continue;
         }
-        // Its inside height (28/4–6, docs/adr/3040 §3): a named room, not on a mezzanine.
+        // Its inside height (28/4–6, docs/adr/8040 §3): a named room, not on a mezzanine.
         if let Some(class) = height_class(name, usage)
             && !mezzanine(e.own_level())
             && let Some(h) = doc.room_height(x)
@@ -870,7 +870,7 @@ pub fn findings(
             }
         }
     }
-    // Inside heights (28/4–6, docs/adr/3040 §3): each room by its class, measured from its finished floor.
+    // Inside heights (28/4–6, docs/adr/8040 §3): each room by its class, measured from its finished floor.
     for (slot, subject, class, h, at) in &inside {
         let (least, article, repair) = match class {
             HeightClass::Inhabited => (
@@ -1593,11 +1593,11 @@ pub fn findings(
             }
         }
     }
-    // Yangın kaçışı (docs/adr/3035): Binaların Yangından Korunması Hakkında Yönetmelik.
+    // Yangın kaçışı (docs/adr/8035): Binaların Yangından Korunması Hakkında Yönetmelik.
     crate::fire_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
-    // Otopark ve sığınak (docs/adr/3036).
+    // Otopark ve sığınak (docs/adr/8036).
     crate::provisions_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
-    // Doğramaların U değeri (docs/adr/3038): TS 825:2024.
+    // Doğramaların U değeri (docs/adr/8038): TS 825:2024.
     crate::joinery_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     out
 }
@@ -1658,7 +1658,7 @@ mod tests {
         assert!(!technical(Some("Sığınak"), None));
     }
 
-    /// The layers (docs/adr/3034): a stricter local value binds with the national beside it; a looser one kept while
+    /// The layers (docs/adr/8034): a stricter local value binds with the national beside it; a looser one kept while
     /// the national is missed is a conflict; equal values say the national alone.
     #[test]
     fn a_local_value_binds_when_stricter_and_conflicts_when_looser() {

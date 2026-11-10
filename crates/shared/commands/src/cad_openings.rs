@@ -163,7 +163,7 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<crate::OpeningBuild>,
-    /// Its own tadilat durumu (docs/adr/3039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
+    /// Its own tadilat durumu (docs/adr/8039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
     /// Absent: its wall's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -342,7 +342,7 @@ pub struct OpeningChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub number: Option<Option<String>>,
-    /// Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:
+    /// Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up; null:
     /// its wall's.
     #[serde(
         default,
@@ -521,7 +521,7 @@ pub enum OpeningsOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         form: Option<OpeningForm>,
-        /// Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens
+        /// Mahale göre (docs/adr/8028): each opening `prefix` and its room's number instead (a door's the room it opens
         /// into, else its other side's; another's the room on either side), and when that room has more than one of
         /// them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
         #[serde(default, rename = "byRoom", skip_serializing_if = "std::ops::Not::not")]

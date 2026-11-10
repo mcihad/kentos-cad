@@ -1,4 +1,4 @@
-# M39 part 2 (docs/adr/3039 §5): the survey flat; the wall between the bedrooms İptal; in Yeni durum a door between
+# M39 part 2 (docs/adr/8039 §5): the survey flat; the wall between the bedrooms İptal; in Yeni durum a door between
 # Salon and Yatak odası 1 (İlave by the view) and a new partition in Salon (İlave); Salon's west window İptal; then
 # Tadilat: Tadilat projesi (Mimarlar Odası's three techniques) and Tadilat lejantı beside the plan.
 fit KentOS Mimari — Daire

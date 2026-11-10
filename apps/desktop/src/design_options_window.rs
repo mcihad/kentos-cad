@@ -81,7 +81,7 @@ pub enum Event {
     ComboDelete,
     Versus(usize),
     Close,
-    /// Çizimden seç: the window steps aside for a pick (docs/adr/3006).
+    /// Çizimden seç: the window steps aside for a pick (docs/adr/8006).
     PickFromDrawing,
 }
 

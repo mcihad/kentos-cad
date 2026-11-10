@@ -303,7 +303,7 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
 }
 
 /// The question an editor with its own save asks when it is closed with unsaved changes (DESIGN.md §7.9, §7.9.1;
-/// docs/adr/3006): what would be lost, “Kaydetmeden kapat” aside, “Vazgeç” and “Kaydet ve kapat”. Dismissing it is
+/// docs/adr/8006): what would be lost, “Kaydetmeden kapat” aside, “Vazgeç” and “Kaydet ve kapat”. Dismissing it is
 /// Vazgeç: the editor stays as it was. Bina programı, Duvar stilleri, the opening types and Malzemeler threw their
 /// edits away on a click beside them; the table editor and the designers asked, each with its own copy of this.
 pub fn unsaved<'a, Message: Clone + 'a>(

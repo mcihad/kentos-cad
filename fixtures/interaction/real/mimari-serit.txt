@@ -1,8 +1,8 @@
-# M15 (docs/adr/3015): Mimari's ribbon, the drawing malzeme.kcad (headless scales.rs keeps it) opened on Mimari's
+# M15 (docs/adr/8015): Mimari's ribbon, the drawing malzeme.kcad (headless scales.rs keeps it) opened on Mimari's
 # tab (the layout copy's ribbonTab is "arch"): the large Duvar ▾ opens its four wall tools, Donatı ▾ the kitchen run
 # and the blocks' library, Etiket ▾ Hepsini etiketle, Kat ▾ the levels and the level view. At 1440 × 900 with 13 px
 # text; the same tab at 1100 × 650 and 18 px, light and dark, are shot by session runs with KENTOS_REAL_SIZE and
-# KENTOS_REAL_SETTINGS (see ADR 3015).
+# KENTOS_REAL_SETTINGS (see ADR 8015).
 fit KentOS Mimari — Malzeme
 wait 3000
 shot m15-01-serit

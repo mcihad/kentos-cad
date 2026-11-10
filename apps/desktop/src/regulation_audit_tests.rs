@@ -1,4 +1,4 @@
-//! Mevzuat denetimi (M33, docs/adr/3033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1), corridors (29/3), storey
+//! Mevzuat denetimi (M33, docs/adr/8033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1), corridors (29/3), storey
 //! heights (28/1-c) and doors (39/1) read on the drawing; each finding names its article and says what it measured.
 
 use kentos_launch::Module;
@@ -272,7 +272,7 @@ fn regulation_findings(app: &mut App) -> Vec<Value> {
         .unwrap_or_default()
 }
 
-/// A four-storey building of two flats (M34, docs/adr/3034): its common stair (1.25 m, 0.1667 m risers, a railing on
+/// A four-storey building of two flats (M34, docs/adr/8034): its common stair (1.25 m, 0.1667 m risers, a railing on
 /// its left only), a ramp of 0.40 m over 4 m without railings, an air shaft of 0.40 × 0.90 m, a light well of 1.40 ×
 /// 3.00 m, a window of 0.40 m sill on the first floor, a toilet's door of 0.86 m clear and no elevator, read by PAİY 30,
 /// 31, 32, 34, 38 and 39. Then Sivas's regulation over them: its 1.30 m stair binding with PAİY's 1.20 m beside it, the
@@ -552,7 +552,7 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
     );
 }
 
-/// Inside heights (M40, docs/adr/3040 §3): PAİY 28/4–6 read from each named room's finished floor to its ceiling. Under
+/// Inside heights (M40, docs/adr/8040 §3): PAİY 28/4–6 read from each named room's finished floor to its ceiling. Under
 /// the 1. kat's Ara kat slab the ground storey's rooms are 2.76 m and keep 2.60 m; the Salon's asma tavan at 2.50 m is
 /// under 28/4's 2.60 m, the Banyo's at 2.15 m under 28/5's 2.20 m, the Kazan dairesi's own 2.10 m under 28/6's 2.20 m; a
 /// Hol under an asma tavan at 2.25 m keeps 28/5. A Balkon, a room with no name and a room on the Asma kat are not read.

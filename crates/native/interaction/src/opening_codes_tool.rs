@@ -1,4 +1,4 @@
-//! Doğrama kodları (docs/adr/3028; ADV-16, ADV-03): the drawing's doors, windows and bare openings get the joinery
+//! Doğrama kodları (docs/adr/8028; ADV-16, ADV-03): the drawing's doors, windows and bare openings get the joinery
 //! codes Mimarlar Odası's and İTÜ's notes give them, one for each type (K01 a door, GK01 a door in the outer wall,
 //! P01 a window, B01 a bare opening), and their tags write the code over the size, 90/210.
 //!
@@ -24,7 +24,7 @@ use crate::tool_settings::Setting;
 
 pub const ID: &str = "openingCodes";
 pub const LABEL: &str = "Doğrama kodları";
-/// The tag's words: the code over the size (docs/adr/3028).
+/// The tag's words: the code over the size (docs/adr/8028).
 pub const CONTENT: &str = "{code}\n{size}";
 
 pub struct OpeningCodes {
@@ -134,7 +134,7 @@ impl OpeningCodes {
         let mut tagged = false;
         if ok && self.tag {
             ok = crate::arch_layer::writing(&Kind::Tag, cx, |id, cx| {
-                // The untagged openings' tags placed clear of the walls, swings and tags (docs/adr/3028); the tagged
+                // The untagged openings' tags placed clear of the walls, swings and tags (docs/adr/8028); the tagged
                 // ones keep their places and take the new words.
                 let doc = &*cx.doc;
                 let have_tags: std::collections::BTreeSet<String> = doc
@@ -315,7 +315,7 @@ impl Tool for OpeningCodes {
         if self.seen != Some(cx.doc.revision()) {
             self.plan(cx);
         }
-        // The card follows the cursor (docs/adr/3018): moved aside, it leaves the plan in sight.
+        // The card follows the cursor (docs/adr/8018): moved aside, it leaves the plan in sight.
         self.at = Some(p.raw);
     }
 

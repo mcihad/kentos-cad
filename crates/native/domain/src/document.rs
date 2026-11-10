@@ -330,7 +330,7 @@ impl Document {
         }
     }
 
-    /// This reading copy drawn in the phase view `view` (docs/adr/3039 §2): a sheet's map showing a phase of its own
+    /// This reading copy drawn in the phase view `view` (docs/adr/8039 §2): a sheet's map showing a phase of its own
     /// joins and cuts its walls as that phase stands. Its settings change without an edit: a copy is only read.
     pub fn with_phase_view(mut self, view: kentos_contracts::PhaseView) -> Document {
         let arch = self.settings.arch.get_or_insert_with(Default::default);

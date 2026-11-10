@@ -1,4 +1,4 @@
-//! Emsal ve TAKS rozeti (docs/adr/3030; ADV-22, M30): the drawing's floor area ratio and coverage against the parcel's
+//! Emsal ve TAKS rozeti (docs/adr/8030; ADV-22, M30): the drawing's floor area ratio and coverage against the parcel's
 //! zoning, live in the status bar while the project has a zoning, in the danger colour when one passes its limit;
 //! clicked, Proje ayarları on its Mimari page, where İmar durumu is typed and the ratios are listed.
 //!
@@ -19,11 +19,11 @@ use crate::app::{App, Message};
 thread_local! {
     /// The last report: the drawing it was read from (its address), its revision and the report.
     static LAST: RefCell<Option<(usize, u64, Option<kentos_domain::zoning::ZoningReport>)>> = const { RefCell::new(None) };
-    /// The last site plan read (docs/adr/3032), kept the same way.
+    /// The last site plan read (docs/adr/8032), kept the same way.
     static SITE: RefCell<Option<(usize, u64, Option<kentos_domain::site::SiteReport>)>> = const { RefCell::new(None) };
 }
 
-/// The drawing's site plan (docs/adr/3032), read again only when the drawing changed.
+/// The drawing's site plan (docs/adr/8032), read again only when the drawing changed.
 pub fn site(doc: &kentos_domain::Document) -> Option<kentos_domain::site::SiteReport> {
     let key = (std::ptr::from_ref(doc) as usize, doc.revision());
     SITE.with(|last| {
@@ -39,7 +39,7 @@ pub fn site(doc: &kentos_domain::Document) -> Option<kentos_domain::site::SiteRe
     })
 }
 
-/// The edges whose garden distance the footprint does not keep (docs/adr/3032), said: “2. kenar (Yan bahçe) 2,80 <
+/// The edges whose garden distance the footprint does not keep (docs/adr/8032), said: “2. kenar (Yan bahçe) 2,80 <
 /// 3,00 m”.
 pub fn short_edges(doc: &kentos_domain::Document) -> Vec<String> {
     site(doc).map_or_else(Vec::new, |r| {
@@ -174,7 +174,7 @@ pub fn cell(app: &App, shown: Option<bool>) -> Option<Element<'_, Message>> {
         n2(r.parcel),
         if over { "Sınır aşıldı. " } else { "" }
     );
-    // The garden distances not kept (docs/adr/3032).
+    // The garden distances not kept (docs/adr/8032).
     let short = short_edges(&doc.model);
     let body = if short.is_empty() {
         body

@@ -1,4 +1,4 @@
-//! Doğrama kodları (docs/adr/3028; ADV-16, ADV-03): the joinery codes Mimarlar Odası's and İTÜ's drawing notes give
+//! Doğrama kodları (docs/adr/8028; ADV-16, ADV-03): the joinery codes Mimarlar Odası's and İTÜ's drawing notes give
 //! doors and windows, one for each type, the same on every opening of it (“aynı türde olup farklı boyut ve özelliklere
 //! sahip yapı elemanlarına … ayırt edici referans numaraları verilir”).
 //!
@@ -70,7 +70,7 @@ fn next_code(types: &[OpeningType], letters: &str) -> String {
 }
 
 /// An opening's middle and its two sides' points a little beyond its wall's faces: left, right (the room list's too,
-/// docs/adr/3038).
+/// docs/adr/8038).
 pub(crate) fn sides(f: &OpeningFields) -> Option<(V, V, V)> {
     kentos_domain::room_openings::opening_sides(f)
 }
@@ -117,7 +117,7 @@ fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
     kentos_domain::room_names::passage(name, usage)
 }
 
-/// The rooms that have a number, each level's, with their areas (docs/adr/3028's Mahale göre).
+/// The rooms that have a number, each level's, with their areas (docs/adr/8028's Mahale göre).
 pub(crate) fn numbered_rooms(doc: &Document) -> Vec<NumberedRoom> {
     doc.entities()
         .filter_map(|e| match e {
@@ -139,7 +139,7 @@ pub(crate) fn numbered_rooms(doc: &Document) -> Vec<NumberedRoom> {
         .collect()
 }
 
-/// An opening's room's number, the room it serves (docs/adr/3028): a door between a room and a corridor, hall or the
+/// An opening's room's number, the room it serves (docs/adr/8028): a door between a room and a corridor, hall or the
 /// like is the room's; between two rooms the one it opens into (Revit's To Room); by one room only, that one's. A
 /// window's or another's the room on either side, its left first. None: no numbered room by it.
 pub(crate) fn room_of(doc: &Document, f: &OpeningFields, rooms: &[NumberedRoom]) -> Option<String> {

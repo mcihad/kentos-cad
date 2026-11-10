@@ -1,7 +1,7 @@
-//! Ruhsat takımı (docs/adr/3037, M37): the drawing's particulars asked once (written into its variables, where every
+//! Ruhsat takımı (docs/adr/8037, M37): the drawing's particulars asked once (written into its variables, where every
 //! sheet's title block and PAİY 57(10)'s table read them), then the phase's set made in one undo step and Paftaları
 //! toplu yayınla opened on it, checked, one PDF/A-2 file a sheet named by the digital project regulation's EK-2: the
-//! user presses Yayınla. A tadilat (docs/adr/3039 §6) gets each storey's plan three times: Mevcut durum, Tadilat
+//! user presses Yayınla. A tadilat (docs/adr/8039 §6) gets each storey's plan three times: Mevcut durum, Tadilat
 //! projesi and Yeni durum; the box is ticked when the drawing has İptal or İlave beside what stands.
 use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
@@ -24,9 +24,9 @@ pub struct State {
     pub phase: Phase,
     pub fields: Vec<Field>,
     pub status: String,
-    /// A tadilat set (docs/adr/3039 §6).
+    /// A tadilat set (docs/adr/8039 §6).
     pub renovation: bool,
-    /// The rooms the tadilat changes but that do not say so (docs/adr/3039 §6), said under the box before the set is
+    /// The rooms the tadilat changes but that do not say so (docs/adr/8039 §6), said under the box before the set is
     /// made: on its sheets they would keep a wall that is not there.
     pub restate: Vec<String>,
 }
@@ -173,11 +173,11 @@ impl App {
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                // The calculation tables and the sheets: one undo step (docs/adr/3037 §3).
+                // The calculation tables and the sheets: one undo step (docs/adr/8037 §3).
                 let group = doc.model.begin_group("Ruhsat takımı");
                 let tables = kentos_interaction::calc_tables::ensure(&mut doc.model);
                 if let Ok(t) = &tables {
-                    // The room list a sheet of its own (docs/adr/3038), the rest the calculation sheet's.
+                    // The room list a sheet of its own (docs/adr/8038), the rest the calculation sheet's.
                     let plot = doc.model.settings().plot_scale.round().max(1.0) as u32;
                     input.tables = t
                         .iter()
@@ -193,7 +193,7 @@ impl App {
                                     kind,
                                     bounds: c.bounds,
                                     scale: c.scale.unwrap_or(plot),
-                                    // The joinery list's elevations are drawn to scale (docs/adr/3038).
+                                    // The joinery list's elevations are drawn to scale (docs/adr/8038).
                                     scaled: c.scale.is_some(),
                                 })
                         })
@@ -218,7 +218,7 @@ impl App {
                             (Some(a), Some(b)) => format!("{} … {}", a.number, b.number),
                             _ => String::new(),
                         };
-                        // A tadilat set says so (docs/adr/3039 §6).
+                        // A tadilat set says so (docs/adr/8039 §6).
                         let kind = if input.renovation {
                             " (tadilat projesi)"
                         } else {
@@ -241,7 +241,7 @@ impl App {
                                 )
                             }
                         );
-                        // A list no paper holds (docs/adr/3038).
+                        // A list no paper holds (docs/adr/8038).
                         for n in &notes {
                             said.push_str("; ");
                             said.push_str(n);
@@ -302,7 +302,7 @@ impl App {
             phases,
         ]
         .spacing(8);
-        // A tadilat set (docs/adr/3039 §6; PAİY 4(1)(dddd), 58; Mimarlar Odası: mevcut, iptal and ilave each its way).
+        // A tadilat set (docs/adr/8039 §6; PAİY 4(1)(dddd), 58; Mimarlar Odası: mevcut, iptal and ilave each its way).
         let check = if s.renovation {
             kentos_ui::widget::tree_view::Check::Checked
         } else {
@@ -327,7 +327,7 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        // The rooms that would keep a wall that is not there, before the set is made (docs/adr/3039 §6).
+        // The rooms that would keep a wall that is not there, before the set is made (docs/adr/8039 §6).
         if s.renovation && !s.restate.is_empty() {
             body = body.push(
                 label::caption(format!(

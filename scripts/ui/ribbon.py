@@ -381,10 +381,10 @@ CAD = [
           overflow=["tool.drawOrderAbove", "tool.drawOrderUnder", "edit.textsToFront", "edit.hatchesToBack"]),
     ]),
     T("arch", "Mimari", [
-        # M15 (docs/adr/3015): a plan's six main tools large, each family one button with its ways under ▾, as
-        # Revit's Wall ▾ and Room ▾: Duvar ▾, Oda (docs/adr/3021), Kapı, Pencere, Mahal ▾ and Donatı ▾. At most 30
+        # M15 (docs/adr/8015): a plan's six main tools large, each family one button with its ways under ▾, as
+        # Revit's Wall ▾ and Room ▾: Duvar ▾, Oda (docs/adr/8021), Kapı, Pencere, Mahal ▾ and Donatı ▾. At most 30
         # buttons show (DESIGN.md §7.3.1); the seldom used wait under their panel's ▾.
-        # Oda (docs/adr/3021) large beside Duvar ▾: the walls, the room and its tag in one step.
+        # Oda (docs/adr/8021) large beside Duvar ▾: the walls, the room and its tag in one step.
         P("Duvar", "wall", [{"key": "archWalls", "size": "large", "split": [
                 {"command": "tool.wall", "title": "Duvar", "label": "Duvar"},
                 {"command": "tool.wallRectangle", "title": "Duvar", "label": "Dikdörtgen duvar"},
@@ -412,7 +412,7 @@ CAD = [
                 {"command": "tool.casework", "title": "Donatı", "label": "Mutfak"},
                 {"command": "block.library", "title": "Donatı", "label": "Kitaplık"},
             ]}]),
-        # A panel's icon is its first command's (DESIGN.md §6): Düzenle had Duvar's (docs/adr/3016).
+        # A panel's icon is its first command's (DESIGN.md §6): Düzenle had Duvar's (docs/adr/8016).
         P("Düzenle", "wallJoins", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
             S("tool.spaceSplit"), S("tool.gridNumber"), S("tool.openingNumber")],
           overflow=["tool.spaceRebound", "tool.spaceSources", "tool.openingArray", "tool.wallShift", "tool.spaceNumber",
@@ -420,38 +420,38 @@ CAD = [
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split; Etiket ▾ holds Hepsini etiketle (as
         # Revit's Tag panel holds Tag All), İşaret ▾ (docs/adr/0721) is a small split, Malzeme lejandı with the schedules.
-        # Ölçü ▾ small since Oda took the sixth large place (docs/adr/3021; ADV-09's Duvar, Oda, Kapı, Pencere, Mahal,
+        # Ölçü ▾ small since Oda took the sixth large place (docs/adr/8021; ADV-09's Duvar, Oda, Kapı, Pencere, Mahal,
         # Donatı).
         P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "small", "split": [
-                # Planı ölçülendir first (docs/adr/3026): the whole plan in one command.
+                # Planı ölçülendir first (docs/adr/8026): the whole plan in one command.
                 {"command": "tool.planDimensions", "title": "Ölçü", "label": "Planı ölçülendir"},
                 {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
                 {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
             ]}, {"key": "archTags", "size": "small", "split": [
                 {"command": "tool.tag", "title": "Etiket", "label": "Etiket"},
                 {"command": "tool.tagAll", "title": "Etiket", "label": "Hepsini etiketle"},
-                # Doğrama kodları (docs/adr/3028): the openings' joinery codes and their tags, code over 90/210.
+                # Doğrama kodları (docs/adr/8028): the openings' joinery codes and their tags, code over 90/210.
                 {"command": "tool.openingCodes", "title": "Etiket", "label": "Doğrama kodları"},
-                # Doğrama listesi (docs/adr/3038): the codes' list with the types' elevations.
+                # Doğrama listesi (docs/adr/8038): the codes' list with the types' elevations.
                 {"command": "tool.joineryList", "title": "Etiket", "label": "Doğrama listesi"},
             ]},
-            # Metraj ▾ (docs/adr/3029): the quantities and the metrekare cetveli, the regulation's areas storey by
-            # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1). Emsal ve TAKS tablosu (docs/adr/3030) beside
+            # Metraj ▾ (docs/adr/8029): the quantities and the metrekare cetveli, the regulation's areas storey by
+            # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1). Emsal ve TAKS tablosu (docs/adr/8030) beside
             # them: the areas against the parcel's zoning.
             {"key": "archQuantities", "size": "small", "split": [
                 {"command": "arch.quantities", "title": "Metraj", "label": "Metraj"},
                 {"command": "tool.scheduleAreas", "title": "Metraj", "label": "Metrekare cetveli"},
                 {"command": "arch.zoningTable", "title": "Metraj", "label": "Emsal ve TAKS tablosu"},
-                # Kat irtifakı tablosu (docs/adr/3031): the deed's sharing table.
+                # Kat irtifakı tablosu (docs/adr/8031): the deed's sharing table.
                 {"command": "tool.scheduleLandShares", "title": "Metraj", "label": "Kat irtifakı tablosu"},
-                # Otopark and Sığınak hesabı (docs/adr/3036): the regulations' needs against the drawing.
+                # Otopark and Sığınak hesabı (docs/adr/8036): the regulations' needs against the drawing.
                 {"command": "arch.parkingTable", "title": "Metraj", "label": "Otopark hesabı"},
                 {"command": "arch.shelterTable", "title": "Metraj", "label": "Sığınak hesabı"},
             ]},
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
-                # Mahal listesi (docs/adr/3038): PAİY 57(29)'s list, storey by storey, in the place of the finishes
+                # Mahal listesi (docs/adr/8038): PAİY 57(29)'s list, storey by storey, in the place of the finishes
                 # schedule, whose columns it has (a menu holds six, DESIGN.md §7.3.1); Mahal kaplama çizelgesi stays the
                 # Çizelge tool's Tür and the command search's.
                 {"command": "tool.scheduleRoomList", "title": "Çizelge", "label": "Mahal listesi"},
@@ -468,22 +468,22 @@ CAD = [
           # Revizyon işaretle and Revizyon listesi (docs/adr/0721) under ▾ too: a revision comes once a set is issued.
           overflow=["arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs", "tool.roomElevation",
                     "tool.revisionMark", "arch.revisionList"]),
-        # Kat ▾: the storey shown and how the others show (the status bar's Kat cell, docs/adr/3011); Mimari ayarları
+        # Kat ▾: the storey shown and how the others show (the status bar's Kat cell, docs/adr/8011); Mimari ayarları
         # beside it holds the storeys themselves.
         P("Proje", "archSettings", [M("Kat", [("", ["view.levels.up", "view.levels.down"]),
                 ("Kat görünümü", ["view.levels.all", "view.levels.active", "view.levels.below"])]),
             M("Tadilat", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed",
                                   "arch.phase.renovation"]),
-                             # Mimarlar Odası's legend (docs/adr/3039 §5).
+                             # Mimarlar Odası's legend (docs/adr/8039 §5).
                              ("", ["tool.renovationLegend"])]),
             S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.permitSet")],
           # Program, Şablon, Kapı ve pencere tipleri (docs/adr/0772), Oda modülleri (docs/adr/0775), Malzemeler
           # (docs/adr/0785) and Tasarım seçenekleri (docs/adr/0788) under ▾. Kırpma çerçevesi (docs/adr/0789 §2) beside
           # the navigator: a view's area edited on the model.
-          # Parsel ve bahçe mesafeleri (docs/adr/3032) beside Program: the site plan's parcel, the project's as the
+          # Parsel ve bahçe mesafeleri (docs/adr/8032) beside Program: the site plan's parcel, the project's as the
           # program is.
-          # Kaçış yolları (docs/adr/3035 §2) beside them: the fire rules' walks drawn on the storey.
-          # Ruhsat takımı (docs/adr/3037) shown beside Denetim: the set the audit's drawing is delivered as.
+          # Kaçış yolları (docs/adr/8035 §2) beside them: the fire rules' walks drawn on the storey.
+          # Ruhsat takımı (docs/adr/8037) shown beside Denetim: the set the audit's drawing is delivered as.
           overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
                     "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
@@ -814,7 +814,7 @@ CONTEXTUAL = [
     {"id": "ctx.wall", "label": "Duvar", "kinds": ["wall"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        # A wall's own work first (docs/adr/3017): Duvarı kaydır large, the wall's edits, Özellikler; the right click's
+        # A wall's own work first (docs/adr/8017): Duvarı kaydır large, the wall's edits, Özellikler; the right click's
         # first section is this panel. Its style and materials, its bonds (the architectural bonds are constraints,
         # docs/adr/0770: shown, or relaxed for the next edit), what it hosts and how it is documented after.
         P("Duvar", "wallShift", [L("tool.wallShift"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"),
@@ -836,7 +836,7 @@ CONTEXTUAL = [
     {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [
         SEL,
         P("Düzenle", "move", [S("tool.move"), S("tool.erase")]),
-        # The room's own edits (the right click's first section, docs/adr/3017), its finishes, its documents: eleven
+        # The room's own edits (the right click's first section, docs/adr/8017), its finishes, its documents: eleven
         # buttons in one panel read "Döşeme" for the floor pattern and "Mahal" for the room schedule.
         P("Mahal", "space", [L("view.properties"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"),
             S("tool.spaceNumber"), S("arch.spaceMerge")]),
@@ -853,7 +853,7 @@ CONTEXTUAL = [
      "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        # Özellikler too, as on the other building tabs (docs/adr/3017).
+        # Özellikler too, as on the other building tabs (docs/adr/8017).
         P("Mimari", "archGrid", [L("view.properties"), S("tool.gridNumber"), S("arch.tagsCheck"), S("arch.viewRefs")]),
     ]},
 ]
@@ -902,7 +902,7 @@ MODULES = {
         "processing.run.network.serviceAreas": ["cbs"],
         # The project type's switch: a module's projects keep their module's type.
         "workspace.cad": [], "workspace.gis": [], "workspace.plan3d": [], "workspace.disaster": [],
-        # Mahal kaplama çizelgesi (docs/adr/0733 §3) left Çizelge ▾ to the room list (docs/adr/3038), whose columns it
+        # Mahal kaplama çizelgesi (docs/adr/0733 §3) left Çizelge ▾ to the room list (docs/adr/8038), whose columns it
         # has; it stays Mimari's (the Çizelge tool's Tür, Komut ara), not every module's.
         "tool.scheduleFinishes": ["mimari"],
         # The GNSS archive's sessions and the feature codes' reconciling are KentOS Harita's.

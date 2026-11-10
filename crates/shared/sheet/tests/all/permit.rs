@@ -1,4 +1,4 @@
-//! Ruhsat takımı (docs/adr/3037): a phase's set from the MO sheet in MO's order, numbered on its code, each sheet
+//! Ruhsat takımı (docs/adr/8037): a phase's set from the MO sheet in MO's order, numbered on its code, each sheet
 //! answering the digital project regulation's file name fields; the first sheet holds PAİY 57(10)'s table and the set's
 //! live list instead of a map; the storeys' codes and the paper follow EK-2 and the maps' sizes.
 
@@ -274,7 +274,7 @@ fn the_calculation_sheet_shows_each_table_at_the_plot_scale() {
         .collect();
     assert_eq!(maps.len(), 2, "a map a table, the template's own gone");
     for (m, centre) in maps.iter().zip([[24.0, 2.5], [24.0, -4.5]]) {
-        // 8 × 5 m at 1/100: 80 × 50 mm, 1.5 mm around it (its outer lines are not clipped, docs/adr/3038).
+        // 8 × 5 m at 1/100: 80 × 50 mm, 1.5 mm around it (its outer lines are not clipped, docs/adr/8038).
         assert_eq!((m.frame.width, m.frame.height), (83_000, 53_000));
         let ItemKind::Map(map) = &m.kind else {
             unreachable!()
@@ -298,7 +298,7 @@ fn the_calculation_sheet_shows_each_table_at_the_plot_scale() {
 
 #[test]
 fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
-    // Mahal listesi (docs/adr/3038): EK-2's Liste (LS) of kind MHL, on the paper it fits while the set is on A2.
+    // Mahal listesi (docs/adr/8038): EK-2's Liste (LS) of kind MHL, on the paper it fits while the set is on A2.
     let template = system_template(permit::TEMPLATE).expect("the MO sheet");
     let a2 = PaperChoice {
         paper: Paper::A2,
@@ -366,7 +366,7 @@ fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
     );
 }
 
-/// A tadilat set (docs/adr/3039 §6): a storey's plan three times, each map linked to the named view of its state; the
+/// A tadilat set (docs/adr/8039 §6): a storey's plan three times, each map linked to the named view of its state; the
 /// view gives the map its state, camera and scale, the map keeps its storey; EK-2's sequence counts the three on; a view
 /// gone, the map is not drawn.
 #[test]

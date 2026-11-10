@@ -334,7 +334,7 @@ impl Tool for RoomElevationTool {
         }
         match key.as_str() {
             "Y" => self.ask = Some(Ask::Sides),
-            // Aralık is A, as in every KentOS tool (docs/adr/3003).
+            // Aralık is A, as in every KentOS tool (docs/adr/8003).
             "A" => self.ask = Some(Ask::Gap),
             _ => {
                 if self.space.is_some()

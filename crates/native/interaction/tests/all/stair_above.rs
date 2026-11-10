@@ -81,7 +81,7 @@ fn the_level_above_draws_the_stair_past_its_cut_and_never_picks_it() {
     let Shape::Stair { pts, stair } = &shape else { panic!("a stair shape") };
     let mut above = stair.clone();
     above.upper = true;
-    // At the store's view (docs/adr/3011): this drawing's scale is beyond 1:150, its railings left out there.
+    // At the store's view (docs/adr/8011): this drawing's scale is beyond 1:150, its railings left out there.
     let view = b.spatial.store().wall_view();
     let upper = Shape::Stair {
         pts: pts.clone(),

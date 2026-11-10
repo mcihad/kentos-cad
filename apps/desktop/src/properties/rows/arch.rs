@@ -358,7 +358,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     pick("Boş".into(), !x.fill, fill(false), None),
                 ],
             ))));
-            // Its material (docs/adr/3041 §2): one section with a wall's layer of the same material.
+            // Its material (docs/adr/8041 §2): one section with a wall's layer of the same material.
             out.push(text("Malzeme", x.material_name().to_owned(), ArchField::Material));
             let tied = if x.grids.is_some() {
                 x.place.clone().unwrap_or_else(|| "Bağlı".into())
@@ -504,7 +504,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 kentos_native_application::arch_elements::ramp_warnings(x, ""),
             ));
         }
-        // A beam (docs/adr/3041 §1): its number and sizes, how it lies on its axis, its top and underside where it
+        // A beam (docs/adr/8041 §1): its number and sizes, how it lies on its axis, its top and underside where it
         // hangs, its material and length.
         Entity::Beam(b) => {
             let x = &b.beam;
@@ -513,7 +513,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 x.tag.clone().unwrap_or_default(),
                 ArchField::Tag,
             ));
-            // Kiriş, lento ya da hatıl (docs/adr/3041 §3).
+            // Kiriş, lento ya da hatıl (docs/adr/8041 §3).
             let roles = kentos_commands::BeamRole::ALL
                 .iter()
                 .map(|&r| {

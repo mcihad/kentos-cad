@@ -25,12 +25,12 @@ pub const PARAPET_WIDTH: f64 = 0.15;
 pub const MAX_SLAB_EDGE: f64 = 2.0;
 /// The most characters a slab's material has.
 pub const MAX_SLAB_MATERIAL: usize = 120;
-/// The thickest layer besides a slab's structure, metres (docs/adr/3040 §2).
+/// The thickest layer besides a slab's structure, metres (docs/adr/8040 §2).
 pub const MAX_SLAB_LAYER: f64 = 1.0;
 /// The most layers over or under a slab's structure.
 pub const MAX_SLAB_LAYERS: usize = 8;
 
-/// What a layer of a slab besides its structure is (docs/adr/3040 §2): TS 825's floor build-up (a storey's floor: its
+/// What a layer of a slab besides its structure is (docs/adr/8040 §2): TS 825's floor build-up (a storey's floor: its
 /// finish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY
 /// 4(1)(ıı)'s "taban döşeme kaplaması", the plaster its "tavan kaplaması".
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -71,7 +71,7 @@ impl SlabLayerKind {
     }
 }
 
-/// A layer of a slab besides its structure (docs/adr/3040 §2).
+/// A layer of a slab besides its structure (docs/adr/8040 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -88,7 +88,7 @@ pub struct SlabLayer {
     pub material: Option<String>,
 }
 
-/// A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the
+/// A slab's layers besides its structure (its `thickness`, docs/adr/8040 §2), each list from the top: those over the
 /// structure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of
 /// the first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -105,7 +105,7 @@ pub struct SlabLayers {
     pub under: Vec<SlabLayer>,
 }
 
-/// The build-ups a slab is given whole (docs/adr/3040 §2), each its name and its layers; typical thicknesses, each to
+/// The build-ups a slab is given whole (docs/adr/8040 §2), each its name and its layers; typical thicknesses, each to
 /// be changed: a storey's floor (kaplama 2, şap 5 over the concrete, sıva 2 under), one on the ground (kaplama 2, şap 5,
 /// ısı yalıtımı 5, su yalıtımı 1; no ceiling under it), a terrace (TS 825's terrace build-up from the top: its finish 3,
 /// su yalıtımı 1, şap as the slope's concrete 5, ısı yalıtımı 8; sıva 2 under) and the concrete alone.
@@ -504,7 +504,7 @@ pub struct SlabFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bound: Option<SlabBound>,
-    /// Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
+    /// Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
     /// structure alone, its top the finished floor.
     #[serde(default, skip_serializing_if = "SlabLayers::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SlabLayers>", optional))]
@@ -537,7 +537,7 @@ pub fn material_problem(m: &str) -> Option<String> {
 }
 
 impl SlabFields {
-    /// Its whole thickness, its layers with its structure, metres (docs/adr/3040 §2).
+    /// Its whole thickness, its layers with its structure, metres (docs/adr/8040 §2).
     pub fn whole_thickness(&self) -> f64 {
         self.layers.over_thickness() + self.thickness + self.layers.under_thickness()
     }
@@ -547,7 +547,7 @@ impl SlabFields {
         floor + self.offset - self.layers.over_thickness()
     }
 
-    /// Its structure's underside over `floor`, metres: where a wall under it stops (docs/adr/3040 §1, §2).
+    /// Its structure's underside over `floor`, metres: where a wall under it stops (docs/adr/8040 §1, §2).
     pub fn structure_underside(&self, floor: f64) -> f64 {
         self.structure_top(floor) - self.thickness
     }

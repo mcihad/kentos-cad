@@ -2,6 +2,6 @@
 import type { SiteEdgeKind } from "./SiteEdgeKind";
 
 /**
- * A parcel edge (docs/adr/3032): its kind and the plan's own setback where the plan gives one, m.
+ * A parcel edge (docs/adr/8032): its kind and the plan's own setback where the plan gives one, m.
  */
 export type SiteEdge = { kind?: SiteEdgeKind, setback?: number, };

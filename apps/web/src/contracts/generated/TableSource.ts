@@ -21,7 +21,7 @@ keyColumn?: number, } | { "kind": "blocks", names?: Array<string>, by?: string, 
  */
 units?: Array<Array<string>>, 
 /**
- * Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has
+ * Kat kat (docs/adr/8029; `.kcad` schema 221): a units schedule's row for each group on each storey it has
  * rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
  */
 byLevel?: boolean, } | { "kind": "extraction" } & ExtractionSource | { "kind": "zoning", } | { "kind": "parking", } | { "kind": "shelter", };

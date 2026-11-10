@@ -17,7 +17,7 @@ geo: boolean,
  */
 layers: boolean, 
 /**
- * PDF/A-2b (ISO 19005-2; docs/adr/3037): XMP metadata, an sRGB output intent and no device CMYK, the file the
+ * PDF/A-2b (ISO 19005-2; docs/adr/8037): XMP metadata, an sRGB output intent and no device CMYK, the file the
  * 2026 digital project regulation asks a drawing as ([`archive`]).
  */
 pdfa?: boolean, };

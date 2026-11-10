@@ -80,17 +80,17 @@ pub const TOOLS: &[&str] = &[
     wall::ID,
     wall_from_lines::ID,
     wall_rectangle::ID,
-    // Oda (docs/adr/3021).
+    // Oda (docs/adr/8021).
     wall_rectangle::ROOM_ID,
     crate::wall_partition::ID,
     // Duvarı kaydır (docs/adr/0790 §1).
     crate::wall_shift::ID,
     crate::wall_dimensions::ID,
     crate::plan_dimensions::ID,
-    // Doğrama kodları (docs/adr/3028).
+    // Doğrama kodları (docs/adr/8028).
     crate::opening_codes_tool::ID,
     crate::parcel_tool::ID,
-    // Kaçış yolları (docs/adr/3035 §2).
+    // Kaçış yolları (docs/adr/8035 §2).
     crate::escape_tool::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
@@ -126,7 +126,7 @@ pub const TOOLS: &[&str] = &[
     arch_tools::STAIR_ID,
     arch_tools::SPIRAL_ID,
     arch_tools::RAMP_ID,
-    // docs/adr/3041 §1: Kiriş.
+    // docs/adr/8041 §1: Kiriş.
     crate::beam_tools::BEAM_ID,
     arch_tools::GRID_NUMBER_ID,
     crate::grid_system::ID,
@@ -442,7 +442,7 @@ pub struct Session {
     cursor: Option<Vec2>,
     /// How many tools have started ([`Session::runs`]).
     runs: u64,
-    /// The layer the running tool writes on, by name, as last settled (docs/adr/3008): the panel's Katman.
+    /// The layer the running tool writes on, by name, as last settled (docs/adr/8008): the panel's Katman.
     layer: Option<String>,
 }
 
@@ -502,7 +502,7 @@ impl Session {
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
-            // Oda (docs/adr/3021): the rectangle's walls, its room and tag.
+            // Oda (docs/adr/8021): the rectangle's walls, its room and tag.
             wall_rectangle::ROOM_ID => Box::new(wall_rectangle::WallRectangle::room()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
             crate::wall_shift::ID => Box::new(crate::wall_shift::WallShift::new()),
@@ -513,9 +513,9 @@ impl Session {
             crate::opening_codes_tool::ID => {
                 Box::new(crate::opening_codes_tool::OpeningCodes::new())
             }
-            // Parsel (docs/adr/3032).
+            // Parsel (docs/adr/8032).
             crate::parcel_tool::ID => Box::new(crate::parcel_tool::ParcelTool::new()),
-            // Kaçış yolları (docs/adr/3035 §2).
+            // Kaçış yolları (docs/adr/8035 §2).
             crate::escape_tool::ID => Box::new(crate::escape_tool::EscapeRoutes::new()),
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
@@ -994,7 +994,7 @@ impl Session {
         self.see_layer(cx);
     }
 
-    /// The running tool's layer, by name (docs/adr/3008): its kind's with the layer key on, else the active one;
+    /// The running tool's layer, by name (docs/adr/8008): its kind's with the layer key on, else the active one;
     /// none for a tool of no Mimari object.
     pub fn layer_shown(&self) -> Option<&str> {
         self.layer.as_deref()
@@ -1935,7 +1935,7 @@ impl Session {
             tool.document_changed(cx);
         }
     }
-    /// The running tool's settings the value field offers after its locks, in Tab's order (docs/adr/3018).
+    /// The running tool's settings the value field offers after its locks, in Tab's order (docs/adr/8018).
     pub fn cursor_settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
         let Some(tool) = self.tool.as_ref() else {
             return Vec::new();
@@ -2053,7 +2053,7 @@ impl Session {
     }
 
     /// Where the temporary dimensions' + stand, those that write a permanent dimension, while no tool runs
-    /// (docs/adr/3019).
+    /// (docs/adr/8019).
     pub fn temporary_permanents(&self) -> Vec<Vec2> {
         if self.tool.is_some() {
             return Vec::new();

@@ -1,4 +1,4 @@
-# M39 tadilat takımı (docs/adr/3039 §6): the survey flat (walls and rooms Mevcut, its particulars and parcel given);
+# M39 tadilat takımı (docs/adr/8039 §6): the survey flat (walls and rooms Mevcut, its particulars and parcel given);
 # the wall between the bedrooms İptal; in Yeni durum a door between Salon and Yatak odası 1 (İlave) and a new
 # partition in Salon (İlave); Salon's west window İptal; back to Tümü. Proje › Ruhsat takımı: Tadilat projesi is
 # ticked; the set says which rooms the tadilat changes without saying so; undone. Those rooms İptal, Yeni durum's

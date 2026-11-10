@@ -1,4 +1,4 @@
-//! Grafik doğrama listesi (M38, docs/adr/3038 §6): the acceptance apartment's door and window types side by side, each
+//! Grafik doğrama listesi (M38, docs/adr/8038 §6): the acceptance apartment's door and window types side by side, each
 //! with its code, its elevation with Türkiye's opening lines, its rough size, sill, opening, frame and leaves, U value
 //! and count; the list is a block the document writes again when a type or an opening changes; in the permit set it is
 //! a sheet of its own at 1/50 (EK-2 LS/MMC).
@@ -49,7 +49,7 @@ fn the_apartment_s_joinery_list_draws_each_type_and_follows_the_drawing() {
     let _ = crate::acceptance_flat_tests::drawn(&mut app);
     let _ = app.update(Message::Run("tool.openingCodes"));
     let _ = app.submit_line("");
-    // The windows' frame, glass and U value (docs/adr/3038 §5).
+    // The windows' frame, glass and U value (docs/adr/8038 §5).
     run(
         &mut app,
         "cad.openingtypes.edit",

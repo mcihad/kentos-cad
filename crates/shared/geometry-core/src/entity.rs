@@ -653,7 +653,7 @@ pub enum Shape {
         at: Vec2,
         column: crate::geom::arch::ColumnSpec,
     },
-    /// A beam (docs/adr/3041 §1): its axis and its band, drawn dashed over the plan's cut.
+    /// A beam (docs/adr/8041 §1): its axis and its band, drawn dashed over the plan's cut.
     Beam {
         pts: Vec<Vec2>,
         beam: crate::geom::beam::BeamSpec,

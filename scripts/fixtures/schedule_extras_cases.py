@@ -12,7 +12,7 @@ The rules (docs/adr/0733 §2–§6, docs/adr/0344 §3):
   phase its own.
 - A space's finishes are its own fields; its baseboard its perimeter less its doorways (none here: its perimeter).
 - Rows in the drawing's order, sorted by the keys (numbers by value, words in the natural order, a storey by its
-  elevation, the lowest first (docs/adr/3038), empties last), alike rows merged when grouped (summed: count, area,
+  elevation, the lowest first (docs/adr/8038), empties last), alike rows merged when grouped (summed: count, area,
   perimeter, baseboard).
 - A sort key with `header` puts its value before each group, across the row (merged), bold; with `footer` after it
   “‹value› toplamı” in its column (or the first not summed) and the group's sums, bold; an inner key's footer before
@@ -85,7 +85,7 @@ SEED = {
     7: ("insert", "donati", *insert(B_KOLTUK, P(1, 1), {"level": "kat-1"})),
     8: ("insert", "donati", *insert(B_ANTET, P(20, 20))),
     9: ("insert", "kilitli", *insert(B_LAVABO, P(6, 2), {"level": "zemin"})),
-    # The room list's stair and railings (docs/adr/3038).
+    # The room list's stair and railings (docs/adr/8038).
     10: ("space", "mahal", space("103", "Merdiven", None, "zemin", (8, 0, 11, 4),
                                  {"floor": "Granit", "stair": "Granit basamak", "railing": "Ahşap küpeşte"}), {}),
 }
@@ -109,7 +109,7 @@ TITLES = {"type": "Tür", "category": "Kategori", "space": "Mahal", "level": "Ka
           "number": "No", "name": "Ad", "usage": "Kullanım", "floorFinish": "Döşeme", "baseFinish": "Süpürgelik",
           "wallFinish": "Duvar kaplaması", "ceilingFinish": "Tavan", "area": "Alan", "perimeter": "Çevre",
           "baseboard": "Süpürgelik boyu",
-          # The room list's (docs/adr/3038).
+          # The room list's (docs/adr/8038).
           "sillFinish": "Denizlik ve parapet", "stairFinish": "Basamak ve rıht", "railingFinish": "Küpeşte ve korkuluk",
           "doors": "Kapı", "windows": "Pencere"}
 LENGTHS = {"perimeter", "baseboard"}
@@ -272,7 +272,7 @@ def rows_of(objs, src):
                 x, y = a["vals"][j], b["vals"][j]
                 storeys = [l["name"] for l in sorted(LEVELS, key=lambda l: l["elevation"])]
                 if columns[j]["field"] == "level" and a["texts"][j] in storeys and b["texts"][j] in storeys:
-                    # A storey by its elevation (docs/adr/3038).
+                    # A storey by its elevation (docs/adr/8038).
                     ra, rb = storeys.index(a["texts"][j]), storeys.index(b["texts"][j])
                     o = (ra > rb) - (ra < rb)
                 elif x[0] != "text" and y[0] != "text":
@@ -490,7 +490,7 @@ FIN = [{"field": f} for f in ("number", "name", "floorFinish", "baseFinish", "wa
                               "baseboard")]
 SP = {"layerId": "cizelge", "at": P(30, 0), "of": "spaces"}
 BY_SPACE = [{"field": "space"}, {"field": "type"}, {"field": "count"}]
-# Mahal listesi (docs/adr/3038): storey (its heading), number, name, the finishes, the doors and windows.
+# Mahal listesi (docs/adr/8038): storey (its heading), number, name, the finishes, the doors and windows.
 ROOM_LIST = [{"field": f} for f in ("level", "number", "name", "floorFinish", "baseFinish", "wallFinish",
                                     "ceilingFinish", "doors", "windows", "sillFinish", "stairFinish",
                                     "railingFinish")]
@@ -615,7 +615,7 @@ def edit_cases():
             "cell_computed", f"“{title}” sütunu çizimden hesaplanır; düzenlenmez. Kaynağın kendi alanını değiştirin.",
             "operation.column")))
     total = {**SP, "columns": FIN, "total": True}
-    # The total row: after every space's row (the room list's stair room is the fourth, docs/adr/3038).
+    # The total row: after every space's row (the room list's stair room is the fourth, docs/adr/8038).
     rooms = sum(1 for k, *_ in SEED.values() if k == "space")
     c.add("Ret: genel toplamın satırı", edit(total, rooms + 1, 2, "X", refusal(
         "cell_out_of_range",

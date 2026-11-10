@@ -115,8 +115,8 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                     Found::Project(t) => OpeningType {
                         id: id.clone(),
                         name: name.clone(),
-                        // A copy is another type: its code is not the original's (docs/adr/3028); its frame and
-                        // leaves and its U value are (docs/adr/3038).
+                        // A copy is another type: its code is not the original's (docs/adr/8028); its frame and
+                        // leaves and its U value are (docs/adr/8038).
                         code: None,
                         version: 1,
                         source: None,
@@ -162,7 +162,7 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
             }
             let mut new = types::changed(&old, change, "operation.change")?;
             let fields = new.differs_from(&old);
-            // Its frame and leaves and its U value are the type's own (docs/adr/3038): the openings do not keep them,
+            // Its frame and leaves and its U value are the type's own (docs/adr/8038): the openings do not keep them,
             // so a change of them alone writes the type and keeps its version.
             let specs = new.material != old.material || new.u_value != old.u_value;
             if fields.is_empty() && !specs {

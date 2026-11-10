@@ -47,6 +47,6 @@ type?: string,
  */
 tag?: string, fill?: boolean, 
 /**
- * Its material (docs/adr/3041 §2); absent: Betonarme.
+ * Its material (docs/adr/8041 §2); absent: Betonarme.
  */
 material?: string, arch?: ArchInfo, attrs?: { [key in string]: string }, };

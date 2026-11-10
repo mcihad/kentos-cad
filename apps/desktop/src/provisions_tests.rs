@@ -1,4 +1,4 @@
-//! Otopark ve sığınak hesapları (M36, docs/adr/3036): Otopark Yönetmeliği Ek-1 and Sığınak Yönetmeliği 7–8 read from the
+//! Otopark ve sığınak hesapları (M36, docs/adr/8036): Otopark Yönetmeliği Ek-1 and Sığınak Yönetmeliği 7–8 read from the
 //! building program's units, live tables placed from Metraj ▾, and the Mevzuat group's findings.
 
 use kentos_launch::Module;

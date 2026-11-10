@@ -1,6 +1,6 @@
-//! Mahal listesinin kapı ve pencereleri (docs/adr/3038; M38): each door and window in the room it serves, as Planlı
+//! Mahal listesinin kapı ve pencereleri (docs/adr/8038; M38): each door and window in the room it serves, as Planlı
 //! Alanlar İmar Yönetmeliği 57(29) lists a room's "kapı-pencere kasa ve kanatları" by the room's code. The rule is the
-//! one Doğrama kodları numbers the openings by (docs/adr/3028), so a room's number on its doors and its row in the list
+//! one Doğrama kodları numbers the openings by (docs/adr/8028), so a room's number on its doors and its row in the list
 //! agree:
 //!
 //! - a door between a room and a corridor, hall or the like (geçiş mahalleri) is the room's; between two rooms the one
@@ -82,7 +82,7 @@ impl Document {
             .unwrap_or_else(|| f.size_cm())
     }
 
-    /// The room an opening serves, among `rooms` (docs/adr/3028's rule).
+    /// The room an opening serves, among `rooms` (docs/adr/8028's rule).
     fn served_room(&self, f: &OpeningFields, rooms: &[Room]) -> Option<Slot> {
         let (_, left, right) = opening_sides(f)?;
         let level = self.wall_of(&f.host).and_then(|w| w.arch.level);
@@ -108,7 +108,7 @@ impl Document {
         Some(pick.1)
     }
 
-    /// Every room's doors and windows (docs/adr/3038), by the room's slot; a room no door or window serves is left out.
+    /// Every room's doors and windows (docs/adr/8038), by the room's slot; a room no door or window serves is left out.
     pub fn room_openings(&self) -> HashMap<Slot, RoomOpenings> {
         let out = self.option_out();
         let rooms: Vec<Room> = self

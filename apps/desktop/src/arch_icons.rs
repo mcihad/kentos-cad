@@ -1,4 +1,4 @@
-//! Mimari's icons (M16, docs/adr/3016; plan ADV-10): every command of the Mimari tab and of the building's context
+//! Mimari's icons (M16, docs/adr/8016; plan ADV-10): every command of the Mimari tab and of the building's context
 //! tabs has a picture of its own. No two of the tab's commands share one, and none of the building's own commands
 //! borrows a drawing tool's (Duvar ölçüleri had Ölçülendirme's, Açıklık dağıt Dizi's, Duvarı kaydır Paralel
 //! kaydır's). A selection filter's icon is its kind's on purpose (Duvarları seç shows the wall), so it is no borrower.

@@ -451,12 +451,12 @@ OPENING_TYPE_FIELDS = ("width", "leaves", "operation", "swing", "showSwing", "fr
                        "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard",
                        "mullions", "transoms", "useZone")
 SCHEDULE_SIZED_FIELDS = ("roughWidth", "unitWidth", "leafWidth", "clearWidth")
-# Schema 208 (docs/adr/3028): an opening's type's joinery code as a schedule's column.
+# Schema 220 (docs/adr/8028): an opening's type's joinery code as a schedule's column.
 SCHEDULE_CODE_FIELDS = ("code",)
-# Schema 209 (docs/adr/3029): a units schedule's regulation areas.
+# Schema 221 (docs/adr/8029): a units schedule's regulation areas.
 SCHEDULE_PAIY_FIELDS = ("paiyNet", "paiyGross", "paiyShare", "generalGross")
 SCHEDULE_LAND_FIELDS = ("nature", "annexNet", "annexGross", "annexes", "totalGross", "landShare")
-# Schema 216 (docs/adr/3038): Mahal listesi's columns.
+# Schema 228 (docs/adr/8038): Mahal listesi's columns.
 SCHEDULE_ROOM_LIST_FIELDS = ("sillFinish", "stairFinish", "railingFinish", "doors", "windows")
 # Schema 140 (docs/adr/0773): the building program (`arch.program`: buildings, wings, units, design brief, fixture
 # clearances), a space's group (`unit`) and a schedule's program fields (`unit`, `target`, `targetDiff`); written only
@@ -573,49 +573,49 @@ SCHEMA_WITH_ROAD_CLOUD_HEIGHTS = 202
 SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS = 203
 # Docs/adr/1041: a volume approval's sources and algorithm, what its figures were computed from.
 SCHEMA_WITH_ROAD_APPROVAL_SOURCES = 204
-# Docs/adr/3012: the project's plan cut height, the height its plans are cut at.
-SCHEMA_WITH_PLAN_CUT = 205
-# Docs/adr/3013: how the project's plan lines are weighted (lineGroups: own, byScale).
-SCHEMA_WITH_LINE_GROUPS = 206
-# Docs/adr/3027: a tag framed by an ellipse round its first line (a room's number, Mimarlar Odası's).
-SCHEMA_WITH_ELLIPSE_TAGS = 207
-# Docs/adr/3028: a door or window type's joinery code (openingTypes[].code) and a tag naming it or an opening's size.
-SCHEMA_WITH_OPENING_CODES = 208
-# Docs/adr/3029: a units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas.
-SCHEMA_WITH_PAIY_AREAS = 209
-# Docs/adr/3030: the parcel's zoning (arch.zoning) and a brief's floor area ratio count (briefs[].emsal).
-SCHEMA_WITH_ZONING = 210
-# Docs/adr/3031: kat irtifakı: annexes (kind annex, annexOf), a unit's nature and value factor (landFactor), the land
+# Docs/adr/8012: the project's plan cut height, the height its plans are cut at.
+SCHEMA_WITH_PLAN_CUT = 217
+# Docs/adr/8013: how the project's plan lines are weighted (lineGroups: own, byScale).
+SCHEMA_WITH_LINE_GROUPS = 218
+# Docs/adr/8027: a tag framed by an ellipse round its first line (a room's number, Mimarlar Odası's).
+SCHEMA_WITH_ELLIPSE_TAGS = 219
+# Docs/adr/8028: a door or window type's joinery code (openingTypes[].code) and a tag naming it or an opening's size.
+SCHEMA_WITH_OPENING_CODES = 220
+# Docs/adr/8029: a units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas.
+SCHEMA_WITH_PAIY_AREAS = 221
+# Docs/adr/8030: the parcel's zoning (arch.zoning) and a brief's floor area ratio count (briefs[].emsal).
+SCHEMA_WITH_ZONING = 222
+# Docs/adr/8031: kat irtifakı: annexes (kind annex, annexOf), a unit's nature and value factor (landFactor), the land
 # shares' whole (program.landTotal) and a units schedule's kat irtifakı fields.
-SCHEMA_WITH_LAND_SHARES = 211
-# Docs/adr/3032: the site plan (arch.site: the parcel, its edges' kinds and setbacks, ±0.00's elevation, the setback
+SCHEMA_WITH_LAND_SHARES = 223
+# Docs/adr/8032: the site plan (arch.site: the parcel, its edges' kinds and setbacks, ±0.00's elevation, the setback
 # line).
-SCHEMA_WITH_SITE_PLAN = 212
-# Docs/adr/3034: the municipality's regulation the audit reads (arch.localRules).
-SCHEMA_WITH_LOCAL_RULES = 213
-# Docs/adr/3035: the building's sprinkler system (arch.sprinklers).
-SCHEMA_WITH_SPRINKLERS = 214
-# Docs/adr/3036: Otopark and Sığınak hesabı (a table's source parking, shelter).
-SCHEMA_WITH_PROVISION_TABLES = 215
-# Docs/adr/3038: Mahal listesi (a space's finishes sill, stair, railing; a spaces schedule's room list columns).
-SCHEMA_WITH_ROOM_LIST = 216
-# Docs/adr/3038: a door or window type's frame and leaves and its U value (openingTypes[].material, uValue).
-SCHEMA_WITH_OPENING_SPECS = 217
-# Docs/adr/3039: a door's or window's own phase (an opening's `phase`).
-SCHEMA_WITH_OPENING_PHASES = 218
-# Docs/adr/3039 §5: the Tadilat projesi view (`renovation`), the project's phaseView or a recipe's phase.
-SCHEMA_WITH_RENOVATION_VIEW = 219
-# Docs/adr/3040 §2: a slab's layers besides its structure (a slab's `layers`: kaplama, şap, yalıtım over it, sıva under).
-SCHEMA_WITH_SLAB_LAYERS = 220
-# Docs/adr/3040 §3: a room's floor offset (`floorOffset`, Döşeme kot farkı) and asma tavan (`suspendedCeiling`).
-SCHEMA_WITH_ROOM_HEIGHTS = 221
-# Docs/adr/3041 §1: beams (`beam`), the drawing's only.
-SCHEMA_WITH_BEAMS = 222
-# Docs/adr/3041 §2: a column's material (`material` of a column).
-SCHEMA_WITH_COLUMN_MATERIAL = 223
-# Docs/adr/3041 §3: a beam's role (`role`: lintel, bond beam) and its base over its storey's floor (`baseOffset`).
-SCHEMA_WITH_BEAM_ROLES = 224
-# The plan cut height's range in metres (docs/adr/3012).
+SCHEMA_WITH_SITE_PLAN = 224
+# Docs/adr/8034: the municipality's regulation the audit reads (arch.localRules).
+SCHEMA_WITH_LOCAL_RULES = 225
+# Docs/adr/8035: the building's sprinkler system (arch.sprinklers).
+SCHEMA_WITH_SPRINKLERS = 226
+# Docs/adr/8036: Otopark and Sığınak hesabı (a table's source parking, shelter).
+SCHEMA_WITH_PROVISION_TABLES = 227
+# Docs/adr/8038: Mahal listesi (a space's finishes sill, stair, railing; a spaces schedule's room list columns).
+SCHEMA_WITH_ROOM_LIST = 228
+# Docs/adr/8038: a door or window type's frame and leaves and its U value (openingTypes[].material, uValue).
+SCHEMA_WITH_OPENING_SPECS = 229
+# Docs/adr/8039: a door's or window's own phase (an opening's `phase`).
+SCHEMA_WITH_OPENING_PHASES = 230
+# Docs/adr/8039 §5: the Tadilat projesi view (`renovation`), the project's phaseView or a recipe's phase.
+SCHEMA_WITH_RENOVATION_VIEW = 231
+# Docs/adr/8040 §2: a slab's layers besides its structure (a slab's `layers`: kaplama, şap, yalıtım over it, sıva under).
+SCHEMA_WITH_SLAB_LAYERS = 232
+# Docs/adr/8040 §3: a room's floor offset (`floorOffset`, Döşeme kot farkı) and asma tavan (`suspendedCeiling`).
+SCHEMA_WITH_ROOM_HEIGHTS = 233
+# Docs/adr/8041 §1: beams (`beam`), the drawing's only.
+SCHEMA_WITH_BEAMS = 234
+# Docs/adr/8041 §2: a column's material (`material` of a column).
+SCHEMA_WITH_COLUMN_MATERIAL = 235
+# Docs/adr/8041 §3: a beam's role (`role`: lintel, bond beam) and its base over its storey's floor (`baseOffset`).
+SCHEMA_WITH_BEAM_ROLES = 236
+# The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
     """A road project's settings written before schema 191 (docs/adr/0977): its grades were percent, each is divided
@@ -7639,7 +7639,7 @@ class _Schema:
         if kind == "slab" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında döşeme olamaz")
-        # Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/3041 §1).
+        # Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/8041 §1).
         if kind == "beam" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında kiriş olamaz")
@@ -8956,15 +8956,15 @@ class _Schema:
     def table_schedule(self, v):
         if self.extraction and isinstance(v, dict) and v.get("kind") == "extraction":
             return self.extraction_source(v)
-        # Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu; its rows are the document's.
+        # Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu; its rows are the document's.
         if isinstance(v, dict) and v.get("kind") == "zoning":
             if not self.zoning:
-                self.fail("unknown_field", "emsal ve TAKS tablosunun kaynağı şema 210'dan beri yazılır")
+                self.fail("unknown_field", "emsal ve TAKS tablosunun kaynağı şema 222'den beri yazılır")
             return self.fields({"kind": (self.enum(("zoning",)), True)})(v)
-        # Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı; their rows are the document's.
+        # Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı; their rows are the document's.
         if isinstance(v, dict) and v.get("kind") in ("parking", "shelter"):
             if not self.provision_tables:
-                self.fail("unknown_field", "otopark ve sığınak hesabı tablolarının kaynağı şema 215'ten beri yazılır")
+                self.fail("unknown_field", "otopark ve sığınak hesabı tablolarının kaynağı şema 227'den beri yazılır")
             return self.fields({"kind": (self.enum(("parking", "shelter")), True)})(v)
         if self.tags and isinstance(v, dict) and v.get("kind") == "schedule":
             return self.arch_schedule(v)
@@ -8998,13 +8998,13 @@ class _Schema:
             if not t.strip() or any(unicodedata.category(c) == "Cc" for c in t) or len(t) > 200:
                 self.fail("bad_value", "tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir")
             return t
-        later = {**{f: ("şema 208", self.opening_codes) for f in SCHEDULE_CODE_FIELDS},
-                 **{f: ("şema 209", self.paiy_areas) for f in SCHEDULE_PAIY_FIELDS},
-                 **{f: ("şema 211", self.land_shares) for f in SCHEDULE_LAND_FIELDS},
-                 **{f: ("şema 216", self.room_list) for f in SCHEDULE_ROOM_LIST_FIELDS}}
+        later = {**{f: ("şema 220", self.opening_codes) for f in SCHEDULE_CODE_FIELDS},
+                 **{f: ("şema 221", self.paiy_areas) for f in SCHEDULE_PAIY_FIELDS},
+                 **{f: ("şema 223", self.land_shares) for f in SCHEDULE_LAND_FIELDS},
+                 **{f: ("şema 228", self.room_list) for f in SCHEDULE_ROOM_LIST_FIELDS}}
 
         def field_of(read):
-            # A field a later schema brought is unknown before it (docs/adr/3028, 3029), as the Rust reader says.
+            # A field a later schema brought is unknown before it (docs/adr/8028, 8029), as the Rust reader says.
             def f(x):
                 if isinstance(x, str) and x in later and not later[x][1]:
                     self.fail("unknown_field", f"çizelge sütunu “{x}” {later[x][0]} ister")
@@ -9036,7 +9036,7 @@ class _Schema:
                          "group": (true_only, False), "total": (true_only, False),
                          "members": (self.array(self.array(self.text)), False),
                          **({"units": (self.array(self.array(self.text)), False)} if self.unit_schedules else {}),
-                         # Schema 209 (docs/adr/3029): a units schedule storey by storey.
+                         # Schema 221 (docs/adr/8029): a units schedule storey by storey.
                          **({"byLevel": (true_only, False)} if self.paiy_areas else {})})(v)
         if not 1 <= len(d["columns"]) <= 30:
             self.path.append("columns")
@@ -9073,8 +9073,8 @@ class _Schema:
             if x == "circle":
                 self.fail("bad_value", "varsayılan çerçeve (circle) yazılmaz")
             if x == "ellipse" and not self.ellipse_tags:
-                # Schema 207 (docs/adr/3027): before it a tag's frame was one of five.
-                self.fail("unknown_field", "etiketin elips çerçevesi (ellipse) şema 207 ister")
+                # Schema 219 (docs/adr/8027): before it a tag's frame was one of five.
+                self.fail("unknown_field", "etiketin elips çerçevesi (ellipse) şema 219 ister")
             return x
         def true_only(x):
             x = self.bool(x)
@@ -9097,8 +9097,8 @@ class _Schema:
             for name in [part.split("}")[0] for part in c.split("{")[1:]]:
                 if name in ("code", "size"):
                     if not self.opening_codes:
-                        # Schema 208 (docs/adr/3028): before it neither was a place.
-                        self.fail("unknown_field", "etiketin doğrama kodu ya da ölçü yeri ({code}, {size}) şema 208 ister")
+                        # Schema 220 (docs/adr/8028): before it neither was a place.
+                        self.fail("unknown_field", "etiketin doğrama kodu ya da ölçü yeri ({code}, {size}) şema 220 ister")
                     continue
                 if not (name in TAG_PLACES or (name.startswith("attr:") and name[5:].strip())):
                     bad(f"Şablonda bilinmeyen yer “{{{name}}}”.")
@@ -9192,7 +9192,7 @@ class _Schema:
                          **({"bound": (self.slab_bound, False)} if self.building_parts else {}),
                          # Schema 148 (docs/adr/0785): the project material it binds to.
                          **({"materialId": (self.material_ref, False)} if self.materials else {}),
-                         # Schema 220 (docs/adr/3040 §2): its layers besides its structure.
+                         # Schema 232 (docs/adr/8040 §2): its layers besides its structure.
                          **({"layers": (self.slab_layers_field, False)} if self.slab_layers else {})})(v)
         bad = lambda words: self.fail("bad_value", words)  # noqa: E731
         if not f["parts"]:
@@ -9213,7 +9213,7 @@ class _Schema:
         return f
 
     def beam_fields(self, v):
-        """A beam's fields (schema 222, docs/adr/3041 §1): its axis (at least two points, at most 1000, none twice in a
+        """A beam's fields (schema 234, docs/adr/8041 §1): its axis (at least two points, at most 1000, none twice in a
         row), its width (over 0, at most 3 m) and height (over 0, at most 5 m); its justification, offset (at most ±10
         m), number and material only when not their defaults. The contract's rule (`BeamFields::problem`)."""
         def text(x):
@@ -9236,7 +9236,7 @@ class _Schema:
             if r == "beam":
                 self.fail("bad_value", "varsayılan tür ('beam') yazılmaz")
             return r
-        # Schema 224 (docs/adr/3041 §3): its role and its base over its storey's floor.
+        # Schema 236 (docs/adr/8041 §3): its role and its base over its storey's floor.
         roles = {"role": (role, False), "baseOffset": (self.float, False)} if self.beam_roles else {}
         f = self.fields({"pts": (self.array(self.jpoint), True), "width": (self.float, True), "height": (self.float, True),
                          "justify": (justify, False), "offset": (offset, False), **roles, "tag": (text, False),
@@ -9262,7 +9262,7 @@ class _Schema:
         return f
 
     def slab_layers_field(self, v):
-        """A slab's layers besides its structure (schema 220, docs/adr/3040 §2): those over it and those under it, each
+        """A slab's layers besides its structure (schema 232, docs/adr/8040 §2): those over it and those under it, each
         list only when not empty, each layer its kind, its thickness (above 0, at most 1 m) and its material; at most 8
         a side. The contract's rule (`SlabLayers::problem`)."""
         layer = self.fields({"kind": (self.enum(("finish", "screed", "insulation", "waterproofing", "plaster")), True),
@@ -9944,7 +9944,7 @@ class _Schema:
                                       "ceiling": (text_not_blank, False),
                                       # Schema 131 (docs/adr/0733 §3): the skirting's finish.
                                       **({"base": (text_not_blank, False)} if self.fixtures else {}),
-                                      # Schema 216 (docs/adr/3038): the room list's finishes.
+                                      # Schema 228 (docs/adr/8038): the room list's finishes.
                                       **({"sill": (text_not_blank, False), "stair": (text_not_blank, False),
                                           "railing": (text_not_blank, False)} if self.room_list else {})}), False),
             "broken": (self.enum(("lostEnclosure", "noFreeArea", "invalidBoundarySource", "sourceUnavailable") if self.space_sources else ("lostEnclosure", "noFreeArea", "invalidBoundarySource") if self.space_columns else ("lostEnclosure",)), False),
@@ -9968,7 +9968,7 @@ class _Schema:
             # Schema 140 (docs/adr/0773 §1): the program's group it belongs to.
             table["unit"] = (text_not_blank, False)
         if self.room_heights:
-            # Schema 221 (docs/adr/3040 §3): its floor offset and its asma tavan.
+            # Schema 233 (docs/adr/8040 §3): its floor offset and its asma tavan.
             table["floorOffset"] = (self.float, False)
             table["suspendedCeiling"] = (self.float, False)
         if self.space_voids:
@@ -10053,7 +10053,7 @@ class _Schema:
                 "overrides": (self.array(self.enum(OPENING_TYPE_FIELDS + (SPECIAL_TYPE_FIELDS if self.special_doors else ())
                                                    + (MULTI_SLIDE_TYPE_FIELDS if self.multi_slide else ()))), False),
                 "build": (self.opening_build, False)} if self.opening_types else {}),
-            # Schema 218 (docs/adr/3039): its own phase; absent: its wall's.
+            # Schema 230 (docs/adr/8039): its own phase; absent: its wall's.
             **({"phase": (self.enum(ARCH_PHASES), False)} if self.opening_phases else {}),
         })(v)
 
@@ -10250,7 +10250,7 @@ class _Schema:
                        "type": (self.text, False), "tag": (self.text, False), "fill": (unless(False, self.bool), False),
                        "grids": (self.array(self.text), False), "place": (self.text, False),
                        "broken": (self.enum(("gridGone",)), False), "arch": arch,
-                       # Schema 223 (docs/adr/3041 §2): its material.
+                       # Schema 235 (docs/adr/8041 §2): its material.
                        **({"material": (self.text, False)} if self.column_material else {})},
             "stair": {"pts": (points, True), "bulges": (stair_bulges, False), "width": (self.float, True), "risers": (self.uint(32), True),
                       "riserHeight": (self.float, True), "tread": (self.float, True), "landing": (self.float, False),
@@ -10471,7 +10471,7 @@ class _Schema:
             if not 1 <= n <= 100_000_000:
                 self.fail("bad_value", "arsa payı paydası 1 ile 100000000 arasında bir tam sayıdır")
             return n
-        # Schema 211 (docs/adr/3031): an annex and its unit, a unit's nature and value factor, the land shares' whole.
+        # Schema 223 (docs/adr/8031): an annex and its unit, a unit's nature and value factor, the land shares' whole.
         land = self.land_shares
         unit = self.fields({"id": (word, True), "number": (word, True), "name": (word, False),
                             "kind": (self.enum(("common", "outdoor") + (("annex",) if land else ())), False),
@@ -10482,7 +10482,7 @@ class _Schema:
                              "minWidth": (positive, False), "minPassage": (positive, False),
                              "adjacent": (self.array(word), False), "reach": (self.array(word), False),
                              "outdoor": (lambda x: x if x is True else self.fail("bad_value", "dış mahal yalnız true yazılır"), False),
-                             # Schema 210 (docs/adr/3030): how its rooms count for the floor area ratio.
+                             # Schema 222 (docs/adr/8030): how its rooms count for the floor area ratio.
                              **({"emsal": (self.enum(("included", "exempt", "outside")), False)} if self.zoning else {})})
         clearance = self.fields({"block": (word, True), "width": (positive, True), "depth": (positive, True)})
         p = self.fields({"buildings": (self.array(building), False), "units": (self.array(unit), False),
@@ -10513,7 +10513,7 @@ class _Schema:
                 self.fail("bad_value", "bölümün binası programda yok")
             if "wing" in u and (b is None or u["wing"] not in [w["id"] for w in b.get("wings", [])]):
                 self.fail("bad_value", "bölümün kanadı binasının değil")
-            # Docs/adr/3031: an annex names its independent unit; only an annex does; a value factor is a unit's.
+            # Docs/adr/8031: an annex names its independent unit; only an annex does; a value factor is a unit's.
             annex = u.get("kind") == "annex"
             if annex and "annexOf" not in u:
                 self.fail("bad_value", "eklentinin ait olduğu bağımsız bölüm yazılmalı")
@@ -11583,22 +11583,22 @@ class _Schema:
                          **({"program": (self.program_, False)} if self.building_program else {}),
                          # Schema 148 (docs/adr/0785): the project's building materials.
                          **({"materials": (self.array(self.material_), False)} if self.materials else {}),
-                         # Schema 205 (docs/adr/3012): the height the project's plans are cut at.
+                         # Schema 217 (docs/adr/8012): the height the project's plans are cut at.
                          **({"cutHeight": (self.float, False)} if self.plan_cut else {}),
-                         # Schema 206 (docs/adr/3013): how the plan's lines are weighted.
+                         # Schema 218 (docs/adr/8013): how the plan's lines are weighted.
                          **({"lineGroups": (self.enum(("own", "byScale")), False)} if self.line_groups else {}),
-                         # Schema 210 (docs/adr/3030): the parcel's zoning.
+                         # Schema 222 (docs/adr/8030): the parcel's zoning.
                          **({"zoning": (self.fields({"parcelArea": (self.float, True), "far": (self.float, False),
                                                       "coverage": (self.float, False)}), False)} if self.zoning else {}),
-                         # Schema 212 (docs/adr/3032): the site plan.
+                         # Schema 224 (docs/adr/8032): the site plan.
                          **({"site": (self.fields({"parcel": (self.text, False),
                                                     "edges": (self.array(self.fields({"kind": (self.enum(("front", "back", "public")), False),
                                                                                       "setback": (self.float, False)})), False),
                                                     "datum": (self.float, False), "envelope": (self.text, False)}), False)}
                             if self.site_plan else {}),
-                         # Schema 213 (docs/adr/3034): the municipality's regulation.
+                         # Schema 225 (docs/adr/8034): the municipality's regulation.
                          **({"localRules": (self.enum(("sivas",)), False)} if self.local_rules else {}),
-                         # Schema 214 (docs/adr/3035): the building's sprinkler system.
+                         # Schema 226 (docs/adr/8035): the building's sprinkler system.
                          **({"sprinklers": (self.only_true, False)} if self.sprinklers else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
@@ -11868,7 +11868,7 @@ class _Schema:
                 return x
             return f
         t = self.fields({"id": (self.text, True), "name": (self.text, True), "version": (self.uint(32), True),
-                         # Schema 208 (docs/adr/3028): its joinery code.
+                         # Schema 220 (docs/adr/8028): its joinery code.
                          **({"code": (self.text, False)} if self.opening_codes else {}),
                          "source": (self.text, False), "form": (self.opening_form, True), "width": (self.float, True),
                          "leaves": (unless(1, self.uint(8)), False),
@@ -11876,7 +11876,7 @@ class _Schema:
                          "swing": (self.float, False), "showSwing": (unless(True, self.bool), False),
                          "frame": (self.float, False), "sill": (self.float, False), "head": (self.float, False),
                          "depth": (self.float, False), "build": (self.opening_build, False),
-                         # Schema 217 (docs/adr/3038): its frame and leaves and its U value.
+                         # Schema 229 (docs/adr/8038): its frame and leaves and its U value.
                          **({"material": (self.text, False), "uValue": (self.float, False)}
                             if self.opening_specs else {})})(v)
         i = t["id"]
@@ -12531,7 +12531,7 @@ ENTITY_KINDS = {
     # Schema 81 (docs/adr/0345 §1): a view mark; its fields as one map.
     "viewmark": lambda s: {"viewmark": (s.viewmark_fields, True)},
     "slab": lambda s: {"slab": (s.slab_fields, True)},
-    # Schema 222 (docs/adr/3041 §1): a beam; its fields as one map.
+    # Schema 234 (docs/adr/8041 §1): a beam; its fields as one map.
     "beam": lambda s: {"beam": (s.beam_fields, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {

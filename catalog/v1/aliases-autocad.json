@@ -2,7 +2,7 @@
   "format": "kentos.aliasProfile/1",
   "id": "autocad",
   "title": "AutoCAD takma adları",
-  "source": "AutoCAD'in acad.pgp dosyasındaki varsayılan kısaltmalar ve komut adları; yalnız KentOS'ta karşılığı olanlar ve KentOS'un zaten tanımadıkları (docs/adr/0282); sonda AutoCAD 2027'ye dahil Architecture toolset'in sık kullanılan komutlarından KentOS Mimari'de karşılığı olanlar (WALLADD, DOORADD …; docs/adr/3002).",
+  "source": "AutoCAD'in acad.pgp dosyasındaki varsayılan kısaltmalar ve komut adları; yalnız KentOS'ta karşılığı olanlar ve KentOS'un zaten tanımadıkları (docs/adr/0282); sonda AutoCAD 2027'ye dahil Architecture toolset'in sık kullanılan komutlarından KentOS Mimari'de karşılığı olanlar (WALLADD, DOORADD …; docs/adr/8002).",
   "names": [
     { "name": "ADC", "autocad": "ADCENTER", "command": "file.takeFrom" },
     { "name": "ARRAYRECT", "autocad": "ARRAYRECT", "command": "tool.array" },

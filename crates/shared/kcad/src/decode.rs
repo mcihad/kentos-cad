@@ -1505,7 +1505,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 let at = r.position();
                 named_views =
                     views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates, has.options, has.option_combos)?;
-                // Schema 219 (docs/adr/3039 §5): a recipe's Tadilat projesi view.
+                // Schema 231 (docs/adr/8039 §5): a recipe's Tadilat projesi view.
                 if !has.renovation_view
                     && named_views.iter().any(|v| {
                         v.recipe.as_ref().is_some_and(|x| {
@@ -1516,7 +1516,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(
                         Code::BadValue,
                         at,
-                        "görünüm tarifinin Tadilat projesi görünümü (renovation) şema 219 ister",
+                        "görünüm tarifinin Tadilat projesi görünümü (renovation) şema 231 ister",
                     ));
                 }
             }
@@ -1655,14 +1655,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "projenin kesme yüksekliği şema 205'ten beri yazılır",
+                        "projenin kesme yüksekliği şema 217'den beri yazılır",
                     ));
                 }
                 if !has.line_groups && a.has_line_groups() {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "projenin çizgi grupları şema 206'dan beri yazılır",
+                        "projenin çizgi grupları şema 218'den beri yazılır",
                     ));
                 }
                 if let Some((field, words)) = a.problem() {
@@ -1724,49 +1724,49 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "yağmurlama sistemi (sprinklers) şema 214 ister",
+                        "yağmurlama sistemi (sprinklers) şema 226 ister",
                     ));
                 }
                 if !has.local_rules && a.has_local_rules() {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "yerel imar yönetmeliği (localRules) şema 213 ister",
+                        "yerel imar yönetmeliği (localRules) şema 225 ister",
                     ));
                 }
                 if !has.site_plan && a.has_site() {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "vaziyet planı (site: parsel, kenarları, ±0,00 kotu) şema 212 ister",
+                        "vaziyet planı (site: parsel, kenarları, ±0,00 kotu) şema 224 ister",
                     ));
                 }
                 if !has.land_shares && a.program.has_land_shares() {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "bina programının eklentileri, niteliği, değer katsayısı ve arsa payı paydası şema 211 ister",
+                        "bina programının eklentileri, niteliği, değer katsayısı ve arsa payı paydası şema 223 ister",
                     ));
                 }
                 if !has.zoning && (a.has_zoning() || a.program.has_emsal()) {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "parselin imar durumu (zoning) ve kullanımın emsal sınıfı şema 210 ister",
+                        "parselin imar durumu (zoning) ve kullanımın emsal sınıfı şema 222 ister",
                     ));
                 }
                 if !has.opening_specs && a.has_opening_specs() {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "kapı ve pencere tipinin kasa ve kanadı (material) ve U değeri (uValue) şema 217 ister",
+                        "kapı ve pencere tipinin kasa ve kanadı (material) ve U değeri (uValue) şema 229 ister",
                     ));
                 }
                 if !has.opening_codes && a.has_opening_codes() {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "kapı ve pencere tipinin doğrama kodu (code) şema 208 ister",
+                        "kapı ve pencere tipinin doğrama kodu (code) şema 220 ister",
                     ));
                 }
                 if !has.opening_types && a.has_opening_types() {
@@ -1827,7 +1827,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(
                         Code::BadValue,
                         at,
-                        "projenin Tadilat projesi görünümü (renovation) şema 219 ister",
+                        "projenin Tadilat projesi görünümü (renovation) şema 231 ister",
                     ));
                 }
                 if !has.spaces && a.space_method.is_some() {

@@ -134,7 +134,7 @@ impl NorthArrow {
     fn request(&self, at: Vec2, cx: &Context<'_>) -> NorthCreate {
         NorthCreate {
             at: wire(at),
-            // The symbols' layer (docs/adr/3008).
+            // The symbols' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Symbol, cx),
             north: self.north(),
             size: (self.size != NORTH_SIZE).then_some(self.size),
@@ -411,7 +411,7 @@ impl MaterialLegend {
     fn request(&self, at: Option<Vec2>, cx: &Context<'_>) -> LegendsMaterials {
         LegendsMaterials {
             at: at.map(wire),
-            // The legends' layer (docs/adr/3008).
+            // The legends' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Legend, cx),
             height: (self.height != legends::HEIGHT).then_some(self.height),
             expected_revision: None,
@@ -498,7 +498,7 @@ impl Tool for MaterialLegend {
     }
 
     fn settings(&self, _f: &Format) -> Vec<Setting> {
-        // Its text's height: Yükseklik alone is a building's, Y in the contract (docs/adr/3003).
+        // Its text's height: Yükseklik alone is a building's, Y in the contract (docs/adr/8003).
         vec![Setting::text("H", "Yazı yüksekliği", format!("{} mm", js_number(self.height)))]
     }
 

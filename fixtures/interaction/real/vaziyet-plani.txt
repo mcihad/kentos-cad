@@ -1,4 +1,4 @@
-# M32 (docs/adr/3032): Parsel ve bahçe mesafeleri in the real window at 1440 × 900, on the building site_plan_tests
+# M32 (docs/adr/8032): Parsel ve bahçe mesafeleri in the real window at 1440 × 900, on the building site_plan_tests
 # keeps (parsel.kcad: a 15 × 6 m building of four storeys, a 30 × 18 m parcel drawn round it, 4 m from its south edge).
 fit KentOS Mimari — Yeni proje
 wait 3000

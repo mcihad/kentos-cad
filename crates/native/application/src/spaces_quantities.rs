@@ -165,7 +165,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     continue;
                 }
                 let area = spaces::area_of(&f.parts);
-                // Its inside height: its finished floor to its ceiling (docs/adr/3040 §3).
+                // Its inside height: its finished floor to its ceiling (docs/adr/8040 §3).
                 let height = doc.room_height(f).map(|h| h.inside());
                 // Its asma tavan covers its net floor (its inner faces'), else its rings'.
                 let suspended_ceiling_area = f
@@ -247,7 +247,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     out.stairs.push(stair_row(uid(e), &s.stair));
                 }
             }
-            // Docs/adr/3041 §3.
+            // Docs/adr/8041 §3.
             Entity::Beam(b) if input.usages.is_none() => {
                 if takes(e, &b.beam.arch) {
                     out.beams.push(beam_row(doc, uid(e), &b.beam));
@@ -263,7 +263,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     x.bulges.as_deref(),
                     x.closed,
                 );
-                // Up to the slab over it within its storey (docs/adr/3040 §1): the wall as built.
+                // Up to the slab over it within its storey (docs/adr/8040 §1): the wall as built.
                 let height = doc.wall_height(x);
                 let id = uid(e);
                 let openings = on_wall.get(&id).cloned().unwrap_or_default();
@@ -334,7 +334,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     Ok(out)
 }
 
-/// A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length; a beam's volume under the slab it
+/// A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length; a beam's volume under the slab it
 /// hangs from, a lintel's and a bond beam's whole.
 pub(crate) fn beam_row(doc: &Document, uid: String, b: &kentos_commands::BeamFields) -> kentos_commands::BeamRow {
     let length = b.length();

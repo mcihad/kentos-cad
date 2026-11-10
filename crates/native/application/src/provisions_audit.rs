@@ -1,4 +1,4 @@
-//! Otopark ve sığınak (docs/adr/3036; ADV-22, M36): the parking and the shelter regulations' needs said in Mimari
+//! Otopark ve sığınak (docs/adr/8036; ADV-22, M36): the parking and the shelter regulations' needs said in Mimari
 //! denetim's Mevzuat group beside their tables (`kentos_domain::provisions`): fewer places than Otopark Yönetmeliği
 //! Ek-1 asks, a smaller shelter than Sığınak Yönetmeliği 8/a asks, a shelter over 100 m² with one exit (8/c), a shelter
 //! lower than 2.40 m inside (8/a).
@@ -53,7 +53,7 @@ fn room(doc: &Document, slot: Slot) -> (String, V) {
     }
 }
 
-/// The provisions' findings (docs/adr/3036), each said through `push(said, slots, at)`.
+/// The provisions' findings (docs/adr/8036), each said through `push(said, slots, at)`.
 pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V)) {
     let parking = doc.parking_report();
     if parking.required > 0 && parking.short() {
@@ -138,7 +138,7 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
                 at,
             );
         }
-        // Its inside height: its finished floor to its ceiling (docs/adr/3040 §3); without one, its storey's floor to
+        // Its inside height: its finished floor to its ceiling (docs/adr/8040 §3); without one, its storey's floor to
         // floor (more than the net inside height).
         let Some(Entity::Space(s)) = doc.get(*slot) else {
             continue;

@@ -137,7 +137,7 @@ fn an_empty_construction_draws_as_none() {
     }
 }
 
-/// A built door and window (docs/adr/3010, ADV-15) at 1:200, 1:100, 1:50 and 1:20, each scale's detail as the walls take
+/// A built door and window (docs/adr/8010, ADV-15) at 1:200, 1:100, 1:50 and 1:20, each scale's detail as the walls take
 /// it: what a drawing at each shows, in the symbol's order.
 #[test]
 fn a_door_and_a_window_show_their_parts_by_the_scale() {
@@ -257,7 +257,7 @@ fn a_construction_adds_its_parts() {
     assert!(mullioned >= window + 3, "{window} → {mullioned}");
 }
 
-/// A window over the plan's cut (docs/adr/3012; İTÜ, Teknik Çizim İlkeleri: plan is cut 1.20–1.50 m over the floor, to
+/// A window over the plan's cut (docs/adr/8012; İTÜ, Teknik Çizim İlkeleri: plan is cut 1.20–1.50 m over the floor, to
 /// show the windows): a bathroom's high window, sill 1.6, leaves its wall whole and is drawn dashed, every part of it;
 /// one across the cut (sill 0.9) is cut and drawn solid; a door is cut whatever its heights.
 #[test]

@@ -125,7 +125,7 @@ impl App {
             return label::body("Şablon farkı okunamadı.").into();
         };
         let session = w.session;
-        // The package's own words, read from it (docs/adr/3007): the texts said cm / 1:50 by hand.
+        // The package's own words, read from it (docs/adr/8007): the texts said cm / 1:50 by hand.
         let package = Package::read();
         let choices = [
             Choice::new("Mevcut birim ve çizim ölçeğini koru"),

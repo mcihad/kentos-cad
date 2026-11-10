@@ -1,4 +1,4 @@
-# M35 §2 (docs/adr/3035), 1920 × 1080: the office storey (buro-yangin.kcad), Etkin kat 1. kat from the status bar, then
+# M35 §2 (docs/adr/8035), 1920 × 1080: the office storey (buro-yangin.kcad), Etkin kat 1. kat from the status bar, then
 # Kaçış yolları: the offices' and the meeting room's walks to the only stair red beyond 15 m, the corridor's dead end red.
 fit KentOS Mimari — Yeni proje
 wait 3000

@@ -35,7 +35,7 @@ fn phases_look_as_the_reference_says() {
     }
 }
 
-/// docs/adr/3012, step 3: an object the store draws as another level's plan shows it (a slab of the level above,
+/// docs/adr/8012, step 3: an object the store draws as another level's plan shows it (a slab of the level above,
 /// dashed; a stair of the level under, from above) changes no look here, but a phasing noting it is another one. The
 /// drawing area builds again when its look changes: Bütün katlar, which hides and fades nothing more than Yalnız etkin
 /// kat on the level under a balcony, once kept the balcony dashed on the screen.
@@ -56,7 +56,7 @@ fn a_level_view_that_only_draws_across_still_changes_the_look() {
     );
 }
 
-/// Tadilat projesi (docs/adr/3039 §6) leaves out a room pulled down and its label, not its wall: the plan names the
+/// Tadilat projesi (docs/adr/8039 §6) leaves out a room pulled down and its label, not its wall: the plan names the
 /// rooms as they will be, its walls carry the three techniques. Yıkım planı still dashes the room.
 #[test]
 fn tadilat_projesi_leaves_out_a_room_pulled_down_and_its_label() {

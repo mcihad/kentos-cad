@@ -1,7 +1,7 @@
 //! An opening's fields beside its wall, place along it, width and jambs (docs/adr/0341 §1), as schema 77 writes
 //! them: one map, each field only when it is not its default, so a file has one way to say an opening. Schema 119
-//! (docs/adr/0719) adds a niche's and flue's form, `depth` and `inset` and the break `tooDeep`. Schema 218
-//! (docs/adr/3039) adds its own `phase`.
+//! (docs/adr/0719) adds a niche's and flue's form, `depth` and `inset` and the break `tooDeep`. Schema 230
+//! (docs/adr/8039) adds its own `phase`.
 
 use kentos_contracts::{
     OpeningAnchor, OpeningBreak, OpeningFields, OpeningForm, OpeningHand, OpeningOperation,
@@ -50,7 +50,7 @@ pub(crate) struct OpeningRest {
     pub overrides: Vec<kentos_contracts::OpeningTypeField>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build: Option<kentos_contracts::OpeningBuild>,
-    /// Schema 218 (docs/adr/3039): its own phase; absent: its wall's.
+    /// Schema 230 (docs/adr/8039): its own phase; absent: its wall's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub phase: Option<kentos_contracts::ArchPhase>,
 }

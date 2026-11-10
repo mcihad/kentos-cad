@@ -89,7 +89,7 @@ pub fn holes(o: &OpeningFields) -> Vec<opening::Hole> {
     opening::holes(o.at, o.width, &spec(o))
 }
 
-/// [`holes`] with the plan cut at `cut` (docs/adr/3012).
+/// [`holes`] with the plan cut at `cut` (docs/adr/8012).
 pub fn holes_at(o: &OpeningFields, cut: f64) -> Vec<opening::Hole> {
     opening::holes_at(o.at, o.width, &spec(o), cut)
 }
@@ -115,7 +115,7 @@ pub fn core_opening(o: &OpeningFields) -> Shape {
 
 /// Its symbol as the contract's plain objects on its layer, with its look: closed polylines for its frame, lines for
 /// its leaves and glass, arcs for its swings, a flue's cross, the dashed outline of one plan does not cut (docs/adr/0719
-/// §2); the parts a drawing at `view` shows (docs/adr/3010), as the walls beside it. Empty for a cut bare opening or
+/// §2); the parts a drawing at `view` shows (docs/adr/8010), as the walls beside it. Empty for a cut bare opening or
 /// niche or one without its four jambs.
 pub fn plain_pieces(base: &EntityBase, o: &OpeningFields, view: View) -> Vec<Entity> {
     let place: Vec<CoreVec2> = o.place.iter().map(core).collect();

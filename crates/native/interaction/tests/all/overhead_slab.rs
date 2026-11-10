@@ -1,4 +1,4 @@
-//! A slab on the level above the active one (docs/adr/3012, step 3): with Zemin kat active, 1. kat's balcony and floor
+//! A slab on the level above the active one (docs/adr/8012, step 3): with Zemin kat active, 1. kat's balcony and floor
 //! show on its plan dashed and narrow, their railing left out, snapped to and never picked; the active level's own slab
 //! is its own plan's; Bütün katlar and 1. kat itself draw them as their own plan does. Mimarlar Odası §14.5.3 u: "Planın
 //! geçtiği düzlem ile tavan arasında kalan imalat nokta nokta işlenir. (Saçak ara kat çıkma vb.)"

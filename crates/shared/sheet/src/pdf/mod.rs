@@ -455,7 +455,7 @@ pub struct PdfOptions {
     /// A vector map's layers as optional content groups (the viewer's layer list).
     #[serde(default = "yes")]
     pub layers: bool,
-    /// PDF/A-2b (ISO 19005-2; docs/adr/3037): XMP metadata, an sRGB output intent and no device CMYK, the file the
+    /// PDF/A-2b (ISO 19005-2; docs/adr/8037): XMP metadata, an sRGB output intent and no device CMYK, the file the
     /// 2026 digital project regulation asks a drawing as ([`archive`]).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]

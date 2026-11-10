@@ -1,4 +1,4 @@
-# M17 (docs/adr/3017): a building object's context in the real window, on malzeme.kcad (headless scales.rs keeps it)
+# M17 (docs/adr/8017): a building object's context in the real window, on malzeme.kcad (headless scales.rs keeps it)
 # opened on Mimari at 1440 × 900, 13 px text. A rectangle of walls is drawn (Duvar ▾ › Dikdörtgen duvar, two corners)
 # and a room placed in it (Mahal, a click inside, its name written there); then a wall is selected (the Duvar tab with Duvarı kaydır, its
 # right click headed Duvar), the room by its name (the Mahal tab, its right click headed Mahal), and the card read on each.

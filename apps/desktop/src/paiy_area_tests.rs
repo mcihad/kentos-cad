@@ -1,4 +1,4 @@
-//! Planlı Alanlar İmar Yönetmeliği 4's areas (M29, docs/adr/3029) on a building a hand can check: 15 × 6 m outside, its
+//! Planlı Alanlar İmar Yönetmeliği 4's areas (M29, docs/adr/8029) on a building a hand can check: 15 × 6 m outside, its
 //! exterior walls 25 cm, two 15 cm walls at x = 5 and 10; the west and east rooms two independent units, the middle one
 //! the common stair hall, shared equally.
 //!
@@ -132,7 +132,7 @@ fn a_units_schedule_writes_the_regulation_s_net_gross_share_and_general_gross() 
     }
 }
 
-/// Metrekare cetveli (M29, docs/adr/3029; PAİY 57/2-a): two storeys of the same plan, the stair hall one common area on
+/// Metrekare cetveli (M29, docs/adr/8029; PAİY 57/2-a): two storeys of the same plan, the stair hall one common area on
 /// both; the units schedule storey by storey: each storey's units and its part of the hall, 30 m² each, the total the
 /// building's 180 m².
 #[test]
@@ -294,7 +294,7 @@ fn zone(app: &mut App, arch: &kentos_commands::ArchSettings, parcel: f64, far: f
     command(app, "cad.settings.set", json!({"arch": a}));
 }
 
-/// Emsal and TAKS (M30, docs/adr/3030): the same ground storey, its middle room an Otopark (22/1-h: emsal harici by its
+/// Emsal and TAKS (M30, docs/adr/8030): the same ground storey, its middle room an Otopark (22/1-h: emsal harici by its
 /// name). On a 300 m² parcel, emsal 1.50, TAKS 0.40: katlar alanı 60 (the two flats), harici 30 within the 30 % cap
 /// of 135, emsal 0.20; taban alanı 90, TAKS 0.30. On an 80 m² parcel with emsal 1.00 the cap is 24: the 6 past it
 /// count in, emsal (60 + 6) / 80 = 0.825, and TAKS 90 / 80 passes 0.40.
@@ -340,7 +340,7 @@ fn emsal_and_taks_read_the_rooms_against_the_parcel() {
     assert!(near(r.coverage(), 1.125) && r.coverage_over(), "{r:?}");
 }
 
-/// Emsal ve TAKS tablosu (M30, docs/adr/3030): placed from Metraj ▾, it writes PAİY 57/3's values against the zoning
+/// Emsal ve TAKS tablosu (M30, docs/adr/8030): placed from Metraj ▾, it writes PAİY 57/3's values against the zoning
 /// and each storey's areas; a smaller parcel rewrites it at once (TAKS 0.45 past 0.40, its value and what is left in
 /// the warning colour), a wall moved rewrites it in the same step and one undo takes both back.
 #[test]
@@ -452,7 +452,7 @@ fn an_emsal_and_taks_table_follows_the_zoning_and_the_rooms() {
     }
 }
 
-/// Kat irtifakı tablosu (M31, docs/adr/3031; Kat Mülkiyeti Kanunu 12/a, PAİY 57/3): the two storeys of the metrekare
+/// Kat irtifakı tablosu (M31, docs/adr/8031; Kat Mülkiyeti Kanunu 12/a, PAİY 57/3): the two storeys of the metrekare
 /// cetveli, the east room upstairs flat 1's annex (Depo), flat 3 worth 1.2 for its place, the hall one common area
 /// shared equally, a 450 m² parcel. Flat 1's total gross is its 30 m² and the Depo's 30, its general gross 80 with its
 /// 20 of the hall; the land shares are 60 : 30 : 36 of 450: 214, 107 and 129 (the one left to the largest remainder).

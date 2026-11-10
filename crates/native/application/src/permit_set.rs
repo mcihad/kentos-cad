@@ -1,4 +1,4 @@
-//! Ruhsat takımı (docs/adr/3037, M37): a phase's set of sheets made from the drawing in one step: the drawing's
+//! Ruhsat takımı (docs/adr/8037, M37): a phase's set of sheets made from the drawing in one step: the drawing's
 //! particulars (`kentos_sheet::permit::PARTICULARS`) written into its variables, the ones it lacks added with their
 //! defaults, then the sheets in the Mimarlar Odası's order (the information sheet, the site plan, the storeys' plans
 //! from the lowest up) on the smallest A paper all the maps fit, through `cad.sheets.edit` (one undo step).
@@ -6,9 +6,9 @@
 //! - The plans share one ground (every storey's objects' box) at the phase's scale, so they lie over each other on
 //!   paper as in the building (docs/adr/0718); a storey with no object has no sheet.
 //! - The site plan draws the ground storey (with the objects on no storey, the parcel among them) at 1/500, 1/1000
-//!   when 1/500 does not fit A0, around the parcel (docs/adr/3032), else the ground storey.
+//!   when 1/500 does not fit A0, around the parcel (docs/adr/8032), else the ground storey.
 //! - The storeys' EK-2 codes from their elevations: K00 at ±0.00, K01 … above, B01 … below.
-//! - A tadilat set (docs/adr/3039 §6; PAİY 4(1)(dddd), 58; the Mimarlar Odası's three techniques): each storey's plan
+//! - A tadilat set (docs/adr/8039 §6; PAİY 4(1)(dddd), 58; the Mimarlar Odası's three techniques): each storey's plan
 //!   three times, as it stands (Mevcut durum), with mevcut, iptal and ilave each drawn its own way (Tadilat projesi)
 //!   and as it will stand (Yeni durum), each map linked to the set's named view of that state; the site plan to its own
 //!   view of Tadilat projesi. The views are written into the project as the particulars are (a setting, no undo step).
@@ -35,14 +35,14 @@ pub struct PermitSet {
     /// The calculation tables the set's “Mimari hesap raporu” shows (their names and boxes, metres), in its order;
     /// none: no such sheet (`kentos_interaction::calc_tables::ensure` makes and finds them).
     pub tables: Vec<(String, [f64; 4])>,
-    /// The lists that are sheets of their own (docs/adr/3038), after the plans: each its title (Mahal listesi), its
+    /// The lists that are sheets of their own (docs/adr/8038), after the plans: each its title (Mahal listesi), its
     /// EK-2 kind (MHL), its box (metres) and the scale it is drawn at; each on the smallest A paper it fits.
     pub lists: Vec<ListSheet>,
-    /// A tadilat set (docs/adr/3039 §6): each storey's plan as Mevcut durum, Tadilat projesi and Yeni durum show it.
+    /// A tadilat set (docs/adr/8039 §6): each storey's plan as Mevcut durum, Tadilat projesi and Yeni durum show it.
     pub renovation: bool,
 }
 
-/// A tadilat set's plans of a storey (docs/adr/3039 §6), in their order: the view each is linked to and the words its
+/// A tadilat set's plans of a storey (docs/adr/8039 §6), in their order: the view each is linked to and the words its
 /// title adds.
 pub const RENOVATION_PLANS: [(PhaseView, &str); 3] = [
     (PhaseView::Existing, "mevcut durum"),
@@ -50,7 +50,7 @@ pub const RENOVATION_PLANS: [(PhaseView, &str); 3] = [
     (PhaseView::Proposed, "yeni durum"),
 ];
 
-/// Whether the drawing is a tadilat (docs/adr/3039 §6): a wall stands (Mevcut, or no state: the Tadilat projesi view
+/// Whether the drawing is a tadilat (docs/adr/8039 §6): a wall stands (Mevcut, or no state: the Tadilat projesi view
 /// draws it as mevcut) and a wall, a door or a window is removed or added (İptal, İlave). Ruhsat takımı offers its
 /// tadilat plans then.
 pub fn renovates(doc: &Document) -> bool {
@@ -77,7 +77,7 @@ pub fn renovates(doc: &Document) -> bool {
     false
 }
 
-/// The rooms a tadilat changes but that do not say so (docs/adr/3039 §6): a room without a state, or Mevcut, along
+/// The rooms a tadilat changes but that do not say so (docs/adr/8039 §6): a room without a state, or Mevcut, along
 /// which a wall removed or added (İptal, İlave) runs on its storey, 30 cm or more. A room is bounded by the walls of
 /// its own state (docs/adr/0798 §3): such a room keeps in Yeni durum the side the removed wall gave it, and takes in
 /// Mevcut durum the new partition, so a sheet shows a wall that is not there. Their numbers and names, in the
@@ -153,7 +153,7 @@ pub fn rooms_to_restate(doc: &Document) -> Vec<String> {
         .collect()
 }
 
-/// The named view a tadilat set's maps of `what` are linked to (docs/adr/3039 §6): named by the set (“Ruhsat takımı ·
+/// The named view a tadilat set's maps of `what` are linked to (docs/adr/8039 §6): named by the set (“Ruhsat takımı ·
 /// Mevcut durum”), the box `b` (metres) around, its recipe only the tadilat `view` and the `scale`.
 fn set_view(phase: Phase, what: &str, view: PhaseView, b: [f64; 4], scale: u32) -> NamedView {
     let name = format!("{} takımı · {what}", phase.name());
@@ -174,7 +174,7 @@ fn set_view(phase: Phase, what: &str, view: PhaseView, b: [f64; 4], scale: u32) 
     }
 }
 
-/// `views` with a set's `made` written in (docs/adr/3039 §6): one of the same name keeps its place, its id and the
+/// `views` with a set's `made` written in (docs/adr/8039 §6): one of the same name keeps its place, its id and the
 /// rest of its recipe (a pen, black and white), its box, tadilat view and scale renewed; the others added after.
 fn with_views(views: &[NamedView], made: &[NamedView]) -> Vec<NamedView> {
     let mut out = views.to_vec();
@@ -193,7 +193,7 @@ fn with_views(views: &[NamedView], made: &[NamedView]) -> Vec<NamedView> {
     out
 }
 
-/// A list the set gives a sheet of its own (docs/adr/3038).
+/// A list the set gives a sheet of its own (docs/adr/8038).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ListSheet {
     pub title: String,
@@ -296,13 +296,13 @@ pub(crate) struct Planned {
     pub pages: Vec<Page>,
     /// The paper they go on.
     pub paper: PaperChoice,
-    /// The project's named views with a tadilat set's (docs/adr/3039 §6); none: as they are.
+    /// The project's named views with a tadilat set's (docs/adr/8039 §6); none: as they are.
     pub views: Option<Vec<NamedView>>,
     /// What was left out (a list no paper holds).
     pub notes: Vec<String>,
 }
 
-/// The set's pages for `phase` (a tadilat set's when `renovation`, docs/adr/3039 §6) and the paper they go on.
+/// The set's pages for `phase` (a tadilat set's when `renovation`, docs/adr/8039 §6) and the paper they go on.
 pub(crate) fn pages(
     doc: &Document,
     phase: Phase,
@@ -358,7 +358,7 @@ pub(crate) fn pages(
         .iter()
         .fold(None, |acc, (_, b)| Some(union(acc, *b)))
         .unwrap_or(ground.1);
-    // The site plan around the parcel (docs/adr/3032), else the ground storey.
+    // The site plan around the parcel (docs/adr/8032), else the ground storey.
     let parcel = doc
         .settings()
         .arch
@@ -401,7 +401,7 @@ pub(crate) fn pages(
                 Some("phase".into()),
             ))
         })?;
-    // A tadilat set's views (docs/adr/3039 §6): the three plans' around every storey at the phase's scale, the site
+    // A tadilat set's views (docs/adr/8039 §6): the three plans' around every storey at the phase's scale, the site
     // plan's with the three techniques too (MO: "Projede mevcut, iptal ve ilaveler üç farklı teknikle ifade
     // edilmelidir") at its own; merged into the project's, a map's link the view it will find.
     let views = renovation.then(|| {
@@ -466,7 +466,7 @@ pub(crate) fn pages(
             None => notes.push(format!("{} A0 kâğıda sığmadı; paftası kurulmadı.", l.title)),
         }
     }
-    // A tadilat's rooms that keep a wall that is not there on its sheets (docs/adr/3039 §6), said by name.
+    // A tadilat's rooms that keep a wall that is not there on its sheets (docs/adr/8039 §6), said by name.
     if renovation {
         let rooms = rooms_to_restate(doc);
         if !rooms.is_empty() {
@@ -618,7 +618,7 @@ mod tests {
         assert_eq!(out.len(), permit::PARTICULARS.len() + 1);
     }
 
-    /// A tadilat set made again (docs/adr/3039 §6) renews its views in place: their box, tadilat view and scale; the
+    /// A tadilat set made again (docs/adr/8039 §6) renews its views in place: their box, tadilat view and scale; the
     /// rest of a recipe the owner gave (black and white) and a view of another name stay.
     #[test]
     fn a_set_s_views_are_renewed_in_place() {

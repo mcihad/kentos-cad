@@ -1,4 +1,4 @@
-//! Tadilat (docs/adr/3039 §2): a phase view hides walls and openings and leaves them out of the joins and cuts, so
+//! Tadilat (docs/adr/8039 §2): a phase view hides walls and openings and leaves them out of the joins and cuts, so
 //! each phase's plan draws its walls as they stand in it. An existing wall with a new door cut into it and an existing
 //! window closed up: the existing plan's wall has the window's hole only, the new plan's the door's only, the
 //! demolition plan's the window's (dashed) and not the door's.
@@ -194,7 +194,7 @@ fn a_wall_pulled_down_takes_its_corner_with_it() {
     );
 }
 
-/// What a tool draws takes the state of the view it is drawn in (docs/adr/3039 §3): in Mevcut durum a wall is Mevcut;
+/// What a tool draws takes the state of the view it is drawn in (docs/adr/8039 §3): in Mevcut durum a wall is Mevcut;
 /// in Yeni durum a wall is İlave, a door drawn into the existing wall is İlave of its own and a door drawn into the new
 /// wall takes its wall's (none of its own); in Tümü nothing is given.
 #[test]
@@ -271,7 +271,7 @@ fn what_a_tool_draws_takes_the_view_s_state() {
     assert_eq!(own(&b, third), None);
 }
 
-/// Tadilat projesi (docs/adr/3039 §5; Mimarlar Odası's technique): one plan with every state. The existing wall is a
+/// Tadilat projesi (docs/adr/8039 §5; Mimarlar Odası's technique): one plan with every state. The existing wall is a
 /// plain outline (its solid fill gone), a new wall's body is hatched (ANSI31), the window closed up does not cut its
 /// wall and is its infill (a hatch between its jambs), the new door cuts its wall and shows the wall it removes dashed.
 #[test]

@@ -27,7 +27,7 @@ const CONTENTS: [(&str, &str, &str); 11] = [
         "Açıklık ve boyut",
         "{number}\n{width} × {height}",
     ),
-    // Mimarlar Odası's door and window tag (docs/adr/3028): the type's joinery code over its size in centimetres.
+    // Mimarlar Odası's door and window tag (docs/adr/8028): the type's joinery code over its size in centimetres.
     ("code", "Doğrama kodu ve ölçü", "{code}\n{size}"),
 ];
 

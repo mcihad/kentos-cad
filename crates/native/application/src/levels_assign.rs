@@ -17,7 +17,7 @@ use crate::codes;
 
 pub const STEP: &str = "Kat ver";
 
-/// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a beam (docs/adr/3041 §1),
+/// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a beam (docs/adr/8041 §1),
 /// a stair, a ramp, a room separator or a block insert (a fixture, docs/adr/0733 §1).
 pub fn levelled(e: &Entity) -> bool {
     match e {

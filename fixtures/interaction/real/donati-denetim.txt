@@ -1,4 +1,4 @@
-# M25 (docs/adr/3025): Mimari denetim's Donatılar in the real window, on a 2.0 × 1.6 m bathroom the headless test
+# M25 (docs/adr/8025): Mimari denetim's Donatılar in the real window, on a 2.0 × 1.6 m bathroom the headless test
 # keeps (`KENTOS_M25_KCAD`, fixture_place_tests.rs): a wall-hung WC, a washbasin whose use zone takes the WC, a door
 # K1 whose leaf opens into the WC's zone. Denetim lists both; a finding clicked selects its objects, fits the view and
 # outlines the fixture's use zone dashed red; Düzelt turns the door and the door's finding goes.

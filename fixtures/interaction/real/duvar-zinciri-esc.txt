@@ -1,4 +1,4 @@
-# M2: Esc duvar zincirini korur (docs/adr/3001). Duvar aracıyla fareyle üç köşe, sonra Esc, yeniden Esc.
+# M2: Esc duvar zincirini korur (docs/adr/8001). Duvar aracıyla fareyle üç köşe, sonra Esc, yeniden Esc.
 # Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/duvar-zinciri-esc.txt .run/gui-evidence/mimari-m2/sonra --modul mimari
 fit KentOS Mimari
 wait 1500

@@ -1,4 +1,4 @@
-//! Yangın kaçışı (M35, docs/adr/3035): Binaların Yangından Korunması Hakkında Yönetmelik read on the drawing's escape
+//! Yangın kaçışı (M35, docs/adr/8035): Binaların Yangından Korunması Hakkında Yönetmelik read on the drawing's escape
 //! routes — an office storey's distances, people, exits and corridor; a tall dwelling building's walks inside a flat
 //! and from its door, and its stairs; the sprinkler system's longer distances.
 
@@ -442,7 +442,7 @@ fn a_tall_dwelling_building_s_walks_and_stairs_are_said() {
     }
 }
 
-/// Kaçış yolları (docs/adr/3035 §2) on the tall dwelling building's ground storey: each walk a line and an arrowhead
+/// Kaçış yolları (docs/adr/8035 §2) on the tall dwelling building's ground storey: each walk a line and an arrowhead
 /// with what it measured against its limit — flat “1” 22,00 m inside (20 m) and 26,15 m from its door (15 m one way)
 /// red, flat “2”'s walks green; run again, the same marks, not twice; one undo step takes them away.
 #[test]

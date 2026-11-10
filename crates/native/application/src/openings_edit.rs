@@ -99,7 +99,7 @@ fn changed(o: &OpeningFields, c: &OpeningChange) -> OpeningFields {
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
-    // Its own phase (docs/adr/3039 §1); null: its wall's.
+    // Its own phase (docs/adr/8039 §1); null: its wall's.
     if let Some(v) = c.phase {
         f.phase = v;
     }
@@ -546,7 +546,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             by_room: true,
             ..
         } => {
-            // Mahale göre (docs/adr/3028): its room's number; -A, -B … when the room has more than one.
+            // Mahale göre (docs/adr/8028): its room's number; -A, -B … when the room has more than one.
             let rooms = crate::opening_codes::numbered_rooms(doc);
             let mut of_room: Vec<(usize, Option<String>, Option<Slot>, f64)> = list
                 .iter()

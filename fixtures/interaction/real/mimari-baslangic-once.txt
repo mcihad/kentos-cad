@@ -1,4 +1,4 @@
-# M8 öncesi: KentOS Mimari'de yeni proje ve ilk duvar, M7'nin programıyla (docs/adr/3007).
+# M8 öncesi: KentOS Mimari'de yeni proje ve ilk duvar, M7'nin programıyla (docs/adr/8007).
 # Oynatma: KENTOS_BIN=<M7 ikilisi> scripts/usage/real/session.sh fixtures/interaction/real/mimari-baslangic-once.txt .run/gui-evidence/mimari-m8/once --modul mimari
 fit KentOS Mimari
 wait 1500

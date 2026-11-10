@@ -76,6 +76,6 @@ Sahibin bildirimi: "Evre mantıksız bir kavram, daha düzgün bir kavram kullan
 Odası'nın tadilat tekniğine göre değişti ("Projede mevcut, iptal ve ilaveler üç farklı teknikle ifade edilmelidir"):
 Evre → **Tadilat durumu**; Mevcut, Yıkılacak, Yeni, Geçici → Mevcut, **İptal**, **İlave**, Geçici; şeritte Evre ▾ →
 **Tadilat ▾**; komut adları "Tadilat: Mevcut durum" …. Dosya ve komut adları değişmedi (`phase`, `phaseView`). Tam tablo
-ve gerekçe: [ADR 3039 §0](3039-renovation-graphic-language.md). Bu belgenin yukarıdaki metni o günün sözcükleriyle
+ve gerekçe: [ADR 8039 §0](3039-renovation-graphic-language.md). Bu belgenin yukarıdaki metni o günün sözcükleriyle
 kaldı; resimlerin adları `tadilat-tumu`, `tadilat-yikim`, `tadilat-yeni` oldu. Yukarıdaki "DXF'e evre görünüşü
-yazılmaz" kuralı da değişti: DXF görünümün gösterdiğini alır, her nesne durumunun katmanında (ADR 3039 §4).
+yazılmaz" kuralı da değişti: DXF görünümün gösterdiğini alır, her nesne durumunun katmanında (ADR 8039 §4).

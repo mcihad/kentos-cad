@@ -1,4 +1,4 @@
-//! Kaçış yolları çizimi (docs/adr/3035 §2; M35): the walks the fire rules measure (`fire_audit::walks`) drawn on the
+//! Kaçış yolları çizimi (docs/adr/8035 §2; M35): the walks the fire rules measure (`fire_audit::walks`) drawn on the
 //! plan of a storey, each from its farthest point to its exit: a line, an arrowhead at the exit and what it measured
 //! against its limit (“tek yön 28,07 m > 15,00 m”).
 //!

@@ -1,4 +1,4 @@
-# M5: Türkçe komut geçmişi (docs/adr/3004). Dikdörtgen duvar, kapı ve mahal çizilir; Komut geçmişi kimliksiz özetleri
+# M5: Türkçe komut geçmişi (docs/adr/8004). Dikdörtgen duvar, kapı ve mahal çizilir; Komut geçmişi kimliksiz özetleri
 # yazar, Ayrıntı komutu, alanları ve Python'u açar.
 # Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/komut-gecmisi.txt .run/gui-evidence/mimari-m5/sonra --modul mimari
 fit KentOS Mimari

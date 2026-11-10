@@ -1,12 +1,12 @@
-//! A beam (kiriş, docs/adr/3041 §1): its axis, its web's width and its height, how it lies on its axis, its top. A
+//! A beam (kiriş, docs/adr/8041 §1): its axis, its web's width and its height, how it lies on its axis, its top. A
 //! plan draws it dashed and narrow, as what lies over the cut (ISO 128-23 02.1); from 1:50 its number and size
 //! ("K101 25/50") beside it, as a construction plan writes them.
 //!
 //! - Its height is its whole depth, the slab within it: TBDY 2018 7.4.1.1 (b) measures a beam's height against the
 //!   slab's thickness, so the slab is part of it.
-//! - Its top is where it hangs: the structure's top of the slab over its storey (docs/adr/3040 §2), else its storey's
+//! - Its top is where it hangs: the structure's top of the slab over its storey (docs/adr/8040 §2), else its storey's
 //!   top; its offset moves it from there. A wall under it stops at its underside.
-//! - A lintel or a bond beam (docs/adr/3041 §3) is one too, of its own role: it sits in a wall at its base over its
+//! - A lintel or a bond beam (docs/adr/8041 §3) is one too, of its own role: it sits in a wall at its base over its
 //!   storey's floor (a lintel at its opening's head), and the wall runs on round it.
 
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ fn is_center(j: &WallJustify) -> bool {
     *j == WallJustify::Center
 }
 
-/// What a beam is (docs/adr/3041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or
+/// What a beam is (docs/adr/8041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or
 /// a bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -66,7 +66,7 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
-/// A beam's own fields (docs/adr/3041 §1).
+/// A beam's own fields (docs/adr/8041 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -92,11 +92,11 @@ pub struct BeamFields {
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: f64,
-    /// What it is (docs/adr/3041 §3): a beam (absent), a lintel or a bond beam.
+    /// What it is (docs/adr/8041 §3): a beam (absent), a lintel or a bond beam.
     #[serde(default, skip_serializing_if = "BeamRole::is_beam")]
     #[cfg_attr(feature = "ts", ts(as = "Option<BeamRole>", optional))]
     pub role: BeamRole,
-    /// Its underside's height over its storey's floor, metres (docs/adr/3041 §3): a lintel's at its opening's head;
+    /// Its underside's height over its storey's floor, metres (docs/adr/8041 §3): a lintel's at its opening's head;
     /// absent: it hangs from where its top is (a beam's). Not with an offset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -230,12 +230,12 @@ impl BeamFields {
     }
 }
 
-/// Whether `e` is a beam with a role or a base of its own (docs/adr/3041 §3): what `.kcad` schema 224 adds.
+/// Whether `e` is a beam with a role or a base of its own (docs/adr/8041 §3): what `.kcad` schema 236 adds.
 pub fn needs_beam_roles(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Beam(b) if b.beam.role != BeamRole::Beam || b.beam.base_offset.is_some())
 }
 
-/// A beam (docs/adr/3041 §1).
+/// A beam (docs/adr/8041 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -314,7 +314,7 @@ mod tests {
         ] {
             assert_eq!(b.problem().map(|p| p.0), Some(field.to_owned()), "{b:?}");
         }
-        // A lintel sits at its base; an offset beside it is refused (docs/adr/3041 §3).
+        // A lintel sits at its base; an offset beside it is refused (docs/adr/8041 §3).
         let lintel = BeamFields {
             role: BeamRole::Lintel,
             base_offset: Some(2.1),

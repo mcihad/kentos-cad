@@ -144,7 +144,7 @@ pub(crate) struct ArchAuditPanel {
     pub note: Option<String>,
     /// The chosen fixes' preview, kept until the drawing or the choice changes.
     pub preview: RefCell<Option<KeptPreview>>,
-    /// The table's columns as dragged wider or narrower (docs/adr/3034), by their place; none: their share.
+    /// The table's columns as dragged wider or narrower (docs/adr/8034), by their place; none: their share.
     pub columns: [Option<f32>; 5],
 }
 
@@ -213,7 +213,7 @@ pub enum Event {
     FixRow(usize),
     /// Eski istisnaları temizle: the exceptions whose finding is gone dropped.
     Prune,
-    /// A column dragged to a width (docs/adr/3034): the regulation's findings are long, their article at the end.
+    /// A column dragged to a width (docs/adr/8034): the regulation's findings are long, their article at the end.
     Column(usize, f32),
 }
 
@@ -241,7 +241,7 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Doors => "door",
         ArchAuditCheck::Program => "archProgram",
         ArchAuditCheck::Fixtures => "blockLibrary",
-        // Mevzuat (docs/adr/3033): a page and a tick.
+        // Mevzuat (docs/adr/8033): a page and a tick.
         ArchAuditCheck::Regulation => "regulation",
     }
 }

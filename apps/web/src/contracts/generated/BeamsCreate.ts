@@ -2,7 +2,7 @@
 import type { NewBeam } from "./NewBeam";
 
 /**
- * Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/3041 §1): beams on a named layer, as one undo step.
+ * Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/8041 §1): beams on a named layer, as one undo step.
  *
  * Refusals, in this order: `no_objects`, `not_finite`, `invalid_beam`, `level_not_found`, `invalid_line_weight`,
  * `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,

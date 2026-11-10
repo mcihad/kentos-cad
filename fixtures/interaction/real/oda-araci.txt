@@ -1,4 +1,4 @@
-# M21 (docs/adr/3021): Oda in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on Mimari at
+# M21 (docs/adr/8021): Oda in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on Mimari at
 # 1440 × 900, 13 px text. Oda (large, beside Duvar ▾); ↓ opens Boyutlar beside the cursor: 4.2,3.6; Tab: Mahal adı,
 # Salon, Enter; the corner and the side clicked: the walls, the room Salon and its tag, written together. One Ctrl+Z
 # takes all three away, Ctrl+Y brings them back.

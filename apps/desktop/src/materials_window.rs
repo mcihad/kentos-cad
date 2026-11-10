@@ -66,7 +66,7 @@ pub struct Window {
     pub conflict: Conflict,
     /// What Seçilenleri al would do; its refusal's words when refused.
     pub take_preview: Option<Result<MaterialsEdited, String>>,
-    /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/3006).
+    /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/8006).
     pub closing: bool,
 }
 
@@ -399,7 +399,7 @@ impl App {
         }
     }
 
-    /// Whether the chosen material has a change Uygula has not written (docs/adr/3006).
+    /// Whether the chosen material has a change Uygula has not written (docs/adr/8006).
     fn materials_unapplied(&self) -> bool {
         self.materials.as_ref().is_some_and(|w| w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some()))
     }

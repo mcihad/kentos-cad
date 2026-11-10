@@ -50,7 +50,7 @@ class TemplateReview(unittest.TestCase):
         entity = doc.entity(uid).entity
         plan = cad.templates.apply.plan(doc, name='mimari', settings_mode='template', unit='ft')
         self.assertEqual(plan.unit.value, 'ft')
-        # The package's scale: 1:100 since docs/adr/3007.
+        # The package's scale: 1:100 since docs/adr/8007.
         self.assertEqual(plan.review.plot_scale, 100)
         cad.templates.apply(doc, name='mimari', settings_mode='template', unit='ft',
                             expected_revision=plan.revision)
@@ -87,7 +87,7 @@ class TemplateReview(unittest.TestCase):
             cad.templates.apply(doc, name='mimari', settings_mode='template', unit='cm')
         self.assertEqual(caught.exception.code, 'unit_needs_local')
         self.assertEqual(doc.info(), before)
-        # The package is metres since docs/adr/3007: no unit given is no refusal.
+        # The package is metres since docs/adr/8007: no unit given is no refusal.
         self.assertEqual(cad.templates.apply.plan(doc, name='mimari', settings_mode='template').unit.value, 'm')
         self.assertEqual(doc.info(), before)
         plan = cad.templates.apply.plan(doc, name='mimari', settings_mode='template', unit='m')

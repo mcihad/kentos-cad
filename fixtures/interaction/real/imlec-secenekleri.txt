@@ -1,4 +1,4 @@
-# M18 (docs/adr/3018): the tool's settings in the value field beside the cursor, in the real window, on malzeme.kcad
+# M18 (docs/adr/8018): the tool's settings in the value field beside the cursor, in the real window, on malzeme.kcad
 # (headless scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text, KentOS Mimari's Dış duvar 25
 # (its thickness the user's). Duvar: 3, Tab (Açı), Tab (Kalınlık), Tab (Hiza), "sa" Enter (Sağ). Dikdörtgen
 # duvar: ↓ opens Boyutlar, 4.2,3.6, Tab (Kalınlık kept), Enter; a click the corner, a second its side: the 4,20 × 3,60 room.

@@ -351,7 +351,7 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
         f.swing = Some(v);
     }
     f.number.clone_from(&n.number);
-    // Its own tadilat durumu (docs/adr/3039 §3); absent: its wall's.
+    // Its own tadilat durumu (docs/adr/8039 §3); absent: its wall's.
     f.phase = n.phase;
     set_build(&mut f, n.build.as_ref());
     f
@@ -401,7 +401,7 @@ pub(crate) fn clear_of_others(
                 .push((opening_follow::reach(f), Some(at.as_str()), (*f).clone()));
         }
     }
-    // At the project's plan cut height (docs/adr/3012).
+    // At the project's plan cut height (docs/adr/8012).
     let cut = doc.settings().plan_cut();
     for (host, list) in by_host.iter_mut() {
         for (slot, o) in doc.openings_of(host) {

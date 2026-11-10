@@ -498,7 +498,7 @@ impl WallDimensions {
             } else {
                 DimensionSetReference::Faces
             },
-            // The key's Ölçü layer still to open is planned on the active one (docs/adr/3008).
+            // The key's Ölçü layer still to open is planned on the active one (docs/adr/8008).
             layer_id: if doc.layers().get(&self.layer).is_some() {
                 self.layer.clone()
             } else {
@@ -547,7 +547,7 @@ impl WallDimensions {
                 command: None,
             })
             .collect();
-        // The key's Ölçü layer, opened with the first dimension (docs/adr/3008).
+        // The key's Ölçü layer, opened with the first dimension (docs/adr/8008).
         if let Some((typed, label)) =
             crate::arch_layer::missing_choice(&crate::arch_layer::Kind::Dimension, cx)
         {
@@ -1199,7 +1199,7 @@ impl Tool for WallDimensions {
         false
     }
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
-        // MM-XXXX-OLCU with the layer key on (docs/adr/3008), else the active layer.
+        // MM-XXXX-OLCU with the layer key on (docs/adr/8008), else the active layer.
         self.layer = crate::arch_layer::chosen_at_start(&crate::arch_layer::Kind::Dimension, cx);
         self.style = styles::dimension_style(cx.memory, cx.doc.settings()).map(|s| s.name.clone());
         self.openings = cx.memory.wall_dimensions_rows & 1 != 0;

@@ -224,12 +224,12 @@ pub enum ArchField {
     MarkNumber,
     /// A view mark's words' height on paper, mm; empty 2.5.
     MarkSize,
-    /// A beam's height and its top's offset (empty 0; docs/adr/3041 §1); a lintel's or a bond beam's underside over its
-    /// storey's floor (empty: it hangs; docs/adr/3041 §3).
+    /// A beam's height and its top's offset (empty 0; docs/adr/8041 §1); a lintel's or a bond beam's underside over its
+    /// storey's floor (empty: it hangs; docs/adr/8041 §3).
     BeamHeight,
     BeamOffset,
     BeamBase,
-    /// A column's or a beam's material (empty: Betonarme; docs/adr/3041 §2).
+    /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2).
     Material,
 }
 
@@ -328,13 +328,13 @@ pub enum Field {
     SpaceUsage(Slot),
     SpaceHeight(Slot),
     /// Its Döşeme kot farkı (empty: the floor slab under it, else its storey's) and Asma tavan (empty or Yok: none;
-    /// docs/adr/3040 §3).
+    /// docs/adr/8040 §3).
     SpaceFloorOffset(Slot),
     SpaceSuspended(Slot),
     SpaceFloor(Slot),
     SpaceWall(Slot),
     SpaceCeiling(Slot),
-    /// Its skirting's finish and the room list's (docs/adr/3038): sills and parapets, stair treads and risers, handrails
+    /// Its skirting's finish and the room list's (docs/adr/8038): sills and parapets, stair treads and risers, handrails
     /// and railings.
     SpaceBase(Slot),
     SpaceSill(Slot),
@@ -345,7 +345,7 @@ pub enum Field {
     SlabOffset(Slot),
     SlabEdgeWidth(Slot),
     SlabMaterial(Slot),
-    /// A slab's layer's thickness (docs/adr/3040 §2): over its structure (true) or under it, by its place from the top;
+    /// A slab's layer's thickness (docs/adr/8040 §2): over its structure (true) or under it, by its place from the top;
     /// 0 takes the layer away.
     SlabLayer(Slot, bool, usize),
     /// A grid's, column's, stair's or ramp's typed field (docs/adr/0343 §5).
@@ -2145,7 +2145,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             use kentos_commands::{SpaceChange, SpacesOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
-            // With an asma tavan the inside height is its height: what is typed there moves it (docs/adr/3040 §3).
+            // With an asma tavan the inside height is its height: what is typed there moves it (docs/adr/8040 §3).
             let suspended = matches!(model.get(*slot), Some(Entity::Space(s)) if s.space.suspended_ceiling.is_some());
             let change = match field {
                 Field::SpaceNumber(_) => SpaceChange {
@@ -2271,7 +2271,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         offset: Some(n),
                         ..Default::default()
                     },
-                    // A layer's thickness (docs/adr/3040 §2); 0 takes it away.
+                    // A layer's thickness (docs/adr/8040 §2); 0 takes it away.
                     Field::SlabLayer(_, over, k) => {
                         let Some(Entity::Slab(s)) = model.get(*slot) else {
                             return Vec::new();

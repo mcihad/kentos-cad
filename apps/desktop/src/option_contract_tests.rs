@@ -1,4 +1,4 @@
-//! KentOS Mimari's option contract (docs/adr/3003), read from the catalog: every tool KentOS Mimari offers and
+//! KentOS Mimari's option contract (docs/adr/8003), read from the catalog: every tool KentOS Mimari offers and
 //! Harita does not is started in a building's drawing, clicked twice, and its prompt and its settings panel read at
 //! each step. One name per letter in a tool, one letter per name across the tools, the contract's letters, the
 //! descriptions' letters; then what a letter does while a command runs, and the cursor's Açı.
@@ -159,7 +159,7 @@ fn the_mimari_tools_are_the_buildings_own() {
     }
 }
 
-/// A letter has one name in a tool: the prompt and the settings panel say the same (docs/adr/3003). The duvar said
+/// A letter has one name in a tool: the prompt and the settings panel say the same (docs/adr/8003). The duvar said
 /// Genişlik (E) and its panel Kalınlık; a door's Uzaklık (U) was Uçtan uzaklık beside it.
 #[test]
 fn the_prompt_and_the_panel_name_a_letter_alike() {
@@ -177,7 +177,7 @@ fn the_prompt_and_the_panel_name_a_letter_alike() {
     assert!(wrong.is_empty(), "aynı harf iki ad taşıyor:\n{}", wrong.join("\n"));
 }
 
-/// A name typed by a letter has that letter in every Mimari tool (docs/adr/3003): Genişlik was E on a door and G on
+/// A name typed by a letter has that letter in every Mimari tool (docs/adr/8003): Genişlik was E on a door and G on
 /// a stair, so E pressed for a stair's width started Esnet.
 #[test]
 fn a_name_has_one_letter_in_every_mimari_tool() {
@@ -227,7 +227,7 @@ fn a_step_offers_each_letter_once() {
     }
 }
 
-/// A tool's description writes an option with its letter, `Kalınlık (E)`: the letter is the tool's (docs/adr/3003).
+/// A tool's description writes an option with its letter, `Kalınlık (E)`: the letter is the tool's (docs/adr/8003).
 #[test]
 fn the_descriptions_give_the_options_their_letters() {
     let mut names: BTreeMap<&str, BTreeMap<String, String>> = BTreeMap::new();
@@ -274,7 +274,7 @@ fn wall_chain() -> App {
     app
 }
 
-/// Shift+E is the duvar's Kalınlık, as a plain e is (docs/adr/3003); it started Uzat, dropping the wall (plan G2).
+/// Shift+E is the duvar's Kalınlık, as a plain e is (docs/adr/8003); it started Uzat, dropping the wall (plan G2).
 #[test]
 fn a_shifted_letter_is_the_running_commands_option() {
     let mut app = wall_chain();
@@ -295,7 +295,7 @@ fn e_is_the_stairs_width() {
     assert!(app.session.prompt().step.contains("genişli"), "{}", app.session.prompt().step);
 }
 
-/// A letter the step does not offer leaves the command running and says why (docs/adr/3003); with no command it
+/// A letter the step does not offer leaves the command running and says why (docs/adr/8003); with no command it
 /// starts its tool as before, and a tool that runs over a command (Pencere yakınlaştır) still does.
 #[test]
 fn a_letter_that_is_not_an_option_keeps_the_command() {

@@ -1431,7 +1431,7 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub wall_detail: Option<crate::WallDetail>,
-    /// The plan's cut height, metres (docs/adr/3012): the project's own; absent: [`crate::PLAN_CUT_HEIGHT`]. What it
+    /// The plan's cut height, metres (docs/adr/8012): the project's own; absent: [`crate::PLAN_CUT_HEIGHT`]. What it
     /// cuts takes its hole out of its wall; a window over it is written dashed, its wall whole.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

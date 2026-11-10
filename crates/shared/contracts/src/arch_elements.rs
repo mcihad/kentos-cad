@@ -303,7 +303,7 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
-/// A column's material when it names none (docs/adr/3041 §2): reinforced concrete, as Turkish frames are built.
+/// A column's material when it names none (docs/adr/8041 §2): reinforced concrete, as Turkish frames are built.
 pub const COLUMN_MATERIAL: &str = "Betonarme";
 
 /// A column's own fields (docs/adr/0343 §1).
@@ -353,7 +353,7 @@ pub struct ColumnFields {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub fill: bool,
-    /// Its material (docs/adr/3041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
+    /// Its material (docs/adr/8041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
     /// are one section, hatched alike with no line between them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -380,14 +380,14 @@ impl ColumnFields {
         self.depth.unwrap_or(self.width)
     }
 
-    /// Its material's name (docs/adr/3041 §2): its own, else Betonarme.
+    /// Its material's name (docs/adr/8041 §2): its own, else Betonarme.
     pub fn material_name(&self) -> &str {
         self.material.as_deref().unwrap_or(COLUMN_MATERIAL)
     }
 
-    /// Its size as a construction plan writes it beside its name (docs/adr/3041 §2, a tag's `{size}`): its width and
+    /// Its size as a construction plan writes it beside its name (docs/adr/8041 §2, a tag's `{size}`): its width and
     /// depth in centimetres (30/50), a round one's diameter (Ø40); whole, else to one decimal (27.5), as its plan's
-    /// words (docs/adr/3011).
+    /// words (docs/adr/8011).
     pub fn size_text(&self) -> String {
         let cm = |m: f64| {
             let c = (m * 1000.0).round() / 10.0;
@@ -979,7 +979,7 @@ mod tests {
         assert_eq!(back["name"], "B");
     }
 
-    /// A column's material (docs/adr/3041 §2): absent Betonarme, left out of its JSON; a blank one refused; its size
+    /// A column's material (docs/adr/8041 §2): absent Betonarme, left out of its JSON; a blank one refused; its size
     /// as its plan writes it.
     #[test]
     fn a_column_says_its_material_and_size() {

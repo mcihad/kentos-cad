@@ -1,4 +1,4 @@
-//! Arsa payı (docs/adr/3031; Kat Mülkiyeti Kanunu 2/d, 3, 12/a; rule `kentos.land/1`): the land's co-ownership shares
+//! Arsa payı (docs/adr/8031; Kat Mülkiyeti Kanunu 2/d, 3, 12/a; rule `kentos.land/1`): the land's co-ownership shares
 //! given to the independent units "in proportion to their values worked out by their location and size".
 //!
 //! - **A unit's value:** its total gross (PAİY 4/ğ-4: its gross and its annexes') taken to whole hundredths of a square

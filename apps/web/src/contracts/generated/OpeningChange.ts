@@ -36,7 +36,7 @@ inset?: number | null,
  */
 number?: string | null, 
 /**
- * Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:
+ * Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up; null:
  * its wall's.
  */
 phase?: ArchPhase | null, 

@@ -18,7 +18,7 @@ version?: string,
  */
 shareRule?: ShareRule, 
 /**
- * Arsa payı paydası (docs/adr/3031; `.kcad` schema 211): the whole the land shares are written over; none: the
+ * Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
  * parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.
  */
 landTotal?: bigint, };

@@ -857,9 +857,9 @@ pub struct Memory {
     pub wall_justify: kentos_commands::WallJustify,
     pub wall_offset: f64,
     pub wall_style: Option<u64>,
-    /// Duvar's Kapanınca mahal (docs/adr/3022): a loop closed with Kapat writes its room's space too, one undo step.
+    /// Duvar's Kapanınca mahal (docs/adr/8022): a loop closed with Kapat writes its room's space too, one undo step.
     pub wall_room: bool,
-    /// Katman anahtarı (docs/adr/3008): Mimari objects go on their kinds' EK-4 layers instead of the active one.
+    /// Katman anahtarı (docs/adr/8008): Mimari objects go on their kinds' EK-4 layers instead of the active one.
     /// KentOS Mimari turns it on at start.
     pub layer_keys: bool,
     /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
@@ -1463,7 +1463,7 @@ impl Context<'_> {
         })
     }
 
-    /// The tadilat durumu a new building element takes (docs/adr/3039 §3): the state of the view it is drawn in.
+    /// The tadilat durumu a new building element takes (docs/adr/8039 §3): the state of the view it is drawn in.
     /// Mevcut durum and Yıkım planı draw the building as it stands (Mevcut), Yeni durum and Tadilat projesi the works
     /// (İlave); Tümü none.
     pub fn drawn_phase(&self) -> Option<kentos_commands::ArchPhase> {
@@ -1482,7 +1482,7 @@ impl Context<'_> {
         }
     }
 
-    /// `arch` with [`Self::drawn_phase`] (docs/adr/3039 §3): what a tool that chooses its own level writes.
+    /// `arch` with [`Self::drawn_phase`] (docs/adr/8039 §3): what a tool that chooses its own level writes.
     pub fn phased(
         &self,
         arch: Option<kentos_commands::ArchInfo>,
@@ -1881,11 +1881,11 @@ pub trait Tool {
         Vec::new()
     }
     /// The keys of its `settings` the value field beside the cursor offers after the locks, in Tab's order
-    /// (docs/adr/3018): Duvar's Kalınlık and Hiza. Each is written as the pane writes it (`configure`).
+    /// (docs/adr/8018): Duvar's Kalınlık and Hiza. Each is written as the pane writes it (`configure`).
     fn cursor_settings(&self) -> &'static [&'static str] {
         &[]
     }
-    /// The layer kind of what the tool writes (docs/adr/3008): the panel's Katman says its layer. None for a tool that
+    /// The layer kind of what the tool writes (docs/adr/8008): the panel's Katman says its layer. None for a tool that
     /// writes no Mimari object, or keeps a layer choice of its own (Duvar ölçüleri's Ölçü katmanı).
     fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
         None

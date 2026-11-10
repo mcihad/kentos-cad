@@ -3860,7 +3860,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
     assert!(!r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31"))));
 }
 
-/// Walls with a tadilat durumu (docs/adr/3039 §4): each wall's lines on its layer's state layer, the iptal one dashed
+/// Walls with a tadilat durumu (docs/adr/8039 §4): each wall's lines on its layer's state layer, the iptal one dashed
 /// (Mimarlar Odası's technique), its hatch on that layer's "-T" (EK-4 4.14.5 after the state); a wall without a state
 /// stays on its layer, its hatch on the layer's "-T", as before. The report says how many.
 #[test]
@@ -3974,7 +3974,7 @@ fn walls_with_a_renovation_state_go_on_their_state_layers() {
     );
 }
 
-/// A wall on an EK-4 layer (docs/adr/3008): its hatches go on the layer's "-T" (the 2026 Dijital Hazırlama
+/// A wall on an EK-4 layer (docs/adr/8008): its hatches go on the layer's "-T" (the 2026 Dijital Hazırlama
 /// Yönetmeliği's EK-4 4.14.5), its lines stay on the layer; the file has both layers. A wall on another layer keeps its
 /// hatch with it.
 #[test]

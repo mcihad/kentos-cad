@@ -74,7 +74,7 @@ pub fn sample_values() -> Vec<VariableValue> {
         ("buro_adres", "Atatürk Blv. 101/7 Çankaya · (0312) 000 00 00"),
         ("yapi_sahibi", "Örnek Yapı Kooperatifi"),
         ("mimar", "Mimar E. Yıldız"),
-        // The MO title block's own (sys:mimari-ruhsat, docs/adr/3037).
+        // The MO title block's own (sys:mimari-ruhsat, docs/adr/8037).
         ("mimar_unvan", "Yüksek Mimar"),
         ("sicil_no", "41234"),
         ("btb_no", "06-2017-0457"),

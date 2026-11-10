@@ -170,14 +170,14 @@ impl SpaceTool {
     }
 
     fn input_for(&self, space: NewSpace, cx: &Context<'_>) -> SpacesCreate {
-        // The view's tadilat durumu (docs/adr/3039 §3): a room found in Yeni durum is İlave, bounded by the walls that
+        // The view's tadilat durumu (docs/adr/8039 §3): a room found in Yeni durum is İlave, bounded by the walls that
         // stand after the works (docs/adr/0798 §3).
         let space = NewSpace {
             arch: cx.phased(space.arch.clone()),
             ..space
         };
         SpacesCreate {
-            // The spaces' layer (docs/adr/3008).
+            // The spaces' layer (docs/adr/8008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Space, cx),
             spaces: vec![space],
             color: cx.draft.color_text(),
@@ -428,7 +428,7 @@ impl Tool for SpaceTool {
                     SpaceColumns::Ignore => SpaceColumns::Net, SpaceColumns::Net => SpaceColumns::All, SpaceColumns::All => SpaceColumns::Ignore,
                 });
             }
-            // Sınır is S, as Döşeme's (docs/adr/3003); Ç, its old letter, still reads.
+            // Sınır is S, as Döşeme's (docs/adr/8003); Ç, its old letter, still reads.
             "S" | "Ç" => {
                 self.draw = !self.draw;
                 self.pts.clear();

@@ -1,4 +1,4 @@
-# M26 (docs/adr/3026): Planı ölçülendir in the real window, on the 2+1 apartment the acceptance test keeps
+# M26 (docs/adr/8026): Planı ölçülendir in the real window, on the 2+1 apartment the acceptance test keeps
 # (`KENTOS_ACCEPTANCE_OUT`, acceptance_flat_tests.rs) opened on Mimari at 1440 × 900, 13 px text. The scenario's one
 # south chain is taken away (a crossing box and Delete), the plan brought near; Ölçü ▾ › Planı ölçülendir draws the
 # four sides' chains and the interior chains before anything is written; Enter writes them, one undo step.

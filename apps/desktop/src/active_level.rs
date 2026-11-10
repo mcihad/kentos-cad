@@ -252,7 +252,7 @@ impl App {
         "blockInsert",
         "wall",
         "wallRectangle",
-        // Oda (docs/adr/3021): its walls and room on Etkin kat.
+        // Oda (docs/adr/8021): its walls and room on Etkin kat.
         "room",
         "wallPartition",
         "column",
@@ -504,7 +504,7 @@ mod tests {
         assert_eq!(app.level_words().as_deref(), Some("Kat: Zemin kat"));
     }
 
-    /// docs/adr/3012, step 3: 1. kat's balcony is dashed on Zemin kat's plan while it is alone, its own plan's again in
+    /// docs/adr/8012, step 3: 1. kat's balcony is dashed on Zemin kat's plan while it is alone, its own plan's again in
     /// Bütün katlar and on 1. kat. The real window once kept it dashed after Bütün katlar.
     #[test]
     fn a_slab_of_the_level_above_is_dashed_until_every_level_shows() {

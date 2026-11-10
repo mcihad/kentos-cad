@@ -1,6 +1,6 @@
-//! Doğrama listesi (docs/adr/3038 §6; M38): the joinery list's block placed at a click, its top left corner at the
+//! Doğrama listesi (docs/adr/8038 §6; M38): the joinery list's block placed at a click, its top left corner at the
 //! cursor. The block is written as the drawing's types give it (`kentos_domain::joinery_list`) and the document keeps
-//! it so; the block and its insert are one undo step “Doğrama listesi”, on the schedules' layer (docs/adr/3008).
+//! it so; the block and its insert are one undo step “Doğrama listesi”, on the schedules' layer (docs/adr/8008).
 
 use kentos_commands::{BlocksInsert, CommandResult};
 use kentos_domain::joinery_list::{JOINERY_LIST_ID, extent};

@@ -1,4 +1,4 @@
-# 2+1 daire gerçek pencerede (docs/adr/3000; üretici scripts/usage/real/scenario_2p1.py).
+# 2+1 daire gerçek pencerede (docs/adr/8000; üretici scripts/usage/real/scenario_2p1.py).
 # Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/daire-2p1.txt .run/gui-evidence/gercek-2p1 --modul mimari
 fit KentOS Mimari
 wait 1500

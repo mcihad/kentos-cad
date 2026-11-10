@@ -38,16 +38,16 @@ columns?: SpaceColumns,
 method?: SpaceMethod, number?: string, name?: string, usage?: string, arch?: ArchInfo, 
 /**
  * Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
- * first. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3).
+ * first. Absent: up to the slab over it, else its storey's top (docs/adr/8040 §3).
  */
 height?: number, 
 /**
- * Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;
+ * Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;
  * a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor.
  */
 floorOffset?: number, 
 /**
- * Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,
+ * Asma tavan (docs/adr/8040 §3, `.kcad` schema 233): its suspended ceiling's underside over its finished floor,
  * metres; its inside height. Absent: none.
  */
 suspendedCeiling?: number, finishes?: SpaceFinishes, 

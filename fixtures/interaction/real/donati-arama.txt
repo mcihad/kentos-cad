@@ -1,4 +1,4 @@
-# M24 (docs/adr/3024): Donatı araması in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on
+# M24 (docs/adr/8024): Donatı araması in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on
 # Mimari at 1440 × 900, 13 px text. Oda draws a room; "lavabo" typed in Komut ara lists the washbasins with their
 # category; Enter takes the washbasin in alone and starts Blok ekle with Duvara hizala on; by the room's west wall
 # its ghost stands against the face, a click places it. "karyola" then finds the beds.

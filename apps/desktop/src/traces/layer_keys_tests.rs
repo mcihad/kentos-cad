@@ -1,4 +1,4 @@
-//! Katman anahtarı on the 2+1 flat (docs/adr/3008). The mouse-and-keyboard trace (fixtures/interaction/v1/
+//! Katman anahtarı on the 2+1 flat (docs/adr/8008). The mouse-and-keyboard trace (fixtures/interaction/v1/
 //! acceptance-flat.json) played as KentOS Mimari starts (the key on, Dış duvar 25) puts its objects on their kinds' EK-4
 //! layers, at least eight. A DXF written of it, read back as another program reads it, has the same layers and the
 //! walls' hatches on their "-T" (EK-4 4.14.5). Before, all 54 objects were on Çizim.

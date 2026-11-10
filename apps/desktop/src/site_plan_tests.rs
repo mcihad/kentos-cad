@@ -1,4 +1,4 @@
-//! Vaziyet planı (M32, docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23): a 15 × 6 m building of four 3 m storeys on a
+//! Vaziyet planı (M32, docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23): a 15 × 6 m building of four 3 m storeys on a
 //! 30 × 18 m parcel drawn round it, 4 m from its south edge, 10 m from its east, 8 m from its north and 5 m from its
 //! west. Parsel takes the parcel by its edge; the south edge clicked once is the front (5 m), the north twice the back
 //! (3 m); Enter writes the site plan and draws the setback line: x −2…22, y 1…11. The front is 1 m short; 450 m² of
@@ -147,7 +147,7 @@ fn a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys() {
         ),
         "{said}"
     );
-    // The site plan's marks (docs/adr/3032 §2): a distance dimension for each edge, ±0.00, its elevation.
+    // The site plan's marks (docs/adr/8032 §2): a distance dimension for each edge, ±0.00, its elevation.
     let marks = |app: &App| {
         let doc = &app.document.as_ref().expect("a drawing").model;
         let mut out: Vec<(String, String)> = doc

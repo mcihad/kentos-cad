@@ -137,7 +137,7 @@ pub struct Spatial {
     elsewhere: HashSet<u32>,
     /// The stairs put as the plan of the level above theirs shows them (docs/adr/0724 §4).
     upper: HashSet<u32>,
-    /// The slabs put as the plan of the level under theirs shows them, dashed (docs/adr/3012, step 3).
+    /// The slabs put as the plan of the level under theirs shows them, dashed (docs/adr/8012, step 3).
     overhead: HashSet<u32>,
 }
 
@@ -256,7 +256,7 @@ impl Spatial {
 
     /// Whether the store draws some objects otherwise than the drawing's own plan does: a sheet's map edited in place
     /// (docs/adr/0716), the stairs under the active level drawn from above (docs/adr/0724 §4) or the slabs over it
-    /// dashed (docs/adr/3012, step 3). A sheet's map then wants a store of its own.
+    /// dashed (docs/adr/8012, step 3). A sheet's map then wants a store of its own.
     pub fn draws_otherwise(&self) -> bool {
         self.sheet_view.is_some() || !self.upper.is_empty() || !self.overhead.is_empty()
     }
@@ -415,7 +415,7 @@ impl Spatial {
             .map(|s| f64::from(s.0))
             .collect();
         // The objects the phase view hides (docs/adr/0346 §2), its walls and openings left out of the joins and cuts
-        // too (docs/adr/3039 §2): a new door in an existing wall leaves the existing plan's wall whole.
+        // too (docs/adr/8039 §2): a new door in an existing wall leaves the existing plan's wall whole.
         let phase_view = doc
             .settings()
             .arch
@@ -442,7 +442,7 @@ impl Spatial {
                 })
                 .collect()
         };
-        // Tadilat projesi (docs/adr/3039 §5): Mimarlar Odası's three techniques; a closed opening fills its wall, so it
+        // Tadilat projesi (docs/adr/8039 §5): Mimarlar Odası's three techniques; a closed opening fills its wall, so it
         // cuts nothing either.
         let renovation = (phase_view == kentos_commands::PhaseView::Renovation).then(|| {
             use kentos_commands::{Entity, RenovationMark as M};
@@ -572,7 +572,7 @@ impl Spatial {
     }
 
     /// Puts the stairs of `upper` as the plan of the level above theirs shows them (docs/adr/0724 §4), the slabs of
-    /// `overhead` as the plan of the level under theirs shows them (docs/adr/3012, step 3), and those that left either
+    /// `overhead` as the plan of the level under theirs shows them (docs/adr/8012, step 3), and those that left either
     /// as their own level's plan does; one put again by a sync came back as its own plan's and is put once more. Their
     /// labels' texts come again with them.
     fn sync_upper(&mut self, doc: &Document, upper: &[u32], overhead: &[u32]) {

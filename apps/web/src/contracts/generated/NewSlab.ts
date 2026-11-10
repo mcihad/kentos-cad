@@ -55,6 +55,6 @@ bound?: boolean,
  */
 space?: string, 
 /**
- * Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
+ * Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
  */
 layers?: SlabLayers, };

@@ -169,7 +169,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ("volume/h", "Saatte hacim: üretim."),
     (
         "W/m2K",
-        "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/3038).",
+        "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038).",
     ),
 ];
 
@@ -537,7 +537,7 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
                 *d = s.apply(*d);
             }
         }
-        // Its axis and sizes are lengths, its top a height (docs/adr/3041 §1).
+        // Its axis and sizes are lengths, its top a height (docs/adr/8041 §1).
         Entity::Beam(e) => {
             let f = &mut e.beam;
             s.points(&mut f.pts);

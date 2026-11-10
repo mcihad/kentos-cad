@@ -1,6 +1,6 @@
 //! Select/click rooms and review the shared semantic numbering plan before one write.
 //!
-//! EK-3 (docs/adr/3027; 2026 Dijital Hazırlama Yönetmeliği, EK-3 Mahal İsimlendirme Esasları): a room's number is
+//! EK-3 (docs/adr/8027; 2026 Dijital Hazırlama Yönetmeliği, EK-3 Mahal İsimlendirme Esasları): a room's number is
 //! Kat_Bölüm_Sıra, three characters each, joined by “_” — its storey's code (EK-2 Tablo 2.14: K00 the ground floor, K01
 //! the first, B01 the first basement, NNN none), the project's section or use code, and its place counted from 001,
 //! clockwise. With EK-3 on, the first number is made from Etkin kat, the rooms go clockwise round their middle from
@@ -182,7 +182,7 @@ impl Number {
                     .extend(Outline::of(&shape(e), Some([5., 3.]), 2., Tone::Accent).strokes);
             }
         }
-        // EK-3 with none clicked: the whole storey's numbers shown before Enter (docs/adr/3027).
+        // EK-3 with none clicked: the whole storey's numbers shown before Enter (docs/adr/8027).
         let uids = if self.ek3 && self.uids.is_empty() {
             Self::storey_rooms(cx)
         } else {
@@ -354,7 +354,7 @@ impl Tool for Number {
         self.see(cx);
     }
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
-        // EK-3 with none clicked: the whole storey (docs/adr/3027).
+        // EK-3 with none clicked: the whole storey (docs/adr/8027).
         if self.ek3 && self.uids.is_empty() {
             self.uids = Self::storey_rooms(cx);
             if self.uids.is_empty() {
@@ -424,7 +424,7 @@ impl Tool for Number {
             ),
             "Y" => self.configure("Y", "pick", cx),
             "G" => self.undo_step(cx),
-            // EK-3 on or off from the keyboard (docs/adr/3027).
+            // EK-3 on or off from the keyboard (docs/adr/8027).
             "E" => self.configure("E", if self.ek3 { "no" } else { "yes" }, cx),
             _ if self.waiting_direction() => {
                 if let Some(p) = cx.typed_point(text, self.direction.last().copied(), None) {

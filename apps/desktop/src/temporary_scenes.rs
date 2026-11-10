@@ -252,7 +252,7 @@ mod tests {
         assert_eq!(
             squares.len(),
             6,
-            "two reference switches, two bond controls and two + that make a distance permanent (docs/adr/3019)"
+            "two reference switches, two bond controls and two + that make a distance permanent (docs/adr/8019)"
         );
         assert_eq!(
             app.session.temporary_permanents().len(),

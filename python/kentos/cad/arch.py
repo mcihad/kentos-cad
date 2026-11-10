@@ -71,7 +71,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions:
     hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız
     istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı,
-    bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/3033):
+    bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/8033):
     Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m²,
     yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en
     büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below,
@@ -82,12 +82,12 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân edilen
     mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte
     2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6)
-    paiy_inside_height_below (docs/adr/3040 §3; balkon, teras, sığınak, şaft, çatı arası
+    paiy_inside_height_below (docs/adr/8040 §3; balkon, teras, sığınak, şaft, çatı arası
     ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m paiy_door_height_below
     (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00,
     öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule
     alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut
-    olmayan bölümün piyesleri okunmaz. docs/adr/3034: merdiven 31 — ortak merdiven kolu
+    olmayan bölümün piyesleri okunmaz. docs/adr/8034: merdiven 31 — ortak merdiven kolu
     ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde
     1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin
     bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz
@@ -110,7 +110,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
     0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa
     bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk).
-    docs/adr/3035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu
+    docs/adr/8035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu
     mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak
     nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı
     Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında
@@ -128,7 +128,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     m (yüksek binada 1,20) bykhy_corridor_narrow, konutta yapı yüksekliği
     21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni bykhy_stair_count_below
     (48/5). settings.arch.sprinklers yağmurlamalı sınırları okutur. Korunumluluk, yangın
-    dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/3036: Otopark
+    dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark
     ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına
     göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm
     başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı
@@ -204,7 +204,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions:
         hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız
         istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı,
-        bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/3033):
+        bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/8033):
         Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m²,
         yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en
         büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below,
@@ -215,12 +215,12 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân edilen
         mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte
         2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6)
-        paiy_inside_height_below (docs/adr/3040 §3; balkon, teras, sığınak, şaft, çatı arası
+        paiy_inside_height_below (docs/adr/8040 §3; balkon, teras, sığınak, şaft, çatı arası
         ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m paiy_door_height_below
         (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00,
         öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule
         alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut
-        olmayan bölümün piyesleri okunmaz. docs/adr/3034: merdiven 31 — ortak merdiven kolu
+        olmayan bölümün piyesleri okunmaz. docs/adr/8034: merdiven 31 — ortak merdiven kolu
         ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde
         1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin
         bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz
@@ -243,7 +243,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
         0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa
         bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk).
-        docs/adr/3035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu
+        docs/adr/8035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu
         mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak
         nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı
         Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında
@@ -261,7 +261,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         m (yüksek binada 1,20) bykhy_corridor_narrow, konutta yapı yüksekliği
         21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni bykhy_stair_count_below
         (48/5). settings.arch.sprinklers yağmurlamalı sınırları okutur. Korunumluluk, yangın
-        dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/3036: Otopark
+        dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark
         ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına
         göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm
         başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı
@@ -424,13 +424,13 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles,
     bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır),
     width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation,
-    type, tag, fill, material (docs/adr/3041 §2; null Betonarme); merdivenin width,
+    type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width,
     risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope,
     base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot
     yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify,
     offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün
     katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz),
-    tag, material (docs/adr/3041 §1, §3; hatalı kiriş invalid_beam); hepsinin level,
+    tag, material (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); hepsinin level,
     phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind),
     renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi
     değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine
@@ -468,13 +468,13 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
         hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends
         (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth,
         legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill,
-        material (docs/adr/3041 §2; null Betonarme); merdivenin width, risers, riserHeight,
+        material (docs/adr/8041 §2; null Betonarme); merdivenin width, risers, riserHeight,
         tread, landing, cut, numbering; rampanın width, rise, slope, base (kat bağını
         kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base
         ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam,
         lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden
         yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material
-        (docs/adr/3041 §1, §3; hatalı kiriş invalid_beam); hepsinin level, phase; null alanı
+        (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); hepsinin level, phase; null alanı
         kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da
         kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı
         kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar,

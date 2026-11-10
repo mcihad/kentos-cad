@@ -66,7 +66,7 @@ Aşağıdaki tablo ilk uygulama öncesini kaydeder; eklenen araçlar çalışma 
   okuyabilmeli; seçenek harflerini ezberlemek zorunda kalmamalı.
 - Mevcut serbest Duvar ve Dikdörtgen var; iki köşeyle **anlamsal duvar çerçevesi**
   oluşturma ayrı bir araç olarak başlangıçta yoktu. Normal alan çizmek bu ihtiyacı karşılamaz.
-- `catalog/v1/templates/mimari.json` cm/1:50 tanımlıyordu; ADR 3007 (M8) onu yeni Mimari projesiyle aynı m/1:100'e
+- `catalog/v1/templates/mimari.json` cm/1:50 tanımlıyordu; ADR 8007 (M8) onu yeni Mimari projesiyle aynı m/1:100'e
   çekti. Komutun ayarsız eski çağrısı otomasyon için cm/1:50 yazmayı sürdürür (ADR 0659).
 - Mevcut mimari nesne, ilişki, canlı çizelge, kat/evre ve tutamaç altyapısı
   kullanılacak. Kodda bulunmaları bu oturumda kusursuz olduklarını kanıtlamaz.

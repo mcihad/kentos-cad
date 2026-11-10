@@ -21,7 +21,7 @@ resources: boolean,
 name?: string, 
 /**
  * Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
- * {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value
+ * {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/8037; one without a value
  * refuses with naming_value_missing). Collisions get a stable numeric suffix.
  */
 naming: string, 
@@ -30,7 +30,7 @@ naming: string,
  */
 dpi?: number, geo: boolean, layers: boolean, 
 /**
- * PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a
+ * PDF/A-2b (ISO 19005-2; docs/adr/8037): every file archival, as the 2026 digital project regulation asks a
  * drawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.
  */
 pdfa?: boolean, 

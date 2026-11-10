@@ -5,7 +5,7 @@ import type { Vec2 } from "./Vec2";
 import type { WallJustify } from "./WallJustify";
 
 /**
- * A beam's own fields (docs/adr/3041 §1).
+ * A beam's own fields (docs/adr/8041 §1).
  */
 export type BeamFields = { 
 /**
@@ -30,11 +30,11 @@ justify?: WallJustify,
  */
 offset?: number, 
 /**
- * What it is (docs/adr/3041 §3): a beam (absent), a lintel or a bond beam.
+ * What it is (docs/adr/8041 §3): a beam (absent), a lintel or a bond beam.
  */
 role?: BeamRole, 
 /**
- * Its underside's height over its storey's floor, metres (docs/adr/3041 §3): a lintel's at its opening's head;
+ * Its underside's height over its storey's floor, metres (docs/adr/8041 §3): a lintel's at its opening's head;
  * absent: it hangs from where its top is (a beam's). Not with an offset.
  */
 baseOffset?: number, 

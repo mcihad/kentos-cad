@@ -47,7 +47,7 @@ pub enum Tab {
     Ramps,
     /// The stairs (docs/adr/0724 §5).
     Stairs,
-    /// The beams, lintels and bond beams (docs/adr/3041 §3).
+    /// The beams, lintels and bond beams (docs/adr/8041 §3).
     Beams,
     /// The materials (docs/adr/0785 §4), when the project keeps materials.
     Materials,
@@ -305,7 +305,7 @@ impl App {
                 "Çevre",
                 // A room's baseboard (docs/adr/0722 §5); a void has none.
                 "Süpürgelik",
-                // Its finished floor to its ceiling (PAİY 4(1)(ıı)) and its asma tavan's area (docs/adr/3040 §3).
+                // Its finished floor to its ceiling (PAİY 4(1)(ıı)) and its asma tavan's area (docs/adr/8040 §3).
                 "İç yükseklik",
                 "Hacim",
                 "Asma tavan",
@@ -532,7 +532,7 @@ impl App {
                 })
                 .collect(),
         };
-        // A slab's layers of a kind (docs/adr/3040 §2): their area (the slab's net area once) and their volume summed.
+        // A slab's layers of a kind (docs/adr/8040 §2): their area (the slab's net area once) and their volume summed.
         use kentos_commands::SlabLayerKind;
         let layer = |r: &kentos_commands::SlabRow, kind: SlabLayerKind| -> Option<(f64, f64)> {
             let of: Vec<_> = r.layers.iter().filter(|l| l.kind == kind).collect();
@@ -551,7 +551,7 @@ impl App {
                 "Net alan",
                 "Çevre",
                 "Hacim",
-                // Its layers (docs/adr/3040 §2): the screed by volume as the concrete, the rest by area.
+                // Its layers (docs/adr/8040 §2): the screed by volume as the concrete, the rest by area.
                 "Kaplama",
                 "Şap",
                 "Isı yalıtımı",
@@ -829,7 +829,7 @@ impl App {
                 })
                 .collect(),
         };
-        // Kiriş, lento, hatıl (docs/adr/3041 §3): a beam's concrete under the slab it carries, the others' whole.
+        // Kiriş, lento, hatıl (docs/adr/8041 §3): a beam's concrete under the slab it carries, the others' whole.
         let beams = Table {
             name: "Kirişler",
             heading: vec!["Numara", "Tür", "Kat", "Ölçü", "Uzunluk", "Döşeme", "Hacim"],

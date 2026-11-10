@@ -1,4 +1,4 @@
-//! Katman anahtarı (docs/adr/3008).
+//! Katman anahtarı (docs/adr/8008).
 //!
 //! A Mimari object goes on its kind's layer, named by the 2026 Dijital Hazırlama Yönetmeliği's EK-4
 //! (`kentos_contracts::ek4`). A brick wall goes on MM-DUVA-TUGLA, a door on MM-KAPI-GENEL, a dimension on MM-XXXX-OLCU.
@@ -34,13 +34,13 @@ pub enum Kind {
     Column,
     Stair,
     Ramp,
-    /// A beam (docs/adr/3041 §1): EK-2 Tablo 2.3 has no Kiriş; it is a Taşıyıcı (TASI), its type KIRIS. A lintel and a
-    /// bond beam (docs/adr/3041 §3) are EK-2's own: Lento (LENT), Hatıl (HATL).
+    /// A beam (docs/adr/8041 §1): EK-2 Tablo 2.3 has no Kiriş; it is a Taşıyıcı (TASI), its type KIRIS. A lintel and a
+    /// bond beam (docs/adr/8041 §3) are EK-2's own: Lento (LENT), Hatıl (HATL).
     Beam(kentos_commands::BeamRole),
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
-    /// A fixture or furniture block (Tefriş), by its type (Mobilya, Vitrifiye; docs/adr/3024); none: GENEL.
+    /// A fixture or furniture block (Tefriş), by its type (Mobilya, Vitrifiye; docs/adr/8024); none: GENEL.
     Furniture(Option<String>),
     Dimension,
     Tag,
@@ -414,7 +414,7 @@ mod tests {
         assert_eq!(names[14], "MM-TEFR-VITRIFIYE");
         assert_eq!(names[15], "MM-XXXX-OLCU");
         assert_eq!(names[20], "MM-TASI-KIRIS");
-        // A lintel and a bond beam (docs/adr/3041 §3): EK-2's own elements.
+        // A lintel and a bond beam (docs/adr/8041 §3): EK-2's own elements.
         assert_eq!((names[21].as_str(), names[22].as_str()), ("MM-LENT-GENEL", "MM-HATL-GENEL"));
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }

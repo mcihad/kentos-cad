@@ -414,7 +414,7 @@ fn same_piece_in(name: &str, got: &opening::Mark, want: &Value) {
     }
 }
 
-/// What each piece of an opening is (docs/adr/3009): in every door and window of the reference's cases a swing is an
+/// What each piece of an opening is (docs/adr/8009): in every door and window of the reference's cases a swing is an
 /// arc at half the pen (ISO 128-23's narrow line), only the frame and the leaves take the whole pen, and a flue's cross
 /// and a recess's outline the narrow line.
 /// Every opening of the reference cases (openings, special doors, multi-leaf slides) with its jambs.
@@ -481,7 +481,7 @@ fn an_openings_pieces_say_what_they_are_and_their_pen() {
     );
 }
 
-/// Every reference door and window (docs/adr/3010) at 1:200, 1:100, 1:50 and 1:20, each scale's detail as the walls
+/// Every reference door and window (docs/adr/8010) at 1:200, 1:100, 1:50 and 1:20, each scale's detail as the walls
 /// take it: a larger scale draws every part a smaller one does and more (a door the very pieces; a window without its
 /// frame's sides spans the hole); 1:50 and 1:20 every piece; the leaves at all four; the swing from 1:100, the frame's
 /// sides from 1:50.

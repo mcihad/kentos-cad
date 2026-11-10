@@ -653,7 +653,7 @@ fn found(app: &mut App, query: &str) -> Vec<String> {
         .map(|h| match h {
             crate::ribbon_search::Hit::Command(c) => c.id.to_owned(),
             crate::ribbon_search::Hit::Model { id, .. } => format!("processing.model.{id}"),
-            // KentOS's library's furniture and fixtures (docs/adr/3024), by name.
+            // KentOS's library's furniture and fixtures (docs/adr/8024), by name.
             crate::ribbon_search::Hit::Fixture(f) => format!("block:{}", f.name),
         })
         .collect()
@@ -980,7 +980,7 @@ fn komut_ara_finds_no_other_modules_work() {
         let hits = found(&mut mimari, query);
         assert!(hits.is_empty(), "Mimari: {query}: {hits:?}");
     }
-    // A parcel is Mimari's own too since the site plan (docs/adr/3032): its Parsel ve bahçe mesafeleri, never KentOS
+    // A parcel is Mimari's own too since the site plan (docs/adr/8032): its Parsel ve bahçe mesafeleri, never KentOS
     // Harita's parcel drawing (`tool.parcel`).
     assert_eq!(found(&mut mimari, "parsel"), ["tool.siteParcel"]);
     // An attachment's web address is no address search; Ölçülendirme's slope dimension no terrain slope.

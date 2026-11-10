@@ -348,7 +348,7 @@ fn document_section(doc: &Document, crs: bool) -> Section {
     }
 }
 
-/// No selection, the project with a zoning (docs/adr/3030): its emsal and TAKS against their limits, live as the
+/// No selection, the project with a zoning (docs/adr/8030): its emsal and TAKS against their limits, live as the
 /// status bar's badge, with the room the badge has not on a narrow bar.
 fn zoning_section(doc: &Document) -> Option<Section> {
     let r = doc.model.zoning_report()?;
@@ -367,7 +367,7 @@ fn zoning_section(doc: &Document) -> Option<Section> {
                 Row::figure("Emsal", against(r.far(), r.far_limit)),
                 Row::figure("TAKS", against(r.coverage(), r.coverage_limit)),
             ];
-            // The site plan's garden distances (docs/adr/3032).
+            // The site plan's garden distances (docs/adr/8032).
             if crate::zoning_badge::site(&doc.model).is_some() {
                 let short = crate::zoning_badge::short_edges(&doc.model);
                 rows.push(Row::text(
@@ -991,7 +991,7 @@ fn origin_rows(parts: &[kentos_native_application::appearance_origin::Explained]
 }
 
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
-/// The rows a building element's own section starts with, in this order (docs/adr/3005, plan ADV-09): what makes it
+/// The rows a building element's own section starts with, in this order (docs/adr/8005, plan ADV-09): what makes it
 /// the element it is, then where it stands.
 const BUILDING_MAIN: [&str; 10] = ["Numara", "Ad", "Tür", "Kalınlık", "Genişlik", "Stil", "Yükseklik", "Hiza", "Kat", "Tadilat durumu"];
 
@@ -1339,7 +1339,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 })
             };
             let fixed = kentos_commands::fixed_width(&x.components).is_some();
-            // A wall's width is its Kalınlık, as the tool and its panel say (docs/adr/3003); a line's weight is Çizgi kalınlığı.
+            // A wall's width is its Kalınlık, as the tool and its panel say (docs/adr/8003); a line's weight is Çizgi kalınlığı.
             geo.push(metres("Kalınlık", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
             // Kalınlıkta sabit (docs/adr/0771 §2): the line a width or style change keeps, this session's.
             let keep_now = super::wall_parts::keep();
@@ -1484,7 +1484,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             geo.push(
                 Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)),
             );
-            // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/3040 §1): the number in
+            // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/8040 §1): the number in
             // its cell, where it comes from in a note under it (docs/adr/0687: a decorated number does not fit a
             // numeric cell at a large text size).
             let height = doc.model.wall_height(x);
@@ -1503,7 +1503,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             if x.height.is_none() && height.is_some() {
                 geo.push(Row::note(match doc.model.wall_top_from(x) {
                     Some(kentos_domain::WallTop::Slab) => "Üst döşemenin altına kadar",
-                    // Docs/adr/3041 §1: a beam over it.
+                    // Docs/adr/8041 §1: a beam over it.
                     Some(kentos_domain::WallTop::Beam) => "Kirişin altına kadar",
                     None => "Katın yüksekliği",
                 }));
@@ -1706,7 +1706,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     )
                 })
                 .collect();
-            // Alan yöntemi, as the Mahal tool names it (docs/adr/3003).
+            // Alan yöntemi, as the Mahal tool names it (docs/adr/8003).
             geo.push(Row::text("Alan yöntemi", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
             if x.seed.is_some() {
                 let items=SpaceColumns::ALL.iter().map(|&m|pick(m.choice().into(),m==x.columns,
@@ -1767,7 +1767,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 Row::text("Tadilat durumu", phase_name)
                     .editor(select(phase_name.to_owned(), phases)),
             );
-            // Its floor, its asma tavan and its inside height (docs/adr/3040 §3; PAİY 4(1)(ıı): from the floor's finish
+            // Its floor, its asma tavan and its inside height (docs/adr/8040 §3; PAİY 4(1)(ıı): from the floor's finish
             // to the ceiling's): each number in its cell, where it comes from in a note under it (docs/adr/0687: a
             // decorated number does not fit a numeric cell).
             let (floor, floor_from) = doc.model.room_floor(x);
@@ -1821,7 +1821,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             }) {
                 geo.push(Row::note(from));
             }
-            // The finishes as the room list writes them (docs/adr/3038; PAİY 57(29)): “Döşeme”, the regulation's word
+            // The finishes as the room list writes them (docs/adr/8038; PAİY 57(29)): “Döşeme”, the regulation's word
             // and the schedules', not “Zemin” (the ground's).
             geo.push(words(
                 "Döşeme kaplaması",
@@ -1968,7 +1968,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             if let Some(l) = level {
                 geo.push(Row::figure("Üst kot", f.length_bare(l.elevation + x.offset)).unit(f.length_unit_label()));
             }
-            // Its layers (docs/adr/3040 §2): a build-up picked whole, then each layer's thickness from the top, and
+            // Its layers (docs/adr/8040 §2): a build-up picked whole, then each layer's thickness from the top, and
             // the whole thickness.
             let build_ups = kentos_commands::slab_build_ups();
             let named = build_ups
@@ -2163,7 +2163,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             geo.push(Row::text("Tür", type_name.clone()).editor(select(type_name, type_items)));
             geo.push(metres("Genişlik", x.width).editor(number(Field::OpeningWidth(slot))));
             geo.push(metres("Konum", x.at).editor(number(Field::OpeningAt(slot))));
-            // Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up.
+            // Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up.
             // Duvarınki: its wall's, which it says.
             let wall_phase = kentos_domain::Uuid::parse_str(&x.host)
                 .ok()

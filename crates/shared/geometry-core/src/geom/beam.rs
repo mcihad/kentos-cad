@@ -1,6 +1,6 @@
-//! A beam's plan (docs/adr/3041 §1): its band along its axis, moved to the side its justification says, drawn dashed and
+//! A beam's plan (docs/adr/8041 §1): its band along its axis, moved to the side its justification says, drawn dashed and
 //! narrow as what lies over the plan's cut (ISO 128-23's dashed narrow line, 02.1, half the wide line: the slab of the
-//! level above's own, [`crate::geom::slab::OVERHEAD_PEN`]); its words along it as a column's beside it (docs/adr/3011):
+//! level above's own, [`crate::geom::slab::OVERHEAD_PEN`]); its words along it as a column's beside it (docs/adr/8011):
 //! none at 1:200, its number at 1:100, its number and size from 1:50 ("K101 25/50").
 
 use crate::Vec2;

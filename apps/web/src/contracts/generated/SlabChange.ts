@@ -13,6 +13,6 @@ export type SlabChange = { role?: SlabRole, thickness?: number, offset?: number,
  */
 edge?: NewSlabEdge | null, excluded?: boolean, 
 /**
- * Its layers besides its structure, all of them (docs/adr/3040 §2); empty lists take them away.
+ * Its layers besides its structure, all of them (docs/adr/8040 §2); empty lists take them away.
  */
 layers?: SlabLayers, };

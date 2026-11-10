@@ -55,7 +55,7 @@ pub const TAG_PLACES: [&str; 40] = [
     // The shares (docs/adr/0784 §3): a space's unit's share of the common areas and its gross.
     "share",
     "gross",
-    // An opening's type's joinery code and its size in centimetres, 90/210 (docs/adr/3028; KCAD schema 208).
+    // An opening's type's joinery code and its size in centimetres, 90/210 (docs/adr/8028; KCAD schema 220).
     "code",
     "size",
 ];
@@ -79,8 +79,8 @@ pub enum TagShape {
     Rectangle,
     Rounded,
     None,
-    /// Round the first line only (docs/adr/3027): a room's number in its ellipse, its name and area below, as
-    /// Mimarlar Odası's room tag (KCAD schema 207).
+    /// Round the first line only (docs/adr/8027): a room's number in its ellipse, its name and area below, as
+    /// Mimarlar Odası's room tag (KCAD schema 219).
     Ellipse,
 }
 
@@ -122,7 +122,7 @@ fn is_circle(s: &TagShape) -> bool {
 }
 
 /// Whether `e` is a tag whose template names an opening's joinery code or size, or a schedule with a Kod column
-/// (docs/adr/3028): KCAD schema 208.
+/// (docs/adr/8028): KCAD schema 220.
 pub fn needs_opening_codes(e: &crate::Entity) -> bool {
     match e {
         crate::Entity::Tag(t) => t
@@ -136,7 +136,7 @@ pub fn needs_opening_codes(e: &crate::Entity) -> bool {
     }
 }
 
-/// Whether `e` is a schedule with a column of Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029): KCAD schema
+/// Whether `e` is a schedule with a column of Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/8029): KCAD schema
 /// 209.
 pub fn needs_paiy_areas(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Table(t) if matches!(&t.source,
@@ -144,14 +144,14 @@ pub fn needs_paiy_areas(e: &crate::Entity) -> bool {
             if *by_level || columns.iter().any(|c| c.field.is_paiy())))
 }
 
-/// Whether `e` is a units schedule with one of kat irtifakı's fields (docs/adr/3031): KCAD schema 211.
+/// Whether `e` is a units schedule with one of kat irtifakı's fields (docs/adr/8031): KCAD schema 223.
 pub fn needs_land_shares(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Table(t) if matches!(&t.source,
         Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_land())))
 }
 
-/// Whether `e` says the room list's fields (docs/adr/3038): a space with a sill's, a stair's or a railing's finish, or a
-/// spaces schedule with one of the room list's columns: KCAD schema 216.
+/// Whether `e` says the room list's fields (docs/adr/8038): a space with a sill's, a stair's or a railing's finish, or a
+/// spaces schedule with one of the room list's columns: KCAD schema 228.
 pub fn needs_room_list(e: &crate::Entity) -> bool {
     match e {
         crate::Entity::Space(s) => s.space.finishes.has_room_list(),
@@ -161,7 +161,7 @@ pub fn needs_room_list(e: &crate::Entity) -> bool {
     }
 }
 
-/// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.
+/// Whether `e` is a tag framed by an ellipse (docs/adr/8027): KCAD schema 219.
 pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Tag(t) if t.tag.shape == TagShape::Ellipse)
 }

@@ -395,7 +395,7 @@ impl App {
         let name = doc.name().to_owned();
         // The viewport fits its home view, once the drawing area has its size.
         self.show_document(*doc);
-        // KentOS Mimari's new project opens on Mimari, where Duvar is (docs/adr/3007).
+        // KentOS Mimari's new project opens on Mimari, where Duvar is (docs/adr/8007).
         self.open_new_project_on_program_tab();
         // The next wizard starts on this type (a module's program chose none: its own), and a local project's unit.
         let mut remembered = Vec::new();

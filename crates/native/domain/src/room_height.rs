@@ -1,9 +1,9 @@
-//! A room's floor, ceiling and inside height (docs/adr/3040 §3; M40, ADV-18). PAİY 4(1)(ıı): the inside height is
+//! A room's floor, ceiling and inside height (docs/adr/8040 §3; M40, ADV-18). PAİY 4(1)(ıı): the inside height is
 //! "taban döşeme kaplaması üzerinden tavan kaplamasına kadar olan net mesafe", from the floor's finish to the
 //! ceiling's.
 //!
 //! - **Its floor:** its own offset from its storey's floor (a wet room 2 cm lower); else the top of the floor slab under
-//!   it (its finish, docs/adr/3040 §2), the slab whose top is half a metre under its storey's floor to 10 cm over it,
+//!   it (its finish, docs/adr/8040 §2), the slab whose top is half a metre under its storey's floor to 10 cm over it,
 //!   the highest; else its storey's floor (0 without a storey).
 //! - **Its ceiling:** its suspended ceiling (asma tavan: its height over the floor); else its own inside height, typed;
 //!   else the ceiling of the lowest slab over it (its structure's underside less its plaster), within its storey; else
@@ -14,7 +14,7 @@ use kentos_contracts::{ArchInfo, SpaceFields, Vec2};
 
 use crate::document::Document;
 
-/// How far over a room's floor a slab's ceiling must be to stand over it, metres (a wall's rule, docs/adr/3040 §1).
+/// How far over a room's floor a slab's ceiling must be to stand over it, metres (a wall's rule, docs/adr/8040 §1).
 const OVER: f64 = 0.1;
 
 /// Where a room's floor comes from.

@@ -1,4 +1,4 @@
-//! Doğramaların ısıl geçirgenliği (docs/adr/3038; M38): TS 825:2024 "Binalarda ısı yalıtım kuralları", made binding by
+//! Doğramaların ısıl geçirgenliği (docs/adr/8038; M38): TS 825:2024 "Binalarda ısı yalıtım kuralları", made binding by
 //! Tebliğ MHGM-2025/1 (RG 20.2.2025/32819, in force from 1.4.2025), asks a window's Up of at most 1.8 W/m²K in every
 //! climate zone; the standard's recommended U values are binding beside its energy limits. Mimari denetim's Mevzuat
 //! group says a window type the drawing uses whose U value is above it, once for the type with its windows. A type
@@ -26,7 +26,7 @@ fn u_text(v: f64) -> String {
     t.replace('.', ",")
 }
 
-/// The windows' findings (docs/adr/3038), each said through `push(said, slots, at)`.
+/// The windows' findings (docs/adr/8038), each said through `push(said, slots, at)`.
 pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V)) {
     for t in doc.opening_types() {
         let Some(u) = t.u_value else {

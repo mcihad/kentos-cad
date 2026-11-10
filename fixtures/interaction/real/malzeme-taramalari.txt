@@ -1,4 +1,4 @@
-# M14 (docs/adr/3014): TS 5319's symbols on the 1:20 sheet of the drawing headless scales.rs keeps with
+# M14 (docs/adr/8014): TS 5319's symbols on the 1:20 sheet of the drawing headless scales.rs keeps with
 # KENTOS_SCALE_PDF_DIR (malzeme.kcad: Bölme duvar 10, Betonarme perde 25, Gazbeton 20 and Dış duvar 25, 3 m each, and
 # a 30/50 column), opened with the file: "KentOS Mimari — Malzeme". The A-101 tab opens the 1:20 sheet; seven wheel
 # turns in at (735, 540) bring the walls' right ends and the column close: the insulations' SN55 zigzag fitted to their

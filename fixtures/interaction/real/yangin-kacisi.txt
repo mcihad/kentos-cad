@@ -1,4 +1,4 @@
-# M35 (docs/adr/3035), 1920 × 1080 (KENTOS_REAL_SIZE): Mimari › Denetim › Mevzuat on an eight-storey dwelling building
+# M35 (docs/adr/8035), 1920 × 1080 (KENTOS_REAL_SIZE): Mimari › Denetim › Mevzuat on an eight-storey dwelling building
 # (konut-yangin.kcad from fire_escape_tests): BYKHY 48/2 (22.00 m inside flat “1”), 48/4 (26.15 m from its door),
 # 48/5-b (one stair at 24 m) and 33/2 (a high building's 1.15 m corridor). Then Proje ayarları › Mimari › Yangın
 # güvenliği › Yağmurlama (sprinkler) sistemi var; Denetle again: the walks may be 30 m, the stairs and corridor stay.

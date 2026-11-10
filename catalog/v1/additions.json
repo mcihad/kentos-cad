@@ -2778,7 +2778,7 @@
       "id": "tool.beam",
       "title": "Kiriş",
       "icon": "beam",
-      "description": "Tür (T): Kiriş, Lento ya da Hatıl (docs/adr/3041 §1, §3). Kiriş ve hatıl: eksenin noktaları, Enter yazar; Genişlik (E), Yükseklik (Y: kirişte döşeme dahil), Hiza (H: orta, sol, sağ), kirişte Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), hatılda Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği). Lento: kapıya ya da pencereye tıklanır; açıklığın başında, duvar kalınlığında, iki yanda Oturma (O) kadar uzanır (TBDY 2018 11.5.3: en az 20 cm; yüksekliği en az 15 cm). Numara (N: K101, L101, H101 gibi; her birinden sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır. Kirişin altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir. Etkin kata, kendi katmanına yazılır: MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL.",
+      "description": "Tür (T): Kiriş, Lento ya da Hatıl (docs/adr/8041 §1, §3). Kiriş ve hatıl: eksenin noktaları, Enter yazar; Genişlik (E), Yükseklik (Y: kirişte döşeme dahil), Hiza (H: orta, sol, sağ), kirişte Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), hatılda Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği). Lento: kapıya ya da pencereye tıklanır; açıklığın başında, duvar kalınlığında, iki yanda Oturma (O) kadar uzanır (TBDY 2018 11.5.3: en az 20 cm; yüksekliği en az 15 cm). Numara (N: K101, L101, H101 gibi; her birinden sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır. Kirişin altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir. Etkin kata, kendi katmanına yazılır: MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL.",
       "aliases": [
         "BEAM",
         "KIRIS",
@@ -2962,7 +2962,7 @@
       "title": "Mahal listesi",
       "short": "Mahal listesi",
       "icon": "scheduleRoomList",
-      "description": "Projenin mahal listesini imleçten yerleştirir (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): kat kat, en alttan başlayarak, katın başlığı altında her mahalin numarası ve adı; döşeme, süpürgelik, duvar ve tavan kaplaması; mahale hizmet eden kapılar ve pencereler doğrama kodlarıyla (K01, P01 (2)); denizlik ve parapet, merdiven basamak ve rıht, küpeşte ve korkuluk. Kaplama hücreleri mahallere yazılır; liste çizimi izler.",
+      "description": "Projenin mahal listesini imleçten yerleştirir (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): kat kat, en alttan başlayarak, katın başlığı altında her mahalin numarası ve adı; döşeme, süpürgelik, duvar ve tavan kaplaması; mahale hizmet eden kapılar ve pencereler doğrama kodlarıyla (K01, P01 (2)); denizlik ve parapet, merdiven basamak ve rıht, küpeşte ve korkuluk. Kaplama hücreleri mahallere yazılır; liste çizimi izler.",
       "aliases": [
         "MAHALLISTESI",
         "MAHALLİSTESİ",
@@ -2978,7 +2978,7 @@
       "title": "Tadilat lejantı",
       "short": "Tadilat lejantı",
       "icon": "renovationLegend",
-      "description": "Mimarlar Odası'nın tadilat lejantını imleçten yerleştirir (docs/adr/3039): başlık ve üç kutu; mevcut düz kontur, ilave 45° taralı, iptal kesikli. Ölçüleri pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, kutu 15 × 6 mm. Blok MM-XXXX-TADILATLEJANTI, lejant katmanında.",
+      "description": "Mimarlar Odası'nın tadilat lejantını imleçten yerleştirir (docs/adr/8039): başlık ve üç kutu; mevcut düz kontur, ilave 45° taralı, iptal kesikli. Ölçüleri pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, kutu 15 × 6 mm. Blok MM-XXXX-TADILATLEJANTI, lejant katmanında.",
       "aliases": [
         "TADILATLEJANTI",
         "RENOVATIONLEGEND"
@@ -2992,7 +2992,7 @@
       "title": "Doğrama listesi",
       "short": "Doğrama listesi",
       "icon": "joineryList",
-      "description": "Grafik doğrama listesini imleçten yerleştirir (docs/adr/3038): çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
+      "description": "Grafik doğrama listesini imleçten yerleştirir (docs/adr/8038): çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
       "aliases": [
         "DOGRAMALISTESI",
         "DOĞRAMALISTESİ",
@@ -3052,7 +3052,7 @@
       "title": "Parsel ve bahçe mesafeleri",
       "short": "Parsel",
       "icon": "siteParcel",
-      "description": "Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Ölçüler (Ö) açıkken binadan her kenara cephe ortasında bir ölçü, ±0,00 kot işareti ve ±0,00 kotunun yazısı da çizilir. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
+      "description": "Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Ölçüler (Ö) açıkken binadan her kenara cephe ortasında bir ölçü, ±0,00 kot işareti ve ±0,00 kotunun yazısı da çizilir. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
       "aliases": [
         "VAZIYET",
         "VAZİYET",
@@ -3073,7 +3073,7 @@
       "title": "Kaçış yolları",
       "short": "Kaçış yolları",
       "icon": "escapeRoutes",
-      "description": "Yangın kaçışı (docs/adr/3035; Binaların Yangından Korunması Hakkında Yönetmelik): etkin katın kaçış yollarını çizer — her mahalin duvardan 40 cm içerideki en uzak noktasından (32/6) en yakın kat çıkışına (Merdiven adlı ortak mahal, açık merdiven ya da zemin katta dışarı açılan kapı); dairede en uzak noktadan daire kapısına (48/2) ve daire kapısından kat çıkışına (48/4). Her yol ölçtüğünü sınırıyla yazar (tek yön 28,07 m > 15,00 m); sınırı aşan kırmızı, uyan yeşil, yönetmeliğin aramadığı (48/1) gri çizilir. Yeniden çalışınca eski yolları siler; tek geri alma adımıdır. Yağmurlama sistemi Proje ayarları › Mimari › Yangın güvenliği'nden okunur; bulgular Denetim › Mevzuat'tadır.",
+      "description": "Yangın kaçışı (docs/adr/8035; Binaların Yangından Korunması Hakkında Yönetmelik): etkin katın kaçış yollarını çizer — her mahalin duvardan 40 cm içerideki en uzak noktasından (32/6) en yakın kat çıkışına (Merdiven adlı ortak mahal, açık merdiven ya da zemin katta dışarı açılan kapı); dairede en uzak noktadan daire kapısına (48/2) ve daire kapısından kat çıkışına (48/4). Her yol ölçtüğünü sınırıyla yazar (tek yön 28,07 m > 15,00 m); sınırı aşan kırmızı, uyan yeşil, yönetmeliğin aramadığı (48/1) gri çizilir. Yeniden çalışınca eski yolları siler; tek geri alma adımıdır. Yağmurlama sistemi Proje ayarları › Mimari › Yangın güvenliği'nden okunur; bulgular Denetim › Mevzuat'tadır.",
       "aliases": [
         "KACIS",
         "KAÇIŞ",
@@ -3092,7 +3092,7 @@
       "title": "Emsal ve TAKS tablosu",
       "short": "Emsal tablosu",
       "icon": "zoningTable",
-      "description": "Parselin imar durumunu çizimle karşılaştıran canlı tabloyu imleçten yerleştirir (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 57/3): parsel alanı, emsal ve TAKS ile izin verdikleri alanların yanında projenin değerleri ve kalanı, emsal harici payı (%30), yapı inşaat alanı ve her katın emsale dahil ve harici alanı. Sınırı aşan değer kırmızı yazılır. Mahal, duvar, program ya da Proje ayarları › Mimari › İmar durumu değişince yeniden yazılır.",
+      "description": "Parselin imar durumunu çizimle karşılaştıran canlı tabloyu imleçten yerleştirir (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 57/3): parsel alanı, emsal ve TAKS ile izin verdikleri alanların yanında projenin değerleri ve kalanı, emsal harici payı (%30), yapı inşaat alanı ve her katın emsale dahil ve harici alanı. Sınırı aşan değer kırmızı yazılır. Mahal, duvar, program ya da Proje ayarları › Mimari › İmar durumu değişince yeniden yazılır.",
       "aliases": [
         "EMSAL",
         "EMSALTABLOSU",
@@ -3111,7 +3111,7 @@
       "title": "Otopark hesabı",
       "short": "Otopark hesabı",
       "icon": "parkingTable",
-      "description": "Bağımsız bölümlerin otopark ihtiyacını Otopark Yönetmeliği'ne göre hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/3036): konutta bölümün brüt alanına göre 80 m²'den küçükse 3 daireye 1, 80–120 m² 2 daireye 1, 120–180 m² daireye 1, 180 m²'den büyükse daireye 2 (Ek-1, RG 25.3.2021); dükkân, mağaza ve bankada 50 m²'ye 1, bölüm başına en az 1 (RG 16.6.2022); büroda 50 m²'ye 1. Toplam bir üste yuvarlanır (8/4). Adı Otopark ya da Garaj olan mahallerin net alanı 20 m²'ye bölünerek çizimdeki yer sayısı bulunur (4/1-ç); az ise kırmızı yazılır. 20 ve daha fazla yerde %5 (en az 1) elektrikli araç şarj yeri (5/1-j). Program, mahal ya da ayar değişince yeniden yazılır.",
+      "description": "Bağımsız bölümlerin otopark ihtiyacını Otopark Yönetmeliği'ne göre hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/8036): konutta bölümün brüt alanına göre 80 m²'den küçükse 3 daireye 1, 80–120 m² 2 daireye 1, 120–180 m² daireye 1, 180 m²'den büyükse daireye 2 (Ek-1, RG 25.3.2021); dükkân, mağaza ve bankada 50 m²'ye 1, bölüm başına en az 1 (RG 16.6.2022); büroda 50 m²'ye 1. Toplam bir üste yuvarlanır (8/4). Adı Otopark ya da Garaj olan mahallerin net alanı 20 m²'ye bölünerek çizimdeki yer sayısı bulunur (4/1-ç); az ise kırmızı yazılır. 20 ve daha fazla yerde %5 (en az 1) elektrikli araç şarj yeri (5/1-j). Program, mahal ya da ayar değişince yeniden yazılır.",
       "aliases": [
         "OTOPARK",
         "OTOPARKHESABI",
@@ -3128,7 +3128,7 @@
       "title": "Sığınak hesabı",
       "short": "Sığınak hesabı",
       "icon": "shelterTable",
-      "description": "Sığınak Yönetmeliği'ne göre (7, 8; RG 7.11.2025 değişikliği) gereken sığınağı hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/3036): konut bölümünde oda sayısına göre 1 oda 2, 2 oda 3, 3 ve daha fazla oda 4 kişi; öbür bölümlerde brüt alan ÷ 20 kişi; kişi başına 1 m² net. 10'dan az bağımsız bölümlü yalnız konut yapısında, 1500 m²'den az konut dışı yapıda ve 10'dan az konutlu, 1500 m²'den az karma yapıda sığınak aranmaz (7/a–c). Adı Sığınak olan mahallerin net alanı karşılaştırılır; az ise kırmızı yazılır. Her 100 kişiye kadın ve erkek için birer tuvalet ve lavabo, 100 m²'yi aşan sığınakta 2 çıkış yazılır. Program, mahal ya da ayar değişince yeniden yazılır.",
+      "description": "Sığınak Yönetmeliği'ne göre (7, 8; RG 7.11.2025 değişikliği) gereken sığınağı hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/8036): konut bölümünde oda sayısına göre 1 oda 2, 2 oda 3, 3 ve daha fazla oda 4 kişi; öbür bölümlerde brüt alan ÷ 20 kişi; kişi başına 1 m² net. 10'dan az bağımsız bölümlü yalnız konut yapısında, 1500 m²'den az konut dışı yapıda ve 10'dan az konutlu, 1500 m²'den az karma yapıda sığınak aranmaz (7/a–c). Adı Sığınak olan mahallerin net alanı karşılaştırılır; az ise kırmızı yazılır. Her 100 kişiye kadın ve erkek için birer tuvalet ve lavabo, 100 m²'yi aşan sığınakta 2 çıkış yazılır. Program, mahal ya da ayar değişince yeniden yazılır.",
       "aliases": [
         "SIGINAK",
         "SIĞINAK",
@@ -3145,7 +3145,7 @@
       "title": "Kat irtifakı tablosu",
       "short": "Kat irtifakı",
       "icon": "scheduleLandShares",
-      "description": "Tapuya verilecek projenin paylaşım tablosunu imleçten yerleştirir (docs/adr/3031; Kat Mülkiyeti Kanunu 12/a, Planlı Alanlar İmar Yönetmeliği 57/2-a): her bağımsız bölümün numarası, katı, niteliği, BB net ve brüt alanı, eklentileri, BB toplam ve genel brüt alanı ve arsa payı. Arsa payı bölümlerin toplam brütü ve değer katsayılarıyla oranlıdır; payda programın paydası, yoksa parsel alanı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
+      "description": "Tapuya verilecek projenin paylaşım tablosunu imleçten yerleştirir (docs/adr/8031; Kat Mülkiyeti Kanunu 12/a, Planlı Alanlar İmar Yönetmeliği 57/2-a): her bağımsız bölümün numarası, katı, niteliği, BB net ve brüt alanı, eklentileri, BB toplam ve genel brüt alanı ve arsa payı. Arsa payı bölümlerin toplam brütü ve değer katsayılarıyla oranlıdır; payda programın paydası, yoksa parsel alanı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
       "aliases": [
         "KATIRTIFAKI",
         "KATİRTİFAKI",
@@ -3303,7 +3303,7 @@
       "title": "Ruhsat takımı",
       "short": "Ruhsat takımı",
       "icon": "permitSet",
-      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen aşamanın pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 3037).",
+      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen aşamanın pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 8037).",
       "aliases": [
         "RUHSAT",
         "RUHSATTAKIMI",

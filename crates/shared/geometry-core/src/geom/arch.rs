@@ -170,14 +170,14 @@ pub struct ColumnSpec {
     pub fill: bool,
     pub tag: Option<String>,
     pub place: Option<String>,
-    /// Its material (docs/adr/3041 §2); none: Betonarme ([`COLUMN_MATERIAL`]). A wall's layer of the same material it
+    /// Its material (docs/adr/8041 §2); none: Betonarme ([`COLUMN_MATERIAL`]). A wall's layer of the same material it
     /// meets is one section with it.
     pub material: Option<String>,
     /// Its level's id (the contract's `arch.level`): a wall it cuts is on the same one, or both on none.
     pub level: Option<String>,
 }
 
-/// A column's material when it names none (docs/adr/3041 §2).
+/// A column's material when it names none (docs/adr/8041 §2).
 pub const COLUMN_MATERIAL: &str = "Betonarme";
 
 impl ColumnSpec {
@@ -771,7 +771,7 @@ fn circle_ring(c: Vec2, r: f64) -> Vec<Vec2> {
         .collect()
 }
 
-/// How much of an architectural object a drawing shows (docs/adr/3011), from its view ([`level_of`]).
+/// How much of an architectural object a drawing shows (docs/adr/8011), from its view ([`level_of`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Level {
     /// Everything as it was drawn before the levels: its tools' previews and the reference cases ([`pieces`]).
@@ -786,7 +786,7 @@ pub(crate) enum Level {
     Construction,
 }
 
-/// A column's concrete at 1:20 (docs/adr/3014): TS 5319's SN46, betonarme.
+/// A column's concrete at 1:20 (docs/adr/8014): TS 5319's SN46, betonarme.
 pub const CONCRETE: &str = "SN46";
 
 /// The level a view draws at: the simplest beyond 1:150 schematic, construction from standard on.
@@ -831,8 +831,8 @@ pub fn column_pieces(at: Vec2, spec: &ColumnSpec, scale: f64) -> Vec<Piece> {
     column_pieces_at(at, spec, scale, Level::Whole, false, None)
 }
 
-/// [`column_pieces`] at `level`: beyond 1:150 without its words, from 1:50 with its size under them (docs/adr/3011);
-/// `detailed` (1:20, Ayrıntılı) its concrete as TS 5319's SN46 instead of a solid fill (docs/adr/3014): a detail shows
+/// [`column_pieces`] at `level`: beyond 1:150 without its words, from 1:50 with its size under them (docs/adr/8011);
+/// `detailed` (1:20, Ayrıntılı) its concrete as TS 5319's SN46 instead of a solid fill (docs/adr/8014): a detail shows
 /// the material where a plan darkens the bearing element (Mimarlar Odası §14.5.3 i).
 fn column_pieces_at(
     at: Vec2,
@@ -851,7 +851,7 @@ fn column_pieces_at(
         let c = column_corners(at, spec);
         (c.clone(), polygon(c))
     };
-    // One section with a wall's layer of its material (docs/adr/3041 §2): that layer's look, as the wall draws it at
+    // One section with a wall's layer of its material (docs/adr/8041 §2): that layer's look, as the wall draws it at
     // the view's detail.
     let joined_look = joined.and_then(|(j, detail)| {
         use crate::geom::wall::Detail;
@@ -934,12 +934,12 @@ fn column_pieces_at(
     out
 }
 
-/// Whether the column is reinforced concrete (docs/adr/3041 §2): its material's name says so (Betonarme, Betonarme C30).
+/// Whether the column is reinforced concrete (docs/adr/8041 §2): its material's name says so (Betonarme, Betonarme C30).
 fn is_concrete(spec: &ColumnSpec) -> bool {
     crate::geom::column_join::material_key(spec.material_name()).starts_with("betonarme")
 }
 
-/// A column's pieces as a view draws it one section with a wall's layer of its material (docs/adr/3041 §2): that
+/// A column's pieces as a view draws it one section with a wall's layer of its material (docs/adr/8041 §2): that
 /// layer's look over it, its outline where it is not inside the layer.
 pub fn column_pieces_joined(
     at: Vec2,
@@ -1427,7 +1427,7 @@ pub fn stair_upper_pieces(pts: &[Vec2], spec: &StairSpec, scale: f64) -> Vec<Pie
     stair_upper_pieces_at(pts, spec, scale, Level::Whole)
 }
 
-/// [`stair_upper_pieces`] at `level`: beyond 1:150 without its railings (docs/adr/3011).
+/// [`stair_upper_pieces`] at `level`: beyond 1:150 without its railings (docs/adr/8011).
 fn stair_upper_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Level) -> Vec<Piece> {
     let mut out = Vec::new();
     if pts.len() < 2 {
@@ -1614,7 +1614,7 @@ fn stair_words(walk: &Walk, spec: &StairSpec, scale: f64) -> Shape {
     shape
 }
 
-/// [`stair_pieces`] at `level` (docs/adr/3011): beyond 1:150 without its railings and its treads' numbers, from 1:50
+/// [`stair_pieces`] at `level` (docs/adr/8011): beyond 1:150 without its railings and its treads' numbers, from 1:50
 /// with its risers and treads in words.
 fn stair_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Level) -> Vec<Piece> {
     if spec.upper {
@@ -1856,7 +1856,7 @@ pub fn ramp_pieces(pts: &[Vec2], spec: &RampSpec, scale: f64) -> Vec<Piece> {
     ramp_pieces_at(pts, spec, scale, Level::Whole)
 }
 
-/// [`ramp_pieces`] at `level`: beyond 1:150 without its railings (docs/adr/3011).
+/// [`ramp_pieces`] at `level`: beyond 1:150 without its railings (docs/adr/8011).
 fn ramp_pieces_at(pts: &[Vec2], spec: &RampSpec, scale: f64, level: Level) -> Vec<Piece> {
     let mut out = Vec::new();
     if pts.len() < 2 {
@@ -1888,7 +1888,7 @@ fn ramp_pieces_at(pts: &[Vec2], spec: &RampSpec, scale: f64, level: Level) -> Ve
         if let Some((a, b)) = longest {
             let (p, d) = walk.point((a + b) / 2.0);
             let n = left(d);
-            // Inside the band when it fits there, else beside it (docs/adr/3011): at 1:200 a 1.2 m ramp's band is no
+            // Inside the band when it fits there, else beside it (docs/adr/8011): at 1:200 a 1.2 m ramp's band is no
             // wider than its words, which sat on its edge.
             let off = if 1.7 * h <= half {
                 1.2 * h
@@ -2029,7 +2029,7 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
         }
         Shape::Stair { pts, stair } => stair_band(pts, stair),
         Shape::Ramp { pts, ramp } => polygon(band(pts, ramp.width / 2.0)),
-        // A beam's band (docs/adr/3041 §1).
+        // A beam's band (docs/adr/8041 §1).
         Shape::Beam { pts, beam } => crate::geom::beam::outline(pts, beam),
         // A tag's middle: its frame is sized on paper (docs/adr/0344 §1).
         Shape::Tag { at, .. } => Shape::Point {
@@ -2054,7 +2054,7 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
     })
 }
 
-/// Its pieces as a view draws them (docs/adr/3011): a column, a stair and a ramp at the view's level ([`Level`]), the
+/// Its pieces as a view draws them (docs/adr/8011): a column, a stair and a ramp at the view's level ([`Level`]), the
 /// rest at its scale; none for another shape.
 pub fn pieces_in(shape: &Shape, view: crate::geom::wall::View) -> Vec<Piece> {
     let (level, scale) = (level_of(view), view.scale);

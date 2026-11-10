@@ -446,9 +446,9 @@ pub struct OpeningType {
     pub id: String,
     /// What it is called (K01): unique in the project, case aside.
     pub name: String,
-    /// Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+    /// Its joinery code (docs/adr/8028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
     /// door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
-    /// unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).
+    /// unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub code: Option<String>,
@@ -496,14 +496,14 @@ pub struct OpeningType {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<OpeningBuild>,
-    /// Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+    /// Its frame's and leaves' make (kasa ve kanat; docs/adr/8038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
     /// odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
-    /// (KCAD schema 217).
+    /// (KCAD schema 229).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
     /// Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
-    /// 825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217).
+    /// 825:2024's 1.8 is a finding (docs/adr/8038). Above 0, at most 10; absent: not said (KCAD schema 229).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "W/m2K")))]
@@ -539,7 +539,7 @@ pub fn opening_type_id_ok(id: &str) -> bool {
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
-/// Whether `code` may be a type's joinery code (docs/adr/3028): a letter first, then letters, digits, `-` or `.`, at
+/// Whether `code` may be a type's joinery code (docs/adr/8028): a letter first, then letters, digits, `-` or `.`, at
 /// most 16.
 pub fn opening_code_ok(code: &str) -> bool {
     let mut chars = code.chars();
@@ -656,7 +656,7 @@ impl OpeningType {
                 "Boş yapı yazılmaz; yapının en az bir alanı olur.".into(),
             ));
         }
-        // Its frame and leaves and its U value (docs/adr/3038).
+        // Its frame and leaves and its U value (docs/adr/8038).
         if let Some(m) = &self.material
             && (m.trim().is_empty()
                 || m.trim() != m
@@ -682,7 +682,7 @@ impl OpeningType {
         f.problem()
     }
 
-    /// Whether it says its frame and leaves or its U value (docs/adr/3038, `.kcad` schema 217).
+    /// Whether it says its frame and leaves or its U value (docs/adr/8038, `.kcad` schema 229).
     pub fn has_specs(&self) -> bool {
         self.material.is_some() || self.u_value.is_some()
     }
@@ -834,7 +834,7 @@ impl OpeningFields {
         opening_sizes(self)
     }
 
-    /// Its size in centimetres as Mimarlar Odası writes it on a plan (docs/adr/3028): width over height, 90/210; its
+    /// Its size in centimetres as Mimarlar Odası writes it on a plan (docs/adr/8028): width over height, 90/210; its
     /// width alone when it has no head. A whole centimetre is written without decimals, else one.
     pub fn size_cm(&self) -> String {
         let cm = |m: f64| {
@@ -1442,7 +1442,7 @@ mod tests {
             (f.width, f.frame, f.type_version),
             (1.1, Some(0.07), Some(2))
         );
-        // Its frame and leaves and its U value (docs/adr/3038): one line, a U above 0 and at most 10.
+        // Its frame and leaves and its U value (docs/adr/8038): one line, a U above 0 and at most 10.
         t.material = Some("PVC, 5 odacıklı".into());
         t.u_value = Some(1.6);
         assert_eq!(t.problem(), None);

@@ -1,4 +1,4 @@
-//! Tadilat durumu in a DXF (docs/adr/3039 §4): the sample's existing wall, its new door and its window closed up, each
+//! Tadilat durumu in a DXF (docs/adr/8039 §4): the sample's existing wall, its new door and its window closed up, each
 //! drawn on its layer's state layer (Duvar-MEVCUT, Kapı-ILAVE, Kapı-IPTAL), the iptal one dashed; the passage takes
 //! its wall's state and has no lines of its own. `KENTOS_RENOVATION_DXF=<file>` keeps the file, for another reader (GDAL's ogrinfo).
 
@@ -58,7 +58,7 @@ fn each_state_is_drawn_on_its_layer() {
     assert!(!doc.entities().any(|e| matches!(e, Entity::Text(_))));
 }
 
-/// The view the drawing is in is what the DXF gets (docs/adr/3039 §4, as design options): in Tümü everything is
+/// The view the drawing is in is what the DXF gets (docs/adr/8039 §4, as design options): in Tümü everything is
 /// written; in Mevcut durum the new door is not written and said, and its wall's lines have no gap where it would be; in
 /// Yeni durum the closed window is not written (no Kapı-IPTAL).
 #[test]

@@ -1,4 +1,4 @@
-//! How the project's plan lines are weighted opts into schema 206 (docs/adr/3013); schema 205 refuses it, an unknown
+//! How the project's plan lines are weighted opts into schema 218 (docs/adr/8013); schema 217 refuses it, an unknown
 //! group is a bad value, and the same drawing without it stays in the schema before.
 
 use kentos_kcad::contracts::{DocumentSnapshotV2, LineGroups};
@@ -15,9 +15,9 @@ fn the_line_groups_opt_into_schema_206() {
         read.settings.arch.as_ref().unwrap().line_groups,
         Some(LineGroups::ByScale)
     );
-    assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\xce"));
+    assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\xda"));
     let old =
-        include_bytes!("../../../../../fixtures/kcad/v2/broken/line-groups-in-schema-205.kcad");
+        include_bytes!("../../../../../fixtures/kcad/v2/broken/line-groups-in-schema-217.kcad");
     assert_eq!(
         kentos_kcad::decode(old).expect_err("refused").code,
         kentos_kcad::Code::UnknownField
@@ -33,7 +33,7 @@ fn the_line_groups_opt_into_schema_206() {
     }
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
     assert!(
-        !bytes.windows(10).any(|w| w == b"\x67version\x18\xce"),
-        "nothing said, no schema 206"
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\xda"),
+        "nothing said, no schema 218"
     );
 }

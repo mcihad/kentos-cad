@@ -1,4 +1,4 @@
-# M31 (docs/adr/3031): Kat irtifakı in the real window at 1440 × 900, on the two-storey building paiy_area_tests keeps
+# M31 (docs/adr/8031): Kat irtifakı in the real window at 1440 × 900, on the two-storey building paiy_area_tests keeps
 # (irtifak.kcad: flats 1, 2, 3 (Daire; 3 worth 1.2), the east room upstairs flat 1's annex Depo, the hall common, a
 # 450 m² parcel). Bina programı shows Niteliği, Bölümü, Değer katsayısı and Arsa payı paydası; Metraj ▾ › Kat irtifakı
 # tablosu lists the flats with their annexes and land shares 214/450, 107/450, 129/450.

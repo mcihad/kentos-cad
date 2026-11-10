@@ -1,11 +1,11 @@
-//! Kapı ve pencere ölçeğe göre (docs/adr/3010): the same storey on 1:200, 1:100 and 1:50 sheets, written as PDF and read
+//! Kapı ve pencere ölçeğe göre (docs/adr/8010): the same storey on 1:200, 1:100 and 1:50 sheets, written as PDF and read
 //! back. A door is its leaf at 1:200, its leaf and swing at 1:100, with its frame's sections at 1:50; a window its glass
 //! at 1:200, its frame's faces and glass at 1:100, with its frame's sections at 1:50. Before, every scale printed every
 //! piece.
 //!
 //! `KENTOS_SCALE_PDF_DIR=dir` keeps the three PDFs there.
 //!
-//! The plan's cut (docs/adr/3012): a window over it is dashed and its wall whole; a slab of the level above is dashed on
+//! The plan's cut (docs/adr/8012): a window over it is dashed and its wall whole; a slab of the level above is dashed on
 //! the plan below it.
 
 use kentos_commands::{CadWork, DrawingFont, DrawingUnit, Workspace};
@@ -44,7 +44,7 @@ fn a_door_and_a_window_print_by_their_maps_scale() {
         heights: None,
     })
     .expect("a new building");
-    // Its pieces by the scale, every object at its own pen (the line groups are their own test, docs/adr/3013).
+    // Its pieces by the scale, every object at its own pen (the line groups are their own test, docs/adr/8013).
     own_pens(&mut s);
     let layer = s.summary()["activeLayer"]
         .as_str()
@@ -125,12 +125,12 @@ fn a_door_and_a_window_print_by_their_maps_scale() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Every object at its own pen whatever the scale (docs/adr/3013): the project's line groups set to nothing.
+/// Every object at its own pen whatever the scale (docs/adr/8013): the project's line groups set to nothing.
 fn own_pens(s: &mut Session) {
     set_line_groups(s, None);
 }
 
-/// The project's line groups (docs/adr/3013) through `cad.settings.set`.
+/// The project's line groups (docs/adr/8013) through `cad.settings.set`.
 fn set_line_groups(s: &mut Session, groups: Option<kentos_commands::LineGroups>) {
     let mut arch = s
         .document()
@@ -156,7 +156,7 @@ fn widths(pdf: &[u8]) -> std::collections::BTreeMap<u32, usize> {
     out
 }
 
-/// docs/adr/3013: the same storey on 1:200, 1:100, 1:50 and 1:20 sheets of a new Mimari project, each printed with
+/// docs/adr/8013: the same storey on 1:200, 1:100, 1:50 and 1:20 sheets of a new Mimari project, each printed with
 /// its line groups and with every object at its own pen. The walls' 0.5 mm goes to the group's wide line (0.25, 0.35,
 /// 0.5, 0.7: TS 88-23 / ISO 128-23 Tablo 2), the openings' 0.25 to its narrow one; the sheet's frame and title block
 /// stay as they are. `KENTOS_SCALE_PDF_DIR=dir` keeps the PDFs there (`grup-1-<scale>.pdf`, `kendi-1-<scale>.pdf`).
@@ -319,7 +319,7 @@ fn bed_library() -> String {
     json!({ "format": "kentos.blocks", "version": 1, "blocks": bed }).to_string()
 }
 
-/// Kolon, merdiven, rampa ve mobilya ölçeğe göre (docs/adr/3011): a tagged column, a numbered stair with railings, a
+/// Kolon, merdiven, rampa ve mobilya ölçeğe göre (docs/adr/8011): a tagged column, a numbered stair with railings, a
 /// ramp with railings and the library's double bed, the same storey on 1:200, 1:100 and 1:50 sheets, written as PDF
 /// and read back.
 /// - 1:200: the column's outline, the stair's band, treads, cut and arrow, the ramp's band, arrow, slope and levels,
@@ -445,7 +445,7 @@ fn columns_stairs_ramps_and_furniture_print_by_their_maps_scale() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// Kesme düzleminin üstündeki pencere (docs/adr/3012): on one wall a window across the plan's cut (sill 0.9) and a
+/// Kesme düzleminin üstündeki pencere (docs/adr/8012): on one wall a window across the plan's cut (sill 0.9) and a
 /// bathroom's high window over it (sill 1.6), on a 1:50 sheet written as PDF and read back. The low window cuts its
 /// wall and is drawn solid; the high one leaves its wall whole and is drawn dashed: the wall's faces run through it.
 /// Before, both cut their wall and were drawn solid.
@@ -536,7 +536,7 @@ fn a_window_over_the_cut_leaves_its_wall_whole_on_paper() {
         "{strokes:?}"
     );
     let low_cut = (count(0.5, false), count(0.25, false), count(0.25, true));
-    // The project's cut raised to 1.80 m (docs/adr/3012, step 2): the 1.60 sill is under it, both windows are cut.
+    // The project's cut raised to 1.80 m (docs/adr/8012, step 2): the 1.60 sill is under it, both windows are cut.
     let mut arch = s
         .document()
         .settings()
@@ -586,7 +586,7 @@ fn a_window_over_the_cut_leaves_its_wall_whole_on_paper() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// docs/adr/3012, step 3: 1. kat's balcony over Zemin kat's entrance shows on Zemin kat's 1:50 sheet dashed and narrow
+/// docs/adr/8012, step 3: 1. kat's balcony over Zemin kat's entrance shows on Zemin kat's 1:50 sheet dashed and narrow
 /// (half its pen), its railing left out; on 1. kat's own sheet it is solid, with its railing. Mimarlar Odası §14.5.3 u:
 /// "Planın geçtiği düzlem ile tavan arasında kalan imalat nokta nokta işlenir. (Saçak ara kat çıkma vb.)"
 #[test]
@@ -710,7 +710,7 @@ fn an_upper_slab_shows_dashed_on_the_plan_below_it() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// docs/adr/3014: KentOS's wall styles and a column on 1:20 and 1:50 sheets. TS 5319 (Teknik resim – Taramalar):
+/// docs/adr/8014: KentOS's wall styles and a column on 1:20 and 1:50 sheets. TS 5319 (Teknik resim – Taramalar):
 /// the heat insulation of Dış duvar 25 and the insulation of Bölme duvar 10 are its SN55, a zigzag between the layer's
 /// two faces, one line along the wall; the concrete of a column at 1:20 its SN46. `KENTOS_SCALE_PDF_DIR=dir` keeps the
 /// PDFs (`malzeme-1-<scale>.pdf`) and the drawing (`malzeme.kcad`) there.

@@ -92,7 +92,7 @@ def type_json(t):
     """A type as the project keeps it: defaults left out."""
     out = {"id": t["id"], "name": t["name"]}
     if t.get("code") is not None:
-        # Its joinery code (docs/adr/3028), after its name as the contract writes it.
+        # Its joinery code (docs/adr/8028), after its name as the contract writes it.
         out["code"] = t["code"]
     out["version"] = t["version"]
     if t.get("source") is not None:
@@ -113,7 +113,7 @@ def type_json(t):
     b = build_json(t.get("build"))
     if b:
         out["build"] = b
-    # Its frame and leaves and its U value (docs/adr/3038), after its construction as the contract writes them.
+    # Its frame and leaves and its U value (docs/adr/8038), after its construction as the contract writes them.
     if t.get("material") is not None:
         out["material"] = t["material"]
     if t.get("uValue") is not None:
@@ -210,7 +210,7 @@ def sizes(f):
 
 def type_problem(t):
     """A type's problem as the ADR orders them: (field, words) or None."""
-    # Its frame and leaves and its U value (docs/adr/3038): one line; a U above 0, at most 10.
+    # Its frame and leaves and its U value (docs/adr/8038): one line; a U above 0, at most 10.
     m = t.get("material")
     if m is not None and (not m.strip() or m.strip() != m or len(m) > 200 or any(ord(c) < 32 for c in m)):
         return "material", "Kasa ve kanat tek satır, boş değil, kenarı boşluksuz ve en çok 200 harftir."
@@ -454,7 +454,7 @@ def changed(t, c, path):
         n["width"] = rough_of(by, v, (n.get("build") or {}).get("fit") or 0.0, n.get("frame") or 0.0)
     if c.get("width") is None and c.get("nominal") is None:
         keep_nominal(t, n)
-    # The type's own (docs/adr/3038): a blank make or a null takes it away.
+    # The type's own (docs/adr/8038): a blank make or a null takes it away.
     if "material" in c:
         m = (c["material"] or "").strip()
         if m:
@@ -768,7 +768,7 @@ def update_step(d, key, change, refused="stop", locked=(), plan=False):
         return types_step(d, "execute", inp, refusal("nothing_to_set", f"“{old['name']}” tipi zaten bu değerlerde; hiçbir şey değişmiyor.",
                                                      "operation.change")), d
     if not fields:
-        # Its frame and leaves and its U value alone (docs/adr/3038): the type written, its version and the openings
+        # Its frame and leaves and its U value alone (docs/adr/8038): the type written, its version and the openings
         # as they were.
         after = copy.deepcopy(d)
         after.types = [new if t["id"] == new["id"] else t for t in after.types]
@@ -887,7 +887,7 @@ def types_edit_cases():
         "layer_locked", "Tipi izleyen bir açıklık kilitli katmanda; tipten ayrılamaz. Kilidi açın ya da tipi silmeyin (“$uidOf:26”).",
         "operation.type"))]))
     out.append(edit_case("Ret: tip zaten bu değerlerde", [update_step(copy.deepcopy(BASE), "K01", {"frame": 0.05})[0]]))
-    # Its frame and leaves and its U value (docs/adr/3038): the type's own; the version and its window stay.
+    # Its frame and leaves and its U value (docs/adr/8038): the type's own; the version and its window stay.
     step, d = update_step(copy.deepcopy(BASE), "P01", {"material": " PVC, 5 odacıklı; çift camlı Low-E ", "uValue": 1.6})
     step2, _ = update_step(d, "P01", {"material": None, "uValue": None})
     out.append(edit_case("Kasa ve kanat ile U değeri: yalnız tip yazılır, sürüm aynı", [step, step2]))
@@ -914,7 +914,7 @@ def types_edit_cases():
     inp = {"operation": {"kind": "rename", "type": "K02", "name": "K02"}}
     out.append(edit_case("Ret: ad aynı", [types_step(d, "execute", inp, refusal("nothing_to_set", "Tipin adı zaten “K02”.",
                                                                                "operation.name"))]))
-    # Doğrama kodu (docs/adr/3028): the type's joinery code; its openings and their tags read it, nothing else changes.
+    # Doğrama kodu (docs/adr/8028): the type's joinery code; its openings and their tags read it, nothing else changes.
     after = copy.deepcopy(d)
     for t in after.types:
         if t["id"] == "k02":

@@ -31,7 +31,7 @@ ramps?: Array<RampRow>,
  */
 stairs?: Array<StairRow>, 
 /**
- * The beams, lintels and bond beams (docs/adr/3041 §3).
+ * The beams, lintels and bond beams (docs/adr/8041 §3).
  */
 beams?: Array<BeamRow>, 
 /**

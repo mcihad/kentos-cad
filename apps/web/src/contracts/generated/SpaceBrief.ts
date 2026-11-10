@@ -30,7 +30,7 @@ reach?: Array<string>,
  */
 outdoor?: boolean, 
 /**
- * How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and
+ * How its rooms count for the floor area ratio (docs/adr/8030; `.kcad` schema 222). Absent: by their name and
  * use (`emsal_by_use`).
  */
 emsal?: EmsalCount, };

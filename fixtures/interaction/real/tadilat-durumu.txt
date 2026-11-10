@@ -1,4 +1,4 @@
-# M39 part 1 (docs/adr/3039): the acceptance flat as a survey (every wall Mevcut: its walls' arch.phase written
+# M39 part 1 (docs/adr/8039): the acceptance flat as a survey (every wall Mevcut: its walls' arch.phase written
 # existing by the reference writer); in the window: the wall between the bedrooms İptal, a new door between Salon and
 # Yatak odası 1 (Tadilat durumu: İlave), Salon's west window İptal; then Mevcut durum, Yıkım planı and Yeni durum.
 # BEFORE (M38) runs the same steps without the openings' rows (they had none). The rows' choices keep their places:

@@ -100,7 +100,7 @@ pub fn sheet_variable(v: &kentos_contracts::ProjectVariable) -> kentos_sheet::mo
     }
 }
 
-/// The drawing's own variables and, after them, what it says of itself for a title block (docs/adr/3037: arsa alanı,
+/// The drawing's own variables and, after them, what it says of itself for a title block (docs/adr/8037: arsa alanı,
 /// emsale konu alan, yapı inşaat alanı, kat adedi, bağımsız bölüm sayısı, kullanım amacı …): a sheet reads them after
 /// its book's, a drawing variable of the same name first.
 pub fn drawing_variables(doc: &kentos_domain::Document) -> Vec<kentos_sheet::model::Variable> {

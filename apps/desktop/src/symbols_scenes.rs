@@ -180,7 +180,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
 }
 
 /// The Mimari tab's Belgele menus: İşaret ▾ (Kesit, Görünüş, Detay, Kuzey oku), the panel's ▾ (Revizyon işaretle and
-/// Revizyon listesi since docs/adr/3015), Çizelge ▾ (with Malzeme lejandı); the Kot's Öznitelikler scrolled to its
+/// Revizyon listesi since docs/adr/8015), Çizelge ▾ (with Malzeme lejandı); the Kot's Öznitelikler scrolled to its
 /// Kot, Kat and Fark.
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![

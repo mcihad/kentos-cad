@@ -1,4 +1,4 @@
-//! A building object's context (M17, docs/adr/3017): the Duvar tab holds Duvarı kaydır, the selection's tab's own
+//! A building object's context (M17, docs/adr/8017): the Duvar tab holds Duvarı kaydır, the selection's tab's own
 //! panel opens the right click under the tab's name, and the card says what an architect asks of the object (a
 //! wall its style, thickness and storey, not its footprint's area; a door its width and number under Kapı; a room
 //! its number, name and storey).
@@ -488,7 +488,7 @@ fn room_area(app: &App) -> f64 {
     }
 }
 
-/// Odayı büyüt (M23, docs/adr/3023): Oda's room is picked on its floor; each of its four edges has a grip. The right
+/// Odayı büyüt (M23, docs/adr/8023): Oda's room is picked on its floor; each of its four edges has a grip. The right
 /// one dragged a metre out moves the wall behind it and the room grows 4 × 3 → 5 × 3 in one undo step; the top one
 /// given 3.5 makes it 3,50 across, and the right one given −0.5 takes half a metre off.
 #[test]
@@ -608,7 +608,7 @@ fn a_room_s_edge_grip_moves_its_wall_and_the_room_grows() {
     assert!(crate::files_testing::last_said(&app).contains("Oda küçültüldü"));
 }
 
-/// A room's edge has a grip only where a wall it follows stands (docs/adr/3023): none on a locked wall's layer, none on
+/// A room's edge has a grip only where a wall it follows stands (docs/adr/8023): none on a locked wall's layer, none on
 /// a room whose boundary was drawn (it does not follow its walls).
 #[test]
 fn a_room_s_edge_grips_need_an_unlocked_wall_and_a_room_that_follows_it() {
@@ -672,7 +672,7 @@ fn a_room_s_edge_grips_need_an_unlocked_wall_and_a_room_that_follows_it() {
     assert_eq!(grips(&app, drawn), 0, "a drawn boundary");
 }
 
-/// Planı ölçülendir (M26, docs/adr/3026) on the 5 × 4 m room of Dış duvar 25: Enter writes the four sides' chains (an ön
+/// Planı ölçülendir (M26, docs/adr/8026) on the 5 × 4 m room of Dış duvar 25: Enter writes the four sides' chains (an ön
 /// proje's three rows each; with no grid, two) and two interior chains each way, all in one undo step.
 #[test]
 fn plan_dimensions_writes_four_sides_and_two_chains_each_way_in_one_step() {
@@ -716,7 +716,7 @@ fn plan_dimensions_writes_four_sides_and_two_chains_each_way_in_one_step() {
     assert_eq!(dims(&app), 0, "one undo takes them all");
 }
 
-/// EK-3 numbering (M27, docs/adr/3027): four rooms in the four quarters of Zemin kat; EK-3 on and the section D01;
+/// EK-3 numbering (M27, docs/adr/8027): four rooms in the four quarters of Zemin kat; EK-3 on and the section D01;
 /// Enter with none clicked numbers the storey Kat_Bölüm_Sıra, clockwise from north: KD, GD, GB, KB.
 #[test]
 fn ek3_numbers_the_storey_s_rooms_kat_bolum_sira_clockwise_from_north() {
@@ -765,8 +765,8 @@ fn ek3_numbers_the_storey_s_rooms_kat_bolum_sira_clockwise_from_north() {
     assert_eq!(numbers["KB"], "K00_D01_004", "{numbers:?}");
 }
 
-/// The MO room tag (M27, docs/adr/3027): Etiket's all-at-once with Elips içinde numara frames the room's number in an
-/// ellipse, its name and net area below it; the drawing then writes KCAD schema 207, and reads back the same.
+/// The MO room tag (M27, docs/adr/8027): Etiket's all-at-once with Elips içinde numara frames the room's number in an
+/// ellipse, its name and net area below it; the drawing then writes KCAD schema 219, and reads back the same.
 #[test]
 fn a_room_tag_in_an_ellipse_writes_schema_207() {
     let (mut app, _) = building();
@@ -806,10 +806,10 @@ fn a_room_tag_in_an_ellipse_writes_schema_207() {
     assert_eq!(
         bytes
             .windows(10)
-            .filter(|w| *w == b"\x67version\x18\xcf")
+            .filter(|w| *w == b"\x67version\x18\xdb")
             .count(),
         1,
-        "schema 207"
+        "schema 219"
     );
     let back = kentos_kcad::decode(&bytes).expect("reads");
     assert!(

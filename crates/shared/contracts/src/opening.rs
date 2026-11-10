@@ -79,7 +79,7 @@ impl OpeningForm {
     }
 
     /// Drawn cut in plan only where it crosses the plan's cut height (docs/adr/0719 §2): a bare opening, a niche, a
-    /// flue, and a window (docs/adr/3012: a high window over the cut leaves its wall whole and shows dashed, as Revit
+    /// flue, and a window (docs/adr/8012: a high window over the cut leaves its wall whole and shows dashed, as Revit
     /// draws a window above its view's cut plane). A door, from the floor, is drawn cut whatever its heights.
     pub fn cut_by_height(self) -> bool {
         !matches!(self, OpeningForm::Door)
@@ -385,7 +385,7 @@ pub struct OpeningFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<OpeningBreak>,
-    /// Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
+    /// Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
     /// its wall's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -182,7 +182,7 @@ fn another_views_pieces_are_those_of_a_store_at_that_view() {
     assert_eq!(a.expanded_at(9.0, detailed), None, "no such object");
 }
 
-/// A door and a window follow the store's view as its walls do (docs/adr/3010): the screen's zoom and a sheet's scale
+/// A door and a window follow the store's view as its walls do (docs/adr/8010): the screen's zoom and a sheet's scale
 /// redraw them. At 1:200 schematic the door is its leaf and the window its glass; at 1:100 the swing and the window's
 /// faces too; at 1:50 the frame's sides as well. Another view's pieces (`expanded_at`) are the same as the store's at it.
 #[test]
@@ -220,7 +220,7 @@ fn a_door_and_a_window_follow_the_stores_view() {
     assert_eq!(count(&s, 3.0), 5, "its own pieces untouched");
 }
 
-/// The plan's cut height is the view's (docs/adr/3012): a window with its sill at 1.6 m leaves its wall whole and is
+/// The plan's cut height is the view's (docs/adr/8012): a window with its sill at 1.6 m leaves its wall whole and is
 /// drawn dashed while the plan is cut at 1.10 or 1.20; cut at 1.70 it takes its hole out of its wall, every wall
 /// joined again, and is drawn solid.
 #[test]
@@ -266,7 +266,7 @@ fn a_higher_cut_cuts_a_high_window() {
     assert_eq!(faces(&s), whole, "back over the cut");
 }
 
-/// docs/adr/3013: at a line group's share (0.5: a 1:200 plan) a wall's and an opening's pieces take it on their own
+/// docs/adr/8013: at a line group's share (0.5: a 1:200 plan) a wall's and an opening's pieces take it on their own
 /// share of their pen, a window's glass half of half; a line keeps its own. At a share of 1 nothing is written.
 #[test]
 fn a_line_group_weighs_the_models_lines_only() {
@@ -316,7 +316,7 @@ fn a_line_group_weighs_the_models_lines_only() {
     assert_eq!((shares(&s, 1.0), shares(&s, 2.0)), (wall, window));
 }
 
-/// A beam (docs/adr/3041 §1) is drawn by its pieces at the view, as a column is: dashed and narrow at every scale, its
+/// A beam (docs/adr/8041 §1) is drawn by its pieces at the view, as a column is: dashed and narrow at every scale, its
 /// number at 1:100, its number and size from 1:50, none at 1:200; its band's corners are snapped to and the line group
 /// weighs it. A beam the store left undrawn was seen in the real window: it was written but showed nothing.
 #[test]
@@ -371,7 +371,7 @@ fn a_beam_is_drawn_dashed_by_the_view_and_snapped_to() {
     assert_eq!(x.strokes[0].weight_scale, Some(0.25));
 }
 
-/// Perde + kolon + tuğla (docs/adr/3041 §2; ADV-18's acceptance): a 40 × 40 column at (4, 0) where a 25 cm concrete
+/// Perde + kolon + tuğla (docs/adr/8041 §2; ADV-18's acceptance): a 40 × 40 column at (4, 0) where a 25 cm concrete
 /// shear wall comes from the west and a 20 cm brick wall from the north. The column takes the shear wall's look, one
 /// section with it: at 1:50 its grey (SOLID #A6A6A6), at 1:100 its dark fill; its side across the shear wall's end is
 /// not drawn, 1.6 − 0.25 = 1.35 m of its outline is. The brick wall stops at the column's top face (y 0.2), the column's

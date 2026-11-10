@@ -19,7 +19,7 @@
 //!   since their difference is what a surveyor checks; holes; perimeter or
 //!   length, and beside it the length in space (docs/adr/0142) when every
 //!   vertex has an elevation; radius; a text's text; a point's elevation.
-//! - A building object says what an architect asks of it first (docs/adr/3017):
+//! - A building object says what an architect asks of it first (docs/adr/8017):
 //!   a wall its style, thickness and storey (its footprint's area is no one's
 //!   question), an opening its type, width and number under its own name
 //!   (Kapı, Pencere), a room its number, name and storey.
@@ -243,7 +243,7 @@ pub(crate) fn card_with(
     Card { title, layer, rows }
 }
 
-/// A building object's own rows, before the measures (docs/adr/3017): a wall's style, thickness and storey; an
+/// A building object's own rows, before the measures (docs/adr/8017): a wall's style, thickness and storey; an
 /// opening's type, width and number; a room's number, name, storey and area. Read as the schedules and tags read
 /// them (`Document::arch_value`), so the card and a tag never say two things.
 fn building_rows(e: &Entity, model: &Model, format: &Format) -> Vec<(&'static str, String, bool)> {

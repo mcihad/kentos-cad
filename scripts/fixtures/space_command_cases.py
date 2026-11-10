@@ -229,7 +229,7 @@ def problem(s, prefix):
     h = s.get("height")
     if h is not None and not (math.isfinite(h) and 0 < h <= 1000):
         return refusal("invalid_space", f"Mahalin yüksekliği {num(h)}; sıfırdan büyük, en çok 1000 m olmalı.", f"{prefix}.height")
-    # Its floor offset and asma tavan (docs/adr/3040 §3).
+    # Its floor offset and asma tavan (docs/adr/8040 §3).
     v = s.get("floorOffset")
     if v is not None and not (math.isfinite(v) and abs(v) <= 10.0):
         return refusal("invalid_space", f"Mahalin döşeme kot farkı {num(v)}; katın kotuna göre en çok ±10 m olmalı.", f"{prefix}.floorOffset")
@@ -381,7 +381,7 @@ def level_height(arch):
 
 
 def room_inside(d, s):
-    """A room's inside height (docs/adr/3040 §3), in the core's order of operations: its floor its own offset over its
+    """A room's inside height (docs/adr/8040 §3), in the core's order of operations: its floor its own offset over its
     storey's floor, else the top of the floor slab under it (half a metre under the storey's floor to 10 cm over it,
     the highest), else the storey's floor; its asma tavan's or its own height as written, else the lowest slab ceiling
     more than 10 cm over its floor within its storey, else its storey's top less its floor. The slabs are looked for at
@@ -619,7 +619,7 @@ def slab_row(d, i, s):
            "perimeter": float(perimeter_of(parts) if parts is not None else s["measure"][1]), "volume": float(net * thickness),
            "edge": edge["kind"] if edge else None, "edgeLength": float(edge_len) or None,
            "excluded": True if s.get("excluded") else None, "rule": rule}
-    # Its layers on its net area (docs/adr/3040 §2), over the structure then under it.
+    # Its layers on its net area (docs/adr/8040 §2), over the structure then under it.
     layers = s.get("layers") or {}
     rows = [{"kind": lay["kind"], **({"material": lay["material"]} if lay.get("material") is not None else {}),
              "thickness": lay["thickness"], "area": float(net), "volume": float(net * F(lay["thickness"]))}
@@ -683,7 +683,7 @@ def quantities(d, inp):
                         by[m] = float(area_of(p))
                 row["byMethod"] = by
             if s.get("suspendedCeiling") is not None:
-                # Its asma tavan covers its net floor (docs/adr/3040 §3): a drawn net room's own, a seeded one's found
+                # Its asma tavan covers its net floor (docs/adr/8040 §3): a drawn net room's own, a seeded one's found
                 # again by its inner faces, else its rings'.
                 net = area if s.get("seed") is None and s.get("method", "net") == "net" else row.get("byMethod", {}).get("net", area)
                 row["suspendedCeilingArea"] = net
@@ -1011,7 +1011,7 @@ def create_cases():
         ("çizilmiş şaft boşluk olarak; metraj alanını boşluk toplamına yazar", one(parts=[box_json(20, 0, 20.8, 0.6)], name="Şaft", usage="Tesisat şaftı", void=True)),
         ("duvarlarla çevrili sağ oda boşluk (asansör); oda ile boşluk ayrı toplanır", {"layerId": "mahal", "spaces": [{"seed": LEFT, "name": "Salon"}, {"seed": RIGHT, "name": "Asansör", "void": True}]}),
         ("boşluk false yazılmaz: oda olarak kalır", one(seed=LEFT, void=False)),
-        # A room's floor offset and asma tavan (docs/adr/3040 §3): its inside height and its asma tavan's area.
+        # A room's floor offset and asma tavan (docs/adr/8040 §3): its inside height and its asma tavan's area.
         ("ıslak hacim döşeme kot farkı ve asma tavanla; metraj iç yüksekliği asma tavandan, alanını asma tavana yazar",
          one(seed=LEFT, name="Banyo", floorOffset=-0.02, suspendedCeiling=2.4, arch={"level": "zemin"})),
         ("döşemesi 2 cm aşağıda, asma tavansız: iç yükseklik kattan kata 3.02",

@@ -1860,7 +1860,7 @@ pub enum Entity {
     Grid(crate::GridEntity),
     /// A column (docs/adr/0343): its centre, outline and the grids it stands on.
     Column(crate::ColumnEntity),
-    /// A beam (docs/adr/3041 §1): its axis, its web's width and height, its top; drawn dashed in a plan.
+    /// A beam (docs/adr/8041 §1): its axis, its web's width and height, its top; drawn dashed in a plan.
     Beam(crate::BeamEntity),
     /// A stair (docs/adr/0343): its walking line and its risers, treads and landings.
     Stair(crate::StairEntity),
@@ -1998,7 +1998,7 @@ impl Entity {
             Entity::Ramp(x) => x.ramp.arch.phase,
             Entity::Insert(x) => x.arch.phase,
             Entity::Opening(x) => x.opening.phase,
-            // A slab's and a room separator's (docs/adr/3039 §4: they were left out, a slab İptal was drawn in Yeni durum).
+            // A slab's and a room separator's (docs/adr/8039 §4: they were left out, a slab İptal was drawn in Yeni durum).
             Entity::Slab(x) => x.slab.arch.phase,
             Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.phase),
             _ => None,
@@ -2006,7 +2006,7 @@ impl Entity {
     }
 
     /// Its phase as a phase view reads it (docs/adr/0346 §2): its own, an opening without one its wall's
-    /// (docs/adr/3039 §1), a tag's its object's (`by_uid` finds an object by its persistent id).
+    /// (docs/adr/8039 §1), a tag's its object's (`by_uid` finds an object by its persistent id).
     pub fn phase<'a>(
         &'a self,
         by_uid: impl Fn(&str) -> Option<&'a Entity>,
@@ -2027,7 +2027,7 @@ impl Entity {
     }
 
     /// How `view` draws it (docs/adr/0346 §2): its tadilat durumu's look, except that Tadilat projesi leaves out a room
-    /// pulled down (İptal) and its label (docs/adr/3039 §6): the plan names the rooms as they will be, its walls and
+    /// pulled down (İptal) and its label (docs/adr/8039 §6): the plan names the rooms as they will be, its walls and
     /// openings carry the Mimarlar Odası's three techniques; drawn too, the old rooms' names and areas lay over the new
     /// ones' in the same place.
     pub fn look_in<'a>(
@@ -2049,7 +2049,7 @@ impl Entity {
         view.look(phase)
     }
 
-    /// How the Tadilat projesi view marks it (docs/adr/3039 §5): a door or window of its own state other than its wall's
+    /// How the Tadilat projesi view marks it (docs/adr/8039 §5): a door or window of its own state other than its wall's
     /// is that wall's infill (closed up, iptal) or cut into it (ilave); otherwise by its state, none a plain outline.
     pub fn renovation_mark<'a>(
         &'a self,

@@ -1,4 +1,4 @@
-//! KentOS Mimari's start (docs/adr/3007): its wall tools begin on Dış duvar 25, a new project opens on Mimari on its
+//! KentOS Mimari's start (docs/adr/8007): its wall tools begin on Dış duvar 25, a new project opens on Mimari on its
 //! ground floor, and the first wall is written with its style and level, poşeli at 1:100.
 
 use kentos_launch::Module;
@@ -129,7 +129,7 @@ fn rectangle_tool() -> App {
 
 #[test]
 fn kentos_mimari_writes_the_first_wall_on_its_ek4_layer_and_one_undo_takes_both() {
-    // docs/adr/3008: in the 2+1 flat all 54 objects were on Çizim.
+    // docs/adr/8008: in the 2+1 flat all 54 objects were on Çizim.
     let mut app = rectangle_tool();
     assert!(app.memory.layer_keys, "KentOS Mimari keys its layers");
     assert_eq!(

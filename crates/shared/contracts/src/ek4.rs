@@ -1,4 +1,4 @@
-//! Layer names of the 2026 Dijital Hazırlama Yönetmeliği (RG 05.08.2026/33331; docs/adr/3008).
+//! Layer names of the 2026 Dijital Hazırlama Yönetmeliği (RG 05.08.2026/33331; docs/adr/8008).
 //!
 //! - EK-4 Tablo 4.1, architecture: disiplin (2 letters), öğe (4 letters), malzeme/tip/gösterim (at most 15 letters or
 //!   digits), all three required.
@@ -140,11 +140,11 @@ pub fn ek4_hatch_layer(layer: &str) -> String {
     format!("{layer}-T")
 }
 
-/// The tadilat durumu's words of a layer name (docs/adr/3039 §4): Mimarlar Odası's mevcut, iptal and ilave and geçici,
+/// The tadilat durumu's words of a layer name (docs/adr/8039 §4): Mimarlar Odası's mevcut, iptal and ilave and geçici,
 /// as EK-4 4.11 writes a field (upper case, no Turkish letters), in `ArchPhase::ALL`'s order.
 pub const EK4_STATES: [&str; 4] = ["MEVCUT", "IPTAL", "ILAVE", "GECICI"];
 
-/// The layer an object of tadilat durumu `phase` on `layer` is drawn on in a DXF (docs/adr/3039 §4): its name and the
+/// The layer an object of tadilat durumu `phase` on `layer` is drawn on in a DXF (docs/adr/8039 §4): its name and the
 /// state's word, as EK-4 4.14.3 adds a depth and 4.14.5 a "-T" after the third field (which holds the material):
 /// MM-DUVA-TUGLA-IPTAL. A hatch of it is on that layer's "-T" (MM-DUVA-TUGLA-IPTAL-T).
 pub fn ek4_state_layer(layer: &str, phase: crate::ArchPhase) -> String {
@@ -159,7 +159,7 @@ pub fn ek4_state_layer(layer: &str, phase: crate::ArchPhase) -> String {
 mod tests {
     use super::*;
 
-    /// A tadilat durumu's layer (docs/adr/3039 §4): the state's word after the material, its hatch's "-T" after that;
+    /// A tadilat durumu's layer (docs/adr/8039 §4): the state's word after the material, its hatch's "-T" after that;
     /// still an EK-4 name. Another fourth field is not.
     #[test]
     fn a_state_layer_is_the_layer_and_its_state() {

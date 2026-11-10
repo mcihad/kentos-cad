@@ -2,7 +2,7 @@
 
 /**
  * A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room
- * list's others (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's
+ * list's others (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's
  * treads' and risers', and its handrails' and railings'.
  */
 export type SpaceFinishes = { floor?: string, wall?: string, ceiling?: string, 
@@ -11,14 +11,14 @@ export type SpaceFinishes = { floor?: string, wall?: string, ceiling?: string,
  */
 base?: string, 
 /**
- * Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 216).
+ * Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 228).
  */
 sill?: string, 
 /**
- * Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 216).
+ * Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 228).
  */
 stair?: string, 
 /**
- * Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 216).
+ * Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 228).
  */
 railing?: string, };

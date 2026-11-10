@@ -56,7 +56,7 @@ impl App {
         if let Some(cell) = self.level_setting(tool) {
             sheet = sheet.row("Kat", cell);
         }
-        // Katman anahtarı (docs/adr/3008): the layer the tool writes on, by its kind's EK-4 name.
+        // Katman anahtarı (docs/adr/8008): the layer the tool writes on, by its kind's EK-4 name.
         if let Some(cell) = self.layer_key_setting() {
             sheet = sheet.row("Katman", cell);
         }

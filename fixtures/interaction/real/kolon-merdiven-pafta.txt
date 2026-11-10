@@ -1,4 +1,4 @@
-# M12 (docs/adr/3011) on a sheet, as a hand does it: a column named S1 (Kolon, İlk etiket), a stair with its treads
+# M12 (docs/adr/8011) on a sheet, as a hand does it: a column named S1 (Kolon, İlk etiket), a stair with its treads
 # numbered and railings both sides (Merdiven's panel: Basamak numaraları, Korkuluk › İki yan), a ramp, the library's
 # double bed (Ekle › Kitaplık, then Bloklar' search and a double click on its card), and a sheet from the + beside
 # Model whose map is set to 100, 50 and 200. The map is centred on the drawing, at (641, 503) on the A1 sheet at %25:

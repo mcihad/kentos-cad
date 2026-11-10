@@ -52,7 +52,7 @@ pub fn core_column(c: &ColumnFields) -> Shape {
     }
 }
 
-/// The beam as the core's shape (docs/adr/3041 §1): its middle off its axis as its justification says, an axis that is
+/// The beam as the core's shape (docs/adr/8041 §1): its middle off its axis as its justification says, an axis that is
 /// its left face putting its body to the right.
 pub fn core_beam(b: &BeamFields) -> Shape {
     let middle = match b.justify {
@@ -194,7 +194,7 @@ pub fn plain_pieces(e: &Entity, scale: f64) -> Option<Vec<Entity>> {
     plain_of(e, kentos_geometry_core::geom::arch::pieces(&shape, scale))
 }
 
-/// [`plain_pieces`] as a drawing at `view` shows them (docs/adr/3011): what DXF writes, at the walls' detail and the
+/// [`plain_pieces`] as a drawing at `view` shows them (docs/adr/8011): what DXF writes, at the walls' detail and the
 /// file's scale; Patlat keeps the whole.
 pub fn plain_pieces_in(
     e: &Entity,
@@ -220,7 +220,7 @@ fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Opti
         base.attachments.clear();
         base.label_pins.clear();
         base.label = None;
-        // A piece's own colour and weight: a column one section with a wall's layer takes its fill's (docs/adr/3041 §2).
+        // A piece's own colour and weight: a column one section with a wall's layer takes its fill's (docs/adr/8041 §2).
         if piece.color.is_some() {
             base.color = piece.color.clone();
         }
@@ -243,7 +243,7 @@ fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Opti
 
 /// One of the four as one simple object, for formats without it (GeoJSON, KML, GPX, the server's projection): a
 /// grid's path an open polyline, a round column a circle, a rectangular column, a stair, a ramp or a beam's band
-/// (docs/adr/3041 §1) an area; none for another object.
+/// (docs/adr/8041 §1) an area; none for another object.
 pub fn simple(e: &Entity) -> Option<Entity> {
     let path = |base: &kentos_contracts::EntityBase, pts: Vec<Vec2>, bulges: Option<Vec<f64>>| kentos_contracts::PathEntity {
         space_separator: None,
@@ -323,7 +323,7 @@ mod tests {
             .collect()
     }
 
-    /// DXF writes a column and a stair as the file's scale draws them (docs/adr/3011): at 1:200 the column without its
+    /// DXF writes a column and a stair as the file's scale draws them (docs/adr/8011): at 1:200 the column without its
     /// name and the stair without railings; at 1:50 the column's name and size and the stair's risers in words. Patlat
     /// keeps the whole.
     #[test]
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(words(&at_50), ["11 × 17.5/28"]);
     }
 
-    /// A beam (docs/adr/3041 §1): DXF writes its band dashed, its words by the file's scale (none at 1:200, its number
+    /// A beam (docs/adr/8041 §1): DXF writes its band dashed, its words by the file's scale (none at 1:200, its number
     /// and size at 1:50); the formats without it (GeoJSON, KML, the server's projection) take its band as an area.
     #[test]
     fn dxf_writes_a_beam_dashed_and_the_simple_formats_its_band() {

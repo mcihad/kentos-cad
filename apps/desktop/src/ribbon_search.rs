@@ -37,7 +37,7 @@ pub enum Hit {
         id: String,
         title: String,
     },
-    /// A furniture or fixture of KentOS's library (Donatı araması, docs/adr/3024).
+    /// A furniture or fixture of KentOS's library (Donatı araması, docs/adr/8024).
     Fixture(&'static crate::fixture_search::Fixture),
 }
 
@@ -52,7 +52,7 @@ pub fn search(query: &str) -> Vec<&'static Command> {
         .collect()
 }
 
-/// `search` as a module's program ranks (its own names, docs/adr/3002).
+/// `search` as a module's program ranks (its own names, docs/adr/8002).
 #[cfg(test)]
 pub fn search_in(query: &str, names: Option<&crate::module_names::Names>) -> Vec<&'static Command> {
     scored_commands(&fold_turkish(query), names)
@@ -63,7 +63,7 @@ pub fn search_in(query: &str, names: Option<&crate::module_names::Names>) -> Vec
 }
 
 /// Every command the folded text finds, with its rank (lower is better); a module's program reads a command's
-/// names as its own names say (module_names.rs, docs/adr/3002: PENCERE is the window in KentOS Mimari).
+/// names as its own names say (module_names.rs, docs/adr/8002: PENCERE is the window in KentOS Mimari).
 fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(f64, &'static Command)> {
     if q.is_empty() {
         return Vec::new();
@@ -157,7 +157,7 @@ impl App {
                 ));
             }
         }
-        // KentOS's library's furniture and fixtures where blocks are placed (docs/adr/3024).
+        // KentOS's library's furniture and fixtures where blocks are placed (docs/adr/8024).
         if self.offers("tool.blockInsert") {
             scored.extend(
                 crate::fixture_search::search(&self.ribbon_search)
@@ -268,7 +268,7 @@ impl App {
     pub(crate) fn search_reveal(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
-            // A fixture's place: Donatı ▾'s Kitaplık (docs/adr/3024).
+            // A fixture's place: Donatı ▾'s Kitaplık (docs/adr/8024).
             Some(Hit::Fixture(_)) => match catalog().get("block.library") {
                 Some(command) => command,
                 None => return Task::none(),

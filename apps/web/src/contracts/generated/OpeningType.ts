@@ -16,9 +16,9 @@ id: string,
  */
 name: string, 
 /**
- * Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+ * Its joinery code (docs/adr/8028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
  * door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
- * unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).
+ * unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).
  */
 code?: string, 
 /**
@@ -34,13 +34,13 @@ source?: string, form: OpeningForm,
  */
 width: number, leaves?: number, operation?: OpeningOperation, swing?: number, showSwing?: boolean, frame?: number, sill?: number, head?: number, depth?: number, build?: OpeningBuild, 
 /**
- * Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+ * Its frame's and leaves' make (kasa ve kanat; docs/adr/8038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
  * odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
- * (KCAD schema 217).
+ * (KCAD schema 229).
  */
 material?: string, 
 /**
  * Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
- * 825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217).
+ * 825:2024's 1.8 is a finding (docs/adr/8038). Above 0, at most 10; absent: not said (KCAD schema 229).
  */
 uValue?: number, };

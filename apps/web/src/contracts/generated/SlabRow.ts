@@ -40,7 +40,7 @@ edgeLength?: number,
  */
 excluded?: boolean, rule: string, 
 /**
- * Its layers besides its structure (docs/adr/3040 §2), over it then under it, each measured on its net area;
+ * Its layers besides its structure (docs/adr/8040 §2), over it then under it, each measured on its net area;
  * `volume` is the structure's.
  */
 layers?: Array<SlabLayerRow>, };

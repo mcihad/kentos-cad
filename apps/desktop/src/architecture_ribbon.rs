@@ -121,7 +121,7 @@ mod tests {
         typography::set(Typography::DEFAULT);
     }
 
-    /// docs/adr/3015 (M15, ADV-09): Mimari's tab counted. At most 30 buttons show, a family or a menu holds at most six,
+    /// docs/adr/8015 (M15, ADV-09): Mimari's tab counted. At most 30 buttons show, a family or a menu holds at most six,
     /// a panel at most four large ones (DESIGN.md §7.3.1); the large ones are Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾
     /// and Ölçü ▾; Kat ▾ carries Üst kat, Alt kat and Kat görünümü.
     #[test]
@@ -511,7 +511,7 @@ mod tests {
                         found: moved.clone(),
                     }),
                 );
-                // The narrow strip fits its tabs, a ⋯ menu holding those that do not (docs/adr/3005): nothing
+                // The narrow strip fits its tabs, a ⋯ menu holding those that do not (docs/adr/8005): nothing
                 // scrolls, so no scroll takes the context out of view.
                 let (at, viewport) = moved.lock().unwrap().expect("the context after a scroll");
                 assert!(

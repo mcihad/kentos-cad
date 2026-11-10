@@ -38,7 +38,7 @@ pub enum UnitKind {
     Common,
     /// Dış alan: a garden, a car park; summed apart.
     Outdoor,
-    /// Eklenti (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,
+    /// Eklenti (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,
     /// allocated to it (a storage room, a garage, a coal room; `annexOf`); its gross counts into its unit's total gross
     /// (PAİY 4/ğ-4), never into the common areas.
     Annex,
@@ -143,16 +143,16 @@ pub struct ProgramUnit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$")))]
     pub share_weight: Option<String>,
-    /// Niteliği (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
+    /// Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
     /// what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub nature: Option<String>,
-    /// An annex's independent unit (docs/adr/3031): the id of the group of kind `unit` it is allocated to.
+    /// An annex's independent unit (docs/adr/8031): the id of the group of kind `unit` it is allocated to.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub annex_of: Option<String>,
-    /// An independent unit's value factor in the land shares (docs/adr/3031; Kat Mülkiyeti Kanunu 3: values by
+    /// An independent unit's value factor in the land shares (docs/adr/8031; Kat Mülkiyeti Kanunu 3: values by
     /// location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -199,7 +199,7 @@ pub struct SpaceBrief {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub outdoor: bool,
-    /// How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and
+    /// How its rooms count for the floor area ratio (docs/adr/8030; `.kcad` schema 222). Absent: by their name and
     /// use (`emsal_by_use`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -270,7 +270,7 @@ pub struct BuildingProgram {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub share_rule: Option<crate::ShareRule>,
-    /// Arsa payı paydası (docs/adr/3031; `.kcad` schema 211): the whole the land shares are written over; none: the
+    /// Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
     /// parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -279,7 +279,7 @@ pub struct BuildingProgram {
     pub land_total: Option<u64>,
 }
 
-/// The largest land share whole (payda) a program may give (docs/adr/3031).
+/// The largest land share whole (payda) a program may give (docs/adr/8031).
 pub const MAX_LAND_TOTAL: u64 = 100_000_000;
 
 fn text_problem(v: &str, at: &str, what: &str) -> Option<(String, String)> {
@@ -318,7 +318,7 @@ fn positive(v: Option<f64>, at: &str, what: &str, unit: &str) -> Option<(String,
 }
 
 impl BuildingProgram {
-    /// Whether a brief says how its rooms count for the floor area ratio (KCAD 210, docs/adr/3030).
+    /// Whether a brief says how its rooms count for the floor area ratio (KCAD 222, docs/adr/8030).
     pub fn has_emsal(&self) -> bool {
         self.briefs.iter().any(|b| b.emsal.is_some())
     }
@@ -327,7 +327,7 @@ impl BuildingProgram {
         self == &BuildingProgram::default()
     }
 
-    /// Whether it says what schema 211 brings (docs/adr/3031): an annex, a unit's nature or value factor, the land
+    /// Whether it says what schema 223 brings (docs/adr/8031): an annex, a unit's nature or value factor, the land
     /// shares' whole.
     pub fn has_land_shares(&self) -> bool {
         self.land_total.is_some()
@@ -339,7 +339,7 @@ impl BuildingProgram {
             })
     }
 
-    /// The annexes of the unit of the id given (docs/adr/3031), in the program's order.
+    /// The annexes of the unit of the id given (docs/adr/8031), in the program's order.
     pub fn annexes_of(&self, id: &str) -> Vec<&ProgramUnit> {
         self.units
             .iter()
@@ -512,7 +512,7 @@ impl BuildingProgram {
             {
                 return Some((format!("{at}.shareWeight"), why));
             }
-            // Kat irtifakı (docs/adr/3031): the nature, an annex's unit, a unit's value factor.
+            // Kat irtifakı (docs/adr/8031): the nature, an annex's unit, a unit's value factor.
             if let Some(n) = &u.nature
                 && let Some(p) = text_problem(n, &format!("{at}.nature"), "Bölümün niteliği")
             {

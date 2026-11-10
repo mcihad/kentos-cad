@@ -12219,7 +12219,7 @@
       "id": "cad.spaces.quantities",
       "version": 1,
       "title": "Metraj",
-      "summary": "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723 §3): kat, genişlik, kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve rampRailingLength. Kiriş (beams, docs/adr/3041 §3): numara, tür (kiriş, lento, hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme) × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı; toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).",
+      "summary": "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. Oda (boşluk olmayan mahal): süpürgelik (baseboard), halkalarının uzunluğundan kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk; düz kenarda) genişlikleri düşülerek. Döşeme (slabs): tür, kat, malzeme, kalınlık, kot farkı, üst kot (katın kotu + fark), alan (delikler düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723 §3): kat, genişlik, kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve rampRailingLength. Kiriş (beams, docs/adr/8041 §3): numara, tür (kiriş, lento, hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme) × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı; toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -12282,7 +12282,7 @@
         "description": "Output of `cad.spaces.quantities` v1 (its plan's too).",
         "properties": {
           "beams": {
-            "description": "The beams, lintels and bond beams (docs/adr/3041 §3).",
+            "description": "The beams, lintels and bond beams (docs/adr/8041 §3).",
             "items": {
               "$ref": "#/$defs/BeamRow"
             },
@@ -12359,7 +12359,7 @@
         "description": "Output of `cad.spaces.quantities` v1 (its plan's too).",
         "properties": {
           "beams": {
-            "description": "The beams, lintels and bond beams (docs/adr/3041 §3).",
+            "description": "The beams, lintels and bond beams (docs/adr/8041 §3).",
             "items": {
               "$ref": "#/$defs/BeamRow"
             },
@@ -13211,7 +13211,7 @@
       "id": "cad.beams.create",
       "version": 1,
       "title": "Kiriş",
-      "summary": "Kirişler ekler (docs/adr/3041 §1); tek geri alma adımı “Kiriş”. Her biri eksen (pts: en az 2, en çok 1000 nokta, düz parçalar), gövde genişliği (width, en çok 3 m), yükseklik (height: döşeme dahil toplam, TBDY 2018 7.4.1.1 b; en çok 5 m), hiza (justify: left eksen sol yüzü, gövde sağda; center varsayılan; right), kot farkı (offset: tepesinin asıldığı yerden farkı — katının üstündeki döşemenin taşıyıcı üstü, yoksa katın tepesi; en çok ±10 m), tür (role: yoksa kiriş; lintel lento, bondBeam hatıl, docs/adr/3041 §3), kattan yükseklik (baseOffset: alt yüzünün katın döşemesinden yüksekliği, lentonun açıklığın başında; kot farkıyla birlikte olmaz), numara (tag, K101 gibi), malzeme (material; yoksa Betonarme), kat ve tadilat durumu (arch).                       Planda kesit düzleminin üstünde kaldığı için kesikli ve ince çizilir (ISO 128-23 02.1); 1:100'de numarası, 1:50 ve ayrıntılı çizimde numarası ve ölçüsü (K101 25/50) yanına yazılır. Altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir, duvar onların üstünden sürer. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
+      "summary": "Kirişler ekler (docs/adr/8041 §1); tek geri alma adımı “Kiriş”. Her biri eksen (pts: en az 2, en çok 1000 nokta, düz parçalar), gövde genişliği (width, en çok 3 m), yükseklik (height: döşeme dahil toplam, TBDY 2018 7.4.1.1 b; en çok 5 m), hiza (justify: left eksen sol yüzü, gövde sağda; center varsayılan; right), kot farkı (offset: tepesinin asıldığı yerden farkı — katının üstündeki döşemenin taşıyıcı üstü, yoksa katın tepesi; en çok ±10 m), tür (role: yoksa kiriş; lintel lento, bondBeam hatıl, docs/adr/8041 §3), kattan yükseklik (baseOffset: alt yüzünün katın döşemesinden yüksekliği, lentonun açıklığın başında; kot farkıyla birlikte olmaz), numara (tag, K101 gibi), malzeme (material; yoksa Betonarme), kat ve tadilat durumu (arch).                       Planda kesit düzleminin üstünde kaldığı için kesikli ve ince çizilir (ISO 128-23 02.1); 1:100'de numarası, 1:50 ve ayrıntılı çizimde numarası ve ölçüsü (K101 25/50) yanına yazılır. Altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir, duvar onların üstünden sürer. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -13227,7 +13227,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/3041 §1): beams on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_beam`, `level_not_found`, `invalid_line_weight`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,\n`attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "description": "Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/8041 §1): beams on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_beam`, `level_not_found`, `invalid_line_weight`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,\n`attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
         "properties": {
           "beams": {
             "items": {
@@ -13375,7 +13375,7 @@
       "id": "cad.arch.edit",
       "version": 1,
       "title": "Mimari nesneyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (docs/adr/3041 §2; null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/3041 §1, §3; hatalı kiriş invalid_beam); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -13542,7 +13542,7 @@
       "id": "cad.tags.create",
       "version": 1,
       "title": "Etiket",
-      "summary": "Nesnelere etiket koyar; tek geri alma adımı “Etiket”. Her etiket nesnesinin kalıcı kimliğiyle (of) verilir: açıklık, mahal, kolon, aks, duvar, merdiven, rampa ya da blok; başka nesne not_taggable. content şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope}, {floorElevation}, {ceilingElevation}, {netArea} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). Mahalin floorElevation değeri bitmiş döşemesinin kotudur (kendi döşeme kot farkı, yoksa altındaki döşemenin üstü, yoksa katın kotu; docs/adr/3040 §3); ceilingElevation tavanının kotudur (asma tavan, yazılan iç yükseklik ya da üst döşemenin sıvalı altı). Katın döşemeden döşemeye yüksekliği tavan sayılmaz; katı bilinmeyen mahalde ikisi, tavanı bilinmeyende ceilingElevation boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen mahalında netArea boş kalır. shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar. all.refresh yok/null/false mevcut etiketleri korur. true yalnız layerId katmanındaki uygun mevcut etiketlere açıkça verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur. Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak CAD katmanlarını, all.phases kaynak tadilat durumlarını, all.levels mimari kat kimliklerini süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik listesi verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu kimlik projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık katını duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına girmez. Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
+      "summary": "Nesnelere etiket koyar; tek geri alma adımı “Etiket”. Her etiket nesnesinin kalıcı kimliğiyle (of) verilir: açıklık, mahal, kolon, aks, duvar, merdiven, rampa ya da blok; başka nesne not_taggable. content şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope}, {floorElevation}, {ceilingElevation}, {netArea} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). Mahalin floorElevation değeri bitmiş döşemesinin kotudur (kendi döşeme kot farkı, yoksa altındaki döşemenin üstü, yoksa katın kotu; docs/adr/8040 §3); ceilingElevation tavanının kotudur (asma tavan, yazılan iç yükseklik ya da üst döşemenin sıvalı altı). Katın döşemeden döşemeye yüksekliği tavan sayılmaz; katı bilinmeyen mahalde ikisi, tavanı bilinmeyende ceilingElevation boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen mahalında netArea boş kalır. shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar. all.refresh yok/null/false mevcut etiketleri korur. true yalnız layerId katmanındaki uygun mevcut etiketlere açıkça verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur. Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak CAD katmanlarını, all.phases kaynak tadilat durumlarını, all.levels mimari kat kimliklerini süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik listesi verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu kimlik projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık katını duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına girmez. Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -22032,7 +22032,7 @@
             "x-unit": "length"
           },
           "byLevel": {
-            "description": "Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.",
+            "description": "Kat kat (docs/adr/8029): a units schedule's rows storey by storey, each group's areas the storey's part.",
             "type": [
               "boolean",
               "null"
@@ -25409,7 +25409,7 @@
       "id": "cad.arch.audit",
       "version": 1,
       "title": "Mimari denetim",
-      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, kiriş, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/3033): Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği 3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), adı ya da kullanımı olan mahalin iç yüksekliği bitmiş döşemesinden tavanına (asma tavan, yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân edilen mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte 2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6) paiy_inside_height_below (docs/adr/3040 §3; balkon, teras, sığınak, şaft, çatı arası ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. docs/adr/3034: merdiven 31 — ortak merdiven kolu ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde 1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27, döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak merdivende iki yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az bir (38/1) paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin kattan yukarıda denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1); Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m² paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); bodrumları (teknik hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve daha fazlada asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü konut hariç), Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük paiy_elevator_small, asansör kapısının açıldığı sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow (34/2). Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/3035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b). Konut olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün yol Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75 …), koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m (yağmurlamada 30, 48/2) ve daire kapısından kat çıkışına Ek-5/B apartman (48/4) — bodrum dahil 4 kata kadar konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal bykhy_escape_no_route; kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen alanıyla) ile katın toplam çıkış eni kişi ÷ birim genişlik kişisi × 0,50 m ve 50/501/2001 kişide her kaçış yolu 1,00/1,50/2,00 m bykhy_exit_width_below (33/1; yüksek binada merdiven 1,20 m, 33/2), 50 kişiyi aşan mahalde 2, katta 500'ü aşanda 3, 1000'i aşanda 4 çıkış bykhy_exit_count_below (39/2), kaçış yolu olan koridor 1,10 m (yüksek binada 1,20) bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/3036: Otopark ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² az ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, kiriş, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/8033): Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği 3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), adı ya da kullanımı olan mahalin iç yüksekliği bitmiş döşemesinden tavanına (asma tavan, yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân edilen mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte 2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6) paiy_inside_height_below (docs/adr/8040 §3; balkon, teras, sığınak, şaft, çatı arası ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. docs/adr/8034: merdiven 31 — ortak merdiven kolu ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde 1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27, döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak merdivende iki yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az bir (38/1) paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin kattan yukarıda denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1); Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m² paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); bodrumları (teknik hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve daha fazlada asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü konut hariç), Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük paiy_elevator_small, asansör kapısının açıldığı sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow (34/2). Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b). Konut olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün yol Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75 …), koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m (yağmurlamada 30, 48/2) ve daire kapısından kat çıkışına Ek-5/B apartman (48/4) — bodrum dahil 4 kata kadar konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal bykhy_escape_no_route; kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen alanıyla) ile katın toplam çıkış eni kişi ÷ birim genişlik kişisi × 0,50 m ve 50/501/2001 kişide her kaçış yolu 1,00/1,50/2,00 m bykhy_exit_width_below (33/1; yüksek binada merdiven 1,20 m, 33/2), 50 kişiyi aşan mahalde 2, katta 500'ü aşanda 3, 1000'i aşanda 4 çıkış bykhy_exit_count_below (39/2), kaçış yolu olan koridor 1,10 m (yüksek binada 1,20) bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² az ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -70935,7 +70935,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS\n  program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes\n  both); a CAD project without a work chooses once, an existing work cannot change;\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans\n  are cut at (docs/adr/3012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or\n  absent: every object its own pen) how its lines are weighted (docs/adr/3013);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n- `standardDocs`: the entire ordered list of versioned drawing-standard\n  documents retained by the project; an empty list removes all bindings.\n  An ordered, byte-identical subset may remove unsupported existing\n  documents for recovery; new or changed documents are validated.\n  This changes the association only and does not apply the standards.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work\nchanged),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS\n  program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes\n  both); a CAD project without a work chooses once, an existing work cannot change;\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans\n  are cut at (docs/adr/8012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or\n  absent: every object its own pen) how its lines are weighted (docs/adr/8013);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n- `standardDocs`: the entire ordered list of versioned drawing-standard\n  documents retained by the project; an empty list removes all bindings.\n  An ordered, byte-identical subset may remove unsupported existing\n  documents for recovery; new or changed documents are validated.\n  This changes the association only and does not apply the standards.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work\nchanged),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
         "properties": {
           "angleUnit": {
             "anyOf": [
@@ -96706,7 +96706,7 @@
           },
           "naming": {
             "default": "{index}-{sheet}",
-            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and\n{@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value\nrefuses with naming_value_missing). Collisions get a stable numeric suffix.",
+            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and\n{@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/8037; one without a value\nrefuses with naming_value_missing). Collisions get a stable numeric suffix.",
             "type": "string"
           },
           "path": {
@@ -96714,7 +96714,7 @@
             "type": "string"
           },
           "pdfa": {
-            "description": "PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a\ndrawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.",
+            "description": "PDF/A-2b (ISO 19005-2; docs/adr/8037): every file archival, as the 2026 digital project regulation asks a\ndrawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.",
             "type": "boolean"
           },
           "pin": {
@@ -106257,7 +106257,7 @@
     },
     {
       "unit": "W/m2K",
-      "meaning": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/3038)."
+      "meaning": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038)."
     }
   ],
   "effects": [
@@ -109443,12 +109443,12 @@
         },
         {
           "const": "fixtures",
-          "description": "Fixtures (docs/adr/3025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older\nsanitary blocks) taken by a wall, a column, another fixture or a door's leaf (passage); checked only when asked\nby name.",
+          "description": "Fixtures (docs/adr/8025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older\nsanitary blocks) taken by a wall, a column, another fixture or a door's leaf (passage); checked only when asked\nby name.",
           "type": "string"
         },
         {
           "const": "regulation",
-          "description": "Mevzuat (docs/adr/3033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,\nkitchen, bathroom and toilet, their narrow side and net area), corridors (29/3), storey heights (28/1-c) and\ndoors (39/1: their height and net width by what they enter); each finding names its article (`rule`); checked\nonly when asked by name.",
+          "description": "Mevzuat (docs/adr/8033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,\nkitchen, bathroom and toilet, their narrow side and net area), corridors (29/3), storey heights (28/1-c) and\ndoors (39/1: their height and net width by what they enter); each finding names its article (`rule`); checked\nonly when asked by name.",
           "type": "string"
         }
       ]
@@ -109519,7 +109519,7 @@
           "$ref": "#/$defs/ArchAuditCheck"
         },
         "code": {
-          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's\n`arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's\n`paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,\n`paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033),\n`paiy_inside_height_below` (docs/adr/3040 §3),\n`paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,\n`paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,\n`paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`\n(docs/adr/3034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,\n`bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/3035); `parking_short`,\n`shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/3036).",
+          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's\n`arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/8025); the regulation group's\n`paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,\n`paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/8033),\n`paiy_inside_height_below` (docs/adr/8040 §3),\n`paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,\n`paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,\n`paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`\n(docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,\n`bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,\n`shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036).",
           "type": "string"
         },
         "exception": {
@@ -109572,7 +109572,7 @@
           "type": "string"
         },
         "rule": {
-          "description": "A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”; a local\nregulation's (docs/adr/3034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.",
+          "description": "A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local\nregulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.",
           "type": [
             "string",
             "null"
@@ -109888,7 +109888,7 @@
               "x-unit": "elevation"
             },
             "baseOffset": {
-              "description": "A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its\nbase staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/3041 §3): a\nlintel's or a bond beam's; null: it hangs from its slab again.",
+              "description": "A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its\nbase staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/8041 §3): a\nlintel's or a bond beam's; null: it hangs from its slab again.",
               "format": "double",
               "type": [
                 "number",
@@ -109952,7 +109952,7 @@
               ]
             },
             "height": {
-              "description": "A beam's height (docs/adr/3041 §1).",
+              "description": "A beam's height (docs/adr/8041 §1).",
               "format": "double",
               "type": [
                 "number",
@@ -110020,7 +110020,7 @@
               ]
             },
             "material": {
-              "description": "A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.",
+              "description": "A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.",
               "type": [
                 "string",
                 "null"
@@ -110110,7 +110110,7 @@
                   "type": "null"
                 }
               ],
-              "description": "A beam's role (docs/adr/3041 §3): a beam, a lintel or a bond beam."
+              "description": "A beam's role (docs/adr/8041 §3): a beam, a lintel or a bond beam."
             },
             "rotation": {
               "description": "A column's, about its reference point.",
@@ -110290,7 +110290,7 @@
           "type": "array"
         },
         "cutHeight": {
-          "description": "The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a\nwindow over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project\nwrites 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).",
+          "description": "The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a\nwindow over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project\nwrites 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).",
           "format": "double",
           "type": [
             "number",
@@ -110334,7 +110334,7 @@
               "type": "null"
             }
           ],
-          "description": "How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the\nplan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide\nline, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its\nown pen whatever the scale. A new Mimari project writes `byScale`."
+          "description": "How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the\nplan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide\nline, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its\nown pen whatever the scale. A new Mimari project writes `byScale`."
         },
         "localRules": {
           "anyOf": [
@@ -110345,7 +110345,7 @@
               "type": "null"
             }
           ],
-          "description": "Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's\nMevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone."
+          "description": "Yerel imar yönetmeliği (docs/adr/8034; `.kcad` schema 225): the municipality's regulation Mimari denetim's\nMevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone."
         },
         "materials": {
           "description": "The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.",
@@ -110406,7 +110406,7 @@
               "type": "null"
             }
           ],
-          "description": "Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the\nabsolute elevation of ±0.00 and the setback line the document keeps. Absent: none given."
+          "description": "Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the\nabsolute elevation of ±0.00 and the setback line the document keeps. Absent: none given."
         },
         "spaceMethod": {
           "anyOf": [
@@ -110441,7 +110441,7 @@
           "type": "array"
         },
         "sprinklers": {
-          "description": "Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the\nfire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.",
+          "description": "Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the\nfire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.",
           "type": "boolean"
         },
         "zoning": {
@@ -110453,7 +110453,7 @@
               "type": "null"
             }
           ],
-          "description": "İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area\nratio and the coverage are read against. Absent: none given."
+          "description": "İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area\nratio and the coverage are read against. Absent: none given."
         }
       },
       "type": "object"
@@ -112974,7 +112974,7 @@
       "type": "object"
     },
     "BeamEntity": {
-      "description": "A beam (docs/adr/3041 §1).",
+      "description": "A beam (docs/adr/8041 §1).",
       "properties": {
         "arch": {
           "$ref": "#/$defs/ArchInfo"
@@ -112994,7 +112994,7 @@
           "type": "object"
         },
         "baseOffset": {
-          "description": "Its underside's height over its storey's floor, metres (docs/adr/3041 §3): a lintel's at its opening's head;\nabsent: it hangs from where its top is (a beam's). Not with an offset.",
+          "description": "Its underside's height over its storey's floor, metres (docs/adr/8041 §3): a lintel's at its opening's head;\nabsent: it hangs from where its top is (a beam's). Not with an offset.",
           "format": "double",
           "type": [
             "number",
@@ -113118,7 +113118,7 @@
         },
         "role": {
           "$ref": "#/$defs/BeamRole",
-          "description": "What it is (docs/adr/3041 §3): a beam (absent), a lintel or a bond beam."
+          "description": "What it is (docs/adr/8041 §3): a beam (absent), a lintel or a bond beam."
         },
         "symbol": {
           "description": "Library symbol overriding the layer's style.",
@@ -113174,7 +113174,7 @@
       "type": "object"
     },
     "BeamRole": {
-      "description": "What a beam is (docs/adr/3041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or\na bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).",
+      "description": "What a beam is (docs/adr/8041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or\na bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).",
       "enum": [
         "beam",
         "lintel",
@@ -113183,7 +113183,7 @@
       "type": "string"
     },
     "BeamRow": {
-      "description": "A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length and its concrete's volume. A beam's\nvolume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the\nslab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,\nin their wall, is the whole.",
+      "description": "A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length and its concrete's volume. A beam's\nvolume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the\nslab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,\nin their wall, is the whole.",
       "properties": {
         "height": {
           "format": "double",
@@ -114373,7 +114373,7 @@
           "type": "array"
         },
         "landTotal": {
-          "description": "Arsa payı paydası (docs/adr/3031; `.kcad` schema 211): the whole the land shares are written over; none: the\nparcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.",
+          "description": "Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the\nparcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.",
           "format": "uint64",
           "maximum": 100000000,
           "minimum": 1,
@@ -117661,7 +117661,7 @@
           "x-unit": "paper-mm"
         },
         "material": {
-          "description": "Its material (docs/adr/3041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two\nare one section, hatched alike with no line between them.",
+          "description": "Its material (docs/adr/8041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two\nare one section, hatched alike with no line between them.",
           "type": [
             "string",
             "null"
@@ -128767,7 +128767,7 @@
       ]
     },
     "EmsalCount": {
-      "description": "How a room counts for the floor area ratio (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).",
+      "description": "How a room counts for the floor area ratio (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).",
       "oneOf": [
         {
           "const": "included",
@@ -129141,7 +129141,7 @@
         },
         {
           "$ref": "#/$defs/BeamEntity",
-          "description": "A beam (docs/adr/3041 §1): its axis, its web's width and height, its top; drawn dashed in a plan.",
+          "description": "A beam (docs/adr/8041 §1): its axis, its web's width and height, its top; drawn dashed in a plan.",
           "properties": {
             "kind": {
               "const": "beam",
@@ -145599,7 +145599,7 @@
       "type": "object"
     },
     "LineGroups": {
-      "description": "How the plan's lines are weighted (docs/adr/3013).",
+      "description": "How the plan's lines are weighted (docs/adr/8013).",
       "oneOf": [
         {
           "const": "own",
@@ -145829,7 +145829,7 @@
       "type": "object"
     },
     "LocalRules": {
-      "description": "A municipality's own regulation (docs/adr/3034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY\n69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the\nnational value is said as a conflict the administration decides; both are named where they differ.",
+      "description": "A municipality's own regulation (docs/adr/8034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY\n69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the\nnational value is said as a conflict the administration decides; both are named where they differ.",
       "oneOf": [
         {
           "const": "sivas",
@@ -151650,7 +151650,7 @@
     },
     "NewBeam": {
       "additionalProperties": false,
-      "description": "One beam to draw (docs/adr/3041 §1): its fields, and its attributes.",
+      "description": "One beam to draw (docs/adr/8041 §1): its fields, and its attributes.",
       "properties": {
         "arch": {
           "anyOf": [
@@ -151672,7 +151672,7 @@
           ]
         },
         "baseOffset": {
-          "description": "Its underside's height over its storey's floor (docs/adr/3041 §3): a lintel's at its opening's head; absent: it\nhangs (a beam's). Not with an offset.",
+          "description": "Its underside's height over its storey's floor (docs/adr/8041 §3): a lintel's at its opening's head; absent: it\nhangs (a beam's). Not with an offset.",
           "format": "double",
           "type": [
             "number",
@@ -151730,7 +151730,7 @@
               "type": "null"
             }
           ],
-          "description": "What it is (docs/adr/3041 §3): absent a beam; a lintel; a bond beam."
+          "description": "What it is (docs/adr/8041 §3): absent a beam; a lintel; a bond beam."
         },
         "tag": {
           "description": "Its number (\"K101\").",
@@ -151840,7 +151840,7 @@
           "x-unit": "length"
         },
         "material": {
-          "description": "Its material (docs/adr/3041 §2); absent: Betonarme.",
+          "description": "Its material (docs/adr/8041 §2); absent: Betonarme.",
           "type": [
             "string",
             "null"
@@ -152261,7 +152261,7 @@
               "type": "null"
             }
           ],
-          "description": "Its own tadilat durumu (docs/adr/3039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.\nAbsent: its wall's."
+          "description": "Its own tadilat durumu (docs/adr/8039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.\nAbsent: its wall's."
         },
         "point": {
           "anyOf": [
@@ -152528,7 +152528,7 @@
               "type": "null"
             }
           ],
-          "description": "Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none."
+          "description": "Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none."
         },
         "material": {
           "type": [
@@ -152663,7 +152663,7 @@
           ]
         },
         "floorOffset": {
-          "description": "Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/3040 §3); absent: the top of the floor\nslab under it, else its storey's floor.",
+          "description": "Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/8040 §3); absent: the top of the floor\nslab under it, else its storey's floor.",
           "format": "double",
           "type": [
             "number",
@@ -152672,7 +152672,7 @@
           "x-unit": "elevation"
         },
         "height": {
-          "description": "Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/3040\n§3).",
+          "description": "Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/8040\n§3).",
           "format": "double",
           "type": [
             "number",
@@ -152747,7 +152747,7 @@
           ]
         },
         "suspendedCeiling": {
-          "description": "Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/3040 §3); absent: none.",
+          "description": "Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/8040 §3); absent: none.",
           "format": "double",
           "type": [
             "number",
@@ -154657,7 +154657,7 @@
               "type": "null"
             }
           ],
-          "description": "Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:\nits wall's."
+          "description": "Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up. Absent:\nits wall's."
         },
         "place": {
           "description": "Its jambs: the start jamb's points on its wall's left and right face, then the end jamb's; written from its\nwall by the document.",
@@ -155343,7 +155343,7 @@
           ]
         },
         "code": {
-          "description": "Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a\ndoor in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;\nunique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).",
+          "description": "Its joinery code (docs/adr/8028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a\ndoor in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;\nunique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).",
           "type": [
             "string",
             "null"
@@ -155388,7 +155388,7 @@
           "x-unit": "count"
         },
         "material": {
-          "description": "Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5\nodacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said\n(KCAD schema 217).",
+          "description": "Its frame's and leaves' make (kasa ve kanat; docs/adr/8038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5\nodacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said\n(KCAD schema 229).",
           "type": [
             "string",
             "null"
@@ -155428,7 +155428,7 @@
           "x-unit": "deg"
         },
         "uValue": {
-          "description": "Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS\n825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217).",
+          "description": "Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS\n825:2024's 1.8 is a finding (docs/adr/8038). Above 0, at most 10; absent: not said (KCAD schema 229).",
           "format": "double",
           "type": [
             "number",
@@ -155510,7 +155510,7 @@
           "x-unit": "count"
         },
         "material": {
-          "description": "Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.",
+          "description": "Its frame's and leaves' make (kasa ve kanat, docs/adr/8038); null: not said.",
           "type": [
             "string",
             "null"
@@ -155561,7 +155561,7 @@
           "x-unit": "deg"
         },
         "uValue": {
-          "description": "Its thermal transmittance, W/m²K (docs/adr/3038); null: not said.",
+          "description": "Its thermal transmittance, W/m²K (docs/adr/8038); null: not said.",
           "format": "double",
           "type": [
             "number",
@@ -155870,7 +155870,7 @@
           "type": "object"
         },
         {
-          "description": "Doğrama kodu (docs/adr/3028): the type's joinery code set, or taken away (null); every opening of the type and\nits tag read it.",
+          "description": "Doğrama kodu (docs/adr/8028): the type's joinery code set, or taken away (null); every opening of the type and\nits tag read it.",
           "properties": {
             "code": {
               "default": null,
@@ -155894,7 +155894,7 @@
           "type": "object"
         },
         {
-          "description": "Doğrama kodları (docs/adr/3028): each type the drawing's doors, windows and bare openings follow that has no\ncode gets the next of its kind, counted from 01 in the order the drawing first has it: K a door, GK a door with\na room on one side only (the building's outer wall), P a window, B a bare opening. An opening following no\nproject type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a\nlocked layer is left out. Codes given before stay.",
+          "description": "Doğrama kodları (docs/adr/8028): each type the drawing's doors, windows and bare openings follow that has no\ncode gets the next of its kind, counted from 01 in the order the drawing first has it: K a door, GK a door with\na room on one side only (the building's outer wall), P a window, B a bare opening. An opening following no\nproject type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a\nlocked layer is left out. Codes given before stay.",
           "properties": {
             "kind": {
               "const": "codes",
@@ -156085,7 +156085,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:\nits wall's."
+              "description": "Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up; null:\nits wall's."
             },
             "showSwing": {
               "type": [
@@ -156314,7 +156314,7 @@
           "description": "Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every\nopening of the form `form` (all forms: absent).",
           "properties": {
             "byRoom": {
-              "description": "Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens\ninto, else its other side's; another's the room on either side), and when that room has more than one of\nthem -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.",
+              "description": "Mahale göre (docs/adr/8028): each opening `prefix` and its room's number instead (a door's the room it opens\ninto, else its other side's; another's the room on either side), and when that room has more than one of\nthem -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.",
               "type": "boolean"
             },
             "form": {
@@ -166747,7 +166747,7 @@
       "type": "object"
     },
     "PhaseView": {
-      "description": "Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;\nTadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.",
+      "description": "Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;\nTadilat projesi (docs/adr/8039 §5) every state with Mimarlar Odası's three techniques.",
       "oneOf": [
         {
           "enum": [
@@ -166760,7 +166760,7 @@
         },
         {
           "const": "renovation",
-          "description": "Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.",
+          "description": "Tadilat projesi (docs/adr/8039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.",
           "type": "string"
         }
       ]
@@ -170590,7 +170590,7 @@
       "description": "A group of spaces: an independent unit, a common area or an outdoor area.",
       "properties": {
         "annexOf": {
-          "description": "An annex's independent unit (docs/adr/3031): the id of the group of kind `unit` it is allocated to.",
+          "description": "An annex's independent unit (docs/adr/8031): the id of the group of kind `unit` it is allocated to.",
           "type": [
             "string",
             "null"
@@ -170609,7 +170609,7 @@
           "$ref": "#/$defs/UnitKind"
         },
         "landFactor": {
-          "description": "An independent unit's value factor in the land shares (docs/adr/3031; Kat Mülkiyeti Kanunu 3: values by\nlocation and size): a decimal as written (“1.15”), read exactly; 1 when absent.",
+          "description": "An independent unit's value factor in the land shares (docs/adr/8031; Kat Mülkiyeti Kanunu 3: values by\nlocation and size): a decimal as written (“1.15”), read exactly; 1 when absent.",
           "pattern": "^[0-9]{1,12}(\\.[0-9]{1,6})?$",
           "type": [
             "string",
@@ -170623,7 +170623,7 @@
           ]
         },
         "nature": {
-          "description": "Niteliği (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 12/a: \"kat, daire, iş bürosu gibi nevi\"):\nwhat the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).",
+          "description": "Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: \"kat, daire, iş bürosu gibi nevi\"):\nwhat the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).",
           "type": [
             "string",
             "null"
@@ -172357,7 +172357,7 @@
           "x-unit": "length"
         },
         "beamVolume": {
-          "description": "The beams', lintels' and bond beams' concrete (docs/adr/3041 §3).",
+          "description": "The beams', lintels' and bond beams' concrete (docs/adr/8041 §3).",
           "format": "double",
           "type": "number",
           "x-unit": "volume"
@@ -178123,7 +178123,7 @@
         },
         {
           "const": "code",
-          "description": "An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.",
+          "description": "An opening's type's joinery code (docs/adr/8028; KCAD schema 220): grouped by it, the joinery list.",
           "type": "string"
         },
         {
@@ -178198,17 +178198,17 @@
         },
         {
           "const": "paiyNet",
-          "description": "Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its\nnet area, its gross (outer contour: the façade's outer face, a shared wall's axis), its part of the common\nareas' gross and its general gross (gross and part).",
+          "description": "Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/8029; `.kcad` schema 221): its\nnet area, its gross (outer contour: the façade's outer face, a shared wall's axis), its part of the common\nareas' gross and its general gross (gross and part).",
           "type": "string"
         },
         {
           "const": "nature",
-          "description": "Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:\ndaire, dükkân, iş bürosu …), its annexes' net and gross areas, its annexes said (their nature or name and gross),\nits total gross (PAİY 4/ğ-4: its gross and its annexes') and its land share (“225/450”).",
+          "description": "Kat irtifakı (docs/adr/8031; `.kcad` schema 223): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:\ndaire, dükkân, iş bürosu …), its annexes' net and gross areas, its annexes said (their nature or name and gross),\nits total gross (PAİY 4/ğ-4: its gross and its annexes') and its land share (“225/450”).",
           "type": "string"
         },
         {
           "const": "sillFinish",
-          "description": "Mahal listesi (docs/adr/3038; `.kcad` schema 216; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window\nsills' and parapets', its stair's treads' and risers', and its handrails' and railings' finishes; the doors and the\nwindows that serve it, by their joinery codes (“K01, P01 (2)”).",
+          "description": "Mahal listesi (docs/adr/8038; `.kcad` schema 228; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window\nsills' and parapets', its stair's treads' and risers', and its handrails' and railings' finishes; the doors and the\nwindows that serve it, by their joinery codes (“K01, P01 (2)”).",
           "type": "string"
         }
       ]
@@ -178360,7 +178360,7 @@
           "description": "Its columns, filter, sort, grouping or total changed; its rows written again.",
           "properties": {
             "byLevel": {
-              "description": "Kat kat (docs/adr/3029): a units schedule's rows storey by storey.",
+              "description": "Kat kat (docs/adr/8029): a units schedule's rows storey by storey.",
               "type": [
                 "boolean",
                 "null"
@@ -179382,7 +179382,7 @@
         },
         {
           "const": "beam",
-          "description": "Kiriş (docs/adr/3041 §1); after it for the same reason.",
+          "description": "Kiriş (docs/adr/8041 §1); after it for the same reason.",
           "type": "string"
         }
       ]
@@ -181709,7 +181709,7 @@
     },
     "SiteEdge": {
       "additionalProperties": false,
-      "description": "A parcel edge (docs/adr/3032): its kind and the plan's own setback where the plan gives one, m.",
+      "description": "A parcel edge (docs/adr/8032): its kind and the plan's own setback where the plan gives one, m.",
       "properties": {
         "kind": {
           "$ref": "#/$defs/SiteEdgeKind"
@@ -181726,7 +181726,7 @@
       "type": "object"
     },
     "SiteEdgeKind": {
-      "description": "A parcel edge's kind (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.",
+      "description": "A parcel edge's kind (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.",
       "oneOf": [
         {
           "const": "side",
@@ -181752,7 +181752,7 @@
     },
     "SitePlan": {
       "additionalProperties": false,
-      "description": "Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a\npolygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;\npast the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on\nthe parcel and the storeys.",
+      "description": "Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a\npolygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;\npast the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on\nthe parcel and the storeys.",
       "properties": {
         "datum": {
           "description": "±0.00's absolute elevation, m.",
@@ -181997,7 +181997,7 @@
         },
         "layers": {
           "$ref": "#/$defs/SlabLayers",
-          "description": "Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the\nstructure alone, its top the finished floor."
+          "description": "Its layers besides its structure (docs/adr/8040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the\nstructure alone, its top the finished floor."
         },
         "linePattern": {
           "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
@@ -182138,7 +182138,7 @@
     },
     "SlabLayer": {
       "additionalProperties": false,
-      "description": "A layer of a slab besides its structure (docs/adr/3040 §2).",
+      "description": "A layer of a slab besides its structure (docs/adr/8040 §2).",
       "properties": {
         "kind": {
           "$ref": "#/$defs/SlabLayerKind"
@@ -182164,7 +182164,7 @@
       "type": "object"
     },
     "SlabLayerKind": {
-      "description": "What a layer of a slab besides its structure is (docs/adr/3040 §2): TS 825's floor build-up (a storey's floor: its\nfinish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY\n4(1)(ıı)'s \"taban döşeme kaplaması\", the plaster its \"tavan kaplaması\".",
+      "description": "What a layer of a slab besides its structure is (docs/adr/8040 §2): TS 825's floor build-up (a storey's floor: its\nfinish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY\n4(1)(ıı)'s \"taban döşeme kaplaması\", the plaster its \"tavan kaplaması\".",
       "oneOf": [
         {
           "const": "finish",
@@ -182194,7 +182194,7 @@
       ]
     },
     "SlabLayerRow": {
-      "description": "A slab's layer measured (docs/adr/3040 §2): its kind, its thickness, its net area (the slab's) and its volume.",
+      "description": "A slab's layer measured (docs/adr/8040 §2): its kind, its thickness, its net area (the slab's) and its volume.",
       "properties": {
         "area": {
           "description": "The slab's net area, m².",
@@ -182233,7 +182233,7 @@
     },
     "SlabLayers": {
       "additionalProperties": false,
-      "description": "A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the\nstructure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of\nthe first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).",
+      "description": "A slab's layers besides its structure (its `thickness`, docs/adr/8040 §2), each list from the top: those over the\nstructure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of\nthe first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).",
       "properties": {
         "over": {
           "items": {
@@ -182300,7 +182300,7 @@
           "type": "boolean"
         },
         "layers": {
-          "description": "Its layers besides its structure (docs/adr/3040 §2), over it then under it, each measured on its net area;\n`volume` is the structure's.",
+          "description": "Its layers besides its structure (docs/adr/8040 §2), over it then under it, each measured on its net area;\n`volume` is the structure's.",
           "items": {
             "$ref": "#/$defs/SlabLayerRow"
           },
@@ -182463,7 +182463,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Its layers besides its structure, all of them (docs/adr/3040 §2); empty lists take them away."
+              "description": "Its layers besides its structure, all of them (docs/adr/8040 §2); empty lists take them away."
             },
             "level": {
               "type": [
@@ -183622,7 +183622,7 @@
               "type": "null"
             }
           ],
-          "description": "How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and\nuse (`emsal_by_use`)."
+          "description": "How its rooms count for the floor area ratio (docs/adr/8030; `.kcad` schema 222). Absent: by their name and\nuse (`emsal_by_use`)."
         },
         "minPassage": {
           "description": "The least net passage: the widest a body may be and still go between all the space's doors (a corridor's).",
@@ -183774,7 +183774,7 @@
           "$ref": "#/$defs/SpaceFinishes"
         },
         "floorOffset": {
-          "description": "Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;\na wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor.",
+          "description": "Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;\na wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor.",
           "format": "double",
           "type": [
             "number",
@@ -183783,7 +183783,7 @@
           "x-unit": "elevation"
         },
         "height": {
-          "description": "Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes\nfirst. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3).",
+          "description": "Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes\nfirst. Absent: up to the slab over it, else its storey's top (docs/adr/8040 §3).",
           "format": "double",
           "type": [
             "number",
@@ -183910,7 +183910,7 @@
           ]
         },
         "suspendedCeiling": {
-          "description": "Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,\nmetres; its inside height. Absent: none.",
+          "description": "Asma tavan (docs/adr/8040 §3, `.kcad` schema 233): its suspended ceiling's underside over its finished floor,\nmetres; its inside height. Absent: none.",
           "format": "double",
           "type": [
             "number",
@@ -183997,7 +183997,7 @@
           "$ref": "#/$defs/SpaceFinishes"
         },
         "floorOffset": {
-          "description": "Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;\na wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor.",
+          "description": "Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;\na wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor.",
           "format": "double",
           "type": [
             "number",
@@ -184006,7 +184006,7 @@
           "x-unit": "elevation"
         },
         "height": {
-          "description": "Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes\nfirst. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3).",
+          "description": "Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes\nfirst. Absent: up to the slab over it, else its storey's top (docs/adr/8040 §3).",
           "format": "double",
           "type": [
             "number",
@@ -184064,7 +184064,7 @@
           ]
         },
         "suspendedCeiling": {
-          "description": "Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,\nmetres; its inside height. Absent: none.",
+          "description": "Asma tavan (docs/adr/8040 §3, `.kcad` schema 233): its suspended ceiling's underside over its finished floor,\nmetres; its inside height. Absent: none.",
           "format": "double",
           "type": [
             "number",
@@ -184097,7 +184097,7 @@
     },
     "SpaceFinishes": {
       "additionalProperties": false,
-      "description": "A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room\nlist's others (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's\ntreads' and risers', and its handrails' and railings'.",
+      "description": "A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room\nlist's others (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's\ntreads' and risers', and its handrails' and railings'.",
       "properties": {
         "base": {
           "description": "The skirting's finish (`.kcad` schema 131).",
@@ -184119,21 +184119,21 @@
           ]
         },
         "railing": {
-          "description": "Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 216).",
+          "description": "Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 228).",
           "type": [
             "string",
             "null"
           ]
         },
         "sill": {
-          "description": "Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 216).",
+          "description": "Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 228).",
           "type": [
             "string",
             "null"
           ]
         },
         "stair": {
-          "description": "Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 216).",
+          "description": "Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 228).",
           "type": [
             "string",
             "null"
@@ -184383,7 +184383,7 @@
           "description": "Persistent column policy; omitted for legacy/ignore rows."
         },
         "height": {
-          "description": "Its inside height (PAİY 4(1)(ıı), docs/adr/3040 §3): its finished floor to its ceiling (its asma tavan, its\nheight typed, the slab over it); without one, its storey's top.",
+          "description": "Its inside height (PAİY 4(1)(ıı), docs/adr/8040 §3): its finished floor to its ceiling (its asma tavan, its\nheight typed, the slab over it); without one, its storey's top.",
           "format": "double",
           "type": [
             "number",
@@ -184435,7 +184435,7 @@
           ]
         },
         "suspendedCeilingArea": {
-          "description": "Its asma tavan's area, m² (docs/adr/3040 §3): its net area; none without one.",
+          "description": "Its asma tavan's area, m² (docs/adr/8040 §3): its net area; none without one.",
           "format": "double",
           "type": [
             "number",
@@ -184633,7 +184633,7 @@
               ]
             },
             "floorOffset": {
-              "description": "Döşeme kot farkı (docs/adr/3040 §3); null: the floor slab under it, else its storey's floor.",
+              "description": "Döşeme kot farkı (docs/adr/8040 §3); null: the floor slab under it, else its storey's floor.",
               "format": "double",
               "type": [
                 "number",
@@ -184710,7 +184710,7 @@
               "description": "Source scope to keep for later wall/column updates; unassigned requires clearing level."
             },
             "sill": {
-              "description": "The room list's finishes (docs/adr/3038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.",
+              "description": "The room list's finishes (docs/adr/8038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.",
               "type": [
                 "string",
                 "null"
@@ -184733,7 +184733,7 @@
               ]
             },
             "suspendedCeiling": {
-              "description": "Asma tavan: its height over the finished floor (docs/adr/3040 §3); null: none.",
+              "description": "Asma tavan: its height over the finished floor (docs/adr/8040 §3); null: none.",
               "format": "double",
               "type": [
                 "number",
@@ -192818,7 +192818,7 @@
           "description": "Kapı ve pencere, mahal, kolon ya da duvar çizelgesi (docs/adr/0344 §3): the objects of `of` that the filter\ntakes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again\nby the document at every step, which writes `members` too: each data row's objects by their persistent ids.",
           "properties": {
             "byLevel": {
-              "description": "Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has\nrooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).",
+              "description": "Kat kat (docs/adr/8029; `.kcad` schema 221): a units schedule's row for each group on each storey it has\nrooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).",
               "type": "boolean"
             },
             "columns": {
@@ -192930,7 +192930,7 @@
           "type": "object"
         },
         {
-          "description": "Emsal ve TAKS tablosu (docs/adr/3030; `.kcad` schema 210): the parcel's zoning against the drawing as PAİY 57/3\nasks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the\ndrawing's, the construction area) and each storey's area counted in and out; written again by the document at\nevery step and when the project's settings change.",
+          "description": "Emsal ve TAKS tablosu (docs/adr/8030; `.kcad` schema 222): the parcel's zoning against the drawing as PAİY 57/3\nasks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the\ndrawing's, the construction area) and each storey's area counted in and out; written again by the document at\nevery step and when the project's settings change.",
           "properties": {
             "kind": {
               "const": "zoning",
@@ -192943,7 +192943,7 @@
           "type": "object"
         },
         {
-          "description": "Otopark hesabı (docs/adr/3036; `.kcad` schema 215): the independent units' parking need by Otopark Yönetmeliği\nEk-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.",
+          "description": "Otopark hesabı (docs/adr/8036; `.kcad` schema 227): the independent units' parking need by Otopark Yönetmeliği\nEk-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.",
           "properties": {
             "kind": {
               "const": "parking",
@@ -192956,7 +192956,7 @@
           "type": "object"
         },
         {
-          "description": "Sığınak hesabı (docs/adr/3036; `.kcad` schema 215): the units' shelter people by Sığınak Yönetmeliği 8/a against\nthe drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.",
+          "description": "Sığınak hesabı (docs/adr/8036; `.kcad` schema 227): the units' shelter people by Sığınak Yönetmeliği 8/a against\nthe drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.",
           "properties": {
             "kind": {
               "const": "shelter",
@@ -193591,7 +193591,7 @@
         },
         {
           "const": "ellipse",
-          "description": "Round the first line only (docs/adr/3027): a room's number in its ellipse, its name and area below, as\nMimarlar Odası's room tag (KCAD schema 207).",
+          "description": "Round the first line only (docs/adr/8027): a room's number in its ellipse, its name and area below, as\nMimarlar Odası's room tag (KCAD schema 219).",
           "type": "string"
         }
       ]
@@ -198558,7 +198558,7 @@
         },
         {
           "const": "annex",
-          "description": "Eklenti (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,\nallocated to it (a storage room, a garage, a coal room; `annexOf`); its gross counts into its unit's total gross\n(PAİY 4/ğ-4), never into the common areas.",
+          "description": "Eklenti (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,\nallocated to it (a storage room, a garage, a coal room; `annexOf`); its gross counts into its unit's total gross\n(PAİY 4/ğ-4), never into the common areas.",
           "type": "string"
         }
       ]
@@ -204042,7 +204042,7 @@
     },
     "Zoning": {
       "additionalProperties": false,
-      "description": "İmar durumu (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's\nemsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan\ngives it.",
+      "description": "İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's\nemsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan\ngives it.",
       "properties": {
         "coverage": {
           "description": "TAKS.",

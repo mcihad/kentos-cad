@@ -1,5 +1,5 @@
 # M7: Mimari düzenleyicileri değişiklik varken sorarak kapanır, F1 Esc'le kapanır, Oda modülleri'nde Çizimden seç
-# (docs/adr/3006). Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/pencere-kapatma.txt .run/gui-evidence/mimari-m7/sonra --modul mimari
+# (docs/adr/8006). Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/pencere-kapatma.txt .run/gui-evidence/mimari-m7/sonra --modul mimari
 fit KentOS Mimari
 wait 1500
 click 353 343   # Başlangıç: Yeni proje

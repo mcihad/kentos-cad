@@ -215,7 +215,7 @@ pub fn plain_pieces(base: &EntityBase, w: &WallFields, view: View) -> Option<Vec
 
 /// Every wall of `entities` as `plain_pieces` gives it, but joined with the others (docs/adr/0340 §5), cut by its
 /// openings (docs/adr/0341 §2; the walls' persistent ids `uid_of` their object ids) and by the columns on its level
-/// (docs/adr/3041 §2), and every opening as its symbol and every column one section with a wall's layer of its material
+/// (docs/adr/8041 §2), and every opening as its symbol and every column one section with a wall's layer of its material
 /// as that layer looks: one entry per entity, none for one that is none of these or cannot be drawn (a column that
 /// meets no such layer draws as on its own, `arch_elements::plain_pieces_in`).
 pub fn plain_joined(
@@ -252,7 +252,7 @@ pub fn plain_joined(
             out[i] = Some(crate::openings::plain_pieces(&o.base, &o.opening, view));
         }
     }
-    // The columns (docs/adr/3041 §2): the walls on their level are cut where they stand.
+    // The columns (docs/adr/8041 §2): the walls on their level are cut where they stand.
     use kentos_geometry_core::geom::column_join::{Foot, WallAt, cut, joined};
     let columns: Vec<(usize, Shape, Foot)> = entities
         .iter()
@@ -515,7 +515,7 @@ mod tests {
         );
     }
 
-    /// A door and a window go out as the drawing at the file's scale shows them (docs/adr/3010), as the walls beside
+    /// A door and a window go out as the drawing at the file's scale shows them (docs/adr/8010), as the walls beside
     /// them: at 1:200 the door's leaf and the window's glass, at 1:100 the swing and the window's faces too (jamb to
     /// jamb, no frame drawn), at 1:50 the frame's sides as well.
     #[test]
@@ -635,7 +635,7 @@ mod tests {
         );
     }
 
-    /// DXF draws a column in a wall as the drawing does (docs/adr/3041 §2): the shear wall stops at the column's face
+    /// DXF draws a column in a wall as the drawing does (docs/adr/8041 §2): the shear wall stops at the column's face
     /// and the column takes its grey, its side across the wall's end left out (1.35 m of its 1.6 m outline); a steel
     /// column still cuts the wall but draws on its own.
     #[test]

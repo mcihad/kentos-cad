@@ -147,9 +147,9 @@ pub struct Select {
     hot: Vec<HotGrip>,
     /// A dynamic block's parameter grip being moved (docs/adr/0319 §1).
     param: Option<crate::param_grip::ParamDrag>,
-    /// A room's edge grip being moved (Odayı büyüt, docs/adr/3023).
+    /// A room's edge grip being moved (Odayı büyüt, docs/adr/8023).
     room: Option<crate::room_grip::RoomDrag>,
-    /// The pointer rests on a room's edge grip: where, and what it is told (docs/adr/3023).
+    /// The pointer rests on a room's edge grip: where, and what it is told (docs/adr/8023).
     hover_room: Option<(Vec2, Vec<String>)>,
     /// A transform mode's ghosts of the selection, and their point marks.
     ghosts: Vec<Stroke>,
@@ -212,7 +212,7 @@ impl Select {
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover_grip = None;
         self.hover_room = None;
-        // A room's edge grip (docs/adr/3023): a hot one is placed.
+        // A room's edge grip (docs/adr/8023): a hot one is placed.
         if self.room.as_ref().is_some_and(|g| g.hot) {
             if let Some(mut g) = self.room.take() {
                 g.follow(p.world, cx);
@@ -241,7 +241,7 @@ impl Select {
             }
             return;
         }
-        // A room's edge grip under the pointer is taken (docs/adr/3023).
+        // A room's edge grip under the pointer is taken (docs/adr/8023).
         if self.grip.is_none()
             && !p.shift
             && let Some(g) = crate::room_grip::grip_at(p.screen, cx)
@@ -332,7 +332,7 @@ impl Select {
             // What a click would select: the selection filter's kinds (docs/adr/0187 §5).
             let hit = crate::selectable::hover(cx, p.raw);
             self.hover_grip = grip_tag_at(p, cx);
-            // On a room's edge grip: what dragging it does (docs/adr/3023).
+            // On a room's edge grip: what dragging it does (docs/adr/8023).
             self.hover_room = crate::room_grip::grip_at(p.screen, cx)
                 .map(|g| (p.raw, crate::room_grip::hover_lines(&g, cx)));
             // On a tagged grip the pointer is on the vertex, not on the object: it is not
@@ -518,7 +518,7 @@ impl Select {
     }
 
     /// Where the temporary dimensions' + stand, those that write a permanent dimension
-    /// (docs/adr/3019).
+    /// (docs/adr/8019).
     pub fn temporary_permanents(&self) -> Vec<Vec2> {
         self.wall_temporary
             .squares
@@ -562,7 +562,7 @@ impl Select {
             return false;
         };
         // A padlock writes the bond (docs/adr/0770 §3), the + a permanent dimension
-        // (docs/adr/3019); the others are the session's.
+        // (docs/adr/8019); the others are the session's.
         match switch {
             crate::temporary_refs::Switch::Bond { .. } => {
                 crate::wall_distance::toggle_bond(switch, cx)
@@ -647,7 +647,7 @@ impl Select {
             self.param = Some(g);
             return false;
         }
-        // A room's edge grip: the room's new inner size, or by how much (docs/adr/3023).
+        // A room's edge grip: the room's new inner size, or by how much (docs/adr/8023).
         if let Some(g) = self.room.take() {
             if let Some(out) = g.typed_out(text, cx) {
                 g.commit(Some(out), cx);
@@ -1075,7 +1075,7 @@ impl Select {
             return Some(g.preview(format));
         }
         let (Some(g), Some(at)) = (self.grip.as_ref(), self.grip_point) else {
-            // Resting on a room's edge grip: what dragging it does (docs/adr/3023).
+            // Resting on a room's edge grip: what dragging it does (docs/adr/8023).
             if let Some((at, lines)) = &self.hover_room {
                 return Some(Preview {
                     tag: Some(Tag {

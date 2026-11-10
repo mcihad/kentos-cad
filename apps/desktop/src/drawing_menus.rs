@@ -28,7 +28,7 @@
 //! (docs/adr/0083).
 //!
 //! A building object selected (a wall, an opening, a room, a slab, an axis …)
-//! puts its context tab's own panel first, under the tab's name (docs/adr/3017):
+//! puts its context tab's own panel first, under the tab's name (docs/adr/8017):
 //! Duvarı kaydır and the wall's edits for a wall, Açıklığı taşı and Çevir for a
 //! door, Mahali böl and Mahal numarala for a room — what an architect reaches
 //! for there, before the edits every object has.
@@ -349,7 +349,7 @@ impl App {
             }
             menu = menu.separator();
         }
-        // A building object's own tools first, under its tab's name (docs/adr/3017).
+        // A building object's own tools first, under its tab's name (docs/adr/8017).
         if let Some((name, tools)) = self.building_tools() {
             menu = menu.header(name);
             menu = tools
@@ -431,7 +431,7 @@ impl App {
         }
     }
 
-    /// The selection's building tab's name and its own tools (docs/adr/3017): the first panel after Seçim and
+    /// The selection's building tab's name and its own tools (docs/adr/8017): the first panel after Seçim and
     /// Düzenle, as the ribbon shows it (a family's every tool), Nesne özellikleri last; none for any other selection.
     pub(crate) fn building_tools(&self) -> Option<(&'static str, Vec<&'static str>)> {
         let tab = self

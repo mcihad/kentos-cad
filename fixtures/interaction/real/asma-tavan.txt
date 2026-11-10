@@ -1,4 +1,4 @@
-# M40 3. bölüm (docs/adr/3040 §3): the two-storey building with its rooms and the 1. kat's Ara kat slab (kaplama 2, şap
+# M40 3. bölüm (docs/adr/8040 §3): the two-storey building with its rooms and the 1. kat's Ara kat slab (kaplama 2, şap
 # 5 over 15 cm of concrete, sıva 2 under). The ground storey's Salon: Döşeme kot farkı 0.000, İç yükseklik 2.760 to the
 # slab's plaster. Asma tavan 2.50: İç yükseklik 2.500. The Yatak odası's floor 2 cm lower: 2.780. Denetim › Mevzuat says
 # the Salon is under PAİY 28/4's 2.60 m; Metraj › Mahaller writes each room's inside height and the Salon's asma tavan.

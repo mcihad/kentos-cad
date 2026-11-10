@@ -751,7 +751,7 @@ const SYSTEM: &[&str] = &[
     include_str!("../templates/rapor-sayfasi.json"),
     include_str!("../templates/cad-teknik.json"),
     include_str!("../templates/cad-mimari.json"),
-    // The Turkish architectural sheet (docs/adr/3037): the MO title block, read from the drawing.
+    // The Turkish architectural sheet (docs/adr/8037): the MO title block, read from the drawing.
     include_str!("../templates/mimari-ruhsat.json"),
     include_str!("../templates/aplikasyon-krokisi.json"),
     include_str!("../templates/ifraz-paftasi.json"),

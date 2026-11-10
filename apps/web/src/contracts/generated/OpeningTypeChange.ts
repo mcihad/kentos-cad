@@ -34,10 +34,10 @@ build?: OpeningBuild,
  */
 unset?: Array<OpeningTypeField>, 
 /**
- * Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.
+ * Its frame's and leaves' make (kasa ve kanat, docs/adr/8038); null: not said.
  */
 material?: string | null, 
 /**
- * Its thermal transmittance, W/m²K (docs/adr/3038); null: not said.
+ * Its thermal transmittance, W/m²K (docs/adr/8038); null: not said.
  */
 uValue?: number | null, };

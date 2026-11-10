@@ -5,7 +5,7 @@ import type { Vec2 } from "./Vec2";
 import type { WallJustify } from "./WallJustify";
 
 /**
- * One beam to draw (docs/adr/3041 §1): its fields, and its attributes.
+ * One beam to draw (docs/adr/8041 §1): its fields, and its attributes.
  */
 export type NewBeam = { 
 /**
@@ -29,11 +29,11 @@ justify?: WallJustify,
  */
 offset?: number, 
 /**
- * What it is (docs/adr/3041 §3): absent a beam; a lintel; a bond beam.
+ * What it is (docs/adr/8041 §3): absent a beam; a lintel; a bond beam.
  */
 role?: BeamRole, 
 /**
- * Its underside's height over its storey's floor (docs/adr/3041 §3): a lintel's at its opening's head; absent: it
+ * Its underside's height over its storey's floor (docs/adr/8041 §3): a lintel's at its opening's head; absent: it
  * hangs (a beam's). Not with an offset.
  */
 baseOffset?: number, 

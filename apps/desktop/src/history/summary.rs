@@ -1,4 +1,4 @@
-//! A Mimari command's input said the way a designer says it (docs/adr/3004): “Dikdörtgen duvar · 3.000 × 3.000 m ·
+//! A Mimari command's input said the way a designer says it (docs/adr/8004): “Dikdörtgen duvar · 3.000 × 3.000 m ·
 //! iç net · ortak duvar: var olan kullanılır”. Komut geçmişi wrote the input field by field, half in English and with
 //! ids (“adopt: evet · frame: corners (başlangıç 4.2, 0, bitiş 7.2, 3)”, “İşlem: shift (yöntem 0.3)”); the summary is
 //! read from the same JSON, says no id, and leaves the field-by-field words to the row's details. Pure: names and
@@ -385,7 +385,7 @@ fn openings_edit(input: &Value, n: &Names) -> Vec<String> {
         "reset" => out.push("tipine döndü".to_owned()),
         _ => {}
     }
-    // A change the summary does not name is still a change, never an English word (docs/adr/3004).
+    // A change the summary does not name is still a change, never an English word (docs/adr/8004).
     if out.iter().all(String::is_empty) {
         out.push("değiştirildi".to_owned());
     }

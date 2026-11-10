@@ -35,7 +35,7 @@ impl App {
             },
         );
         if self.answered(result).is_some() {
-            // What is drawn from now on takes the view's state (docs/adr/3039 §3): said, so it is never a surprise.
+            // What is drawn from now on takes the view's state (docs/adr/8039 §3): said, so it is never a surprise.
             let drawn = match view {
                 PhaseView::All => String::new(),
                 PhaseView::Existing | PhaseView::Demolition => {
@@ -57,7 +57,7 @@ impl App {
 mod tests {
     use crate::app::Message;
 
-    /// Tadilat ▾ says what is drawn from now on takes (docs/adr/3039 §3): the view's state, never a surprise.
+    /// Tadilat ▾ says what is drawn from now on takes (docs/adr/8039 §3): the view's state, never a surprise.
     #[test]
     fn the_view_says_what_new_objects_take() {
         let mut app = crate::files_testing::app_with_drawing();
