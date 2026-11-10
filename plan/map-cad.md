@@ -39,7 +39,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -1153,6 +1153,15 @@ olup olmadığı). Kabul teknik olarak: aynı parselin iki ölçümü ve belgesi
 kaydedilince komşuluk değişir, belgenin değeri değişmez. 36 + 22 bağımsız durum, Python, MCP, masaüstü (Parsel alan
 denetimi › Parsel kayıtları…) ve resimler. Açık: ifrazda komşunun sınırının bölünmesi, kenarın belgedeki ölçüleri,
 belge taslağı ile onaylı kayıt, erişim denetimli hak/pay.
+
+**10 Kasım 2026, dokuzuncu tur — ifrazda komşunun sınırının yeni köşede bölünmesi ([ADR 4620](../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Pro'nun parseli tarihî yaparken güncel komşuyla paylaşılan çizgiyi bölmesi
+(komşu çakışan güncel çizgileri alır, asıl çizgi tarihî) ve Split parcels. Kanıtlanan: `cad.parcels.record`, belgenin
+yeni köşeleri (1 µm kuralı) güncel bir komşunun düz sınırının içine düşüp parçalar belgenin sınırlarıysa sınırı böler;
+komşunun halkası parçaları sırayla (ters yürüyende ters ve eksi) alır, eski sınır kapanır; cevapta `boundariesSplit`,
+`neighbours`. 38 + 23 bağımsız durum (3 yeni, eski ifraz durumu bölmeyle değişti), Python, MCP, masaüstü (planın sözü)
+ve resimler. Açık: yaylı sınırın bölünmesi, kenarın belgedeki ölçüleri, belge taslağı ile onaylı kayıt, erişim
+denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

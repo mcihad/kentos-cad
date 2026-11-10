@@ -4,4 +4,9 @@
  * Output of `cad.parcels.record` v1: the document's number, the parcels it made and closed (numbers), the boundaries
  * it made, the current boundaries its parcels share with earlier ones, and those it closed; the revision after.
  */
-export type ParcelsRecorded = { document: number, created: Array<number>, closed: Array<number>, boundariesCreated: number, boundariesShared: number, boundariesClosed: number, revision: string, };
+export type ParcelsRecorded = { document: number, created: Array<number>, closed: Array<number>, boundariesCreated: number, boundariesShared: number, boundariesClosed: number, 
+/**
+ * Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
+ * took the pieces (not closed: their identity, document and stated area stay).
+ */
+boundariesSplit?: number, neighbours?: Array<number>, revision: string, };

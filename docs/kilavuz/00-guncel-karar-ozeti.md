@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İfrazda komşunun sınırının bölünmesi (10 Kasım 2026; MAP-08, [ADR 4620](../../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
+  `cad.parcels.record`: yeni köşe güncel komşunun düz sınırının içindeyse (1 µm) ve parçalar belgenin sınırlarıysa
+  sınır bölünür, komşunun halkası parçaları alır, eski sınır kapanır; `boundariesSplit`, `neighbours`. Harita + CBS.
 - **Topoloji bulgusunun Öznitelikler'den işaretlenmesi (10 Kasım 2026; MAP-07, [ADR 4600](../../docs/adr/4600-topology-findings-marked-from-attributes.md)).**
   Öznitelikler › Topoloji: Gerekçe satırı ve bulgunun durumu açılır listede (`cad.topology.exceptions`); çoklu seçimde
   bulgular duruma göre sayılır. Komut değişmedi. Harita + CBS.

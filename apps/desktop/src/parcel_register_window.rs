@@ -198,6 +198,11 @@ pub fn plan_words(r: Option<&ParcelsRecordsListed>, created: &[String], out: &Pa
     if out.boundaries_closed > 0 {
         lines.push(format!("{} sınır kapanır", out.boundaries_closed));
     }
+    // Docs/adr/4620: the neighbours' boundaries split at the new corners, and who took the pieces.
+    if out.boundaries_split > 0 {
+        let names = r.map(|r| format!(" ({} parçaları alır)", labels(r, &out.neighbours))).unwrap_or_default();
+        lines.push(format!("{} komşu sınırı yeni köşede bölünür{names}", out.boundaries_split));
+    }
     let tail = if lines.is_empty() { String::new() } else { format!("; {}", lines.join(", ")) };
     format!("Belge {} “{name}”: {}{tail}.", out.document, parts.join(", "))
 }

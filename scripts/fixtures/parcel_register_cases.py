@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The shared cases of `cad.parcels.record` and `cad.parcels.records` (Parsel kayıtları; plan/map-cad.md MAP-08,
-docs/adr/4220), without KentOS code.
+docs/adr/4220 and 4620), without KentOS code.
 
     python3 scripts/fixtures/parcel_register_cases.py           # writes the two files
     python3 scripts/fixtures/parcel_register_cases.py --check   # writes nothing; compares
@@ -17,6 +17,11 @@ once no current parcel uses it):
   with the same two corners (as stored) and a bulge within 1e-9 of a boundary current before the document, or of one
   the document made already, is that boundary, negative in the ring where run the other way; else a new boundary,
   numbered on;
+- ADR 4620 (ArcGIS splits a bounding line shared with a current adjacent parcel): a straight boundary current before
+  the document, used by a parcel current before it that the document does not close, inside which (within 1e-6 m of
+  its line, farther than 1e-6 m from its ends) corners of the document's new parcels lie, and whose pieces between them
+  (from its lesser corner on) are all current straight boundaries, is split: each such parcel's rings take the pieces,
+  in order, each signed by its own direction (backwards and negated where the ring ran the boundary the other way);
 - the closed parcels lose their area; a boundary current before the document that no current parcel uses after it is
   closed by the document;
 - reading: a parcel's recorded area is its rings' (shoelace plus each arc's circular segment, holes less), its area now
@@ -234,6 +239,7 @@ def record(reg, document, create=(), close=(), ents=None):
         created.append(next_p)
         next_p += 1
         reg["parcels"].append(parcel)
+    split, neighbours = split_neighbours(reg, earlier, close, created)
     for p in reg["parcels"]:
         if p["number"] in close:
             p["closedBy"] = number
@@ -247,7 +253,80 @@ def record(reg, document, create=(), close=(), ents=None):
     out = {"document": number, "created": created, "closed": list(close),
            "boundariesCreated": len(reg["boundaries"]) - earlier, "boundariesShared": len(shared),
            "boundariesClosed": gone, "revision": "$current"}
+    if split:
+        out["boundariesSplit"] = split
+    if neighbours:
+        out["neighbours"] = neighbours
     return reg, out
+
+
+INSIDE = 1e-6
+
+
+def split_neighbours(reg, earlier, close, created):
+    """ADR 4620's split, on `reg` in place: how many boundaries were split and the parcels whose rings took pieces."""
+    by_number = {b["number"]: b for b in reg["boundaries"]}
+    corners = []
+    for p in reg["parcels"]:
+        if p["number"] in created:
+            for r in p["rings"]:
+                for e in r["edges"]:
+                    b = by_number[abs(e)]
+                    for c in ((b["from"]["x"], b["from"]["y"]), (b["to"]["x"], b["to"]["y"])):
+                        if c not in corners:
+                            corners.append(c)
+    holders_of = {}
+    for p in reg["parcels"]:
+        if "closedBy" in p or p["number"] in close or p["number"] in created:
+            continue
+        for r in p["rings"]:
+            for e in r["edges"]:
+                holders_of.setdefault(abs(e), [])
+                if p not in holders_of[abs(e)]:
+                    holders_of[abs(e)].append(p)
+    current = [b for b in reg["boundaries"] if "closedBy" not in b and not b.get("bulge")]
+    splits = []
+    for b in reg["boundaries"][:earlier]:
+        if "closedBy" in b or b.get("bulge") or b["number"] not in holders_of:
+            continue
+        a, z = (b["from"]["x"], b["from"]["y"]), (b["to"]["x"], b["to"]["y"])
+        dx, dy = z[0] - a[0], z[1] - a[1]
+        length_ = math.hypot(dx, dy)
+        inside = []
+        for c in corners:
+            along = ((c[0] - a[0]) * dx + (c[1] - a[1]) * dy) / length_
+            off = abs((c[0] - a[0]) * dy - (c[1] - a[1]) * dx) / length_
+            if off <= INSIDE and along > INSIDE and length_ - along > INSIDE:
+                inside.append((along, c))
+        if not inside:
+            continue
+        chain = [a] + [c for _, c in sorted(inside)] + [z]
+        pieces = []
+        for p, q in zip(chain, chain[1:]):
+            frm, to, back = (p, q, False) if p <= q else (q, p, True)
+            hit = next((x for x in current if (x["from"]["x"], x["from"]["y"]) == frm
+                        and (x["to"]["x"], x["to"]["y"]) == to), None)
+            if hit is None:
+                pieces = None
+                break
+            pieces.append(-hit["number"] if back else hit["number"])
+        if pieces is not None:
+            splits.append((b["number"], pieces, holders_of[b["number"]]))
+    neighbours = set()
+    for old, pieces, holders in splits:
+        for p in holders:
+            for r in p["rings"]:
+                edges = []
+                for e in r["edges"]:
+                    if e == old:
+                        edges += pieces
+                    elif e == -old:
+                        edges += [-x for x in reversed(pieces)]
+                    else:
+                        edges.append(e)
+                r["edges"] = edges
+            neighbours.add(p["number"])
+    return len(splits), sorted(neighbours)
 
 
 def label(p):
@@ -381,8 +460,8 @@ def wanted(create):
     return out
 
 
-def record_case(name, document, create=(), close=(), reg=None, op="execute", note=None):
-    after, out = record(reg, document, create, close)
+def record_case(name, document, create=(), close=(), reg=None, op="execute", note=None, ents=None):
+    after, out = record(reg, document, create, close, ents=ents)
     input_ = {"document": doc_input(document)}
     if create:
         input_["create"] = wanted(create)
@@ -391,8 +470,8 @@ def record_case(name, document, create=(), close=(), reg=None, op="execute", not
     case = {"name": name}
     if note:
         case["note"] = note
-    if reg is not None:
-        case["setup"] = setup(reg)
+    if reg is not None or ents is not None:
+        case["setup"] = setup(reg, ents)
     if op != "execute":
         result = {"status": "completed", "output": None if op == "validate" else out, "warnings": []}
         case["steps"] = [{"op": op, "input": input_, "result": result, "expect": SAME}]
@@ -412,6 +491,16 @@ def refused(name, input_, code, message, path_, reg=None):
     case["steps"] = [{"op": "execute", "input": input_, "result": {"status": "failed", "error": {
         "code": code, "message": message, "path": path_}}, "expect": SAME}]
     return case
+
+
+# ADR 4620's own areas, apart from the shared drawing: 101/9 divided at x = 10 (straight north edges), and an area whose
+# south edge lies inside 101/8's north boundary.
+SPLIT_ENTS = copy.deepcopy(ENTS) + [
+    dict(area(who(parsel="16", tapu="100"), [(0, 10), (10, 10), (10, 20), (0, 20)]), id=len(ENTS) + 1),
+    dict(area(who(parsel="17", tapu="100"), [(10, 10), (20, 10), (20, 20), (10, 20)]), id=len(ENTS) + 2),
+    dict(area(who(parsel="18", tapu="50"), [(25, 10), (35, 10), (35, 15), (25, 15)]), id=len(ENTS) + 3),
+]
+SLOT.update({"A15": len(ENTS) + 1, "A16": len(ENTS) + 2, "A17": len(ENTS) + 3})
 
 
 def first():
@@ -440,8 +529,15 @@ def record_cases():
                     "kapanır", {"name": "2026/77 yenileme", "kind": "Yenileme"}, [("A10", None)], [1], reg=three),
         record_case("Aynı alan yeniden kaydedilir: belgedeki alan değişir, sınırlar aynı numarayla", brief,
                     [("A1", "200,05")], [1], reg=one),
-        record_case("İfraz: 101/7 kapanır, iki yeni parsel; ortadaki sınır ikisinin, doğu ve batı sınırları sürer",
-                    IFRAZ, [("A11", None), ("A12", None)], [1], reg=three),
+        record_case("İfraz: 101/7 kapanır, iki yeni parsel; ortadaki sınır ikisinin, doğu ve batı sınırları sürer; 101/9'la "
+                    "ortak kuzey sınırı yeni köşede bölünür, 101/9 parçaları alır",
+                    IFRAZ, [("A11", None), ("A12", None)], [1], reg=three,
+                    note="ADR 4620: (10, 10) köşesi 101/9'un da kullandığı (0, 10)–(20, 10) sınırının içinde; parçalar "
+                         "101/13 ile 101/14'ün kuzey sınırları."),
+        record_case("İfraz, komşu sınırı ters yürüyor: 101/9 kapanır, iki yeni parsel; 101/7 parçaları ters sırayla, eksi "
+                    "işaretle alır", IFRAZ, [("A15", None), ("A16", None)], [3], reg=three, ents=SPLIT_ENTS),
+        record_case("Yeni alanın köşeleri komşunun sınırının içinde ama parçalar belgenin sınırı değil: bölünmez",
+                    {"name": "2026/310 tescil"}, [("A17", None)], reg=three, ents=SPLIT_ENTS),
         record_case("Tevhit: 101/7 ile 101/8 kapanır, bir parsel oluşur; aradaki sınır kapanır",
                     {"name": "2026/200 tevhit", "kind": "Değişiklik"}, [("A13", None)], [1, 2], reg=two),
         record_case("Yalnız kapatma: 101/8 kapanır, yalnız onun sınırları kapanır; ortak sınır 101/7'de sürer",
@@ -545,6 +641,10 @@ def records_cases():
     # The move recorded by a new document: 101/7 closed and made again from the moved area.
     remeasured, _ = record(three, {"name": "2026/77 yenileme"}, [("A1", "203,10")], [1], ents=shifted)
     divided, _ = record(three, IFRAZ, [("A11", None), ("A12", None)], [1])
+    # ADR 4620: 101/9's area given the new corner (10, 10) on its south edge.
+    cornered = copy.deepcopy(ENTS)
+    cornered[SLOT["A3"] - 1]["pts"].insert(1, P(10, 10))
+    cornered[SLOT["A3"] - 1]["bulges"] = [0, 0, 0, 0.2, 0]
     joined, _ = record(record(None, KADASTRO, [("A1", None), ("A2", None)])[0],
                        {"name": "2026/200 tevhit"}, [("A13", None)], [1, 2])
     holed, _ = record(None, KADASTRO, [("A4", None), ("A5", None)])
@@ -574,7 +674,10 @@ def records_cases():
                      remeasured, shifted),
         records_case("Aynısı, kapananlar da: eski 101/7'nin belgedeki alanı tarihçede", remeasured, shifted,
                      history=True),
-        records_case("İfraz sonrası: 101/7 kapandı, 101/13 ve 101/14 güncel", divided),
+        records_case("İfraz sonrası: 101/7 kapandı, 101/13 ve 101/14 güncel; 101/9'un bölünen sınırının yeni köşesi "
+                     "alanında yok: changed", divided),
+        records_case("İfraz sonrası 101/9'un alanına yeni köşe eklenmiş: kayıttaki gibi, komşuları 101/13 ve 101/14",
+                     divided, cornered),
         records_case("İfraz sonrası, kapananlar da: önceki ve sonraki parseller", divided, history=True),
         records_case("Tevhit sonrası, kapananlar da: iki önceki parsel, bir sonraki", joined, history=True),
         records_case("Yalnız kapatma sonrası, kapananlar da", terminated, history=True),

@@ -46,7 +46,7 @@ fn saved_register(app: &App) -> Value {
 
 const FIRST: &str =
     "İlk belge: üç parsel; ortak sınırlar birer kez, bir parselin sınırı öbürüne numarasıyla";
-const IFRAZ: &str = "İfraz: 101/7 kapanır, iki yeni parsel; ortadaki sınır ikisinin, doğu ve batı sınırları sürer";
+const IFRAZ: &str = "İfraz: 101/7 kapanır, iki yeni parsel; ortadaki sınır ikisinin, doğu ve batı sınırları sürer; 101/9'la ortak kuzey sınırı yeni köşede bölünür, 101/9 parçaları alır";
 const MOVED: &str = "Çizimde köşe taşınmış: 101/7'nin alanı değişir, belgedeki ve kayıttaki alanı değişmez; kenarları kayıttaki yerinde değil";
 
 /// The first document from the window: A1, A2 and A3 selected (slots 1–3), named; the plan says what the case's answer
@@ -88,7 +88,8 @@ fn the_first_document_writes_the_shared_case_s_register() {
 }
 
 /// The ifraz from the window: the register after Kadastro 1985, A11 and A12 selected (slots 11, 12); 101/7's row pressed
-/// goes into Kapat; the plan names it, Belgeyi kaydet writes the shared case's register.
+/// goes into Kapat; the plan names it and the neighbour whose boundary splits at the new corner (docs/adr/4620),
+/// Belgeyi kaydet writes the shared case's register.
 #[test]
 fn a_parcel_pressed_in_the_table_is_closed_by_the_document() {
     let want = case("record", IFRAZ);
@@ -111,7 +112,7 @@ fn a_parcel_pressed_in_the_table_is_closed_by_the_document() {
     );
     assert_eq!(
         words,
-        "Belge 2 “2026/145 ifraz”: 2 parsel oluşturur (101/13, 101/14), 1 parsel kapatır (101/7); 5 yeni sınır, 2 kayıtlı sınır paylaşılır, 1 sınır kapanır."
+        "Belge 2 “2026/145 ifraz”: 2 parsel oluşturur (101/13, 101/14), 1 parsel kapatır (101/7); 5 yeni sınır, 2 kayıtlı sınır paylaşılır, 2 sınır kapanır, 1 komşu sınırı yeni köşede bölünür (101/9 parçaları alır)."
     );
     let _ = app.update(Message::ParcelRegister(R::Save));
     assert_eq!(saved_register(&app), want["steps"][0]["expect"]["settings"]["parcelRegister"]);
@@ -232,4 +233,39 @@ fn lines_step(app: &mut App) {
 
 fn moved_step(app: &mut App) {
     register(app, &[]);
+}
+
+/// Docs/adr/4620, `.run/gui-evidence/komsu-sinir-bolunmesi-4620/`: the ifraz's plan names the neighbour whose boundary
+/// splits at the new corner; after it, the boundaries with the old one closed and its two pieces.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib parcel_register_window_tests::split_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn split_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/komsu-sinir-bolunmesi-4620");
+    std::fs::create_dir_all(&out).expect("a folder");
+    type Step = fn(&mut App);
+    let (ifraz, lines): (Step, Step) = (ifraz_step, lines_step);
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (step, file) in [(ifraz, "1-ifraz-plani"), (lines, "2-sinirlar")] {
+            let mut app = opened(case("record", IFRAZ)["setup"].clone());
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            step(&mut app);
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
 }

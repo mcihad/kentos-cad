@@ -334,6 +334,7 @@ fn run(doc: &Document, input: &ParcelsRecord) -> Result<(ParcelRegister, Parcels
         created.push(parcel.number);
         reg.parcels.push(parcel);
     }
+    let (boundaries_split, neighbours) = split_neighbours(&mut reg, earlier, &closing, &created, &index);
     for p in reg.parcels.iter_mut().filter(|p| closing.contains(&p.number)) {
         p.closed_by = Some(number);
         p.uid = None;
@@ -361,9 +362,122 @@ fn run(doc: &Document, input: &ParcelsRecord) -> Result<(ParcelRegister, Parcels
         boundaries_created: (reg.boundaries.len() - earlier) as u32,
         boundaries_shared: shared.len() as u32,
         boundaries_closed,
+        boundaries_split,
+        neighbours,
         revision: doc.revision().to_string(),
     };
     Ok((reg, out))
+}
+
+/// A corner lies inside a straight boundary when it is within this of its line and farther than this from both its
+/// ends (m): docs/adr/2000's `missingVertex` and docs/adr/2600's inner vertices.
+const INSIDE: f64 = 1e-6;
+
+/// Docs/adr/4620 (ArcGIS: a bounding line shared with a current adjacent parcel is split so that it has coincident
+/// current lines, the original saved as historic): an earlier current straight boundary that a parcel current before
+/// the document, and not closed by it, uses; inside which corners of the parcels the document made lie; and whose
+/// pieces between them (from its `from` to its `to`) are current straight boundaries, is split: each such parcel's
+/// rings take the pieces in order (each signed by its own direction; reversed and negated where the ring ran the
+/// boundary backwards). The old boundary is then used by no current parcel and closes with the document. How many
+/// were split, and the parcels whose rings changed.
+fn split_neighbours(
+    reg: &mut ParcelRegister,
+    earlier: usize,
+    closing: &[u32],
+    created: &[u32],
+    index: &HashMap<[u64; 4], Vec<usize>>,
+) -> (u32, Vec<u32>) {
+    let made: HashSet<u32> = created.iter().copied().collect();
+    let shut: HashSet<u32> = closing.iter().copied().collect();
+    // The new parcels' corners, each once.
+    let mut corners: Vec<Vec2> = Vec::new();
+    let by_number: HashMap<u32, usize> = reg.boundaries.iter().enumerate().map(|(k, b)| (b.number, k)).collect();
+    for p in reg.parcels.iter().filter(|p| made.contains(&p.number)) {
+        for e in p.rings.iter().flat_map(|r| &r.edges) {
+            if let Some(&k) = by_number.get(&e.unsigned_abs()) {
+                for c in [reg.boundaries[k].from, reg.boundaries[k].to] {
+                    if !corners.contains(&c) {
+                        corners.push(c);
+                    }
+                }
+            }
+        }
+    }
+    // The boundaries the neighbours (current before the document, not closed by it) use, and who uses each.
+    let mut users: HashMap<u32, Vec<usize>> = HashMap::new();
+    for (i, p) in reg.parcels.iter().enumerate() {
+        if p.closed_by.is_some() || shut.contains(&p.number) || made.contains(&p.number) {
+            continue;
+        }
+        for e in p.rings.iter().flat_map(|r| &r.edges) {
+            let list = users.entry(e.unsigned_abs()).or_default();
+            if !list.contains(&i) {
+                list.push(i);
+            }
+        }
+    }
+    let mut splits: Vec<(u32, Vec<i32>, Vec<usize>)> = Vec::new();
+    for b in reg.boundaries[..earlier].iter().filter(|b| b.closed_by.is_none() && b.bulge == 0.0) {
+        let Some(holders) = users.get(&b.number) else { continue };
+        let (dx, dy) = (b.to.x - b.from.x, b.to.y - b.from.y);
+        let l = dx.hypot(dy);
+        if !(l > 0.0) {
+            continue;
+        }
+        let mut inside: Vec<(f64, Vec2)> = corners
+            .iter()
+            .filter_map(|&c| {
+                let along = ((c.x - b.from.x) * dx + (c.y - b.from.y) * dy) / l;
+                let off = ((c.x - b.from.x) * dy - (c.y - b.from.y) * dx).abs() / l;
+                (off <= INSIDE && along > INSIDE && l - along > INSIDE).then_some((along, c))
+            })
+            .collect();
+        if inside.is_empty() {
+            continue;
+        }
+        inside.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let chain: Vec<Vec2> = std::iter::once(b.from).chain(inside.iter().map(|&(_, c)| c)).chain(std::iter::once(b.to)).collect();
+        let pieces: Option<Vec<i32>> = chain
+            .windows(2)
+            .map(|w| {
+                let (from, to, _, reversed) = canonical(w[0], w[1], 0.0);
+                index.get(&corners_key(from, to)).and_then(|list| {
+                    list.iter()
+                        .copied()
+                        .find(|&k| reg.boundaries[k].bulge == 0.0 && reg.boundaries[k].closed_by.is_none())
+                        .map(|k| {
+                            let n = reg.boundaries[k].number as i32;
+                            if reversed { -n } else { n }
+                        })
+                })
+            })
+            .collect();
+        if let Some(pieces) = pieces {
+            splits.push((b.number, pieces, holders.clone()));
+        }
+    }
+    let mut neighbours: BTreeSet<u32> = BTreeSet::new();
+    for (old, pieces, holders) in &splits {
+        let (old, back): (i32, Vec<i32>) = (*old as i32, pieces.iter().rev().map(|e| -e).collect());
+        for &i in holders {
+            let p = &mut reg.parcels[i];
+            for r in &mut p.rings {
+                let mut edges = Vec::with_capacity(r.edges.len() + pieces.len());
+                for &e in &r.edges {
+                    if e == old {
+                        edges.extend_from_slice(pieces);
+                    } else if e == -old {
+                        edges.extend_from_slice(&back);
+                    } else {
+                        edges.push(e);
+                    }
+                }
+                r.edges = edges;
+            }
+            neighbours.insert(p.number);
+        }
+    }
+    (splits.len() as u32, neighbours.into_iter().collect())
 }
 
 /// Checks `input` against the document, writing nothing.

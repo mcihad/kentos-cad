@@ -66647,6 +66647,9 @@ class ParcelsRecorded(_Model):
         boundaries_created: Unit: count.
         boundaries_shared: Unit: count.
         boundaries_closed: Unit: count.
+        boundaries_split: Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
+            took the pieces (not closed: their identity, document and stated area stay). Unit: count.
+        neighbours: Unit: id.
     """
     document: int
     created: list[int]
@@ -66655,6 +66658,8 @@ class ParcelsRecorded(_Model):
     boundaries_shared: int
     boundaries_closed: int
     revision: str
+    boundaries_split: int | Unset = UNSET
+    neighbours: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -66665,6 +66670,10 @@ class ParcelsRecorded(_Model):
         out["boundariesShared"] = self.boundaries_shared
         out["boundariesClosed"] = self.boundaries_closed
         out["revision"] = self.revision
+        if self.boundaries_split is not UNSET:
+            out["boundariesSplit"] = self.boundaries_split
+        if self.neighbours is not UNSET:
+            out["neighbours"] = list(self.neighbours)
         return out
 
     @classmethod
@@ -66677,6 +66686,8 @@ class ParcelsRecorded(_Model):
             boundaries_shared=data["boundariesShared"],
             boundaries_closed=data["boundariesClosed"],
             revision=data["revision"],
+            boundaries_split=data.get("boundariesSplit", UNSET),
+            neighbours=list(data["neighbours"]) if "neighbours" in data else UNSET,
         )
 
 

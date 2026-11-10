@@ -7,7 +7,10 @@
 //!   attributes, the stated area as written, the area's rings as a chain of boundaries) and closes earlier parcels,
 //!   which stay as history. A ring edge with the same two corners (as stored) and bulge as a current boundary is that
 //!   boundary: two parcels share it by its number. A boundary no current parcel uses any more is closed by the
-//!   document. The areas are not touched: the register is apart from the drawing. One undo step, “Parsel kaydı”.
+//!   document. Docs/adr/4620: an earlier straight boundary a current neighbour uses, inside which the document's new
+//!   corners lie and whose pieces are the document's boundaries, is split: the neighbour's rings take the pieces (as
+//!   ArcGIS splits a bounding line so that the current parcel has coincident current lines). The areas are not touched:
+//!   the register is apart from the drawing. One undo step, “Parsel kaydı”.
 //! - `cad.parcels.records` reads the register against the drawing: each current parcel's area now beside its recorded
 //!   area and the area its document states (a moved boundary changes the first, never the others), its neighbours by
 //!   shared boundaries, the parcels before and after it through its documents, and whether each boundary is still
@@ -108,7 +111,21 @@ pub struct ParcelsRecorded {
     pub boundaries_shared: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub boundaries_closed: u32,
+    /// Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
+    /// took the pieces (not closed: their identity, document and stated area stay).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub boundaries_split: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub neighbours: Vec<u32>,
     pub revision: String,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// Input of `cad.parcels.records` v1: with `history` the closed parcels and boundaries too (none: the current ones).

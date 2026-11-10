@@ -62189,6 +62189,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "boundariesSplit": {
+            "description": "Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings\ntook the pieces (not closed: their identity, document and stated area stay).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "closed": {
             "items": {
               "format": "uint32",
@@ -62211,6 +62218,15 @@
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
+            "x-unit": "id"
+          },
+          "neighbours": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
             "x-unit": "id"
           },
           "revision": {
@@ -62251,6 +62267,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "boundariesSplit": {
+            "description": "Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings\ntook the pieces (not closed: their identity, document and stated area stay).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "closed": {
             "items": {
               "format": "uint32",
@@ -62273,6 +62296,15 @@
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
+            "x-unit": "id"
+          },
+          "neighbours": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
             "x-unit": "id"
           },
           "revision": {

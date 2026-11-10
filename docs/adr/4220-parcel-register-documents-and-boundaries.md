@@ -175,7 +175,8 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-08, sekizinci tur. Durum: taslak. ADR 140
 
 ## Sonra
 
-- İfrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri (COGO) ve ölçülerden hesaplanan alan.
+- ~~İfrazda komşunun sınırının bölünmesi~~ ([ADR 4620](4620-subdivision-splits-neighbour-boundary.md)); kenarın belgedeki
+  ölçüleri (COGO) ve ölçülerden hesaplanan alan.
 - Belge taslağı ile onaylı kayıt; kaynak uyuşmazlığı.
 - Erişim denetimli hak, pay ve yükümlülük kayıtları (MAP-08'in kalanı).
 - Web (TODOS §0.2).
