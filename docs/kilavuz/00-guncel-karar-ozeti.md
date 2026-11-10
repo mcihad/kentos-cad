@@ -655,6 +655,12 @@
   `map.features.reconcile`'in `reapply`'ı: yeni çıkarımın kararsız adayı aynı kaynağın yakınındaki eşleştirilmiş
   adayının notundaki kararı alır (gruplama kuralı, en yakını); çıktı `reapplied`, yeni not önceki notu anar. Detay
   eşleştirme › Önceki kararlar. Harita.
+- **GNSS baz oturumlarının korelasyonları, yeni noktaların hızı, sınırın projede saklanması (11 Kasım 2026; MAP-03, [ADR 4920](../../docs/adr/4920-gnss-sessions-new-point-velocity-kept-limits.md)).**
+  GVX'in SESSION/CCM_BLOCK'ları baz oturumu `bo-N` olarak saklanır (şema 240); `map.survey.network` ve `edit network`'te
+  `correlations: session` oturumu tam kovaryansıyla dengeler, bazlar korelasyonlu w-testiyle sınanır (verilmezse `none`,
+  söylenir); `velocities` yeni noktaların hızını arazi ölçümünün hız ızgarasından okur, kabul edilen nokta ızgaranın adı
+  ve SHA-256'sıyla tutar (hız uydurulmaz); `edit tolerance` kabul farkı sınırını kaynağıyla projeye yazar, `places`
+  onu okur. GNSS ağ dengelemesi › Oturum korelasyonları, Yeni noktaların hızı; GNSS arşivi › Projeye yaz. Harita + CBS.
 - **Bilinen noktanın kabul farkı sınırı (10 Kasım 2026; MAP-03, [ADR 4520](../../docs/adr/4520-known-place-tolerance.md)).**
   `map.survey.query`'nin `tolerance`'ı (`places` ile): yatay ve düşey sınır; yerde `horizontal` ve `beyond`. GNSS
   arşivi › Kabul farkı sınırı (oturumluk). Harita.

@@ -1941,6 +1941,16 @@ def edit_cases():
                        write(sess, after_s, {"op": "network", "correlations": "session"},
                              {"id": da, "records": records}, "Ağ dengelemesini kabul et",
                              extra={"ids": sorted(after_s.entities), "fields": fields}), d=sess))
+    after_n, res_n, da, records, fields = accept(sess, {})
+    out.append(ms.case("Oturumlu ağı korelasyonsuz kabul et: oturumların kullanılmadığı söylenir",
+                       write(sess, after_n, {"op": "network"}, {"id": da, "records": records},
+                             "Ağ dengelemesini kabul et", warnings=warnings_of(res_n, "operation."),
+                             extra={"ids": sorted(after_n.entities), "fields": fields}, then_undo=False), d=sess))
+    bad_s = sessioned(survey=with_known.clone(), blocks_b=[{"row": "bz-6", "col": "bz-7",
+                                                            "r": [0.99, 0.9, 0.9, 0.9, 0.99, 0.9, 0.9, 0.9, 0.99]}])
+    out.append(ms.case("Ağı oturum korelasyonlarıyla kabul et: oturumun tam kovaryansı pozitif tanımlı değil", [refusal(
+        {"op": "network", "correlations": "session"}, "session_covariance_invalid",
+        "“bo-2” oturumunun tam kovaryansı pozitif tanımlı değil.", "operation")], d=bad_s))
     moving_v = timed()
     after_v, _, da, records, fields = accept(moving_v, {"velocities": True})
     out.append(ms.case("Ağı yeni noktaların hızıyla kabul et: her nokta hızını (doğu, kuzey, yukarı m/yıl) ve hız "

@@ -65721,7 +65721,7 @@
       "id": "map.survey.query",
       "version": 1,
       "title": "GNSS arşivini sorgula",
-      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını aşan yer beyond; girdide sınır yoksa projede saklı sınır (tolerance, kaynağıyla; ADR 4920) kullanılır. Ağaç baz oturumlarını (baselineSessions) ve bazın oturumunu da verir. Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project, invalid_uid, entity_not_found.",
       "aliases": [
         "gnssarsivi"
       ],
@@ -65777,6 +65777,13 @@
             },
             "type": "array"
           },
+          "baselineSessions": {
+            "description": "The baseline sessions with their cross-correlations (docs/adr/4920).",
+            "items": {
+              "$ref": "#/$defs/SurveyBaselineSession"
+            },
+            "type": "array"
+          },
           "baselines": {
             "items": {
               "$ref": "#/$defs/SurveyBaselineRow"
@@ -65841,6 +65848,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "tolerance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyTolerance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The place limits kept in the project, with their source (docs/adr/4920); `places` reads them when the input\ngives none."
           },
           "uses": {
             "items": {
@@ -65872,6 +65890,13 @@
             },
             "type": "array"
           },
+          "baselineSessions": {
+            "description": "The baseline sessions with their cross-correlations (docs/adr/4920).",
+            "items": {
+              "$ref": "#/$defs/SurveyBaselineSession"
+            },
+            "type": "array"
+          },
           "baselines": {
             "items": {
               "$ref": "#/$defs/SurveyBaselineRow"
@@ -65936,6 +65961,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "tolerance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyTolerance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The place limits kept in the project, with their source (docs/adr/4920); `places` reads them when the input\ngives none."
           },
           "uses": {
             "items": {
@@ -65978,7 +66014,7 @@
       "id": "map.survey.edit",
       "version": 1,
       "title": "GNSS arşivini düzenle",
-      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları okunmaz, uyarı gvx_correlations_ignored; ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed; ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde, kb-N dayanan kaydıyla (ADR 2960); heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst, sol üst, sağ alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş değilse doğuda kalır (labelsMoved, labelsCrowded; ADR 4160). Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing, known_differ, unknown_rule_class, duplicate_station, invalid_covariance, network_too_large, network_disconnected, network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
+      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da; baz oturumu bo-N çıkar (bazları kalır), dengelemedeki oturum ve bir oturumdaki baz çıkmaz. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları baz oturumu bo-N olarak saklanır (ADR 4920: bazları, satır satır dokuzar korelasyonlu blokları; blokları eksik oturum saklanır, uyarı gvx_session_incomplete; iki vektör anmayan oturum alınmaz, uyarı gvx_correlations_ignored); ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed; ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde, kb-N dayanan kaydıyla (ADR 2960); heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst, sol üst, sağ alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş değilse doğuda kalır (labelsMoved, labelsCrowded; ADR 4160). Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. network'ün correlations'ı ve velocities'i map.survey.network'ünkiler gibidir (ADR 4920): dengeleme kaydı kullandığı baz oturumlarını (sessions), noktanın sonucu hızını (velocity: doğu, kuzey, yukarı m/yıl, ızgaranın adı ve SHA-256'sı) tutar. tolerance: bilinen noktaların kabul farkı sınırı (horizontal, vertical metre; source: yönetmelik maddesi ya da idarenin şartnamesi, zorunlu) projeye yazılır, map.survey.query'nin places'i girdide sınır yoksa onunla değerlendirir; üçü de verilmezse saklı sınır kalkar. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines, no_velocity_grid, datum_missing, known_differ, unknown_rule_class, duplicate_station, invalid_covariance, session_blocks_missing, session_covariance_invalid, network_too_large, network_disconnected, network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
       "aliases": [
         "gnssarsividuzenle"
       ],
@@ -66249,15 +66285,20 @@
           "network_too_large",
           "network_disconnected",
           "network_blunder",
-          "network_test_failed"
+          "network_test_failed",
+          "session_blocks_missing",
+          "session_covariance_invalid",
+          "no_velocity_grid"
         ],
         "warnings": [
           "rinex_differs",
           "gnss_lines_skipped",
           "gvx_correlations_ignored",
+          "gvx_session_incomplete",
           "baseline_text_stations",
           "network_rules_failed",
-          "network_unchecked"
+          "network_unchecked",
+          "session_correlations_unused"
         ]
       },
       "examples": [
@@ -66578,7 +66619,7 @@
       "id": "map.survey.network",
       "version": 1,
       "title": "GNSS ağını dengele",
-      "summary": "Harita projesinin GNSS arşivindeki bazlardan (dengelemeye giren, dışlanmamış; campaign verilirse yalnız o arazi ölçümünün) ve uçlarındaki bilinen noktalardan (dışlanmamış; aynı coğrafi çerçeve ve epokta, ölçme epokunda) kurulan ağı iki kez dengeler; hiçbir şey yazmaz. Serbest: tek bilinen nokta (hold, verilmezse ilki) sabit; uyuşumsuz bazlar ve ağın kendi duyarlığı (BÖHHBÜY Madde 15(1)(b)). Dayalı: bilinen noktalar sabit, σ'sı verilmişse kuzey/doğu/yukarı σ'sıyla ağırlıklı (ECEF'e döndürülmüş tam kovaryans); işaretlerin koordinatları (15(1)(ç)). Her aşamada m0, serbestlik, vᵀPv, χ² (%95) ve model testi, uyuşumsuz ölçü sayısı ve en kötüsü; her baz için uzunluk, işlenmiş σX σY σZ (varyans çarpanıyla), serbest dengelemede dengelenmiş vektörün σ'sı, iki aşamada başlangıcının doğu/kuzey/yukarısında artık, w ve durum. Bilinen nokta olmayan işaretler koordinat zinciriyle projeye taşınır, kabul edilen noktasından farkı (dx, dy, dz) verilir. class (KentOS'un paketinde BÖHHBÜY 2018 C1, C2, C3; rules ile başka paket) baz σ'sını a + b·ppm·uzunluk sınırıyla (C1 serbest dengelemenin, C2/C3 işlenmiş σ), noktanın σ kuzey/doğu/yukarısını sınırlarla ve testleri sınıfın güveniyle (C1: 1−α = 0,95, w > 1,96; başkasında Baarda α₀ = 0,001, w > 3,29) denetler. acceptable ve why: kabul edilip edilemeyeceği. Kurum onayı değildir. Retler: not_a_map_project, unknown_survey_record, invalid_survey_value, unknown_rule_class, no_baselines, solutions_differ, datum_missing, known_differ, unknown_frame, duplicate_station, invalid_covariance, network_too_large, network_disconnected.",
+      "summary": "Harita projesinin GNSS arşivindeki bazlardan (dengelemeye giren, dışlanmamış; campaign verilirse yalnız o arazi ölçümünün) ve uçlarındaki bilinen noktalardan (dışlanmamış; aynı coğrafi çerçeve ve epokta, ölçme epokunda) kurulan ağı iki kez dengeler; hiçbir şey yazmaz. Serbest: tek bilinen nokta (hold, verilmezse ilki) sabit; uyuşumsuz bazlar ve ağın kendi duyarlığı (BÖHHBÜY Madde 15(1)(b)). Dayalı: bilinen noktalar sabit, σ'sı verilmişse kuzey/doğu/yukarı σ'sıyla ağırlıklı (ECEF'e döndürülmüş tam kovaryans); işaretlerin koordinatları (15(1)(ç)). Her aşamada m0, serbestlik, vᵀPv, χ² (%95) ve model testi, uyuşumsuz ölçü sayısı ve en kötüsü; her baz için uzunluk, işlenmiş σX σY σZ (varyans çarpanıyla), serbest dengelemede dengelenmiş vektörün σ'sı, iki aşamada başlangıcının doğu/kuzey/yukarısında artık, w ve durum. Bilinen nokta olmayan işaretler koordinat zinciriyle projeye taşınır, kabul edilen noktasından farkı (dx, dy, dz) verilir. class (KentOS'un paketinde BÖHHBÜY 2018 C1, C2, C3; rules ile başka paket) baz σ'sını a + b·ppm·uzunluk sınırıyla (C1 serbest dengelemenin, C2/C3 işlenmiş σ), noktanın σ kuzey/doğu/yukarısını sınırlarla ve testleri sınıfın güveniyle (C1: 1−α = 0,95, w > 1,96; başkasında Baarda α₀ = 0,001, w > 3,29) denetler. acceptable ve why: kabul edilip edilemeyeceği. Kurum onayı değildir. correlations (ADR 4920): session ile her baz oturumunun (bo-N) dengelemeye giren iki ya da daha çok bazı tam kovaryansıyla (çapraz bloklar ρ·σ·σ) birlikte girer, bazlar korelasyonlu ölçü gibi bileşen bileşen sınanır (w = |Pv|ᵢ/√(PQvvP)ᵢᵢ); none ya da verilmezse her baz kendi 3×3'üyle; cevabın correlations'ı hangisinin kullanıldığını, giren ve kullanılmayan oturumları söyler (uyarı session_correlations_unused). velocities ile bilinen nokta olmayan her işaretin hızı (doğu, kuzey, yukarı m/yıl) arazi ölçümünün hız ızgarasından, koordinat zinciriyle bir yıllık taşınmadan okunur; velocityGrid ızgaranın adı ve SHA-256'sı; ızgarasız ret no_velocity_grid, ızgaranın dışındaki işaret why'da. Retler: not_a_map_project, unknown_survey_record, invalid_survey_value, unknown_rule_class, no_baselines, no_velocity_grid, solutions_differ, datum_missing, known_differ, unknown_frame, duplicate_station, invalid_covariance, session_blocks_missing, session_covariance_invalid, network_too_large, network_disconnected.",
       "aliases": [
         "gnssagi",
         "arsivagdengele"
@@ -66610,6 +66651,17 @@
               "string",
               "null"
             ]
+          },
+          "correlations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NetworkCorrelations"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`session`: each baseline session's baselines whitened together by its full covariance, the baselines tested\ncomponent by component as correlated observations; `none` (when not given): each baseline by its own 3×3\n(docs/adr/4920)."
           },
           "epoch": {
             "description": "The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120).",
@@ -66643,6 +66695,10 @@
               "null"
             ],
             "x-unit": "1"
+          },
+          "velocities": {
+            "description": "Each new point's velocity east, north, up read from the campaign's velocity grid (docs/adr/4920).",
+            "type": "boolean"
           }
         },
         "title": "MapSurveyNetwork",
@@ -66663,6 +66719,17 @@
           },
           "constrained": {
             "$ref": "#/$defs/NetworkStage"
+          },
+          "correlations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NetworkCorrelationsUsed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which correlations were used (docs/adr/4920): written when asked for or when the used baselines have sessions."
           },
           "current": {
             "type": [
@@ -66730,6 +66797,17 @@
               "$ref": "#/$defs/NetworkStation"
             },
             "type": "array"
+          },
+          "velocityGrid": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyGrid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `velocities`: the velocity grid the new marks' velocities were read from (docs/adr/4920)."
           },
           "why": {
             "items": {
@@ -66768,6 +66846,17 @@
           "constrained": {
             "$ref": "#/$defs/NetworkStage"
           },
+          "correlations": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NetworkCorrelationsUsed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which correlations were used (docs/adr/4920): written when asked for or when the used baselines have sessions."
+          },
           "current": {
             "type": [
               "string",
@@ -66835,6 +66924,17 @@
             },
             "type": "array"
           },
+          "velocityGrid": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyGrid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `velocities`: the velocity grid the new marks' velocities were read from (docs/adr/4920)."
+          },
           "why": {
             "items": {
               "type": "string"
@@ -66872,11 +66972,15 @@
           "duplicate_station",
           "invalid_covariance",
           "network_too_large",
-          "network_disconnected"
+          "network_disconnected",
+          "session_blocks_missing",
+          "session_covariance_invalid",
+          "no_velocity_grid"
         ],
         "warnings": [
           "network_rules_failed",
-          "network_unchecked"
+          "network_unchecked",
+          "session_correlations_unused"
         ]
       },
       "examples": [
@@ -110542,7 +110646,37 @@
       "code": "gvx_correlations_ignored",
       "kind": "warning",
       "retryable": false,
-      "meaning": "GVX oturumlarının vektörler arası çapraz korelasyonları okunmadı; vektörler birbirinden bağımsız dengelenir."
+      "meaning": "GVX oturumunun çapraz korelasyonları alınmadı: oturum dosyanın iki vektörünü bile anmıyor."
+    },
+    {
+      "code": "gvx_session_incomplete",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "GVX oturumunun korelasyon blokları eksik (n bazlı oturumda n(n − 1)/2 blok olur); oturum korelasyonlarıyla dengelenemez."
+    },
+    {
+      "code": "session_blocks_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Baz oturumunun korelasyon blokları eksik; korelasyonsuz dengeleyin ya da dosyayı yeniden alın."
+    },
+    {
+      "code": "session_covariance_invalid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Baz oturumunun tam kovaryansı pozitif tanımlı değil; dosyayı yeniden işleyin ya da korelasyonsuz dengeleyin."
+    },
+    {
+      "code": "session_correlations_unused",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazların oturum korelasyonları kullanılmadı; aynı oturumun bazları birbirinden bağımsız sayıldı."
+    },
+    {
+      "code": "no_velocity_grid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yeni noktaların hızı arazi ölçümünün hız ızgarasından okunur; arazi ölçümüne hız ızgarasını verin."
     },
     {
       "code": "baseline_text_stations",
@@ -128309,6 +128443,34 @@
           "type": "object"
         }
       ]
+    },
+    "CorrelationBlock": {
+      "additionalProperties": false,
+      "description": "The correlations between two baselines of a session, X, Y, Z by X, Y, Z, row by row.",
+      "properties": {
+        "col": {
+          "type": "string"
+        },
+        "r": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 9,
+          "minItems": 9,
+          "type": "array",
+          "x-unit": "1"
+        },
+        "row": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "row",
+        "col",
+        "r"
+      ],
+      "type": "object"
     },
     "CorridorDef": {
       "additionalProperties": false,
@@ -155801,6 +155963,13 @@
           },
           "type": "array"
         },
+        "baselineSessions": {
+          "description": "Baseline sessions with their cross-correlations (docs/adr/4920).",
+          "items": {
+            "$ref": "#/$defs/SurveyBaselineSession"
+          },
+          "type": "array"
+        },
         "baselines": {
           "items": {
             "$ref": "#/$defs/SurveyBaseline"
@@ -155836,6 +156005,17 @@
             "$ref": "#/$defs/SurveySolution"
           },
           "type": "array"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyTolerance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The known points' place limits kept in the project (docs/adr/4920)."
         },
         "uses": {
           "items": {
@@ -156568,6 +156748,17 @@
                 "null"
               ]
             },
+            "correlations": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/NetworkCorrelations"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The sessions' cross-correlations used or not (docs/adr/4920), as `map.survey.network` takes them."
+            },
             "ellipses": {
               "anyOf": [
                 {
@@ -156621,6 +156812,10 @@
                 "null"
               ],
               "x-unit": "1"
+            },
+            "velocities": {
+              "description": "Each new point's velocity read from the campaign's velocity grid and kept with it (docs/adr/4920).",
+              "type": "boolean"
             }
           },
           "required": [
@@ -156740,7 +156935,43 @@
         },
         {
           "additionalProperties": false,
-          "description": "A record taken away: a campaign (with its sessions and solutions), a session (with its solutions), a solution,\nan accepted point's record (its object stays) or a use. What an accepted point or a use rests on is not.",
+          "description": "The known points' place limits kept in the project with their source (docs/adr/4920): a regulation's article\nor an administration's specification; none of the three takes the kept limits away.",
+          "properties": {
+            "horizontal": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "op": {
+              "const": "tolerance",
+              "type": "string"
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "vertical": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            }
+          },
+          "required": [
+            "op"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A record taken away: a campaign (with its sessions, solutions, baselines and baseline sessions), a session (with\nits solutions), a solution, an accepted point's record (its object stays), a use or a baseline session. What an\naccepted point, a use or an adjustment rests on is not; nor is a baseline a session names.",
           "properties": {
             "id": {
               "type": "string"
@@ -160770,6 +161001,38 @@
         }
       ]
     },
+    "NetworkCorrelations": {
+      "description": "Whether a network's baselines are adjusted with their sessions' cross-correlations (docs/adr/4920).",
+      "enum": [
+        "session",
+        "none"
+      ],
+      "type": "string"
+    },
+    "NetworkCorrelationsUsed": {
+      "description": "Which correlations an adjustment used (docs/adr/4920): `session` or `none`, the baseline sessions whose full\ncovariance went in, and those of the used baselines that were left out (their sessions incomplete or `none`).",
+      "properties": {
+        "sessions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unused": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "used": {
+          "$ref": "#/$defs/NetworkCorrelations"
+        }
+      },
+      "required": [
+        "used"
+      ],
+      "type": "object"
+    },
     "NetworkCost": {
       "description": "A cost besides the length (docs/adr/0209 §2).",
       "properties": {
@@ -161656,6 +161919,20 @@
           "minItems": 3,
           "type": "array",
           "x-unit": "m"
+        },
+        "velocity": {
+          "description": "With `velocities`: a new mark's velocity east, north, up (m/yr) read from the campaign's velocity grid\n(docs/adr/4920).",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m/yr"
         },
         "x": {
           "format": "double",
@@ -180295,6 +180572,30 @@
         "triangle"
       ],
       "type": "string"
+    },
+    "PointVelocity": {
+      "additionalProperties": false,
+      "description": "A point's velocity east, north, up (m/yr) and the velocity grid it was read from, by its name and SHA-256\n(docs/adr/4920): the grid's displacement over one year at the point, by the coordinate chain itself.",
+      "properties": {
+        "enu": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m/yr"
+        },
+        "grid": {
+          "$ref": "#/$defs/SurveyGrid"
+        }
+      },
+      "required": [
+        "enu",
+        "grid"
+      ],
+      "type": "object"
     },
     "PolygonSelectMode": {
       "description": "How a polygon selects (Çokgenle seç, docs/adr/0187 §2).",
@@ -203129,6 +203430,13 @@
           "type": "number",
           "x-unit": "1"
         },
+        "sessions": {
+          "description": "The baseline sessions `bo-N` whose full covariance it was adjusted with (docs/adr/4920); none: each baseline's\nown 3×3 alone.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "srid": {
           "format": "uint32",
           "minimum": 0,
@@ -203406,6 +203714,13 @@
           "type": "number",
           "x-unit": "m"
         },
+        "session": {
+          "description": "The baseline session `bo-N` it is in (docs/adr/4920).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "sigma": {
           "items": {
             "format": "double",
@@ -203434,6 +203749,65 @@
         "length",
         "sigma",
         "adjust"
+      ],
+      "type": "object"
+    },
+    "SurveyBaselineSession": {
+      "additionalProperties": false,
+      "description": "A baseline session `bo-N` (docs/adr/4920): baselines processed together from simultaneous observations of common\nsatellites, as GVX 1.0 keeps a `SESSION`: its id in the file, its time, its baselines and the cross-correlation\nblocks between them. A block's nine numbers go row by row, the rows the `row` baseline's X, Y, Z and the columns the\n`col` baseline's; a complete session of n baselines has n(n − 1)/2 blocks.",
+      "properties": {
+        "baselines": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/CorrelationBlock"
+          },
+          "type": "array"
+        },
+        "campaign": {
+          "type": "string"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "`bo-N`.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its id in the file (GVX's `SESSION ID`).",
+          "type": "string"
+        },
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "campaign",
+        "name",
+        "baselines",
+        "blocks"
       ],
       "type": "object"
     },
@@ -203916,7 +204290,7 @@
     },
     "SurveyPlaceTolerance": {
       "additionalProperties": false,
-      "description": "How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal\ndistance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a\nvertical tolerance; either may be left out, not both.",
+      "description": "How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal\ndistance and their height difference (m), as a point comparison report takes a horizontal and a\nvertical tolerance; either may be left out, not both.",
       "properties": {
         "horizontal": {
           "format": "double",
@@ -204163,6 +204537,17 @@
             "null"
           ],
           "x-unit": "year"
+        },
+        "velocity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointVelocity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its velocity, read from the velocity grid the user gave (docs/adr/4920), never made up."
         },
         "x": {
           "format": "double",
@@ -204893,6 +205278,35 @@
         "missing"
       ],
       "type": "string"
+    },
+    "SurveyTolerance": {
+      "additionalProperties": false,
+      "description": "The limits a known point's place may lie from its mark's accepted point (docs/adr/4520), kept in the project with\nwhere they come from (docs/adr/4920): a regulation's article, an administration's stricter specification\n(BÖHHBÜY Madde 103(1)(c)).",
+      "properties": {
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "source": {
+          "type": "string"
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "type": "object"
     },
     "SurveyTraverseHeights": {
       "additionalProperties": false,

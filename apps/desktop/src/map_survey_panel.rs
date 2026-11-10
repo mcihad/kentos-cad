@@ -28,6 +28,9 @@ use kentos_ui::widget::{Status, StatusItem, StatusTree};
 
 use crate::app::{App, Message, Panel};
 
+/// Docs/adr/4920: the button that writes the limits typed into the project.
+pub(crate) const SAVE_LIMITS: &str = "Projeye yaz";
+
 #[derive(Clone, Debug)]
 pub enum Event {
     /// A new arazi ölçümü.
@@ -40,6 +43,9 @@ pub enum Event {
     /// Docs/adr/4520: the user's limits of the known points' places against their accepted points, as typed.
     LimitHorizontal(String),
     LimitVertical(String),
+    /// Docs/adr/4920: the limits' source, and the limits written into the project with it.
+    LimitSource(String),
+    LimitSave,
     Deep(bool),
     /// A solution left out with the toolbar's reason, or taken back.
     Exclude(String),
@@ -81,6 +87,8 @@ pub struct PanelState {
     /// empty: none).
     pub limit_horizontal: String,
     pub limit_vertical: String,
+    /// Docs/adr/4920: where the limits come from (a regulation's article, an administration's specification), as typed.
+    pub limit_source: String,
 }
 
 impl std::fmt::Debug for PanelState {
@@ -160,6 +168,29 @@ impl App {
         let answer = map_survey::preview_judged(&doc.model, deep, limits.clone());
         *kept = Some((revision, deep, limits, answer.clone()));
         Some(answer)
+    }
+
+    /// Docs/adr/4920: the limits typed written into the project with their source (`map.survey.edit tolerance`); none
+    /// typed takes the kept ones away.
+    pub(crate) fn map_survey_save_limits(&mut self) {
+        let source = self.map_survey.limit_source.trim().to_owned();
+        let Some(limits) = self.map_survey_limits() else {
+            let kept = self.document.as_ref().and_then(|d| d.model.map_survey()).is_some_and(|s| s.tolerance.is_some());
+            if !kept {
+                self.say(Level::Warn, "Yatay ya da düşey kabul farkı sınırını yazın (m), sonra Projeye yaz.");
+            } else if self.map_survey_edit(Op::Tolerance { horizontal: None, vertical: None, source: None }).is_some() {
+                self.say(Level::Success, "Projedeki kabul farkı sınırı kaldırıldı.");
+            }
+            return;
+        };
+        if source.is_empty() {
+            self.say(Level::Warn, "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi.");
+            return;
+        }
+        let op = Op::Tolerance { horizontal: limits.horizontal, vertical: limits.vertical, source: Some(source.clone()) };
+        if self.map_survey_edit(op).is_some() {
+            self.say(Level::Success, format!("Kabul farkı sınırı projeye yazıldı; kaynağı: {source}."));
+        }
     }
 
     pub(crate) fn map_survey_edit(&mut self, operation: Op) -> Option<kentos_commands::MapSurveyEdited> {
@@ -413,6 +444,8 @@ impl App {
             Event::Text(t) => self.map_survey.text = t,
             Event::LimitHorizontal(t) => self.map_survey.limit_horizontal = t,
             Event::LimitVertical(t) => self.map_survey.limit_vertical = t,
+            Event::LimitSource(t) => self.map_survey.limit_source = t,
+            Event::LimitSave => self.map_survey_save_limits(),
             Event::Deep(on) => self.map_survey.deep = on,
             Event::Exclude(id) => {
                 let reason = self.map_survey.text.trim().to_owned();
@@ -524,8 +557,9 @@ impl App {
         ]
         .spacing(4)
         .align_y(Center);
-        // Docs/adr/4520: the user's limits of the known points' places against their accepted points (TBC's point
-        // comparison's horizontal and vertical tolerances), shown with known points.
+        // Docs/adr/4520: the user's limits of the known points' places against their accepted points (a horizontal and
+        // a vertical tolerance), shown with known points; docs/adr/4920: written into the project with their source,
+        // the kept ones read when none is typed.
         let head: Element<'_, Message> = if tree.known.is_empty() {
             container(bar).padding([4, 12]).width(Fill).into()
         } else {
@@ -545,7 +579,21 @@ impl App {
             ]
             .spacing(6)
             .align_y(Center);
-            container(iced::widget::column![bar, limits].spacing(4)).padding([4, 12]).width(Fill).into()
+            let kept = tree.tolerance.as_ref().map_or_else(
+                || "Projede sınır yok.".to_owned(),
+                |t| {
+                    let m = |v: Option<f64>| v.map_or("—".to_owned(), |v| format!("{v}"));
+                    format!("Projede: yatay {}, düşey {} m · {}", m(t.horizontal), m(t.vertical), t.source)
+                },
+            );
+            let source = row![
+                crate::style::fields::input(None, "Kaynak: yönetmelik maddesi, idare şartnamesi", &self.map_survey.limit_source, false, false)
+                    .on_input(|t| msg(Event::LimitSource(t))),
+                crate::exchange::words::secondary(SAVE_LIMITS, Some(msg(Event::LimitSave))),
+            ]
+            .spacing(6)
+            .align_y(Center);
+            container(iced::widget::column![bar, limits, source, label::caption(kept)].spacing(4)).padding([4, 12]).width(Fill).into()
         };
         let mut items = Vec::new();
         if !tree.campaigns.is_empty() {
