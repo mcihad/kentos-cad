@@ -65,8 +65,8 @@ pub struct State {
     pub answer: Option<Result<RoadProjectGraph, String>>,
     /// The last Tariften üret's answer (docs/adr/3240).
     pub produced: Option<RoadProjectProduced>,
-    /// What each layer of its recipe takes when it is added, beyond its style (docs/adr/4440), by its id there.
-    pub looks: BTreeMap<String, String>,
+    /// What each layer of its recipe takes when it is added, beyond its style (docs/adr/4440, 4860), by its id there.
+    pub looks: BTreeMap<String, Takes>,
     /// The recipe picked, before it is drawn (docs/adr/3640).
     pub recipe: Option<Recipe>,
 }
@@ -80,8 +80,19 @@ pub struct Recipe {
     pub layers: Vec<(String, String, String)>,
     pub plan: Result<RoadProjectProduced, String>,
     pub warnings: Vec<String>,
-    /// What each of its layers takes when it is added, beyond its style (docs/adr/4440), by its id in the recipe.
-    pub looks: BTreeMap<String, String>,
+    /// What each of its layers takes when it is added, beyond its style (docs/adr/4440, 4860), by its id in the recipe.
+    pub looks: BTreeMap<String, Takes>,
+}
+
+/// What a recipe layer takes when it is added, beyond its style: its transparency, blending mode, type and Yazdır said
+/// as Tariften üret says them (docs/adr/4440); its fields, whether with subtypes, and the names of the value lists they
+/// link (docs/adr/4860).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Takes {
+    pub look: Option<String>,
+    pub fields: usize,
+    pub subtypes: bool,
+    pub lists: Vec<String>,
 }
 
 impl Recipe {
@@ -107,9 +118,10 @@ pub fn recipe_layers(path: &std::path::Path) -> Vec<(String, String)> {
     out
 }
 
-/// What each layer of a recipe file takes when it is added, beyond its style (docs/adr/4440): its transparency, blending
-/// mode, type and Yazdır, said as Tariften üret says them; by its id in the recipe, only those that take any.
-pub fn recipe_looks(path: &std::path::Path) -> BTreeMap<String, String> {
+/// What each layer of a recipe file takes when it is added, beyond its style (docs/adr/4440, 4860): its transparency,
+/// blending mode, type and Yazdır, said as Tariften üret says them, and its fields; by its id in the recipe, only those
+/// that take any.
+pub fn recipe_looks(path: &std::path::Path) -> BTreeMap<String, Takes> {
     let Some(graph) = std::fs::read(path).ok().and_then(|b| serde_json::from_slice::<RoadProjectGraph>(&b).ok()) else {
         return BTreeMap::new();
     };
@@ -117,14 +129,54 @@ pub fn recipe_looks(path: &std::path::Path) -> BTreeMap<String, String> {
         .nodes
         .iter()
         .filter_map(|n| n.recipe.as_ref()?.layer.as_ref())
-        .filter_map(|l| Some((l.id.clone(), road_project_produce::look_said(l)?)))
+        .filter_map(|l| {
+            let lists = l
+                .fields
+                .iter()
+                .filter_map(|f| f.domain.as_ref())
+                .filter_map(|id| l.domains.iter().find(|d| d.id == *id))
+                .fold(Vec::new(), |mut names: Vec<String>, d| {
+                    if !names.contains(&d.name) {
+                        names.push(d.name.clone());
+                    }
+                    names
+                });
+            let takes =
+                Takes { look: road_project_produce::look_said(l), fields: l.fields.len(), subtypes: l.subtypes.is_some(), lists };
+            (takes != Takes::default()).then(|| (l.id.clone(), takes))
+        })
         .collect()
 }
 
+/// What a layer added takes of its recipe layer's fields (docs/adr/4860), in the plan or (`done`) after Üret: their
+/// number and its subtypes, then each value list they link: added with it, added under another name beside this
+/// project's list of its name holding other values, or this project's list of the same values linked.
+fn fields_words(l: &RoadProducedLayer, done: bool, t: &Takes) -> Option<String> {
+    if t.fields == 0 {
+        return None;
+    }
+    let verb = if done { "eklendi" } else { "eklenecek" };
+    let mut out = format!("Alanları ({}){} tarifteki gibi.", t.fields, if t.subtypes { " ve alt türleri" } else { "" });
+    for name in &t.lists {
+        let renamed = l.domains_added.iter().find(|a| *a != name && a.starts_with(&format!("{name}_")));
+        if l.domains_added.contains(name) {
+            out.push_str(&format!(" “{name}” değer listesi de {verb}."));
+        } else if let Some(here) = renamed {
+            out.push_str(&format!(
+                " Bu projenin “{name}” listesi başka değerli, değişmez; tarifinki “{here}” adıyla {verb}."
+            ));
+        } else {
+            let link = if done { "bağlandı" } else { "bağlanacak" };
+            out.push_str(&format!(" Alanları bu projenin aynı değerli “{name}” listesine {link}."));
+        }
+    }
+    Some(out)
+}
+
 /// What adding a recipe layer brings (docs/adr/3640, 4040), in the plan or (`done`) after Üret: the recipe's style, the
-/// groups it goes in, and the groups and the line type added with it; what it takes beyond its style (`look`,
-/// docs/adr/4440).
-fn added_words(l: &RoadProducedLayer, done: bool, look: Option<&String>) -> String {
+/// groups it goes in, and the groups and the line type added with it; what it takes beyond its style (`takes`,
+/// docs/adr/4440, 4860).
+fn added_words(l: &RoadProducedLayer, done: bool, takes: Option<&Takes>) -> String {
     let verb = if done { "eklendi" } else { "eklenecek" };
     let into = if l.group.is_empty() { String::new() } else { format!(" “{}” grubuna", l.group.join(" › ")) };
     let mut out = if done {
@@ -144,9 +196,13 @@ fn added_words(l: &RoadProducedLayer, done: bool, look: Option<&String>) -> Stri
     if !also.is_empty() {
         out.push_str(&format!(" {} de {verb}.", also.join(" ve ")));
     }
-    if let Some(look) = look {
+    if let Some(look) = takes.and_then(|t| t.look.as_ref()) {
         out.push(' ');
         out.push_str(look);
+    }
+    if let Some(fields) = takes.and_then(|t| fields_words(l, done, t)) {
+        out.push(' ');
+        out.push_str(&fields);
     }
     out
 }
@@ -209,7 +265,7 @@ fn outdated(s: S) -> bool {
 
 /// What Tariften üret did (docs/adr/3240): the drawings drawn (each kept here, from its main source by name) and those
 /// left with why; a layer added with what it took beyond its style (`looks`, docs/adr/4440).
-pub fn produced_lines(out: &RoadProjectProduced, looks: &BTreeMap<String, String>) -> Vec<(Kind, String)> {
+pub fn produced_lines(out: &RoadProjectProduced, looks: &BTreeMap<String, Takes>) -> Vec<(Kind, String)> {
     let mut lines = Vec::new();
     if out.produced.is_empty() {
         lines.push((Kind::Info, "Tariften üretilecek yeni çizim yok.".to_owned()));
@@ -485,7 +541,7 @@ impl App {
                 );
             }
             if !r.layers.is_empty() {
-                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili, grupları, saydamlığı, türü ve Yazdır'ıyla eklenir. Başka bir katmana çizmek için seçin.");
+                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili, grupları, saydamlığı, türü, Yazdır'ı ve alanlarıyla eklenir. Başka bir katmana çizmek için seçin.");
             }
             // What it would do, read before Üret.
             let ready = matches!(&r.plan, Ok(out) if !out.produced.is_empty());

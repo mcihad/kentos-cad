@@ -18,4 +18,9 @@ groupsAdded?: Array<string>,
 /**
  * A layer added: the project line type its style names, added with it from the recipe's definition.
  */
-lineTypeAdded?: string, };
+lineTypeAdded?: string, 
+/**
+ * A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
+ * here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
+ */
+domainsAdded?: Array<string>, };

@@ -84790,6 +84790,8 @@ class RoadProducedLayer(_Model):
     """A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how
     it was found; in the order the drawings first use them.
     Attributes:
+        domains_added: A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
+            here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
         group: A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
             name, its name here); empty: at the top.
         groups_added: A layer added: those of its groups added with it (none of their names was here), from the top.
@@ -84800,6 +84802,7 @@ class RoadProducedLayer(_Model):
     to: str
     to_name: str
     how: RoadLayerMatch | RoadLayerMatchName
+    domains_added: list[str] | Unset = UNSET
     group: list[str] | Unset = UNSET
     groups_added: list[str] | Unset = UNSET
     line_type_added: str | None | Unset = UNSET
@@ -84811,6 +84814,8 @@ class RoadProducedLayer(_Model):
         out["to"] = self.to
         out["toName"] = self.to_name
         out["how"] = _enum_out(self.how)
+        if self.domains_added is not UNSET:
+            out["domainsAdded"] = list(self.domains_added)
         if self.group is not UNSET:
             out["group"] = list(self.group)
         if self.groups_added is not UNSET:
@@ -84827,6 +84832,7 @@ class RoadProducedLayer(_Model):
             to=data["to"],
             to_name=data["toName"],
             how=_enum_in(RoadLayerMatch, data["how"]),
+            domains_added=list(data["domainsAdded"]) if "domainsAdded" in data else UNSET,
             group=list(data["group"]) if "group" in data else UNSET,
             groups_added=list(data["groupsAdded"]) if "groupsAdded" in data else UNSET,
             line_type_added=data.get("lineTypeAdded", UNSET),
@@ -85464,6 +85470,10 @@ class RoadRecipeLayer(_Model):
         line_weight: Unit: paper-mm.
         compose: How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask
             (a mask cuts into its project's other layers by their ids); none: opaque and normal.
+        domains: The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.
+        fields: Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's
+            column (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;
+            the list is in `domains`. Empty: no fields.
         geometry: What it held (Katman türü): points, lines, areas or annotation; none: any kind.
         group: The names of the groups it was in, from the top of the tree; empty: at the top.
         line_type_def: The project line type its style names (`style.linePattern`), as its project defines it; none when the style
@@ -85471,6 +85481,7 @@ class RoadRecipeLayer(_Model):
         plot: Yazdır: `false`, it was drawn on screen but not printed; none: printed. Only `false` is written.
         style: Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the
             fields above.
+        subtypes: Its subtypes (Alt türler, docs/adr/0422, 4860): its field that sorts the records and what each kind narrows.
     """
     id: str
     name: str
@@ -85478,11 +85489,14 @@ class RoadRecipeLayer(_Model):
     line_type: LineType | LineTypeName
     line_weight: float
     compose: LayerCompose | None | Unset = UNSET
+    domains: list[FieldDomain] | Unset = UNSET
+    fields: list[LayerField] | Unset = UNSET
     geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     group: list[str] | Unset = UNSET
     line_type_def: LineTypeDef | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
     style: LayerStyle | None | Unset = UNSET
+    subtypes: LayerSubtypes | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -85493,6 +85507,10 @@ class RoadRecipeLayer(_Model):
         out["lineWeight"] = float(self.line_weight)
         if self.compose is not UNSET:
             out["compose"] = None if self.compose is None else self.compose.to_json()
+        if self.domains is not UNSET:
+            out["domains"] = [e0.to_json() for e0 in self.domains]
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.geometry is not UNSET:
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.group is not UNSET:
@@ -85503,6 +85521,8 @@ class RoadRecipeLayer(_Model):
             out["plot"] = self.plot
         if self.style is not UNSET:
             out["style"] = None if self.style is None else self.style.to_json()
+        if self.subtypes is not UNSET:
+            out["subtypes"] = None if self.subtypes is None else self.subtypes.to_json()
         return out
 
     @classmethod
@@ -85514,11 +85534,14 @@ class RoadRecipeLayer(_Model):
             line_type=_enum_in(LineType, data["lineType"]),
             line_weight=float(data["lineWeight"]),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
+            fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             group=list(data["group"]) if "group" in data else UNSET,
             line_type_def=UNSET if "lineTypeDef" not in data else None if data["lineTypeDef"] is None else LineTypeDef.from_json(data["lineTypeDef"]),
             plot=data.get("plot", UNSET),
             style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
+            subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
         )
 
 

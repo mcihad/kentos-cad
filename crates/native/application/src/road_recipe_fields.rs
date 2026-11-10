@@ -221,7 +221,8 @@ pub(crate) fn differences(doc: &Document, id: &str, def: &RoadRecipeLayer) -> Op
     }
     let mut parts = Vec::new();
     if !missing.is_empty() {
-        parts.push(format!("tarifin {} alanı onda yok", missing.join(", ")));
+        let word = if missing.len() > 1 { "alanları" } else { "alanı" };
+        parts.push(format!("tarifin {} {word} onda yok", missing.join(", ")));
     }
     if !other.is_empty() {
         parts.push(other.join("; "));

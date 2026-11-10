@@ -1,0 +1,241 @@
+{
+  "nodes": [
+    {
+      "kind": "surface",
+      "id": "a-5",
+      "name": "Düz",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-10",
+      "name": "Tümsek",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-6",
+      "name": "Teras",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-9",
+      "name": "Set",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-1",
+      "name": "Ova",
+      "state": "current"
+    },
+    {
+      "kind": "drawing",
+      "id": "cz-1",
+      "name": "Sıfır hattı",
+      "state": "current",
+      "recipe": {
+        "command": "road.terrains.zeroline",
+        "version": 1,
+        "input": {
+          "base": "a-5",
+          "comparison": "a-10",
+          "layerId": "k-7"
+        },
+        "written": 1,
+        "objects": 1,
+        "digest": "0123456789abcdef",
+        "made": 1,
+        "revision": "7",
+        "layer": {
+          "id": "k-7",
+          "name": "Sıfır hattı",
+          "color": "#E5484D",
+          "lineType": "continuous",
+          "lineWeight": 0.5
+        }
+      }
+    },
+    {
+      "kind": "drawing",
+      "id": "cz-2",
+      "name": "Sıfır hattı",
+      "state": "current",
+      "recipe": {
+        "command": "road.terrains.zeroline",
+        "version": 1,
+        "input": {
+          "base": "a-6",
+          "comparison": "Set",
+          "layerId": "k-7"
+        },
+        "written": 2,
+        "objects": 2,
+        "digest": "0123456789abcdef",
+        "made": 1,
+        "revision": "7",
+        "layer": {
+          "id": "k-7",
+          "name": "Sıfır hattı",
+          "color": "#E5484D",
+          "lineType": "continuous",
+          "lineWeight": 0.5
+        }
+      }
+    },
+    {
+      "kind": "drawing",
+      "id": "cz-3",
+      "name": "Sıfır hattı",
+      "state": "current",
+      "recipe": {
+        "command": "road.terrains.zeroline",
+        "version": 1,
+        "input": {
+          "base": "a-1",
+          "comparison": "a-5",
+          "layerId": "k-20"
+        },
+        "written": 1,
+        "objects": 1,
+        "digest": "0123456789abcdef",
+        "made": 1,
+        "revision": "7",
+        "layer": {
+          "id": "k-20",
+          "name": "Kazı sınırı",
+          "color": "#2A9D8F",
+          "lineType": "dashdot",
+          "lineWeight": 0.35,
+          "style": {
+            "color": "#2A9D8F",
+            "lineType": "dashdot",
+            "lineWeight": 0.35,
+            "fill": "#2A9D8F",
+            "point": {
+              "symbol": "cross",
+              "size": 6.0
+            },
+            "label": {
+              "placement": "along",
+              "size": 10.0
+            }
+          },
+          "fields": [
+            {
+              "name": "Ad",
+              "kind": "text",
+              "length": 40
+            },
+            {
+              "name": "Tür",
+              "kind": "text",
+              "values": [
+                {
+                  "code": "K",
+                  "label": "Kazı"
+                },
+                {
+                  "code": "D",
+                  "label": "Dolgu"
+                }
+              ],
+              "domain": "sinir-turu"
+            },
+            {
+              "name": "Derinlik",
+              "kind": "decimal",
+              "scale": 2,
+              "unit": "m"
+            }
+          ],
+          "domains": [
+            {
+              "id": "sinir-turu",
+              "name": "Sınır türü",
+              "kind": "text",
+              "values": [
+                {
+                  "code": "K",
+                  "label": "Kazı"
+                },
+                {
+                  "code": "D",
+                  "label": "Dolgu"
+                }
+              ]
+            }
+          ],
+          "subtypes": {
+            "field": "Tür",
+            "types": [
+              {
+                "code": "K",
+                "label": "Kazı sınırı",
+                "fields": [
+                  {
+                    "field": "Derinlik",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "code": "D",
+                "label": "Dolgu sınırı"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": 0,
+      "to": 5,
+      "kind": "source",
+      "main": true,
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    },
+    {
+      "from": 1,
+      "to": 5,
+      "kind": "source",
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    },
+    {
+      "from": 2,
+      "to": 6,
+      "kind": "source",
+      "main": true,
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    },
+    {
+      "from": 4,
+      "to": 7,
+      "kind": "source",
+      "main": true,
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    },
+    {
+      "from": 0,
+      "to": 7,
+      "kind": "source",
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    }
+  ],
+  "drawings": 3,
+  "outdated": 0,
+  "sheets": 0,
+  "blocked": 0,
+  "epsg": "EPSG:5254",
+  "system": "TUREF / TM30",
+  "deep": false,
+  "revision": "9"
+}

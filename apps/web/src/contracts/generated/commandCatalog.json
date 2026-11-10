@@ -57009,7 +57009,8 @@
         "warnings": [
           "recipe_other_system",
           "layer_hidden",
-          "recipe_layer_created"
+          "recipe_layer_created",
+          "recipe_layer_fields"
         ]
       },
       "examples": [
@@ -107005,6 +107006,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Tarifin katmanı bu projede yoktu; tarifteki tanımıyla eklendi."
+    },
+    {
+      "code": "recipe_layer_fields",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bulunan katmanın alanları tarifinkinden başka; katman kendi alanlarını korur."
     },
     {
       "code": "drawing_edited",
@@ -189626,6 +189633,13 @@
     "RoadProducedLayer": {
       "description": "A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how\nit was found; in the order the drawings first use them.",
       "properties": {
+        "domainsAdded": {
+          "description": "A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names\nhere (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "from": {
           "type": "string"
         },
@@ -189740,6 +189754,20 @@
           ],
           "description": "How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask\n(a mask cuts into its project's other layers by their ids); none: opaque and normal."
         },
+        "domains": {
+          "description": "The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.",
+          "items": {
+            "$ref": "#/$defs/FieldDomain"
+          },
+          "type": "array"
+        },
+        "fields": {
+          "description": "Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's\ncolumn (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;\nthe list is in `domains`. Empty: no fields.",
+          "items": {
+            "$ref": "#/$defs/LayerField"
+          },
+          "type": "array"
+        },
         "geometry": {
           "anyOf": [
             {
@@ -189800,6 +189828,17 @@
             }
           ],
           "description": "Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the\nfields above."
+        },
+        "subtypes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerSubtypes"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its subtypes (Alt türler, docs/adr/0422, 4860): its field that sorts the records and what each kind narrows."
         }
       },
       "required": [

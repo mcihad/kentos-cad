@@ -51,7 +51,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın alanları | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440, 4860 | katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi; adıyla bulunan katmana tarifin eksik alanlarını ekleme seçeneği | bütçe (gerçek veriyle ölçüm) |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -2567,6 +2567,19 @@ kendi görünüşünü korur; çizimin nesnesini katmanının türü tutmuyorsa 
 reddedilir; maskeli, boş ve 0–1 dışı katman çizimi tutarsız tarif. Grafikte 1 (23), üretimde 9 yeni bağımsız durum (64),
 Python, MCP, masaüstü. Bulunan: plan türlü katmanın tutmadığı nesneyi görmüyordu (yazım adımın sonunda reddediliyordu),
 düzeltildi. Açık: bütçe, öbür yedi çizimin kendi hesabının içinde durması, katmanın alanları.
+
+**10 Kasım 2026, dokuzuncu tur — yedi çizimin kendi hesabının içinde durması; tarifin katmanının alanları ([ADR 4860](../docs/adr/4860-stop-within-seven-drawings-and-recipe-layer-fields.md)).**
+Kapsam: **Harita + Yol**. Dayanak: Netcad'in Tablo Düzenle ve Lookup Tanımı pencereleri (öznitelik kolonu, veri türü,
+Gerekli; değer listesi ayrı veri tablosu), ArcGIS Pro'nun Copy'si (alan listeleri ve alt türler sınıfla birlikte; adı
+olan bağımlı veri “_1”) ve durum şeridindeki iptal; ekran resimleri araştırma notunda. Kanıtlanan: etiketler (etiket
+etiket), boykesit (arazinin yürüyüşü bir kez, sonra bantların sütunları), otokorkuluk ve menfez (koridorun kesitleri,
+sonra kesitler), kavşak (kolların kesişiminin aranması), platform (köşe köşe şev çizgileri, tasarım yüzeyi, hacimler) ve
+boru hattı profili (boru boru) kendi hesabının içinde durur; sonuçlar değişmez. Tarif katmanın alanlarını (bağlı
+tablonun sütunu hariç), bağladıkları değer listelerini ve alt türlerini taşır; Tariften üret eklediği katmana verir:
+aynı adlı ve aynı değerli listeye bağlar, başka değerli listeyi değiştirmeden tarifinkini “<ad>_1” adıyla, yoksa kendi
+adıyla ekler; adıyla bulunan katmanın eksik ve başka türlü alanlarını söyler; beş ret. Grafikte 1 (24), üretimde 11 yeni
+bağımsız durum (75), Python, MCP, masaüstü. Açık: formlar, değer bileşimleri, kayıt kuralları ve dizinler; bütçe
+(gerçek veriyle ölçüm; bekliyor).
 
 ## Uygulama sırası ve sahiplik
 
