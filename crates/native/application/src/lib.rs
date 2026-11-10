@@ -55,6 +55,8 @@ pub(crate) mod dimension_set_copy;
 pub mod constraint_follow;
 #[cfg(test)]
 mod constraint_jobs_tests;
+#[cfg(test)]
+mod told_tests;
 pub mod constraint_solve;
 pub mod constraints_edit;
 pub mod constraints_query;
@@ -308,6 +310,7 @@ pub(crate) mod road_project;
 pub use road_project::outdated_drawings;
 pub mod road_project_graph;
 pub mod road_project_produce;
+pub(crate) mod road_recipe_fields;
 pub mod road_project_query;
 pub mod road_project_rebuild;
 pub(crate) mod road_project_regional;

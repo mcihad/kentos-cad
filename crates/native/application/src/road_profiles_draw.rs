@@ -45,6 +45,9 @@ struct Checked {
     id: String,
     built: Built,
     surface: Option<Surface>,
+    /// The terrain's points inside the range and its ends (docs/adr/4860: walked once, told, for the elevations shown,
+    /// the split and the drawn line); none without a surface.
+    ground: Option<Vec<(f64, Option<f64>)>>,
     datum: f64,
     top: f64,
     exaggeration: f64,
@@ -73,21 +76,26 @@ fn range(built: &Built) -> (f64, f64) {
     (built.vertical.start, built.vertical.end)
 }
 
-/// The terrain's points inside the range `s0`–`s1`, and its ends: station, height (none off the surface).
-fn terrain(built: &Built, surface: &Surface, s0: f64, s1: f64) -> Vec<(f64, Option<f64>)> {
+/// The parts of each half of the whole a profile view tells its progress in (docs/adr/4860): the terrain's walk the
+/// first, the bands' columns the second.
+const TICKS: u64 = 1000;
+
+/// The terrain's points inside the range `s0`–`s1`, and its ends: station, height (none off the surface). The walk
+/// tells `told` how far it has come (`kentos_road::profile::terrain_told`); none when `told` stops it.
+fn terrain(built: &Built, surface: &Surface, s0: f64, s1: f64, told: &dyn Fn(u64, u64) -> bool) -> Option<Vec<(f64, Option<f64>)>> {
     let core = &built.alignment.core;
     let ends: Vec<f64> =
         std::iter::once(0.0).chain(core.elements.iter().map(|e| e.station)).chain(std::iter::once(core.length)).collect();
     let black = |s: f64| core.at(s).and_then(|p| surface.height(p.x, p.y).z);
     let mut out = vec![(s0, black(s0))];
     out.extend(
-        kentos_road::profile::terrain(surface, core)
+        kentos_road::profile::terrain_told(surface, core, told)?
             .into_iter()
             .filter(|p| (p.crossing || ends.contains(&p.station)) && p.station > s0 && p.station < s1)
             .map(|p| (p.station, p.z)),
     );
     out.push((s1, black(s1)));
-    out
+    Some(out)
 }
 
 /// The stations whose red elevations bound the design line between `s0` and `s1`: its pieces' ends and its curves'
@@ -103,7 +111,9 @@ fn design_stations(built: &Built, s0: f64, s1: f64) -> Vec<f64> {
     out
 }
 
-fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked, Stop> {
+/// Checks `input`, its terrain walked once telling `told` the first half of the view's progress (docs/adr/4860);
+/// `told` answering true stops it there, cancelled.
+fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     common::road_project(doc)?;
     let own = common::profiles(doc);
     let (_, def) = common::find(own, &input.profile, "profile")?;
@@ -155,11 +165,17 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         }
         None => None,
     };
+    // The terrain's points in the range, walked once.
+    let first_half = |done: u64, all: u64| told(if all == 0 { 0 } else { done * TICKS / all }, 2 * TICKS);
+    let ground = match &surface {
+        Some(s) => Some(terrain(&built, s, s0, s1, &first_half).ok_or(Stop::Cancelled)?),
+        None => None,
+    };
     // The elevations shown: the design line's bounds and the terrain's points in the range.
     let mut zs: Vec<f64> =
         design_stations(&built, s0, s1).into_iter().filter_map(|s| built.vertical.at(s).map(|r| r.0)).collect();
-    if let Some(s) = &surface {
-        zs.extend(terrain(&built, s, s0, s1).into_iter().filter_map(|(_, z)| z));
+    if let Some(g) = &ground {
+        zs.extend(g.iter().filter_map(|(_, z)| *z));
     }
     let (lo, hi) = zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)));
     let span = match (input.span, input.datum) {
@@ -196,7 +212,7 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
     let parts = match span {
         None => vec![crate::road_profile_splits::Part { from: s0, to: s1, datum }],
         Some(span) => {
-            let points = surface.as_ref().map(|sf| terrain(&built, sf, s0, s1)).unwrap_or_default();
+            let points = ground.clone().unwrap_or_default();
             let lines = crate::road_profile_splits::Lines {
                 vertical: &built.vertical,
                 terrain: points.iter().filter_map(|(s, z)| z.map(|z| (*s, z))).collect(),
@@ -315,6 +331,7 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         id: def.id.clone(),
         built,
         surface,
+        ground,
         datum,
         top,
         exaggeration,
@@ -342,7 +359,9 @@ pub fn grid_step(datum: f64, top: f64) -> f64 {
 }
 
 /// The bands' columns: every round km in the range and its ends, in station order.
-fn columns(c: &Checked) -> Result<Vec<ProfileAt>, Stop> {
+/// Docs/adr/4860: read one at a time, telling `told` the second half of the view's progress; `told` answering true
+/// stops it there, cancelled.
+fn columns(c: &Checked, told: &dyn Fn(u64, u64) -> bool) -> Result<Vec<ProfileAt>, Stop> {
     let (s0, s1) = (c.s0, c.s1);
     let mut stations: Vec<f64> = alignments::tick_stations(&c.built.alignment, c.every)?
         .into_iter()
@@ -355,7 +374,17 @@ fn columns(c: &Checked) -> Result<Vec<ProfileAt>, Stop> {
         }
     }
     stations.sort_by(f64::total_cmp);
-    Ok(stations.into_iter().filter_map(|s| common::at(&c.built, c.surface.as_ref(), s)).collect())
+    let all = stations.len().max(1) as u64;
+    let mut out = Vec::with_capacity(stations.len());
+    for (k, s) in stations.into_iter().enumerate() {
+        if told(TICKS + k as u64 * TICKS / all, 2 * TICKS) {
+            return Err(Stop::Cancelled);
+        }
+        if let Some(at) = common::at(&c.built, c.surface.as_ref(), s) {
+            out.push(at);
+        }
+    }
+    Ok(out)
 }
 
 fn object(geometry: EntityGeometry, color: Option<&str>, weight: Option<f64>) -> NewObject {
@@ -533,10 +562,10 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             .collect()
     };
     // The terrain.
-    if let Some(surface) = &c.surface {
+    if let (Some(surface), Some(ground)) = (&c.surface, &c.ground) {
         let core = &c.built.alignment.core;
         let on = |s: f64| core.at(s).is_some_and(|p| surface.height(p.x, p.y).z.is_some());
-        for run in terrain_runs(&terrain(&c.built, surface, s0, s1), on) {
+        for run in terrain_runs(ground, on) {
             for pts in pieces(&run) {
                 out.push(path(&pts, false, None, Some(0.25)));
             }
@@ -703,11 +732,8 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     out
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked) -> CommandResult<ProfilesDrawn> {
-    let cols = match columns(&c) {
-        Ok(cols) => cols,
-        Err(stop) => return stop.into(),
-    };
+/// Writes the view of `c` with its bands' columns `cols` (read told before, docs/adr/4860).
+fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked, cols: Vec<ProfileAt>) -> CommandResult<ProfilesDrawn> {
     let objects = objects(cx.doc, &c, &cols, input.at);
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
@@ -756,8 +782,9 @@ pub(crate) fn view(
     doc: &kentos_domain::Document,
     input: &ProfilesDraw,
 ) -> Result<(Vec<NewObject>, ProfilesDrawn, Vec<CommandWarning>), Stop> {
-    let c = check(doc, input)?;
-    let cols = columns(&c)?;
+    let never = |_, _| false;
+    let c = check(doc, input, &never)?;
+    let cols = columns(&c, &never)?;
     let objects = objects(doc, &c, &cols, input.at);
     let drawn = ProfilesDrawn {
         profile: c.id.clone(),
@@ -1052,7 +1079,7 @@ pub(crate) fn kgm_depth(doc: &kentos_domain::Document, height: f64) -> f64 {
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed {
             output: (),
             warnings: c.warnings,
@@ -1063,12 +1090,13 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResul
 
 /// What execute would write now, on a reading copy; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResult<ProfilesDrawn> {
-    let c = match check(cx.doc, input) {
-        Ok(c) => c,
+    let stop = cx.stop_only();
+    let (c, cols) = match check(cx.doc, input, &stop).and_then(|c| columns(&c, &stop).map(|cols| (c, cols))) {
+        Ok(read) => read,
         Err(stop) => return stop.into(),
     };
     let mut copy = cx.doc.reading_copy();
-    let mut planned = write(&mut ExecutionContext::new(&mut copy), input, c);
+    let mut planned = write(&mut ExecutionContext::new(&mut copy), input, c, cols);
     if let CommandResult::Completed { output, .. } = &mut planned {
         output.uids.clear();
         output.revision = cx.doc.revision().to_string();
@@ -1097,8 +1125,32 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesDraw) -> CommandRes
 }
 
 fn write_execute(cx: &mut ExecutionContext<'_>, input: ProfilesDraw) -> CommandResult<ProfilesDrawn> {
-    match check(cx.doc, &input) {
-        Ok(c) => write(cx, &input, c),
+    let read = {
+        let told = cx.told();
+        check(cx.doc, &input, &told).and_then(|c| columns(&c, &told).map(|cols| (c, cols)))
+    };
+    match read {
+        Ok((c, cols)) => write(cx, &input, c, cols),
         Err(stop) => stop.into(),
+    }
+}
+
+#[cfg(test)]
+mod stop_tests {
+    //! Docs/adr/4860: the terrain's walk, then the bands' columns told and a stop heard within (`crate::told_tests`), on the shared cases' project.
+    use super::*;
+
+    const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.profiles.draw.json");
+
+    #[test]
+    fn its_reckoning_is_told_and_hears_a_stop() {
+        let (doc, input): (kentos_domain::Document, kentos_commands::ProfilesDraw) = crate::told_tests::project(CASES);
+        crate::told_tests::told_and_stopped(|told| check(&doc, &input, told).and_then(|c| columns(&c, told)));
+    }
+
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::ProfilesDraw) = crate::told_tests::project(CASES);
+        crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

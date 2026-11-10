@@ -164,10 +164,21 @@ fn object(geometry: EntityGeometry) -> NewObject {
     }
 }
 
-fn objects(doc: &kentos_domain::Document, c: &Checked, rows: &[AlignmentLabelRow]) -> Vec<NewObject> {
+/// The labels' ticks and texts, placed on the alignment one label at a time, telling `told` how far it has come
+/// (docs/adr/4860); `told` answering true stops it there, cancelled.
+fn objects(
+    doc: &kentos_domain::Document,
+    c: &Checked,
+    rows: &[AlignmentLabelRow],
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Vec<NewObject>, Stop> {
     let mm = doc.settings().plot_scale / 1000.0;
     let mut out = Vec::new();
-    for r in rows {
+    let all = rows.len() as u64;
+    for (k, r) in rows.iter().enumerate() {
+        if told(k as u64, all) {
+            return Err(Stop::Cancelled);
+        }
         let Some(at) = c.built.place(r.station) else { continue };
         let curve = !matches!(r.kind.as_str(), "tick" | "major" | "start" | "end");
         let half = if r.kind == "tick" { 1.5 * mm } else { 3.0 * mm };
@@ -206,12 +217,19 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, rows: &[AlignmentLabelRow
             path: None,
         }));
     }
-    out
+    Ok(out)
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &AlignmentsLabel, c: Checked) -> CommandResult<AlignmentsLabelled> {
-    let rows = labels(&c);
-    let objects = objects(cx.doc, &c, &rows);
+/// The labels' rows and objects made, told (docs/adr/4860).
+type Made = (Vec<AlignmentLabelRow>, Vec<NewObject>);
+
+fn made(doc: &kentos_domain::Document, c: &Checked, told: &dyn Fn(u64, u64) -> bool) -> Result<Made, Stop> {
+    let rows = labels(c);
+    let objects = objects(doc, c, &rows, told)?;
+    Ok((rows, objects))
+}
+
+fn write(cx: &mut ExecutionContext<'_>, input: &AlignmentsLabel, c: Checked, (rows, objects): Made) -> CommandResult<AlignmentsLabelled> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects,
@@ -250,8 +268,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsLabel) -> CommandResult
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
+    let m = match made(cx.doc, &c, &cx.stop_only()) {
+        Ok(m) => m,
+        Err(stop) => return stop.into(),
+    };
     let mut copy = cx.doc.reading_copy();
-    let mut planned = write(&mut ExecutionContext::new(&mut copy), input, c);
+    let mut planned = write(&mut ExecutionContext::new(&mut copy), input, c, m);
     if let CommandResult::Completed { output, .. } = &mut planned {
         output.uids.clear();
         output.revision = cx.doc.revision().to_string();
@@ -280,9 +302,33 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> Command
 }
 
 fn write_execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> CommandResult<AlignmentsLabelled> {
-    match check(cx.doc, &input) {
-        Ok(c) => write(cx, &input, c),
+    let c = match check(cx.doc, &input) {
+        Ok(c) => c,
+        Err(stop) => return stop.into(),
+    };
+    let m = made(cx.doc, &c, &cx.told());
+    match m {
+        Ok(m) => write(cx, &input, c, m),
         Err(stop) => stop.into(),
     }
 }
 
+#[cfg(test)]
+mod stop_tests {
+    //! Docs/adr/4860: the labels, one at a time told and a stop heard within (`crate::told_tests`), on the shared cases' project.
+    use super::*;
+
+    const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.alignments.label.json");
+
+    #[test]
+    fn its_reckoning_is_told_and_hears_a_stop() {
+        let (doc, input): (kentos_domain::Document, kentos_commands::AlignmentsLabel) = crate::told_tests::project(CASES);
+        crate::told_tests::told_and_stopped(|told| check(&doc, &input).and_then(|c| made(&doc, &c, told)));
+    }
+
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::AlignmentsLabel) = crate::told_tests::project(CASES);
+        crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
+    }
+}

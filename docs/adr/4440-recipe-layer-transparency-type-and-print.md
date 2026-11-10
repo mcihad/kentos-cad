@@ -108,8 +108,9 @@ saydamlığı, türü ve alanlarının tarife girmesi” (alanlar bu turda yok, 
 
 ## Sonra
 
-- Katmanın alanlarının tarife girmesi (değer listeleri, bağlı tablo ve alt türlerle birlikte).
+- Katmanın alanlarının tarife girmesi (değer listeleri, bağlı tablo ve alt türlerle birlikte): yapıldı,
+  [ADR 4860](4860-stop-within-seven-drawings-and-recipe-layer-fields.md) (bağlı tablonun sütunu girmez).
 - Bellek ve CPU bütçesi, gerçek veriyle ölçümle (ADR 3640'ın sınırı).
 - Etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru hattı profili çizimlerinin kendi hesabının içinde durması
-  (ADR 4040 Sonra).
+  (ADR 4040 Sonra): yapıldı, ADR 4860.
 - Web (TODOS §0.2).

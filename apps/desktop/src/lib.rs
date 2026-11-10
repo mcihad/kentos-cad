@@ -427,6 +427,8 @@ mod project_graph_window_tests;
 #[cfg(test)]
 mod recipe_layer_look_tests;
 #[cfg(test)]
+mod recipe_layer_fields_tests;
+#[cfg(test)]
 mod survey_network_window_tests;
 #[cfg(test)]
 mod features_reconcile_window_tests;

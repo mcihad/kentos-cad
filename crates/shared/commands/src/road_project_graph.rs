@@ -110,6 +110,20 @@ pub struct RoadRecipeLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
+    /// Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's
+    /// column (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;
+    /// the list is in `domains`. Empty: no fields.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LayerField>>"))]
+    pub fields: Vec<crate::LayerField>,
+    /// The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::FieldDomain>>"))]
+    pub domains: Vec<crate::FieldDomain>,
+    /// Its subtypes (Alt türler, docs/adr/0422, 4860): its field that sorts the records and what each kind narrows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub subtypes: Option<crate::LayerSubtypes>,
 }
 
 /// How a drawing is made again: its command and the version that draws it again (a record keeps no version; every

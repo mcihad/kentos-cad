@@ -179,3 +179,29 @@ fn a_line_along_a_triangles_edge_reads_the_terrain() {
         assert!((d[2] - terrain).abs() < 1e-9, "{l:?}");
     }
 }
+
+/// Docs/adr/4860: the grading told is the grading; a tick before each corner's slope lines, the design surface and its
+/// volumes, rising within one whole; a stop asked at the fourth is heard there, nothing graded.
+#[test]
+fn the_grading_told_is_the_grading_and_hears_a_stop() {
+    use std::cell::{Cell, RefCell};
+    let (p, t) = (pad(12.0), terrain(10.0, 0.0, 0.0));
+    let seen = RefCell::new(Vec::new());
+    let told = grading::grade_told(&p, &t, 0.0, &|done, total| {
+        seen.borrow_mut().push((done, total));
+        false
+    })
+    .expect("grades");
+    let plain = grading::grade(&p, &t, 0.0).expect("grades");
+    assert_eq!(told.lines, plain.lines);
+    assert_eq!(told.top, plain.top);
+    assert_eq!(told.volumes, plain.volumes);
+    assert_eq!(seen.into_inner(), (0..6).map(|k| (k, 6)).collect::<Vec<_>>());
+    let asked = Cell::new(0);
+    let stopped = grading::grade_told(&p, &t, 0.0, &|_, _| {
+        asked.set(asked.get() + 1);
+        asked.get() > 3
+    });
+    assert_eq!(stopped.unwrap_err(), GradingError::Stopped);
+    assert_eq!(asked.get(), 4);
+}

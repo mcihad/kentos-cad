@@ -69,6 +69,12 @@ pub(crate) struct Read {
 
 /// The culvert read now.
 pub(crate) fn read(doc: &Document, def: &CulvertDef) -> Result<Read, Stop> {
+    read_told(doc, def, &|_, _| false)
+}
+
+/// [`read`] telling `tick` how far it has come (docs/adr/4860): its corridor's sections, then its cross
+/// (`road_stakeout::table_told`); `tick` answering true stops it there, cancelled.
+pub(crate) fn read_told(doc: &Document, def: &CulvertDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
     let (_, corridor) = corridors::find(doc.road_corridors(), &def.corridor, "corridor")?;
     let bad = |words: String| fail(codes::INVALID_CULVERT, words, "station");
     let first = corridor.regions.iter().map(|r| r.from).fold(f64::INFINITY, f64::min);
@@ -91,8 +97,9 @@ pub(crate) fn read(doc: &Document, def: &CulvertDef) -> Result<Read, Stop> {
         codes: None,
         distances: StakeoutDistances::Grid,
     };
-    let (table, mut warnings, alignment) = crate::road_stakeout::table(doc, &query).map_err(|stop| {
-        fail(codes::INVALID_CULVERT, format!("“{}” menfezinin koridoru okunamıyor: {}", def.name, words(stop)), "corridor")
+    let (table, mut warnings, alignment) = crate::road_stakeout::table_told(doc, &query, tick).map_err(|stop| match stop {
+        Stop::Cancelled => Stop::Cancelled,
+        stop => fail(codes::INVALID_CULVERT, format!("“{}” menfezinin koridoru okunamıyor: {}", def.name, words(stop)), "corridor"),
     })?;
     warnings.retain(|w| w.code != codes::STAKEOUT_UNSOLVED);
     let Some(region) = table.rows.first().map(|r| r.region) else {

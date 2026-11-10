@@ -9,6 +9,13 @@ use crate::alignment::Alignment;
 /// The stations of `a` and `b` where they cross, in `a`'s order: the alignments sampled every `step` metres, crossing
 /// segments refined by Newton's method on both stations.
 pub fn crossings(a: &Alignment, b: &Alignment, step: f64) -> Vec<(f64, f64)> {
+    // Nothing asks it to stop.
+    crossings_told(a, b, step, &|_, _| false).unwrap_or_default()
+}
+
+/// [`crossings`] telling `tick` how far it has come (docs/adr/4860): `a`'s sampled segments one at a time, each against
+/// all of `b`'s (`done` of their count); `tick` answering true stops it there: none. The crossings are [`crossings`]'.
+pub fn crossings_told(a: &Alignment, b: &Alignment, step: f64, tick: &dyn Fn(u64, u64) -> bool) -> Option<Vec<(f64, f64)>> {
     let sample = |al: &Alignment| -> Vec<(f64, [f64; 2])> {
         let n = (al.length / step).ceil().max(1.0) as usize;
         (0..=n)
@@ -20,7 +27,11 @@ pub fn crossings(a: &Alignment, b: &Alignment, step: f64) -> Vec<(f64, f64)> {
     };
     let (pa, pb) = (sample(a), sample(b));
     let mut out: Vec<(f64, f64)> = Vec::new();
-    for wa in pa.windows(2) {
+    let all = pa.len().saturating_sub(1) as u64;
+    for (k, wa) in pa.windows(2).enumerate() {
+        if tick(k as u64, all) {
+            return None;
+        }
         let (a0, a1) = (wa[0].1, wa[1].1);
         for wb in pb.windows(2) {
             let (b0, b1) = (wb[0].1, wb[1].1);
@@ -59,7 +70,7 @@ pub fn crossings(a: &Alignment, b: &Alignment, step: f64) -> Vec<(f64, f64)> {
         }
     }
     out.sort_by(|x, y| x.0.total_cmp(&y.0));
-    out
+    Some(out)
 }
 
 /// A curb return: its centre, its tangent points on the first and the second leg's edge, the arc's sweep (radians,
@@ -398,5 +409,39 @@ mod tests {
         assert!((f.on_b[0] - 3.0).abs() < 1e-12 && (f.on_b[1] - 13.0).abs() < 1e-12);
         assert!((f.length - 5.0 * std::f64::consts::PI).abs() < 1e-12);
         assert!(fillet([0.0, 0.0], e([1.0, 0.0], 3.0, 1.0), e([1.0, 0.0], 3.0, 1.0), 10.0).is_none());
+    }
+
+    /// Docs/adr/4860: the search told finds what the search finds, `a`'s segments told one at a time; a stop asked at
+    /// the fourth is heard there.
+    #[test]
+    fn the_crossings_told_are_the_crossings_and_hear_a_stop() {
+        use std::cell::{Cell, RefCell};
+        let pi = |id: &str, x: f64, y: f64| crate::alignment::PiInput {
+            id: id.into(),
+            x,
+            y,
+            radius: 0.0,
+            spiral_in: 0.0,
+            spiral_out: 0.0,
+            ove: false,
+        };
+        let a = crate::alignment::build(&[pi("a1", -50.0, 0.0), pi("a2", 50.0, 0.0)]).expect("a");
+        let b = crate::alignment::build(&[pi("b1", 0.0, -50.0), pi("b2", 0.0, 50.0)]).expect("b");
+        let seen = RefCell::new(Vec::new());
+        let told = crossings_told(&a, &b, 1.0, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        })
+        .expect("not stopped");
+        assert_eq!(told, crossings(&a, &b, 1.0));
+        assert_eq!(told.len(), 1);
+        assert_eq!(seen.into_inner(), (0..100).map(|k| (k, 100)).collect::<Vec<_>>());
+        let asked = Cell::new(0);
+        let stopped = crossings_told(&a, &b, 1.0, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert!(stopped.is_none());
+        assert_eq!(asked.get(), 4);
     }
 }

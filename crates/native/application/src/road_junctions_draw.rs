@@ -41,7 +41,7 @@ fn object(geometry: EntityGeometry) -> NewObject {
     }
 }
 
-fn check(doc: &Document, input: &JunctionsDraw) -> Result<Checked, Stop> {
+fn check(doc: &Document, input: &JunctionsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_junctions(), &input.junction, "junction")?;
@@ -52,7 +52,7 @@ fn check(doc: &Document, input: &JunctionsDraw) -> Result<Checked, Stop> {
             "junction",
         ));
     }
-    let (r, read_warnings) = common::read(doc, def)?;
+    let (r, read_warnings) = common::read_told(doc, def, told)?;
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     warnings.extend(read_warnings);
     let mut objects: Vec<NewObject> = r
@@ -111,7 +111,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: &JunctionsDraw, c: Checked) -> Co
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -119,7 +119,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResu
 
 /// What execute would draw now, on a reading copy; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResult<JunctionsDrawn> {
-    let c = match check(cx.doc, input) {
+    let c = match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
@@ -136,7 +136,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResult<J
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
 pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::JunctionsDraw) -> CommandResult<kentos_commands::JunctionsDrawn> {
-    match check(cx.doc, input) {
+    let checked = check(cx.doc, input, &cx.told());
+    match checked {
         Ok(c) => write(cx, input, c),
         Err(stop) => stop.into(),
     }
@@ -149,11 +150,32 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsDraw) -> CommandRe
         kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION,
         input,
         |cx, input| {
-            let r = match check(cx.doc, &input) {
+            let checked = check(cx.doc, &input, &cx.told());
+            let r = match checked {
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
             crate::road_drawings::kept(cx, kentos_commands::ROAD_JUNCTIONS_DRAW, &input, (kentos_commands::RoadSourceKind::Junction, "junction"), r, |o| &o.uids)
         },
     )
+}
+
+#[cfg(test)]
+mod stop_tests {
+    //! Docs/adr/4860: the search for the legs' crossing told and a stop heard within (`crate::told_tests`), on the shared cases' project.
+    use super::*;
+
+    const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.junctions.draw.json");
+
+    #[test]
+    fn its_reckoning_is_told_and_hears_a_stop() {
+        let (doc, input): (kentos_domain::Document, kentos_commands::JunctionsDraw) = crate::told_tests::project(CASES);
+        crate::told_tests::told_and_stopped(|told| check(&doc, &input, told));
+    }
+
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::JunctionsDraw) = crate::told_tests::project(CASES);
+        crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
+    }
 }

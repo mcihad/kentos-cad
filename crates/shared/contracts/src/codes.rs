@@ -962,6 +962,9 @@ codes! {
     AMBIGUOUS_RECIPE_LAYER = "ambiguous_recipe_layer", Failed, false, "Tarifin katmanının adı bu projede birden çok katmanda var; layers ile hangisi olduğunu verin.";
     /// A warning: a recipe layer this project has none of by its name was added with the recipe's look (docs/adr/3640).
     RECIPE_LAYER_CREATED = "recipe_layer_created", Warning, false, "Tarifin katmanı bu projede yoktu; tarifteki tanımıyla eklendi.";
+    /// A warning: a recipe layer found here (by its name or given) keeps its own fields, and they are not the recipe's
+    /// (docs/adr/4860): the recipe's fields it lacks and those of another kind are said.
+    RECIPE_LAYER_FIELDS = "recipe_layer_fields", Warning, false, "Bulunan katmanın alanları tarifinkinden başka; katman kendi alanlarını korur.";
     /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
     /// warning (docs/adr/0911 §3).
     DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";

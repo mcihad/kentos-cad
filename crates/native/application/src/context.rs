@@ -48,6 +48,13 @@ impl<'a> ExecutionContext<'a> {
         }
     }
 
+    /// The context running as a job (docs/adr/0253 §9, 4860): a host that runs a command on its own thread gives the
+    /// job's progress and stop; a long reckoning tells it how far it has come and hears its stop.
+    pub fn in_job(mut self, job: &'a Progress) -> Self {
+        self.job = Some(job);
+        self
+    }
+
     /// The context with the host's store, when it has one.
     pub fn with_optional_store(doc: &'a mut Document, store: Option<&'a Store>) -> Self {
         Self {

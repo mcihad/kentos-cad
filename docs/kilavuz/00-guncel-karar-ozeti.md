@@ -689,6 +689,10 @@
   arama bandı, geçilmeyecek alanlar); tek geri alma adımında Mozaik elemanları katmanına. Raster › Birleşme çizgisi.
   Terimler: birleşme çizgisi, mozaik elemanı, ayak izi (TUCBS “ayakizi”), kayıklık; Ortofoto karşılaştırması'nın “dikiş”
   sözleri de değişti. Mevzuat çizginin yerine kural koymaz (BÖHHBÜY m. 67(6)). CAD + CBS.
+- **Yedi çizimin kendi hesabının içinde durması; tarifin katmanının alanları (10 Kasım 2026; MAP-20, [ADR 4860](../../docs/adr/4860-stop-within-seven-drawings-and-recipe-layer-fields.md)).**
+  Etiket, boykesit, otokorkuluk, menfez, kavşak, platform ve boru hattı profili çizimleri durdurmayı kendi hesabının
+  içinde duyar. Tarif katmanın alanlarını (bağlı tablonun sütunu hariç), değer listelerini ve alt türlerini taşır;
+  Tariften üret aynı değerli listeye bağlar, başka değerlinin yanına “<ad>_1” ekler. Harita + Yol.
 - **Tarifin katmanının saydamlığı, türü ve Yazdır'ı (10 Kasım 2026; MAP-20, [ADR 4440](../../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
   İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz), türünü ve Yazdır'ını taşır; Tariften üret
   eklediği katmana verir. Çizimin nesnesini katmanının türü tutmuyorsa `layer_geometry_mismatch`, plan da. Harita + Yol.
