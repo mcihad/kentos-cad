@@ -42,7 +42,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460 | türeyen nesnenin kaynağa izi (MAP-01 kararı); dikiş çokgenlerinin KentOS'ta kurulması (Voronoi, radyometri) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
@@ -1465,6 +1465,14 @@ içinde bir yazı; önce yatay, sonra en uzun düz kenarı boyunca, sığana dek
 yazı tipiyle ölçülür); hiçbiri sığmazsa `fits` false. 5 yeni bağımsız durum (43; yazı tipi dosyadan elle okunur),
 Python (fontTools), MCP, masaüstü (Numara yazısı (mm)) ve resimler. Açık: sığmayan numaranın kılavuzla dışarıda
 yazılması, tescil bildirimi, değer esaslı dağıtım.
+
+**10 Kasım 2026, dokuzuncu tur — sığmayan numaranın kılavuzla dışarıda yazılması ([ADR 4680](../docs/adr/4680-separation-number-on-a-leader.md)).**
+Kapsam: **Harita ve CBS**. Araştırma: ArcGIS Pro'nun içine sığmayan alan etiketini dışarıda, yatay, sınırdan etiket
+aralığı kadar uzakta yerleştirmesi. Kanıtlanan: `cad.readjustment.sheets`'in `numberLeader`'ı ile numara yalnız tam
+boyda denenir; sığmazsa küçültülmeden, yatay, ucu parçanın etiket yerinde, çizgisi parçanın doğu sınırından bir boy
+öteye uzanan bir kılavuzla dışarıda yazılır; cevapta `leader`. 46 bağımsız durum (3 yeni), Python, MCP, masaüstü
+(Sığmayan numara anahtarı) ve resimler. Açık: dışarıdaki notun çakışma denetimi, değer esaslı dağıtım (resmî metinde
+kural yok).
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 

@@ -78,6 +78,7 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-11, sekizinci tur. Durum: taslak. ADR 348
 
 ## Sonra
 
-- Sığmayan numaranın parçanın dışına kılavuz çizgiyle yazılması; yaylı parçada yay boyunca.
+- ~~Sığmayan numaranın parçanın dışına kılavuz çizgiyle yazılması~~ ([ADR 4680](4680-separation-number-on-a-leader.md));
+  yaylı parçada yay boyunca.
 - Tescil bildirimi (m. 22(1)(ğ)): TKGM'nin biçimi beklenir; değer esaslı dağıtım (resmî metinde kural yok).
 - Web (TODOS §0.2).

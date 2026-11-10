@@ -378,6 +378,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
         number_height: float | None | Unset = UNSET,
+        number_leader: bool | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -422,6 +423,11 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
             number_height: The outside parts' numbers' height on the sheet, paper millimetres (docs/adr/4280; the user's, KentOS gives
                 none): given, each number is written as a text fitted inside its part, horizontal or along the part's longest
                 straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480). Unit: paper-mm.
+            number_leader: Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
+                along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
+                leader from the part's label place, its line running east to one text height past the part's boundary on that
+                line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
+                fit outside it, horizontal, at an offset from its boundary).
             numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
                 docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
                 outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
@@ -443,6 +449,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
             scope=scope,
             expected_revision=expected_revision,
             number_height=number_height,
+            number_leader=number_leader,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
@@ -456,6 +463,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
         number_height: float | None | Unset = UNSET,
+        number_leader: bool | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -467,6 +475,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
             scope=scope,
             expected_revision=expected_revision,
             number_height=number_height,
+            number_leader=number_leader,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
@@ -480,6 +489,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
         number_height: float | None | Unset = UNSET,
+        number_leader: bool | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -491,6 +501,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
             scope=scope,
             expected_revision=expected_revision,
             number_height=number_height,
+            number_leader=number_leader,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
@@ -504,6 +515,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
         number_height: float | None | Unset = UNSET,
+        number_leader: bool | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -520,6 +532,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
             scope=scope,
             expected_revision=expected_revision,
             number_height=number_height,
+            number_leader=number_leader,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,

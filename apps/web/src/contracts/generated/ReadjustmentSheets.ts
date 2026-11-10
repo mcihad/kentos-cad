@@ -17,7 +17,8 @@ import type { SheetTemplateSource } from "./SheetTemplateSource";
  * parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
  * (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
  * not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
- * `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`.
+ * `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`; `numberLeader`
+ * without `numberHeight` is `invalid_input` at `numberLeader` (docs/adr/4680).
  */
 export type ReadjustmentSheets = { scope: ReadjustmentScope, source?: SheetTemplateSource, 
 /**
@@ -35,4 +36,12 @@ numbers?: { [key in string]: Array<string> },
  * none): given, each number is written as a text fitted inside its part, horizontal or along the part's longest
  * straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480).
  */
-numberHeight?: number, expectedRevision?: string, };
+numberHeight?: number, 
+/**
+ * Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
+ * along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
+ * leader from the part's label place, its line running east to one text height past the part's boundary on that
+ * line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
+ * fit outside it, horizontal, at an offset from its boundary).
+ */
+numberLeader?: boolean, expectedRevision?: string, };

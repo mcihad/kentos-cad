@@ -59413,7 +59413,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.readjustment.sheets` v1: the scope (`cad.readjustment.scope`'s input: the boundary, the parcels, the\nregistered area's attribute, the places, rounding and piece tolerance), the template (KentOS's separation sheet,\n`sys:ayirma-capi`, without one; a template of one's own needs a fixed map with the id `harita`, and may have a\ncoordinate list `koordinatlar` and fixed tables `yuzolcumleri` and `kisimlar`), and the template's options: its\npaper, a scale (without one, each map takes the standard scale its parcel fits at with a 5% margin) and answers to\nits questions. Each sheet is named “Ayırma çapı ‹Ada/Parsel›”; the template's `il`, `ilce`, `mahalle`, `ada` and\n`parsel` are answered from the parcel's own attributes.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, the scope's own at `scope.…`, `no_partial_parcels`\n(no parcel is partly inside), `no_identity` and `duplicate_parcel` (a partial parcel without Ada or Parsel, or with\nanother's), `unknown_template`, `invalid_options` (options that do not read; a name, a centre or an answer to a\nparcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`\n(a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do\nnot fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are\n`invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`.",
+        "description": "Input of `cad.readjustment.sheets` v1: the scope (`cad.readjustment.scope`'s input: the boundary, the parcels, the\nregistered area's attribute, the places, rounding and piece tolerance), the template (KentOS's separation sheet,\n`sys:ayirma-capi`, without one; a template of one's own needs a fixed map with the id `harita`, and may have a\ncoordinate list `koordinatlar` and fixed tables `yuzolcumleri` and `kisimlar`), and the template's options: its\npaper, a scale (without one, each map takes the standard scale its parcel fits at with a 5% margin) and answers to\nits questions. Each sheet is named “Ayırma çapı ‹Ada/Parsel›”; the template's `il`, `ilce`, `mahalle`, `ada` and\n`parsel` are answered from the parcel's own attributes.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, the scope's own at `scope.…`, `no_partial_parcels`\n(no parcel is partly inside), `no_identity` and `duplicate_parcel` (a partial parcel without Ada or Parsel, or with\nanother's), `unknown_template`, `invalid_options` (options that do not read; a name, a centre or an answer to a\nparcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`\n(a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do\nnot fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are\n`invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`; `numberLeader`\nwithout `numberHeight` is `invalid_input` at `numberLeader` (docs/adr/4680).",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -59430,6 +59430,10 @@
               "null"
             ],
             "x-unit": "paper-mm"
+          },
+          "numberLeader": {
+            "description": "Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or\nalong its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a\nleader from the part's label place, its line running east to one text height past the part's boundary on that\nline, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not\nfit outside it, horizontal, at an offset from its boundary).",
+            "type": "boolean"
           },
           "numbers": {
             "additionalProperties": {
@@ -189029,6 +189033,20 @@
           "format": "double",
           "type": [
             "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "leader": {
+          "description": "Docs/adr/4680: the leader's tip, inside the part (its label place), when the number goes outside on a leader;\n`at` is then where the leader's landing starts.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
             "null"
           ],
           "x-unit": "m"

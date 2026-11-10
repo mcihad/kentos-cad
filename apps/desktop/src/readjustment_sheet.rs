@@ -154,7 +154,15 @@ impl App {
                 }
             }
         };
-        let input = ReadjustmentSheets { scope, source: None, options: serde_json::json!({}), numbers, number_height, expected_revision: None };
+        let input = ReadjustmentSheets {
+            scope,
+            source: None,
+            options: serde_json::json!({}),
+            numbers,
+            number_height,
+            number_leader: self.readjustment.number_leader,
+            expected_revision: None,
+        };
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let result = readjustment_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
         let Some(out) = self.answered(result) else { return Task::none() };

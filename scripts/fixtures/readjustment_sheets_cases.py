@@ -32,7 +32,11 @@ The rules, by hand (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, as
   place in the part turned so; the largest share wins, the horizontal among equals; none fits: horizontal at 0.1. The
   box (ADR 0145) is its letters' advances (Barlow 500, read here from the font file without a font library, in
   thousandths of an em) times its height wide, from 0.73 of its height under its middle to 0.65 over it, turned about
-  it; inside when the part clipped by the box (Sutherland–Hodgman) has the box's area to 1e-9 of it.
+  it; inside when the part clipped by the box (Sutherland–Hodgman) has the box's area to 1e-9 of it;
+- docs/adr/4680: with `numberLeader` only the full height is tried (horizontal, then along the longest edge); a number
+  that does not fit goes outside, horizontal, at the full height, on a leader whose tip is the part's place above and
+  whose landing starts on that line one text height east of the line's last crossing of the part (`at`), the tip in
+  `leader`.
 """
 
 import copy
@@ -131,6 +135,18 @@ def label_at(part):
     """docs/adr/3480: where an outside part's number stands, by the rule above (the arcs' circles from the bulge)."""
     outer = part["rings"][0]["pts"]
     y = (min(q[1] for q in outer) + max(q[1] for q in outer)) / 2
+    xs = crossings(part, y)
+    pairs = [(xs[k], xs[k + 1]) for k in range(0, len(xs) - 1, 2)]
+    best = max(pairs, key=lambda q: q[1] - q[0]) if pairs else None
+    for q in pairs:  # the first of equals
+        if q[1] - q[0] == best[1] - best[0]:
+            best = q
+            break
+    return [(best[0] + best[1]) / 2, y]
+
+
+def crossings(part, y):
+    """Where the horizontal line at `y` crosses the part's rings, sorted, by the rule above."""
     xs = []
     for ring in part["rings"]:
         pts, bulges = ring["pts"], ring.get("bulges") or [0.0] * len(ring["pts"])
@@ -157,13 +173,7 @@ def label_at(part):
                 if turn < abs(theta):
                     xs.append(x)
     xs.sort()
-    pairs = [(xs[k], xs[k + 1]) for k in range(0, len(xs) - 1, 2)]
-    best = max(pairs, key=lambda q: q[1] - q[0]) if pairs else None
-    for q in pairs:  # the first of equals
-        if q[1] - q[0] == best[1] - best[0]:
-            best = q
-            break
-    return [(best[0] + best[1]) / 2, y]
+    return xs
 
 
 def font_advances(path):
@@ -290,8 +300,9 @@ def turns(part):
     return out
 
 
-def fitted(part, number, height):
-    """docs/adr/4280: the place, turn, height, share and fit of a number's text in its part."""
+def fitted(part, number, height, leader=False):
+    """docs/adr/4280: the place, turn, height, share and fit of a number's text in its part; docs/adr/4680: with
+    `leader`, the full height only, else outside on a leader (its tip last)."""
     origin = part["rings"][0]["pts"][0]
     best = None
     for turn in turns(part):
@@ -303,19 +314,22 @@ def fitted(part, number, height):
             c, s = math.cos(r), math.sin(r)
             x, y = local[0] - origin[0], local[1] - origin[1]
             at = [origin[0] + x * c - y * s, origin[1] + x * s + y * c]
-        for share in SHARES:
+        for share in (SHARES[:1] if leader else SHARES):
             if best is not None and best[2] >= share:
                 break
             if inside(part, text_box(number, at, turn, height * share)):
                 best = (at, turn, share)
                 break
+    if best is None and leader:
+        tip = label_at(part)
+        return [crossings(part, tip[1])[-1] + height, tip[1]], 0.0, height, 1.0, False, tip
     if best is None:
-        return label_at(part), 0.0, height * SHARES[-1], SHARES[-1], False
+        return label_at(part), 0.0, height * SHARES[-1], SHARES[-1], False, None
     at, turn, share = best
-    return at, turn, height * share, share, True
+    return at, turn, height * share, share, True, None
 
 
-def labels(p, numbers, height=None, scale=None):
+def labels(p, numbers, height=None, scale=None, leader=False):
     """docs/adr/3480: each numbered outside part's name, number and place; docs/adr/4280: with a height, its fitted
     text."""
     if numbers is None:
@@ -326,8 +340,10 @@ def labels(p, numbers, height=None, scale=None):
             number = numbers[k].strip()
             label = {"part": n, "number": number, "at": label_at(part)}
             if height is not None:
-                at, turn, h, share, fits = fitted(part, number, height * scale / 1000.0)
+                at, turn, h, share, fits, tip = fitted(part, number, height * scale / 1000.0, leader)
                 label.update({"at": at, "height": h, "rotation": turn, "share": share, "fits": fits})
+                if tip is not None:
+                    label["leader"] = tip
             out.append(label)
             k += 1
     return out
@@ -345,7 +361,7 @@ def part_rows(p, scale, mode, numbers=None):
     return out
 
 
-def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, height=None):
+def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, height=None, leader=False):
     """The sheets' answer rows and the book's listing for the partial parcels of the scope."""
     scope_kw = {k: kw[k] for k in ("scale", "mode", "tolerance", "field") if k in kw}
     scope = rs.scope(entities, 0, chosen, **scope_kw)
@@ -368,7 +384,7 @@ def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, heigh
         rows.append({"sheet": sid, "name": name, "uid": p["uid"], "parcel": p["parcel"], "scale": s, "center": centre,
                      "points": len(p["points"]), "areas": areas(p, scale, mode),
                      "parts": part_rows(p, scale, mode, (numbers or {}).get(p["uid"])),
-                     **({"labels": labels(p, (numbers or {}).get(p["uid"]), height, s)}
+                     **({"labels": labels(p, (numbers or {}).get(p["uid"]), height, s, leader)}
                         if (numbers or {}).get(p["uid"]) else {})})
         listing.append({"id": sid, "name": name, "width": 210.0, "height": 297.0,
                         "items": len(TEMPLATE["sheet"]["items"]),
@@ -400,9 +416,10 @@ def made(rows, plan=False):
 WRITTEN = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
 
 
-def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, numbers=None, height=None, **kw):
+def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, numbers=None, height=None,
+       leader=False, **kw):
     given = (options or {}).get("scale")
-    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers, height=height)
+    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers, height=height, leader=leader)
     inp = {"scope": scope_input(chosen, **kw)}
     if options:
         inp["options"] = options
@@ -410,6 +427,8 @@ def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, 
         inp["numbers"] = numbers
     if height is not None:
         inp["numberHeight"] = height
+    if leader:
+        inp["numberLeader"] = True
     step = {"op": op, "input": inp, "within": W}
     if op == "validate":
         step["result"] = {"status": "completed", "output": None, "warnings": []}
@@ -465,6 +484,16 @@ def cases():
         ok("numara yazısı 6 mm: sığmayan onda bir adımlarla küçülür", three,
            numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
                     rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0),
+        # docs/adr/4680: a number too big for its part outside on a leader, at the full height.
+        ok("numara yazısı 6 mm, kılavuzla: tam boyda sığmayan numara küçülmez, dışarıda kılavuzla", three,
+           numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
+                    rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0, leader=True),
+        ok("numara yazısı 2 mm, kılavuzla: tam boyda sığanlar içeride, kılavuz yok", three,
+           numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
+                    rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=2.0, leader=True),
+        refused("kılavuz, numaranın yazı boyu olmadan", {"scope": scope_input([P(10)]),
+                "numbers": {rs.uid(P(10) + 1): ["101/24", "101/25"]}, "numberLeader": True}, "invalid_input",
+                "Kılavuz, numaranın yazısıyla olur: numaranın yazı boyunu (numberHeight) da verin.", "numberLeader"),
         ok("numara yazısı 400 mm: hiçbir boyda sığmaz, yatay ve en küçük payda", [P(10)],
            numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=400.0),
         ok("numara yazısının planı: yazmaz", [P(10)], op="plan", numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]},

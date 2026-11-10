@@ -82,6 +82,8 @@ pub struct State {
     pub numbers: String,
     /// The numbers' height on paper, millimetres, as typed (docs/adr/4280); empty: labelled points.
     pub number_height: String,
+    /// docs/adr/4680: a number that does not fit at the full height goes outside on a leader instead of stepping down.
+    pub number_leader: bool,
 }
 
 impl Default for State {
@@ -109,6 +111,7 @@ impl Default for State {
             applied: Vec::new(),
             numbers: String::new(),
             number_height: String::new(),
+            number_leader: false,
         }
     }
 }
@@ -137,6 +140,8 @@ pub enum Event {
     Numbers(String),
     /// Their height on paper, millimetres, typed (docs/adr/4280).
     NumberHeight(String),
+    /// docs/adr/4680: Sığmayan numara kılavuzla dışarıda.
+    NumberLeader(bool),
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -389,6 +394,7 @@ impl App {
             Event::MakeSheets => return self.readjustment_sheets_make(),
             Event::Numbers(t) => self.readjustment.numbers = t,
             Event::NumberHeight(t) => self.readjustment.number_height = t,
+            Event::NumberLeader(on) => self.readjustment.number_leader = on,
             Event::Apply => {
                 if let Some(Ok(scope)) = &self.readjustment.scope {
                     let scope = scope.clone();
@@ -532,10 +538,20 @@ impl App {
                     crate::style::fields::input(None, "boş: noktanın etiketi", &s.number_height, false, false)
                         .on_input(|t| msg(Event::NumberHeight(t)))
                         .width(160),
-                    label::caption("parçaya sığana dek onda bir adımlarla küçülür; yatay ya da en uzun kenarı boyunca")
+                    label::caption(if s.number_leader {
+                        "tam boyda; yatay ya da en uzun kenarı boyunca sığmazsa dışarıda, kılavuzla"
+                    } else {
+                        "parçaya sığana dek onda bir adımlarla küçülür; yatay ya da en uzun kenarı boyunca"
+                    })
                 ]
                 .spacing(10)
                 .align_y(Center),
+            )
+            // docs/adr/4680: a number too big for its part outside on a leader, at the full height.
+            .field(
+                "Sığmayan numara",
+                kentos_ui::widget::switch::Switch::new(s.number_leader, |on| msg(Event::NumberLeader(on)))
+                    .label("Küçültme; parçanın dışına kılavuzla yaz"),
             )
         } else {
             form

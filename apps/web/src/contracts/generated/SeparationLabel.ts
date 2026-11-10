@@ -11,4 +11,9 @@ export type SeparationLabel = { part: string, number: string, at: [number, numbe
  * from east), its share of the height asked (1, 0.9 … 0.1) and whether its box lies inside the part; `at` is then
  * its middle.
  */
-height?: number, rotation?: number, share?: number, fits?: boolean, };
+height?: number, rotation?: number, share?: number, fits?: boolean, 
+/**
+ * Docs/adr/4680: the leader's tip, inside the part (its label place), when the number goes outside on a leader;
+ * `at` is then where the leader's landing starts.
+ */
+leader?: [number, number], };

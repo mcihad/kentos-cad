@@ -79093,11 +79093,17 @@ class ReadjustmentSheets(_Model):
     parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
     (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
     not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
-    `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`.
+    `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`; `numberLeader`
+    without `numberHeight` is `invalid_input` at `numberLeader` (docs/adr/4680).
     Attributes:
         number_height: The outside parts' numbers' height on the sheet, paper millimetres (docs/adr/4280; the user's, KentOS gives
             none): given, each number is written as a text fitted inside its part, horizontal or along the part's longest
             straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480). Unit: paper-mm.
+        number_leader: Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
+            along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
+            leader from the part's label place, its line running east to one text height past the part's boundary on that
+            line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
+            fit outside it, horizontal, at an offset from its boundary).
         numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
             docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
             outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
@@ -79106,6 +79112,7 @@ class ReadjustmentSheets(_Model):
     scope: ReadjustmentScope
     expected_revision: str | None | Unset = UNSET
     number_height: float | None | Unset = UNSET
+    number_leader: bool | Unset = UNSET
     numbers: dict[str, list[str]] | None | Unset = UNSET
     options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
     source: SheetTemplateSource | None | Unset = UNSET
@@ -79117,6 +79124,8 @@ class ReadjustmentSheets(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.number_height is not UNSET:
             out["numberHeight"] = None if self.number_height is None else float(self.number_height)
+        if self.number_leader is not UNSET:
+            out["numberLeader"] = self.number_leader
         if self.numbers is not UNSET:
             out["numbers"] = None if self.numbers is None else {k0: list(e0) for k0, e0 in self.numbers.items()}
         out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
@@ -79130,6 +79139,7 @@ class ReadjustmentSheets(_Model):
             scope=ReadjustmentScope.from_json(data["scope"]),
             expected_revision=data.get("expectedRevision", UNSET),
             number_height=UNSET if "numberHeight" not in data else None if data["numberHeight"] is None else float(data["numberHeight"]),
+            number_leader=data.get("numberLeader", UNSET),
             numbers=UNSET if "numbers" not in data else None if data["numbers"] is None else {k0: list(e0) for k0, e0 in data["numbers"].items()},
             options=data["options"] if "options" in data else dict(),
             source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
@@ -86740,6 +86750,8 @@ class SeparationLabel(_Model):
         height: With `numberHeight` (docs/adr/4280): the text's height, metres on the drawing, its turn (degrees, counter-clockwise
             from east), its share of the height asked (1, 0.9 … 0.1) and whether its box lies inside the part; `at` is then
             its middle. Unit: m.
+        leader: Docs/adr/4680: the leader's tip, inside the part (its label place), when the number goes outside on a leader;
+            `at` is then where the leader's landing starts. Unit: m.
         rotation: Unit: deg.
         share: Unit: 1.
     """
@@ -86748,6 +86760,7 @@ class SeparationLabel(_Model):
     at: list[float]
     fits: bool | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    leader: list[float] | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     share: float | None | Unset = UNSET
 
@@ -86760,6 +86773,8 @@ class SeparationLabel(_Model):
             out["fits"] = self.fits
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.leader is not UNSET:
+            out["leader"] = None if self.leader is None else [float(e0) for e0 in self.leader]
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.share is not UNSET:
@@ -86774,6 +86789,7 @@ class SeparationLabel(_Model):
             at=[float(e0) for e0 in data["at"]],
             fits=data.get("fits", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            leader=UNSET if "leader" not in data else None if data["leader"] is None else [float(e0) for e0 in data["leader"]],
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             share=UNSET if "share" not in data else None if data["share"] is None else float(data["share"]),
         )

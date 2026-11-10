@@ -632,6 +632,84 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
     }
 }
 
+/// docs/adr/4680: with Sığmayan numara on, at 6 mm the numbers of 101/10's 4 m pieces do not fit at the full height: they
+/// are leaders on its pieces' layer, 6 m tall (the sheet's 1:1000), their tips inside the pieces and their lines running
+/// east past them; no text is stepped down.
+#[test]
+fn the_numbers_too_big_go_outside_on_leaders() {
+    let mut app = named();
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+    let _ = app.update(Message::Readjustment(R::NumberHeight("6".into())));
+    let _ = app.update(Message::Readjustment(R::NumberLeader(true)));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert_eq!(app.dialog, None, "the sheets are made");
+    let doc = &app.document.as_ref().expect("open").model;
+    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "101/10 dış parçalar").map(|l| l.id.clone()).expect("101/10's pieces");
+    let on: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    assert!(!on.iter().any(|e| matches!(e, kentos_commands::Entity::Text(_))), "no text stepped down");
+    let leaders: Vec<_> = on
+        .iter()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Leader(l) => Some(l.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(leaders.iter().map(|l| l.text.clone().unwrap_or_default()).collect::<Vec<_>>(), ["101/24", "101/25"]);
+    for l in &leaders {
+        assert!((l.height - 6.0).abs() < 1e-9, "{:?}", l.height);
+        assert_eq!(l.rotation, 0.0);
+        let (tip, start) = (l.pts[0], l.pts[l.pts.len() - 1]);
+        assert!(start.x > tip.x && (start.y - tip.y).abs() < 1e-9, "east of the tip: {tip:?} → {start:?}");
+        assert_eq!(l.base.attrs["ParselNo"], l.text.clone().unwrap_or_default());
+    }
+}
+
+/// docs/adr/4680: the window with Sığmayan numara on and the model on 101/10's pieces with their numbers on leaders;
+/// `.run/gui-evidence/numara-kilavuz-4680/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::leader_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn leader_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/numara-kilavuz-4680");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (made, file) in [(false, "1-pencere"), (true, "2-model-kilavuzlar")] {
+            let mut app = named();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("readjustment.distribute"));
+            let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+            let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+            let _ = app.update(Message::Readjustment(R::NumberHeight("6".into())));
+            let _ = app.update(Message::Readjustment(R::NumberLeader(true)));
+            if made {
+                let _ = app.update(Message::Readjustment(R::MakeSheets));
+                let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
+                // 101/10's two 4 m pieces outside and their leaders running east.
+                let b = kentos_commands::Bounds { min_x: 486980.0, min_y: 4419970.0, max_x: 487045.0, max_y: 4420070.0 };
+                app.zoom_to_bounds(&b);
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
+}
+
 /// docs/adr/4280: 101/10's sheet with the numbers fitted at 2 mm, turned along the narrow pieces; light wide and dark
 /// narrow, `.run/gui-evidence/numara-sigdir-4280/`:
 ///

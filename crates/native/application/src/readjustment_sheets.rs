@@ -99,6 +99,14 @@ pub fn label_at(part: &ScopePart) -> Option<[f64; 2]> {
     let outer = part.rings.first()?;
     let (lo, hi) = outer.pts.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| (lo.min(p[1]), hi.max(p[1])));
     let y = (lo + hi) / 2.0;
+    let xs = crossings_at(part, y);
+    let best = xs.chunks_exact(2).max_by(|p, q| (p[1] - p[0]).total_cmp(&(q[1] - q[0])).then(std::cmp::Ordering::Greater))?;
+    Some([(best[0] + best[1]) / 2.0, y])
+}
+
+/// Where the horizontal line at `y` crosses a part's rings, sorted (a straight edge when its ends lie on either side,
+/// the upper end counted; an arc where its circle meets the line within its sweep, its end not counted).
+fn crossings_at(part: &ScopePart, y: f64) -> Vec<f64> {
     let mut xs: Vec<f64> = Vec::new();
     for r in &part.rings {
         let n = r.pts.len();
@@ -131,8 +139,7 @@ pub fn label_at(part: &ScopePart) -> Option<[f64; 2]> {
         }
     }
     xs.sort_by(f64::total_cmp);
-    let best = xs.chunks_exact(2).max_by(|p, q| (p[1] - p[0]).total_cmp(&(q[1] - q[0])).then(std::cmp::Ordering::Greater))?;
-    Some([(best[0] + best[1]) / 2.0, y])
+    xs
 }
 
 /// docs/adr/4280: the shares of the asked height a number is tried at, the largest first.
@@ -241,13 +248,18 @@ fn turns(part: &ScopePart) -> Vec<f64> {
     out
 }
 
-/// A label's place, turn (degrees), height, share of the height asked and whether it fits.
-type Fitted = ([f64; 2], f64, f64, f64, bool);
+/// A label's place, turn (degrees), height, share of the height asked, whether it fits and (docs/adr/4680) its leader's
+/// tip.
+type Fitted = ([f64; 2], f64, f64, f64, bool, Option<[f64; 2]>);
 
 /// docs/adr/4280: where and how big a number's text stands inside its part: at each turn (`turns`), its place by
 /// `label_at` in the part turned so (the widest stretch of the middle line, turned back); the largest share of `height`
 /// (`SHARES`) whose box lies inside the part, the first turn among equals. None fits: horizontal at the least share.
-fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_core::text::Font) -> Option<Fitted> {
+///
+/// Docs/adr/4680, with `leader`: only the full height is tried; when it does not fit, the number goes outside at the full
+/// height, horizontal, on a leader from the part's label place running east to one text height past the part's last
+/// boundary crossing on that line (where the landing starts).
+fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_core::text::Font, leader: bool) -> Option<Fitted> {
     let areas = part_areas(part);
     let origin = *part.rings.first()?.pts.first()?;
     let mut best: Option<([f64; 2], f64, f64)> = None;
@@ -261,7 +273,7 @@ fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_cor
             let (x, y) = (local[0] - origin[0], local[1] - origin[1]);
             [origin[0] + x * c - y * s, origin[1] + x * s + y * c]
         };
-        for share in SHARES {
+        for share in SHARES.iter().copied().take(if leader { 1 } else { SHARES.len() }) {
             if best.is_some_and(|(_, _, s)| s >= share) {
                 break;
             }
@@ -273,8 +285,13 @@ fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_cor
     }
     let least = SHARES[SHARES.len() - 1];
     Some(match best {
-        Some((at, turn, share)) => (at, turn, height * share, share, true),
-        None => (label_at(part)?, 0.0, height * least, least, false),
+        Some((at, turn, share)) => (at, turn, height * share, share, true, None),
+        None if leader => {
+            let tip = label_at(part)?;
+            let east = crossings_at(part, tip[1]).last().copied()?;
+            ([east + height, tip[1]], 0.0, height, 1.0, false, Some(tip))
+        }
+        None => (label_at(part)?, 0.0, height * least, least, false, None),
     })
 }
 
@@ -284,6 +301,7 @@ fn labels_of(
     p: &ReadjustmentScopeParcel,
     given: Option<&[String]>,
     height: Option<f64>,
+    leader: bool,
     scale: u32,
     font: kentos_geometry_core::text::Font,
 ) -> Vec<kentos_commands::SeparationLabel> {
@@ -304,14 +322,16 @@ fn labels_of(
                 rotation: None,
                 share: None,
                 fits: None,
+                leader: None,
             };
             if let Some(mm) = height {
-                let (at, turn, h, share, fits) = fitted(q, &number, mm * f64::from(scale) / 1000.0, font)?;
+                let (at, turn, h, share, fits, tip) = fitted(q, &number, mm * f64::from(scale) / 1000.0, font, leader)?;
                 label.at = at;
                 label.height = Some(h);
                 label.rotation = Some(turn);
                 label.share = Some(share);
                 label.fits = Some(fits);
+                label.leader = tip;
             }
             Some(label)
         })
@@ -361,6 +381,24 @@ fn part_objects(p: &ReadjustmentScopeParcel, labels: &[kentos_commands::Separati
             },
             None,
         ));
+        // docs/adr/4680: a number outside on a leader, from the part's label place to where its landing starts.
+        if let (Some(tip), Some(height)) = (l.leader, l.height) {
+            out.push(object(
+                EntityGeometry::Leader {
+                    pts: vec![Vec2 { x: tip[0], y: tip[1] }, Vec2 { x: l.at[0], y: l.at[1] }],
+                    text: Some(l.number.clone()),
+                    height,
+                    rotation: 0.0,
+                    arrow: None,
+                    arrow_size: None,
+                    mask: false,
+                    annotative: None,
+                    arms: None,
+                },
+                None,
+            ));
+            continue;
+        }
         // docs/adr/4280: with a height, the number as its fitted text; else a point labelled with it (docs/adr/3480).
         match (l.height, l.rotation) {
             (Some(height), Some(rotation)) => out.push(object(
@@ -631,6 +669,14 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
             "numberHeight",
         ));
     }
+    // docs/adr/4680: the leader is the numbers' text's.
+    if input.number_leader && input.number_height.is_none() {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Kılavuz, numaranın yazısıyla olur: numaranın yazı boyunu (numberHeight) da verin.".into(),
+            "numberLeader",
+        ));
+    }
     let template = template_of(input.source.as_ref())?;
     let options: InstanceOptions = serde_json::from_value(input.options.clone())
         .map_err(|e| fail(codes::INVALID_OPTIONS, format!("Şablon seçenekleri okunamadı: {e}"), "options"))?;
@@ -767,7 +813,14 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
                 points: u32::try_from(p.points.len()).unwrap_or(u32::MAX),
                 areas,
                 parts,
-                labels: labels_of(p, given, input.number_height, scale, crate::geometry::drawing_font(doc.settings().drawing_font)),
+                labels: labels_of(
+                    p,
+                    given,
+                    input.number_height,
+                    input.number_leader,
+                    scale,
+                    crate::geometry::drawing_font(doc.settings().drawing_font),
+                ),
             },
         });
     }

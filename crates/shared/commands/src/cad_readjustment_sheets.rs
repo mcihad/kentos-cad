@@ -39,7 +39,8 @@ fn empty_options() -> serde_json::Value {
 /// parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
 /// (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
 /// not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
-/// `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`.
+/// `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`; `numberLeader`
+/// without `numberHeight` is `invalid_input` at `numberLeader` (docs/adr/4680).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -68,6 +69,14 @@ pub struct ReadjustmentSheets {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub number_height: Option<f64>,
+    /// Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
+    /// along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
+    /// leader from the part's label place, its line running east to one text height past the part's boundary on that
+    /// line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
+    /// fit outside it, horizontal, at an offset from its boundary).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub number_leader: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
@@ -136,6 +145,12 @@ pub struct SeparationLabel {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fits: Option<bool>,
+    /// Docs/adr/4680: the leader's tip, inside the part (its label place), when the number goes outside on a leader;
+    /// `at` is then where the leader's landing starts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub leader: Option<[f64; 2]>,
 }
 
 /// Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the
