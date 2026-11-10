@@ -3217,8 +3217,8 @@
    ]
   },
   {
-   "name": "Elle rengi değişen eğri: iki renk, çizgi çizimi değil, bütün yeniden yazılır",
-   "note": "çizim sırası resmin parçası olunca nesneler komutun sırasıyla yazılır",
+   "name": "Elle rengi değişen eğri: yalnız o çizimin rengiyle yeniden yazılır, öbürleri yerinde",
+   "note": "ADR 4740: yeni eğrilerin hepsi tek renkte çizgi, sıraları resmi değiştirmez; boyalı eski eğri hiçbirine eş değil",
    "steps": [
     {
      "op": "execute",
@@ -3268,8 +3268,14 @@
         {
          "drawing": "cz-1",
          "command": "road.terrains.contours",
-         "removed": 16,
-         "kept": 0,
+         "removed": 1,
+         "kept": 15,
+         "region": [
+          49.78792730496451,
+          7.870566502463111,
+          59.145035502958706,
+          13.037710084033614
+         ],
          "uids": "$any"
         }
        ],
@@ -3340,22 +3346,22 @@
        58,
        59,
        60,
-       77,
-       78,
-       79,
-       80,
-       81,
-       82,
-       83,
-       84,
-       85,
-       86,
-       87,
-       88,
-       89,
-       90,
-       91,
-       92
+       61,
+       62,
+       64,
+       65,
+       66,
+       67,
+       68,
+       69,
+       70,
+       71,
+       72,
+       73,
+       74,
+       75,
+       76,
+       77
       ],
       "canUndo": true,
       "canRedo": false,

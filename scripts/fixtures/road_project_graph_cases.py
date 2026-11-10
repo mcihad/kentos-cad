@@ -391,9 +391,13 @@ def cases():
     a = drawn(st, rp.ZEROLINE)
     b = edit_height(st)
     rp.rebuild(st, st.drawings[0])
-    cap = redrawn(st)
-    add("Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır", [*a, b, cap, asked(st, book_=BOOK, boxes=boxes)],
-        sa)
+    # Docs/adr/4740: drawing again by itself writes only what changed. The corner stays under the plane, so the zero
+    # line comes out as it was: nothing is written, the record takes the stamps now and keeps the revision of the write
+    # that made its objects (docs/adr/4320).
+    for d in st.drawings:
+        SNAP[(id(st), d["id"])] = copy.deepcopy(st.road)
+    add("Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır; aynı çıkan sıfır hattı yazılmaz",
+        [*a, b, asked(st, book_=BOOK, boxes=boxes)], sa)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     target = len(sm["entities"]) + 1

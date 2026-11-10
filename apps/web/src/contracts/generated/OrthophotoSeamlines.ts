@@ -8,7 +8,7 @@ import type { OrthoSeamMethod } from "./OrthoSeamMethod";
  * (metres; none: 1), for radiometry the cell's side in the first image's pixels (none: 1) and the corridor round the
  * Voronoi seam the path keeps to (metres; none: the whole overlap). `folder`: where a raster's relative file is looked
  * for (radiometry reads the pixels). `avoid` (radiometry): a layer whose areas the seam keeps out of. `layer`: the
- * layer's id the polygons are written on; none: `dikis-cokgenleri` (“Dikiş çokgenleri”), made in the same undo step
+ * layer's id the polygons are written on; none: `mozaik-elemanlari` (“Mozaik elemanları”), made in the same undo step
  * when missing.
  *
  * Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`first`, `second`); `invalid_input`

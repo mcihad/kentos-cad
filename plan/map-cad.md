@@ -45,7 +45,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740 | katman damgasının katman dizininden okunması; m. 63(2) ızgarasının taban noktası ve dönmesi; kesit kontrolünün kendisi (iki kontrol noktası arasında kesit, m. 93(1)) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
@@ -1849,6 +1849,19 @@ kutusu); sonuç bütün yeniden çizimle nesne nesne aynı (kayıt özeti ve dam
 kesirli eğriler, belgenin nesne sırası), Python, MCP; masaüstünde Proje ağacı'nda **Yalnız değişeni yaz** (öntanımlı
 açık). Açık: pafta eğrilerinin kayıtlı çizim olması, kendiliğinden yeniden üretimin yalnız değişeni yazması, karolu
 hesap (gerçek veri), fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir).
+
+**10 Kasım 2026, dokuzuncu tur — pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması ([ADR 4740](../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
+Kapsam: **Harita + Yol**. Dayanak: BÖHHBÜY m. 63(2), 91(2), 93(1) (10 Kasım 2026'da okundu; 2025 değişikliği bu
+maddeleri değiştirmedi); Civil 3D'nin Spot Levels On Grid ve Create Points – Surface › On Grid'i, OpenRoads'un kurallı
+arazi modeli, ArcGIS Pro'nun canlı ve bağsız eğrisi. Kanıtlanan: pafta eğrileri yüzeyin ve okuduğu katmanların (yeni
+`layer` kaynağı: geometrinin damgası) damgasıyla kayıtlı çizimdir, eskir ve yeniden üretilir; yalnız değişeni yaz
+kuralı sırayı korur (aynı renkli yazısız çizgiler serbest, maskeli yazı ve nokta sırasını korur) ve elle de
+kendiliğinden de projenin ayarıdır (`rebuildWhole`, `road.project.edit`'in `regional`'ı, `.kcad` şema 238);
+`builtUp` ile yollarda ve yerleşik alanın ızgarasında paftada 2 cm'de bir kot (paketin `heightEvery`'si); seçilen
+noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin 1,5 · KOH_Z sınırına göre karşılaştırılır (`check`, uyarı
+`section_check_exceeded`); 71 bağımsız durum (22 yeni), regional ve proje durumları, `.kcad` örneği, Python, MCP,
+masaüstünde Yerleşik alan (63/2) satırı ve özet. Açık: katman damgasının dizinden okunması, ızgaranın taban noktası,
+kesit kontrolünün kendisi, karolu hesap (gerçek veri).
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

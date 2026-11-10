@@ -7,10 +7,12 @@
  * its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
  *
  * `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
- * first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
- * drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
- * draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
- * changed is drawn whole, so its objects keep the command's drawing order.
+ * first; one whose objects come out as they are is not written (its record takes its sources' stamps now). Otherwise,
+ * in the command's order, a new object takes the first old one exactly alike not taken yet and stays where that is,
+ * unless an object before it in the order is written, or stays from a later place, and the two could draw another
+ * picture in the other order (docs/adr/4740): only lines and polylines without a label and of one colour and
+ * transparency draw the same picture in any order. The old objects left are removed, the new ones left written at the
+ * drawing's end in its order.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
  * `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand

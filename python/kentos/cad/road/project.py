@@ -31,8 +31,11 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
     """``road.project.edit`` v1. Kendiliğinden yeniden üret: autoRebuild açıkken bir yazma,
     eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt);
     elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve
-    söylenir. Tek geri alma adımı “Kendiliğinden yeniden üret”. Retler:
-    invalid_revision, revision_conflict, not_a_road_project, nothing_to_set.
+    söylenir. regional (ADR 4740): yeniden üretim, elle de kendiliğinden de, yalnız
+    değişeni yazar (true, projenin ilk seçimi; ADR 4320) ya da her çizimi bütün çizer
+    (false). Tek geri alma adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya
+    da ikisi birden “Yeniden üretim”. Retler: invalid_revision, revision_conflict,
+    not_a_road_project, nothing_to_set.
     """
     __slots__ = ()
     id = "road.project.edit"
@@ -50,19 +53,24 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         *,
         auto_rebuild: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadProjectEdited:
         """Kendiliğinden yeniden üret: autoRebuild açıkken bir yazma, eskittiği yol çizimlerini
         kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler
-        (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. Tek
-        geri alma adımı “Kendiliğinden yeniden üret”. Retler: invalid_revision,
-        revision_conflict, not_a_road_project, nothing_to_set.
+        (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir.
+        regional (ADR 4740): yeniden üretim, elle de kendiliğinden de, yalnız değişeni yazar
+        (true, projenin ilk seçimi; ADR 4320) ya da her çizimi bütün çizer (false). Tek geri
+        alma adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya da ikisi birden
+        “Yeniden üretim”. Retler: invalid_revision, revision_conflict, not_a_road_project,
+        nothing_to_set.
 
         Args:
             doc: The drawing it works on.
             auto_rebuild:
             expected_revision:
+            regional:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -78,6 +86,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         return self.execute_input(doc, RoadProjectEdit(
             auto_rebuild=auto_rebuild,
             expected_revision=expected_revision,
+            regional=regional,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -87,6 +96,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         *,
         auto_rebuild: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | None | Unset = UNSET,
     ) -> RoadProjectEdited:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -94,6 +104,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         return self.plan_input(doc, RoadProjectEdit(
             auto_rebuild=auto_rebuild,
             expected_revision=expected_revision,
+            regional=regional,
         ))
 
     def validate(
@@ -103,6 +114,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         *,
         auto_rebuild: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -110,6 +122,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         return self.validate_input(doc, RoadProjectEdit(
             auto_rebuild=auto_rebuild,
             expected_revision=expected_revision,
+            regional=regional,
         ))
 
     def answer(
@@ -119,6 +132,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         *,
         auto_rebuild: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -131,6 +145,7 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         return self.answer_input(doc, RoadProjectEdit(
             auto_rebuild=auto_rebuild,
             expected_revision=expected_revision,
+            regional=regional,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -573,14 +588,18 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
     duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR
     4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır;
     nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır,
-    nesneleri kimlikleriyle yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta,
-    yazısız çizgi ve çoklu çizgiler: çizim sırası resmi değiştirmez) aynı çıkan
-    çizgilerini yerinde bırakır, yalnız değişenleri siler ve yazar; değişen başka çizim
-    bütün yeniden çizilir (çizim sırası komutunki kalır). Cevabın her çiziminde kept
-    (yerinde kalan nesne) ve çizgi çiziminde region (silinen ve yazılan çizgilerin
-    kutusu: değişen bölge). Retler: invalid_revision, revision_conflict,
-    not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim
-    komutlarının retleri.
+    nesneleri kimlikleriyle yerinde kalır); değişen çizimde komutun sırasıyla her yeni
+    nesne tıpatıp aynı, alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız
+    sırada önündeki bir nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve
+    ikisi öbür sırada başka bir resim çizebiliyorsa yazılır (ADR 4740: yalnız tek renk
+    ve saydamlıktaki yazısız çizgi ve çoklu çizgiler her sırada aynı resmi çizer;
+    maskeli yazı, nokta, dolgu sırasını korur); kalan eskiler silinir, kalan yeniler
+    çizimin sırasıyla sona yazılır. Pafta eğrilerinde aynı çıkan eğriler kalır, bir eğri
+    yazılınca ondan sonraki kotlar da yeniden yazılır (maskeleri eğrilerin üstünde
+    kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve region (silinen ve
+    yazılan nesnelerin kutusu, yazı ekleme noktasıyla: değişen bölge). Retler:
+    invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
+    drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.rebuild"
@@ -615,13 +634,18 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni
         yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan
         çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle
-        yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta, yazısız çizgi ve çoklu
-        çizgiler: çizim sırası resmi değiştirmez) aynı çıkan çizgilerini yerinde bırakır,
-        yalnız değişenleri siler ve yazar; değişen başka çizim bütün yeniden çizilir (çizim
-        sırası komutunki kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve çizgi
-        çiziminde region (silinen ve yazılan çizgilerin kutusu: değişen bölge). Retler:
-        invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
-        drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
+        yerinde kalır); değişen çizimde komutun sırasıyla her yeni nesne tıpatıp aynı,
+        alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız sırada önündeki bir
+        nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve ikisi öbür sırada başka
+        bir resim çizebiliyorsa yazılır (ADR 4740: yalnız tek renk ve saydamlıktaki yazısız
+        çizgi ve çoklu çizgiler her sırada aynı resmi çizer; maskeli yazı, nokta, dolgu
+        sırasını korur); kalan eskiler silinir, kalan yeniler çizimin sırasıyla sona
+        yazılır. Pafta eğrilerinde aynı çıkan eğriler kalır, bir eğri yazılınca ondan
+        sonraki kotlar da yeniden yazılır (maskeleri eğrilerin üstünde kalır). Cevabın her
+        çiziminde kept (yerinde kalan nesne) ve region (silinen ve yazılan nesnelerin
+        kutusu, yazı ekleme noktasıyla: değişen bölge). Retler: invalid_revision,
+        revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone,
+        drawing_edited ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.

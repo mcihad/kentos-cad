@@ -657,6 +657,13 @@
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
+- **Pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması (10 Kasım 2026; MAP-14, [ADR 4740](../../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
+  `road.terrains.sheetcontours` çizimi yüzeyin ve okuduğu katmanların damgasıyla tutulur (yeni kaynak türü `layer`),
+  eskir ve yeniden üretilir. Yalnız değişeni yaz sırayı korur: aynı renkli yazısız çizgiler kalır, maskeli yazı ve nokta
+  bir çizgi yazılınca yeniden yazılır; Proje ağacı'ndaki kutu projenin ayarıdır (`road.rebuildWhole`, `road.project.edit`
+  `regional`; kendiliğinden yeniden üretim de uyar; `.kcad` şema 238). `builtUp`: yollarda ve yerleşik alanda paftada
+  2 cm'de bir kot; `check`: seçilen noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin sınırına göre (uyarı
+  `section_check_exceeded`). Pafta eğrileri › Yerleşik alan (63/2). Harita + Yol.
 - **Tarama ağı dengelemesi (10 Kasım 2026; MAP-13, [ADR 4720](../../docs/adr/4720-scan-network-adjustment.md)).**
   Yeni `cad.pointclouds.network`: üç ve daha çok tarama bir GNSS ağı gibi birlikte dengelenir; bağlar Tarama kaydı gibi
   kaydedilip normal matrisleriyle ağırlıklanır, sabit taramalar yerinde kalır; döngü kapanmaları ve her taramanın yatay

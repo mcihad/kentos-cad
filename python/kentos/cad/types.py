@@ -6596,6 +6596,7 @@ class RoadSourceKind(_StrEnum):
     - ``junction``
     - ``platform``
     - ``network``: A utility network (docs/adr/3560): its definition and the objects of its layers.
+    - ``layer``: A layer of the drawing (docs/adr/4740): the geometries of its objects in the drawing's order. A sheet's
     """
     SURFACE = "surface"
     ALIGNMENT = "alignment"
@@ -6610,9 +6611,10 @@ class RoadSourceKind(_StrEnum):
     JUNCTION = "junction"
     PLATFORM = "platform"
     NETWORK = "network"
+    LAYER = "layer"
 
 
-RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform", "network"]
+RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform", "network", "layer"]
 """The names of :class:`RoadSourceKind`, for a plain string."""
 
 
@@ -24877,7 +24879,9 @@ class ContourRules(_Model):
     lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'
     text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and
     the auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:
-    the built-in dashed type, docs/adr/2720).
+    the built-in dashed type, docs/adr/2720); docs/adr/4740: the spacing of the heights in built-up areas and along
+    roads (paper mm, m. 63(2)'s about 2 cm; none: such heights are refused) and the section check's limit (m. 91(2),
+    m. 93(1)(c); none: no comparison).
     Attributes:
         release: Unit: count.
         major_every: Unit: count.
@@ -24889,6 +24893,7 @@ class ContourRules(_Model):
         label_every: Unit: paper-mm.
         label_height: Unit: paper-mm.
         auxiliary_pattern: Unit: paper-mm.
+        height_every: Unit: paper-mm.
         spot_height: Unit: paper-mm.
     """
     id: str
@@ -24906,6 +24911,8 @@ class ContourRules(_Model):
     label_every: float
     label_height: float
     auxiliary_pattern: list[float] | Unset = UNSET
+    height_every: float | None | Unset = UNSET
+    section_check: SectionCheck | None | Unset = UNSET
     spot_height: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -24926,6 +24933,10 @@ class ContourRules(_Model):
         out["labelHeight"] = float(self.label_height)
         if self.auxiliary_pattern is not UNSET:
             out["auxiliaryPattern"] = [float(e0) for e0 in self.auxiliary_pattern]
+        if self.height_every is not UNSET:
+            out["heightEvery"] = None if self.height_every is None else float(self.height_every)
+        if self.section_check is not UNSET:
+            out["sectionCheck"] = None if self.section_check is None else self.section_check.to_json()
         if self.spot_height is not UNSET:
             out["spotHeight"] = None if self.spot_height is None else float(self.spot_height)
         return out
@@ -24948,6 +24959,8 @@ class ContourRules(_Model):
             label_every=float(data["labelEvery"]),
             label_height=float(data["labelHeight"]),
             auxiliary_pattern=[float(e0) for e0 in data["auxiliaryPattern"]] if "auxiliaryPattern" in data else UNSET,
+            height_every=UNSET if "heightEvery" not in data else None if data["heightEvery"] is None else float(data["heightEvery"]),
+            section_check=UNSET if "sectionCheck" not in data else None if data["sectionCheck"] is None else SectionCheck.from_json(data["sectionCheck"]),
             spot_height=UNSET if "spotHeight" not in data else None if data["spotHeight"] is None else float(data["spotHeight"]),
         )
 
@@ -84876,12 +84889,16 @@ class RoadProfilesLengths(_Model):
 @dataclass(kw_only=True, slots=True)
 class RoadProjectEdit(_Model):
     """Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in
-    the step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.
+    the step of the write that left them stale, on or off; `regional` (docs/adr/4740) chooses whether drawing again, by
+    itself or from the project tree, writes only what changed (docs/adr/4320; the project's first choice) or draws each
+    drawing whole. One undo step: “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” or, both changed, “Yeniden üretim”.
 
-    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set` (neither
+    given, or what is given is already so: at `autoRebuild` when it is given, else at `regional`).
     """
     auto_rebuild: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    regional: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -84889,6 +84906,8 @@ class RoadProjectEdit(_Model):
             out["autoRebuild"] = self.auto_rebuild
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.regional is not UNSET:
+            out["regional"] = self.regional
         return out
 
     @classmethod
@@ -84896,18 +84915,23 @@ class RoadProjectEdit(_Model):
         return cls(
             auto_rebuild=data.get("autoRebuild", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            regional=data.get("regional", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class RoadProjectEdited(_Model):
-    """Output of `road.project.edit` v1: drawing again by itself now, and the revision after."""
+    """Output of `road.project.edit` v1: drawing again by itself now, whether drawing again writes only what changed
+    (docs/adr/4740), and the revision after.
+    """
     auto_rebuild: bool
+    regional: bool
     revision: str
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["autoRebuild"] = self.auto_rebuild
+        out["regional"] = self.regional
         out["revision"] = self.revision
         return out
 
@@ -84915,6 +84939,7 @@ class RoadProjectEdited(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProjectEdited:
         return cls(
             auto_rebuild=data["autoRebuild"],
+            regional=data["regional"],
             revision=data["revision"],
         )
 
@@ -85110,10 +85135,12 @@ class RoadProjectRebuild(_Model):
     its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
 
     `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
-    first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
-    drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
-    draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
-    changed is drawn whole, so its objects keep the command's drawing order.
+    first; one whose objects come out as they are is not written (its record takes its sources' stamps now). Otherwise,
+    in the command's order, a new object takes the first old one exactly alike not taken yet and stays where that is,
+    unless an object before it in the order is written, or stays from a later place, and the two could draw another
+    picture in the other order (docs/adr/4740): only lines and polylines without a label and of one colour and
+    transparency draw the same picture in any order. The old objects left are removed, the new ones left written at the
+    drawing's end in its order.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
     `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
@@ -85176,7 +85203,8 @@ class RoadProjectRebuilt(_Model):
 class RoadProjectTree(_Model):
     """Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are
     stale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be
-    drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.
+    drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, whether drawing again
+    writes only what changed (docs/adr/4740), and the revision read.
     Attributes:
         stale: Unit: count.
         problems: Unit: count.
@@ -85188,6 +85216,7 @@ class RoadProjectTree(_Model):
     rebuildable: int
     deep: bool
     auto_rebuild: bool
+    regional: bool
     revision: str
 
     def to_json(self) -> dict[str, Any]:
@@ -85198,6 +85227,7 @@ class RoadProjectTree(_Model):
         out["rebuildable"] = self.rebuildable
         out["deep"] = self.deep
         out["autoRebuild"] = self.auto_rebuild
+        out["regional"] = self.regional
         out["revision"] = self.revision
         return out
 
@@ -85210,6 +85240,7 @@ class RoadProjectTree(_Model):
             rebuildable=data["rebuildable"],
             deep=data["deep"],
             auto_rebuild=data["autoRebuild"],
+            regional=data["regional"],
             revision=data["revision"],
         )
 
@@ -85300,6 +85331,8 @@ class RoadSettings(_Model):
         pay: The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
         platforms: The graded pads (docs/adr/0927), each on a terrain surface.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
+        rebuild_whole: Drawing again, by hand from the project tree or by itself, draws each drawing whole (docs/adr/4740); unless
+            chosen, only what changed is written (docs/adr/4320). Since `.kcad` schema 238.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
         sheet_sets: The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
         superelevations: The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
@@ -85319,6 +85352,7 @@ class RoadSettings(_Model):
     pay: PayBookDef | None | Unset = UNSET
     platforms: list[PlatformDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
+    rebuild_whole: bool | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
     sheet_sets: list[RoadSheetSetDef] | Unset = UNSET
     superelevations: list[SuperelevationDef] | Unset = UNSET
@@ -85351,6 +85385,8 @@ class RoadSettings(_Model):
             out["platforms"] = [e0.to_json() for e0 in self.platforms]
         if self.profiles is not UNSET:
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
+        if self.rebuild_whole is not UNSET:
+            out["rebuildWhole"] = self.rebuild_whole
         if self.sections is not UNSET:
             out["sections"] = [e0.to_json() for e0 in self.sections]
         if self.sheet_sets is not UNSET:
@@ -85381,6 +85417,7 @@ class RoadSettings(_Model):
             pay=UNSET if "pay" not in data else None if data["pay"] is None else PayBookDef.from_json(data["pay"]),
             platforms=[PlatformDef.from_json(e0) for e0 in data["platforms"]] if "platforms" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
+            rebuild_whole=data.get("rebuildWhole", UNSET),
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             sheet_sets=[RoadSheetSetDef.from_json(e0) for e0 in data["sheetSets"]] if "sheetSets" in data else UNSET,
             superelevations=[SuperelevationDef.from_json(e0) for e0 in data["superelevations"]] if "superelevations" in data else UNSET,
@@ -87452,6 +87489,36 @@ class ScopeRing(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectionCheck(_Model):
+    """The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,
+    KOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences
+    between measured heights and the heights read from the contour lines is under `factor` times KOH_Z.
+    Attributes:
+        xy: The formula's coefficients of S², S and 1, giving centimetres. Unit: 1.
+        z_factor: Unit: 1.
+        factor: Unit: 1.
+    """
+    xy: list[float]
+    z_factor: float
+    factor: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["xy"] = [float(e0) for e0 in self.xy]
+        out["zFactor"] = float(self.z_factor)
+        out["factor"] = float(self.factor)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionCheck:
+        return cls(
+            xy=[float(e0) for e0 in data["xy"]],
+            z_factor=float(data["zFactor"]),
+            factor=float(data["factor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SectionCrossing(_Model):
     """Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far
     out on each.
@@ -89422,6 +89489,40 @@ class ShapesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetBuiltUp(_Model):
+    """The heights of built-up areas and roads (BÖHHBÜY m. 63(2): “yerleşik alanlar ve yollarda harita üzerinde yaklaşık 2
+    cm'de bir”, docs/adr/4740): the layers of the built-up areas' closed boundaries and of the roads' lines, and the
+    spacing on the sheet (paper mm; none: the package's `heightEvery`). Along each road line from its start a height
+    every spacing, the first at half of it; then on the grid of the spacing (multiples of it east and north) inside the
+    built-up areas (even-odd over their rings), outside the details and farther than half the spacing from every height
+    already placed. Heights are the surface's, written as the summits' are; a place off the surface is counted.
+    Attributes:
+        every: Unit: paper-mm.
+    """
+    areas: list[str] | Unset = UNSET
+    every: float | None | Unset = UNSET
+    roads: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.areas is not UNSET:
+            out["areas"] = list(self.areas)
+        if self.every is not UNSET:
+            out["every"] = None if self.every is None else float(self.every)
+        if self.roads is not UNSET:
+            out["roads"] = list(self.roads)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetBuiltUp:
+        return cls(
+            areas=list(data["areas"]) if "areas" in data else UNSET,
+            every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            roads=list(data["roads"]) if "roads" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetContourLabel(_Model):
     """A height written on a major line: its level, its text, where its middle is and its turn (degrees counter-clockwise
     from east, its top uphill).
@@ -89537,6 +89638,56 @@ class SheetDeliveryResources(_Model):
             project=data["project"],
             files=[SheetDeliveryResource.from_json(e0) for e0 in data["files"]],
             bytes=data["bytes"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetHeightCheck(_Model):
+    """The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points
+    compared (an own height, on the surface, not one of the surface's corners: a corner's difference is nought), the
+    corners left out, the RMS of the differences and the largest one with its place (metres), KOH_Z for the scale by
+    m. 91(2) and the limit, `factor` times it (metres), and whether the RMS is under the limit.
+    Attributes:
+        compared: Unit: count.
+        corners: Unit: count.
+        rms: Unit: length.
+        largest: Unit: length.
+        at: Unit: length.
+        koh_z: Unit: length.
+        limit: Unit: length.
+    """
+    compared: int
+    corners: int
+    rms: float
+    largest: float
+    at: list[float]
+    koh_z: float
+    limit: float
+    within: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["compared"] = self.compared
+        out["corners"] = self.corners
+        out["rms"] = float(self.rms)
+        out["largest"] = float(self.largest)
+        out["at"] = [float(e0) for e0 in self.at]
+        out["kohZ"] = float(self.koh_z)
+        out["limit"] = float(self.limit)
+        out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetHeightCheck:
+        return cls(
+            compared=data["compared"],
+            corners=data["corners"],
+            rms=float(data["rms"]),
+            largest=float(data["largest"]),
+            at=[float(e0) for e0 in data["at"]],
+            koh_z=float(data["kohZ"]),
+            limit=float(data["limit"]),
+            within=data["within"],
         )
 
 
@@ -90077,7 +90228,8 @@ class SheetSpot(_Model):
     """A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
     with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
     (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point
-    (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the
+    (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none), or (docs/adr/4740, m. 63(2)) a
+    `road` height along a road line or a `builtUp` one on the grid of a built-up area; its place and height, the
     height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
     Attributes:
         x: Unit: length.
@@ -105413,6 +105565,7 @@ class TerrainsSheetContoured(_Model):
     cut: float
     revision: str
     notes: list[str]
+    check: SheetHeightCheck | None | Unset = UNSET
     pattern: str | None | Unset = UNSET
     spots: list[SheetSpot] | Unset = UNSET
     uids: list[str] | Unset = UNSET
@@ -105430,6 +105583,8 @@ class TerrainsSheetContoured(_Model):
         out["cut"] = float(self.cut)
         out["revision"] = self.revision
         out["notes"] = list(self.notes)
+        if self.check is not UNSET:
+            out["check"] = None if self.check is None else self.check.to_json()
         if self.pattern is not UNSET:
             out["pattern"] = self.pattern
         if self.spots is not UNSET:
@@ -105452,6 +105607,7 @@ class TerrainsSheetContoured(_Model):
             cut=float(data["cut"]),
             revision=data["revision"],
             notes=list(data["notes"]),
+            check=UNSET if "check" not in data else None if data["check"] is None else SheetHeightCheck.from_json(data["check"]),
             pattern=data.get("pattern", UNSET),
             spots=[SheetSpot.from_json(e0) for e0 in data["spots"]] if "spots" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
@@ -105465,15 +105621,22 @@ class TerrainsSheetContours(_Model):
     (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
     the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
     (`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot
-    heights (`slopes`, none: no such heights; docs/adr/3120), the rule package (none: KentOS's BÖHHBÜY 2018).
+    heights (`slopes`, none: no such heights; docs/adr/3120), the built-up areas' and roads' heights (`builtUp`, none:
+    none; docs/adr/4740), the rule package (none: KentOS's BÖHHBÜY 2018).
+
+    Drawn, its drawing is kept with the surface and every layer it reads (docs/adr/4740): it goes stale when they
+    change and `road.project.rebuild` draws it again.
 
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
     the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
-    their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
-    `slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
-    `invalid_contours` (more than 10 000 levels), `no_contours`.
+    their text height, built-up heights asked without a spacing above nought or with neither areas nor roads),
+    `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,
+    `slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,
+    `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning
+    `section_check_exceeded`: the chosen points' RMS is not under the package's limit.
     Attributes:
         base: Unit: elevation.
+        built_up: The heights of built-up areas and roads (BÖHHBÜY m. 63(2), docs/adr/4740).
         interval: Unit: length.
         points: The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
             takes a spot height, its own measured height when it has one, else the surface's.
@@ -105483,6 +105646,7 @@ class TerrainsSheetContours(_Model):
     layer_id: str
     auxiliary: bool | None | Unset = UNSET
     base: float | None | Unset = UNSET
+    built_up: SheetBuiltUp | None | Unset = UNSET
     details: list[str] | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
@@ -105502,6 +105666,8 @@ class TerrainsSheetContours(_Model):
             out["auxiliary"] = self.auxiliary
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
+        if self.built_up is not UNSET:
+            out["builtUp"] = None if self.built_up is None else self.built_up.to_json()
         if self.details is not UNSET:
             out["details"] = list(self.details)
         if self.expected_revision is not UNSET:
@@ -105531,6 +105697,7 @@ class TerrainsSheetContours(_Model):
             layer_id=data["layerId"],
             auxiliary=data.get("auxiliary", UNSET),
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            built_up=UNSET if "builtUp" not in data else None if data["builtUp"] is None else SheetBuiltUp.from_json(data["builtUp"]),
             details=list(data["details"]) if "details" in data else UNSET,
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
@@ -138211,6 +138378,7 @@ __all__ = [
     "SchemaKindName",
     "ScopePart",
     "ScopeRing",
+    "SectionCheck",
     "SectionCrossing",
     "SectionFormula",
     "SectionFormulaName",
@@ -138300,10 +138468,12 @@ __all__ = [
     "ShareRule",
     "ShareRuleName",
     "SharpRectangleCorners",
+    "SheetBuiltUp",
     "SheetContourLabel",
     "SheetContourLine",
     "SheetDeliveryResource",
     "SheetDeliveryResources",
+    "SheetHeightCheck",
     "SheetInfo",
     "SheetMapInfo",
     "SheetModelScope",

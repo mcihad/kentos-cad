@@ -3,7 +3,9 @@
 //! case's; a rule unticked changes the plan; Çiz writes the lines and heights in one undo step; Harita offers it; the
 //! summit's height ticked is the shared case's, the building's vertices left out (docs/adr/2320); the auxiliary lines
 //! take the package's 5/1 mm pattern as a project line type (docs/adr/2720); the slopes' tops and bottoms guessed
-//! from their layers' names and their corners' heights the shared case's (docs/adr/3120). And its pictures.
+//! from their layers' names and their corners' heights the shared case's (docs/adr/3120); the built-up areas' and roads'
+//! heights (m. 63(2)) and the chosen points' check against m. 93(1)(c)'s limit the shared case's, the drawing kept and
+//! stale once its surface changes (docs/adr/4740). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -195,6 +197,136 @@ fn the_chosen_points_heights_are_the_shared_case_s() {
     let _ = app.update(Message::SheetContours(E::Draw));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert_eq!(after, before + r.lines.len() + r.labels.len() + r.spots.len(), "one height each");
+}
+
+/// The output of the shared case whose name starts so.
+fn case_output(start: &str) -> Value {
+    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start))).expect(start)["steps"][0]
+        ["result"]["output"]
+        .clone()
+}
+
+/// docs/adr/4740 (m. 63(2)): Yerleşik alan's layers guessed from their names (the road's centre line left out of the
+/// details); ticked, with only the building cut, the road's and the built-up area's heights are the shared case's and
+/// the summary counts them; Çiz keeps the drawing with its surface and layers.
+#[test]
+fn the_built_up_heights_are_the_shared_case_s() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    let s = &app.sheet_contours;
+    assert_eq!((s.built_area.as_str(), s.built_road.as_str()), ("yerlesik", "yol-ekseni"));
+    assert!(!s.details.contains(&"yol-ekseni".to_owned()));
+    for d in ["yol", "sev"] {
+        let _ = app.update(Message::SheetContours(E::Detail(d.into(), false)));
+    }
+    let _ = app.update(Message::SheetContours(E::Built(true)));
+    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let want = case_output("m. 63(2): yolda");
+    let spots = want["spots"].as_array().expect("spots");
+    assert_eq!(r.spots.len(), spots.len());
+    for (got, w) in r.spots.iter().zip(spots) {
+        assert_eq!((got.kind.as_str(), got.text.as_str()), (w["kind"].as_str().expect("kind"), w["text"].as_str().expect("text")));
+        assert!((got.x - w["x"].as_f64().expect("x")).abs() < 1e-9 && (got.y - w["y"].as_f64().expect("y")).abs() < 1e-9);
+        assert!((got.z - w["z"].as_f64().expect("z")).abs() < 1e-9);
+    }
+    let _ = app.update(Message::SheetContours(E::Draw));
+    let model = &app.document.as_ref().expect("a drawing").model;
+    let d = model.road_drawings().last().expect("the drawing kept");
+    assert_eq!(d.command, "road.terrains.sheetcontours");
+    let kinds: Vec<_> = d.sources.iter().map(|s| (s.kind, s.id.as_str())).collect();
+    use kentos_commands::RoadSourceKind as K;
+    assert_eq!(kinds, vec![(K::Surface, "t-1"), (K::Layer, "bina"), (K::Layer, "yerlesik"), (K::Layer, "yol-ekseni")]);
+}
+
+/// docs/adr/4740 (m. 93(1)(c)): the control layer over the limit as Seçilen noktalar: the check is the shared case's,
+/// said as a warning line.
+#[test]
+fn the_section_check_is_the_shared_case_s() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    let _ = app.update(Message::SheetContours(E::ChosenLayer("kontrol-asan".into())));
+    let _ = app.update(Message::SheetContours(E::Chosen(true)));
+    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let c = r.check.expect("compared");
+    let want = &case_output("m. 93(1)(c): farkların")["check"];
+    assert_eq!((c.compared, c.corners, c.within), (4, 1, false));
+    assert!((c.rms - want["rms"].as_f64().expect("rms")).abs() < 1e-9);
+    assert!((c.limit - want["limit"].as_f64().expect("limit")).abs() < 1e-12);
+}
+
+/// docs/adr/4740: the window with Yerleşik alan ticked, the heights drawn in the built-up area, the window over the
+/// limit of m. 93(1)(c), and the project tree with the kept drawing stale after a ground height changed; light wide and
+/// dark narrow, `.run/gui-evidence/yerlesik-alan-4740/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib sheet_contours_window_tests::built_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn built_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yerlesik-alan-4740");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        };
+        // 1: m. 93(1)(c) over the limit.
+        let _ = app.update(Message::Run("terrain.sheetContours"));
+        let _ = app.update(Message::SheetContours(E::ChosenLayer("kontrol-asan".into())));
+        let _ = app.update(Message::SheetContours(E::Chosen(true)));
+        shot(&mut app, "1-kesit-siniri");
+        // 2: Yerleşik alan ticked, the building alone cut.
+        let _ = app.update(Message::SheetContours(E::Chosen(false)));
+        for d in ["yol", "sev"] {
+            let _ = app.update(Message::SheetContours(E::Detail(d.into(), false)));
+        }
+        let _ = app.update(Message::SheetContours(E::Built(true)));
+        shot(&mut app, "2-pencere");
+        // 3: drawn, the built-up area close.
+        let _ = app.update(Message::SheetContours(E::Draw));
+        let b = kentos_commands::Bounds { min_x: 175.0, min_y: 95.0, max_x: 345.0, max_y: 225.0 };
+        app.navigating(|a| a.zoom_to_bounds(&b));
+        shot(&mut app, "3-yerlesik-alan");
+        // 4: a ground point raised: the kept drawing stale in the project tree.
+        let k = {
+            let model = &app.document.as_ref().expect("a drawing").model;
+            model
+                .entities()
+                .filter(|e| e.base().layer_id == "zemin")
+                .min_by(|a, b| {
+                    let d = |e: &kentos_commands::Entity| match e {
+                        kentos_commands::Entity::Point(p) => (p.p.x - 330.0).powi(2) + (p.p.y - 250.0).powi(2),
+                        _ => f64::INFINITY,
+                    };
+                    d(a).total_cmp(&d(b))
+                })
+                .cloned()
+                .expect("a ground point")
+        };
+        if let kentos_commands::Entity::Point(p) = &k {
+            let uid = app.document.as_ref().and_then(|d| d.model.uid(kentos_domain::Slot(p.base.id))).expect("its uid");
+            let input = serde_json::json!({"operation": "elevation", "changes": [{"kind": "update", "uid": uid.to_string(),
+                "geometry": {"kind": "point", "p": {"x": p.p.x, "y": p.p.y}, "z": p.z.unwrap_or(0.0) + 0.6}}]});
+            crate::program_scenes::command(&mut app, "cad.entities.edit", input);
+        }
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(crate::app::Panel::RoadProject));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        shot(&mut app, "4-proje-agaci-eskidi");
+    }
 }
 
 /// docs/adr/3520: the window with Nokta kotları ticked, the drawing after Çiz and close to the measured point; light

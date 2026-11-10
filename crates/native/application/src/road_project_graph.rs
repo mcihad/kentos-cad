@@ -61,6 +61,8 @@ fn source_kind(k: K) -> G {
         K::Junction => G::Junction,
         K::Platform => G::Platform,
         K::Network => G::Network,
+        // A sheet's contour lines read layers (docs/adr/4740): the layer's node when the graph shows it.
+        K::Layer => G::Layer,
     }
 }
 

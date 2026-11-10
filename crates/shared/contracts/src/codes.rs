@@ -712,6 +712,9 @@ codes! {
     INVALID_CONTOURS = "invalid_contours", Failed, false, "Eş yükselti aralığı 0'dan büyük olmalı; yüzeyi en çok 10 000 düzey keser.";
     /// No level of the interval crosses the surface.
     NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
+    /// A warning: the chosen points' own heights part from the surface's by more than BÖHHBÜY m. 93(1)(c)'s limit
+    /// (docs/adr/4740).
+    SECTION_CHECK_EXCEEDED = "section_check_exceeded", Warning, false, "Ölçülen kotlarla yüzeyin kotu arasındaki farkların karesel ortalaması m. 93(1)(c)'nin sınırını aşıyor.";
     /// Two surfaces whose difference changes sign nowhere: no cut and fill boundary (docs/adr/1620).
     NO_ZERO_LINE = "no_zero_line", Failed, false, "İki yüzeyin farkı hiçbir yerde işaret değiştirmiyor: sıfır hattı yok.";
     /// Two surfaces that do not overlap, or coincide wherever they do: no cut or fill zone (docs/adr/1840).

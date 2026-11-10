@@ -29,7 +29,16 @@ The rules, by hand (BÖHHBÜY 2018 m. 78(1)(c)–(g), Ek-3 0001–0005, the pack
 - asked for (docs/adr/3120; m. 78(1)(ğ)'s slopes), every corner of a line or polyline on the slopes' top layers, then on
   their bottom layers, in the drawing's order, once per place, its height the surface's there (Triangle's triangle, its
   plane), written as the summits' are; a corner off the surface is counted. The slope's top and bottom lines run along
-  the scarp, the top's last line ending beyond the surface.
+  the scarp, the top's last line ending beyond the surface;
+- docs/adr/4740 (m. 63(2)): asked for, a height every `heightEvery` paper mm along each road line from its start (the
+  first at half of it, once per place), then on the grid of that spacing (multiples of it east and north, south to
+  north, west to east) inside the built-up areas, outside the details and at least half the spacing from every height
+  placed before; heights the surface's, the places off it counted;
+- docs/adr/4740 (m. 91(2), m. 93(1)(c)): the chosen points with their own height on the surface and not one of its
+  corners compared: the RMS of own − surface against `factor` · KOH_Z, KOH_Z = `zFactor` · (xy₀·S² + xy₁·S + xy₂) cm;
+- docs/adr/4740: the drawing kept and drawn again, writing only what changed: a new line exactly alike an old one not
+  taken yet stays (lines are strokes of one look); once a line is written, the heights after it (masked texts) are
+  written again; the old ones left removed, the new ones left written at the end with the next numbers.
 """
 
 import copy
@@ -83,6 +92,14 @@ SLOPE_BOTTOM = [(90.0, 30.0), (88.5, 75.0), (91.0, 120.0), (89.5, 165.0), (90.0,
 # docs/adr/3520: the chosen points (x, y, their own height or none).
 CHOSEN = [(100.0, 60.0, 858.62), (95.0, 140.0, None), (130.0, 330.0, 902.4), (150.0, 330.0, None)]
 CHOSEN_TWO = [(60.0, 100.0), (95.0, 140.0)]
+# docs/adr/4740 (m. 63(2)): a built-up area round the building and the road's centre line along the road area.
+BUILT_UP = [(185.0, 105.0), (335.0, 105.0), (335.0, 215.0), (185.0, 215.0)]
+ROAD_AXIS = [(-10.0, 64.5), (410.0, 76.5)]
+# docs/adr/4740 (m. 93(1)(c)): control points on the smooth ground, their heights the surface's there and an offset
+# (within the limit at 1/1000, and over it), and one on a corner of the surface.
+CONTROL = [(300.0, 250.0), (340.0, 30.0), (200.0, 260.0), (370.0, 160.0)]
+WITHIN = [0.06, -0.09, 0.11, -0.04]
+OVER = [0.45, -0.38, 0.52, -0.41]
 
 
 def bowl_points():
@@ -101,7 +118,8 @@ BOWL = bowl_points()
 
 LAYERS = [rt.node("0", "0"), rt.node("zemin", "Zemin"), rt.node("bina", "Bina"), rt.node("yol", "Yol"),
           rt.node("sev", "Şev sınırı"), rt.node("sev-ust", "Şev üstü"), rt.node("sev-dip", "Şev dibi"),
-          rt.node("secilen", "Seçilen noktalar"),
+          rt.node("secilen", "Seçilen noktalar"), rt.node("yerlesik", "Yerleşik alan"), rt.node("yol-ekseni", "Yol ekseni"),
+          rt.node("kontrol", "Kontrol"), rt.node("kontrol-asan", "Kontrol (aşan)"),
           rt.node("az", "Az nokta"), rt.node("cukur", "Çukur"),
           rt.node("esyukselti", "Eş yükselti"),
           rt.node("arazi", "Arazi", [rt.node("ek", "Ek")]), {**rt.node("kilitli", "Kilitli"), "locked": True},
@@ -128,6 +146,9 @@ def entities():
     for x, y, z in CHOSEN:
         ents.append(("point", "secilen", {"p": P(x, y), **({"z": z} if z is not None else {})}))
     ents.append(("point", "secilen", {"p": P(*CHOSEN_TWO[0]), "parts": [{"p": P(*CHOSEN_TWO[1])}]}))
+    # docs/adr/4740: the built-up area and the road's centre line; the control points follow once the surface is made.
+    ents.append(("polygon", "yerlesik", {"pts": [P(*p) for p in BUILT_UP]}))
+    ents.append(("polyline", "yol-ekseni", {"pts": [P(*p) for p in ROAD_AXIS]}))
     return ents
 
 
@@ -162,6 +183,23 @@ BOWL_FIRST = next(i for i, e in enumerate(ENTS) if e[1] == "cukur")
 S3 = rt.build({"points": [(x, y, z, U(BOWL_FIRST + i + 1)) for i, (x, y, z) in enumerate(BOWL)],
                "breaklines": [], "boundary": None, "voids": [], "tolerance": None, "maxEdge": None, "edges": [],
                "removed": []})
+
+
+def control_points():
+    """docs/adr/4740: on each control layer the four places with the surface's height plus the layer's offsets (three
+    decimals), then a ground point's own place (a corner of the surface) a little above it."""
+    out = []
+    for layer, offsets in (("kontrol", WITHIN), ("kontrol-asan", OVER)):
+        for (x, y), dz in zip(CONTROL, offsets):
+            h = rt.height(S, (x, y))
+            assert h["place"] == "inside", (x, y)
+            out.append(("point", layer, {"p": P(x, y), "z": round(h["z"] + dz, 3)}))
+        x, y, z = POINTS[150]
+        out.append(("point", layer, {"p": P(x, y), "z": round(z + 0.02, 3)}))
+    return out
+
+
+ENTS += control_points()
 
 
 def ring_holds(ring, p):
@@ -228,6 +266,89 @@ def slope_spots(s, top=(), bottom=()):
                 z = h["z"]
                 out.append({"kind": kind, "x": c[0], "y": c[1], "z": z, "text": f"{math.floor(z * 10.0 + 0.5) / 10.0:.1f}"})
     return out, off
+
+
+def built_up_spots(s, built, d, dets, placed):
+    """docs/adr/4740 (m. 63(2)): the road heights then the built-up grid's (the module's note); and how many along the
+    roads, on the grid and off the surface."""
+    out, seen, off = [], [], 0
+
+    def add(kind, c):
+        nonlocal off
+        h = rt.height(s, c)
+        if h["place"] != "inside":
+            off += 1
+            return
+        z = h["z"]
+        out.append({"kind": kind, "x": c[0], "y": c[1], "z": z, "text": f"{math.floor(z * 10.0 + 0.5) / 10.0:.1f}"})
+    for k, layer, g in ENTS:
+        if layer not in built.get("roads", ()):
+            continue
+        if k == "line":
+            pieces = [[(g["a"]["x"], g["a"]["y"]), (g["b"]["x"], g["b"]["y"])]]
+        elif k == "polyline":
+            # Each part of it, a closed one round to its start (a part closes as its polyline does).
+            pieces = []
+            for part in [g["pts"]] + [q["pts"] for q in g.get("parts", [])]:
+                pts = [(v["x"], v["y"]) for v in part]
+                pieces.append(pts + [pts[0]] if g.get("closed") and len(pts) > 2 else pts)
+        else:
+            continue
+        for piece in pieces:
+            at, walked = d / 2.0, 0.0
+            for p, q in zip(piece, piece[1:]):
+                ln = math.hypot(q[0] - p[0], q[1] - p[1])
+                if ln == 0.0:
+                    continue
+                while at <= walked + ln:
+                    f = (at - walked) / ln
+                    c = (p[0] + f * (q[0] - p[0]), p[1] + f * (q[1] - p[1]))
+                    if c not in seen:
+                        seen.append(c)
+                        add("road", c)
+                    at += d
+                walked += ln
+    roads = len(out)
+    areas = details_of(built.get("areas", ()))
+    corners = [c for a in areas for ring in a for c in ring]
+    if corners:
+        lo = (min(c[0] for c in corners), min(c[1] for c in corners))
+        hi = (max(c[0] for c in corners), max(c[1] for c in corners))
+        i0, i1 = math.ceil(lo[0] / d), math.floor(hi[0] / d)
+        j0, j1 = math.ceil(lo[1] / d), math.floor(hi[1] / d)
+
+        def near(c, spots):
+            return any(math.hypot(sp["x"] - c[0], sp["y"] - c[1]) < d / 2.0 for sp in spots)
+        for j in range(j0, j1 + 1):
+            for i in range(i0, i1 + 1):
+                c = (float(i) * d, float(j) * d)
+                if (any(inside(a, c) for a in areas) and not any(inside(x, c) for x in dets)
+                        and not near(c, placed) and not near(c, out)):
+                    add("builtUp", c)
+    return out, roads, len(out) - roads, off
+
+
+def height_check(s, picked, check, scale):
+    """docs/adr/4740: the chosen points with their own height on the surface and not one of its corners, against
+    m. 93(1)(c)'s limit; none when there are none."""
+    used = {i for t in s["tris"] for i in t}
+    corners = {tuple(s["xy"][i]) for i in used}
+    measured = [m for m in picked if "surface" in m]
+    compared = [m for m in measured if (m["x"], m["y"]) not in corners]
+    if not compared:
+        return None
+    diffs = [m["z"] - m["surface"] for m in compared]
+    rms = math.sqrt(sum(v * v for v in diffs) / len(diffs))
+    wide = 0
+    for k in range(1, len(diffs)):
+        if abs(diffs[k]) > abs(diffs[wide]):
+            wide = k
+    S_ = float(scale)
+    koh_z = check["zFactor"] * (check["xy"][0] * S_ * S_ + check["xy"][1] * S_ + check["xy"][2]) / 100.0
+    limit = check["factor"] * koh_z
+    return {"compared": len(compared), "corners": len(measured) - len(compared), "rms": rms,
+            "largest": abs(diffs[wide]), "at": [compared[wide]["x"], compared[wide]["y"]], "kohZ": koh_z,
+            "limit": limit, "within": rms < limit}
 
 
 def level_lines(s, z, keep):
@@ -428,7 +549,7 @@ def chosen_spots(s, layers):
 
 
 def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary=True, labels=True, rules=None,
-          spots=False, surface=None, slopes=None, points=None):
+          spots=False, surface=None, slopes=None, points=None, built=None, warns=None):
     rules = rules or RULES
     if interval is None:
         interval = next(i["interval"] for i in rules["intervals"] if i["scale"] == scale)
@@ -494,6 +615,7 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
             note += f" Yüzeyin dışındaki {off} köşe yazılmadı."
         notes.append(note)
         found = found + more
+    check = None
     if points:
         picked, off, own_count = chosen_spots(s, points)
         measured = [m for m in picked if "surface" in m]
@@ -508,6 +630,45 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
             note += f" Kendi kotu olmayan ve yüzeyin dışında kalan {off} nokta yazılmadı."
         notes.append(note)
         found = found + picked
+        if rules.get("sectionCheck"):
+            check = height_check(s, picked, rules["sectionCheck"], scale)
+    built_found = None
+    if built is not None:
+        every = built.get("every", rules.get("heightEvery"))
+        built_found = built_up_spots(s, built, every / mm, dets, found)
+        found = found + built_found[0]
+    if check is not None:
+        f = rules["sectionCheck"]["factor"]
+        note = (f"Seçilen noktalardan kendi kotu olan ve yüzeyin köşesi olmayan {check['compared']} noktada ölçülen kot ile "
+                f"yüzeyin kotu arasındaki farkların karesel ortalaması {check['rms']:.3f} m (en büyük "
+                f"{check['largest']:.3f} m, Y {check['at'][0]:.3f}, X {check['at'][1]:.3f}); m. 93(1)(c)'nin 1/{scale} için "
+                f"sınırı {num(f)} · KOH_Z = {check['limit']:.3f} m (KOH_Z m. 91(2)'den {check['kohZ']:.3f} m): "
+                f"{'sınırın altında' if check['within'] else 'sınırı aşıyor'}. Bu bir karşılaştırmadır; m. 93'ün kesit "
+                "kontrolü yüksekliği bilinen iki kontrol noktası arasında, en çok 20 m aralıklı ve nivelmanla ölçülmüş "
+                "noktalarla yapılır.")
+        if check["corners"]:
+            note += f" Yüzeyin köşesi olan {check['corners']} nokta karşılaştırılmadı (farkı sıfırdır)."
+        notes.append(note)
+        if not check["within"] and warns is not None:
+            warns.append({"code": "section_check_exceeded",
+                          "message": f"Seçilen noktaların ölçülen kotlarıyla yüzeyin kotu arasındaki farkların karesel "
+                                     f"ortalaması {check['rms']:.3f} m, m. 93(1)(c)'nin sınırını ({check['limit']:.3f} m) "
+                                     "aşıyor; yüzeyin kaynaklarını ve noktaların kotlarını denetleyin.",
+                          "path": "points"})
+    elif points and rules.get("sectionCheck") and any("surface" in m for m in found if m["kind"] == "chosen"):
+        notes.append("Kendi kotu olan seçilen noktaların hepsi yüzeyin köşesi; ölçülen kotla yüzeyin karşılaştırması "
+                     "yüzeye girmeyen noktalarla yapılır.")
+    if built_found is not None:
+        _, roads, grid, off = built_found
+        every = built.get("every", rules.get("heightEvery"))
+        note = (f"Yollarda {roads}, yerleşik alanlarda {grid} kot dm'ye kadar yazıldı ({num(rules['spotHeight'])} mm, "
+                f"m. 63(2)): paftada yaklaşık {num(every)} mm'de bir (arazide {num(every / mm)} m), kotlar yüzeyden; "
+                "yerleşik alandaki ızgara noktası detayın içinde ya da başka bir kota aralığın yarısından yakınsa "
+                "yazılmaz. Çatı ve terasların uygun köşeleri ölçmecinin seçtiği noktalardır. m. 63 fotogrametrik "
+                "üretimin maddesidir; yersel alımda m. 45(1)(c) uygulanır.")
+        if off:
+            note += f" Yüzeyin dışındaki {off} yer yazılmadı."
+        notes.append(note)
     # docs/adr/2720: the auxiliary lines take the package's pattern (Ek-3 0003) as a project line type of its name.
     pattern = None
     if rules.get("auxiliaryPattern") and any(l["kind"] == "auxiliary" for l in lines):
@@ -522,6 +683,8 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
         out["spots"] = found
     if pattern:
         out["pattern"] = pattern
+    if check is not None:
+        out["check"] = check
     return out
 
 
@@ -538,8 +701,102 @@ def pattern_type(rules):
 N = len(ENTS)
 
 
+# ── docs/adr/4740: the drawing kept and drawn again, writing only what changed ────────────────────────────────────
+def objects_of(o, rules=RULES):
+    """The objects a sheet output writes, in its order: (content, look, places). Lines are strokes of the drawing's one
+    look; a spot's point and text and a label's text keep their order (a text's place is its insertion point)."""
+    spot = rules["spotHeight"] * o["scale"] / 1000.0
+    out = [(("line", l["z"], l["kind"], l["closed"], tuple(tuple(p) for p in l["points"])), "stroke",
+            [tuple(p) for p in l["points"]]) for l in o["lines"]]
+    for s_ in o.get("spots", []):
+        if s_["kind"] != "chosen":
+            out.append((("point", s_["x"], s_["y"], s_["z"]), "ordered", [(s_["x"], s_["y"])]))
+        out.append((("spot", s_["x"], s_["y"], s_["text"]), "ordered", [(s_["x"] + spot / 2.0, s_["y"])]))
+    out += [(("label", lab["text"], tuple(lab["at"]), lab["rotation"]), "ordered", [tuple(lab["at"])])
+            for lab in o["labels"]]
+    return out
+
+
+def staying(old, new, looks):
+    """docs/adr/4740's walk: a new object takes the first old one alike not taken yet, unless an object before it is
+    written, or stays from a later place, and the two are not strokes of one look; then the old one stays free."""
+    alike = {}
+    for i, c in enumerate(old):
+        alike.setdefault(c, []).append(i)
+    written, kept, stays = [], {}, [None] * len(new)
+
+    def free(a, b):
+        return a != "ordered" and a == b
+    for j, c in enumerate(new):
+        look = looks[j]
+        queue = alike.get(c)
+        cand = queue.pop(0) if queue else None
+        blocked = cand is not None and (any(not free(w, look) for w in written)
+                                        or any(m > cand and not free(k, look) for k, m in kept.items()))
+        if cand is not None and not blocked:
+            stays[j] = cand
+            kept[look] = max(kept.get(look, -1), cand)
+        else:
+            if cand is not None:
+                queue.insert(0, cand)
+            if look not in written:
+                written.append(look)
+    return stays
+
+
+class Kept:
+    """The document's numbers as the steps leave them and the drawing's objects (number, content, look, places)."""
+
+    def __init__(self):
+        self.ids, self.next, self.objs = list(range(1, N + 1)), N + 1, []
+
+    def draw(self, o):
+        for content, look, places in objects_of(o):
+            self.objs.append((self.next, content, look, places))
+            self.ids.append(self.next)
+            self.next += 1
+
+    def redraw(self, o, regional=True):
+        new, old = objects_of(o), self.objs
+        stays = staying([x[1] for x in old], [c for c, _, _ in new], [l for _, l, _ in new]) if regional \
+            else [None] * len(new)
+        taken = {i for i in stays if i is not None}
+        gone = [old[i] for i in range(len(old)) if i not in taken]
+        gone_ids = {g[0] for g in gone}
+        self.ids = [i for i in self.ids if i not in gone_ids]
+        objs, written = [], []
+        for j, (c, look, places) in enumerate(new):
+            if stays[j] is None:
+                objs.append((self.next, c, look, places))
+                self.ids.append(self.next)
+                self.next += 1
+                written.append(places)
+            else:
+                objs.append(old[stays[j]])
+        self.objs = objs
+        row = {"drawing": "cz-1", "command": "road.terrains.sheetcontours", "removed": len(gone)}
+        if regional:
+            row["kept"] = len(new) - len(written)
+            places = [p for g in gone for p in g[3]] + [p for pl in written for p in pl]
+            if places:
+                row["region"] = [min(p[0] for p in places), min(p[1] for p in places),
+                                 max(p[0] for p in places), max(p[1] for p in places)]
+        row["uids"] = "$any"
+        return row
+
+
+def raised(k, dz):
+    """The surface with ground point k's height raised by dz (three decimals), and that height."""
+    pts = list(POINTS)
+    x, y, z = pts[k]
+    pts[k] = (x, y, round(z + dz, 3))
+    return surface_of(pts), pts[k][2]
+
+
 def drawn(cases, name, input_, op="execute", layer="esyukselti", warns=(), note=None, **kw):
-    out = sheet(**kw)
+    more = []
+    out = sheet(warns=more, **kw)
+    warns = list(warns) + more
     written = op == "execute"
     if written:
         out["uids"] = "$any"
@@ -618,6 +875,117 @@ def cases():
           scale=5000, points=["secilen"])
     drawn(out, "Şevler ve seçilen noktalar birlikte: şevler önce (1/5000)", {"scale": 5000, "slopes": both,
           "points": ["secilen"]}, scale=5000, slopes=both, points=["secilen"])
+    # docs/adr/4740 (m. 63(2)): heights along the road and on the built-up area's grid.
+    built = {"areas": ["yerlesik"], "roads": ["yol-ekseni"]}
+    town = drawn(out, "m. 63(2): yolda ve yerleşik alanda paftada yaklaşık 2 cm'de bir kot (1/1000: 20 m); binanın içi "
+                 "atlanır, yolun yüzeyin dışındaki uçları sayılır", {"builtUp": built, "details": ["bina"]}, built=built,
+                 details=["bina"])
+    kinds = [s_["kind"] for s_ in town["spots"]]
+    assert kinds.count("road") >= 15 and kinds.count("builtUp") >= 20, kinds
+    drawn(out, "m. 63(2) elle 40 mm (1/1000: 40 m)", {"builtUp": {**built, "every": 40.0}},
+          built={**built, "every": 40.0})
+    drawn(out, "m. 63(2) planı yazmaz (1/5000)", {"scale": 5000, "builtUp": built}, op="plan", scale=5000, built=built)
+    drawn(out, "Yalnız yol (1/5000)", {"scale": 5000, "builtUp": {"roads": ["yol-ekseni"]}}, scale=5000,
+          built={"roads": ["yol-ekseni"]})
+    drawn(out, "Tepe kotu ve yerleşik alan: tepeye yarım aralıktan yakın ızgara noktası yazılmaz",
+          {"spots": True, "builtUp": {"areas": ["yerlesik"]}}, spots=True, built={"areas": ["yerlesik"]})
+    # docs/adr/4740 (m. 91(2), m. 93(1)(c)): the control points' measured heights against the surface.
+    within = drawn(out, "m. 93(1)(c): kontrol noktalarının ölçülen kotu ile yüzeyin farklarının KOH'u sınırın altında; "
+                   "yüzeyin köşesi karşılaştırılmaz (1/1000)", {"points": ["kontrol"]}, points=["kontrol"])
+    assert within["check"]["within"] and within["check"]["compared"] == 4 and within["check"]["corners"] == 1, \
+        within["check"]
+    over = drawn(out, "m. 93(1)(c): farkların KOH'u sınırı aşar, uyarılır (1/1000)", {"points": ["kontrol-asan"]},
+                 points=["kontrol-asan"])
+    assert not over["check"]["within"], over["check"]
+    drawn(out, "m. 93(1)(c) 1/5000: sınır ölçekle büyür", {"scale": 5000, "points": ["kontrol-asan"]}, scale=5000,
+          points=["kontrol-asan"])
+    no_check = {k: v for k, v in copy.deepcopy(RULES).items() if k != "sectionCheck"}
+    drawn(out, "Karşılaştırma sınırı vermeyen paket: karşılaştırma yok", {"points": ["kontrol"], "rules": no_check},
+          points=["kontrol"], rules=no_check)
+    # docs/adr/4740: the drawing kept with its surface and layers, drawn again writing only what changed.
+    all3_in = {"surface": "t-1", "layerId": "esyukselti", "details": all3}
+    k = min(range(len(POINTS)), key=lambda i: (POINTS[i][0] - 330.0) ** 2 + (POINTS[i][1] - 250.0) ** 2)
+    first = sheet(details=all3)
+    s2_, z2 = raised(k, 0.6)
+    second = sheet(details=all3, surface=s2_)
+    any_ = {"status": "completed", "output": "$any", "warnings": "$any"}
+    draw_step = {"op": "execute", "input": all3_in, "result": any_, "within": rt.W}
+    x, y, _ = POINTS[k]
+    height = {"op": "execute", "command": "cad.entities.edit",
+              "input": {"operation": "elevation", "changes": [{"kind": "update", "uid": f"$uidOf:{k + 1}",
+                                                                "geometry": {"kind": "point", "p": P(x, y), "z": z2}}]},
+              "result": any_, "within": rt.W}
+
+    def rebuilt(rows, input_):
+        return {"op": "execute", "command": "road.project.rebuild", "input": input_,
+                "result": rt.completed({"rebuilt": rows, "revision": "$current"}), "within": rt.W}
+
+    def changed(st):
+        return {"ids": list(st.ids), "canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
+    st = Kept()
+    st.draw(first)
+    row = st.redraw(second)
+    lines_alike = row["kept"]
+    assert 0 < lines_alike < len(second["lines"]) and row["removed"] > len(first["labels"]), row
+    out.append({"name": "Kayıtlı çizim: zeminin bir kotu değişince eskir; yalnız değişeni yazınca aynı çıkan eğriler "
+                        "yerinde kalır, eğriden sonraki yazılar yeniden yazılır",
+                "note": "ADR 4740: eğriler tek renkte çizgi, sıraları resmi değiştirmez; maskeli yazılar bir eğri "
+                        "yazılınca onun üstünde kalsın diye yeniden yazılır",
+                "steps": [draw_step, height, {**rebuilt([row], {"regional": True}), "expect": changed(st)}]})
+    st = Kept()
+    st.draw(first)
+    row = st.redraw(second, regional=False)
+    out.append({"name": "Aynı değişiklik bütün yeniden üretimle: bütün nesneler yeniden yazılır",
+                "steps": [draw_step, height, {**rebuilt([row], {}), "expect": changed(st)}]})
+    # The building moved (a detail layer): the drawing goes stale by its layer's stamp.
+    b = next(i for i, e in enumerate(ENTS) if e[1] == "bina")
+    moved = [(px + 6.0, py) for px, py in BUILDING]
+    keep = ENTS[b]
+    ENTS[b] = ("polygon", "bina", {"pts": [P(*p) for p in moved]})
+    third = sheet(details=all3)
+    ENTS[b] = keep
+    st = Kept()
+    st.draw(first)
+    row = st.redraw(third)
+    move = {"op": "execute", "command": "cad.entities.edit",
+            "input": {"operation": "grip", "changes": [{"kind": "update", "uid": f"$uidOf:{b + 1}",
+                                                         "geometry": {"kind": "polygon", "pts": [P(*p) for p in moved]}}]},
+            "result": any_, "within": rt.W}
+    out.append({"name": "Bina katmanında bina kaydırılınca çizim katmanın damgasıyla eskir; yalnız değişeni yazar",
+                "steps": [draw_step, move, {**rebuilt([row], {"regional": True}), "expect": changed(st)}]})
+    # A layer the drawing does not read changed: nothing is stale.
+    c = next(i for i, e in enumerate(ENTS) if e[1] == "kontrol")
+    cx_, cy_ = CONTROL[0]
+    nudge = {"op": "execute", "command": "cad.entities.edit",
+             "input": {"operation": "grip", "changes": [{"kind": "update", "uid": f"$uidOf:{c + 1}",
+                                                          "geometry": {"kind": "point", "p": P(cx_ + 1.0, cy_),
+                                                                       "z": ENTS[c][2]["z"]}}]},
+             "result": any_, "within": rt.W}
+    st = Kept()
+    st.draw(first)
+    out.append({"name": "Okumadığı bir katman değişince çizim eskimez: yeniden üretilecek çizim yok",
+                "steps": [draw_step, nudge, {**rebuilt([], {"regional": True}),
+                                             "expect": {"ids": list(st.ids), "revision": "same"}}]})
+    # Drawing again by itself (the project's autoRebuild): only what changed, unless the project draws whole.
+    auto = setup()
+    auto["settings"]["road"]["autoRebuild"] = True
+    told = [{"code": "drawings_rebuilt", "message": "Eskiyen yol çizimleri kendiliğinden yeniden üretildi: cz-1."}]
+    st = Kept()
+    st.draw(first)
+    st.redraw(second)
+    out.append({"name": "Kendiliğinden yeniden üretim yalnız değişeni yazar: kot değişikliğinin adımında",
+                "setup": auto,
+                "steps": [draw_step, {**height, "result": {"status": "completed", "output": "$any", "warnings": told},
+                                      "expect": changed(st)}]})
+    whole = setup()
+    whole["settings"]["road"].update(autoRebuild=True, rebuildWhole=True)
+    st = Kept()
+    st.draw(first)
+    st.redraw(second, regional=False)
+    out.append({"name": "Proje bütün çizer derse kendiliğinden yeniden üretim bütün yazar",
+                "setup": whole,
+                "steps": [draw_step, {**height, "result": {"status": "completed", "output": "$any", "warnings": told},
+                                      "expect": changed(st)}]})
     # docs/adr/2720: the auxiliary pattern added as a project line type in the same step; the project's own kept.
     plain_out = sheet()
     assert plain_out.get("pattern"), "the default package draws auxiliary lines with its pattern"
@@ -668,6 +1036,28 @@ def cases():
                       "Ek-3 0004) vermiyor; seçilen noktaların kotları yazılmaz.", "rules"))
     refused(out, "Olmayan seçilen nokta katmanı", {"points": ["yok"]},
             rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "points"))
+    refused(out, "m. 63(2): katman seçilmemiş", {"builtUp": {}},
+            rt.failed("invalid_contours", "Yerleşik alan ve yol kotları için yerleşik alan sınırlarının ya da yolların "
+                      "katmanını seçin.", "builtUp"))
+    refused(out, "m. 63(2): aralık 0", {"builtUp": {"roads": ["yol-ekseni"], "every": 0.0}},
+            rt.failed("invalid_contours", "Kotların paftadaki aralığı 0'dan büyük olmalı.", "builtUp.every"))
+    no_every = {k: v for k, v in copy.deepcopy(RULES).items() if k != "heightEvery"}
+    refused(out, "m. 63(2): aralık vermeyen paket", {"builtUp": {"roads": ["yol-ekseni"]}, "rules": no_every},
+            rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi yerleşik alan kotlarının aralığını (heightEvery, "
+                      "m. 63(2)) vermiyor; aralığı yazın.", "builtUp.every"))
+    refused(out, "m. 63(2), kot noktası yazı yüksekliği vermeyen paket", {"builtUp": {"roads": ["yol-ekseni"]},
+                                                                           "rules": no_spot},
+            rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi kot noktası yazısının yüksekliğini (spotHeight, "
+                      "Ek-3 0004) vermiyor; yerleşik alan ve yol kotları yazılmaz.", "rules"))
+    refused(out, "Olmayan yerleşik alan katmanı", {"builtUp": {"areas": ["yok"]}},
+            rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "builtUp.areas"))
+    refused(out, "Olmayan yol katmanı", {"builtUp": {"roads": ["yok"]}},
+            rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "builtUp.roads"))
+    refused(out, "Bozuk karşılaştırma sınırı", {"rules": dict(copy.deepcopy(RULES), sectionCheck={"xy": [0.0, 0.0, 0.0],
+                                                                                                "zFactor": 0.0,
+                                                                                                "factor": 1.5})},
+            rt.failed("invalid_contours", "Eğri kural paketi eksik: kimliği ve kaynağı yazılı, her değeri sonlu ve "
+                      "sıfırdan büyük olmalı.", "rules"))
     refused(out, "Olmayan şev üstü katmanı", {"slopes": {"top": ["yok"]}},
             rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "slopes.top"))
     refused(out, "Olmayan şev dibi katmanı", {"slopes": {"top": ["sev-ust"], "bottom": ["yok"]}},
@@ -702,7 +1092,7 @@ def cases():
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.sheetcontours",
            "commandVersion": 1, "title": "Pafta eş yükselti eğrileri (BÖHHBÜY m. 78)",
-           "note": "ADR 1820, 2320, 2720. Bağımsız başvuru scripts/fixtures/road_sheet_contour_cases.py: yüzey Triangle'ın, eğri arası "
+           "note": "ADR 1820, 2320, 2720, 4740. Bağımsız başvuru scripts/fixtures/road_sheet_contour_cases.py: yüzey Triangle'ın, eğri arası "
                    "kuralı, kırpma ve yazılar elle; KentOS kodu yok. Yazma tek geri alma adımıdır.",
            "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

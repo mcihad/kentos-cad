@@ -79,6 +79,11 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "events_dirty",
     // Every write that changes or removes a kitchen run's object apart from its run (docs/adr/0727 §5).
     "casework_owned",
+    // Every write that leaves a project's drawings stale while it draws them again by itself (docs/adr/0911 §3,
+    // docs/adr/4740): what was drawn again, left as changed by hand, or could not be drawn.
+    "drawings_rebuilt",
+    "drawing_edited",
+    "drawing_not_rebuilt",
 ];
 
 /// The revision's two, every writing command's.
@@ -1670,7 +1675,7 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &["unknown_terrain", "terrain_unbuildable", "no_contours"],
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "section_check_exceeded"],
         targets: none,
     },
     Entry {

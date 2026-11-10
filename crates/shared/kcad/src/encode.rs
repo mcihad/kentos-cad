@@ -2291,6 +2291,11 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 238 (docs/adr/4740): a sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing
+    // again whole.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_sheet_contour_drawings) {
+        return crate::SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS;
+    }
     // Schema 237 (docs/adr/8044 §1): a roof.
     if objs.iter().any(|e| matches!(e, Entity::Roof(_))) {
         return crate::SCHEMA_WITH_ROOFS;

@@ -7169,7 +7169,7 @@ fn check(
                     .map_err(|e| format!("{at}: {e}"))?;
                 let wanted = fill(want, doc, state, at)?;
                 // What the road commands drew (docs/adr/0911 §1) is compared only where a case names it.
-                for key in ["drawings", "autoRebuild"] {
+                for key in ["drawings", "autoRebuild", "rebuildWhole"] {
                     if wanted.get(key).is_none()
                         && let Some(o) = got.as_object_mut()
                     {

@@ -62774,7 +62774,7 @@
    }
   },
   {
-   "name": "Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır",
+   "name": "Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır; aynı çıkan sıfır hattı yazılmaz",
    "steps": [
     {
      "op": "execute",
@@ -62824,10 +62824,6 @@
      },
      "within": 1e-06,
      "command": "road.terrains.edit"
-    },
-    {
-     "op": "captureRevision",
-     "as": "r2"
     },
     {
      "op": "execute",
@@ -62934,7 +62930,7 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r2",
+          "revision": "$r1",
           "layer": {
            "id": "sifir",
            "name": "Sıfır hattı",

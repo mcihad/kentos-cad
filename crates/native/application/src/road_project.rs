@@ -24,6 +24,7 @@ pub(crate) fn drawing_words(command: &str) -> &'static str {
         "road.walls.draw" => "Duvar çizimi",
         "road.junctions.draw" => "Kavşak çizimi",
         "road.terrains.contours" => "Eş yükselti eğrileri",
+        "road.terrains.sheetcontours" => "Pafta eğrileri",
         "road.terrains.zeroline" => "Sıfır hattı",
         "road.terrains.cutfill" => "Kazı ve dolgu bölgeleri",
         "cad.pipes.profile" => "Hat profili",
@@ -47,6 +48,7 @@ fn kind_words(kind: K) -> &'static str {
         K::Junction => "kavşak",
         K::Platform => "platform",
         K::Network => "ağ",
+        K::Layer => "katman",
     }
 }
 
@@ -66,6 +68,7 @@ fn kind_named(kind: K) -> &'static str {
         K::Junction => "kavşağı",
         K::Platform => "platformu",
         K::Network => "ağı",
+        K::Layer => "katmanı",
     }
 }
 
@@ -453,6 +456,7 @@ pub(crate) fn tree(doc: &Document, deep: bool) -> Result<RoadProjectTree, Stop> 
         rebuildable,
         deep,
         auto_rebuild: doc.road_auto_rebuild(),
+        regional: !doc.road_rebuild_whole(),
         revision: doc.revision().to_string(),
     })
 }

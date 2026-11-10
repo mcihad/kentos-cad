@@ -1,7 +1,7 @@
-//! Yalnız değişeni yaz (Proje ağacı, docs/adr/4320; plan/map-cad.md MAP-14): the panel's box, ticked by default, draws a
-//! stale contour drawing again keeping the lines that come out as they are, says how many stayed, were written and
-//! removed and the box where they changed; undone, the old lines are back; unticked, the drawing is drawn whole; and its
-//! pictures.
+//! Yalnız değişeni yaz (Proje ağacı, docs/adr/4320, 4740; plan/map-cad.md MAP-14): the project's box, ticked by default,
+//! draws a stale contour drawing again keeping the lines that come out as they are, says how many stayed, were written
+//! and removed and the box where they changed; undone, the old lines are back; unticked (the project's choice now), the
+//! drawing is drawn whole; and its pictures.
 
 use kentos_commands::RoadNodeState as S;
 use kentos_domain::{Slot, Uuid};
@@ -58,6 +58,12 @@ fn said(app: &App) -> String {
     app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n")
 }
 
+/// Whether the project draws whole (docs/adr/4740): the tree's Yalnız değişeni yaz unticked.
+fn whole(app: &App) -> Option<bool> {
+    let t = app.road_project_read()?.ok()?;
+    Some(!t.regional)
+}
+
 fn state(app: &App) -> S {
     let t = app.road_project_read().expect("a drawing").expect("a map project");
     t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the contour lines").state
@@ -68,7 +74,7 @@ fn yalniz_degiseni_yaz_keeps_the_lines_that_come_out_as_they_are() {
     let mut app = regional_app();
     let case = &cases()["cases"][0]["steps"][2]["result"]["output"]["rebuilt"][0];
     assert_eq!(state(&app), S::Stale);
-    assert!(!app.road_project.whole, "Yalnız değişeni yaz is ticked by default");
+    assert!(whole(&app).is_some_and(|w| !w), "Yalnız değişeni yaz is ticked by default");
     let before = drawing_uids(&app);
     rebuild(&mut app, P::Rebuild(None, false));
     assert_eq!(state(&app), S::Current);
@@ -94,7 +100,7 @@ fn yalniz_degiseni_yaz_keeps_the_lines_that_come_out_as_they_are() {
     assert_eq!(state(&app), S::Stale);
     // Unticked: drawn whole, every line new.
     send(&mut app, P::Regional(false));
-    assert!(app.road_project.whole);
+    assert_eq!(whole(&app), Some(true), "the project's choice now (docs/adr/4740)");
     rebuild(&mut app, P::Rebuild(None, false));
     let whole = drawing_uids(&app);
     assert!(whole.iter().all(|u| !before.contains(u)), "drawn whole");

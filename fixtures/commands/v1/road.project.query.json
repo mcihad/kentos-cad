@@ -2697,6 +2697,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -2983,6 +2984,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -3292,6 +3294,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -3598,6 +3601,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -3904,6 +3908,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -4210,6 +4215,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -4516,6 +4522,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -4826,6 +4833,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -5136,6 +5144,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -5488,6 +5497,7 @@
        "rebuildable": 1,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -5812,6 +5822,7 @@
        "rebuildable": 1,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -6136,6 +6147,7 @@
        "rebuildable": 1,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -6462,6 +6474,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -6777,6 +6790,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -7078,6 +7092,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -7408,6 +7423,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -7688,6 +7704,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -10395,6 +10412,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -13105,6 +13123,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -16038,6 +16057,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": true,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -18764,6 +18784,7 @@
        "rebuildable": 0,
        "deep": true,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -19073,6 +19094,7 @@
        "rebuildable": 0,
        "deep": true,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -23487,6 +23509,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -35875,6 +35898,7 @@
        "rebuildable": 1,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -48217,6 +48241,7 @@
        "rebuildable": 0,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []
@@ -51837,6 +51862,7 @@
        "rebuildable": 1,
        "deep": false,
        "autoRebuild": false,
+       "regional": true,
        "revision": "$current"
       },
       "warnings": []

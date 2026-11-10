@@ -383,7 +383,8 @@ def tree(st, deep=False):
     return {"nodes": nodes, "stale": count(lambda n: n["state"] == "stale"),
             "problems": count(lambda n: n["state"] in ("unbuildable", "unsolved", "changed", "missing", "edited", "gone")),
             "rebuildable": count(lambda n: n["kind"] == "drawing" and n["state"] in ("stale", "missing")),
-            "deep": deep, "autoRebuild": bool(road.get("autoRebuild")), "revision": "$current"}
+            "deep": deep, "autoRebuild": bool(road.get("autoRebuild")), "regional": not road.get("rebuildWhole"),
+            "revision": "$current"}
 
 
 # ── The drawings' counts (their commands' references) ───────────────────────────────────────────────────────────────
@@ -803,7 +804,7 @@ def edit_cases():
     s0 = base()
     on = base(road={"autoRebuild": True})
     road_on = copy.deepcopy(on["settings"]["road"])
-    edited = lambda v: completed({"autoRebuild": v, "revision": "$current"})  # noqa: E731
+    edited = lambda v, r=True: completed({"autoRebuild": v, "regional": r, "revision": "$current"})  # noqa: E731
     nothing = failed("nothing_to_set", "Değişecek bir şey yok: kendiliğinden yeniden üretme zaten böyle.", "autoRebuild")
     add("Açılır", [step("execute", {"autoRebuild": True}, edited(True),
                         {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed", "road": road_on})])
@@ -813,6 +814,32 @@ def edit_cases():
     add("Zaten açık", [step("execute", {"autoRebuild": True}, nothing, UNCHANGED)], on)
     add("Zaten kapalı", [step("execute", {"autoRebuild": False}, nothing, UNCHANGED)])
     add("Değer yok", [step("execute", {}, nothing, UNCHANGED)])
+    # Docs/adr/4740: whether drawing again writes only what changed (the project's first choice) or draws whole.
+    whole_road = {**copy.deepcopy(s0["settings"]["road"]), "rebuildWhole": True}
+    whole = base(road={"rebuildWhole": True})
+    add("Yalnız değişeni yaz kapanır: yeniden üretim bütün çizer",
+        [step("execute", {"regional": False}, edited(False, False),
+              {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed", "road": whole_road}),
+         {"op": "undo", "returns": "Yalnız değişeni yaz",
+          "expect": {"canUndo": False, "canRedo": True, "road": s0["settings"]["road"]}}])
+    add("Yalnız değişeni yaz yeniden açılır", [step("execute", {"regional": True}, edited(False, True),
+                                                    {"canUndo": True, "dirty": True, "revision": "changed",
+                                                     "road": s0["settings"]["road"]})], whole)
+    add("Zaten yalnız değişeni yazıyor",
+        [step("execute", {"regional": True},
+              failed("nothing_to_set", "Değişecek bir şey yok: yeniden üretim zaten böyle yazıyor.", "regional"),
+              UNCHANGED)])
+    add("İkisi birden tek adımda", [step("execute", {"autoRebuild": True, "regional": False}, edited(True, False),
+                                         {"canUndo": True, "dirty": True, "revision": "changed",
+                                          "road": {**copy.deepcopy(road_on), "rebuildWhole": True}}),
+                                    {"op": "undo", "returns": "Yeniden üretim",
+                                     "expect": {"canUndo": False, "canRedo": True, "road": s0["settings"]["road"]}}])
+    add("Kendiliğinden açıkken yalnız değişeni yaz kapanır", [step("execute", {"autoRebuild": True, "regional": False},
+                                                                  edited(True, False),
+                                                                  {"canUndo": True, "dirty": True, "revision": "changed",
+                                                                   "road": {**copy.deepcopy(road_on), "rebuildWhole": True}}),
+                                                             {"op": "undo", "returns": "Yalnız değişeni yaz"}], on)
+    add("Plan yazmaz: yalnız değişeni yaz", [step("plan", {"regional": False}, edited(False, False), UNCHANGED)])
     add("Plan yazmaz", [step("plan", {"autoRebuild": True}, edited(True), UNCHANGED)])
     add("Doğrulama yazmaz", [step("validate", {"autoRebuild": True}, completed(None), UNCHANGED)])
     add("Geri alınır", [step("execute", {"autoRebuild": True}, edited(True), {"revision": "changed"}),

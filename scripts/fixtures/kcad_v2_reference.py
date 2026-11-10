@@ -2734,6 +2734,12 @@ def document(d):
     if any(e["kind"] == "roof" for e in d["entities"]):
         # A roof (docs/adr/8044 §1).
         schema = max(schema, 237)
+    kept = d["settings"].get("road", {})
+    if kept.get("rebuildWhole") or any(
+            x.get("command") == "road.terrains.sheetcontours" or any(s.get("kind") == "layer" for s in x.get("sources", []))
+            for x in kept.get("drawings", [])):
+        # A sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing again whole (docs/adr/4740).
+        schema = max(schema, 238)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3638,7 +3644,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-238.kcad"] = container(root(cmap(parts), version=uint(238)))
+    files["schema-version-239.kcad"] = container(root(cmap(parts), version=uint(239)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6729,6 +6735,13 @@ def build():
     assert roofs.count(b"\x67version\x18\xed") == 1, "roofs are schema 237"
     out["roofs.kcad"] = container(roofs)
     out["broken/roofs-in-schema-236.kcad"] = container(roofs.replace(b"\x67version\x18\xed", b"\x67version\x18\xec"))
+    # Schema 238 (docs/adr/4740): a sheet's contour lines kept as a drawing with a layer among its sources, and drawing
+    # again whole; schema 237 knows neither.
+    sheeted = document(load("map-sheet-contours.json"))
+    assert sheeted.count(b"\x67version\x18\xee") == 1, "a sheet's contour drawing is schema 238"
+    out["map-sheet-contours.kcad"] = container(sheeted)
+    out["broken/sheet-contour-drawing-in-schema-237.kcad"] = container(
+        sheeted.replace(b"\x67version\x18\xee", b"\x67version\x18\xed"))
     # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
     assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"

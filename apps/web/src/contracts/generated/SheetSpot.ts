@@ -4,7 +4,8 @@
  * A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
  * with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
  * (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point
- * (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the
+ * (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none), or (docs/adr/4740, m. 63(2)) a
+ * `road` height along a road line or a `builtUp` one on the grid of a built-up area; its place and height, the
  * height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
  */
 export type SheetSpot = { kind: string, x: number, y: number, z: number, text: string, surface?: number, };

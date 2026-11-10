@@ -2,8 +2,11 @@
 
 /**
  * Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in
- * the step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.
+ * the step of the write that left them stale, on or off; `regional` (docs/adr/4740) chooses whether drawing again, by
+ * itself or from the project tree, writes only what changed (docs/adr/4320; the project's first choice) or draws each
+ * drawing whole. One undo step: “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” or, both changed, “Yeniden üretim”.
  *
- * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.
+ * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set` (neither
+ * given, or what is given is already so: at `autoRebuild` when it is given, else at `regional`).
  */
-export type RoadProjectEdit = { autoRebuild?: boolean, expectedRevision?: string, };
+export type RoadProjectEdit = { autoRebuild?: boolean, regional?: boolean, expectedRevision?: string, };
