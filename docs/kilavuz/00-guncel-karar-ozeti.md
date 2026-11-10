@@ -342,6 +342,9 @@
     görünüşler çizilir"); cepheler `sections::building_facings` — katıların taban birleşiminin dış çizgisi, kenarlar kuzey
     okuna göre sekiz yöne, en uzunun beşte birinden ve 2 m'den uzun yön bir cephe; çıkarılmış görünüşün yönü
     `facing_rank`. `regulation_audit::CODES` 34.
+  - **Cephe kaplaması (M43 2. bölüm, ADR 8043 §10):** görünüşte cephe 25 cm aralıkla taranır (`geom::section::seen_at`:
+    en önde görünen prizma yüzü), açıklıklar atlanır; 0,25 m²'den çok görünen her kaplama (`Solid.finish` → proje
+    malzemesinin adı) bir kez, kat yüksekliklerinin sağında, `MM-XXXX-ETIKET`'te; çizgisi yazıya en yakın noktasından.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
