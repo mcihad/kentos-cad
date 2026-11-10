@@ -49,6 +49,12 @@ satıra (749 KB) büyüdüğü için bölündü.
   Kullanıcıya dönük kabul gerçek pencerede, gerçek fare ve klavyeyle yapılır: `scripts/usage/real/` (ADR 8000).
 - **Araştırma önce:** her yeni mimari adımda üreticilerin resmî belgeleri (Civil 3D, OpenRoads, NETPRO…) araştırılır;
   kaynak ve KentOS kararı ADR'ye ve plana yazılır. Değer uydurulmaz, kaynak beklenir.
+- **Başka uygulamaya atıf yok (kesin kural, 10 Kasım 2026):** arayüzde (pencere, ipucu, durum çubuğu, ileti),
+  kod yorumlarında ve kodda (ad, sabit, test adı, metin) hiçbir başka uygulama (Netcad, AutoCAD, Civil 3D, ArcGIS,
+  QGIS, OpenRoads, MicroStation…) açıkça anılmaz; karşılaştırma ve kaynak yalnız ADR'de, planda ve araştırma notunda
+  durur. Şeritteki (ribbon) ipuçları ve arayüz metinleri ADR'ye de atıf yapmaz (“ADR …”, “docs/adr/…” yok). Dokunulan
+  her dosyada eski atıflar da aynı işte temizlenir; yeni kodda hiç yazılmaz. Dosya biçimi adları (DXF, DWG, LandXML,
+  GeoPackage…) uygulama adı sayılmaz.
 - **Araç = komut** (§9.2): çizimi değiştiren her iş anlamsal komutla yapılır; katalog, ≥20 bağımsız başvurulu ortak durum,
   Python, MCP ve manifest olmadan bitmiş sayılmaz.
 - **Pencere düzeni** (DESIGN.md §7.19): Yol pencereleri `road_dialog::RoadDialog` iskeletindedir; çizim alanı

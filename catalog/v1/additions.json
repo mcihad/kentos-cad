@@ -7,7 +7,7 @@
       "title": "Uygulama kontrolü…",
       "short": "Uygulama kontrolü",
       "icon": "asbuiltCheck",
-      "description": "Sahada ölçülen noktaları tasarımla karşılaştırır (cad.asbuilt.check; ADR 1700): tasarım noktaları (adla, yarıçap verilirse yerle öneri olarak; iki aday belirsiz), tasarım yüzeyi (kot farkı) ve tasarım çizgileri (işaretli dik uzaklık); Δdoğu, Δkuzey, Δkot, KOH, ölçülmeyen tasarım noktaları, σ'sı yüksek noktalar ayrı. Toleranslar kullanıcınındır, KentOS değer vermez. Salt okunur; Dışındakileri seç ve CSV kaydet. Saha paketi yaz… aynı tasarımı, sınırları ve kalite notlarını tek .zip olarak yazar (cad.field.package; ADR 1920). Harita, Yol ve CBS'de.",
+      "description": "Sahada ölçülen noktaları tasarımla karşılaştırır (cad.asbuilt.check): tasarım noktaları (adla, yarıçap verilirse yerle öneri olarak; iki aday belirsiz), tasarım yüzeyi (kot farkı) ve tasarım çizgileri (işaretli dik uzaklık); Δdoğu, Δkuzey, Δkot, KOH, ölçülmeyen tasarım noktaları, σ'sı yüksek noktalar ayrı. Toleranslar kullanıcınındır, KentOS değer vermez. Salt okunur; Dışındakileri seç ve CSV kaydet. Saha paketi yaz… aynı tasarımı, sınırları ve kalite notlarını tek .zip olarak yazar (cad.field.package). Harita, Yol ve CBS'de.",
       "aliases": [
         "UYGULAMAKONTROLU",
         "ASBUILT",
@@ -22,7 +22,7 @@
       "title": "Dışa aktarma kaybı denetimi…",
       "short": "Aktarma kaybı",
       "icon": "exchangeCheck",
-      "description": "Çizimi seçilen değişim biçimine (GeoPackage, GeoParquet, FlatGeobuf, GML, Shapefile, DXF) KentOS'un yazıcısıyla geçici bir dosyaya yazar ve KentOS'un okuyucusuyla geri okur (file.exchange.check; ADR 1660): sayısal sapma (köşe kayması, kot, ölçü, uzunluk, alan) ve anlamsal kayıplar (yazılmayan, türü değişen, kirişe dönen, kaybolan kot/ölçü/öznitelik/stil/kimlik) ayrı söylenir. Salt okunur; dosya silinir; Kayıplıları seç.",
+      "description": "Çizimi seçilen değişim biçimine (GeoPackage, GeoParquet, FlatGeobuf, GML, Shapefile, DXF) KentOS'un yazıcısıyla geçici bir dosyaya yazar ve KentOS'un okuyucusuyla geri okur (file.exchange.check): sayısal sapma (köşe kayması, kot, ölçü, uzunluk, alan) ve anlamsal kayıplar (yazılmayan, türü değişen, kirişe dönen, kaybolan kot/ölçü/öznitelik/stil/kimlik) ayrı söylenir. Salt okunur; dosya silinir; Kayıplıları seç.",
       "aliases": [
         "AKTARMAKAYBI",
         "KAYIPRAPORU",
@@ -37,7 +37,7 @@
       "title": "Boru hattı denetimi…",
       "short": "Boru denetimi",
       "icon": "pipesCheck",
-      "description": "Bir altyapı ağının borularını cazibeli hat olarak denetler (cad.pipes.check; ADR 1640): akar kotları (öznitelik ya da köşe kotları), akış yönünde eğim, çap ve kataloğu, tepe üstü örtü (arazi yüzeyinden ya da bacaların kapak kotundan); bağlantısız parça, bacasız uç, ters eğim, çıkışı girişten yüksek baca, cm/mm ya da derinlik yazılmış kot, başka birimde yazılmış çap. Örtü ve eğim sınırları kullanıcınındır, KentOS değer vermez. Salt okunur; Bulgulu boruları seç ve CSV kaydet. Harita, Yol ve CBS'de.",
+      "description": "Bir altyapı ağının borularını cazibeli hat olarak denetler (cad.pipes.check): akar kotları (öznitelik ya da köşe kotları), akış yönünde eğim, çap ve kataloğu, tepe üstü örtü (arazi yüzeyinden ya da bacaların kapak kotundan); bağlantısız parça, bacasız uç, ters eğim, çıkışı girişten yüksek baca, cm/mm ya da derinlik yazılmış kot, başka birimde yazılmış çap. Örtü ve eğim sınırları kullanıcınındır, KentOS değer vermez. Salt okunur; Bulgulu boruları seç ve CSV kaydet. Harita, Yol ve CBS'de.",
       "aliases": [
         "BORUDENETIMI",
         "KANALDENETIMI",
@@ -75,7 +75,7 @@
       "title": "Tarama uyumu…",
       "short": "Tarama uyumu",
       "icon": "cloudOverlap",
-      "description": "Aynı yerin iki taramasını (LiDAR şeridi, oturum) örtüştükleri yerde tam çözünürlükte karşılaştırır (cad.pointclouds.overlap; ADR 1500): hücrelere düzlem uydurularak (eğim fark sayılmaz) RMSDz, sistematik kayma, en büyük fark ve en kötü hücreler; GNSS kontrol noktalarında her taramanın KOH_Z'si (BÖHHBÜY m. 91). Şeritler arası sınır kural paketinin örnek değeridir; Türk mevzuatında ölçütü yok. Salt okunur. Harita ve CBS'de.",
+      "description": "Aynı yerin iki taramasını (LiDAR şeridi, oturum) örtüştükleri yerde tam çözünürlükte karşılaştırır (cad.pointclouds.overlap): hücrelere düzlem uydurularak (eğim fark sayılmaz) RMSDz, sistematik kayma, en büyük fark ve en kötü hücreler; GNSS kontrol noktalarında her taramanın KOH_Z'si (BÖHHBÜY m. 91). Şeritler arası sınır kural paketinin örnek değeridir; Türk mevzuatında ölçütü yok. Salt okunur. Harita ve CBS'de.",
       "aliases": [
         "TARAMAUYUMU",
         "SERITFARKI"
@@ -89,7 +89,7 @@
       "title": "Ortofoto doğruluğu…",
       "short": "Doğruluk",
       "icon": "orthoAccuracy",
-      "description": "Seçili ortofotoyu arazide ölçülmüş noktalarla ve aynı noktaların görüntüde okunan yerleriyle denetler (cad.orthophoto.check; ADR 1480): denetim noktalarının KOH_X,Y ve KOH_Z'si BÖHHBÜY m. 91(2) sınırlarıyla, yer örnekleme aralığı m. 54 ile; oturtmanın uyum noktaları ayrı, ortalama (yönlü) ve en büyük hata, yarım piksel altı uyarısı. Salt okunur; görüntünün koordinatları değişmez. Harita ve CBS'de raster sekmesinde.",
+      "description": "Seçili ortofotoyu arazide ölçülmüş noktalarla ve aynı noktaların görüntüde okunan yerleriyle denetler (cad.orthophoto.check): denetim noktalarının KOH_X,Y ve KOH_Z'si BÖHHBÜY m. 91(2) sınırlarıyla, yer örnekleme aralığı m. 54 ile; oturtmanın uyum noktaları ayrı, ortalama (yönlü) ve en büyük hata, yarım piksel altı uyarısı. Salt okunur; görüntünün koordinatları değişmez. Harita ve CBS'de raster sekmesinde.",
       "aliases": [
         "ORTOFOTODOGRULUK",
         "KOH"
@@ -103,7 +103,7 @@
       "title": "Düzenleme dağıtım taslağı…",
       "short": "Dağıtım taslağı",
       "icon": "readjustment",
-      "description": "Arazi düzenlemesinin ilk sayılarını taslak olarak hesaplar (cad.readjustment.distribute; ADR 1460): kural paketi (kurum, kaynak belge, yürürlük, sürüm, kesinti oranı, sayı politikası) ve parsel/hak sahibi/tapu alanı/pay kayıtlarından kesinti, net alan ve kesin paylı haklar; artığın gittiği yer ve toplamın kesin korunumu. Açılırken seçili alan düzenleme sınırıdır (cad.readjustment.scope; ADR 2060): Kapsam giren parsellerin ayırma çapı sayılarını (tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım) ve esas alanı gösterir, Esas alanları kayıtlara yaz esasları kayıtlara koyar. Ayırma çapı görünümü parçaların köşelerini listeler; Çapı çizime yaz parçaları çizime yazar, Çapın paftaları her kısmen giren parsel için numaralı noktalı bir ayırma çapı paftası yapar (cad.readjustment.sheets; ADR 2680). Hesap salt okunurdur; resmî karar vermez. Harita ve CBS'de.",
+      "description": "Arazi düzenlemesinin ilk sayılarını taslak olarak hesaplar (cad.readjustment.distribute): kural paketi (kurum, kaynak belge, yürürlük, sürüm, kesinti oranı, sayı politikası) ve parsel/hak sahibi/tapu alanı/pay kayıtlarından kesinti, net alan ve kesin paylı haklar; artığın gittiği yer ve toplamın kesin korunumu. Açılırken seçili alan düzenleme sınırıdır (cad.readjustment.scope): Kapsam giren parsellerin ayırma çapı sayılarını (tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım) ve esas alanı gösterir, Esas alanları kayıtlara yaz esasları kayıtlara koyar. Ayırma çapı görünümü parçaların köşelerini listeler; Çapı çizime yaz parçaları çizime yazar, Çapın paftaları her kısmen giren parsel için numaralı noktalı bir ayırma çapı paftası yapar (cad.readjustment.sheets). Hesap salt okunurdur; resmî karar vermez. Harita ve CBS'de.",
       "aliases": [
         "DUZENLEMEDAGITIM",
         "DUZENLEMEKAPSAMI",
@@ -119,7 +119,7 @@
       "title": "Senaryo ölçüleri…",
       "short": "Senaryo ölçüleri",
       "icon": "scenarioImpact",
-      "description": "Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır (cad.scenarios.impact; ADR 1440, 2040): nesne sayısı, alanların toplamı, çizgi uzunluğu, inşaat alanı (alan × KAKS) birimi ve yöntemiyle; kullanıma göre alanlar; anahtarıyla izlenen değişen kararlar; istenirse geçirimsiz alan ve erişim (değerler kullanıcının); veri eksikleri ve varsayımlar. Tek puanla en iyi senaryo seçilmez. Raporu kaydet CSV yazar ve taban damgasını saklar: taban sonradan değişince senaryonun eskidiği söylenir. Harita ve CBS'de. Eski adı Alternatif etkisi.",
+      "description": "Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır (cad.scenarios.impact): nesne sayısı, alanların toplamı, çizgi uzunluğu, inşaat alanı (alan × KAKS) birimi ve yöntemiyle; kullanıma göre alanlar; anahtarıyla izlenen değişen kararlar; istenirse geçirimsiz alan ve erişim (değerler kullanıcının); veri eksikleri ve varsayımlar. Tek puanla en iyi senaryo seçilmez. Raporu kaydet CSV yazar ve taban damgasını saklar: taban sonradan değişince senaryonun eskidiği söylenir. Harita ve CBS'de. Eski adı Alternatif etkisi.",
       "aliases": [
         "SENARYOOLCULERI",
         "ALTERNATIFETKISI",
@@ -134,7 +134,7 @@
       "title": "İmar planı denetimi…",
       "short": "İmar denetimi",
       "icon": "zoningCheck",
-      "description": "İmar planını sembolden değil imar-plani profilinin tipli nesnelerinden denetler (cad.zoning.check; ADR 1420): plan kademesi ve üst plan, karar alanının planı ve kullanımı, verilmemiş ya da planda verilmeyen değerler (boş değer 0 değildir), KAKS > TAKS × kat adedi, karar çelişkisi, plan sınırında kararsız kısım, plan dışına taşma, plan notları. Salt okunur; Seç ve göster bulgudaki nesnelere götürür, Profili uygula eksik katmanları ekler. MPYY/PlanGML şemasına uygunluk iddiası değildir. Harita ve CBS'de.",
+      "description": "İmar planını sembolden değil imar-plani profilinin tipli nesnelerinden denetler (cad.zoning.check): plan kademesi ve üst plan, karar alanının planı ve kullanımı, verilmemiş ya da planda verilmeyen değerler (boş değer 0 değildir), KAKS > TAKS × kat adedi, karar çelişkisi, plan sınırında kararsız kısım, plan dışına taşma, plan notları. Salt okunur; Seç ve göster bulgudaki nesnelere götürür, Profili uygula eksik katmanları ekler. MPYY/PlanGML şemasına uygunluk iddiası değildir. Harita ve CBS'de.",
       "aliases": [
         "IMARDENETIM",
         "PLANDENETIM"
@@ -148,7 +148,7 @@
       "title": "Parsel alan denetimi…",
       "short": "Alan denetimi",
       "icon": "parcelArea",
-      "description": "Parsellerin hesap alanını tapu alanıyla karşılaştırır (cad.parcels.check; ADR 1400): fark ve yanılma sınırı (Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik 2022, Madde 8(2), arşiv onaylı geometri tablosu); kimlik İl/İlçe/Mahalle/Ada/Parsel birlikte, yinelenen ve kimliksiz parseller. Salt okunur; Dışındakileri seç ve CSV kaydet. Harita ve CBS'de.",
+      "description": "Parsellerin hesap alanını tapu alanıyla karşılaştırır (cad.parcels.check): fark ve yanılma sınırı (Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik 2022, Madde 8(2), arşiv onaylı geometri tablosu); kimlik İl/İlçe/Mahalle/Ada/Parsel birlikte, yinelenen ve kimliksiz parseller. Salt okunur; Dışındakileri seç ve CSV kaydet. Harita ve CBS'de.",
       "aliases": [
         "PARSELALAN",
         "YANILMASINIRI",
@@ -163,7 +163,7 @@
       "title": "Taşınma raporu…",
       "short": "Taşınma raporu",
       "icon": "cleanReport",
-      "description": "Topolojik temizliğin (ADR 0148) yazmadan önceki taşınma raporu (cad.topology.clean; ADR 1262): seçim ya da bütün çizim, tolerans ve dört iş (Uçlar, Köşeler, Uzat, Buda); her nesnenin taşınan köşeleri, en uzak ve toplam taşınma, alan ya da boy farkı, kalite profilinin kabul eşiği. CSV kaydet her taşınmayı Y, X ile yazar; Uygula tek geri alma adımı, kabul eşiğini aşan temizliği reddeder. Harita ve CBS'de.",
+      "description": "Topolojik temizliğin yazmadan önceki taşınma raporu (cad.topology.clean): seçim ya da bütün çizim, tolerans ve dört iş (Uçlar, Köşeler, Uzat, Buda); her nesnenin taşınan köşeleri, en uzak ve toplam taşınma, alan ya da boy farkı, kalite profilinin kabul eşiği. CSV kaydet her taşınmayı Y, X ile yazar; Uygula tek geri alma adımı, kabul eşiğini aşan temizliği reddeder. Harita ve CBS'de.",
       "aliases": [
         "TASINMARAPORU",
         "TEMIZLIKRAPORU"
@@ -177,7 +177,7 @@
       "title": "Eğimle kot ver…",
       "short": "Eğimle kot",
       "icon": "gradeBetween",
-      "description": "Seçili çizginin, çoklu çizginin ya da alanın iki köşesi arasına sabit eğimle kot verir (cad.entities.grade; Civil 3D'nin Set Grade/Slope Between Points'i gibi): başlangıç kotu, sonra bitiş kotu ya da eğim (%); aradaki köşeler yol boyunca yatay uzaklıklarına göre kot alır. Yüksek/alçak nokta: başlangıçtan ve bitişten iki eğim, kesiştikleri yere köşe eklenir (Insert High/Low Elevation Point gibi). Referanstan: bir köşe referans noktasından eğimle ya da kot farkıyla kot alır, nesnenin bütün kotları aynı farkla kayar (cad.entities.raise; Raise/Lower by Reference gibi). Yüzeyden: nesnenin her köşesi projenin arazi yüzeyinin kotunu alır, isteğe bağlı ara kırık noktalarıyla (cad.entities.drape; Elevations From Surface gibi). Pencere önizlemedir; tek geri alma adımı. Harita ve Yol'da.",
+      "description": "Seçili çizginin, çoklu çizginin ya da alanın iki köşesi arasına sabit eğimle kot verir (cad.entities.grade): başlangıç kotu, sonra bitiş kotu ya da eğim (%); aradaki köşeler yol boyunca yatay uzaklıklarına göre kot alır. Yüksek/alçak nokta: başlangıçtan ve bitişten iki eğim, kesiştikleri yere köşe eklenir. Referanstan: bir köşe referans noktasından eğimle ya da kot farkıyla kot alır, nesnenin bütün kotları aynı farkla kayar (cad.entities.raise). Yüzeyden: nesnenin her köşesi projenin arazi yüzeyinin kotunu alır, isteğe bağlı ara kırık noktalarıyla (cad.entities.drape). Pencere önizlemedir; tek geri alma adımı. Harita ve Yol'da.",
       "aliases": ["EGIMLEKOT", "SETGRADE"],
       "shortcuts": [],
       "category": "Değiştir",
@@ -232,7 +232,7 @@
       "title": "Bağımsız yap",
       "short": "Bağımsız",
       "icon": "workRelease",
-      "description": "Seçili türetilmiş nesneleri türetme kayıtlarından çıkarır: nesneler kalır, kaynaklarını izlemez, kullanıcının bağımsız çizimi olur (Civil 3D'nin promote'u gibi). Nesnesi kalmayan kayıt kalkar. Tek geri alma adımı “Bağımsız yap”. Yalnız KentOS Harita'da.",
+      "description": "Seçili türetilmiş nesneleri türetme kayıtlarından çıkarır: nesneler kalır, kaynaklarını izlemez, kullanıcının bağımsız çizimi olur. Nesnesi kalmayan kayıt kalkar. Tek geri alma adımı “Bağımsız yap”. Yalnız KentOS Harita'da.",
       "aliases": ["BAGIMSIZYAP", "PROMOTE"],
       "shortcuts": [],
       "category": "Harita",
@@ -384,7 +384,7 @@
       "title": "Adres sağlayıcıları…",
       "short": "Sağlayıcılar",
       "icon": "addressProviders",
-      "description": "Çevrimiçi adres sağlayıcılarını açar ve ayarlar: Nominatim (OpenStreetMap), Photon, ArcGIS World Geocoding, Google ve kurumun kendi sunucuları. Her birinin koşulları, sınırları ve atfı kartındadır; koşulları onaylanmayan sağlayıcı kullanılmaz. Ayarlar ve anahtarlar bu cihazdadır.",
+      "description": "Çevrimiçi adres sağlayıcılarını açar ve ayarlar: açık ve ticari adres servisleri ve kurumun kendi sunucuları. Her birinin koşulları, sınırları ve atfı kartındadır; koşulları onaylanmayan sağlayıcı kullanılmaz. Ayarlar ve anahtarlar bu cihazdadır.",
       "aliases": [
         "ADRESSAGLAYICILARI",
         "ADRESSAĞLAYICILARI",
@@ -442,7 +442,7 @@
       "title": "Ölçü aralığı",
       "short": "Aralık",
       "icon": "dimensionSpace",
-      "description": "Seçili paralel hizalı ve doğrusal ölçülerin çizgilerini seçimin ilk ölçüsünden (temel) eşit aralıkla dizer: her yanda uzaklık sırasıyla, aralık temelin değer yüksekliğinin üç katı (cad.dimensions.edit space; AutoCAD'in DIMSPACE'i).",
+      "description": "Seçili paralel hizalı ve doğrusal ölçülerin çizgilerini seçimin ilk ölçüsünden (temel) eşit aralıkla dizer: her yanda uzaklık sırasıyla, aralık temelin değer yüksekliğinin üç katı (cad.dimensions.edit space).",
       "aliases": [
         "DIMSPACE",
         "OLCUARALIGI"
@@ -456,7 +456,7 @@
       "title": "Ölçüyü kır",
       "short": "Kır",
       "icon": "dimensionBreak",
-      "description": "Seçili hizalı ve doğrusal ölçülerin ölçü ve uzatma çizgilerini görünen nesnelerin kestiği yerlerde boşlukla kırar; nesneler değişince yeniden kırılır (cad.dimensions.edit break; AutoCAD'in DIMBREAK'i).",
+      "description": "Seçili hizalı ve doğrusal ölçülerin ölçü ve uzatma çizgilerini görünen nesnelerin kestiği yerlerde boşlukla kırar; nesneler değişince yeniden kırılır (cad.dimensions.edit break).",
       "aliases": [
         "DIMBREAK",
         "OLCUKIR"
@@ -718,7 +718,7 @@
       "title": "Görünümü UCS'e döndür",
       "short": "UCS'e döndür",
       "icon": "viewTwistUcs",
-      "description": "Görünümü geçerli UCS'in x ekseni ekranda yatay olacak biçimde döndürür (AutoCAD'in PLAN'ı gibi); UCS dünyaysa kuzey yukarı olur.",
+      "description": "Görünümü geçerli UCS'in x ekseni ekranda yatay olacak biçimde döndürür; UCS dünyaysa kuzey yukarı olur.",
       "aliases": [
         "GORUNUMUCS",
         "GÖRÜNÜMUCS"
@@ -880,7 +880,7 @@
       "id": "tool.wipeout",
       "title": "Maske",
       "icon": "wipeout",
-      "description": "Kendinden önce çizilenleri örten bir alan çizer (AutoCAD'in WIPEOUT'u): alan çizim zemininin rengiyle dolar; çerçevesi gösterilir ya da gizlenir (Ç). Nesne (N) açıkken tıklanan kapalı alan maske olur. Örtme katmanın çizim sırasıyla ve katmanların sırasıyla olur; yazılar ve etiketler her zaman üstte kalır. Maske yalnız sınırından seçilir.",
+      "description": "Kendinden önce çizilenleri örten bir alan çizer: alan çizim zemininin rengiyle dolar; çerçevesi gösterilir ya da gizlenir (Ç). Nesne (N) açıkken tıklanan kapalı alan maske olur. Örtme katmanın çizim sırasıyla ve katmanların sırasıyla olur; yazılar ve etiketler her zaman üstte kalır. Maske yalnız sınırından seçilir.",
       "aliases": [
         "WIPEOUT",
         "MASKE",
@@ -895,7 +895,7 @@
       "title": "Nesnenin üstüne",
       "short": "Üstüne",
       "icon": "drawOrderAbove",
-      "description": "Seçili nesneleri tıklanan nesnenin hemen üstünde çizer (AutoCAD'in DRAWORDER'ının Üstüne'si). Nesneler başvurunun katmanında olmalı; kendi aralarındaki sıra korunur. cad.entities.order ile tek geri alma adımı.",
+      "description": "Seçili nesneleri tıklanan nesnenin hemen üstünde çizer. Nesneler başvurunun katmanında olmalı; kendi aralarındaki sıra korunur. cad.entities.order ile tek geri alma adımı.",
       "aliases": [
         "USTUNE",
         "NESNEUSTUNE"
@@ -909,7 +909,7 @@
       "title": "Nesnenin altına",
       "short": "Altına",
       "icon": "drawOrderUnder",
-      "description": "Seçili nesneleri tıklanan nesnenin hemen altında çizer (AutoCAD'in DRAWORDER'ının Altına'sı). Nesneler başvurunun katmanında olmalı; kendi aralarındaki sıra korunur. cad.entities.order ile tek geri alma adımı.",
+      "description": "Seçili nesneleri tıklanan nesnenin hemen altında çizer. Nesneler başvurunun katmanında olmalı; kendi aralarındaki sıra korunur. cad.entities.order ile tek geri alma adımı.",
       "aliases": [
         "ALTINA",
         "NESNEALTINA"
@@ -923,7 +923,7 @@
       "title": "Yazıları öne getir",
       "short": "Yazılar öne",
       "icon": "textsToFront",
-      "description": "Çizimde görünen bütün yazıları, ölçüleri, kılavuzları ve tabloları kendi katmanlarının çizim sırasında öne alır (AutoCAD'in TEXTTOFRONT'u). Kilitli katmandakiler atlanır ve sayılır. cad.entities.select ve cad.entities.order ile tek geri alma adımı.",
+      "description": "Çizimde görünen bütün yazıları, ölçüleri, kılavuzları ve tabloları kendi katmanlarının çizim sırasında öne alır. Kilitli katmandakiler atlanır ve sayılır. cad.entities.select ve cad.entities.order ile tek geri alma adımı.",
       "aliases": [
         "TEXTTOFRONT",
         "YAZILARIONE"
@@ -937,7 +937,7 @@
       "title": "Taramaları arkaya gönder",
       "short": "Taramalar arkaya",
       "icon": "hatchesToBack",
-      "description": "Çizimde görünen bütün taramaları kendi katmanlarının çizim sırasında arkaya gönderir (AutoCAD'in HATCHTOBACK'i): çizgiler ve yazılar taramaların üstünde kalır. Kilitli katmandakiler atlanır ve sayılır. cad.entities.select ve cad.entities.order ile tek geri alma adımı.",
+      "description": "Çizimde görünen bütün taramaları kendi katmanlarının çizim sırasında arkaya gönderir: çizgiler ve yazılar taramaların üstünde kalır. Kilitli katmandakiler atlanır ve sayılır. cad.entities.select ve cad.entities.order ile tek geri alma adımı.",
       "aliases": [
         "HATCHTOBACK",
         "TARAMALARIARKAYA"
@@ -951,7 +951,7 @@
       "title": "Katmanı dondur",
       "short": "Dondur",
       "icon": "layerFreeze",
-      "description": "Tıklanan nesnenin katmanını dondurur (AutoCAD'in LAYFRZ'si): dondurulmuş katman çizilmez, seçilmez, kenetlenmez, Tümünü göster saymaz; Hepsini göster onu çözmez. Etkin katman dondurulamaz. cad.layers.set'in frozen işlemiyle; geri alma adımı değildir.",
+      "description": "Tıklanan nesnenin katmanını dondurur: dondurulmuş katman çizilmez, seçilmez, kenetlenmez, Tümünü göster saymaz; Hepsini göster onu çözmez. Etkin katman dondurulamaz. cad.layers.set'in frozen işlemiyle; geri alma adımı değildir.",
       "aliases": [
         "LAYFRZ",
         "KATMANDONDUR"
@@ -965,7 +965,7 @@
       "title": "Bütün katmanları çöz",
       "short": "Hepsini çöz",
       "icon": "layersThawAll",
-      "description": "Dondurulmuş bütün katmanları ve grupları çözer (AutoCAD'in LAYTHW'si). cad.layers.set'in thawAll işlemiyle; geri alma adımı değildir.",
+      "description": "Dondurulmuş bütün katmanları ve grupları çözer. cad.layers.set'in thawAll işlemiyle; geri alma adımı değildir.",
       "aliases": [
         "LAYTHW",
         "KATMANLARICOZ"
@@ -979,7 +979,7 @@
       "title": "Katmanları çevir",
       "short": "Katman çevir",
       "icon": "layersTranslate",
-      "description": "Katmanları kurallarla bir çizim standardının katmanlarına birleştirir (AutoCAD'in LAYTRANS'ı): her kural bir ad örüntüsü (A-*, duvar*,wall*) ve standart katmanın adı, rengi ve kalınlığıdır; önizleme neyin nereye gideceğini nesne sayılarıyla gösterir. cad.layers.translate ile tek geri alma adımı.",
+      "description": "Katmanları kurallarla bir çizim standardının katmanlarına birleştirir: her kural bir ad örüntüsü (A-*, duvar*,wall*) ve standart katmanın adı, rengi ve kalınlığıdır; önizleme neyin nereye gideceğini nesne sayılarıyla gösterir. cad.layers.translate ile tek geri alma adımı.",
       "aliases": [
         "LAYTRANS",
         "KATMANCEVIR"
@@ -1230,7 +1230,7 @@
       "title": "Merkez işareti",
       "short": "Merkez",
       "icon": "centerMark",
-      "description": "Daireye, yaya ya da çoklu çizginin yay parçasına tıklanınca merkezine artı ve eksen çizgilerini koyar (AutoCAD'in CENTERMARK'ı). İşaret eğriyi izler: eğri taşınınca, döndürülünce, yarıçapı değişince gelir. Uzantı Öznitelikler'den (cad.dimensions.create, centerMark).",
+      "description": "Daireye, yaya ya da çoklu çizginin yay parçasına tıklanınca merkezine artı ve eksen çizgilerini koyar. İşaret eğriyi izler: eğri taşınınca, döndürülünce, yarıçapı değişince gelir. Uzantı Öznitelikler'den (cad.dimensions.create, centerMark).",
       "aliases": [
         "CENTERMARK",
         "MERKEZISARETI"
@@ -1244,7 +1244,7 @@
       "title": "Eksen çizgisi",
       "short": "Eksen",
       "icon": "centerLine",
-      "description": "İki düz kenara tıklanınca aralarına eksen çizgisi koyar: uçlarının ortalarından geçer, uzantısı kadar taşar (AutoCAD'in CENTERLINE'ı). Çizgi kenarları izler (cad.dimensions.create, centerLine).",
+      "description": "İki düz kenara tıklanınca aralarına eksen çizgisi koyar: uçlarının ortalarından geçer, uzantısı kadar taşar. Çizgi kenarları izler (cad.dimensions.create, centerLine).",
       "aliases": [
         "EKSENCIZGISI"
       ],
@@ -1271,7 +1271,7 @@
       "title": "Ölçekli yap",
       "short": "Ölçekli",
       "icon": "annotationMake",
-      "description": "Seçili yazı, ölçü ve kılavuzları ölçekli yapar: kâğıtta aynı yükseklikte, katıldıkları her ölçekte çizilirler; kendileri projenin çizim ölçeğindeki temsilleridir. Diğer ölçekler Öznitelikler › Diğer ölçekler'den eklenir; paftanın haritası her nesneyi kendi ölçeğinde çizer (cad.annotations.scales, make; AutoCAD'in ANNOTATIVE'i).",
+      "description": "Seçili yazı, ölçü ve kılavuzları ölçekli yapar: kâğıtta aynı yükseklikte, katıldıkları her ölçekte çizilirler; kendileri projenin çizim ölçeğindeki temsilleridir. Diğer ölçekler Öznitelikler › Diğer ölçekler'den eklenir; paftanın haritası her nesneyi kendi ölçeğinde çizer (cad.annotations.scales, make).",
       "aliases": [
         "ANNOTATIVE",
         "OLCEKLIYAP"
@@ -1298,7 +1298,7 @@
       "title": "Ölçekteki yeri",
       "short": "Yeri",
       "icon": "annotativePlace",
-      "description": "Ölçekli bir yazının, kılavuzun ya da ölçünün başka bir ölçekteki yerini verir: nesneye tıklanır, Ölçek (Ö) ile ölçek seçilir, yeni yer tıklanır; yazının noktası, kılavuzun notu, ölçünün çizgisi o ölçekte orada çizilir, diğer ölçekler değişmez (cad.annotations.scales, set; AutoCAD'in ANNORESET'inin tersi).",
+      "description": "Ölçekli bir yazının, kılavuzun ya da ölçünün başka bir ölçekteki yerini verir: nesneye tıklanır, Ölçek (Ö) ile ölçek seçilir, yeni yer tıklanır; yazının noktası, kılavuzun notu, ölçünün çizgisi o ölçekte orada çizilir, diğer ölçekler değişmez (cad.annotations.scales, set).",
       "aliases": [
         "OLCEKTEKIYERI",
         "ANNOPLACE"
@@ -1312,7 +1312,7 @@
       "title": "Ölçeği sıfırla",
       "short": "Sıfırla",
       "icon": "annotationReset",
-      "description": "Seçili ölçekli açıklamaların diğer ölçeklerindeki ayrı yerleri ve değerleri kaldırır: her ölçekte nesnenin kendi yerinde, ölçekle büyüyerek çizilirler (cad.annotations.scales, reset; AutoCAD'in ANNORESET'i).",
+      "description": "Seçili ölçekli açıklamaların diğer ölçeklerindeki ayrı yerleri ve değerleri kaldırır: her ölçekte nesnenin kendi yerinde, ölçekle büyüyerek çizilirler (cad.annotations.scales, reset).",
       "aliases": [
         "ANNORESET",
         "OLCEKSIFIRLA"
@@ -1326,7 +1326,7 @@
       "title": "Yazı tipleri",
       "short": "Yazı tipleri",
       "icon": "textFonts",
-      "description": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini, KentOS'un hangi yazı tipiyle çizdiğini ve nasıl (kendisi, eşdeğeri, SHX ya da yok) gösterir; paftanın PDF'inin gömdüğü yazı tipleri (cad.fonts.report). Yerine başka yazı tipiyle çizilen stil uyarıyla söylenir; SHX fontu (ve Big Font'u) projeye gömülü stil o fontun çizgileriyle çizilir ve embedded olarak gösterilir (ADR 1125).",
+      "description": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini, KentOS'un hangi yazı tipiyle çizdiğini ve nasıl (kendisi, eşdeğeri, SHX ya da yok) gösterir; paftanın PDF'inin gömdüğü yazı tipleri (cad.fonts.report). Yerine başka yazı tipiyle çizilen stil uyarıyla söylenir; SHX fontu (ve Big Font'u) projeye gömülü stil o fontun çizgileriyle çizilir ve embedded olarak gösterilir.",
       "aliases": [
         "FONTREPORT",
         "YAZITIPLERI"
@@ -1340,7 +1340,7 @@
       "title": "Alan ekle",
       "short": "Alan ekle",
       "icon": "textField",
-      "description": "Seçili yazının sonuna bir alan ekler: bir nesnenin alanı, çevresi, uzunluğu, katmanı, etiketi, özniteliği, yazısı ya da yeri, ya da projenin adı, ölçeği, birimi, koordinat sistemi ya da değişkeni; basamak, birim, ön ve son ekle. Kaynak değişince değer aynı adımda yenilenir, okunamazsa #### olur (cad.fields.edit insert; AutoCAD'in FIELD'ı).",
+      "description": "Seçili yazının sonuna bir alan ekler: bir nesnenin alanı, çevresi, uzunluğu, katmanı, etiketi, özniteliği, yazısı ya da yeri, ya da projenin adı, ölçeği, birimi, koordinat sistemi ya da değişkeni; basamak, birim, ön ve son ekle. Kaynak değişince değer aynı adımda yenilenir, okunamazsa #### olur (cad.fields.edit insert).",
       "aliases": [
         "FIELD",
         "ALANEKLE"
@@ -1354,7 +1354,7 @@
       "title": "Alanları yenile",
       "short": "Alanları yenile",
       "icon": "textFieldsUpdate",
-      "description": "Seçili yazıların (seçim yoksa bütün yazıların) alanlarını yeniden yazar (cad.fields.edit update; AutoCAD'in UPDATEFIELD'ı).",
+      "description": "Seçili yazıların (seçim yoksa bütün yazıların) alanlarını yeniden yazar (cad.fields.edit update).",
       "aliases": [
         "UPDATEFIELD",
         "ALANYENILE"
@@ -1368,7 +1368,7 @@
       "title": "Numarala",
       "short": "Numarala",
       "icon": "textNumber",
-      "description": "Seçili yazıları seçildikleri sırayla numaralar: başlangıç, artış, basamak, ön ve son ek; yazının yerine, başına ya da sonuna (cad.texts.edit number; AutoCAD'in TCOUNT'u).",
+      "description": "Seçili yazıları seçildikleri sırayla numaralar: başlangıç, artış, basamak, ön ve son ek; yazının yerine, başına ya da sonuna (cad.texts.edit number).",
       "aliases": [
         "TCOUNT",
         "YAZINUMARALA"
@@ -1382,7 +1382,7 @@
       "title": "Yazıları birleştir",
       "short": "Birleştir",
       "icon": "textCombine",
-      "description": "Seçili yazıları yukarıdan aşağıya tek çok satırlı yazı yapar: en üsttekinin yerinde ve görünüşüyle, biçimleri ve alanlarıyla (cad.texts.edit combine; AutoCAD'in TXT2MTXT'i).",
+      "description": "Seçili yazıları yukarıdan aşağıya tek çok satırlı yazı yapar: en üsttekinin yerinde ve görünüşüyle, biçimleri ve alanlarıyla (cad.texts.edit combine).",
       "aliases": [
         "TXT2MTXT",
         "YAZIBIRLESTIR"
@@ -1432,7 +1432,7 @@
       "title": "Kol ekle",
       "short": "Kol ekle",
       "icon": "leaderArm",
-      "description": "Seçili kılavuza ucu çizimden seçilen bir kol ekler; uç bir nesnenin köşesine, ucuna ya da merkezine kenetlenirse ona bağlanır ve nesne değişince izler (cad.leaders.edit addArm; AutoCAD'in MLEADEREDIT'i).",
+      "description": "Seçili kılavuza ucu çizimden seçilen bir kol ekler; uç bir nesnenin köşesine, ucuna ya da merkezine kenetlenirse ona bağlanır ve nesne değişince izler (cad.leaders.edit addArm).",
       "aliases": [
         "MLEADEREDIT",
         "KOLEKLE"
@@ -1459,7 +1459,7 @@
       "title": "Kılavuzları hizala",
       "short": "Hizala",
       "icon": "leaderAlign",
-      "description": "Seçili kılavuzların notlarını ilk seçilenin hizasına indirir: yatay, dikey ya da açıyla, izdüşümüyle ya da eşit aralıkla; uçlar yerinde kalır (cad.leaders.edit align; AutoCAD'in MLEADERALIGN'ı).",
+      "description": "Seçili kılavuzların notlarını ilk seçilenin hizasına indirir: yatay, dikey ya da açıyla, izdüşümüyle ya da eşit aralıkla; uçlar yerinde kalır (cad.leaders.edit align).",
       "aliases": [
         "MLEADERALIGN",
         "KILAVUZHIZALA"
@@ -1473,7 +1473,7 @@
       "title": "Kılavuzları topla",
       "short": "Topla",
       "icon": "leaderCollect",
-      "description": "Seçili blok içerikli kılavuzları ilk seçilende toplar: diğerlerinin kolları onun kolu, blokları onun bloklarının ardına; diğerleri silinir (cad.leaders.edit collect; AutoCAD'in MLEADERCOLLECT'i).",
+      "description": "Seçili blok içerikli kılavuzları ilk seçilende toplar: diğerlerinin kolları onun kolu, blokları onun bloklarının ardına; diğerleri silinir (cad.leaders.edit collect).",
       "aliases": [
         "MLEADERCOLLECT",
         "KILAVUZTOPLA"
@@ -1500,7 +1500,7 @@
       "title": "Kılavuz stilleri",
       "short": "Kılavuz stilleri",
       "icon": "leaderStyles",
-      "description": "Projenin kılavuz stillerini düzenler: notun yüksekliği, ok başı, ok boyu, zemin; stil değişince ona bağlı kılavuzlar eski değerdeki alanlarında yenisini alır (cad.styles.edit leader; AutoCAD'in MLEADERSTYLE'ı).",
+      "description": "Projenin kılavuz stillerini düzenler: notun yüksekliği, ok başı, ok boyu, zemin; stil değişince ona bağlı kılavuzlar eski değerdeki alanlarında yenisini alır (cad.styles.edit leader).",
       "aliases": [
         "MLEADERSTYLE",
         "KILAVUZSTILI"
@@ -1514,7 +1514,7 @@
       "title": "Dosyaya bağla",
       "short": "Dosyaya bağla",
       "icon": "tableLink",
-      "description": "Seçili tabloyu seçilen tablo dosyasına (XLSX, ODS, CSV, TXT) bağlar ve ondan yazar: yol (çizimin klasöründeyse göreli), dosyanın SHA-256 özeti ve okunan hücrelerin kopyası saklanır; Tabloyu güncelle sonra dosyayı yolundan okur, aynı baytları yazmaz, elle değişen hücreleri dosyadaki karşılığı değişmedikçe korur (cad.tables.edit link; AutoCAD'in DATALINK'i).",
+      "description": "Seçili tabloyu seçilen tablo dosyasına (XLSX, ODS, CSV, TXT) bağlar ve ondan yazar: yol (çizimin klasöründeyse göreli), dosyanın SHA-256 özeti ve okunan hücrelerin kopyası saklanır; Tabloyu güncelle sonra dosyayı yolundan okur, aynı baytları yazmaz, elle değişen hücreleri dosyadaki karşılığı değişmedikçe korur (cad.tables.edit link).",
       "aliases": [
         "DATALINK",
         "DOSYAYABAGLA"
@@ -1562,7 +1562,7 @@
       "id": "tool.hatchEdit",
       "title": "Taramayı düzenle",
       "icon": "hatchEdit",
-      "description": "Bir taramaya tıklanır; Ada ekle tıklanan kapalı nesneyi ada yapar, Ada çıkar tıklanan adayı yeniden tarar, Yeniden seç taramanın bölgesini tıklanan yerden Tarama'nın seçenekleriyle yeniden bulur, Yeniden oluştur sınırını alan ya da çoklu çizgi olarak yazar ve taramayı ona bağlar, İlişkiyi kopar taramayı serbest bırakır, Başlangıcı taşı yalnız desenin başlangıç noktasını değiştirir (N; cad.hatches.edit; AutoCAD'in HATCHEDIT'i).",
+      "description": "Bir taramaya tıklanır; Ada ekle tıklanan kapalı nesneyi ada yapar, Ada çıkar tıklanan adayı yeniden tarar, Yeniden seç taramanın bölgesini tıklanan yerden Tarama'nın seçenekleriyle yeniden bulur, Yeniden oluştur sınırını alan ya da çoklu çizgi olarak yazar ve taramayı ona bağlar, İlişkiyi kopar taramayı serbest bırakır, Başlangıcı taşı yalnız desenin başlangıç noktasını değiştirir (N; cad.hatches.edit).",
       "aliases": [
         "HATCHEDIT",
         "HE",
@@ -1793,7 +1793,7 @@
       "title": "Kısıt",
       "short": "Kısıt",
       "icon": "constraint",
-      "description": "Nesnelerin parçalarına tıklanarak geometrik ya da ölçü kısıtı ekler (AutoCAD'in GEOMCONSTRAINT ve DIMCONSTRAINT'i): tür seçilir (Çakışık, Yatay, Düşey, Paralel, Dik, Teğet, Eş merkezli, Doğrudaş, Eşit, Simetrik, Sabit; Uzaklık, Yatay ve Düşey uzaklık, Açı, Yarıçap, Çap), her tıklama imlecin altındaki noktayı, düz kenarı ya da daireyi alır. Son parçadan önce çizimin kısıtla çözülmüş hâli kesikli görünür; ölçü kısıtı değerini sorar (Enter: çizimin ölçtüğü, B: başvuru). Kısıtı cad.constraints.edit yazar.",
+      "description": "Nesnelerin parçalarına tıklanarak geometrik ya da ölçü kısıtı ekler: tür seçilir (Çakışık, Yatay, Düşey, Paralel, Dik, Teğet, Eş merkezli, Doğrudaş, Eşit, Simetrik, Sabit; Uzaklık, Yatay ve Düşey uzaklık, Açı, Yarıçap, Çap), her tıklama imlecin altındaki noktayı, düz kenarı ya da daireyi alır. Son parçadan önce çizimin kısıtla çözülmüş hâli kesikli görünür; ölçü kısıtı değerini sorar (Enter: çizimin ölçtüğü, B: başvuru). Kısıtı cad.constraints.edit yazar.",
       "aliases": [
         "GEOMCONSTRAINT",
         "DIMCONSTRAINT",
@@ -1809,7 +1809,7 @@
       "title": "Gevşeterek düzenle",
       "short": "Gevşet",
       "icon": "constraintRelax",
-      "description": "Bir sonraki düzenleme kısıtları korumaz, gevşetir (AutoCAD'de düzenlerken Shift): tutamaç, Taşı, Döndür ya da Esnet kısıtlı nesneleri değiştirdiğinde çözüm izlemez, düzenlemenin bozduğu kısıtlar aynı adımda kaldırılır ve sayıları söylenir. Yeniden basmak gevşetmeyi kaldırır. Gevşetilmeyen düzenleme kısıtları korur ya da hiçbir şey yazmaz.",
+      "description": "Bir sonraki düzenleme kısıtları korumaz, gevşetir: tutamaç, Taşı, Döndür ya da Esnet kısıtlı nesneleri değiştirdiğinde çözüm izlemez, düzenlemenin bozduğu kısıtlar aynı adımda kaldırılır ve sayıları söylenir. Yeniden basmak gevşetmeyi kaldırır. Gevşetilmeyen düzenleme kısıtları korur ya da hiçbir şey yazmaz.",
       "aliases": [
         "CONSTRAINTRELAX",
         "GEVSET"
@@ -1823,7 +1823,7 @@
       "title": "Parametreler",
       "short": "Parametreler",
       "icon": "constraintParameters",
-      "description": "Çizimin parametreleri ve kısıtları (AutoCAD'in PARAMETERS'ı): her parametrenin adı, ifadesi ve değeri; ifade değişince çizim yeni değerle çözülür, kullanıcı parametresi eklenir ve silinir. Kısıtlar türü, parametresi ve tutup tutmadığıyla listelenir; kaldırılır ya da ölçü başvuru yapılır. Çizimin karşılayamadığı değer reddedilir, hiçbir şey yazılmaz; çelişen kısıtlar listede işaretlenir. Yazmalar cad.parameters.edit ve cad.constraints.edit ile.",
+      "description": "Çizimin parametreleri ve kısıtları: her parametrenin adı, ifadesi ve değeri; ifade değişince çizim yeni değerle çözülür, kullanıcı parametresi eklenir ve silinir. Kısıtlar türü, parametresi ve tutup tutmadığıyla listelenir; kaldırılır ya da ölçü başvuru yapılır. Çizimin karşılayamadığı değer reddedilir, hiçbir şey yazılmaz; çelişen kısıtlar listede işaretlenir. Yazmalar cad.parameters.edit ve cad.constraints.edit ile.",
       "aliases": [
         "PARAMETERS",
         "PARAMETRELER"
@@ -1837,7 +1837,7 @@
       "title": "Kısıtları göster",
       "short": "Göster",
       "icon": "constraintShow",
-      "description": "Kısıtların işaretlerini çizimde gösterir ya da gizler (AutoCAD'in kısıt çubukları): her kısıt andığı parçanın yanında türünün ikonuyla, ölçü kısıtı adı ve değeriyle; tutmayan kısıt kırmızı. İşaretin üstüne gelince andığı parçalar vurgulanır ve adı yazılır.",
+      "description": "Kısıtların işaretlerini çizimde gösterir ya da gizler: her kısıt andığı parçanın yanında türünün ikonuyla, ölçü kısıtı adı ve değeriyle; tutmayan kısıt kırmızı. İşaretin üstüne gelince andığı parçalar vurgulanır ve adı yazılır.",
       "aliases": [
         "CONSTRAINTBAR",
         "KISITGOSTER"
@@ -1904,7 +1904,7 @@
       "id": "file.export.shp",
       "title": "Shapefile dışa aktar…",
       "icon": "exportShp",
-      "description": "Nesnesi olan katmanları ESRI Shapefile olarak yazar: tek .zip arşivine, yeni bir klasöre ya da tek bir .shp'ye. Bir Shapefile tek geometri türü taşıdığından noktası, çizgisi ve alanı olan katman ayrı Shapefile'lar olur. Eğriler en çok 0,1 mm sapan kirişlerle yazılır, sütun adları dBASE'in 10 baytına kısaltılır, alan türleri dBASE'inkine çevrilir; yazılamayan ve değişen her şey söylenir. Kod sayfası UTF-8 ya da Windows-1254; .prj sistemi ArcGIS ve QGIS'in tanıdığı biçimde adlandırır.",
+      "description": "Nesnesi olan katmanları ESRI Shapefile olarak yazar: tek .zip arşivine, yeni bir klasöre ya da tek bir .shp'ye. Bir Shapefile tek geometri türü taşıdığından noktası, çizgisi ve alanı olan katman ayrı Shapefile'lar olur. Eğriler en çok 0,1 mm sapan kirişlerle yazılır, sütun adları dBASE'in 10 baytına kısaltılır, alan türleri dBASE'inkine çevrilir; yazılamayan ve değişen her şey söylenir. Kod sayfası UTF-8 ya da Windows-1254; .prj sistemi yaygın CBS yazılımlarının tanıdığı biçimde adlandırır.",
       "aliases": [
         "SHPVER",
         "SHPYAZ"
@@ -1917,7 +1917,7 @@
       "id": "file.export.csv",
       "title": "CSV dışa aktar…",
       "icon": "exportCsvTable",
-      "description": "Nesnesi olan katmanları tek CSV olarak yazar: geometri ilk sütunda ISO WKT (yaylar CIRCULARSTRING olarak kesin), X ve Y sütunları ya da hiç; öznitelikler öbür sütunlarda, birden çok katmanda katman sütunu. Yanına GDAL'ın .csvt'si (sütun türleri) ve .prj yazılır; QGIS ve GDAL aynı türlerle okur. Ayırıcı virgül, noktalı virgül ya da sekme.",
+      "description": "Nesnesi olan katmanları tek CSV olarak yazar: geometri ilk sütunda ISO WKT (yaylar CIRCULARSTRING olarak kesin), X ve Y sütunları ya da hiç; öznitelikler öbür sütunlarda, birden çok katmanda katman sütunu. Yanına .csvt (sütun türleri) ve .prj yazılır; CBS yazılımları aynı türlerle okur. Ayırıcı virgül, noktalı virgül ya da sekme.",
       "aliases": [
         "CSVVER",
         "CSVEXPORT"
@@ -1930,7 +1930,7 @@
       "id": "file.export.fgb",
       "title": "FlatGeobuf dışa aktar…",
       "icon": "exportFgb",
-      "description": "Nesnesi olan katmanları tek FlatGeobuf dosyası olarak yazar: geometri biçimin türleriyle (yaylar kesin, Z ve M), katmanın alanları türleriyle sütun, birden çok katmanda katman sütunu, projenin sistemi EPSG koduyla ve nesnelerin Hilbert sırasıyla mekânsal dizin. QGIS ve GDAL dosyayı dizinden okur.",
+      "description": "Nesnesi olan katmanları tek FlatGeobuf dosyası olarak yazar: geometri biçimin türleriyle (yaylar kesin, Z ve M), katmanın alanları türleriyle sütun, birden çok katmanda katman sütunu, projenin sistemi EPSG koduyla ve nesnelerin Hilbert sırasıyla mekânsal dizin. CBS yazılımları dosyayı dizinden okur.",
       "aliases": [
         "FGBVER",
         "FGBEXPORT"
@@ -1956,7 +1956,7 @@
       "id": "file.export.parquet",
       "title": "GeoParquet dışa aktar…",
       "icon": "exportParquet",
-      "description": "Nesnesi olan katmanları tek GeoParquet 1.1 dosyası olarak yazar: geometri WKB sütununda (yaylar 0,1 mm'lik kirişlerle, söylenerek), katmanın alanları türleriyle sütun, nesnelerin kalıcı kimlikleri kentos_uid, birden çok katmanda katman sütunu, kutu sütunu (bbox) ve projenin sistemi PROJJSON olarak; Snappy ya da sıkıştırmasız. QGIS, GDAL, DuckDB ve pandas okur.",
+      "description": "Nesnesi olan katmanları tek GeoParquet 1.1 dosyası olarak yazar: geometri WKB sütununda (yaylar 0,1 mm'lik kirişlerle, söylenerek), katmanın alanları türleriyle sütun, nesnelerin kalıcı kimlikleri kentos_uid, birden çok katmanda katman sütunu, kutu sütunu (bbox) ve projenin sistemi PROJJSON olarak; Snappy ya da sıkıştırmasız. CBS ve veri çözümleme yazılımları okur.",
       "aliases": [
         "PARQUETVER",
         "PARQUETEXPORT"
@@ -1982,7 +1982,7 @@
       "id": "file.export.gml",
       "title": "GML dışa aktar…",
       "icon": "exportGml",
-      "description": "Nesnesi olan katmanları tek GML 3.2 dosyası olarak yazar: her katman bir nesne türü, alanları türleriyle özellik, geometri OGC basit nesne türleriyle (yaylar kesin, Z), projenin sistemi urn:ogc:def:crs:EPSG adıyla ve EPSG'nin eksen sırasıyla (TUREF dilimleri ve enlem boylam kuzey önce). Yanına alanların türlerini veren .xsd şeması yazılır. QGIS, GDAL ve ArcGIS okur.",
+      "description": "Nesnesi olan katmanları tek GML 3.2 dosyası olarak yazar: her katman bir nesne türü, alanları türleriyle özellik, geometri OGC basit nesne türleriyle (yaylar kesin, Z), projenin sistemi urn:ogc:def:crs:EPSG adıyla ve EPSG'nin eksen sırasıyla (TUREF dilimleri ve enlem boylam kuzey önce). Yanına alanların türlerini veren .xsd şeması yazılır. CBS yazılımları okur.",
       "aliases": [
         "GMLVER",
         "GMLEXPORT"
@@ -2034,7 +2034,7 @@
       "id": "file.export.xyz",
       "title": "XYZ dışa aktar…",
       "icon": "exportXyz",
-      "description": "Noktaları ya da bütün köşeleri X Y Z satırları olarak metin dosyasına yazar (X doğu, Y kuzey, projenin sisteminde): ayırıcı, ondalık basamak, başlık satırı ve kotsuz konumun 0 kotla yazılması ya da atlanması seçilir. Nokta bulutu araçları ve GDAL okur; dosya koordinat sistemi taşımaz.",
+      "description": "Noktaları ya da bütün köşeleri X Y Z satırları olarak metin dosyasına yazar (X doğu, Y kuzey, projenin sisteminde): ayırıcı, ondalık basamak, başlık satırı ve kotsuz konumun 0 kotla yazılması ya da atlanması seçilir. Nokta bulutu ve CBS yazılımları okur; dosya koordinat sistemi taşımaz.",
       "aliases": [
         "XYZVER",
         "XYZEXPORT"
@@ -2307,7 +2307,7 @@
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",
-      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynak çizgiler (K) Sil iken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
+      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynak çizgiler (K) Sil iken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır.",
       "aliases": [
         "CIZGIDENDUVAR",
         "DUVARCEVIR"
@@ -2781,7 +2781,7 @@
       "id": "tool.beam",
       "title": "Kiriş",
       "icon": "beam",
-      "description": "Tür (T): Kiriş, Lento ya da Hatıl (docs/adr/8041 §1, §3). Kiriş ve hatıl: eksenin noktaları, Enter yazar; Genişlik (E), Yükseklik (Y: kirişte döşeme dahil), Hiza (H: orta, sol, sağ), kirişte Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), hatılda Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği). Lento: kapıya ya da pencereye tıklanır; açıklığın başında, duvar kalınlığında, iki yanda Oturma (O) kadar uzanır (TBDY 2018 11.5.3: en az 20 cm; yüksekliği en az 15 cm). Numara (N: K101, L101, H101 gibi; her birinden sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır. Kirişin altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir. Etkin kata, kendi katmanına yazılır: MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL.",
+      "description": "Tür (T): Kiriş, Lento ya da Hatıl. Kiriş ve hatıl: eksenin noktaları, Enter yazar; Genişlik (E), Yükseklik (Y: kirişte döşeme dahil), Hiza (H: orta, sol, sağ), kirişte Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), hatılda Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği). Lento: kapıya ya da pencereye tıklanır; açıklığın başında, duvar kalınlığında, iki yanda Oturma (O) kadar uzanır (TBDY 2018 11.5.3: en az 20 cm; yüksekliği en az 15 cm). Numara (N: K101, L101, H101 gibi; her birinden sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır. Kirişin altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir. Etkin kata, kendi katmanına yazılır: MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL.",
       "aliases": [
         "BEAM",
         "KIRIS",
@@ -2979,7 +2979,7 @@
       "title": "Mahal listesi",
       "short": "Mahal listesi",
       "icon": "scheduleRoomList",
-      "description": "Projenin mahal listesini imleçten yerleştirir (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): kat kat, en alttan başlayarak, katın başlığı altında her mahalin numarası ve adı; döşeme, süpürgelik, duvar ve tavan kaplaması; mahale hizmet eden kapılar ve pencereler doğrama kodlarıyla (K01, P01 (2)); denizlik ve parapet, merdiven basamak ve rıht, küpeşte ve korkuluk. Kaplama hücreleri mahallere yazılır; liste çizimi izler.",
+      "description": "Projenin mahal listesini imleçten yerleştirir (Planlı Alanlar İmar Yönetmeliği 57(29)): kat kat, en alttan başlayarak, katın başlığı altında her mahalin numarası ve adı; döşeme, süpürgelik, duvar ve tavan kaplaması; mahale hizmet eden kapılar ve pencereler doğrama kodlarıyla (K01, P01 (2)); denizlik ve parapet, merdiven basamak ve rıht, küpeşte ve korkuluk. Kaplama hücreleri mahallere yazılır; liste çizimi izler.",
       "aliases": [
         "MAHALLISTESI",
         "MAHALLİSTESİ",
@@ -2995,7 +2995,7 @@
       "title": "Tadilat lejantı",
       "short": "Tadilat lejantı",
       "icon": "renovationLegend",
-      "description": "Mimarlar Odası'nın tadilat lejantını imleçten yerleştirir (docs/adr/8039): başlık ve üç kutu; mevcut düz kontur, ilave 45° taralı, iptal kesikli. Ölçüleri pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, kutu 15 × 6 mm. Blok MM-XXXX-TADILATLEJANTI, lejant katmanında.",
+      "description": "Mimarlar Odası'nın tadilat lejantını imleçten yerleştirir: başlık ve üç kutu; mevcut düz kontur, ilave 45° taralı, iptal kesikli. Ölçüleri pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, kutu 15 × 6 mm. Blok MM-XXXX-TADILATLEJANTI, lejant katmanında.",
       "aliases": [
         "TADILATLEJANTI",
         "RENOVATIONLEGEND"
@@ -3009,7 +3009,7 @@
       "title": "Doğrama listesi",
       "short": "Doğrama listesi",
       "icon": "joineryList",
-      "description": "Grafik doğrama listesini imleçten yerleştirir (docs/adr/8038): çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
+      "description": "Grafik doğrama listesini imleçten yerleştirir: çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
       "aliases": [
         "DOGRAMALISTESI",
         "DOĞRAMALISTESİ",
@@ -3069,7 +3069,7 @@
       "title": "Parsel ve bahçe mesafeleri",
       "short": "Parsel",
       "icon": "siteParcel",
-      "description": "Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Ölçüler (Ö) açıkken binadan her kenara cephe ortasında bir ölçü, ±0,00 kot işareti ve ±0,00 kotunun yazısı da çizilir. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
+      "description": "Vaziyet planı (Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Ölçüler (Ö) açıkken binadan her kenara cephe ortasında bir ölçü, ±0,00 kot işareti ve ±0,00 kotunun yazısı da çizilir. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
       "aliases": [
         "VAZIYET",
         "VAZİYET",
@@ -3090,7 +3090,7 @@
       "title": "Kaçış yolları",
       "short": "Kaçış yolları",
       "icon": "escapeRoutes",
-      "description": "Yangın kaçışı (docs/adr/8035; Binaların Yangından Korunması Hakkında Yönetmelik): etkin katın kaçış yollarını çizer — her mahalin duvardan 40 cm içerideki en uzak noktasından (32/6) en yakın kat çıkışına (Merdiven adlı ortak mahal, açık merdiven ya da zemin katta dışarı açılan kapı); dairede en uzak noktadan daire kapısına (48/2) ve daire kapısından kat çıkışına (48/4). Her yol ölçtüğünü sınırıyla yazar (tek yön 28,07 m > 15,00 m); sınırı aşan kırmızı, uyan yeşil, yönetmeliğin aramadığı (48/1) gri çizilir. Yeniden çalışınca eski yolları siler; tek geri alma adımıdır. Yağmurlama sistemi Proje ayarları › Mimari › Yangın güvenliği'nden okunur; bulgular Denetim › Mevzuat'tadır.",
+      "description": "Yangın kaçışı (Binaların Yangından Korunması Hakkında Yönetmelik): etkin katın kaçış yollarını çizer — her mahalin duvardan 40 cm içerideki en uzak noktasından (32/6) en yakın kat çıkışına (Merdiven adlı ortak mahal, açık merdiven ya da zemin katta dışarı açılan kapı); dairede en uzak noktadan daire kapısına (48/2) ve daire kapısından kat çıkışına (48/4). Her yol ölçtüğünü sınırıyla yazar (tek yön 28,07 m > 15,00 m); sınırı aşan kırmızı, uyan yeşil, yönetmeliğin aramadığı (48/1) gri çizilir. Yeniden çalışınca eski yolları siler; tek geri alma adımıdır. Yağmurlama sistemi Proje ayarları › Mimari › Yangın güvenliği'nden okunur; bulgular Denetim › Mevzuat'tadır.",
       "aliases": [
         "KACIS",
         "KAÇIŞ",
@@ -3109,7 +3109,7 @@
       "title": "Emsal ve TAKS tablosu",
       "short": "Emsal tablosu",
       "icon": "zoningTable",
-      "description": "Parselin imar durumunu çizimle karşılaştıran canlı tabloyu imleçten yerleştirir (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 57/3): parsel alanı, emsal ve TAKS ile izin verdikleri alanların yanında projenin değerleri ve kalanı, emsal harici payı (%30), yapı inşaat alanı ve her katın emsale dahil ve harici alanı. Sınırı aşan değer kırmızı yazılır. Mahal, duvar, program ya da Proje ayarları › Mimari › İmar durumu değişince yeniden yazılır.",
+      "description": "Parselin imar durumunu çizimle karşılaştıran canlı tabloyu imleçten yerleştirir (Planlı Alanlar İmar Yönetmeliği 57/3): parsel alanı, emsal ve TAKS ile izin verdikleri alanların yanında projenin değerleri ve kalanı, emsal harici payı (%30), yapı inşaat alanı ve her katın emsale dahil ve harici alanı. Sınırı aşan değer kırmızı yazılır. Mahal, duvar, program ya da Proje ayarları › Mimari › İmar durumu değişince yeniden yazılır.",
       "aliases": [
         "EMSAL",
         "EMSALTABLOSU",
@@ -3128,7 +3128,7 @@
       "title": "Otopark hesabı",
       "short": "Otopark hesabı",
       "icon": "parkingTable",
-      "description": "Bağımsız bölümlerin otopark ihtiyacını Otopark Yönetmeliği'ne göre hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/8036): konutta bölümün brüt alanına göre 80 m²'den küçükse 3 daireye 1, 80–120 m² 2 daireye 1, 120–180 m² daireye 1, 180 m²'den büyükse daireye 2 (Ek-1, RG 25.3.2021); dükkân, mağaza ve bankada 50 m²'ye 1, bölüm başına en az 1 (RG 16.6.2022); büroda 50 m²'ye 1. Toplam bir üste yuvarlanır (8/4). Adı Otopark ya da Garaj olan mahallerin net alanı 20 m²'ye bölünerek çizimdeki yer sayısı bulunur (4/1-ç); az ise kırmızı yazılır. 20 ve daha fazla yerde %5 (en az 1) elektrikli araç şarj yeri (5/1-j). Program, mahal ya da ayar değişince yeniden yazılır.",
+      "description": "Bağımsız bölümlerin otopark ihtiyacını Otopark Yönetmeliği'ne göre hesaplayan canlı tabloyu imleçten yerleştirir: konutta bölümün brüt alanına göre 80 m²'den küçükse 3 daireye 1, 80–120 m² 2 daireye 1, 120–180 m² daireye 1, 180 m²'den büyükse daireye 2 (Ek-1, RG 25.3.2021); dükkân, mağaza ve bankada 50 m²'ye 1, bölüm başına en az 1 (RG 16.6.2022); büroda 50 m²'ye 1. Toplam bir üste yuvarlanır (8/4). Adı Otopark ya da Garaj olan mahallerin net alanı 20 m²'ye bölünerek çizimdeki yer sayısı bulunur (4/1-ç); az ise kırmızı yazılır. 20 ve daha fazla yerde %5 (en az 1) elektrikli araç şarj yeri (5/1-j). Program, mahal ya da ayar değişince yeniden yazılır.",
       "aliases": [
         "OTOPARK",
         "OTOPARKHESABI",
@@ -3145,7 +3145,7 @@
       "title": "Sığınak hesabı",
       "short": "Sığınak hesabı",
       "icon": "shelterTable",
-      "description": "Sığınak Yönetmeliği'ne göre (7, 8; RG 7.11.2025 değişikliği) gereken sığınağı hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/8036): konut bölümünde oda sayısına göre 1 oda 2, 2 oda 3, 3 ve daha fazla oda 4 kişi; öbür bölümlerde brüt alan ÷ 20 kişi; kişi başına 1 m² net. 10'dan az bağımsız bölümlü yalnız konut yapısında, 1500 m²'den az konut dışı yapıda ve 10'dan az konutlu, 1500 m²'den az karma yapıda sığınak aranmaz (7/a–c). Adı Sığınak olan mahallerin net alanı karşılaştırılır; az ise kırmızı yazılır. Her 100 kişiye kadın ve erkek için birer tuvalet ve lavabo, 100 m²'yi aşan sığınakta 2 çıkış yazılır. Program, mahal ya da ayar değişince yeniden yazılır.",
+      "description": "Sığınak Yönetmeliği'ne göre (7, 8; RG 7.11.2025 değişikliği) gereken sığınağı hesaplayan canlı tabloyu imleçten yerleştirir: konut bölümünde oda sayısına göre 1 oda 2, 2 oda 3, 3 ve daha fazla oda 4 kişi; öbür bölümlerde brüt alan ÷ 20 kişi; kişi başına 1 m² net. 10'dan az bağımsız bölümlü yalnız konut yapısında, 1500 m²'den az konut dışı yapıda ve 10'dan az konutlu, 1500 m²'den az karma yapıda sığınak aranmaz (7/a–c). Adı Sığınak olan mahallerin net alanı karşılaştırılır; az ise kırmızı yazılır. Her 100 kişiye kadın ve erkek için birer tuvalet ve lavabo, 100 m²'yi aşan sığınakta 2 çıkış yazılır. Program, mahal ya da ayar değişince yeniden yazılır.",
       "aliases": [
         "SIGINAK",
         "SIĞINAK",
@@ -3162,7 +3162,7 @@
       "title": "Kat irtifakı tablosu",
       "short": "Kat irtifakı",
       "icon": "scheduleLandShares",
-      "description": "Tapuya verilecek projenin paylaşım tablosunu imleçten yerleştirir (docs/adr/8031; Kat Mülkiyeti Kanunu 12/a, Planlı Alanlar İmar Yönetmeliği 57/2-a): her bağımsız bölümün numarası, katı, niteliği, BB net ve brüt alanı, eklentileri, BB toplam ve genel brüt alanı ve arsa payı. Arsa payı bölümlerin toplam brütü ve değer katsayılarıyla oranlıdır; payda programın paydası, yoksa parsel alanı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
+      "description": "Tapuya verilecek projenin paylaşım tablosunu imleçten yerleştirir (Kat Mülkiyeti Kanunu 12/a, Planlı Alanlar İmar Yönetmeliği 57/2-a): her bağımsız bölümün numarası, katı, niteliği, BB net ve brüt alanı, eklentileri, BB toplam ve genel brüt alanı ve arsa payı. Arsa payı bölümlerin toplam brütü ve değer katsayılarıyla oranlıdır; payda programın paydası, yoksa parsel alanı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
       "aliases": [
         "KATIRTIFAKI",
         "KATİRTİFAKI",
@@ -3232,7 +3232,7 @@
       "id": "tool.northArrow",
       "title": "Kuzey oku",
       "icon": "northArrow",
-      "description": "Kuzey okunu tıklanan yere yerleştirir (docs/adr/0721): çizimin “Kuzey oku” bloğu, yoksa KentOS kitaplığınınki aynı adımda eklenir. Yön (Y): Plan kuzeyi, Coğrafi kuzey (projenin koordinat sisteminin meridyeni, meridyen yakınsamasıyla) ya da Açı (A, derece). Boyut (B): kâğıttaki eni, mm; çizim ölçeğiyle büyür. Tek geri alma adımı “Kuzey oku”.",
+      "description": "Kuzey okunu tıklanan yere yerleştirir: çizimin “Kuzey oku” bloğu, yoksa KentOS kitaplığınınki aynı adımda eklenir. Yön (Y): Plan kuzeyi, Coğrafi kuzey (projenin koordinat sisteminin meridyeni, meridyen yakınsamasıyla) ya da Açı (A, derece). Boyut (B): kâğıttaki eni, mm; çizim ölçeğiyle büyür. Tek geri alma adımı “Kuzey oku”.",
       "aliases": [
         "KUZEYOKU",
         "NORTHARROW"
@@ -3245,7 +3245,7 @@
       "id": "tool.revisionMark",
       "title": "Revizyon işaretle",
       "icon": "revisionMark",
-      "description": "Revizyon bulutunu ve üçgenini birlikte çizer (docs/adr/0721): bulutun Revizyon özniteliği ve üçgenin REV'i aynı numara; numara çizimin son revizyonudur, Revizyon (R) değiştirir. Dikdörtgen, Çokgen, Nesne ve Yay boyu Revizyon bulutu'nunkiler. Tek geri alma adımı “Revizyon”.",
+      "description": "Revizyon bulutunu ve üçgenini birlikte çizer: bulutun Revizyon özniteliği ve üçgenin REV'i aynı numara; numara çizimin son revizyonudur, Revizyon (R) değiştirir. Dikdörtgen, Çokgen, Nesne ve Yay boyu Revizyon bulutu'nunkiler. Tek geri alma adımı “Revizyon”.",
       "aliases": [
         "REVIZYON",
         "REVİZYON",
@@ -3261,7 +3261,7 @@
       "title": "Revizyon listesi",
       "short": "Revizyonlar",
       "icon": "revisionList",
-      "description": "Revizyon üçgenlerini numaralarına göre sayan canlı tabloyu imleçten yerleştirir (docs/adr/0721): “Revizyon” bloğunun REV'e göre Blok çizelgesi; her adımda güncel kalır.",
+      "description": "Revizyon üçgenlerini numaralarına göre sayan canlı tabloyu imleçten yerleştirir: “Revizyon” bloğunun REV'e göre Blok çizelgesi; her adımda güncel kalır.",
       "aliases": [
         "REVIZYONLISTESI",
         "REVİZYONLİSTESİ",
@@ -3276,7 +3276,7 @@
       "title": "Malzeme lejandı",
       "short": "Malzeme",
       "icon": "materialLegend",
-      "description": "Duvarların malzemelerinin lejandını yerleştirir (docs/adr/0721): her malzemenin duvardaki taramasıyla örneği ve adı, “Malzeme lejandı” bloğu olarak. Yükseklik (H): yazının kâğıttaki yüksekliği; Yenile (Y): çizimdeki lejant yerinde yeniden yapılır. Tek geri alma adımı “Malzeme lejandı”.",
+      "description": "Duvarların malzemelerinin lejandını yerleştirir: her malzemenin duvardaki taramasıyla örneği ve adı, “Malzeme lejandı” bloğu olarak. Yükseklik (H): yazının kâğıttaki yüksekliği; Yenile (Y): çizimdeki lejant yerinde yeniden yapılır. Tek geri alma adımı “Malzeme lejandı”.",
       "aliases": [
         "MALZEMELEJANDI",
         "MATERIALLEGEND"
@@ -3320,7 +3320,7 @@
       "title": "Ruhsat takımı",
       "short": "Ruhsat takımı",
       "icon": "permitSet",
-      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen aşamanın pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 8037).",
+      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen aşamanın pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar.",
       "aliases": [
         "RUHSAT",
         "RUHSATTAKIMI",
@@ -3540,7 +3540,7 @@
       "title": "Kat görünümü: Etkin kat ve alt kat",
       "short": "Alt kat soluk",
       "icon": "levelsBelow",
-      "description": "Etkin kat olduğu gibi, altındaki kat soluk çizilir: soluk kat kenetlenir ama seçilmez (Revit'in altlığı gibi); öbür katlar gizlenir.",
+      "description": "Etkin kat olduğu gibi, altındaki kat soluk çizilir: soluk kat kenetlenir ama seçilmez; öbür katlar gizlenir.",
       "aliases": [
         "KATALT"
       ],
@@ -3625,7 +3625,7 @@
       "title": "Topolojiyi kurallarla denetle…",
       "short": "Topolojiyi denetle",
       "icon": "topologyCheck",
-      "description": "Projenin topoloji kurallarını İşlem araç kutusundan, bir modelden ya da betikten çalıştırır (cad.topology.check'in denetimi; ADR 1980): bulgular kuralı, sorunu, durumu (Değerlendirilmedi, Hata, İstisna, Yeniden değerlendir), nesneleri, yeri, ölçüsü ve gerekçesiyle tabloda; bulgulu nesneler seçilir. İstisnalar istenirse listelenir. Çizim değişmez.",
+      "description": "Projenin topoloji kurallarını İşlem araç kutusundan, bir modelden ya da betikten çalıştırır (cad.topology.check'in denetimi): bulgular kuralı, sorunu, durumu (Değerlendirilmedi, Hata, İstisna, Yeniden değerlendir), nesneleri, yeri, ölçüsü ve gerekçesiyle tabloda; bulgulu nesneler seçilir. İstisnalar istenirse listelenir. Çizim değişmez.",
       "aliases": [
         "KURALDENETLE",
         "TOPOLOGYRULESCHECK"
@@ -3639,7 +3639,7 @@
       "title": "İmar planını denetle…",
       "short": "İmarı denetle",
       "icon": "zoningCheck",
-      "description": "İmar planının katmanlarını İşlem araç kutusundan, bir modelden ya da betikten denetler (cad.zoning.check'in denetimi; ADR 3840): bulgular türü, nesneleri, alanı, bölge sayısı ve iletisiyle tabloda; bulgulu nesneler seçilir. Bulguları hata katmanına yaz açıksa yola giren karar ve parsellerin her bölgesi hata katmanına alan olarak yazılır (tek geri alma adımı). Resmî uygunluk iddia edilmez.",
+      "description": "İmar planının katmanlarını İşlem araç kutusundan, bir modelden ya da betikten denetler (cad.zoning.check'in denetimi): bulgular türü, nesneleri, alanı, bölge sayısı ve iletisiyle tabloda; bulgulu nesneler seçilir. Bulguları hata katmanına yaz açıksa yola giren karar ve parsellerin her bölgesi hata katmanına alan olarak yazılır (tek geri alma adımı). Resmî uygunluk iddia edilmez.",
       "aliases": [
         "IMARDENETLE",
         "ZONINGCHECK"
@@ -3653,7 +3653,7 @@
       "title": "Altyapı bağlarını çiz…",
       "short": "Altyapı bağları",
       "icon": "shortestLine",
-      "description": "Bir senaryonun alanlarını bir altyapı katmanının en yakın nesnesine bağlar (cad.scenarios.impact'in altyapıya yakınlık bağları; ADR 3860): her bağ alanın ağırlık merkezinden nesnenin en yakın yerine bir çizgi olarak kendi katmanına yazılır, taraf, alan, hat ve uzaklıkla; tek geri alma adımı. Mevcut durum, senaryo ya da ikisi. Yakınlık hattın kapasitesi ya da bağlanma hakkı değildir.",
+      "description": "Bir senaryonun alanlarını bir altyapı katmanının en yakın nesnesine bağlar (cad.scenarios.impact'in altyapıya yakınlık bağları): her bağ alanın ağırlık merkezinden nesnenin en yakın yerine bir çizgi olarak kendi katmanına yazılır, taraf, alan, hat ve uzaklıkla; tek geri alma adımı. Mevcut durum, senaryo ya da ikisi. Yakınlık hattın kapasitesi ya da bağlanma hakkı değildir.",
       "aliases": [
         "ALTYAPIBAGLARI",
         "SCENARIOLINKS"
@@ -3941,7 +3941,7 @@
       "title": "Kübaj…",
       "short": "Kübaj",
       "icon": "volumeEditor",
-      "description": "Yol projesinin kübaj hesapları: bir koridorun hacmi ortalama alanla, iki kesitin ortasında kurulan kesitle prizmoidal ya da koridorun üst yüzeyiyle arazi arasında; kabarma ve sıkışma katsayıları km aralıklarına. Kübaj yazdıkça hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı, dolgu ve kütle ordinatı), toplamlar, uyarılar ve kübaj cetveli. Sıyırma (bitkisel toprak kalınlığı km aralıklarına) ve diş kazısı (eğim eşiği, basamak yüksekliği) kesit yöntemlerinde. Kaydet road.volumes.edit ile yazar, Onayla ve Onayı kaldır road.volumes.approve ile; onaylı kübaj değişmez, kaynakları değişince bugünkü hacmin onaylı hâlinden farkı gösterilir. Her yazma bir geri alma adımıdır; Cetveli yaz cetveli Excel, OpenDocument ya da CSV olarak yazar.",
+      "description": "Yol projesinin kübaj hesapları: bir koridorun hacmi ortalama alanla, iki kesitin ortasında kurulan kesitle prizmoidal ya da koridorun üst yüzeyiyle arazi arasında; kabarma ve sıkışma katsayıları km aralıklarına. Kübaj yazdıkça hesaplanır: kütle diyagramı (birikimli düzeltilmiş kazı, dolgu ve kütle ordinatı), toplamlar, uyarılar ve kübaj cetveli. Sıyırma (bitkisel toprak kalınlığı km aralıklarına) ve diş kazısı (eğim eşiği, basamak yüksekliği) kesit yöntemlerinde. Kaydet road.volumes.edit ile yazar, Onayla ve Onayı kaldır road.volumes.approve ile; onaylı kübaj değişmez, kaynakları değişince bugünkü hacmin onaylı hâlinden farkı gösterilir. Her yazma bir geri alma adımıdır; Cetveli yaz cetveli XLSX, ODS ya da CSV olarak yazar.",
       "aliases": [
         "KUBAJ",
         "KÜBAJ",
@@ -3970,7 +3970,7 @@
       "title": "Kübaj cetveli…",
       "short": "Cetvel",
       "icon": "volumeExport",
-      "description": "Kübaj cetvelini dosyaya yazar: Kübaj penceresinde seçilen kübajın satırları (km'ler, uzunluk, kazı, dolgu, katsayılar, düzeltilmiş hacimler, birikimli toplamlar ve kütle ordinatı) ve toplam satırı Excel çalışma kitabı, OpenDocument hesap tablosu ya da CSV olarak; çizim değişmez.",
+      "description": "Kübaj cetvelini dosyaya yazar: Kübaj penceresinde seçilen kübajın satırları (km'ler, uzunluk, kazı, dolgu, katsayılar, düzeltilmiş hacimler, birikimli toplamlar ve kütle ordinatı) ve toplam satırı XLSX çalışma kitabı, ODS hesap tablosu ya da CSV olarak; çizim değişmez.",
       "aliases": [
         "KUBAJCETVELI",
         "KÜBAJCETVELİ"
@@ -4028,7 +4028,7 @@
       "title": "Aplikasyon cetveli…",
       "short": "Aplikasyon",
       "icon": "stakeoutTable",
-      "description": "Koridorun kodlu kesit noktaları km, kod, yan, eksenden öteleme, Y, X ve Z ile: koridorun kendi km'lerinde ya da her aralıkta, istenen kodlarla; ötelemeler plan boyu ya da ayrıca zemin boyu (projenin ölçeği ve ortalama elipsoit yüksekliğiyle). Noktalar planda çizilir; cetvel Excel, ODS ya da CSV olarak yazılır. Çizim değişmez.",
+      "description": "Koridorun kodlu kesit noktaları km, kod, yan, eksenden öteleme, Y, X ve Z ile: koridorun kendi km'lerinde ya da her aralıkta, istenen kodlarla; ötelemeler plan boyu ya da ayrıca zemin boyu (projenin ölçeği ve ortalama elipsoit yüksekliğiyle). Noktalar planda çizilir; cetvel XLSX, ODS ya da CSV olarak yazılır. Çizim değişmez.",
       "aliases": [
         "APLIKASYONCETVELI",
         "APLİKASYONCETVELİ",
@@ -4043,7 +4043,7 @@
       "title": "Yol paftaları…",
       "short": "Yol paftaları",
       "icon": "roadSheets",
-      "description": "Aksı plan–boykesit paftalarına dizer (Civil 3D'nin görünüm çerçeveleri gibi): her pafta aksın bir parçasını planda, aks soldan sağa akacak biçimde döndürülmüş olarak, boykesit seçilince aynı km'lerin boykesit görünümünü aynı yatay ölçekte gösterir. Çerçeveler planda önizlenir; boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımıdır.",
+      "description": "Aksı plan–boykesit paftalarına dizer: her pafta aksın bir parçasını planda, aks soldan sağa akacak biçimde döndürülmüş olarak, boykesit seçilince aynı km'lerin boykesit görünümünü aynı yatay ölçekte gösterir. Çerçeveler planda önizlenir; boykesit görünümleri, pafta takımı ve paftalar tek geri alma adımıdır.",
       "aliases": [
         "YOLPAFTALARI",
         "PLANBOYKESIT",
@@ -4058,7 +4058,7 @@
       "title": "Görünüşler…",
       "short": "Görünüşler",
       "icon": "roadViews",
-      "description": "Bir aksın planı, boykesiti ve bir km'deki enkesiti yan yana; tek km üçünü birlikte yürütür (Civil 3D'nin Section Editor görünüşleri, OpenRoads'un Dynamic Sections ve Synchronize View'u). Planda km'nin kesit çizgisi, boykesitte km'nin düşey çizgisi, enkesitte koridorun ya da kesit takımının o km'ye en yakın kesiti. Plana ya da boykesite basmak, sürüklemek, kaydırıcı, yazılan km (aksın denklemleriyle) ve kesitler arası İlk, Önceki, Sonraki, Son km'yi taşır. Çizime yazmaz.",
+      "description": "Bir aksın planı, boykesiti ve bir km'deki enkesiti yan yana; tek km üçünü birlikte yürütür. Planda km'nin kesit çizgisi, boykesitte km'nin düşey çizgisi, enkesitte koridorun ya da kesit takımının o km'ye en yakın kesiti. Plana ya da boykesite basmak, sürüklemek, kaydırıcı, yazılan km (aksın denklemleriyle) ve kesitler arası İlk, Önceki, Sonraki, Son km'yi taşır. Çizime yazmaz.",
       "aliases": [
         "YOLGORUNUSLERI",
         "ROADVIEWS"
@@ -4072,7 +4072,7 @@
       "title": "Çizgiden aks…",
       "short": "Çizgiden aks",
       "icon": "alignmentFromLine",
-      "description": "Seçili çizgiden ya da açık çoklu çizgiden aks kurar (Civil 3D'nin Create Alignment from Objects ve Best Fit Alignment'ı gibi): Eleman eleman çizginin doğruları aliyman, yayları kurp olur, iki yay arasında aliyman yoksa söylenir; En iyi uyum sık köşeli bir eksende en büyük yarıçaptan dar kıvrılan köşeleri kurp sayar, aliymanları en küçük karelerle uydurur ve her kurbun yarıçapını köşelerine en yakın olanla seçer. Aks çizgiden ne kadar ayrıldığını söyler; çizgi kalır. Tek geri alma adımı.",
+      "description": "Seçili çizgiden ya da açık çoklu çizgiden aks kurar: Eleman eleman çizginin doğruları aliyman, yayları kurp olur, iki yay arasında aliyman yoksa söylenir; En iyi uyum sık köşeli bir eksende en büyük yarıçaptan dar kıvrılan köşeleri kurp sayar, aliymanları en küçük karelerle uydurur ve her kurbun yarıçapını köşelerine en yakın olanla seçer. Aks çizgiden ne kadar ayrıldığını söyler; çizgi kalır. Tek geri alma adımı.",
       "aliases": [
         "CIZGIDENAKS",
         "ÇİZGİDENAKS",
@@ -4380,7 +4380,7 @@
       "title": "LandXML ver…",
       "short": "LandXML ver",
       "icon": "landxmlExport",
-      "description": "Yol projesinin arazi yüzeylerini (TIN), akslarını (doğru, daire eğrisi, klotoid ve km denklemleri) ve boykesitlerini LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Paralel aks LandXML'de olmadığından yazılmaz ve söylenir. Bütün yazılır ya da hiç; çizim değişmez.",
+      "description": "Yol projesinin arazi yüzeylerini (TIN), akslarını (doğru, daire eğrisi, klotoid ve km denklemleri) ve boykesitlerini LandXML 1.2 dosyasına yazar; yol projelendirme yazılımları okur. Paralel aks LandXML'de olmadığından yazılmaz ve söylenir. Bütün yazılır ya da hiç; çizim değişmez.",
       "aliases": [
         "LANDXMLVER",
         "LANDXMLOUT"
@@ -4422,7 +4422,7 @@
       "id": "raster.mosaic",
       "title": "Sanal mozaik",
       "icon": "rasterMosaic",
-      "description": "Birçok GeoTIFF dosyasını tek raster gibi gösterilen ve çözümlenen sanal mozaik yapar: GDAL'ın VRT dosyası yazılır, pikseller kopyalanmaz (GDAL ve QGIS de açar). Örtüşen yerde üstteki listenin sırası, ince piksel ya da yeni tarih; mozaiğin pikseli en ince, en kaba ya da ortalama. İsteğe bağlı olarak yeni katmana raster olarak eklenir, tek adımda geri alınır.",
+      "description": "Birçok GeoTIFF dosyasını tek raster gibi gösterilen ve çözümlenen sanal mozaik yapar: VRT dosyası yazılır, pikseller kopyalanmaz (CBS yazılımları da açar). Örtüşen yerde üstteki listenin sırası, ince piksel ya da yeni tarih; mozaiğin pikseli en ince, en kaba ya da ortalama. İsteğe bağlı olarak yeni katmana raster olarak eklenir, tek adımda geri alınır.",
       "aliases": [
         "SANALMOZAIK",
         "SANALMOZAİK",
@@ -4450,7 +4450,7 @@
       "id": "raster.gpkgWrite",
       "title": "Rasteri GeoPackage karosu yaz…",
       "icon": "rasterGpkgOut",
-      "description": "Çizimdeki bir rasteri (8 bitlik, kuzeyi yukarıda) GeoPackage karo tablosu olarak yazar: 256 × 256 PNG karolar, en ince zoom düzeyi rasterin kendi pikseli, kaba düzeyler 2 × 2 ortalamasıyla; yeni bir GeoPackage'a ya da var olanın içine tek işlemde. QGIS ve GDAL açar.",
+      "description": "Çizimdeki bir rasteri (8 bitlik, kuzeyi yukarıda) GeoPackage karo tablosu olarak yazar: 256 × 256 PNG karolar, en ince zoom düzeyi rasterin kendi pikseli, kaba düzeyler 2 × 2 ortalamasıyla; yeni bir GeoPackage'a ya da var olanın içine tek işlemde. CBS yazılımları açar.",
       "aliases": [
         "GPKGKAROYAZ",
         "KAROYAZ",
@@ -4750,7 +4750,7 @@
       "title": "Baskı stili tablosu…",
       "short": "Baskı stili",
       "icon": "colorModeMono",
-      "description": "AutoCAD'in renge bağlı (.ctb, 255 kalem) ya da adlı (.stb) baskı stili tablosunu pafta kitabına baskı profili olarak alan pencere: kalemler KentOS'un basacağı gibi (renk, tarama, kalınlık, uç, birleşim) ve aynı basılmayan her alan adıyla önizlenir; kalemler katmanlara elle verilir (katmanın renginden tahmin edilmez), profil seçilen paftalara uygulanır. İçe aktar tek geri alma adımıdır; dosya yalnız okunur.",
+      "description": "Renge bağlı (.ctb, 255 kalem) ya da adlı (.stb) baskı stili tablosunu pafta kitabına baskı profili olarak alan pencere: kalemler KentOS'un basacağı gibi (renk, tarama, kalınlık, uç, birleşim) ve aynı basılmayan her alan adıyla önizlenir; kalemler katmanlara elle verilir (katmanın renginden tahmin edilmez), profil seçilen paftalara uygulanır. İçe aktar tek geri alma adımıdır; dosya yalnız okunur.",
       "aliases": [
         "BASKISTILI",
         "CTB",
@@ -5092,7 +5092,7 @@
       "id": "tool.sectionDraw",
       "title": "Kesit çıkar",
       "icon": "sectionDraw",
-      "description": "Planda çizilmiş kesit işaretinin kesitini modelden 1/50 çıkarır (docs/adr/8042): işaretin çizgisine, sonra kesitin sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Kesilen duvar, döşeme, kolon, kiriş, lento ve merdiven malzeme malzeme tek kesit, kalın ve taralı; ötede görünenler ince; kotlar, kat yükseklikleri, akslar, geçilen mahallerin adları, ±0,00'da zemin, A-A KESİTİ başlığı. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir kesitin işaretine tıklamak onu yeniden çizer.",
+      "description": "Planda çizilmiş kesit işaretinin kesitini modelden 1/50 çıkarır: işaretin çizgisine, sonra kesitin sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Kesilen duvar, döşeme, kolon, kiriş, lento ve merdiven malzeme malzeme tek kesit, kalın ve taralı; ötede görünenler ince; kotlar, kat yükseklikleri, akslar, geçilen mahallerin adları, ±0,00'da zemin, A-A KESİTİ başlığı. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir kesitin işaretine tıklamak onu yeniden çizer.",
       "aliases": ["KESITCIKAR", "KESİTÇIKAR", "BIMSECTION"],
       "shortcuts": [],
       "category": "Mimari",
@@ -5102,7 +5102,7 @@
       "id": "tool.facadeDraw",
       "title": "Görünüş çıkar",
       "icon": "facadeDraw",
-      "description": "Planda çizilmiş görünüş işaretinin baktığı cepheyi modelden 1/50 çıkarır (docs/adr/8043): işaretin balonuna, sonra görünüşün sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Duvarlar ve döşeme kenarları, kapı ve pencereler doğramalarıyla ve açılım çizgileriyle kendi katmanlarında; kotlar, kat yükseklikleri, akslar, ±0,00'da zemin; zeminin altında kalanlar kesik çizgiyle. Başlık kuzey okuna göre: KUZEY GÖRÜNÜŞÜ. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir görünüşün işaretine tıklamak onu yeniden çizer. Tümü (T): çizilmemiş bütün görünüşler kuzeyden başlayarak çizimin sağında yan yana, tek geri alma adımında; çizimde görünüş işareti yoksa önce binanın dört yanına (4 m öteye) işaret konur.",
+      "description": "Planda çizilmiş görünüş işaretinin baktığı cepheyi modelden 1/50 çıkarır: işaretin balonuna, sonra görünüşün sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Duvarlar ve döşeme kenarları, kapı ve pencereler doğramalarıyla ve açılım çizgileriyle kendi katmanlarında; kotlar, kat yükseklikleri, akslar, ±0,00'da zemin; zeminin altında kalanlar kesik çizgiyle. Başlık kuzey okuna göre: KUZEY GÖRÜNÜŞÜ. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir görünüşün işaretine tıklamak onu yeniden çizer. Tümü (T): çizilmemiş bütün görünüşler kuzeyden başlayarak çizimin sağında yan yana, tek geri alma adımında; çizimde görünüş işareti yoksa önce binanın dört yanına (4 m öteye) işaret konur.",
       "aliases": ["GORUNUSCIKAR", "GÖRÜNÜŞÇIKAR", "BIMELEVATION"],
       "shortcuts": [],
       "category": "Mimari",
@@ -5127,13 +5127,13 @@
     {"id": "map.featuresReconcile", "title": "Detay eşleştirme…", "short": "Detay eşleştirme", "icon": "featuresReconcile", "description": "Nokta bulutu ve ortofoto çıkarımından (ya da sahadan) gelen harita varlığı adaylarını (detayları) Harita varlıkları profilinin sınıflarıyla eşleştirir (map.features.reconcile): yarıçap içindeki adaylar gruplanır; iki kaynağın uyuştuğu grup yazılır, tek kaynaklı aday kabul edilmeden ve çelişen aday sınıfı düzeltilmeden kesin varlık olmaz, kabul edilmiş varlığın yanındaki aday yeni varlık yapmaz; aynı kaynağın yinelenen adayı işaretlenir, eksik zorunlu alan söylenir. Yazılan varlık kaynaklarını, adaylarını ve yayılımını taşır; adaylar Eşleştirme özniteliğiyle işaretlenip bir daha okunmaz; değerler sınıf katmanının alan kurallarından geçer, eksik ya da kurala uymayan alan Alan gir ile verilir. Tek geri alma adımı. Yalnız KentOS Harita.", "aliases": ["ESLESTIR", "EŞLEŞTİR", "DETAYESLESTIR", "UZLASTIR", "UZLAŞTIR", "ADAYLAR"], "shortcuts": [], "category": "Ölçme", "status": "implemented"},
     {"id": "map.survey.adjustment", "title": "GNSS ağ dengelemesi…", "short": "Ağı dengele", "icon": "gnssNetworkAccept", "description": "GNSS arşivindeki bazları (GVX 1.0 ya da baz metninden içe aktarılır) ve bilinen noktaları iki aşamada dengeler (map.survey.network): önce tek bilinen noktaya dayalı serbest dengeleme (uyuşumsuz bazlar, ağın kendi duyarlığı), sonra bilinen noktalara dayalı dengeleme (işaretlerin koordinatları ve σ'ları); BÖHHBÜY 2018'in C1, C2, C3 sınıflarıyla baz ve nokta standart sapmalarını denetler, kabul edilmiş noktaların ne kadar kayacağını gösterir. Dışla bazı nedeniyle silmeden çıkarır. Kabul et (map.survey.edit network) dengeleme kaydını yazar, yeni işaretleri çizer, kabul edilmiş noktaları eski sonucunu koruyarak taşır; tek geri alma adımı. Teknik denetimdir, kurum onayı değildir. Yalnız KentOS Harita.", "aliases": ["ARSIVAG", "ARŞİVAĞ", "AGKABUL", "AĞKABUL", "GVX"], "shortcuts": [], "category": "Ölçme", "status": "implemented"},
     {"id": "map.survey.select", "title": "Kabul edilen noktalar", "short": "Kabul edilenler", "icon": "gnssSelect", "description": "Projenin GNSS arşivinde kabul edilen noktaların nesnelerini seçer ve gösterir; Öznitelikler'in GNSS ölçümü bölümü her birinin yöntemini, çözümlerini, σ'sını, epoğunu, koordinat zincirini ve güncelliğini salt okunur verir. HDOP ve fix doğruluk değildir. map.survey.query ile. KentOS Harita ve GIS.", "aliases": ["KABULEDILEN", "KABULEDİLEN"], "shortcuts": [], "category": "Ölçme", "status": "implemented"},
-    {"id": "raster.compare", "title": "Ortofoto karşılaştır…", "short": "Karşılaştır", "icon": "orthoCompare", "description": "Çizimdeki iki ortofotoyu aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır (cad.orthophoto.compare; ADR 1780): her noktanın kayması (ikinci − birinci), görüntüler arasındaki sistematik kayma ve kaymaların KOH_X,Y'si; nokta başına sınır BÖHHBÜY m. 67(6)'nın ±2·YÖA'sı, iki görüntüden YÖA'sı iri olanınki. Arazi noktaları verilirse her görüntü kendi doğruluğuyla da denetlenir (m. 91). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur; CSV kaydet kaymaları yazar. Harita ve CBS'de raster sekmesinde.", "aliases": ["ORTOFOTOKARSILASTIR", "ORTOFOTOKARŞILAŞTIR"], "shortcuts": [], "category": "Raster", "status": "implemented"},
-    {"id": "raster.seamlines", "title": "Mozaik birleşme çizgisi…", "short": "Birleşme çizgisi", "icon": "orthoSeamlines", "description": "İki ortofotonun mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (cad.orthophoto.seamlines; ADR 4700; TUCBS Ortogörüntü'nün mozaik elemanı: görüntünün mozaikte kullanılan bölümü, elemanlar örtüşmez). Eşit uzaklık (Voronoi; Pan ve ark. 2009): çizgi iki görüntünün kendi bölgelerinden eşit uzak. Radyometrik fark: eşit uzaklık çizgisinin uçları arasında en büyük farkı en küçük yol; arama bandı ve geçilmeyecek alanlar (bina, köprü) verilebilir. Mozaik elemanları tek geri alma adımında Mozaik elemanları katmanına yazılır ve seçilir; Ortofoto karşılaştırması'nın Seçili mozaik elemanlarını al'ı onları ölçer. Harita ve CBS'de raster sekmesinde.", "aliases": ["BIRLESMECIZGISI", "BİRLEŞMEÇİZGİSİ", "MOZAIKELEMANLARI", "MOZAİKELEMANLARI", "SEAMLINES"], "shortcuts": [], "category": "Raster", "status": "implemented"},
-    {"id": "pointcloud.register", "title": "Tarama kaydı…", "short": "Tarama kaydı", "icon": "cloudRegister", "description": "İkinci taramayı (LiDAR şeridi, oturum) birinciye örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler (cad.pointclouds.register; ADR 1800): dönüşüm tarifi (doğu, kuzey, kot ötelemesi ve ω φ κ), önce ve sonra RMS, eşleşen pay, geometrinin gücü (düz zeminde yatay kayma bilinmez), güvenilir kapsam ve GNSS kontrol noktalarında sabit taramanın ve oturtulanın önce/sonra KOH_Z'si (BÖHHBÜY m. 91). Ağırlık kaba hatalı eşleşmeleri bastırır (ADR 2300); Ayıkla sabit taramanın kenarındaki ve normalleri belirtilen açıdan çok ayrılan eşleşmeleri her adımın dışında bırakır: bir taramanın görüp öbürünün görmediği duvar, bordür arkası gölge (ADR 2700). Bulut taşınmaz; salt okunur. Harita ve CBS'de.", "aliases": ["TARAMAKAYDI", "ICP"], "shortcuts": [], "category": "Arazi", "status": "implemented"},
-    {"id": "pointcloud.network", "title": "Tarama ağı dengelemesi…", "short": "Tarama ağı", "icon": "cloudNetwork", "description": "Üç ve daha çok taramayı birlikte kaydeder (cad.pointclouds.network; ADR 4720), bir GNSS ağının bazlarını dengelemesi gibi: plan kutuları örtüşen her çift bir bağdır ve Tarama kaydı gibi kaydedilir; her bağ kaydın normal matrisiyle ağırlıklanır, sabit tarama yerinde kalır, öbürlerinin düzeltmeleri en küçük karelerle birlikte dengelenir. Taramalar tablosu her taramanın düzeltmesini ve yatay gücünü, Bağlar tablosu eşleşmeyi, örtüşmeyi, kayıt RMS'ini ve ağın bağa verdiği kaymayı, Döngüler tablosu kapanmamaları verir. Salt okunur; Dönüşüm uygula seçilen taramayı matrisiyle taşır. Harita ve CBS'de nokta bulutu sekmesinde.", "aliases": ["TARAMAAGI", "TARAMAAĞI", "AGDENGELEMESI", "AĞDENGELEMESİ"], "shortcuts": [], "category": "Nokta bulutu", "status": "implemented"},
-    {"id": "processing.run.pointcloud.transform", "title": "Dönüşüm uygula…", "short": "Dönüşüm uygula", "icon": "cloudTransform", "description": "Nokta bulutunun bütün noktalarını satır satır 16 sayılık afin matrisle taşır ve sonucu kaynağın ızgarasında LAS, LAZ ya da COPC olarak yazar (İşlemler aracı pointcloud.transform; ADR 3100): Tarama kaydı'nın Buluta uygula düğmesi oturtulan taramanın matrisini getirir. Her koordinat kaynağın ölçeğine yarım sıfırdan uzağa yuvarlanır; noktaların öbür alanları aynen kalır, koordinat sistemi değişmez, kaynak dosyaya dokunulmaz. Matris yazılmadan önce denetlenir: 16 sayı, son satır 0 0 0 1, tekil değil, bulut ızgaraya sığar. Özet bulutun ortasının kaymasını ve katı dönüşümde dönüklük açısını söyler; ölçek ya da kayma içeren matris uyarılır. Harita ve CBS'de.", "aliases": ["DONUSUMUYGULA", "BULUTDONUSTUR"], "shortcuts": [], "category": "İşlemler", "status": "implemented"},
-    {"id": "terrain.sheetContours", "title": "Pafta eğrileri…", "short": "Pafta eğrileri", "icon": "sheetContours", "description": "Bir arazi yüzeyinin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3'e göre çizer (road.terrains.sheetcontours; ADR 1820): aralık ölçekten, her beşinci eğri kalın (0,25 mm), dik yerde (eğri arası 2 mm'den az) yalnız kalın, düz yerde (20 mm'den çok) yarım aralıkta kesik yardımcı eğri, kalın eğrilere her 200 mm'de bir maskeli kot yazısı (1,4 mm, üstü yokuşa), seçilen detay katmanlarının (bina, yol, şev) içinden eğri geçmez. Tek geri alma adımı. Harita ve Yol'da.", "aliases": ["PAFTAEGRILERI", "PAFTAEĞRİLERİ"], "shortcuts": [], "category": "Arazi", "status": "implemented"},
-    {"id": "terrain.stockpile", "title": "Stok hacmi…", "short": "Stok hacmi", "icon": "stockpileVolume", "description": "Bir yığının (stok) hacmini kapalı sınırından çizilen bir tabana göre ölçer (road.terrains.stockpile; ADR 3140, Pix4D'nin hacim tabanları): sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem, köşelere oturan eğimli düzlem (düşey farkların en küçük kareleri) ya da verilen kot. Tabanın üstü kazı (yığın), altı dolgu; toplam, alanlar, taban, köşe kotları ve yüzeyin örtmediği yer. Çizim değişmez. Harita ve Yol'da.", "aliases": ["STOKHACMI", "YIGINHACMI"], "shortcuts": [], "category": "Arazi", "status": "implemented"}
+    {"id": "raster.compare", "title": "Ortofoto karşılaştır…", "short": "Karşılaştır", "icon": "orthoCompare", "description": "Çizimdeki iki ortofotoyu aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır (cad.orthophoto.compare): her noktanın kayması (ikinci − birinci), görüntüler arasındaki sistematik kayma ve kaymaların KOH_X,Y'si; nokta başına sınır BÖHHBÜY m. 67(6)'nın ±2·YÖA'sı, iki görüntüden YÖA'sı iri olanınki. Arazi noktaları verilirse her görüntü kendi doğruluğuyla da denetlenir (m. 91). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur; CSV kaydet kaymaları yazar. Harita ve CBS'de raster sekmesinde.", "aliases": ["ORTOFOTOKARSILASTIR", "ORTOFOTOKARŞILAŞTIR"], "shortcuts": [], "category": "Raster", "status": "implemented"},
+    {"id": "raster.seamlines", "title": "Mozaik birleşme çizgisi…", "short": "Birleşme çizgisi", "icon": "orthoSeamlines", "description": "İki ortofotonun mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (cad.orthophoto.seamlines; TUCBS Ortogörüntü'nün mozaik elemanı: görüntünün mozaikte kullanılan bölümü, elemanlar örtüşmez). Eşit uzaklık (Voronoi; Pan ve ark. 2009): çizgi iki görüntünün kendi bölgelerinden eşit uzak. Radyometrik fark: eşit uzaklık çizgisinin uçları arasında en büyük farkı en küçük yol; arama bandı ve geçilmeyecek alanlar (bina, köprü) verilebilir. Mozaik elemanları tek geri alma adımında Mozaik elemanları katmanına yazılır ve seçilir; Ortofoto karşılaştırması'nın Seçili mozaik elemanlarını al'ı onları ölçer. Harita ve CBS'de raster sekmesinde.", "aliases": ["BIRLESMECIZGISI", "BİRLEŞMEÇİZGİSİ", "MOZAIKELEMANLARI", "MOZAİKELEMANLARI", "SEAMLINES"], "shortcuts": [], "category": "Raster", "status": "implemented"},
+    {"id": "pointcloud.register", "title": "Tarama kaydı…", "short": "Tarama kaydı", "icon": "cloudRegister", "description": "İkinci taramayı (LiDAR şeridi, oturum) birinciye örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler (cad.pointclouds.register): dönüşüm tarifi (doğu, kuzey, kot ötelemesi ve ω φ κ), önce ve sonra RMS, eşleşen pay, geometrinin gücü (düz zeminde yatay kayma bilinmez), güvenilir kapsam ve GNSS kontrol noktalarında sabit taramanın ve oturtulanın önce/sonra KOH_Z'si (BÖHHBÜY m. 91). Ağırlık kaba hatalı eşleşmeleri bastırır; Ayıkla sabit taramanın kenarındaki ve normalleri belirtilen açıdan çok ayrılan eşleşmeleri her adımın dışında bırakır: bir taramanın görüp öbürünün görmediği duvar, bordür arkası gölge. Bulut taşınmaz; salt okunur. Harita ve CBS'de.", "aliases": ["TARAMAKAYDI", "ICP"], "shortcuts": [], "category": "Arazi", "status": "implemented"},
+    {"id": "pointcloud.network", "title": "Tarama ağı dengelemesi…", "short": "Tarama ağı", "icon": "cloudNetwork", "description": "Üç ve daha çok taramayı birlikte kaydeder (cad.pointclouds.network), bir GNSS ağının bazlarını dengelemesi gibi: plan kutuları örtüşen her çift bir bağdır ve Tarama kaydı gibi kaydedilir; her bağ kaydın normal matrisiyle ağırlıklanır, sabit tarama yerinde kalır, öbürlerinin düzeltmeleri en küçük karelerle birlikte dengelenir. Taramalar tablosu her taramanın düzeltmesini ve yatay gücünü, Bağlar tablosu eşleşmeyi, örtüşmeyi, kayıt RMS'ini ve ağın bağa verdiği kaymayı, Döngüler tablosu kapanmamaları verir. Salt okunur; Dönüşüm uygula seçilen taramayı matrisiyle taşır. Harita ve CBS'de nokta bulutu sekmesinde.", "aliases": ["TARAMAAGI", "TARAMAAĞI", "AGDENGELEMESI", "AĞDENGELEMESİ"], "shortcuts": [], "category": "Nokta bulutu", "status": "implemented"},
+    {"id": "processing.run.pointcloud.transform", "title": "Dönüşüm uygula…", "short": "Dönüşüm uygula", "icon": "cloudTransform", "description": "Nokta bulutunun bütün noktalarını satır satır 16 sayılık afin matrisle taşır ve sonucu kaynağın ızgarasında LAS, LAZ ya da COPC olarak yazar (İşlemler aracı pointcloud.transform): Tarama kaydı'nın Buluta uygula düğmesi oturtulan taramanın matrisini getirir. Her koordinat kaynağın ölçeğine yarım sıfırdan uzağa yuvarlanır; noktaların öbür alanları aynen kalır, koordinat sistemi değişmez, kaynak dosyaya dokunulmaz. Matris yazılmadan önce denetlenir: 16 sayı, son satır 0 0 0 1, tekil değil, bulut ızgaraya sığar. Özet bulutun ortasının kaymasını ve katı dönüşümde dönüklük açısını söyler; ölçek ya da kayma içeren matris uyarılır. Harita ve CBS'de.", "aliases": ["DONUSUMUYGULA", "BULUTDONUSTUR"], "shortcuts": [], "category": "İşlemler", "status": "implemented"},
+    {"id": "terrain.sheetContours", "title": "Pafta eğrileri…", "short": "Pafta eğrileri", "icon": "sheetContours", "description": "Bir arazi yüzeyinin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3'e göre çizer (road.terrains.sheetcontours): aralık ölçekten, her beşinci eğri kalın (0,25 mm), dik yerde (eğri arası 2 mm'den az) yalnız kalın, düz yerde (20 mm'den çok) yarım aralıkta kesik yardımcı eğri, kalın eğrilere her 200 mm'de bir maskeli kot yazısı (1,4 mm, üstü yokuşa), seçilen detay katmanlarının (bina, yol, şev) içinden eğri geçmez. Tek geri alma adımı. Harita ve Yol'da.", "aliases": ["PAFTAEGRILERI", "PAFTAEĞRİLERİ"], "shortcuts": [], "category": "Arazi", "status": "implemented"},
+    {"id": "terrain.stockpile", "title": "Stok hacmi…", "short": "Stok hacmi", "icon": "stockpileVolume", "description": "Bir yığının (stok) hacmini kapalı sınırından çizilen bir tabana göre ölçer (road.terrains.stockpile): sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem, köşelere oturan eğimli düzlem (düşey farkların en küçük kareleri) ya da verilen kot. Tabanın üstü kazı (yığın), altı dolgu; toplam, alanlar, taban, köşe kotları ve yüzeyin örtmediği yer. Çizim değişmez. Harita ve Yol'da.", "aliases": ["STOKHACMI", "YIGINHACMI"], "shortcuts": [], "category": "Arazi", "status": "implemented"}
   ],
   "icons": {
     "sheetContours": "<path d=\"M2 15.5c3-2 5 1 8-.5s5-2.5 8-1\" stroke-width=\"1\"/><path d=\"M2 11c3-2 5 1 8-.5\" stroke-width=\"1.8\"/><path d=\"M14.5 9.6c1.2-.4 2.3-.6 3.5-.4\" stroke-width=\"1.8\"/><path d=\"M2 6.5c3-2 5 1 8-.5s5-2.5 8-1\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.1\"/><path d=\"M11.2 8.7h2.4M12.4 8.7v3\" stroke-width=\"1\"/>",
