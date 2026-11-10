@@ -541,6 +541,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::edge_shift_bond_scenes::scenes());
     all.extend(crate::edge_shift_junction_scenes::scenes());
     all.extend(crate::topology_inner_scenes::scenes());
+    all.extend(crate::arc_join_scenes::scenes());
     all.extend(crate::offset_scenes::scenes());
     all.extend(crate::stretch_scenes::scenes());
     all.extend(crate::lengthen_scenes::scenes());

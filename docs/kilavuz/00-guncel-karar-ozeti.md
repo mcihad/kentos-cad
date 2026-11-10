@@ -641,6 +641,11 @@
 - **İfrazda komşunun sınırının bölünmesi (10 Kasım 2026; MAP-08, [ADR 4620](../../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
   `cad.parcels.record`: yeni köşe güncel komşunun düz sınırının içindeyse (1 µm) ve parçalar belgenin sınırlarıysa
   sınır bölünür, komşunun halkası parçaları alır, eski sınır kapanır; `boundariesSplit`, `neighbours`. Harita + CBS.
+- **Köşe sil'de aynı dairenin iki yayı tek yay (11 Kasım 2026; MAP-07, [ADR 5000](../../docs/adr/5000-vertex-delete-joins-arcs-of-one-circle.md)).**
+  `cad.entities.vertex`'in `joinArcs`'ı (uzunluk toleransı, yalnız Köşeyi sil): aynı yöne dönen, merkez ve yarıçapı
+  tolerans içinde iki yay süpürmeleri toplanarak tek yay olur; olmazsa kenar düz, `arcs_not_joined` uyarısı. Aynı yayları
+  paylaşan komşu Topolojik düzenlemeyle tek yayı alır (`Change::Join`). Masaüstünde tutamaç menüsü ve Köşe aracı
+  Topolojik temizlik'in toleransını verir. CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi.
 - **Topoloji bulgusunun Öznitelikler'den işaretlenmesi (10 Kasım 2026; MAP-07, [ADR 4600](../../docs/adr/4600-topology-findings-marked-from-attributes.md)).**
   Öznitelikler › Topoloji: Gerekçe satırı ve bulgunun durumu açılır listede (`cad.topology.exceptions`); çoklu seçimde
   bulgular duruma göre sayılır. Komut değişmedi. Harita + CBS.

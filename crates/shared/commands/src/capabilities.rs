@@ -7160,7 +7160,7 @@ const ENTRIES: &[Entry] = &[
             "too_few_points",
             "shared_boundary_locked",
         ]],
-        warnings: &["neighbour_locked", "neighbour_invalid"],
+        warnings: &["neighbour_locked", "neighbour_invalid", "arcs_not_joined"],
         targets: || {
             vec![target(
                 None,

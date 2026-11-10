@@ -1198,6 +1198,9 @@ codes! {
     SHARED_BOUNDARY_LOCKED = "shared_boundary_locked", Failed, false, "Ortak sınır kilitli katmandaki bir komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.";
     /// A neighbour that following would leave invalid (Topolojik düzenleme).
     NEIGHBOUR_INVALID = "neighbour_invalid", Warning, false, "Komşu nesne geçersiz kalacağı için değişmedi.";
+    /// Köşeyi sil's two arcs not joined into one (docs/adr/5000): not of one circle within the tolerance, turning
+    /// opposite ways or a whole turn together; the joined edge is straight.
+    ARCS_NOT_JOINED = "arcs_not_joined", Warning, false, "Köşenin iki yanındaki yaylar tek yay olmadı; birleşen kenar düz.";
     /// An object of a kind Kır does not break.
     NOT_BREAKABLE = "not_breakable", Failed, false, "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.";
     /// The core could not break the object there.

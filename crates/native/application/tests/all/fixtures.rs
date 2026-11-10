@@ -2528,7 +2528,7 @@ impl Input for kentos_commands::RegularPolygonCreate {
 }
 
 impl Input for kentos_commands::EntitiesVertex {
-    /// `radius`, `through.x`, `through.y`, `widths[0]`, `widths[1]` (docs/adr/0288).
+    /// `radius`, `through.x`, `through.y`, `widths[0]`, `widths[1]` (docs/adr/0288), `joinArcs` (docs/adr/5000).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "radius" => self.radius.as_mut(),
@@ -2536,6 +2536,7 @@ impl Input for kentos_commands::EntitiesVertex {
             "through.y" => self.through.as_mut().map(|p| &mut p.y),
             "widths[0]" => self.widths.as_mut().map(|w| &mut w[0]),
             "widths[1]" => self.widths.as_mut().map(|w| &mut w[1]),
+            "joinArcs" => self.join_arcs.as_mut(),
             _ => None,
         }
     }

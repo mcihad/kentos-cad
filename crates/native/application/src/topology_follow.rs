@@ -296,7 +296,7 @@ pub fn neighbours_with(
 /// vertex, an edge's first end.
 pub fn anchor(c: &Change) -> Vec2 {
     match *c {
-        Change::Move { at, .. } | Change::Remove { at, .. } => at,
+        Change::Move { at, .. } | Change::Remove { at, .. } | Change::Join { at, .. } => at,
         Change::Insert { a, .. } | Change::Bulge { a, .. } => a,
     }
 }

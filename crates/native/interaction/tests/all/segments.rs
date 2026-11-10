@@ -218,6 +218,7 @@ fn edge_tool(b: &mut Bench, ask: Ask, action: VertexAction) {
         through: None,
         radius: None,
         widths: None,
+        join_arcs: None,
         topology: None,
         expected_revision: None,
     };

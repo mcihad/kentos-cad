@@ -94695,7 +94695,7 @@
       "id": "cad.entities.vertex",
       "version": 1,
       "title": "Köşe ve kenar",
-      "summary": "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder (shared_boundary_locked). Tek geri alma adımı.",
+      "summary": "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Köşeyi sil iki kenarı düz bir kenar yapar; joinArcs (uzunluk toleransı) ile iki yanı aynı yöne dönen ve merkezleri ile yarıçapları tolerans içinde aynı olan iki yay tek yay olur (süpürmeleri toplanır), olmazsa kenar düz kalır ve arcs_not_joined uyarısı nedenini söyler; aynı yayları paylaşan komşu topology ile tek yayı alır. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder (shared_boundary_locked). Tek geri alma adımı.",
       "aliases": [
         "kose",
         "vertex"
@@ -94713,7 +94713,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are\nnot edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would\nmake it (straight, or an arc) does not change: nothing is written.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes\nOrtasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'\nnot an edge's middle),\n`hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left\nwith fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the\nobject is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not\nfinite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without\nthem, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),\n`invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).",
+        "description": "Input of `cad.entities.vertex` v1. The place is on the object's own outer rings (a hole's vertices and edges are\nnot edited here); a multi-part area's other parts and an area's holes stay. An edge already as the action would\nmake it (straight, or an arc) does not change: nothing is written.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_uid`, `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found`, `layer_locked`, `not_a_path` (not a polyline or an area; a line takes\nOrtasına köşe ekle only), `wrong_place` (Köşeyi sil's place not a vertex, Köşe ekle's not an edge's middle or a place along it, the others'\nnot an edge's middle),\n`hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left\nwith fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the\nobject is looked up: `invalid_arc_edge` (`through` or `radius` with another action, docs/adr/5000's `joinArcs` with\nanother action, below zero or not finite, `through` and `radius` together, a radius not\nfinite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without\nthem, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),\n`invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).",
         "properties": {
           "action": {
             "$ref": "#/$defs/VertexAction"
@@ -94725,6 +94725,15 @@
               "string",
               "null"
             ]
+          },
+          "joinArcs": {
+            "description": "Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex\nare arcs turning the same way whose centres and radii are within it of each other, they become one arc of\nboth sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a\nwarning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
           },
           "place": {
             "$ref": "#/$defs/SubPlace",
@@ -94874,7 +94883,8 @@
         ],
         "warnings": [
           "neighbour_locked",
-          "neighbour_invalid"
+          "neighbour_invalid",
+          "arcs_not_joined"
         ]
       },
       "examples": [
@@ -94889,6 +94899,20 @@
               "ring": 0
             },
             "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+          }
+        },
+        {
+          "title": "İki yayın ortak köşesini sil, aynı dairedeyse (1 mm içinde) tek yay olsun",
+          "input": {
+            "action": "remove",
+            "joinArcs": 0.001,
+            "place": {
+              "index": 1,
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"
           }
         },
         {
@@ -108286,6 +108310,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Komşu nesne geçersiz kalacağı için değişmedi."
+    },
+    {
+      "code": "arcs_not_joined",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Köşenin iki yanındaki yaylar tek yay olmadı; birleşen kenar düz."
     },
     {
       "code": "not_breakable",

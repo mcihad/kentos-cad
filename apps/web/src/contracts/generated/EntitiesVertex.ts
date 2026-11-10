@@ -15,7 +15,8 @@ import type { VertexAction } from "./VertexAction";
  * not an edge's middle),
  * `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
  * with fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the
- * object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not
+ * object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, docs/adr/5000's `joinArcs` with
+ * another action, below zero or not finite, `through` and `radius` together, a radius not
  * finite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without
  * them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
  * `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
@@ -46,6 +47,13 @@ radius?: number,
  * leave the polyline without widths.
  */
 widths?: [number, number], 
+/**
+ * Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex
+ * are arcs turning the same way whose centres and radii are within it of each other, they become one arc of
+ * both sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a
+ * warning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil.
+ */
+joinArcs?: number, 
 /**
  * Topolojik düzenleme: the visible, unlocked neighbours sharing the changed vertices and edges follow.
  */
