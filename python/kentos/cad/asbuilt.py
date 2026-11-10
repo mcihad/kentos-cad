@@ -18,6 +18,8 @@ from .types import (  # noqa: F401
     AsbuiltKindName,
     AsbuiltSurfaceBy,
     AsbuiltSurfaceByName,
+    AsbuiltThresholds,
+    AsbuiltTrendAsk,
 )
 
 if TYPE_CHECKING:
@@ -48,9 +50,16 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
     kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki
     tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines
     katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler;
-    cevapta package.design. Retler: invalid_asbuilt_check, invalid_file_path (paket
-    yolu), file_not_found (paket yok), layer_not_found, not_a_road_project,
-    unknown_terrain, terrain_unbuildable.
+    cevapta package.design. İzleme işinin dönem dizisinde (epochs, ADR 4420) istenirse
+    (ADR 4840): trend.confidence ile her noktanın günlü dönemlerinden (en az 3) en küçük
+    kareler doğrusu (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay
+    hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds
+    (warning, alarm: yatay ve düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan
+    küçük) ile her noktanın state'i (normal, warning, alarm) ve aştığı sınırlar
+    (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve güven
+    kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler:
+    invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok),
+    layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.
     """
     __slots__ = ()
     id = "cad.asbuilt.check"
@@ -83,6 +92,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
+        thresholds: AsbuiltThresholds | None | Unset = UNSET,
+        trend: AsbuiltTrendAsk | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -110,9 +121,16 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki
         tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines
         katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler;
-        cevapta package.design. Retler: invalid_asbuilt_check, invalid_file_path (paket
-        yolu), file_not_found (paket yok), layer_not_found, not_a_road_project,
-        unknown_terrain, terrain_unbuildable.
+        cevapta package.design. İzleme işinin dönem dizisinde (epochs, ADR 4420) istenirse
+        (ADR 4840): trend.confidence ile her noktanın günlü dönemlerinden (en az 3) en küçük
+        kareler doğrusu (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay
+        hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds
+        (warning, alarm: yatay ve düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan
+        küçük) ile her noktanın state'i (normal, warning, alarm) ve aştığı sınırlar
+        (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve güven
+        kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler:
+        invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok),
+        layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
@@ -144,6 +162,10 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             surface:
             surface_by: What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the
                 nearest distance to the surface (`nearest`, Trimble Access's Measure to surface).
+            thresholds: Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest
+                level it goes beyond. Needs a series (`epochs`). No threshold is the program's.
+            trend: A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and
+                which components move at the confidence asked. Needs a series (`epochs`).
             vertical: Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -175,6 +197,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             search=search,
             surface=surface,
             surface_by=surface_by,
+            thresholds=thresholds,
+            trend=trend,
             vertical=vertical,
         ), request_id=request_id, expected=expected)
 
@@ -200,6 +224,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
+        thresholds: AsbuiltThresholds | None | Unset = UNSET,
+        trend: AsbuiltTrendAsk | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
     ) -> AsbuiltChecked:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -223,6 +249,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             search=search,
             surface=surface,
             surface_by=surface_by,
+            thresholds=thresholds,
+            trend=trend,
             vertical=vertical,
         ))
 
@@ -248,6 +276,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
+        thresholds: AsbuiltThresholds | None | Unset = UNSET,
+        trend: AsbuiltTrendAsk | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -271,6 +301,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             search=search,
             surface=surface,
             surface_by=surface_by,
+            thresholds=thresholds,
+            trend=trend,
             vertical=vertical,
         ))
 
@@ -296,6 +328,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
         surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
+        thresholds: AsbuiltThresholds | None | Unset = UNSET,
+        trend: AsbuiltTrendAsk | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -324,6 +358,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             search=search,
             surface=surface,
             surface_by=surface_by,
+            thresholds=thresholds,
+            trend=trend,
             vertical=vertical,
         ), op=op, request_id=request_id, expected=expected)
 

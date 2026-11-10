@@ -602,6 +602,10 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İzlemede dönemlerden doğru ve iki eşik (10 Kasım 2026; MAP-19, [ADR 4840](../../docs/adr/4840-monitoring-trend-and-thresholds.md)).**
+  İzleme dizisine `trend` (güven): üç ya da daha çok günlü dönemde noktanın doğu, kuzey ve kot doğrusu, σ'ları, Student
+  t'yle anlamlı hareket (`fit`); `thresholds` (uyarı, alarm) her noktaya `state` ve `exceeded`. Eşikler kullanıcının,
+  yönetmelik değeri yok. Uygulama kontrolü › İzleme › Dönem dizisi. Harita + Yol + CBS.
 - **Atlas sayfasının görünüşü (10 Kasım 2026; MAP-18, [ADR 4820](../../docs/adr/4820-atlas-page-look.md)).**
   `file.export.atlas` sayfalar yapılınca her sayfanın `look`'u (çizdiğinin SHA-256'sı, yayının damgaları dışarıda) ve
   değişen sayfanın `changes[].look`'u (same: yalnız çizmediği değişti); kayıtta da. CAD + CBS.

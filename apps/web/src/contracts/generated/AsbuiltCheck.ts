@@ -2,6 +2,8 @@
 import type { AsbuiltEpoch } from "./AsbuiltEpoch";
 import type { AsbuiltKind } from "./AsbuiltKind";
 import type { AsbuiltSurfaceBy } from "./AsbuiltSurfaceBy";
+import type { AsbuiltThresholds } from "./AsbuiltThresholds";
+import type { AsbuiltTrendAsk } from "./AsbuiltTrendAsk";
 
 /**
  * Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,
@@ -14,7 +16,8 @@ import type { AsbuiltSurfaceBy } from "./AsbuiltSurfaceBy";
  * attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
  * job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
  * monitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that
- * is no `YYYY-MM-DD` day); the package's (docs/adr/2420;
+ * is no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a
+ * threshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;
  * at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
  * field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
  * `lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
@@ -61,4 +64,14 @@ epochs?: Array<AsbuiltEpoch>,
 /**
  * This epoch's day, `YYYY-MM-DD` (docs/adr/4420): with the day of a point's first epoch, its mean rate of movement.
  */
-date?: string, };
+date?: string, 
+/**
+ * A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and
+ * which components move at the confidence asked. Needs a series (`epochs`).
+ */
+trend?: AsbuiltTrendAsk, 
+/**
+ * Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest
+ * level it goes beyond. Needs a series (`epochs`). No threshold is the program's.
+ */
+thresholds?: AsbuiltThresholds, };

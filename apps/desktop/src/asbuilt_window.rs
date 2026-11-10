@@ -99,6 +99,8 @@ pub struct State {
     pub epochs: String,
     /// The series table's epoch titles (docs/adr/4420): “1. dönem” … then “Bu dönem”, as the last answer has them.
     pub epoch_titles: Vec<String>,
+    /// The series' trend and thresholds (docs/adr/4840).
+    pub trend: crate::asbuilt_trend::TrendForm,
 }
 
 /// The jobs' words, in the kind's order (docs/adr/3620).
@@ -136,6 +138,8 @@ pub enum Event {
     Nearest(bool),
     /// Önceki dönemler (docs/adr/4420): the earlier epochs' layers' names.
     Epochs(String),
+    /// Doğru uydurma, Uyarı eşiği, Alarm eşiği (docs/adr/4840).
+    Trend(crate::asbuilt_trend::Change),
     Close,
 }
 
@@ -330,6 +334,9 @@ impl App {
         // A monitoring job (docs/adr/3620) sets the earlier epoch's marks by name: the design's other parts stay out.
         let watch = s.kind == 2;
         let unless = |v: Option<String>| if watch { None } else { v };
+        // Docs/adr/4840: a series' trend and thresholds.
+        let series = watch && !s.epochs.trim().is_empty();
+        let (trend, thresholds) = if series { crate::asbuilt_trend::ask(&s.trend)? } else { (None, None) };
         Ok(AsbuiltCheck {
             measured: s.measured.clone(),
             design: opt(&s.design),
@@ -359,6 +366,8 @@ impl App {
             // bilgisi's (Güncelleme günü), this epoch's too.
             epochs: if watch { self.asbuilt_epochs()? } else { Vec::new() },
             date: if watch && !s.epochs.trim().is_empty() { self.layer_day(&s.measured) } else { None },
+            trend,
+            thresholds,
         })
     }
 
@@ -503,6 +512,7 @@ impl App {
             design,
             lines,
             surface,
+            trend: crate::asbuilt_trend::TrendForm::new(),
             ..State::default()
         };
         self.asbuilt_run();
@@ -526,6 +536,12 @@ impl App {
             Event::Kind(k) => s.kind = k.min(2),
             Event::Control(v) => s.control = v,
             Event::Epochs(v) => s.epochs = v,
+            // The table shown under the series: nothing is checked again.
+            Event::Trend(crate::asbuilt_trend::Change::View(v)) => {
+                s.trend.view = v;
+                return Task::none();
+            }
+            Event::Trend(c) => s.trend.apply(c),
             Event::Nearest(on) => s.nearest = on,
             Event::Lines(v) => s.lines = v,
             Event::Surface(v) => s.surface = v,
@@ -668,7 +684,8 @@ impl App {
             .field("Kontrol noktaları", text(&s.control, "ör. K1, K2", Event::Control, 260.0))
             .help("Oynamaması gereken noktalar: biri sınırı aşarsa iki dönem aynı datumda değildir ya da nokta oynamıştır.")
             // Docs/adr/4420: the series through the earlier epochs.
-            .field("Önceki dönemler", text(&s.epochs, "ör. Birinci dönem, İkinci dönem", Event::Epochs, 260.0))
+            // A list of layers' names: wide enough for three or four epochs (docs/adr/4840).
+            .field("Önceki dönemler", text(&s.epochs, "ör. Birinci dönem, İkinci dönem", Event::Epochs, 400.0))
             .help("Katman adları eskiden yeniye: her nokta ilk ölçüldüğü döneme göre izlenir; günler katmanların Veri kümesi bilgisinden (hız için).")
         } else {
             form.field(
@@ -744,6 +761,14 @@ impl App {
                 )
                 .help("Tasarım noktaları, çizgileri, yüzey, toleranslar ve kalite sınırı notlarla tek .zip olur; çizim değişmez.")
                 .row(words::secondary(PACKAGE, package.then(|| msg(Event::Package))));
+        }
+        // Docs/adr/4840: a series' line through the dated epochs and its two thresholds.
+        if watch && !s.epochs.trim().is_empty() {
+            form = form.section("Dönem dizisi");
+            for (title, element) in crate::asbuilt_trend::rows(&s.trend, |c| msg(Event::Trend(c))) {
+                form = form.field(title, element);
+            }
+            form = form.help("Eşikler sizin (boş: denetlenmez); izleme için yönetmelik değeri yoktur. Hız doğrununki, doğru yoksa ortalama hız.");
         }
         let mut lines = Vec::new();
         let mut rows = Vec::new();
@@ -840,6 +865,11 @@ impl App {
                         "Farklar ölçülen − tasarım; çizgiye göre uzaklık çizgi yönünün solunda artı. Sınırlar sizin (boş: denetlenmez); çizime bir şey yazılmaz."
                     },
                 ));
+                // Docs/adr/4840: the marks' states against the thresholds.
+                if let Some(said) = crate::asbuilt_trend::line(&r.tracks) {
+                    let alarmed = r.tracks.iter().any(|t| t.state == Some(kentos_commands::AsbuiltState::Alarm));
+                    lines.push(words::text_line(if alarmed { Kind::Warn } else { Kind::Info }, said));
+                }
                 for p in r.points.iter().filter(|p| s.show == Show::All || p.status != "within") {
                     rows.push(if watch { watch_row(p) } else { point_row(p) });
                 }
@@ -876,7 +906,12 @@ impl App {
         let table = sheet(columns, rows, "Bu süzgeçte nokta yok.", 260.0);
         // Docs/adr/4420: a monitoring job's series: each point's horizontal movement from its first epoch at every
         // epoch (— where it was not measured or before it), its last height movement and its mean rates.
+        // Docs/adr/4840: with a line or thresholds, a choice between the movements and each mark's line and state.
+        let trend = matches!(&s.answer, Some(Ok(r)) if watched(r) && crate::asbuilt_trend::shown(&r.tracks));
         let series = match &s.answer {
+            Some(Ok(r)) if trend && s.trend.view == crate::asbuilt_trend::View::Line => {
+                Some((crate::asbuilt_trend::lead(&r.tracks, &s.trend.confidence), crate::asbuilt_trend::table(&r.tracks)))
+            }
             Some(Ok(r)) if watched(r) && !r.tracks.is_empty() => {
                 let mut columns = vec![col("Nokta", 70.0)];
                 for title in &s.epoch_titles {
@@ -916,7 +951,12 @@ impl App {
             .push(Segmented::new([Show::All, Show::Faults], s.show, |v| msg(Event::Show(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         if let Some((lead, series)) = series {
-            body = body.push(label::caption(lead)).push_fit(series, kentos_ui::theme::typography::scaled(100.0));
+            if trend {
+                use crate::asbuilt_trend::{Change, View};
+                body = body.push(Segmented::new([View::Series, View::Line], s.trend.view, |v| msg(Event::Trend(Change::View(v)))));
+            }
+            // Five rows at least when the window is short (docs/adr/4840: the series' marks are what the job is for).
+            body = body.push(label::caption(lead)).push_fit(series, kentos_ui::theme::typography::scaled(160.0));
         }
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.points.is_empty());
         Frame::new(TITLE)

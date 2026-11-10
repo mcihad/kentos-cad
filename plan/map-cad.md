@@ -50,7 +50,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420 | yetkili inceleme kaydı; dönemlerden doğru uydurma ve iki eşik | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın alanları | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -2394,6 +2394,17 @@ günleriyle) ve `date`: bu dönemde ölçülen her nokta ilk ölçüldüğü dö
 adımlar, sınırı aşan adım), günler varsa ortalama yatay ve düşey hız; gün denetimi ve retler; 22 bağımsız durum (eski 65
 değişmedi), Python (testin kendi okuması), MCP; masaüstünde Önceki dönemler satırı (günler katmanların Veri kümesi
 bilgisinden) ve Dönem dizisi tablosu. Açık: yetkili inceleme kaydı, doğru uydurma, uyarı ve alarm eşikleri.
+
+**10 Kasım 2026, dokuzuncu tur — dönemlerden doğru ve iki eşik ([ADR 4840](../docs/adr/4840-monitoring-trend-and-thresholds.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Trimble 4D Control (hız = kayan penceredeki regresyonun eğimi; Attention,
+Warning, Alarm), TBC Monitor Point Movement (Warning, Alarm), Leica GeoMoS (düzeyli sınır, regresyon denetimi); resmî
+metinlerde izleme eşiği ve doğru uydurma hükmü yok (DSİ, TBDY 2018, AFAD, KGM; BÖHHBÜY m. 21 yalnız C derece hızı).
+Kanıtlanan: izleme dizisine `trend` (güven): üç ya da daha çok günlü dönemde nokta başına doğu, kuzey ve kot doğrusu (en
+küçük kareler), hızlar, σ'ları ve Student t'yle anlamlı hareket (`fit`); `thresholds` (uyarı ve alarm; son yatay ve kot
+hareketi, yatay ve kot hızı) her noktaya `state` ve aşılan sınırlar; beş ret; dördüncü dönemli çizimle 12 bağımsız durum
+(34; eski 22 bayt bayt aynı), Python (numpy.polyfit), MCP; masaüstünde Dönem dizisi bölümü (Doğru uydurma, Uyarı ve
+Alarm eşiği), özette durum sayıları, Hareketler | Doğru ve eşikler tablosu. Açık: yetkili inceleme kaydı (`.kcad`
+bölümü), eşiklerin kaynağıyla saklanması, hareketin zaman grafiği, ağırlıklı doğru.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

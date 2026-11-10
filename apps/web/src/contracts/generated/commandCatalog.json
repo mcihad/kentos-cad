@@ -61128,7 +61128,7 @@
       "id": "cad.asbuilt.check",
       "version": 1,
       "title": "Uygulama kontrolü",
-      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet, sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820) kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler; cevapta package.design. Retler: invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
+      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet, sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820) kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler; cevapta package.design. İzleme işinin dönem dizisinde (epochs, ADR 4420) istenirse (ADR 4840): trend.confidence ile her noktanın günlü dönemlerinden (en az 3) en küçük kareler doğrusu (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds (warning, alarm: yatay ve düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan küçük) ile her noktanın state'i (normal, warning, alarm) ve aştığı sınırlar (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve güven kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler: invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
       "aliases": [
         "uygulamakontrolu",
         "asbuilt",
@@ -61148,7 +61148,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that\nis no `YYYY-MM-DD` day); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that\nis no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a\nthreshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
         "properties": {
           "control": {
             "description": "A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond\nthe limits says the two epochs do not rest on one datum (or the mark moved).",
@@ -61266,6 +61266,28 @@
               }
             ],
             "description": "What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the\nnearest distance to the surface (`nearest`, Trimble Access's Measure to surface)."
+          },
+          "thresholds": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltThresholds"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest\nlevel it goes beyond. Needs a series (`epochs`). No threshold is the program's."
+          },
+          "trend": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltTrendAsk"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and\nwhich components move at the confidence asked. Needs a series (`epochs`)."
           },
           "vertical": {
             "format": "double",
@@ -118077,6 +118099,79 @@
       ],
       "type": "object"
     },
+    "AsbuiltFit": {
+      "description": "The line fitted through a point's dated epochs (docs/adr/4840): by least squares, its movement from its reference\nagainst the years since its first dated epoch, east, north and (with both heights) up apart.",
+      "properties": {
+        "east": {
+          "description": "The velocity east and north (m a year).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "epochs": {
+          "description": "The dated epochs the point was measured in (3 or more).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "moving": {
+          "description": "The components whose velocity is more than Student's t times its standard deviation (`east`, `north`, `up`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "north": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "sigmaEast": {
+          "description": "Their standard deviations from the residuals: s / √Σ(t − t̄)², s² = Σr² / (n − 2) (m a year).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "sigmaNorth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "sigmaUp": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        },
+        "speed": {
+          "description": "The horizontal speed, √(east² + north²) (m a year).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "up": {
+          "description": "The velocity up (m a year), when 3 dated epochs or more have both heights.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        }
+      },
+      "required": [
+        "epochs",
+        "east",
+        "north",
+        "sigmaEast",
+        "sigmaNorth",
+        "speed"
+      ],
+      "type": "object"
+    },
     "AsbuiltKind": {
       "description": "What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation\nmeasurement as their own jobs): what was built against the design, stakes against their design points, or the same\nmarks at two epochs (physical movement, never a design change).",
       "enum": [
@@ -118085,6 +118180,49 @@
         "monitoring"
       ],
       "type": "string"
+    },
+    "AsbuiltLevel": {
+      "additionalProperties": false,
+      "description": "A threshold level's limits; a limit not given is not checked at that level.",
+      "properties": {
+        "horizontal": {
+          "description": "The horizontal movement from the point's reference at this epoch (m).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "horizontalRate": {
+          "description": "The horizontal speed (m a year): the fitted line's when there is one, else the mean rate.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        },
+        "vertical": {
+          "description": "The height movement from the point's reference at this epoch, either way (m).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "verticalRate": {
+          "description": "The vertical speed, either way (m a year): the fitted line's when there is one, else the mean rate.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        }
+      },
+      "type": "object"
     },
     "AsbuiltMissing": {
       "description": "A design point no measured point matched.",
@@ -118324,6 +118462,15 @@
       ],
       "type": "object"
     },
+    "AsbuiltState": {
+      "description": "A point's state against the thresholds (docs/adr/4840): the highest level any of its values goes beyond.",
+      "enum": [
+        "normal",
+        "warning",
+        "alarm"
+      ],
+      "type": "string"
+    },
     "AsbuiltStep": {
       "description": "A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)\nand horizontal; `outside` when it is beyond the job's horizontal or vertical limit.",
       "properties": {
@@ -118376,9 +118523,46 @@
         }
       ]
     },
+    "AsbuiltThresholds": {
+      "additionalProperties": false,
+      "description": "The two thresholds (docs/adr/4840); each limit given in both must be smaller at the warning.",
+      "properties": {
+        "alarm": {
+          "$ref": "#/$defs/AsbuiltLevel",
+          "description": "The alarm level (Trimble's red)."
+        },
+        "warning": {
+          "$ref": "#/$defs/AsbuiltLevel",
+          "description": "The warning level (Trimble's yellow)."
+        }
+      },
+      "required": [
+        "warning",
+        "alarm"
+      ],
+      "type": "object"
+    },
     "AsbuiltTrack": {
       "description": "A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was\nfirst measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch\nits movement from the reference, none where it was not measured; with the days of its reference and of this epoch,\nits mean rates (m a year: its last horizontal and vertical movement over the years between).",
       "properties": {
+        "exceeded": {
+          "description": "The limits of its state's level its values go beyond (`horizontal`, `vertical`, `horizontalRate`,\n`verticalRate`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "fit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltFit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The line fitted through its dated epochs (docs/adr/4840), asked and with 3 of them or more."
+        },
         "from": {
           "format": "uint32",
           "minimum": 0,
@@ -118404,6 +118588,17 @@
           ],
           "x-unit": "m"
         },
+        "state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its state against the thresholds (docs/adr/4840), asked."
+        },
         "steps": {
           "items": {
             "anyOf": [
@@ -118422,6 +118617,22 @@
         "name",
         "from",
         "steps"
+      ],
+      "type": "object"
+    },
+    "AsbuiltTrendAsk": {
+      "additionalProperties": false,
+      "description": "The line fitted through a point's epochs (docs/adr/4840): the confidence its velocity's test is made at.",
+      "properties": {
+        "confidence": {
+          "description": "The confidence, between 0 and 1 (0.95: a component moves when its velocity is more than Student's t at 0.975\nwith n − 2 degrees of freedom times its standard deviation). The user's: no regulation gives one for monitoring.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "confidence"
       ],
       "type": "object"
     },
