@@ -1480,6 +1480,8 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
                 (n.offset, "offset", "Kot farkı"),
                 (n.thickness, "thickness", "Kalınlık"),
                 (n.overhang, "overhang", "Saçak"),
+                (n.gutter, "gutter", "Oluk"),
+                (n.snow_guard, "snowGuard", "Kar siperliği"),
             ],
             &at,
         )?;
@@ -1501,6 +1503,8 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
             thickness: n.thickness,
             overhang: n.overhang,
             material: n.material.clone(),
+            gutter: n.gutter,
+            snow_guard: n.snow_guard,
             parts: n.parts.clone().unwrap_or_default(),
             arch: n.arch.clone().unwrap_or_default(),
         };

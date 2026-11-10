@@ -60032,21 +60032,26 @@ class NewRoof(_Model):
     Attributes:
         pts: Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner. Unit: length.
         slopes: Each edge's slope from its eaves, per cent (the edge from `pts[i]` to the next point); null: a gable end. Unit: percent.
+        gutter: Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge; absent: none. Unit: length.
         material: Its covering; absent: Kiremit.
         offset: Its eaves' height over its storey's top (the next storey's floor); absent: 0. Unit: elevation.
         overhang: How far its eaves stand past the walls' outer faces (saçak). Unit: length.
         parts: Its chimneys, vents and roof windows (docs/adr/8044 §6): each chimney's and vent's middle inside its eaves, each
             window wholly in one face.
+        snow_guard: Its snow guard (kar siperliği, docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): its distance in from every sloping
+            eaves edge; absent: none. Unit: length.
         thickness: Its build-up's thickness, measured upright; absent: 0.25 m. Unit: length.
     """
     pts: list[Vec2]
     slopes: list[float | None]
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    gutter: float | None | Unset = UNSET
     material: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     overhang: float | None | Unset = UNSET
     parts: list[RoofPart] | None | Unset = UNSET
+    snow_guard: float | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -60057,6 +60062,8 @@ class NewRoof(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.gutter is not UNSET:
+            out["gutter"] = None if self.gutter is None else float(self.gutter)
         if self.material is not UNSET:
             out["material"] = self.material
         if self.offset is not UNSET:
@@ -60065,6 +60072,8 @@ class NewRoof(_Model):
             out["overhang"] = None if self.overhang is None else float(self.overhang)
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.snow_guard is not UNSET:
+            out["snowGuard"] = None if self.snow_guard is None else float(self.snow_guard)
         if self.thickness is not UNSET:
             out["thickness"] = None if self.thickness is None else float(self.thickness)
         return out
@@ -60076,10 +60085,12 @@ class NewRoof(_Model):
             slopes=[None if e0 is None else float(e0) for e0 in data["slopes"]],
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            gutter=UNSET if "gutter" not in data else None if data["gutter"] is None else float(data["gutter"]),
             material=data.get("material", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [RoofPart.from_json(e0) for e0 in data["parts"]],
+            snow_guard=UNSET if "snowGuard" not in data else None if data["snowGuard"] is None else float(data["snowGuard"]),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
         )
 
@@ -85241,6 +85252,7 @@ class RoofEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        gutter: Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge, metres; absent: none. Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -85257,6 +85269,8 @@ class RoofEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         overhang: How far its eaves were drawn past the walls' outer faces (saçak), metres. Unit: length.
         parts: Its chimneys, vents and roof windows (docs/adr/8044 §6).
+        snow_guard: Its snow guard (kar siperliği, docs/adr/8044 §8): its distance in from every sloping eaves edge, metres; absent:
+            none. Unit: length.
         symbol: Library symbol overriding the layer's style.
         thickness: Its build-up's thickness (kaplama, çıta, tahta, mertek), metres, measured upright; absent: 0.25. Unit: length.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -85273,6 +85287,7 @@ class RoofEntity(Entity):
     attachments: list[Attachment] | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    gutter: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
@@ -85284,6 +85299,7 @@ class RoofEntity(Entity):
     order: int | None | Unset = UNSET
     overhang: float | None | Unset = UNSET
     parts: list[RoofPart] | Unset = UNSET
+    snow_guard: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -85304,6 +85320,8 @@ class RoofEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.gutter is not UNSET:
+            out["gutter"] = None if self.gutter is None else float(self.gutter)
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -85326,6 +85344,8 @@ class RoofEntity(Entity):
             out["overhang"] = None if self.overhang is None else float(self.overhang)
         if self.parts is not UNSET:
             out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.snow_guard is not UNSET:
+            out["snowGuard"] = None if self.snow_guard is None else float(self.snow_guard)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.thickness is not UNSET:
@@ -85348,6 +85368,7 @@ class RoofEntity(Entity):
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            gutter=UNSET if "gutter" not in data else None if data["gutter"] is None else float(data["gutter"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_pattern=data.get("linePattern", UNSET),
@@ -85359,6 +85380,7 @@ class RoofEntity(Entity):
             order=data.get("order", UNSET),
             overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
             parts=[RoofPart.from_json(e0) for e0 in data["parts"]] if "parts" in data else UNSET,
+            snow_guard=UNSET if "snowGuard" not in data else None if data["snowGuard"] is None else float(data["snowGuard"]),
             symbol=data.get("symbol", UNSET),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
@@ -113728,6 +113750,7 @@ class SetArchOperation(ArchOperation):
         depth: A column's; null: its width. Unit: length.
         ends: A grid's gapped end segments, millimetres on paper (docs/adr/0725 §5); null: the whole grid. Unit: paper-mm.
         fill: A column's.
+        gutter: A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none. Unit: length.
         height: A beam's height (docs/adr/8041 §1). Unit: length.
         height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
             risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
@@ -113753,6 +113776,7 @@ class SetArchOperation(ArchOperation):
         shape: A column's; another than L drops its legs.
         slope: A ramp's. Unit: percent.
         slopes: A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1). Unit: percent.
+        snow_guard: A roof's snow guard, its distance in from every sloping eaves edge (docs/adr/8044 §8); null: none. Unit: length.
         tag: A column's.
         thickness: A roof's build-up, measured upright; null: 0.25 m. Unit: length.
         tread: A stair's. Unit: length.
@@ -113769,6 +113793,7 @@ class SetArchOperation(ArchOperation):
     depth: float | None | Unset = UNSET
     ends: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
+    gutter: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     height_from_level: bool | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
@@ -113792,6 +113817,7 @@ class SetArchOperation(ArchOperation):
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     slope: float | None | Unset = UNSET
     slopes: list[float | None] | None | Unset = UNSET
+    snow_guard: float | None | Unset = UNSET
     tag: str | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
     tread: float | None | Unset = UNSET
@@ -113818,6 +113844,8 @@ class SetArchOperation(ArchOperation):
             out["ends"] = None if self.ends is None else float(self.ends)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.gutter is not UNSET:
+            out["gutter"] = None if self.gutter is None else float(self.gutter)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.height_from_level is not UNSET:
@@ -113864,6 +113892,8 @@ class SetArchOperation(ArchOperation):
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.slopes is not UNSET:
             out["slopes"] = None if self.slopes is None else [None if e0 is None else float(e0) for e0 in self.slopes]
+        if self.snow_guard is not UNSET:
+            out["snowGuard"] = None if self.snow_guard is None else float(self.snow_guard)
         if self.tag is not UNSET:
             out["tag"] = self.tag
         if self.thickness is not UNSET:
@@ -113888,6 +113918,7 @@ class SetArchOperation(ArchOperation):
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             fill=data.get("fill", UNSET),
+            gutter=UNSET if "gutter" not in data else None if data["gutter"] is None else float(data["gutter"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             height_from_level=data.get("heightFromLevel", UNSET),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
@@ -113911,6 +113942,7 @@ class SetArchOperation(ArchOperation):
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else [None if e0 is None else float(e0) for e0 in data["slopes"]],
+            snow_guard=UNSET if "snowGuard" not in data else None if data["snowGuard"] is None else float(data["snowGuard"]),
             tag=data.get("tag", UNSET),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
             tread=UNSET if "tread" not in data else None if data["tread"] is None else float(data["tread"]),

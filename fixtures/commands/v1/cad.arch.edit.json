@@ -4910,6 +4910,600 @@
       ]
     },
     {
+      "name": "Değiştir: çatıya oluk ve kar siperliği, null kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.roofs.create",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "gutter": 0.15,
+              "snowGuard": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "roof",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 59.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 59.0
+                    }
+                  ],
+                  "slopes": [
+                    33.0,
+                    33.0,
+                    33.0,
+                    33.0
+                  ],
+                  "gutter": 0.15,
+                  "snowGuard": 0.3
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "gutter": 0.15,
+                "snowGuard": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "gutter": null,
+              "snowGuard": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "roof",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 59.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 59.0
+                    }
+                  ],
+                  "slopes": [
+                    33.0,
+                    33.0,
+                    33.0,
+                    33.0
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: 3 m içerideki kar siperliği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.roofs.create",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "snowGuard": 3.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Kar siperliğinin saçaktan uzaklığı 3; sıfırla 2 m arasında olmalı.",
+              "path": "uids[0].snowGuard"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sonsuz oluk reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.roofs.create",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "gutter": 0.15
+            }
+          },
+          "nonFinite": {
+            "operation.gutter": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Oluk sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.gutter"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: null rampanın eğimini kaldırır, başlangıç kotu",
       "steps": [
         {

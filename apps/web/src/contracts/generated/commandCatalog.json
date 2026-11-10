@@ -116683,6 +116683,15 @@
                 "null"
               ]
             },
+            "gutter": {
+              "description": "A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            },
             "height": {
               "description": "A beam's height (docs/adr/8041 §1).",
               "format": "double",
@@ -116906,6 +116915,15 @@
                 "null"
               ],
               "x-unit": "percent"
+            },
+            "snowGuard": {
+              "description": "A roof's snow guard, its distance in from every sloping eaves edge (docs/adr/8044 §8); null: none.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
             },
             "tag": {
               "description": "A column's.",
@@ -161031,6 +161049,15 @@
             "null"
           ]
         },
+        "gutter": {
+          "description": "Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "material": {
           "description": "Its covering; absent: Kiremit.",
           "type": [
@@ -161085,6 +161112,15 @@
           },
           "type": "array",
           "x-unit": "percent"
+        },
+        "snowGuard": {
+          "description": "Its snow guard (kar siperliği, docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): its distance in from every sloping\neaves edge; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         },
         "thickness": {
           "description": "Its build-up's thickness, measured upright; absent: 0.25 m.",
@@ -188908,6 +188944,15 @@
             "null"
           ]
         },
+        "gutter": {
+          "description": "Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge, metres; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "id": {
           "format": "uint32",
           "minimum": 0,
@@ -189025,6 +189070,15 @@
           },
           "type": "array",
           "x-unit": "percent"
+        },
+        "snowGuard": {
+          "description": "Its snow guard (kar siperliği, docs/adr/8044 §8): its distance in from every sloping eaves edge, metres; absent:\nnone.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         },
         "symbol": {
           "description": "Library symbol overriding the layer's style.",

@@ -10,6 +10,10 @@
 //!   by its middle in plan and its size; a chimney's top 0.80 m over the ridge unless given (Binaların Yangından
 //!   Korunması Hakkında Yönetmelik 58/2), a vent's 0.60 m over the roof at its place (PAİY 40/5: at most that), a window
 //!   in its face's plane, its depth down the slope (Sivas İmar Yönetmeliği 40: at most 1.20 × 1.50 m).
+//! - Its gutter and snow guard (docs/adr/8044 §8) run along every eaves edge that slopes, where the water and the snow
+//!   come off (a gable end has neither): the gutter outside the eaves by its width (Mimarlık Hizmetleri Şartnamesi
+//!   14.5.3 w, x: "su toplama yerleri", "yağmur iniş boruları"), the snow guard on the roof by its distance in from
+//!   the eaves (Sivas İmar Yönetmeliği 42/5: "saçak uçlarında kar siperliklerinin yapılması mecburidir").
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -42,6 +46,14 @@ pub const CHIMNEY_OVER_RIDGE: f64 = 0.8;
 /// A vent's top over the roof at its place when none is given, metres: PAİY 40/5 allows "hava bacaları … en fazla 0.60
 /// metre" over the roof's planes.
 pub const VENT_OVER_ROOF: f64 = 0.6;
+/// The widest a roof's gutter is, metres.
+pub const MAX_ROOF_GUTTER: f64 = 0.5;
+/// The farthest a roof's snow guard stands in from its eaves, metres.
+pub const MAX_SNOW_GUARD: f64 = 2.0;
+/// A gutter's width when the tool gives one, metres: a half-round gutter of 15 cm.
+pub const DEFAULT_ROOF_GUTTER: f64 = 0.15;
+/// A snow guard's distance in from the eaves when the tool gives one, metres: at the eaves' tip (Sivas 42/5).
+pub const DEFAULT_SNOW_GUARD: f64 = 0.3;
 
 /// What a roof's part is (docs/adr/8044 §6).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -158,6 +170,17 @@ pub struct RoofFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge, metres; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gutter: Option<f64>,
+    /// Its snow guard (kar siperliği, docs/adr/8044 §8): its distance in from every sloping eaves edge, metres; absent:
+    /// none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub snow_guard: Option<f64>,
     /// Its chimneys, vents and roof windows (docs/adr/8044 §6).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RoofPart>>"))]
@@ -267,6 +290,24 @@ impl RoofFields {
                 format!("Çatının saçağı {o}; sıfırla {MAX_ROOF_OVERHANG} m arasında olmalı."),
             ));
         }
+        if let Some(g) = self.gutter
+            && !(g.is_finite() && g > 0.0 && g <= MAX_ROOF_GUTTER)
+        {
+            return Some((
+                "gutter".into(),
+                format!("Çatının oluğu {g}; sıfırdan büyük, en çok {MAX_ROOF_GUTTER} m olmalı."),
+            ));
+        }
+        if let Some(d) = self.snow_guard
+            && !(d.is_finite() && (0.0..=MAX_SNOW_GUARD).contains(&d))
+        {
+            return Some((
+                "snowGuard".into(),
+                format!(
+                    "Kar siperliğinin saçaktan uzaklığı {d}; sıfırla {MAX_SNOW_GUARD} m arasında olmalı."
+                ),
+            ));
+        }
         if self.parts.len() > MAX_ROOF_PARTS {
             return Some((
                 "parts".into(),
@@ -342,6 +383,11 @@ impl RoofFields {
 /// Whether `e` is a roof with parts: a file of schema 238 holds them (docs/adr/8044 §6).
 pub fn needs_roof_parts(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Roof(r) if !r.roof.parts.is_empty())
+}
+
+/// Whether `e` is a roof with a gutter or a snow guard: a file of schema 239 holds them (docs/adr/8044 §8).
+pub fn needs_roof_edges(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Roof(r) if r.roof.gutter.is_some() || r.roof.snow_guard.is_some())
 }
 
 /// A roof (docs/adr/8044 §1).

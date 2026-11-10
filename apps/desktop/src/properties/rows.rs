@@ -1640,6 +1640,13 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 geo.push(metres("Saçak", o));
             }
             geo.push(Row::text("Kaplama", x.material_name()));
+            // Its gutter and snow guard (docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): along its sloping eaves.
+            for (label, v) in [("Oluk", x.gutter), ("Kar siperliği", x.snow_guard)] {
+                geo.push(match v {
+                    Some(v) => metres(label, v),
+                    None => Row::text(label, "Yok"),
+                });
+            }
             // Its chimneys, vents and windows (docs/adr/8044 §6), numbered within their kind when more than one: each
             // one's size and a chimney's or a vent's top over ±0.00.
             if let kentos_geometry_core::entity::Shape::Roof { pts, roof: spec } =

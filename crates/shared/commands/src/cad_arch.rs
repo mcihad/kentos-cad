@@ -948,6 +948,17 @@ pub struct NewRoof {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gutter: Option<f64>,
+    /// Its snow guard (kar siperliği, docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): its distance in from every sloping
+    /// eaves edge; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub snow_guard: Option<f64>,
     /// Its chimneys, vents and roof windows (docs/adr/8044 §6): each chimney's and vent's middle inside its eaves, each
     /// window wholly in one face.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1258,6 +1269,26 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub overhang: Option<Option<f64>>,
+    /// A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gutter: Option<Option<f64>>,
+    /// A roof's snow guard, its distance in from every sloping eaves edge (docs/adr/8044 §8); null: none.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub snow_guard: Option<Option<f64>>,
     /// A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write
     /// the ones it has with theirs; empty: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]

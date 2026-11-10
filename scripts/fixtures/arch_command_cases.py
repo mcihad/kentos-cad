@@ -1506,7 +1506,7 @@ def roof_fields(n):
     f = {"pts": n["pts"], "slopes": n["slopes"]}
     if n.get("offset") is not None and n["offset"] != 0.0:
         f["offset"] = n["offset"]
-    for k in ("thickness", "overhang", "material"):
+    for k in ("thickness", "overhang", "material", "gutter", "snowGuard"):
         if n.get(k) is not None:
             f[k] = n[k]
     if n.get("parts"):
@@ -1628,6 +1628,13 @@ def roof_problem(f, path):
     h = f.get("overhang")
     if h is not None and not (math.isfinite(h) and 0 <= h <= 5.0):
         return refusal("invalid_roof", f"Çatının saçağı {num(h)}; sıfırla 5 m arasında olmalı.", f"{path}.overhang")
+    g = f.get("gutter")
+    if g is not None and not (math.isfinite(g) and 0 < g <= 0.5):
+        return refusal("invalid_roof", f"Çatının oluğu {num(g)}; sıfırdan büyük, en çok 0.5 m olmalı.", f"{path}.gutter")
+    d = f.get("snowGuard")
+    if d is not None and not (math.isfinite(d) and 0 <= d <= 2.0):
+        return refusal("invalid_roof", f"Kar siperliğinin saçaktan uzaklığı {num(d)}; sıfırla 2 m arasında olmalı.",
+                       f"{path}.snowGuard")
     r = roof_parts_problem(f.get("parts", []), path)
     if r:
         return r
@@ -1660,7 +1667,8 @@ def roofs_create(d, inp, conflict=False):
         at = f"roofs[{i}]"
         r = points_not_finite(n["pts"], at) or finite_each(
             [(n.get("offset"), "offset", "Kot farkı"), (n.get("thickness"), "thickness", "Kalınlık"),
-             (n.get("overhang"), "overhang", "Saçak")], at)
+             (n.get("overhang"), "overhang", "Saçak"), (n.get("gutter"), "gutter", "Oluk"),
+             (n.get("snowGuard"), "snowGuard", "Kar siperliği")], at)
         if not r:
             for k, x in enumerate(n["slopes"]):
                 if x is not None and not math.isfinite(x):
@@ -2407,6 +2415,8 @@ def roof_cases():
         ("renkli ve kalın çatı", {**roof(), "color": "#cc3300", "lineWeight": 0.35}),
         ("duman bacası ve çatı penceresi", roof(parts=[CHIMNEY, WINDOW])),
         ("50 cm'lik, dönük hava bacası", roof(parts=[{**VENT, "rotation": 0.5, "rise": 0.5}])),
+        ("oluklu ve kar siperlikli çatı", roof(gutter=0.15, snowGuard=0.3)),
+        ("saçak ucundaki kar siperliği", roof(slopes=[40.0, None, 40.0, None], snowGuard=0.0)),
     ]:
         c.add(name, [create_step(Drawing(), ROOFS, "execute", inp)])
     refusals(c, ROOFS, [
@@ -2436,6 +2446,9 @@ def roof_cases():
         ("kırmaya taşan pencere reddedilir", roof(parts=[{**WINDOW, "at": P(1, 50.7)}]), {}),
         ("saçağın dışındaki pencere reddedilir", roof(parts=[{**WINDOW, "at": P(6, 49)}]), {}),
         ("düz çatıya pencere konmaz", roof(slopes=[None] * 4, parts=[WINDOW]), {}),
+        ("sonsuz oluk reddedilir", roof(gutter=0.15), {"non_finite": {"roofs[0].gutter": "Infinity"}}),
+        ("60 cm oluk reddedilir", roof(gutter=0.6), {}),
+        ("eksi kar siperliği reddedilir", roof(snowGuard=-0.1), {}),
     ])
     common_refusals(c, ROOFS, roof())
     return c.cases
@@ -2639,7 +2652,8 @@ FIELDS = [  # wire name, kinds, nullable
     # A column's, a beam's (docs/adr/8041 §2) or a roof's.
     ("material", ("column", "beam", "roof"), True),
     # A roof's (docs/adr/8044 §1, §6).
-    ("slopes", ("roof",), False), ("thickness", ("roof",), True), ("overhang", ("roof",), True), ("parts", ("roof",), False),
+    ("slopes", ("roof",), False), ("thickness", ("roof",), True), ("overhang", ("roof",), True),
+    ("gutter", ("roof",), True), ("snowGuard", ("roof",), True), ("parts", ("roof",), False),
     ("level", ("grid", "column", "stair", "ramp", "beam", "roof"), True),
     ("phase", ("grid", "column", "stair", "ramp", "beam", "roof"), True),
 ]
@@ -2650,7 +2664,8 @@ NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width
            ("legs[0]", "L kolonun kolu"), ("legs[1]", "L kolonun kolu"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
            ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu"),
-           ("height", "Yükseklik"), ("offset", "Kot farkı"), ("thickness", "Kalınlık"), ("overhang", "Saçak")]
+           ("height", "Yükseklik"), ("offset", "Kot farkı"), ("thickness", "Kalınlık"), ("overhang", "Saçak"),
+           ("gutter", "Oluk"), ("snowGuard", "Kar siperliği")]
 
 
 def set_field(f, name, value):
@@ -2946,6 +2961,16 @@ def edit_cases():
     c.add("Değiştir: çatıya kirişin yüksekliği reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "height": 0.5})])
     d = Drawing()
     c.add("Değiştir: merdivene çatının bacaları reddedilir", [one(d, [uid_of(8)], {"kind": "set", "parts": []})])
+    # A roof's gutter and snow guard (docs/adr/8044 §8): set, then null takes them away.
+    d, made, k = with_roof()
+    c.add("Değiştir: çatıya oluk ve kar siperliği, null kaldırır",
+          [made, one(d, [uid_of(k)], {"kind": "set", "gutter": 0.15, "snowGuard": 0.3}),
+           one(d, [uid_of(k)], {"kind": "set", "gutter": None, "snowGuard": None})])
+    d, made, k = with_roof()
+    c.add("Değiştir: 3 m içerideki kar siperliği reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "snowGuard": 3.0})])
+    d, made, k = with_roof()
+    c.add("Değiştir: sonsuz oluk reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "gutter": 0.15}, non_finite={"operation.gutter": "NaN"})])
     d = Drawing()
     c.add("Değiştir: null rampanın eğimini kaldırır, başlangıç kotu", [one(d, [uid_of(9)], {"kind": "set", "slope": None, "base": 0.45})])
     d = Drawing()

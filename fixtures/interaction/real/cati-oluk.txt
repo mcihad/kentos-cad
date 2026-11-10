@@ -1,0 +1,42 @@
+# M44 5. bölüm, oluk ve kar siperliği (docs/adr/8044 §8), on fixtures/arch/v1/facade-building.kcad (--modul mimari):
+# 1. kat active; Çatı by Binadan near the south wall with its defaults, Oluk 15 cm and Kar siperliği 30 cm (Sivas İmar
+# Yönetmeliği 42/5); the tool's settings; the roof drawn; a close view of the south-west corner: the gutter outside the
+# eaves, the snow guard inside with its ticks; the roof selected: Öznitelikler's "Oluk" and "Kar siperliği".
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1800
+shot o1-arac
+click 765 735
+wait 2500
+key Escape
+wait 800
+move 1400 120
+wait 600
+shot o2-cati
+wheel 520 760 5
+wait 1500
+move 1400 120
+wait 800
+shot o3-kose
+click 800 500 middle
+click 800 500 middle
+wait 2000
+click 465 450
+wait 1500
+wheel 1720 900 -4
+wait 1200
+move 1400 120
+wait 800
+shot o4-oznitelikler

@@ -30,6 +30,9 @@ pub const ARROW_MM: f64 = 12.0;
 const WORDS_GAP_MM: f64 = 1.0;
 /// Ridges, hips and valleys: the narrow pen's share of the object's (ISO 128-20's narrow line, half the wide).
 pub const NARROW: f64 = 0.5;
+/// A snow guard's ticks on paper, millimetres: across it, and apart along it.
+const GUARD_TICK_MM: f64 = 1.5;
+const GUARD_STEP_MM: f64 = 5.0;
 
 /// A roof's fields beside its eaves line.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -44,6 +47,10 @@ pub struct RoofSpec {
     pub overhead: bool,
     /// Its chimneys, vents and roof windows (docs/adr/8044 §6).
     pub parts: Vec<Part>,
+    /// Its gutter's width outside every sloping eaves edge (docs/adr/8044 §8); none: no gutter.
+    pub gutter: Option<f64>,
+    /// Its snow guard's distance in from every sloping eaves edge (docs/adr/8044 §8); none: no snow guard.
+    pub snow_guard: Option<f64>,
 }
 
 /// What a roof's part is (docs/adr/8044 §6).
@@ -688,7 +695,150 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
             TextAlign::BottomCenter,
         )));
     }
+    out.extend(edge_pieces(pts, spec, scale, h));
     out.extend(part_pieces(pts, spec, h));
+    out
+}
+
+/// Lines `d` out of every sloping eaves edge (in from it when negative): mitred where two sloping edges meet, squared
+/// off where a gable end meets one (it has no gutter and no snow guard: the water and the snow come off the eaves).
+/// Each with its edge's index.
+pub fn along_eaves(pts: &[Vec2], spec: &RoofSpec, d: f64) -> Vec<(usize, [Vec2; 2])> {
+    let n = pts.len();
+    if n < 3 || spec.slopes.len() != n {
+        return Vec::new();
+    }
+    let ccw = area2(pts) >= 0.0;
+    // Each edge's outward normal.
+    let normal = |i: usize| {
+        let (a, b) = (pts[i], pts[(i + 1) % n]);
+        let l = js_max(js_hypot(b.x - a.x, b.y - a.y), EPS);
+        if ccw {
+            Vec2::new((b.y - a.y) / l, -(b.x - a.x) / l)
+        } else {
+            Vec2::new(-(b.y - a.y) / l, (b.x - a.x) / l)
+        }
+    };
+    let moved = |i: usize, p: Vec2| {
+        let m = normal(i);
+        Vec2::new(p.x + m.x * d, p.y + m.y * d)
+    };
+    // Where edge `i`'s line moved meets edge `j`'s, `j` following it; its own end when they run in one line.
+    let meet = |i: usize, j: usize| {
+        let (a, b) = (moved(i, pts[i]), moved(i, pts[(i + 1) % n]));
+        let (c, e) = (moved(j, pts[j]), moved(j, pts[(j + 1) % n]));
+        let (r, s) = (
+            Vec2::new(b.x - a.x, b.y - a.y),
+            Vec2::new(e.x - c.x, e.y - c.y),
+        );
+        let den = r.x * s.y - r.y * s.x;
+        if den.abs() <= EPS * js_hypot(r.x, r.y) * js_hypot(s.x, s.y) {
+            return b;
+        }
+        let t = ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / den;
+        Vec2::new(a.x + r.x * t, a.y + r.y * t)
+    };
+    let sloping = |i: usize| spec.slopes[i].is_some();
+    (0..n)
+        .filter(|&i| sloping(i))
+        .map(|i| {
+            let (prev, next) = ((i + n - 1) % n, (i + 1) % n);
+            let start = if sloping(prev) {
+                meet(prev, i)
+            } else {
+                moved(i, pts[i])
+            };
+            let end = if sloping(next) {
+                meet(i, next)
+            } else {
+                moved(i, pts[next])
+            };
+            (i, [start, end])
+        })
+        .collect()
+}
+
+/// Its gutter and snow guard as the roof plan draws them (docs/adr/8044 §8; Mimarlık Hizmetleri Şartnamesi 14.3.3 u
+/// "su toplama yerleri", Sivas İmar Yönetmeliği 42/5): the gutter's outer edge outside the eaves, the snow guard a line
+/// in from them with short ticks across it, both narrow; each named once, along the longest of its lines.
+fn edge_pieces(pts: &[Vec2], spec: &RoofSpec, scale: f64, h: f64) -> Vec<Piece> {
+    let mut out = Vec::new();
+    let tick = GUARD_TICK_MM * scale / 1000.0;
+    let step = GUARD_STEP_MM * scale / 1000.0;
+    let gap = WORDS_GAP_MM * scale / 1000.0;
+    let narrow = |shape: Shape| {
+        let mut p = piece(shape);
+        p.stroke.weight_scale = Some(NARROW);
+        p
+    };
+    // Its words along the longest line, read from below or from the right, on the side `side` (1 out, -1 in).
+    let name = |lines: &[(usize, [Vec2; 2])], words: &str, side: f64| -> Option<Piece> {
+        let (_, [a, b]) = lines.iter().max_by(|(_, p), (_, q)| {
+            js_hypot(p[1].x - p[0].x, p[1].y - p[0].y)
+                .total_cmp(&js_hypot(q[1].x - q[0].x, q[1].y - q[0].y))
+        })?;
+        let l = js_max(js_hypot(b.x - a.x, b.y - a.y), EPS);
+        let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
+        let ccw = area2(pts) >= 0.0;
+        let outward = if ccw {
+            Vec2::new(along.y, -along.x)
+        } else {
+            Vec2::new(-along.y, along.x)
+        };
+        let mut turn = crate::jsmath::atan2(along.y, along.x);
+        if turn > std::f64::consts::FRAC_PI_2 + 1e-9 {
+            turn -= std::f64::consts::PI;
+        } else if turn <= -std::f64::consts::FRAC_PI_2 + 1e-9 {
+            turn += std::f64::consts::PI;
+        }
+        let up = Vec2::new(-crate::jsmath::sin(turn), crate::jsmath::cos(turn));
+        // On the line's own side, a gap off it: over it when that side is up, under it when down.
+        let toward = Vec2::new(outward.x * side, outward.y * side);
+        let above = up.x * toward.x + up.y * toward.y >= 0.0;
+        let mid = Vec2::new(
+            (a.x + b.x) / 2.0 + toward.x * gap,
+            (a.y + b.y) / 2.0 + toward.y * gap,
+        );
+        Some(piece(text(
+            mid,
+            words.to_owned(),
+            h,
+            turn.to_degrees(),
+            if above {
+                TextAlign::BottomCenter
+            } else {
+                TextAlign::TopCenter
+            },
+        )))
+    };
+    if let Some(g) = spec.gutter.filter(|g| *g > 0.0) {
+        let lines = along_eaves(pts, spec, g);
+        out.extend(lines.iter().map(|(_, [a, b])| narrow(segment(*a, *b))));
+        out.extend(name(&lines, "Oluk", 1.0));
+    }
+    if let Some(d) = spec.snow_guard {
+        let lines = along_eaves(pts, spec, -d);
+        for (_, [a, b]) in &lines {
+            out.push(narrow(segment(*a, *b)));
+            let l = js_hypot(b.x - a.x, b.y - a.y);
+            if l <= EPS || step <= EPS {
+                continue;
+            }
+            let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
+            let across = Vec2::new(-along.y * tick / 2.0, along.x * tick / 2.0);
+            let count = (l / step).floor() as usize;
+            let first = (l - count as f64 * step) / 2.0;
+            for k in 0..=count {
+                let t = first + k as f64 * step;
+                let c = Vec2::new(a.x + along.x * t, a.y + along.y * t);
+                out.push(narrow(segment(
+                    Vec2::new(c.x - across.x, c.y - across.y),
+                    Vec2::new(c.x + across.x, c.y + across.y),
+                )));
+            }
+        }
+        out.extend(name(&lines, "Kar siperliği", -1.0));
+    }
     out
 }
 
@@ -761,9 +911,71 @@ mod tests {
         RoofSpec {
             slopes: slopes.to_vec(),
             base: 6.0,
-            overhead: false,
-            parts: Vec::new(),
+            ..Default::default()
         }
+    }
+
+    #[test]
+    fn a_gutter_and_a_snow_guard_run_along_the_sloping_eaves() {
+        let pts = rect(12.0, 9.0);
+        let close = |p: Vec2, x: f64, y: f64| (p.x - x).abs() < 1e-9 && (p.y - y).abs() < 1e-9;
+        // A hip roof: four gutter lines 15 cm out, mitred into a rectangle.
+        let hip = spec([Some(33.0); 4]);
+        let g = along_eaves(&pts, &hip, 0.15);
+        assert_eq!(g.len(), 4);
+        assert!(
+            close(g[0].1[0], -0.15, -0.15) && close(g[0].1[1], 12.15, -0.15),
+            "{g:?}"
+        );
+        assert!(
+            close(g[2].1[0], 12.15, 9.15) && close(g[2].1[1], -0.15, 9.15),
+            "{g:?}"
+        );
+        // A gable roof: the south and the north eaves only, squared off at the gable ends.
+        let gable = spec([Some(40.0), None, Some(40.0), None]);
+        let g = along_eaves(&pts, &gable, 0.15);
+        assert_eq!(g.iter().map(|(i, _)| *i).collect::<Vec<_>>(), [0, 2]);
+        assert!(
+            close(g[0].1[0], 0.0, -0.15) && close(g[0].1[1], 12.0, -0.15),
+            "{g:?}"
+        );
+        // A snow guard 30 cm in.
+        let s = along_eaves(&pts, &hip, -0.3);
+        assert!(
+            close(s[0].1[0], 0.3, 0.3) && close(s[0].1[1], 11.7, 0.3),
+            "{s:?}"
+        );
+        // Drawn and named once each; the gable's gable ends have neither.
+        let words = |s: &RoofSpec| -> Vec<String> {
+            pieces_at(&pts, s, 100.0, Level::Whole)
+                .into_iter()
+                .filter_map(|p| match p.shape {
+                    Shape::Text { text, .. } => Some(text),
+                    _ => None,
+                })
+                .collect()
+        };
+        let with = RoofSpec {
+            gutter: Some(0.15),
+            snow_guard: Some(0.3),
+            ..hip.clone()
+        };
+        let w = words(&with);
+        assert_eq!(w.iter().filter(|t| *t == "Oluk").count(), 1, "{w:?}");
+        assert_eq!(
+            w.iter().filter(|t| *t == "Kar siperliği").count(),
+            1,
+            "{w:?}"
+        );
+        assert!(
+            !words(&hip)
+                .iter()
+                .any(|t| t == "Oluk" || t == "Kar siperliği")
+        );
+        // On its own storey's plan only the dashed eaves.
+        let mut own = with.clone();
+        own.overhead = true;
+        assert_eq!(pieces_at(&pts, &own, 100.0, Level::Whole).len(), 1);
     }
 
     fn kinds(lines: &[RoofLine]) -> Vec<Line> {
@@ -1003,8 +1215,7 @@ mod tests {
         let s = RoofSpec {
             slopes: vec![Some(33.0); 6],
             base: 0.0,
-            overhead: false,
-            parts: Vec::new(),
+            ..Default::default()
         };
         assert_eq!(faces(&l, &s), Err(Problem::Concave));
         // Its plan draws its eaves alone.

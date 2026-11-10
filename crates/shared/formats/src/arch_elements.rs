@@ -99,6 +99,8 @@ pub fn core_roof(r: &RoofFields) -> Shape {
             base: r.offset,
             overhead: false,
             parts: r.parts.iter().map(core_roof_part).collect(),
+            gutter: r.gutter,
+            snow_guard: r.snow_guard,
         },
     }
 }

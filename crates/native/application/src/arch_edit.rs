@@ -96,6 +96,8 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.slopes.is_some(), "slopes", ROOF);
     add(c.thickness.is_some(), "thickness", ROOF);
     add(c.overhang.is_some(), "overhang", ROOF);
+    add(c.gutter.is_some(), "gutter", ROOF);
+    add(c.snow_guard.is_some(), "snowGuard", ROOF);
     add(c.parts.is_some(), "parts", ROOF);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
@@ -136,6 +138,8 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (c.offset, "offset", "Kot farkı"),
         (flat(c.thickness), "thickness", "Kalınlık"),
         (flat(c.overhang), "overhang", "Saçak"),
+        (flat(c.gutter), "gutter", "Oluk"),
+        (flat(c.snow_guard), "snowGuard", "Kar siperliği"),
     ] {
         if let Some(x) = v {
             checks::finite(
@@ -326,6 +330,12 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = &c.material {
                 f.material.clone_from(v);
+            }
+            if let Some(v) = c.gutter {
+                f.gutter = v;
+            }
+            if let Some(v) = c.snow_guard {
+                f.snow_guard = v;
             }
             if let Some(v) = &c.parts {
                 f.parts.clone_from(v);

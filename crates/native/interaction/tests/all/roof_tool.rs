@@ -294,3 +294,30 @@ fn without_an_offset_the_roof_sits_on_the_walls_outer_faces() {
     b.click(6.0, 1.0);
     assert!((newest_roof(&b).roof.offset - 0.05).abs() < 1e-12);
 }
+
+/// Oluk and Kar siperliği (docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): a roof gets both by default, 15 cm and 30 cm;
+/// emptied, none; a flat roof has neither.
+#[test]
+fn a_roof_gets_a_gutter_and_a_snow_guard_unless_emptied() {
+    let mut b = building();
+    b.start("roof");
+    assert!(b.options().contains(&"O") && b.options().contains(&"K"));
+    b.click(6.0, 1.0);
+    let r = newest_roof(&b);
+    assert_eq!((r.roof.gutter, r.roof.snow_guard), (Some(0.15), Some(0.3)));
+    assert!(b.run(|s, cx| s.configure("O", "", cx)));
+    assert!(b.run(|s, cx| s.configure("K", "yok", cx)));
+    b.click(6.0, 1.0);
+    let r = newest_roof(&b);
+    assert_eq!((r.roof.gutter, r.roof.snow_guard), (None, None));
+    // A 60 cm gutter is refused, the tool keeping its own.
+    assert!(!b.run(|s, cx| s.configure("O", "0.6", cx)));
+    assert!(b.run(|s, cx| s.configure("O", "0.12", cx)));
+    assert!(b.run(|s, cx| s.configure("T", "flat", cx)));
+    b.click(6.0, 1.0);
+    assert_eq!(
+        newest_roof(&b).roof.gutter,
+        None,
+        "a flat roof sheds no water off an eaves edge"
+    );
+}

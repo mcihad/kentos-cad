@@ -32,6 +32,15 @@ overhang?: number,
  */
 material?: string, 
 /**
+ * Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge; absent: none.
+ */
+gutter?: number, 
+/**
+ * Its snow guard (kar siperliği, docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): its distance in from every sloping
+ * eaves edge; absent: none.
+ */
+snowGuard?: number, 
+/**
  * Its chimneys, vents and roof windows (docs/adr/8044 §6): each chimney's and vent's middle inside its eaves, each
  * window wholly in one face.
  */

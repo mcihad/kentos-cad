@@ -2737,6 +2737,9 @@ def document(d):
     if any(e["kind"] == "roof" and e.get("parts") for e in d["entities"]):
         # A roof's chimneys, vents and windows (docs/adr/8044 §6).
         schema = max(schema, 238)
+    if any(e["kind"] == "roof" and ("gutter" in e or "snowGuard" in e) for e in d["entities"]):
+        # A roof's gutter and snow guard (docs/adr/8044 §8).
+        schema = max(schema, 239)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3641,7 +3644,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-239.kcad"] = container(root(cmap(parts), version=uint(239)))
+    files["schema-version-240.kcad"] = container(root(cmap(parts), version=uint(240)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6737,6 +6740,11 @@ def build():
     assert roof_parts.count(b"\x67version\x18\xee") == 1, "a roof's parts are schema 238"
     out["roof-parts.kcad"] = container(roof_parts)
     out["broken/roof-parts-in-schema-237.kcad"] = container(roof_parts.replace(b"\x67version\x18\xee", b"\x67version\x18\xed"))
+    # Schema 239 (docs/adr/8044 §8): a roof's gutter and snow guard; schema 238 refuses them.
+    roof_edges = document(load("roof-edges.json"))
+    assert roof_edges.count(b"\x67version\x18\xef") == 1, "a roof's gutter and snow guard are schema 239"
+    out["roof-edges.kcad"] = container(roof_edges)
+    out["broken/roof-edges-in-schema-238.kcad"] = container(roof_edges.replace(b"\x67version\x18\xef", b"\x67version\x18\xee"))
     # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
     assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"

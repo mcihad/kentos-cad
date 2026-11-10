@@ -374,6 +374,10 @@
     çıkarır (masaüstü harita, model düzenleme ve PDF aynı kural). Ruhsat takımı, kendi katının planında kesikli kalan ve
     üstünde planı olan kat bulunmayan çatı için planlardan sonra "Çatı planı" ekler: EK-2 PL / CAT / NNN. Görünüm penceresi
     yaması seviyeyi bütün alanlarıyla yazar; tasarımcıda kat seçmek çatı planını kat planına çevirir.
+  - **Oluk ve kar siperliği (M44 5. bölüm, ADR 8044 §8):** `RoofFields.gutter` (genişlik) ve `snowGuard` (saçaktan
+    içeri uzaklık), `.kcad` 239; eğimli her saçak kenarı boyunca (kalkanda yok), `geom::roof::along_eaves` gönyeli ve
+    kalkanda dik; planda oluk dışta, kar siperliği içte çentikli, her biri bir kez adlı. Çatı aracı O (15 cm) ve K (30 cm,
+    Sivas 42/5 "saçak uçlarında kar siperliği mecburi"), boş/"yok" kaldırır; düz çatıda yok.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -2,8 +2,9 @@
 
 - **Durum:** sürüyor (10 Kasım 2026); `plan/architecture-advanced.md` ADV-20, M44. 1. bölüm yapıldı: çekirdek
   geometri (§2), çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). 2. bölüm yapıldı: kesit ve görünüşte çatı
-  (§5). 3. bölüm yapıldı: baca, hava bacası ve çatı penceresi (§6). 4. bölüm yapıldı: çatı planı paftası (§7). Sırada
-  oluk ve iniş borusu, kar siperliği ve PAİY 40/42 denetimi.
+  (§5). 3. bölüm yapıldı: baca, hava bacası ve çatı penceresi (§6). 4. bölüm yapıldı: çatı planı paftası (§7). 5.
+  bölümün ilk adımı yapıldı: oluk ve kar siperliği (§8). Sırada iniş borusu, görünüşte oluk ve inişler, PAİY 40/42 ve
+  Sivas denetimi.
 - **Bağlam belgesi:** ADR 8040 (düşey model: kat yükseklikleri, döşemenin katmanları), ADR 8042–8043 (kesit ve görünüş:
   "çizilmeyen: çatı"), ADR 8008 (EK-4 katman anahtarı), ADR 8011 (ölçeğe göre ayrıntı).
 
@@ -257,6 +258,29 @@ projede çatı planını ister.
 - **Sonraya:** çatı planında alttaki dış duvarların kesik çizgiyle gösterilmesi (Türk kaynağında doğrulanamadı; Revit
   ve Archicad göstermiyor), saçak ve bina ölçüleri, oluk ve iniş boruları.
 
+### 8. Oluk ve kar siperliği (5. bölüm)
+
+- **Mevzuat:** Sivas İmar Yönetmeliği 42(5) (RG 10.11.2022/32009, resmî metin): "Çatılarda biriken karların yola ve
+  kaldırıma düşmemesi için saçak uçlarında kar siperliklerinin yapılması mecburidir." Mimarlık Hizmetleri Şartnamesi
+  14.3.3 u (ön proje, çatı planı): "su toplama yerleri"; 14.5.3 w ve x (uygulama projesi): "su toplama yerleri",
+  "Yağmur iniş boruları gerçek boyutlarında çizilir ve ölçüleri yazılır." Oluk ve iniş borusu Sivas metninde geçmez.
+- **Başka programlar (yalnız görünüş):** Chief Architect oluğu çatı düzleminin saçak kenarına kendiliğinden koyar,
+  kenar kenar açılıp kapanır (X11'den önce düzlem başına); kalkan kenarında oluk yoktur. Revit'in "Roof: Gutter"ı yatay
+  kenarlara (saçak) seçilerek konur.
+- **Model (`RoofFields.gutter`, `snowGuard`; `.kcad` 239):** oluğun genişliği ve kar siperliğinin saçaktan içeri
+  uzaklığı; ikisi de **eğimli her saçak kenarı** boyunca (su ve kar oradan iner; kalkanda yok), yoksa alan yazılmaz.
+  Oluk en çok 0,5 m, kar siperliği saçaktan en çok 2 m içeride. Şema 238 dosya bu alanları yazamaz; okuyan "şema 239
+  ister" der. `cad.arch.edit` ikisini de değiştirir (null kaldırır).
+- **Planda** (`geom::roof::along_eaves`, `edge_pieces`): oluğun dış kenarı saçağın genişliği kadar dışında, kar
+  siperliği içeride, kâğıtta 5 mm arayla 1,5 mm'lik çentiklerle; iki eğimli kenarın köşesinde gönye, kalkana değdiği
+  yerde dik kesilir; ikisi de ince kalem; her biri en uzun çizgisi boyunca bir kez adlandırılır ("Oluk",
+  "Kar siperliği"). Çatının kendi katının planında (kesikli saçak) çizilmez.
+- **Çatı aracı:** Oluk (O, 15 cm) ve Kar siperliği (K, 30 cm: saçak ucunda, Sivas 42/5 zorunlu kıldığı için açık
+  başlar); boş ya da "yok" yazılınca yok; düz çatıya ikisi de yazılmaz.
+- **Öznitelikler:** "Oluk" ve "Kar siperliği" satırları (yoksa "Yok").
+- **Sonraya (5. bölümün devamı):** iniş borusu (oluğa bağlı, Ø100, planda gerçek boyutunda ve çapı yazılı), görünüşte
+  oluk ve iniş boruları, denetim: kar siperliği olmayan eğimli çatıya Sivas 42/5 uyarısı.
+
 ## Doğrulama
 
 - `geom::roof` birim testleri 7 (kırma, beşik, tek eğim, düz ve saat yönü, içe dönen köşe reddi, planın okları ve
@@ -312,6 +336,14 @@ projede çatı planını ister.
 - Bulunan iki hata: görünüm penceresinin yaması katı yalnız `id` ve `below` ile yazıyordu (çatı planı kayboluyordu);
   geri alma yaması eski katta olmayan alana `null` yazıyor ve `bool` alan onu okuyamıyordu (`below` için de
   geçerliydi, testlere hiç düşmemişti): ikisi de `null`ı yanlış okur (`default_on_null`).
+
+- 5. bölüm, oluk ve kar siperliği (§8): çekirdek 13 (`along_eaves`: kırmada dört çizgi gönyeli, beşikte yalnız iki
+  saçak ve kalkanda dik kesim, kar siperliği 30 cm içeride; "Oluk" ve "Kar siperliği" birer kez; kendi katında yalnız
+  kesikli saçak); KCAD 250 (şema 239 örneği `roof-edges.kcad`, şema 238'de ret, şema 240'ın reddi); ortak durumlar
+  `cad.roofs.create` 52 (5 yeni), `cad.arch.edit` 75 (3 yeni); Çatı aracı 8 (varsayılan 15 cm ve 30 cm, boş ve "yok"
+  kaldırır, 60 cm oluk reddedilir, düz çatıda yok); masaüstü 20 (seçenek harfleri, Öznitelikler). Gerçek pencere
+  (`fixtures/interaction/real/cati-oluk.txt`): köşede dışta oluk, içte çentikli kar siperliği, adları güney saçakta;
+  araç ayarlarında ve Öznitelikler'de "Oluk 0.150 m", "Kar siperliği 0.300 m".
 
 ## Sonraya kalan
 

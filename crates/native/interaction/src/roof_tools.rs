@@ -7,6 +7,8 @@
 //! - Tür (T): Kırma, Beşik, Tek eğimli, Düz. The front edge is the one nearest the click (Binadan) or the first drawn:
 //!   a shed's water runs off it, a gable roof's ridge runs along it.
 //! - Eğim (M: per cent, as Rampa's), Saçak (A), Kalınlık (E), Kot farkı (F), Kaplama (P), Kat (L).
+//! - Oluk (O, 15 cm) and Kar siperliği (K, 30 cm in from the eaves: Sivas İmar Yönetmeliği 42/5 makes it mandatory)
+//!   along every sloping eaves edge (docs/adr/8044 §8); emptied: none. A flat roof has neither.
 //!
 //! The roof's eaves stand at its storey's top and its offset. Without an offset typed (Kot farkı empty) its underside sits
 //! on its storey's top at the walls' outer faces (Revit's Truss: the plate on the wall's outside): the offset is its
@@ -69,6 +71,8 @@ enum Ask {
     Thickness,
     Offset,
     Material,
+    Gutter,
+    SnowGuard,
 }
 
 /// The icon of a kind in Tür's menu.
@@ -95,6 +99,9 @@ pub struct RoofTool {
     /// Its offset as typed; none: its underside sits on its storey's top at the walls ([`RoofTool::offset_now`]).
     offset: Option<f64>,
     material: Option<String>,
+    /// Its gutter's width and its snow guard's distance in from the eaves (docs/adr/8044 §8); none: none.
+    gutter: Option<f64>,
+    snow_guard: Option<f64>,
     level: crate::architecture_level::Choice,
     pts: Vec<Vec2>,
     hover: Option<Vec2>,
@@ -116,6 +123,8 @@ impl Default for RoofTool {
             thickness: kentos_commands::DEFAULT_ROOF_THICKNESS,
             offset: None,
             material: None,
+            gutter: Some(kentos_commands::DEFAULT_ROOF_GUTTER),
+            snow_guard: Some(kentos_commands::DEFAULT_SNOW_GUARD),
             level: Default::default(),
             pts: Vec::new(),
             hover: None,
@@ -184,6 +193,9 @@ impl RoofTool {
             // Drawn by its corners, the walls are not known: no overhang is said.
             overhang: (!self.draws()).then_some(self.overhang),
             material: self.material.clone(),
+            // A flat roof sheds no water and no snow off an eaves edge.
+            gutter: self.gutter.filter(|_| self.form != RoofForm::Flat),
+            snow_guard: self.snow_guard.filter(|_| self.form != RoofForm::Flat),
             parts: None,
             arch: self.level.arch(),
             attrs: None,
@@ -357,6 +369,11 @@ impl RoofTool {
             .collect()
     }
 
+    /// A gutter's width or a snow guard's distance; "Yok" when there is none.
+    fn edge_text(&self, v: Option<f64>, f: &Format) -> String {
+        v.map_or_else(|| "Yok".to_owned(), |v| f.length(v))
+    }
+
     fn slope_text(&self) -> String {
         roof::slope_words(self.slope)
     }
@@ -371,6 +388,16 @@ impl RoofTool {
         // Empty: the underside sits on the storey's top at the walls again.
         if ask == Ask::Offset && text.is_empty() {
             self.offset = None;
+            return true;
+        }
+        // Empty or "yok": no gutter, no snow guard.
+        if matches!(ask, Ask::Gutter | Ask::SnowGuard)
+            && (text.is_empty() || upper_tr(text) == "YOK")
+        {
+            match ask {
+                Ask::Gutter => self.gutter = None,
+                _ => self.snow_guard = None,
+            }
             return true;
         }
         if ask == Ask::Slope {
@@ -419,6 +446,28 @@ impl RoofTool {
             }
             Ask::Thickness => self.thickness = v,
             Ask::Offset => self.offset = Some(v),
+            Ask::Gutter if !(v > 0.0 && v <= kentos_commands::MAX_ROOF_GUTTER) => {
+                cx.say(
+                    Level::Warn,
+                    format!(
+                        "Oluk sıfırdan büyük, en çok {} olmalı; oluk istemiyorsanız boş bırakın.",
+                        cx.format().length(kentos_commands::MAX_ROOF_GUTTER)
+                    ),
+                );
+                return false;
+            }
+            Ask::Gutter => self.gutter = Some(v),
+            Ask::SnowGuard if !(0.0..=kentos_commands::MAX_SNOW_GUARD).contains(&v) => {
+                cx.say(
+                    Level::Warn,
+                    format!(
+                        "Kar siperliğinin saçaktan uzaklığı sıfırla {} arasında olmalı.",
+                        cx.format().length(kentos_commands::MAX_SNOW_GUARD)
+                    ),
+                );
+                return false;
+            }
+            Ask::SnowGuard => self.snow_guard = Some(v),
             Ask::Slope | Ask::Material => {}
         }
         true
@@ -431,6 +480,8 @@ impl RoofTool {
             "E" => Ask::Thickness,
             "F" => Ask::Offset,
             "P" => Ask::Material,
+            "O" => Ask::Gutter,
+            "K" => Ask::SnowGuard,
             _ => return None,
         })
     }
@@ -496,6 +547,12 @@ impl Tool for RoofTool {
                 );
             }
             Some(Ask::Material) => return words("kaplamayı yazın (Kiremit gibi)"),
+            Some(Ask::Gutter) => {
+                return words("oluğun genişliğini yazın (15 cm gibi); boş: oluk yok");
+            }
+            Some(Ask::SnowGuard) => {
+                return words("kar siperliğinin saçaktan uzaklığını yazın (30 cm gibi); boş: yok");
+            }
             None => {}
         }
         let step = match (self.draws(), self.pts.len()) {
@@ -517,6 +574,8 @@ impl Tool for RoofTool {
                 "P",
                 self.material.clone().unwrap_or_else(|| "Kiremit".into()),
             )
+            .option_with("Oluk", "O", self.edge_text(self.gutter, f))
+            .option_with("Kar siperliği", "K", self.edge_text(self.snow_guard, f))
             .option_with("Kat", "L", self.level.label());
         if self.draws() && !self.pts.is_empty() {
             p = p.option("Geri al", "G");
@@ -621,6 +680,12 @@ impl Tool for RoofTool {
                 "P",
                 "Kaplama",
                 self.material.clone().unwrap_or_else(|| "Kiremit".into()),
+            ),
+            Setting::text("O", "Oluk (boş: yok)", self.edge_text(self.gutter, f)),
+            Setting::text(
+                "K",
+                "Kar siperliği (boş: yok)",
+                self.edge_text(self.snow_guard, f),
             ),
             self.level.setting(),
             Setting::hint(

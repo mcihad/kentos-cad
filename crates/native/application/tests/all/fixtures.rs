@@ -1295,6 +1295,8 @@ impl Input for kentos_commands::RoofsCreate {
             "offset" => r.offset.as_mut(),
             "thickness" => r.thickness.as_mut(),
             "overhang" => r.overhang.as_mut(),
+            "gutter" => r.gutter.as_mut(),
+            "snowGuard" => r.snow_guard.as_mut(),
             _ if rest.starts_with("parts[") => roof_part_number(r.parts.as_mut(), rest),
             _ => match rest
                 .strip_prefix("slopes[")
@@ -1634,6 +1636,8 @@ impl Input for kentos_commands::ArchEdit {
                 // A roof's (docs/adr/8044 §1, §6).
                 "operation.thickness" => c.thickness.as_mut().and_then(Option::as_mut),
                 "operation.overhang" => c.overhang.as_mut().and_then(Option::as_mut),
+                "operation.gutter" => c.gutter.as_mut().and_then(Option::as_mut),
+                "operation.snowGuard" => c.snow_guard.as_mut().and_then(Option::as_mut),
                 _ => {
                     let rest = path.strip_prefix("operation.")?;
                     if rest.starts_with("parts[") {

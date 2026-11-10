@@ -2291,6 +2291,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 239 (docs/adr/8044 §8): a roof's gutter and snow guard.
+    if objs.iter().any(kentos_contracts::needs_roof_edges) {
+        return crate::SCHEMA_WITH_ROOF_EDGES;
+    }
     // Schema 238 (docs/adr/8044 §6): a roof's chimneys, vents and windows.
     if objs.iter().any(kentos_contracts::needs_roof_parts) {
         return crate::SCHEMA_WITH_ROOF_PARTS;

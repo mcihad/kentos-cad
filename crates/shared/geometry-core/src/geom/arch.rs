@@ -478,7 +478,7 @@ impl crate::api::json::Flat for crate::geom::beam::BeamSpec {
 to_json_flat!(crate::geom::beam::BeamSpec);
 
 impl crate::api::json::Flat for crate::geom::roof::RoofSpec {
-    const NAMES: &'static [&'static str] = &["slopes", "base", "parts"];
+    const NAMES: &'static [&'static str] = &["slopes", "base", "parts", "gutter", "snowGuard"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         Ok(crate::geom::roof::RoofSpec {
@@ -489,6 +489,8 @@ impl crate::api::json::Flat for crate::geom::roof::RoofSpec {
                 Json::Null => Vec::new(),
                 parts => Vec::<crate::geom::roof::Part>::from_json(parts)?,
             },
+            gutter: number(v, "gutter")?,
+            snow_guard: number(v, "snowGuard")?,
         })
     }
 
@@ -499,6 +501,12 @@ impl crate::api::json::Flat for crate::geom::roof::RoofSpec {
         }
         if !self.parts.is_empty() {
             field(out, first, "parts", &self.parts);
+        }
+        if let Some(g) = self.gutter {
+            field(out, first, "gutter", &g);
+        }
+        if let Some(d) = self.snow_guard {
+            field(out, first, "snowGuard", &d);
         }
     }
 }

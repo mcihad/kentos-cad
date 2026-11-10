@@ -153,6 +153,14 @@ thickness?: number | null,
  */
 overhang?: number | null, 
 /**
+ * A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none.
+ */
+gutter?: number | null, 
+/**
+ * A roof's snow guard, its distance in from every sloping eaves edge (docs/adr/8044 §8); null: none.
+ */
+snowGuard?: number | null, 
+/**
  * A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write
  * the ones it has with theirs; empty: none.
  */
