@@ -126,6 +126,8 @@ pub enum Event {
     EndOriented(bool),
     /// Docs/adr/4100: the traverse's heights asked; the start's and the end's heights typed.
     TraverseHeights(bool),
+    /// Docs/adr/4500: the legs sighted back too.
+    TraverseReciprocal(bool),
     TraverseStartZ(String),
     TraverseEndZ(String),
     /// Kutupsal alım's reading to the back point and heights.
@@ -397,6 +399,10 @@ impl App {
             }
             Event::TraverseHeights(on) => {
                 self.calc.traverse.heights = on;
+                Task::none()
+            }
+            Event::TraverseReciprocal(on) => {
+                self.calc.traverse.reciprocal = on;
                 Task::none()
             }
             Event::TraverseStartZ(t) => {
@@ -832,3 +838,5 @@ fn field_label(window: Window, field: Field) -> &'static str {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod traverse_reciprocal_tests;

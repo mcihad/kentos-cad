@@ -90662,7 +90662,7 @@
       "id": "cad.survey.points",
       "version": 1,
       "title": "Ölçme hesabı",
-      "summary": "Ölçme pencerelerinin noktalarını hesaplayıp verilen katmana adlı noktalar olarak yazar; hesabı komut ortak çekirdekle yapar: Poligon hesabı (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar uzunlukları, kapanma hataları dağıtılır), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen noktalar adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı biriminde. Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin adıyla.",
+      "summary": "Ölçme pencerelerinin noktalarını hesaplayıp verilen katmana adlı noktalar olarak yazar; hesabı komut ortak çekirdekle yapar: Poligon hesabı (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar uzunlukları, kapanma hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100; heights.back ile karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün ortalaması, k düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta, ADR 4500), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen noktalar adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı biriminde. Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin adıyla.",
       "aliases": [
         "olcme-hesabi",
         "survey"
@@ -90753,6 +90753,18 @@
               "null"
             ],
             "x-unit": "m"
+          },
+          "refractions": {
+            "description": "Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et\nal. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back.",
+            "items": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "type": "array",
+            "x-unit": "1"
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -198267,6 +198279,33 @@
       ],
       "type": "object"
     },
+    "SurveyBackSight": {
+      "additionalProperties": false,
+      "description": "A traverse leg sighted back from its far end (docs/adr/4500): the zenith angle there to the leg's station (in the\nproject's unit, 0 straight up), the instrument's height at the far end and the target's height at the station (m).",
+      "properties": {
+        "instrument": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "target": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "zenith": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "survey-angle"
+        }
+      },
+      "required": [
+        "zenith",
+        "instrument",
+        "target"
+      ],
+      "type": "object"
+    },
     "SurveyBaseline": {
       "additionalProperties": false,
       "description": "A baseline vector `bz-N` (docs/adr/1740): from mark to mark, ΔX, ΔY, ΔZ in Earth-centred, Earth-fixed axes (m)\nwith the antenna heights applied by its processor, and its covariance xx, xy, xz, yy, yz, zz (m²); its campaign,\nwhen it was observed (GPS time), how and with what it was made, the file it was read from and its id there; left\nout with a reason, never deleted; whether it goes into the network adjustment.",
@@ -199889,8 +199928,21 @@
     },
     "SurveyTraverseHeights": {
       "additionalProperties": false,
-      "description": "A traverse's heights by trigonometric heighting (docs/adr/4100): the start's height (none: the start point's own,\na drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height\nclosure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0\nstraight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the\nearth's curvature and refraction (docs/adr/0169 §3).",
+      "description": "A traverse's heights by trigonometric heighting (docs/adr/4100): the start's height (none: the start point's own,\na drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height\nclosure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0\nstraight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the\nearth's curvature and refraction (docs/adr/0169 §3). `back` (docs/adr/4500): each leg's reciprocal sight from its far\nend (none: not sighted back); such a leg's height difference is the mean of its two one-way differences, k falling\nout.",
       "properties": {
+        "back": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyBackSight"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "array"
+        },
         "end": {
           "format": "double",
           "type": [

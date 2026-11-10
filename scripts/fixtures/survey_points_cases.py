@@ -156,6 +156,29 @@ def adjusted_heights(path, heights, error):
     return out, f
 
 
+def reciprocal_for(path, heights, inst, tgt, back_inst, back_tgt, k, unit="grad"):
+    """docs/adr/4500: the zenith angles both ways along `path` that give its heights when the air's refraction
+    coefficient is `k` (S·cot z + i − t + (1 − k)·S²/2R the one-way difference, forward to the far end and back from
+    it), in the unit; and each pair's refraction coefficient, given when both sights run between the same two points
+    (i = t′, t = i′), by Baselga, García-Asenjo and Garrigues (J. Surv. Eng. 2014, eq. 11): ½·sin z + ½·sin z′ +
+    (2R/s)·cos((z + z′)/2), s = S / sin z."""
+    fore, back, pair = [], [], []
+    for i in range(len(path) - 1):
+        s_ = dist(path[i], path[i + 1])
+        c = (1 - k) * s_ * s_ / (2 * R)
+        rise = heights[i + 1] - heights[i]
+        z = math.atan2(1.0, (rise - inst[i] + tgt[i] - c) / s_)
+        zb = math.atan2(1.0, (-rise - back_inst[i] + back_tgt[i] - c) / s_)
+        fore.append(z * TURN[unit] / (2 * math.pi))
+        back.append(zb * TURN[unit] / (2 * math.pi))
+        # The pair's k from the angles as the unit writes them, read back to radians.
+        za, zr = fore[-1] * 2 * math.pi / TURN[unit], back[-1] * 2 * math.pi / TURN[unit]
+        same = back_tgt[i] == inst[i] and back_inst[i] == tgt[i]
+        pair.append(math.sin(za) / 2 + math.sin(zr) / 2 + 2 * R / (s_ / math.sin(za)) * math.cos((za + zr) / 2)
+                    if same else None)
+    return fore, back, pair
+
+
 def heights_cases():
     """docs/adr/4100: Poligon hesabı with heights by trigonometric heighting."""
     A, Rp, E, F = KNOWN["A"], KNOWN["R"], KNOWN["E"], KNOWN["F"]
@@ -202,6 +225,43 @@ def heights_cases():
         refused("Poligon hesabı kotlarla: başucu açısı sonlu değil", connected, "not_finite",
                 "Başucu açısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
                 "work.heights.zeniths[0]", non_finite={"work.heights.zeniths[0]": "NaN"}),
+    ] + reciprocal_cases(connected, path, hs, inst, tgt, p1, p2)
+
+
+def reciprocal_cases(connected, path, hs, inst, tgt, p1, p2):
+    """docs/adr/4500: the connected traverse's legs sighted back too, the air's k 0.2 (the project's 0.13): a leg
+    sighted back takes the mean of its two one-way differences, k falling out, so the heights are the path's; one way,
+    the project's k would miss them. Sighted between the same two points (the far end's instrument at the forward
+    target's height, the station's target at the forward instrument's), each pair's refraction coefficient is said."""
+    fore, back, pair = reciprocal_for(path, hs, inst, tgt, tgt, inst, 0.2)
+    sights = [{"zenith": z, "instrument": i, "target": t} for z, i, t in zip(back, tgt, inst)]
+    every = {**connected, "heights": dict(connected["heights"], zeniths=fore, back=sights)}
+    # The middle leg one way with the project's k (its angle the one that k gives); the last sighted back to a target
+    # 0.2 m higher at its station (not one chord: no pair's k, the mean still right).
+    one_way = zeniths_for(path, hs, inst, tgt)
+    higher = [inst[0], inst[1], inst[2] + 0.2]
+    _, back_h, pair_h = reciprocal_for(path, hs, inst, tgt, tgt, higher, 0.2)
+    mixed = {**connected, "heights": dict(connected["heights"], zeniths=[fore[0], one_way[1], fore[2]],
+                                          back=[sights[0], None, dict(sights[2], zenith=back_h[2], target=higher[2])])}
+    zero = {"angleMisclosure": 0, "linearMisclosure": 0, "heightMisclosure": 0}
+    points = [written("P101", p1, "Poligon noktası", 101.2), written("P102", p2, "Poligon noktası", 102.9)]
+    assert all(abs(k - 0.2) < 2e-3 for k in pair) and pair_h[2] is None, (pair, pair_h)
+    return [
+        done("Poligon hesabı karşılıklı başucu açılarıyla: havanın k'sı 0,2, kotlar yine yolun kotları", every, points,
+             "Poligon hesabı", misclosure=dict(zero, refractions=pair)),
+        done("Poligon hesabı karşılıklı başucu açılarıyla: ortadaki kenar tek yönlü, sonuncunun işareti başka "
+             "yükseklikte (k yok)", mixed, points, "Poligon hesabı",
+             misclosure=dict(zero, refractions=[pair[0], None, None])),
+        refused("Poligon hesabı karşılıklı: geri nişan sayısı uymuyor",
+                {**every, "heights": dict(every["heights"], back=sights[:2])}, "survey_refused",
+                "3 kenarlı bu poligonda geri nişanlar 3 kenar için olmalı, 2 verildi.", "work"),
+        refused("Poligon hesabı karşılıklı: geri başucu açısı 0 ile 200 grad arasında değil",
+                {**every, "heights": dict(every["heights"], back=[dict(sights[0], zenith=200.0)] + sights[1:])},
+                "survey_refused",
+                "1. kenarın geri başucu açısı 0 ile 200 grad arasında olmalı (yatay nişan 100 grad).", "work"),
+        refused("Poligon hesabı karşılıklı: geri başucu açısı sonlu değil", every, "not_finite",
+                "Geri başucu açısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+                "work.heights.back[0].zenith", non_finite={"work.heights.back[0].zenith": "NaN"}),
     ]
 
 

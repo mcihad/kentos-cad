@@ -2257,7 +2257,8 @@ impl Input for kentos_commands::SurveyAdjust {
 }
 
 impl Input for kentos_commands::SurveyPoints {
-    /// `work.angles[i]`, `work.a.at.x` (the shared cases spoil only these).
+    /// `work.angles[i]`, `work.a.at.x`, `work.heights.zeniths[i]`, `work.heights.back[i].zenith` (the shared cases
+    /// spoil only these).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::{KnownPoint, SurveyWork as S};
         match (&mut self.work, path) {
@@ -2268,10 +2269,13 @@ impl Input for kentos_commands::SurveyPoints {
                 },
                 "work.a.at.x",
             ) => Some(&mut at.x),
-            // docs/adr/4100: a leg's zenith angle.
-            (S::Traverse { heights: Some(h), .. }, _) if path.starts_with("work.heights.zeniths[") => {
-                let i = path.strip_prefix("work.heights.zeniths[")?.strip_suffix(']')?;
-                h.zeniths.get_mut(i.parse::<usize>().ok()?)
+            // docs/adr/4100: a leg's zenith angle; docs/adr/4500: a back sight's.
+            (S::Traverse { heights: Some(h), .. }, _) if path.starts_with("work.heights.") => {
+                if let Some(i) = path.strip_prefix("work.heights.zeniths[") {
+                    return h.zeniths.get_mut(i.strip_suffix(']')?.parse::<usize>().ok()?);
+                }
+                let i = path.strip_prefix("work.heights.back[")?.strip_suffix("].zenith")?;
+                h.back.get_mut(i.parse::<usize>().ok()?)?.as_mut().map(|b| &mut b.zenith)
             }
             (S::Traverse { angles, .. }, _) => {
                 let i = path.strip_prefix("work.angles[")?.strip_suffix(']')?;

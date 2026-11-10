@@ -517,6 +517,7 @@ fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
         targets: vec![1.5, 1.4, 1.6, 1.5],
         refraction: None,
         undulations: None,
+        back: None,
     };
     let input = TraverseInput {
         unit: "deg".into(),
@@ -602,6 +603,7 @@ fn each_leg_s_factor_is_taken_at_its_own_height() {
             targets: vec![100.0, 200.0],
             refraction: None,
             undulations: Some(vec![36.0, 36.5, 37.0]),
+            back: None,
         }),
     })
     .expect("computes");
@@ -615,4 +617,119 @@ fn each_leg_s_factor_is_taken_at_its_own_height() {
         assert!((leg.height_factor.expect("its factor") - f.height_factor).abs() < 1e-9, "{leg:?}");
         at = next;
     }
+}
+
+/// docs/adr/4500: an open traverse of two 1000 m legs whose first is sighted back too. Its zenith angles both ways are
+/// those a true height difference of 10 m gives with k = 0.13 (S·cot z = 10 − c forward, −10 − c back, c the curvature
+/// and refraction): its height difference is 10 m whatever k the project has, and its pair gives back k (Baselga et
+/// al.'s compact formula, within 10⁻³ of the one-way model's); the second leg, sighted one way, keeps the project's k.
+#[test]
+fn a_leg_sighted_back_takes_the_mean_of_its_two_differences_and_gives_its_refraction() {
+    use super::traverse::TraverseBackSight;
+    let r = super::fieldbook::EARTH_RADIUS;
+    let c = (1.0 - 0.13) * 1000.0 * 1000.0 / (2.0 * r);
+    let zenith = |cot: f64| 90.0 - (cot / 1000.0).atan().to_degrees();
+    let back = Vec2::new(TM.x - 50.0, TM.y);
+    let run = |k: f64, sighted_back: bool| {
+        traverse(&TraverseInput {
+            unit: "deg".into(),
+            start: TM,
+            back,
+            end: None,
+            fore: None,
+            angles: vec![180.0, 180.0],
+            distances: vec![1000.0, 1000.0],
+            grid: None,
+            heights: Some(TraverseHeights {
+                start: 500.0,
+                end: None,
+                zeniths: vec![zenith(10.0 - c), zenith(-3.0)],
+                instruments: vec![1.6, 1.5],
+                targets: vec![1.6, 1.7],
+                refraction: Some(k),
+                undulations: None,
+                // Sighted back between the same two points: the far end's instrument at the forward target's height,
+                // the station's target at the forward instrument's.
+                back: sighted_back.then(|| {
+                    vec![Some(TraverseBackSight { zenith: zenith(-10.0 - c), instrument: 1.6, target: 1.6 }), None]
+                }),
+            }),
+        })
+        .expect("computes")
+    };
+    for k in [0.13, 0.2] {
+        let got = run(k, true);
+        let first = &got.legs[0];
+        assert!((first.dh.expect("a difference") - 10.0).abs() < 1e-9, "{first:?}");
+        let pair = first.refraction.expect("its pair's k");
+        assert!((pair - 0.13).abs() < 1e-3, "{pair}");
+        // The second, one way: S·cot z + i − t + (1 − k)·S²/2R.
+        let second = &got.legs[1];
+        let one_way = -3.0 + 1.5 - 1.7 + super::fieldbook::curvature(1000.0, k);
+        assert!((second.dh.expect("a difference") - one_way).abs() < 1e-9 && second.refraction.is_none(), "{second:?}");
+    }
+    // Sighted back to another target height at the station: still the mean, but no pair's k (not one chord).
+    let mut other = TraverseInput {
+        unit: "deg".into(),
+        start: TM,
+        back,
+        end: None,
+        fore: None,
+        angles: vec![180.0],
+        distances: vec![1000.0],
+        grid: None,
+        heights: Some(TraverseHeights {
+            start: 500.0,
+            end: None,
+            zeniths: vec![zenith(10.0 - c)],
+            instruments: vec![1.6],
+            targets: vec![1.6],
+            refraction: Some(0.13),
+            undulations: None,
+            back: Some(vec![Some(TraverseBackSight { zenith: zenith(-10.0 - c + 0.2), instrument: 1.6, target: 1.8 })]),
+        }),
+    };
+    let leg = traverse(&other).expect("computes").legs[0].clone();
+    assert!((leg.dh.expect("a difference") - 10.0).abs() < 1e-9 && leg.refraction.is_none(), "{leg:?}");
+    other.heights.as_mut().expect("heights").back = None;
+    assert!(traverse(&other).expect("computes").legs[0].refraction.is_none());
+    // Not sighted back: the first leg one way, with the project's k.
+    let alone = run(0.2, false);
+    let one_way = 10.0 - c + super::fieldbook::curvature(1000.0, 0.2);
+    assert!((alone.legs[0].dh.expect("a difference") - one_way).abs() < 1e-9 && alone.legs[0].refraction.is_none());
+}
+
+/// docs/adr/4500: the back sights' refusals: one a leg, a zenith angle between straight up and down, finite heights.
+#[test]
+fn back_sights_are_refused_as_their_rules_say() {
+    use super::traverse::TraverseBackSight;
+    let back = Vec2::new(TM.x - 50.0, TM.y);
+    let input = |sights: Vec<Option<TraverseBackSight>>| TraverseInput {
+        unit: "grad".into(),
+        start: TM,
+        back,
+        end: None,
+        fore: None,
+        angles: vec![200.0, 200.0],
+        distances: vec![100.0, 100.0],
+        grid: None,
+        heights: Some(TraverseHeights {
+            start: 500.0,
+            end: None,
+            zeniths: vec![100.0, 100.0],
+            instruments: vec![1.5, 1.5],
+            targets: vec![1.5, 1.5],
+            refraction: None,
+            undulations: None,
+            back: Some(sights),
+        }),
+    };
+    let sight = |zenith: f64, target: f64| Some(TraverseBackSight { zenith, instrument: 1.5, target });
+    let said = |sights| traverse(&input(sights)).expect_err("refused");
+    assert_eq!(said(vec![sight(100.0, 1.5)]), "2 kenarlı bu poligonda geri nişanlar 2 kenar için olmalı, 1 verildi.");
+    assert_eq!(
+        said(vec![None, sight(200.0, 1.5)]),
+        "2. kenarın geri başucu açısı 0 ile 200 grad arasında olmalı (yatay nişan 100 grad)."
+    );
+    assert!(said(vec![sight(100.0, f64::NAN), None]).starts_with("1. kenarın geri nişandaki işaret yüksekliği"));
 }

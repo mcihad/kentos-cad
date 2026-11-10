@@ -164,6 +164,8 @@ struct Laid {
     kind: &'static str,
     /// Docs/adr/4100: a traverse's height misclosure.
     height_misclosure: Option<f64>,
+    /// Docs/adr/4500: each leg's refraction coefficient from its reciprocal zenith angles; empty: none sighted back.
+    refractions: Vec<Option<f64>>,
     operation: CreateOperation,
     angle_misclosure: Option<f64>,
     linear_misclosure: Option<f64>,
@@ -218,6 +220,17 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                     finite_all(&h.zeniths, "Başucu açısı", "work.heights.zeniths")?;
                     finite_all(&h.instruments, "Alet yüksekliği", "work.heights.instruments")?;
                     finite_all(&h.targets, "İşaret yüksekliği", "work.heights.targets")?;
+                    // Docs/adr/4500: each back sight's numbers.
+                    for (i, b) in h.back.iter().enumerate() {
+                        let Some(b) = b else { continue };
+                        for (v, what, field) in [
+                            (b.zenith, "Geri başucu açısı", "zenith"),
+                            (b.instrument, "Geri nişandaki alet yüksekliği", "instrument"),
+                            (b.target, "Geri nişandaki işaret yüksekliği", "target"),
+                        ] {
+                            checks::finite(v, what, "Sonlu bir sayı verin.", &format!("work.heights.back[{i}].{field}"))?;
+                        }
+                    }
                     let Some(z0) = h.start.or_else(|| known_height(doc, start)) else {
                         return Err(refuse(
                             codes::SURVEY_REFUSED,
@@ -272,6 +285,18 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                     targets: h.targets.clone(),
                     refraction: Some(settings.refraction()),
                     undulations: None,
+                    back: (!h.back.is_empty()).then(|| {
+                        h.back
+                            .iter()
+                            .map(|b| {
+                                b.as_ref().map(|b| kentos_geometry_core::survey::traverse::TraverseBackSight {
+                                    zenith: b.zenith,
+                                    instrument: b.instrument,
+                                    target: b.target,
+                                })
+                            })
+                            .collect()
+                    }),
                 }),
             };
             // Each leg at its own height, as Kutupsal alım reduces its lines (docs/adr/2900 §3, 4100).
@@ -302,6 +327,11 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 angle_misclosure: r.angle_misclosure,
                 linear_misclosure: r.linear_misclosure,
                 height_misclosure: r.height_misclosure,
+                refractions: if r.legs.iter().any(|l| l.refraction.is_some()) {
+                    r.legs.iter().map(|l| l.refraction).collect()
+                } else {
+                    Vec::new()
+                },
             })
         }
         SurveyWork::Polar {
@@ -367,6 +397,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 angle_misclosure: None,
                 linear_misclosure: None,
                 height_misclosure: None,
+                refractions: Vec::new(),
             })
         }
         SurveyWork::Forward {
@@ -391,6 +422,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 angle_misclosure: None,
                 linear_misclosure: None,
                 height_misclosure: None,
+                refractions: Vec::new(),
             })
         }
         SurveyWork::Resection {
@@ -417,6 +449,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 angle_misclosure: None,
                 linear_misclosure: None,
                 height_misclosure: None,
+                refractions: Vec::new(),
             })
         }
     }
@@ -477,6 +510,7 @@ fn write_execute(
                 angle_misclosure: laid.angle_misclosure,
                 linear_misclosure: laid.linear_misclosure,
                 height_misclosure: laid.height_misclosure,
+                refractions: laid.refractions,
                 revision: output.revision,
             },
             warnings,

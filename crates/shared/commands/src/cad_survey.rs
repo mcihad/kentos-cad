@@ -36,7 +36,9 @@ pub enum KnownPoint {
 /// a drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height
 /// closure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0
 /// straight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the
-/// earth's curvature and refraction (docs/adr/0169 §3).
+/// earth's curvature and refraction (docs/adr/0169 §3). `back` (docs/adr/4500): each leg's reciprocal sight from its far
+/// end (none: not sighted back); such a leg's height difference is the mean of its two one-way differences, k falling
+/// out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -57,6 +59,25 @@ pub struct SurveyTraverseHeights {
     pub instruments: Vec<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub targets: Vec<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<SurveyBackSight>>>", optional))]
+    pub back: Vec<Option<SurveyBackSight>>,
+}
+
+/// A traverse leg sighted back from its far end (docs/adr/4500): the zenith angle there to the leg's station (in the
+/// project's unit, 0 straight up), the instrument's height at the far end and the target's height at the station (m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyBackSight {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
+    pub zenith: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub instrument: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub target: f64,
 }
 
 /// A traverse's shape.
@@ -222,6 +243,12 @@ pub struct SurveyPointsWritten {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub height_misclosure: Option<f64>,
+    /// Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et
+    /// al. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<f64>>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub refractions: Vec<Option<f64>>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

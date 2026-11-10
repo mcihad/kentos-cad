@@ -325,24 +325,43 @@ def trav(unit, start, back, end, fore, angles, dists, heights=None):
         pts.pop()
     out["points"], out["legs"], out["length"] = pts, legs, S(L)
     if heights is not None:
-        raw_h = []
+        raw_h, pair_k = [], []
+        backs = heights.get("back") or [None] * len(Sd)
         for i, s in enumerate(Sd):
             z = Decimal(heights["zeniths"][i]) / k
             d = s * dcos(z) / dsin(z) + Decimal(heights["instruments"][i]) - Decimal(heights["targets"][i])
-            if heights.get("refraction") is not None:
-                d += (1 - Decimal(heights["refraction"])) * s * s / (2 * Decimal(6371000))
+            b = backs[i]
+            if b is not None:
+                # docs/adr/4500: sighted back, the mean of the two one-way differences (the curvature and refraction
+                # term, one k both ways, falls out); the pair's refraction coefficient, Baselga, García-Asenjo and
+                # Garrigues (J. Surv. Eng. 2014) eq. 11: k = ½ sin z + ½ sin z′ + (2R/s) cos((z + z′)/2), s = S / sin z.
+                zb = Decimal(b["zenith"]) / k
+                d_back = s * dcos(zb) / dsin(zb) + Decimal(b["instrument"]) - Decimal(b["target"])
+                d = (d - d_back) / 2
+                # The pair's k only for sights between the same two points (i = t′, t = i′): the formula's chord.
+                same = (Decimal(b["target"]) == Decimal(heights["instruments"][i])
+                        and Decimal(b["instrument"]) == Decimal(heights["targets"][i]))
+                chord = s / dsin(z)
+                pair_k.append(dsin(z) / 2 + dsin(zb) / 2 + 2 * Decimal(6371000) / chord * dcos((z + zb) / 2)
+                              if same else None)
+            else:
+                if heights.get("refraction") is not None:
+                    d += (1 - Decimal(heights["refraction"])) * s * s / (2 * Decimal(6371000))
+                pair_k.append(None)
             raw_h.append(d)
         f_h = None
         if heights.get("end") is not None:
             f_h = sum(raw_h) - (Decimal(heights["end"]) - Decimal(heights["start"]))
             out["heightMisclosure"] = S(f_h)
         at, hs = Decimal(heights["start"]), []
-        for leg, d, s in zip(legs, raw_h, Sd):
+        for leg, d, s, pk in zip(legs, raw_h, Sd, pair_k):
             v = None if f_h is None else -f_h * s / L
             d = d + (v or 0)
             leg["dh"] = S(d)
             if v is not None:
                 leg["vh"] = S(v)
+            if pk is not None:
+                leg["refraction"] = S(pk)
             at += d
             hs.append(S(at))
         if end is not None:
@@ -415,6 +434,25 @@ case("Açık poligon kotlarla, yer küreselliği ve kırılma (k)", "surveyTrave
                    "instruments": [float(v) for v in hts["instruments"]], "targets": [float(v) for v in hts["targets"]],
                    "refraction": 0.13}}],
      trav("grad", A, A0, None, None, angles, dists, hts), "1e-8")
+
+# docs/adr/4500: the connected traverse's first and third legs sighted back too (their zenith angles at the far end,
+# that set-up's instrument at the forward target's height and the target at the station at the forward instrument's:
+# one chord both ways): their differences the means of the two one-way ones, k falling out; their pairs' refraction
+# coefficients; the other legs one way with k 0.13.
+angles, dists = notes("grad", route, A0, E0, 4, [(2, "0.0025")])
+hts = {"start": "912.345", "end": "905.117", "zeniths": ["101.2345", "98.7766", "100.5021", "99.8754"],
+       "instruments": ["1.552", "1.498", "1.605", "1.533"], "targets": ["1.700", "1.300", "1.650", "1.500"],
+       "refraction": "0.13",
+       "back": [{"zenith": "98.7667", "instrument": "1.700", "target": "1.552"}, None,
+                {"zenith": "99.4993", "instrument": "1.650", "target": "1.605"}, None]}
+case("Bağlı poligon karşılıklı başucu açılarıyla (grad)", "surveyTraverse",
+     [{"unit": "grad", "start": A[0], "back": A0[0], "end": E_[0], "fore": E0[0], "angles": [float(a) for a in angles],
+       "distances": [float(d) for d in dists],
+       "heights": {"start": float(hts["start"]), "end": float(hts["end"]), "zeniths": [float(z) for z in hts["zeniths"]],
+                   "instruments": [float(v) for v in hts["instruments"]], "targets": [float(v) for v in hts["targets"]],
+                   "refraction": 0.13,
+                   "back": [None if b is None else {key: float(v) for key, v in b.items()} for b in hts["back"]]}}],
+     trav("grad", A, A0, E_, E0, angles, dists, hts), "1e-8")
 
 # Kutupsal alım (grad): slope distances with zenith angles, heights.
 St, Bk = pt("10.5", "-20.25"), pt("250.125", "180.75")

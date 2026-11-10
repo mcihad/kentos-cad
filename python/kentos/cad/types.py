@@ -96830,6 +96830,35 @@ class SurveyAntenna(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyBackSight(_Model):
+    """A traverse leg sighted back from its far end (docs/adr/4500): the zenith angle there to the leg's station (in the
+    project's unit, 0 straight up), the instrument's height at the far end and the target's height at the station (m).
+    Attributes:
+        zenith: Unit: survey-angle.
+        instrument: Unit: m.
+        target: Unit: m.
+    """
+    zenith: float
+    instrument: float
+    target: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["zenith"] = float(self.zenith)
+        out["instrument"] = float(self.instrument)
+        out["target"] = float(self.target)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyBackSight:
+        return cls(
+            zenith=float(data["zenith"]),
+            instrument=float(data["instrument"]),
+            target=float(data["target"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyBaseline(_Model):
     """A baseline vector `bz-N` (docs/adr/1740): from mark to mark, ΔX, ΔY, ΔZ in Earth-centred, Earth-fixed axes (m)
     with the antenna heights applied by its processor, and its covariance xx, xy, xz, yy, yz, zz (m²); its campaign,
@@ -97555,6 +97584,8 @@ class SurveyPointsWritten(_Model):
         angle_misclosure: Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one. Unit: survey-angle.
         height_misclosure: Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known. Unit: m.
         linear_misclosure: Unit: m.
+        refractions: Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et
+            al. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back. Unit: 1.
     """
     ids: list[int]
     uids: list[str]
@@ -97562,6 +97593,7 @@ class SurveyPointsWritten(_Model):
     angle_misclosure: float | None | Unset = UNSET
     height_misclosure: float | None | Unset = UNSET
     linear_misclosure: float | None | Unset = UNSET
+    refractions: list[float | None] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -97574,6 +97606,8 @@ class SurveyPointsWritten(_Model):
             out["heightMisclosure"] = None if self.height_misclosure is None else float(self.height_misclosure)
         if self.linear_misclosure is not UNSET:
             out["linearMisclosure"] = None if self.linear_misclosure is None else float(self.linear_misclosure)
+        if self.refractions is not UNSET:
+            out["refractions"] = [None if e0 is None else float(e0) for e0 in self.refractions]
         return out
 
     @classmethod
@@ -97585,6 +97619,7 @@ class SurveyPointsWritten(_Model):
             angle_misclosure=UNSET if "angleMisclosure" not in data else None if data["angleMisclosure"] is None else float(data["angleMisclosure"]),
             height_misclosure=UNSET if "heightMisclosure" not in data else None if data["heightMisclosure"] is None else float(data["heightMisclosure"]),
             linear_misclosure=UNSET if "linearMisclosure" not in data else None if data["linearMisclosure"] is None else float(data["linearMisclosure"]),
+            refractions=[None if e0 is None else float(e0) for e0 in data["refractions"]] if "refractions" in data else UNSET,
         )
 
 
@@ -98217,7 +98252,9 @@ class SurveyTraverseHeights(_Model):
     a drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height
     closure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0
     straight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the
-    earth's curvature and refraction (docs/adr/0169 §3).
+    earth's curvature and refraction (docs/adr/0169 §3). `back` (docs/adr/4500): each leg's reciprocal sight from its far
+    end (none: not sighted back); such a leg's height difference is the mean of its two one-way differences, k falling
+    out.
     Attributes:
         zeniths: Unit: survey-angle.
         instruments: Unit: m.
@@ -98228,6 +98265,7 @@ class SurveyTraverseHeights(_Model):
     zeniths: list[float]
     instruments: list[float]
     targets: list[float]
+    back: list[SurveyBackSight | None] | Unset = UNSET
     end: float | None | Unset = UNSET
     start: float | None | Unset = UNSET
 
@@ -98236,6 +98274,8 @@ class SurveyTraverseHeights(_Model):
         out["zeniths"] = [float(e0) for e0 in self.zeniths]
         out["instruments"] = [float(e0) for e0 in self.instruments]
         out["targets"] = [float(e0) for e0 in self.targets]
+        if self.back is not UNSET:
+            out["back"] = [None if e0 is None else e0.to_json() for e0 in self.back]
         if self.end is not UNSET:
             out["end"] = None if self.end is None else float(self.end)
         if self.start is not UNSET:
@@ -98248,6 +98288,7 @@ class SurveyTraverseHeights(_Model):
             zeniths=[float(e0) for e0 in data["zeniths"]],
             instruments=[float(e0) for e0 in data["instruments"]],
             targets=[float(e0) for e0 in data["targets"]],
+            back=[None if e0 is None else SurveyBackSight.from_json(e0) for e0 in data["back"]] if "back" in data else UNSET,
             end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )
@@ -135981,6 +136022,7 @@ __all__ = [
     "SurveyAdjustedPoint",
     "SurveyAdjustment",
     "SurveyAntenna",
+    "SurveyBackSight",
     "SurveyBaseline",
     "SurveyBaselineRow",
     "SurveyBaselines",

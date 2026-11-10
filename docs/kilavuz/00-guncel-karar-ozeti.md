@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Poligon hesabında karşılıklı başucu açıları (10 Kasım 2026; MAP-02, [ADR 4500](../../docs/adr/4500-traverse-reciprocal-zenith-angles.md)).**
+  `cad.survey.points`'in `heights.back`'i: geri nişanlı kenarın kot farkı iki yönün ortalaması (k düşer), aynı iki uç
+  arasındaki çiftin k'sı `refractions`'ta (Baselga vd. 2014, denklem 11). Poligon hesabı › Karşılıklı. CAD + CBS.
 - **Onaydan sonra geometrisi değişenin onaylanan şekli (10 Kasım 2026; MAP-01, [ADR 4480](../../docs/adr/4480-map-work-approved-shape-in-the-drawing.md)).**
   `map.work.query`'nin değişen nesnesinde `approved` (geometrisi değiştiyse); Harita işi › Değişenler onaylanan şekli
   kesik çizgiyle çizimin üstünde gösterir (approved_layer.rs). Yalnız Harita.

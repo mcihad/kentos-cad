@@ -28,6 +28,14 @@
 //! legs in proportion to their lengths. With the geoid's undulations each
 //! leg's height factor is then taken at its own ellipsoidal height (the mean
 //! of its ends' H + N) instead of the project's mean.
+//!
+//! Reciprocal zenith angles (docs/adr/4500): a leg sighted back from its far end too (the zenith angle there to its
+//! station, that set-up's instrument height i′ and the target's height t′ at the station) has the mean of its two
+//! one-way differences as its height difference, ((S·cot z + i − t) − (S·cot z′ + i′ − t′))/2: the curvature and
+//! refraction term, the same both ways with one k, falls out. When both sights run between the same two points (each
+//! end's instrument at the height of the target the other end sighted there: i = t′, t = i′), the pair gives its
+//! refraction coefficient, Baselga, García-Asenjo and Garrigues' (J. Surv. Eng. 2014, eq. 11): k = ½·sin z + ½·sin z′ +
+//! (2R/s)·cos((z + z′)/2), s the chord between the sight's ends (S / sin z) and R the earth's mean radius.
 
 use super::{Unit, bearing, distinct, finite, positive, signed};
 use crate::api::Op;
@@ -84,6 +92,8 @@ pub struct TraverseHeights {
     pub targets: Vec<f64>,
     pub refraction: Option<f64>,
     pub undulations: Option<Vec<f64>>,
+    /// Each leg's reciprocal sight (docs/adr/4500), none for a leg not sighted back; none: no leg was.
+    pub back: Option<Vec<Option<TraverseBackSight>>>,
 }
 
 crate::json_struct!(TraverseHeights {
@@ -93,8 +103,20 @@ crate::json_struct!(TraverseHeights {
     instruments,
     targets,
     refraction,
-    undulations
+    undulations,
+    back
 });
+
+/// A leg sighted back from its far end (docs/adr/4500): the zenith angle there to the leg's station (in the unit), the
+/// instrument's height at the far end and the target's height at the station (m).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TraverseBackSight {
+    pub zenith: f64,
+    pub instrument: f64,
+    pub target: f64,
+}
+
+crate::json_struct!(TraverseBackSight { zenith, instrument, target });
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TraverseLeg {
@@ -117,6 +139,9 @@ pub struct TraverseLeg {
     pub dh: Option<f64>,
     pub vh: Option<f64>,
     pub height: Option<f64>,
+    /// Sighted back between the same two points (docs/adr/4500): the refraction coefficient its reciprocal zenith
+    /// angles give.
+    pub refraction: Option<f64>,
 }
 
 crate::json_struct!(out TraverseLeg {
@@ -131,7 +156,8 @@ crate::json_struct!(out TraverseLeg {
     height_factor => "heightFactor",
     dh,
     vh,
-    height
+    height,
+    refraction
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -175,6 +201,8 @@ struct Heights {
     at: Vec<f64>,
     misclosure: Option<f64>,
     own: Option<Vec<f64>>,
+    /// Each leg's refraction coefficient from its reciprocal zenith angles (docs/adr/4500).
+    refraction: Vec<Option<f64>>,
 }
 
 /// The heights of `input` (its legs' horizontal lengths as measured).
@@ -206,6 +234,26 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
     if let Some(k) = h.refraction {
         finite(k, "Kırılma katsayısı")?;
     }
+    // docs/adr/4500: a back sight a leg, each finite, its zenith angle between straight up and straight down.
+    if let Some(back) = &h.back {
+        if back.len() != legs {
+            return Err(format!("{legs} kenarlı bu poligonda geri nişanlar {legs} kenar için olmalı, {} verildi.", back.len()));
+        }
+        for (i, b) in back.iter().enumerate() {
+            let Some(b) = b else { continue };
+            let z = unit.rad(finite(b.zenith, &format!("{}. kenarın geri başucu açısı", i + 1))?);
+            if !(z > 0.0 && z < PI) {
+                return Err(format!(
+                    "{}. kenarın geri başucu açısı 0 ile {} arasında olmalı (yatay nişan {}).",
+                    i + 1,
+                    if unit == Unit::GRAD { "200 grad" } else { "180°" },
+                    if unit == Unit::GRAD { "100 grad" } else { "90°" }
+                ));
+            }
+            finite(b.instrument, &format!("{}. kenarın geri nişandaki alet yüksekliği", i + 1))?;
+            finite(b.target, &format!("{}. kenarın geri nişandaki işaret yüksekliği", i + 1))?;
+        }
+    }
     if let Some(n) = &h.undulations {
         if n.len() != legs + 1 {
             return Err(format!(
@@ -218,15 +266,34 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
             finite(*v, &format!("{}. geoit ayrımı", i + 1))?;
         }
     }
-    // Each leg's height difference as measured, the curvature and refraction taken in with k.
+    // Each leg's height difference as measured, the curvature and refraction taken in with k; sighted back
+    // (docs/adr/4500), the mean of its two one-way differences, which leaves the curvature and refraction out, and the
+    // pair's refraction coefficient.
     let mut raw = Vec::with_capacity(legs);
+    let mut refraction = Vec::with_capacity(legs);
     for (i, &s) in input.distances.iter().enumerate() {
         let z = unit.rad(h.zeniths[i]);
-        let mut d = s * cos(z) / sin(z) + h.instruments[i] - h.targets[i];
-        if let Some(k) = h.refraction {
-            d += super::fieldbook::curvature(s, k);
+        let forward = s * cos(z) / sin(z) + h.instruments[i] - h.targets[i];
+        match h.back.as_ref().and_then(|b| b[i].as_ref()) {
+            Some(b) => {
+                let zb = unit.rad(b.zenith);
+                let backward = s * cos(zb) / sin(zb) + b.instrument - b.target;
+                raw.push((forward - backward) / 2.0);
+                // The pair's k only for sights between the same two points (the formula's chord).
+                let same = b.target == h.instruments[i] && b.instrument == h.targets[i];
+                let chord = s / sin(z);
+                let r = super::fieldbook::EARTH_RADIUS;
+                refraction.push(same.then(|| sin(z) / 2.0 + sin(zb) / 2.0 + 2.0 * r / chord * cos((z + zb) / 2.0)));
+            }
+            None => {
+                let mut d = forward;
+                if let Some(k) = h.refraction {
+                    d += super::fieldbook::curvature(s, k);
+                }
+                raw.push(d);
+                refraction.push(None);
+            }
         }
-        raw.push(d);
     }
     // Closed on a known height: the misclosure taken off in proportion to the legs' lengths.
     let length: f64 = input.distances.iter().sum();
@@ -246,7 +313,7 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
     let own = h.undulations.as_ref().map(|n| {
         (0..legs).map(|i| ((heights[i] + n[i]) + (heights[i + 1] + n[i + 1])) / 2.0).collect()
     });
-    Ok(Heights { dh, vh, at: heights, misclosure, own })
+    Ok(Heights { dh, vh, at: heights, misclosure, own, refraction })
 }
 
 /// `result` with the heights `h` written into it: its legs' height differences and corrections, its new points'
@@ -255,6 +322,7 @@ fn with_heights(mut result: TraverseResult, h: Heights, end_known: bool) -> Trav
     for (i, leg) in result.legs.iter_mut().enumerate() {
         leg.dh = Some(h.dh[i]);
         leg.vh = h.vh[i];
+        leg.refraction = h.refraction[i];
     }
     let mut points = h.at[1..].to_vec();
     if end_known {
@@ -423,6 +491,7 @@ fn adjusted(input: &TraverseInput) -> Result<TraverseResult, String> {
             dh: None,
             vh: None,
             height: None,
+            refraction: None,
         });
         points.push(at);
     }

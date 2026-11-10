@@ -3704,6 +3704,7 @@ __all__ = [
     "SurveyAdjustedPoint",
     "SurveyAdjustment",
     "SurveyAntenna",
+    "SurveyBackSight",
     "SurveyBaseline",
     "SurveyBaselineRow",
     "SurveyBaselines",

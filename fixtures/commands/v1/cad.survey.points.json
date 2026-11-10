@@ -2328,6 +2328,638 @@
       ]
     },
     {
+      "name": "Poligon hesabı karşılıklı başucu açılarıyla: havanın k'sı 0,2, kotlar yine yolun kotları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12782247874172,
+                  99.07363053643918,
+                  99.62580629154662
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ],
+                "back": [
+                  {
+                    "zenith": 100.87296468808151,
+                    "instrument": 1.7,
+                    "target": 1.55
+                  },
+                  {
+                    "zenith": 100.92720388164733,
+                    "instrument": 1.3,
+                    "target": 1.48
+                  },
+                  {
+                    "zenith": 100.37507664070378,
+                    "instrument": 1.65,
+                    "target": 1.6
+                  }
+                ]
+              }
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0,
+              "heightMisclosure": 0,
+              "refractions": [
+                0.2001314131401113,
+                0.20014824750575633,
+                0.2000242078132084
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "101.200"
+                },
+                "z": 101.2
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "102.900"
+                },
+                "z": 102.9
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı karşılıklı başucu açılarıyla: ortadaki kenar tek yönlü, sonuncunun işareti başka yükseklikte (k yok)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12782247874172,
+                  99.07366704223773,
+                  99.62580629154662
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ],
+                "back": [
+                  {
+                    "zenith": 100.87296468808151,
+                    "instrument": 1.7,
+                    "target": 1.55
+                  },
+                  null,
+                  {
+                    "zenith": 100.25980584623724,
+                    "instrument": 1.65,
+                    "target": 1.8
+                  }
+                ]
+              }
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0,
+              "heightMisclosure": 0,
+              "refractions": [
+                0.2001314131401113,
+                null,
+                null
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "101.200"
+                },
+                "z": 101.2
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "102.900"
+                },
+                "z": 102.9
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı karşılıklı: geri nişan sayısı uymuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12782247874172,
+                  99.07363053643918,
+                  99.62580629154662
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ],
+                "back": [
+                  {
+                    "zenith": 100.87296468808151,
+                    "instrument": 1.7,
+                    "target": 1.55
+                  },
+                  {
+                    "zenith": 100.92720388164733,
+                    "instrument": 1.3,
+                    "target": 1.48
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "3 kenarlı bu poligonda geri nişanlar 3 kenar için olmalı, 2 verildi.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı karşılıklı: geri başucu açısı 0 ile 200 grad arasında değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12782247874172,
+                  99.07363053643918,
+                  99.62580629154662
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ],
+                "back": [
+                  {
+                    "zenith": 200.0,
+                    "instrument": 1.7,
+                    "target": 1.55
+                  },
+                  {
+                    "zenith": 100.92720388164733,
+                    "instrument": 1.3,
+                    "target": 1.48
+                  },
+                  {
+                    "zenith": 100.37507664070378,
+                    "instrument": 1.65,
+                    "target": 1.6
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "1. kenarın geri başucu açısı 0 ile 200 grad arasında olmalı (yatay nişan 100 grad).",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı karşılıklı: geri başucu açısı sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12782247874172,
+                  99.07363053643918,
+                  99.62580629154662
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ],
+                "back": [
+                  {
+                    "zenith": 100.87296468808151,
+                    "instrument": 1.7,
+                    "target": 1.55
+                  },
+                  {
+                    "zenith": 100.92720388164733,
+                    "instrument": 1.3,
+                    "target": 1.48
+                  },
+                  {
+                    "zenith": 100.37507664070378,
+                    "instrument": 1.65,
+                    "target": 1.6
+                  }
+                ]
+              }
+            }
+          },
+          "nonFinite": {
+            "work.heights.back[0].zenith": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Geri başucu açısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "work.heights.back[0].zenith"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Kutupsal alım: üç nokta, bakılan noktada 50g okuma",
       "steps": [
         {

@@ -112,6 +112,6 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-02, sekizinci tur. Durum: taslak. ADR 330
 
 ## Sonra
 
-- Karşılıklı başucu açılarıyla kenar başına ortalama kot farkı.
+- ~~Karşılıklı başucu açılarıyla kenar başına ortalama kot farkı.~~ ADR 4500.
 - Kot kapanma hatası için proje toleransı (resmî ya da kullanıcı değeri; KentOS değer uydurmaz).
 - Web (TODOS §0.2): web'in Poligon penceresi (`TraverseDialog`) aynı çekirdeği çağırır; kot sütunları orada yok.

@@ -335,11 +335,14 @@ class _SurveyPoints(LocalCommand[SurveyPoints, SurveyPointsWritten, EntitiesCrea
     """``cad.survey.points`` v1. Ölçme hesabı: Ölçme pencerelerinin noktalarını hesaplayıp
     verilen katmana adlı noktalar olarak yazar; hesabı komut ortak çekirdekle yapar:
     Poligon hesabı (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar
-    uzunlukları, kapanma hataları dağıtılır), Kutupsal alım (polar: bakılan noktaya
-    yöneltilmiş okumalar, başucu açısıyla kot), Önden kestirme (forward) ve Geriden
-    kestirme (resection). Bilinen noktalar adıyla (named) ya da koordinatıyla (at);
-    açılar unit'te, yoksa projenin açı biriminde. Noktalar Ad, Tür ve kotuyla yazılır.
-    Tek geri alma adımı, pencerenin adıyla.
+    uzunlukları, kapanma hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100;
+    heights.back ile karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün
+    ortalaması, k düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta,
+    ADR 4500), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu
+    açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen
+    noktalar adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı
+    biriminde. Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin
+    adıyla.
     """
     __slots__ = ()
     id = "cad.survey.points"
@@ -365,11 +368,13 @@ class _SurveyPoints(LocalCommand[SurveyPoints, SurveyPointsWritten, EntitiesCrea
         """Ölçme hesabı: Ölçme pencerelerinin noktalarını hesaplayıp verilen katmana adlı
         noktalar olarak yazar; hesabı komut ortak çekirdekle yapar: Poligon hesabı
         (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar uzunlukları, kapanma
-        hataları dağıtılır), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar,
-        başucu açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection).
-        Bilinen noktalar adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa
-        projenin açı biriminde. Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı,
-        pencerenin adıyla.
+        hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100; heights.back ile
+        karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün ortalaması, k
+        düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta, ADR 4500),
+        Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot),
+        Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen noktalar adıyla
+        (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı biriminde.
+        Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin adıyla.
 
         Args:
             doc: The drawing it works on.

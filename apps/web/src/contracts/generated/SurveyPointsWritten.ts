@@ -11,4 +11,9 @@ angleMisclosure?: number, linearMisclosure?: number,
 /**
  * Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known.
  */
-heightMisclosure?: number, revision: string, };
+heightMisclosure?: number, 
+/**
+ * Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et
+ * al. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back.
+ */
+refractions?: Array<number | null>, revision: string, };

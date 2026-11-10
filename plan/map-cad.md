@@ -33,7 +33,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480 | tipli katman profili; köşe köşe kayma (en büyük kayma) ve silinenin şekli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100 | EPSG'nin çokgen kullanım alanları; karşılıklı başucu açıları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500 | EPSG'nin çokgen kullanım alanları; ölçülen k'nın projeye önerilmesi | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
@@ -423,6 +423,16 @@ noktaların kotlarını verir; uzunluklar projeksiyona indiriliyorsa her kenar u
 aynı), bağımsız Python testi, MCP; masaüstünde Kotlar anahtarı, üç sütun, kot alanları, H sütunu ve özet; TG-20
 projesinde kenarın çarpanları `cad.crs.factors`'ınkiyle aynı. Açık: karşılıklı başucu açıları, kot kapanması toleransı
 (kaynak bekler), çokgen kullanım alanları, zamana bağlı Helmert.
+
+**10 Kasım 2026, dokuzuncu tur — Poligon hesabında karşılıklı başucu açıları ([ADR 4500](../docs/adr/4500-traverse-reciprocal-zenith-angles.md)).**
+Kapsam: **CAD + CBS**. Dayanak: Baselga, García-Asenjo ve Garrigues (J. Surv. Eng. 2014): eş zamanlı karşılıklı başucu
+gözlemleri kırılma katsayısının en hassas belirlenme yolu, kapalı biçim k = ½ sin Z_A′ + ½ sin Z_B′ + (2R/s) cos((Z_A′ +
+Z_B′)/2); İTÜ'nün tek yönlü kuralı (ADR 4100). Kanıtlanan: `heights.back` ile geri nişanlı kenarın kot farkı iki tek
+yönlü farkın ortalaması (k düşer); iki nişan aynı iki uç arasındaysa (i = t′, t = i′) çiftin k'sı (`refractions`); tek
+yönlü kenarlar proje k'sıyla. Yüksek duyarlıklı başvuruda yeni çağrı (120), `cad.survey.points`'te 5 yeni durum (40),
+Python (proje k'sı değişince kotlar aynı), MCP; Poligon hesabı'nda Karşılıklı anahtarı ve üç geri nişan sütunu.
+Açık: ölçülen k'nın projeye önerilmesi, kot kapanması toleransı (kaynak bekler), çokgen kullanım alanları, zamana bağlı
+Helmert.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

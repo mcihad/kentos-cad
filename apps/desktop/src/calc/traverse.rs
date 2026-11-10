@@ -40,6 +40,11 @@ pub const DISTANCE: usize = 2;
 pub const ZENITH: usize = 3;
 pub const INSTRUMENT: usize = 4;
 pub const TARGET: usize = 5;
+/// Docs/adr/4500: a leg sighted back from its far end: the zenith angle there, the instrument's height there and the
+/// target's at the station (empty: the leg one way; the heights empty, one chord: the forward target's and instrument's).
+pub const BACK_ZENITH: usize = 6;
+pub const BACK_INSTRUMENT: usize = 7;
+pub const BACK_TARGET: usize = 8;
 
 /// Which traverse.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -81,15 +86,17 @@ pub struct Form {
     pub back: String,
     pub end: String,
     pub fore: String,
-    pub first: [String; 6],
-    pub rows: Vec<[String; 6]>,
-    pub last: [String; 6],
+    pub first: [String; 9],
+    pub rows: Vec<[String; 9]>,
+    pub last: [String; 9],
     pub layer: Option<String>,
     /// The heights by trigonometric heighting (docs/adr/4100): asked, and the start's and the end's heights as typed
     /// (empty: the known point's own).
     pub heights: bool,
     pub start_z: String,
     pub end_z: String,
+    /// Docs/adr/4500: the legs sighted back too (their columns shown).
+    pub reciprocal: bool,
 }
 
 impl Default for Form {
@@ -108,6 +115,7 @@ impl Default for Form {
             heights: false,
             start_z: String::new(),
             end_z: String::new(),
+            reciprocal: false,
         }
     }
 }
@@ -131,6 +139,8 @@ pub struct Computed {
     pub own_heights: Option<Result<Option<String>, String>>,
     /// The start's and the end's heights as taken, each with whether it is the known point's own.
     pub ends_z: Option<((f64, bool), Option<(f64, bool)>)>,
+    /// Docs/adr/4500: each leg's back sight (none: one way); none when no leg is sighted back.
+    pub back: Option<Vec<Option<kentos_interaction::survey::traverse::TraverseBackSight>>>,
 }
 
 impl Computed {
@@ -222,7 +232,7 @@ impl Form {
             Kind::Open => (None, None),
         };
         // New points with nothing typed at the end of the table are left out.
-        let mut rows: &[[String; 6]] = &self.rows;
+        let mut rows: &[[String; 9]] = &self.rows;
         while let [head @ .., last] = rows
             && last.iter().all(|v| js_trim(v).is_empty())
         {
@@ -237,6 +247,7 @@ impl Form {
         let mut angles = Vec::new();
         let mut distances = Vec::new();
         let (mut zeniths, mut instruments, mut targets) = (Vec::new(), Vec::new(), Vec::new());
+        let mut back_sights: Vec<Option<kentos_interaction::survey::traverse::TraverseBackSight>> = Vec::new();
         for (i, row) in std::iter::once(&self.first).chain(legs).enumerate() {
             let a = read_number(&row[ANGLE]);
             let d = read_number(&row[DISTANCE]);
@@ -261,6 +272,24 @@ impl Form {
                         errors.push(format!("{place} {what} bir sayı değil."));
                     }
                     list.push(v);
+                }
+                // Docs/adr/4500: sighted back, its zenith angle; its heights empty: one chord with the forward sight.
+                if self.reciprocal {
+                    back_sights.push(match read_number(&row[BACK_ZENITH]) {
+                        None => None,
+                        Some(z) => {
+                            if z.is_nan() {
+                                errors.push(format!("{place} geri başucu açısı bir sayı değil."));
+                            }
+                            let (i_fore, t_fore) = (instruments[instruments.len() - 1], targets[targets.len() - 1]);
+                            let instrument = read_number(&row[BACK_INSTRUMENT]).unwrap_or(t_fore);
+                            let target = read_number(&row[BACK_TARGET]).unwrap_or(i_fore);
+                            if instrument.is_nan() || target.is_nan() {
+                                errors.push(format!("{place} geri nişanın yüksekliği bir sayı değil."));
+                            }
+                            Some(kentos_interaction::survey::traverse::TraverseBackSight { zenith: z, instrument, target })
+                        }
+                    });
                 }
             }
             match a {
@@ -332,6 +361,7 @@ impl Form {
                         targets: targets.clone(),
                         refraction: Some(model.settings().refraction()),
                         undulations: None,
+                        back: back_sights.iter().any(Option::is_some).then(|| back_sights.clone()),
                     });
                 }
             }
@@ -385,6 +415,7 @@ impl Form {
             targets,
             own_heights,
             ends_z,
+            back: back_sights.iter().any(Option::is_some).then_some(back_sights),
         }
     }
 
@@ -424,6 +455,21 @@ impl Form {
                 zeniths: c.zeniths,
                 instruments: c.instruments,
                 targets: c.targets,
+                // Docs/adr/4500: the legs sighted back too.
+                back: c
+                    .back
+                    .map(|b| {
+                        b.into_iter()
+                            .map(|s| {
+                                s.map(|s| kentos_commands::SurveyBackSight {
+                                    zenith: s.zenith,
+                                    instrument: s.instrument,
+                                    target: s.target,
+                                })
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default(),
             }),
         })
     }
@@ -445,6 +491,11 @@ impl Form {
         let heights = r.heights.as_ref();
         if heights.is_some() {
             head.extend(["Δh", "vh", "H"]);
+        }
+        // Docs/adr/4500: the pairs' refraction coefficients, when a leg was sighted back between the same two points.
+        let paired = r.legs.iter().any(|l| l.refraction.is_some());
+        if paired {
+            head.push("k");
         }
         let mut lines = vec![
             vec![TITLE.to_owned()],
@@ -477,6 +528,9 @@ impl Form {
                 row.push(leg.dh.map(|d| fixed(d, 4)).unwrap_or_default());
                 row.push(leg.vh.map(|v| fixed(v, 4)).unwrap_or_default());
                 row.push(h.get(i).map_or_else(|| "bilinen".to_owned(), |z| fixed(*z, 3)));
+            }
+            if paired {
+                row.push(leg.refraction.map(|k| fixed(k, 3)).unwrap_or_default());
             }
             lines.push(row);
         }
@@ -596,6 +650,20 @@ impl Form {
                     ),
                 },
             ));
+            // Docs/adr/4500: the legs sighted back, and what their pairs give.
+            if let Some(b) = &c.back {
+                let n = b.iter().filter(|s| s.is_some()).count();
+                let ks: Vec<String> = r.legs.iter().filter_map(|l| l.refraction).map(|k| fixed(k, 3)).collect();
+                let pairs = if ks.is_empty() {
+                    " İşaretler aletlerle aynı yükseklikte değil: çiftlerin k'sı hesaplanmadı.".to_owned()
+                } else {
+                    format!(" Aynı iki uç arasındaki çiftlerin k'sı: {}.", ks.join("; "))
+                };
+                lines.push((
+                    Line::Info,
+                    format!("Karşılıklı nişanlı {n} kenarda kot farkı iki yönün ortalaması: yer eğriliği ve refraksiyon düşer.{pairs}"),
+                ));
+            }
         }
         match own {
             Some(Ok(model)) => lines.push((
@@ -640,6 +708,14 @@ impl Form {
             Switch::new(self.heights, |on| event(Event::TraverseHeights(on))).label("Trigonometrik nivelmanla hesapla"),
             None,
         ));
+        // Docs/adr/4500: the legs sighted back too.
+        if self.heights {
+            top = top.push(words::field(
+                "Karşılıklı",
+                Switch::new(self.reciprocal, |on| event(Event::TraverseReciprocal(on))).label("Geri başucu açılarıyla"),
+                None,
+            ));
+        }
         let mut fields = vec![
             known_field(
                 model,
@@ -689,6 +765,10 @@ impl Form {
         let table = grid::view(Window::Traverse, columns, self, |r, col| match col {
             NAME => format!("P{r}"),
             INSTRUMENT | TARGET => "0".to_owned(),
+            // Docs/adr/4500: empty, one way; the heights empty, the forward sight's (one chord).
+            BACK_ZENITH => "tek yön".to_owned(),
+            BACK_INSTRUMENT => "işaretinki".to_owned(),
+            BACK_TARGET => "aletinki".to_owned(),
             _ => String::new(),
         });
         // The start's and the end's heights: empty, the known point's own.
@@ -826,7 +906,11 @@ impl Form {
 impl Table for Form {
     /// Docs/adr/4100: with the heights, the legs' zenith angles and heights too.
     fn columns(&self) -> usize {
-        if self.heights { 6 } else { 3 }
+        match (self.heights, self.reciprocal) {
+            (true, true) => 9,
+            (true, false) => 6,
+            _ => 3,
+        }
     }
 
     fn rows(&self) -> usize {
@@ -925,12 +1009,12 @@ fn unsigned(text: String) -> String {
     if zero { text[1..].to_owned() } else { text }
 }
 
-const COLUMNS_GRAD: [Col; 6] = columns("g", "Sonraki noktaya kenar");
-const COLUMNS_DEG: [Col; 6] = columns("°", "Sonraki noktaya kenar");
-const HEIGHTS_GRAD: [Col; 6] = columns("g", "Kenar");
-const HEIGHTS_DEG: [Col; 6] = columns("°", "Kenar");
+const COLUMNS_GRAD: [Col; 9] = columns("g", "Sonraki noktaya kenar");
+const COLUMNS_DEG: [Col; 9] = columns("°", "Sonraki noktaya kenar");
+const HEIGHTS_GRAD: [Col; 9] = columns("g", "Kenar");
+const HEIGHTS_DEG: [Col; 9] = columns("°", "Kenar");
 
-const fn columns(unit: &'static str, leg: &'static str) -> [Col; 6] {
+const fn columns(unit: &'static str, leg: &'static str) -> [Col; 9] {
     [
         Col {
             label: "Nokta",
@@ -960,6 +1044,22 @@ const fn columns(unit: &'static str, leg: &'static str) -> [Col; 6] {
         },
         Col {
             label: "İşaret yüksekliği",
+            unit: Some("m"),
+            numeric: true,
+        },
+        // Docs/adr/4500: the back sight's readings.
+        Col {
+            label: "Geri başucu",
+            unit: Some(unit),
+            numeric: true,
+        },
+        Col {
+            label: "Geri alet",
+            unit: Some("m"),
+            numeric: true,
+        },
+        Col {
+            label: "Geri işaret",
             unit: Some("m"),
             numeric: true,
         },

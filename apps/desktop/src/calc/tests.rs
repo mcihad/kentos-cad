@@ -7,12 +7,12 @@ use serde_json::{Value, json};
 use super::*;
 use crate::files_testing::{app_with_drawing, drawing, last_said};
 
-fn calc(app: &mut App, e: Event) {
+pub(super) fn calc(app: &mut App, e: Event) {
     let _ = app.update(Message::Calc(e));
 }
 
 /// The journal's last call: its command and the work it was given (docs/adr/0622 §9).
-fn last_work(app: &App) -> (String, Value) {
+pub(super) fn last_work(app: &App) -> (String, Value) {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let call = doc.journal().last().expect("a call");
     let input = call.input.clone().unwrap_or(Value::Null);
@@ -709,8 +709,8 @@ fn the_survey_windows_take_lengths_to_the_grid() {
         kind: traverse::Kind::Open,
         start: "486500,4420200".into(),
         back: "486500,4420700".into(),
-        first: [String::new(), "100".into(), "500".into(), String::new(), String::new(), String::new()],
-        rows: vec![["Y1".into(), String::new(), String::new(), String::new(), String::new(), String::new()]],
+        first: [String::new(), "100".into(), "500".into(), String::new(), String::new(), String::new(), String::new(), String::new(), String::new()],
+        rows: vec![["Y1".into(), String::new(), String::new(), String::new(), String::new(), String::new(), String::new(), String::new(), String::new()]],
         ..Default::default()
     };
     let r = form.compute(&doc.model).result.expect("a traverse");
