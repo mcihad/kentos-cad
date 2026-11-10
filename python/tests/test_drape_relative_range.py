@@ -1,15 +1,18 @@
-"""Yüzeyden kot ver's height over the surface and range (`cad.entities.drape`'s `offset` and `range`, docs/adr/4580;
+"""Yüzeyden kot ver's height over the surface and range (`cad.entities.drape`'s `offset` and `range`, docs/adr/4580 and 4980;
 plan/map-cad.md MAP-06), held by the test's own planes (no KentOS code in the expectations).
 
 The drawing is the shared cases' (fixtures/commands/v1/cad.entities.drape.json): the surface “Zemin” of four corners
 A (0, 0, 100), B (100, 0, 104), C (100, 80, 112), D (0, 100, 106) from X0, Y0, its triangles ABC and ACD split by AC
-(y = 0.8 x), as the test works them out. By the test's rule (Civil 3D's Relative Elevation to Surface and Partial):
+(y = 0.8 x), as the test works them out. By the test's rule:
 
 - with a height over the surface every vertex taken is its triangle's height plus it (minus below);
 - with a range only the vertices from its first to its last take heights; a break point goes only into an edge
   between them (the polyline (10, 50), (60, 30), (90, 10) crosses AC on its first edge at (45, 36));
 - an area's range leaves its hole and its closing edge as they were;
-- the range is for one object, not a point, within the vertices.
+- the range is for one object, not a point, within the vertices;
+- docs/adr/4980: the range lies on the ring its `part` and `ring` name (the two-part area's second part's hole
+  (65, 35), (85, 35), (85, 65), (65, 65) crosses AC on its edge y = 65 at x = 81.25); the other rings are left; a part
+  or a hole the object has not is refused at `range.part` or `range.ring`.
 """
 
 from __future__ import annotations
@@ -51,7 +54,7 @@ def uid(slot: int) -> str:
     return CASES["setup"]["uids"][slot - 1]
 
 
-POINT, POLYLINE, AREA = 5, 8, 9
+POINT, POLYLINE, AREA, ISLAND = 5, 8, 9, 18
 
 
 class DrapeRelativeRange(unittest.TestCase):
@@ -95,6 +98,23 @@ class DrapeRelativeRange(unittest.TestCase):
         self.assertIsNone(e["zs"][4], "the fourth corner is out of the range")
         self.assertEqual(e["holes"], before["holes"])
 
+    def test_a_range_on_a_further_part_s_hole(self) -> None:
+        before = self.entity(ISLAND)
+        out = cad.entities.drape(self.doc, uids=[uid(ISLAND)], surface="t-1", breaks=True, offset=0.15,
+                                 range=DrapeRange.from_json({"from": 1, "to": 3, "part": 1, "ring": 1})).to_json()
+        self.assertEqual((out["set"], out["outside"], out["inserted"]), (3, 0, 1))
+        e = self.entity(ISLAND)
+        hole = e["parts"][0]["holes"][0]
+        local = [(p["x"] - X0, p["y"] - Y0) for p in hole["pts"]]
+        self.assertEqual(local, [(65.0, 35.0), (85.0, 35.0), (85.0, 65.0), (81.25, 65.0), (65.0, 65.0)])
+        self.assertIsNone(hole["zs"][0], "the first vertex is not in the range")
+        for k in (1, 2, 3, 4):
+            self.assertAlmostEqual(hole["zs"][k], ground(*local[k]) + 0.15, delta=1e-9)
+        # The first part, its hole and the second part's outer ring are left.
+        self.assertEqual((e["pts"], e.get("zs"), e["holes"]), (before["pts"], before.get("zs"), before["holes"]))
+        self.assertEqual(e["parts"][0]["pts"], before["parts"][0]["pts"])
+        self.assertIsNone(e["parts"][0].get("zs"))
+
     def test_refusals(self) -> None:
         command = cad.command("cad.entities.drape")
         for input_, code, path in [
@@ -102,6 +122,9 @@ class DrapeRelativeRange(unittest.TestCase):
             ({"uids": [uid(POINT)], "range": {"from": 0, "to": 1}}, "not_a_path", "range"),
             ({"uids": [uid(POLYLINE)], "range": {"from": 2, "to": 1}}, "wrong_place", "range"),
             ({"uids": [uid(POLYLINE)], "range": {"from": 0, "to": 3}}, "wrong_place", "range"),
+            ({"uids": [uid(ISLAND)], "range": {"from": 0, "to": 1, "part": 2}}, "wrong_place", "range.part"),
+            ({"uids": [uid(ISLAND)], "range": {"from": 0, "to": 1, "part": 1, "ring": 2}}, "wrong_place", "range.ring"),
+            ({"uids": [uid(ISLAND)], "range": {"from": 2, "to": 4, "part": 1, "ring": 1}}, "wrong_place", "range"),
         ]:
             answer = command.run(self.doc, command.input_type.from_json(dict(input_, surface="t-1")), op="plan")
             self.assertEqual((answer.error.code, answer.error.path), (code, path), input_)

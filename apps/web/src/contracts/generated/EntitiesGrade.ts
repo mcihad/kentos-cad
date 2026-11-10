@@ -7,7 +7,7 @@
  * `end` or else the end vertex's own.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
- * (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
+ * (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`),
  * `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
  * alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
  * and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the

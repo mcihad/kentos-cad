@@ -57596,7 +57596,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's\nouter ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;\nor, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being\n`end` or else the end vertex's own.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),\n`invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`\nalone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given\nand the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the\ntwo grades parallel, or meeting outside the range or at its start or end), `layer_locked`.",
+        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's\nouter ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;\nor, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being\n`end` or else the end vertex's own.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`),\n`invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`\nalone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given\nand the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the\ntwo grades parallel, or meeting outside the range or at its start or end), `layer_locked`.",
         "properties": {
           "ahead": {
             "description": "The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up).",
@@ -58093,7 +58093,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),\nthe map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go\nonly into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line\nkeeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;\nnone: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's\nvertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,\n`invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one\nobject), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a\nrange), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no\nvertex of them, or of the range, on the surface), `layer_locked`.",
+        "description": "Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),\nthe map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go\nonly into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line\nkeeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;\nnone: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's ring's\nvertices, 0-based, `from` < `to`; the closing edge is not in it. The ring is the first part's outer one unless\n`part` and `ring` (docs/adr/4980) name another; the object's other rings keep theirs.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,\n`invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one\nobject), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a\nrange), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no\nvertex of them, or of the range, on the surface), `layer_locked`.",
         "properties": {
           "breaks": {
             "type": "boolean"
@@ -137403,9 +137403,23 @@
     },
     "DrapeRange": {
       "additionalProperties": false,
-      "description": "The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.",
+      "description": "The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based, of\nthe ring `ring` (0: the outer one, 1 on: the holes in order) of the part `part` (0: the first, the object's own\nvertices; 1 on: the further parts in order), docs/adr/4980. A line has one part and one ring.",
       "properties": {
         "from": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "part": {
+          "description": "Docs/adr/4980: the part, 0-based; absent: the first.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "ring": {
+          "description": "Docs/adr/4980: the ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.",
           "format": "uint32",
           "minimum": 0,
           "type": "integer",

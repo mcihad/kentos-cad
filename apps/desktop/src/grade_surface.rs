@@ -1,13 +1,13 @@
 //! Eğimle kot ver's Hedef Yüzeyden (docs/adr/4180; grade_window.rs): the selected line, polyline or area takes the
-//! project's terrain surface's heights by `cad.entities.drape`, as Civil 3D's Elevations From Surface. Every vertex on
-//! the surface takes its height; one off it keeps its own. Ara kırık noktaları puts a vertex wherever a straight edge
-//! crosses an edge of the surface's triangles (Insert Intermediate Grade Break Points). Docs/adr/4580: Kot farkı puts
-//! the vertices that far above (or below) the surface (Relative Elevation to Surface's offset); Aralık gives heights
-//! only to the vertices from Başlangıç to Bitiş (Partial), picked on the drawing as Eğimle kot ver's range. The preview
-//! is the command's plan; Uygula writes one undo step.
+//! project's terrain surface's heights by `cad.entities.drape`. Every vertex on the surface takes its height; one off
+//! it keeps its own. Ara kırık noktaları puts a vertex wherever a straight edge crosses an edge of the surface's
+//! triangles. Docs/adr/4580: Kot farkı puts the vertices that far above (or below) the surface; Aralık gives heights
+//! only to the vertices from Başlangıç to Bitiş, picked on the drawing as Eğimle kot ver's range. Docs/adr/4980: on a
+//! multi-part object or one with holes Halka chooses the ring the range is on. The preview is the command's plan;
+//! Uygula writes one undo step.
 
 use iced::Element;
-use kentos_commands::{CommandResult, DrapeRange, EntitiesDrape, EntitiesDraped};
+use kentos_commands::{CommandResult, DrapeRange, EntitiesDrape, EntitiesDraped, Entity, Vec2};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, entities_drape};
 use kentos_ui::widget::switch::Switch;
@@ -17,6 +17,39 @@ use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
 use crate::grade_window::{Event, State, TITLE, msg};
 use crate::style::fields;
+
+/// One ring of an object: its part and ring (docs/adr/4980), its vertices, its bulges.
+pub(crate) type Ring = ((u32, u32), Vec<Vec2>, Option<Vec<f64>>);
+
+/// An object's rings in the command's order: each part (the first is the object's own vertices), its outer ring, then
+/// its holes. A line is one ring of its two ends.
+pub(crate) fn rings(e: &Entity) -> Vec<Ring> {
+    match e {
+        Entity::Line(l) => vec![((0, 0), vec![l.a, l.b], None)],
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            let mut out = vec![((0, 0), p.pts.clone(), p.bulges.clone())];
+            for (h, r) in p.holes.iter().flatten().enumerate() {
+                out.push(((0, h as u32 + 1), r.pts.clone(), r.bulges.clone()));
+            }
+            for (k, q) in p.parts.iter().flatten().enumerate() {
+                out.push(((k as u32 + 1, 0), q.pts.clone(), q.bulges.clone()));
+                for (h, r) in q.holes.iter().flatten().enumerate() {
+                    out.push(((k as u32 + 1, h as u32 + 1), r.pts.clone(), r.bulges.clone()));
+                }
+            }
+            out
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// A ring's name in the window, numbered from 1: “2. parça, 1. delik”.
+fn ring_name((part, ring): (u32, u32)) -> String {
+    match ring {
+        0 => format!("{}. parça, dış halka", part + 1),
+        h => format!("{}. parça, {h}. delik", part + 1),
+    }
+}
 
 impl App {
     /// The project's terrain surfaces: id and name.
@@ -35,7 +68,12 @@ impl App {
             surface: s.surface.clone(),
             breaks: s.breaks,
             offset: (s.above != 0.0).then_some(s.above),
-            range: s.partial.then(|| DrapeRange { from: (s.from.max(1.0) as u32) - 1, to: (s.to.max(1.0) as u32) - 1 }),
+            range: s.partial.then(|| DrapeRange {
+                from: (s.from.max(1.0) as u32) - 1,
+                to: (s.to.max(1.0) as u32) - 1,
+                part: s.ring.0,
+                ring: s.ring.1,
+            }),
             expected_revision: None,
         }
     }
@@ -104,6 +142,16 @@ impl App {
             );
         // Docs/adr/4580: the range's two vertices, as Eğimle kot ver's own (Sahneden seç takes them by two clicks).
         if s.partial {
+            // Docs/adr/4980: the ring, when the object has more than one.
+            let all = self.grade_object().map(rings).unwrap_or_default();
+            let place = if all.len() > 1 { format!(" ({})", ring_name(s.ring)) } else { String::new() };
+            if all.len() > 1 {
+                let choices = all.iter().map(|r| (format!("{}:{}", r.0.0, r.0.1), ring_name(r.0))).collect();
+                form = form.field(
+                    "Halka",
+                    fields::select_owned(choices, &format!("{}:{}", s.ring.0, s.ring.1), |id| msg(Event::Ring(id))),
+                );
+            }
             form = form
                 .field(
                     "Başlangıç köşesi",
@@ -116,8 +164,8 @@ impl App {
                 )
                 .field("Bitiş köşesi", NumberInput::new(s.to, |v| msg(Event::To(v))).step(1.0).decimals(0).width(BOX))
                 .help(format!(
-                    "Köşeler 1'den {}'e (alanda dış halka); aradaki kenarlar ara kırık noktası alır, öbür köşeler kotunu korur.",
-                    s.vertices
+                    "Köşeler 1'den {}'e{place}; aradaki kenarlar ara kırık noktası alır, öbür köşeler kotunu korur.",
+                    self.grade_vertices().len()
                 ));
         }
         let f = self.format();

@@ -32309,18 +32309,28 @@ class DrainageQuery(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DrapeRange(_Model):
-    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.
+    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based, of
+    the ring `ring` (0: the outer one, 1 on: the holes in order) of the part `part` (0: the first, the object's own
+    vertices; 1 on: the further parts in order), docs/adr/4980. A line has one part and one ring.
     Attributes:
         from_: Unit: index.
         to: Unit: index.
+        part: Docs/adr/4980: the part, 0-based; absent: the first. Unit: index.
+        ring: Docs/adr/4980: the ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
     """
     from_: int
     to: int
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["to"] = self.to
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         return out
 
     @classmethod
@@ -32328,6 +32338,8 @@ class DrapeRange(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
         )
 
 
@@ -34656,13 +34668,14 @@ class EntitiesDrape(_Model):
     the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
     only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
     keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
-    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
-    vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
+    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's ring's
+    vertices, 0-based, `from` < `to`; the closing edge is not in it. The ring is the first part's outer one unless
+    `part` and `ring` (docs/adr/4980) name another; the object's other rings keep theirs.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
     `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
     object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
-    range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+    range), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
     vertex of them, or of the range, on the surface), `layer_locked`.
     Attributes:
         offset: Docs/adr/4580: the height above (positive) or below (negative) the surface, m. Unit: m.
@@ -35061,7 +35074,7 @@ class EntitiesGrade(_Model):
     `end` or else the end vertex's own.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
+    (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`),
     `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
     alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
     and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the

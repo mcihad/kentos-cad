@@ -12,7 +12,9 @@
 //!
 //! docs/adr/3780: Hedef Referanstan raises or lowers the object whole from a reference point, by `cad.entities.raise`
 //! (grade_reference.rs); Hedef is the form's first row. docs/adr/4180: Hedef Yüzeyden gives the vertices the project's
-//! terrain surface's heights, by `cad.entities.drape` (grade_surface.rs).
+//! terrain surface's heights, by `cad.entities.drape` (grade_surface.rs). docs/adr/4980: Yüzeyden's range may lie on
+//! any ring of a multi-part object (Halka, or the ring Sahneden seç's first click is nearest); the window numbers that
+//! ring's vertices and marks it.
 
 use iced::widget::Column;
 use iced::{Element, Task};
@@ -119,6 +121,8 @@ pub struct State {
     pub breaks: bool,
     pub above: f64,
     pub partial: bool,
+    /// Docs/adr/4980: the range's part and ring (0, 0: the first part's outer ring).
+    pub ring: (u32, u32),
     pub draped: Option<Result<kentos_commands::EntitiesDraped, String>>,
 }
 
@@ -144,6 +148,8 @@ pub enum Event {
     Breaks(bool),
     Above(f64),
     Partial(bool),
+    /// Docs/adr/4980: the range's ring, as `part:ring`.
+    Ring(String),
     /// Sahneden seç: the range by two clicks, its start then its end; for Referanstan the reference, then the vertex.
     Pick,
     Apply,
@@ -212,7 +218,7 @@ impl App {
                 return Task::none();
             }
         };
-        // A reference given before stays for the next object, with Referanstan (Civil 3D keeps it active).
+        // A reference given before stays for the next object, with Referanstan.
         let kept = std::mem::take(&mut self.grade);
         let kept = kept.referenced.then_some(kept);
         self.grade = State {
@@ -240,6 +246,7 @@ impl App {
             breaks: false,
             above: 0.0,
             partial: false,
+            ring: (0, 0),
             draped: None,
         };
         self.grade_plan();
@@ -267,6 +274,14 @@ impl App {
             Event::Breaks(on) => self.grade.breaks = on,
             Event::Above(v) => self.grade.above = v,
             Event::Partial(on) => self.grade.partial = on,
+            Event::Ring(id) => {
+                if let Some((part, ring)) = id.split_once(':').and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?))) {
+                    self.grade.ring = (part, ring);
+                    // The new ring's vertices from its first to its last.
+                    self.grade.from = 1.0;
+                    self.grade.to = self.grade_vertices().len().max(1) as f64;
+                }
+            }
             Event::Pick => {
                 let first = if self.grade.target == Target::Reference { Pick::Reference } else { Pick::Start };
                 self.start_grade_pick(first);
@@ -326,18 +341,22 @@ impl App {
     }
 
     /// The path's vertices as the window numbers them (from 0 here): a line's two ends, a polyline's or an area's outer
-    /// ring's points.
+    /// ring's points; Yüzeyden's those of the ring its range is on (docs/adr/4980).
     pub(crate) fn grade_vertices(&self) -> Vec<kentos_commands::Vec2> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        let Some(e) = kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
-        else {
-            return Vec::new();
-        };
-        match e {
-            Entity::Line(l) => vec![l.a, l.b],
-            Entity::Polyline(p) | Entity::Polygon(p) => p.pts.clone(),
-            _ => Vec::new(),
-        }
+        self.grade_ring().0
+    }
+
+    /// The ring the window works on: its vertices and bulges (see `grade_vertices`).
+    fn grade_ring(&self) -> (Vec<kentos_commands::Vec2>, Option<Vec<f64>>) {
+        let Some(e) = self.grade_object() else { return (Vec::new(), None) };
+        let at = if self.grade.target == Target::Surface { self.grade.ring } else { (0, 0) };
+        crate::grade_surface::rings(e).into_iter().find(|r| r.0 == at).map_or((Vec::new(), None), |r| (r.1, r.2))
+    }
+
+    /// The object the window was opened on.
+    pub(crate) fn grade_object(&self) -> Option<&Entity> {
+        let doc = self.document.as_ref()?;
+        kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
     }
 
     /// The range on the drawing (docs/adr/2980): the path from its start vertex to its end, arcs as points along them,
@@ -352,16 +371,10 @@ impl App {
         if self.grade.target == Target::Surface && !self.grade.partial {
             return (Vec::new(), Vec::new());
         }
-        let Some(doc) = self.document.as_ref().filter(|_| open) else { return (Vec::new(), Vec::new()) };
-        let Some(e) = kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
-        else {
+        if !open {
             return (Vec::new(), Vec::new());
-        };
-        let (pts, bulges) = match e {
-            Entity::Line(l) => (vec![l.a, l.b], None),
-            Entity::Polyline(p) | Entity::Polygon(p) => (p.pts.clone(), p.bulges.clone()),
-            _ => return (Vec::new(), Vec::new()),
-        };
+        }
+        let (pts, bulges) = self.grade_ring();
         let (from, to) = (self.grade.from.max(1.0) as usize - 1, self.grade.to.max(1.0) as usize - 1);
         match self.grade.picking {
             Some(Pick::Start | Pick::Reference | Pick::Vertex) => (Vec::new(), Vec::new()),
@@ -421,6 +434,21 @@ impl App {
         if end == Pick::Reference {
             self.reference_picked(p, reach);
             return true;
+        }
+        // Yüzeyden's range starts on whichever ring the click is nearest (docs/adr/4980); its end on the same ring.
+        if end == Pick::Start && self.grade.target == Target::Surface {
+            let rings = self.grade_object().map(crate::grade_surface::rings).unwrap_or_default();
+            let nearest = rings
+                .iter()
+                .flat_map(|r| r.1.iter().enumerate().map(move |(i, v)| (r.0, i, (v.x - p.x).hypot(v.y - p.y))))
+                .filter(|(_, _, d)| *d <= reach)
+                .min_by(|a, b| a.2.total_cmp(&b.2));
+            if let Some((at, i, _)) = nearest {
+                self.grade.ring = at;
+                self.grade.from = (i + 1) as f64;
+                self.start_grade_pick(Pick::End);
+                return true;
+            }
         }
         let nearest = self
             .grade_vertices()

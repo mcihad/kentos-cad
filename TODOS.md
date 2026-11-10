@@ -232,6 +232,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `neighbours`; cad.parcels.record.json'un yeni ve değişen durumları) ve web Parsel kayıtları'nda planın sözü.
 - MAP-07 / ADR 4600: web Öznitelikler'inin Topoloji bölümünde Gerekçe satırı, bulgu durumunun açılır listesi
   (`cad.topology.exceptions`) ve çoklu seçimin bulgu sayıları.
+- MAP-06 / ADR 4980: web'in `cad.entities.drape` işleyicisinde aralığın parçası ve halkası (`range.part`, `range.ring`;
+  cad.entities.drape.json'un 9 yeni durumu) ve web Eğimle kot ver › Yüzeyden › Aralık'ta Halka listesi.
 - MAP-06 / ADR 4580: web'in `cad.entities.drape` işleyicisinde göreli kot ve köşe aralığı (`offset`, `range`,
   `wrong_place`; cad.entities.drape.json'un 13 yeni durumu) ve web Eğimle kot ver › Yüzeyden'de Kot farkı ve Aralık.
 - MAP-05 / ADR 4560: web'e `cad.survey.baselines` işleyicisi gelirken WASM çekirdeğinin seyrek GNSS çözümü (zarf sınırı,
