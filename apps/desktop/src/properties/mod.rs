@@ -347,6 +347,8 @@ pub enum Field {
     DimensionTolerance(Vec<Slot>, bool),
     /// Kots' offset from their level, metres (docs/adr/0721 §2): Fark.
     DimensionLevelOffset(Vec<Slot>),
+    /// Topoloji's Gerekçe (docs/adr/4600): the words a finding's mark is written with, the tab's own; no drawing change.
+    TopologyReason,
 }
 
 /// What Öznitelikler's dimension rows ask of `cad.dimensions.edit` (docs/adr/0321 §4).
@@ -610,6 +612,14 @@ impl App {
 
     fn add_live_sections(&self, panel: &mut Panel) {
         // Attachment tasks may finish without editing geometry. Never freeze their actions in the cache.
+        // Several objects: their findings counted by state (docs/adr/4600), under Geometri as one object's are.
+        if let ids @ [_, _, ..] = self.selection.ids()
+            && self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology)
+            && let Some(section) = self.topology_summary_section(ids)
+        {
+            let at = panel.sections.iter().position(|s| s.id == "geometry").map_or(panel.sections.len(), |i| i + 1);
+            panel.sections.insert(at, section);
+        }
         if let [slot] = self.selection.ids() {
             // The object's findings of the Topoloji tab's last check (docs/adr/3800): a check changes no drawing, so
             // the section is not cached with the object's rows. Under Geometri.
@@ -625,33 +635,61 @@ impl App {
         }
     }
 
-    /// Topoloji (docs/adr/3800): each finding its problem and its measure, its place in its life cycle and its rule in
-    /// a quiet line under it, and a button that opens the Topoloji tab on it; a word when the drawing was not checked,
-    /// when the check found nothing of the object, or when the drawing changed since.
+    /// Topoloji (docs/adr/3800): each finding its problem, its state in a drop-down that marks it as the tab does
+    /// (Değerlendirilmedi, Hata, İstisna; docs/adr/4600) with Gerekçe's words (a row of its own, the tab's), its measure,
+    /// reason and rule in a quiet line under it, and a button that opens the Topoloji tab on it; a word when the drawing
+    /// was not checked, when the check found nothing of the object, or when the drawing changed since.
     fn topology_section(&self, slot: Slot) -> Option<rows::Section> {
         use crate::topology::object::ObjectFindings;
+        use kentos_commands::{TopologyExceptionOperation as Op, TopologyFindingState as State};
         let (rows, n) = match self.object_findings(slot)? {
             ObjectFindings::NotChecked => (vec![Row::note("Denetlenmedi: Topoloji sekmesinde Denetle.")], 0),
             ObjectFindings::Checked { findings, old } => {
                 let n = findings.len();
                 let mut rows = Vec::new();
-                for f in findings {
-                    // The cell holds the short measure (the state when there is none); the state and the rule go in
-                    // the quiet line under it, which wraps.
-                    let (value, note) = if f.measure.is_empty() {
-                        (f.state, format!("Kural: {}", f.rule))
-                    } else {
-                        (f.measure, format!("{} · kural: {}", f.state, f.rule))
-                    };
+                if n > 0 {
                     rows.push(Row {
+                        editor: Some(Editor::Text(Field::TopologyReason)),
+                        ..Row::text("Gerekçe", self.topology.reason.clone())
+                    });
+                    rows.push(Row::note("Hata ve istisna bu gerekçeyle yazılır."));
+                }
+                for f in findings {
+                    let word = match f.status {
+                        State::Open => "Değerlendirilmedi",
+                        State::Error => "Hata",
+                        State::Exception => "İstisna",
+                        State::Lapsed => "Yeniden değerlendir",
+                    };
+                    let pick = |label: &str, state: State, op: Op| rows::Choice::Pick {
+                        label: label.to_owned(),
+                        swatch: None,
+                        icon: None,
+                        wide: false,
+                        chosen: f.status == state,
+                        enabled: true,
+                        message: Message::Topology(crate::topology::Event::Review(f.key.clone(), op)),
+                    };
+                    let items = vec![
+                        pick("Değerlendirilmedi", State::Open, Op::Unmark),
+                        pick("Hata", State::Error, Op::Error),
+                        pick("İstisna", State::Exception, Op::Mark),
+                    ];
+                    // The quiet lines: the mark's reason, then the measure and the rule.
+                    let note = if f.measure.is_empty() { format!("Kural: {}", f.rule) } else { format!("{} · kural: {}", f.measure, f.rule) };
+                    rows.push(Row {
+                        editor: Some(Editor::Select { text: word.to_owned(), swatch: None, icon: None, items }),
                         thumb: Some(rows::Thumb {
                             key: None,
                             icon: "zoomSelection",
                             title: "Topoloji sekmesinde göster".into(),
-                            open: Message::Topology(crate::topology::Event::Show(f.key)),
+                            open: Message::Topology(crate::topology::Event::Show(f.key.clone())),
                         }),
-                        ..Row::text(f.problem, value)
+                        ..Row::text(f.problem.clone(), word)
                     });
+                    if let Some(why) = &f.reason {
+                        rows.push(Row::note(&format!("Gerekçe: {why}")));
+                    }
                     rows.push(Row::note(&note));
                 }
                 if n == 0 {
@@ -670,6 +708,32 @@ impl App {
             title: if n > 0 { format!("Topoloji ({n})").into() } else { "Topoloji".into() },
             rows,
         })
+    }
+
+    /// Topoloji for several objects (docs/adr/4600): the findings naming any of them, counted by state, from the tab's
+    /// last check; a word when the drawing was not checked or changed since.
+    fn topology_summary_section(&self, slots: &[Slot]) -> Option<rows::Section> {
+        let rows = match self.selection_findings(slots)? {
+            None => vec![Row::note("Denetlenmedi: Topoloji sekmesinde Denetle.")],
+            Some(s) => {
+                let figure = |label: &'static str, n: usize| Row { numeric: true, ..Row::text(label, n.to_string()) };
+                let mut rows = vec![figure("Bulgular", s.total())];
+                // Each state with findings, a row of its own (a long line would be cut in the panel).
+                for (n, word) in [(s.open, "Değerlendirilmedi"), (s.errors, "Hata"), (s.exceptions, "İstisna"), (s.lapsed, "Yeniden değerlendir")] {
+                    if n > 0 {
+                        rows.push(figure(word, n));
+                    }
+                }
+                rows.push(Row::note(&format!("Denetlenen {} nesnenin; ortak bulgu bir kez sayılır.", s.objects)));
+                if s.old {
+                    let mut stale = Row::note("Çizim denetimden sonra değişti; Topoloji sekmesinde Değişenleri denetle.");
+                    stale.warn = true;
+                    rows.push(stale);
+                }
+                rows
+            }
+        };
+        Some(rows::Section { id: "topology".into(), title: "Topoloji".into(), rows })
     }
 
     /// The header's meta: “#12”, “3 nesne”; none with nothing selected.
@@ -902,6 +966,11 @@ impl App {
             }
             other => other,
         };
+        // Docs/adr/4600: Gerekçe typed in Öznitelikler › Topoloji is the tab's own words; the drawing does not change.
+        if let Event::Commit(Field::TopologyReason, text) = &event {
+            self.topology.reason = text.trim().to_owned();
+            return;
+        }
         if matches!(event, Event::Query) {
             let scope = if self.selection.is_empty() { "all" } else { "selection" };
             let mut input = serde_json::json!({"scope":scope});
@@ -2430,7 +2499,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::DimensionZb(_)
         | Field::DimensionRound(_)
         | Field::DimensionTolerance(..)
-        | Field::DimensionLevelOffset(_) => return Vec::new(),
+        | Field::DimensionLevelOffset(_)
+        // Gerekçe is the Topoloji tab's own words, taken before any drawing commit (docs/adr/4600).
+        | Field::TopologyReason => return Vec::new(),
         Field::DimensionSetGap(_) | Field::DimensionSetScales(_) | Field::CaseworkDepth(_) => {
             return Vec::new();
         }

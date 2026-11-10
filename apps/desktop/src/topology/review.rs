@@ -45,15 +45,26 @@ pub(crate) fn state_text(c: &Checked, f: &Finding) -> String {
 impl App {
     /// İstisna yap, Hata işaretle or İşareti kaldır on the chosen findings (docs/adr/0589 §3, 1260 §1): the project's
     /// settings (not an undo step), each mark bound to its objects' geometry and its rule's version, with Gerekçe's
-    /// words; checked again.
+    /// words; checked again, the chosen rows following their keys.
     pub(super) fn topology_review(&mut self, op: TopologyExceptionOperation) -> Task<Message> {
-        let chosen = self.topology.selected.clone();
         let Some(c) = self.topology_checked() else {
             return Task::none();
         };
-        let keys: Vec<String> = chosen
+        let keys: Vec<String> = self.topology.selected.iter().filter_map(|&at| c.findings.get(at)).map(|f| c.key(f)).collect();
+        self.topology_review_keys(keys.clone(), op, keys)
+    }
+
+    /// The findings of `keys` marked (those already so left out), from the tab or from Öznitelikler (docs/adr/4600);
+    /// checked again, then the rows of `chosen` are the tab's chosen ones.
+    pub(super) fn topology_review_keys(&mut self, keys: Vec<String>, op: TopologyExceptionOperation, chosen: Vec<String>) -> Task<Message> {
+        let Some(c) = self.topology_checked() else {
+            return Task::none();
+        };
+        let asked: std::collections::HashSet<&str> = keys.iter().map(String::as_str).collect();
+        let todo: Vec<String> = c
+            .findings
             .iter()
-            .filter_map(|&at| c.findings.get(at))
+            .filter(|f| asked.contains(c.key(f).as_str()))
             .filter(|f| {
                 let state = c.g.state(f);
                 match op {
@@ -64,7 +75,7 @@ impl App {
             })
             .map(|f| c.key(f))
             .collect();
-        if keys.is_empty() {
+        if todo.is_empty() {
             return Task::none();
         }
         let reason = self.topology.reason.trim().to_owned();
@@ -74,7 +85,7 @@ impl App {
         };
         let input = TopologyExceptions {
             operation: op,
-            keys,
+            keys: todo,
             reason,
             scope: None,
             expected_revision: None,
@@ -90,13 +101,6 @@ impl App {
                 }
                 CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
             };
-        let keys: Vec<String> = chosen
-            .iter()
-            .filter_map(|&at| {
-                self.topology_checked()
-                    .and_then(|c| c.findings.get(at).map(|f| c.key(f)))
-            })
-            .collect();
         let said = match op {
             TopologyExceptionOperation::Mark => format!("{n} bulgu istisna yapıldı."),
             TopologyExceptionOperation::Error => format!("{n} bulgu hata diye işaretlendi."),
@@ -104,7 +108,7 @@ impl App {
         };
         self.topology.recipe = None;
         // Checked again (the marks are part of the rules' stamp); the chosen rows follow their keys.
-        self.topology_run(Work::Check, Then::Marked { keys, said })
+        self.topology_run(Work::Check, Then::Marked { keys: chosen, said })
     }
 
     /// Tarifle onar: the chosen findings in the order shown, each with its first fix, planned by `cad.topology.repair`

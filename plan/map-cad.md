@@ -38,7 +38,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
@@ -1045,6 +1045,14 @@ düzenleme açıkken Köşe sil iki düz kenarı birleştirince eski kenarların
 yolun ucu ve yaylı kenar eskisi gibi; kilitli komşu ADR 3400'deki gibi. 6 yeni bağımsız durum (26), Python, MCP,
 masaüstü (Köşe tablosunda Kaldır, ileti) ve resimler. Açık: yaylı kenarların birleşmesi, tutamaçla birden çok nesne,
 köşenin gidişine ok, Öznitelikler'den işaretleme, büyük veri ölçümü.
+
+**10 Kasım 2026, dokuzuncu tur — bulgunun Öznitelikler'den işaretlenmesi ve çoklu seçimin bulgu sayıları ([ADR 4600](../docs/adr/4600-topology-findings-marked-from-attributes.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Pro'nun Error Inspector'ı (Mark as Exception X, Clear Exception E; haritada
+açılır menü; nesnenin panelinden yönetim yok). Kanıtlanan: Öznitelikler › Topoloji'de Gerekçe satırı (sekmeninkiyle
+aynı) ve her bulgunun durumu açılır listede (Değerlendirilmedi, Hata, İstisna); seçim `cad.topology.exceptions`'la
+yazılır, yeniden denetlenir, sekmenin seçimi değişmez; çoklu seçimde bulgular duruma göre sayılır (ortak bulgu bir kez).
+Komut değişmedi. Masaüstü testi ve resimler. Açık: köşenin gidişine ok, tutamaçla birden çok nesne, yaylı kenarların
+birleşmesi, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 

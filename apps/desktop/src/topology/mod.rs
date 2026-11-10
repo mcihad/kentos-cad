@@ -168,6 +168,9 @@ pub enum Event {
     Frame,
     /// A finding by its lasting key, from Öznitelikler or Formla düzenle (docs/adr/3800): the tab opened on it.
     Show(String),
+    /// A finding's state chosen in Öznitelikler (docs/adr/4600): its lasting key and the mark, with Gerekçe's words; the
+    /// tab's chosen rows stay as they are.
+    Review(String, TopologyExceptionOperation),
 }
 
 impl App {
@@ -510,6 +513,13 @@ impl App {
             Event::Apply => return self.topology_apply_recipe(),
             Event::Drop => self.topology.recipe = None,
             Event::Show(key) => self.topology_open_finding(&key),
+            Event::Review(key, op) => {
+                let keep: Vec<String> = match self.topology_checked() {
+                    Some(c) => self.topology.selected.iter().filter_map(|&at| c.findings.get(at)).map(|f| c.key(f)).collect(),
+                    None => Vec::new(),
+                };
+                return self.topology_review_keys(vec![key], op, keep);
+            }
         }
         Task::none()
     }
