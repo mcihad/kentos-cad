@@ -770,6 +770,92 @@ pub fn along_eaves(pts: &[Vec2], spec: &RoofSpec, d: f64) -> Vec<(usize, [Vec2; 
         .collect()
 }
 
+/// A gutter's depth for its width (docs/adr/8044 §8): a half-round gutter (yarım yuvarlak oluk) is half as deep as it
+/// is wide.
+pub const GUTTER_DEPTH: f64 = 0.5;
+/// The gap a downpipe's clips leave between it and the wall it runs down, metres (docs/adr/8044 §8).
+pub const PIPE_STANDOFF: f64 = 0.03;
+
+/// Its gutter as a section and an elevation see it (docs/adr/8044 §8): along every sloping eaves edge a band its
+/// width outside them, mitred where two sloping edges meet and squared off at a gable end as the plan draws it
+/// ([`along_eaves`]); each counter-clockwise, with its edge's index. None without a gutter.
+pub fn gutter_bands(pts: &[Vec2], spec: &RoofSpec) -> Vec<(usize, Vec<Vec2>)> {
+    let Some(g) = spec.gutter.filter(|g| *g > EPS) else {
+        return Vec::new();
+    };
+    along_eaves(pts, spec, 0.0)
+        .into_iter()
+        .zip(along_eaves(pts, spec, g))
+        .map(|((i, [a, b]), (_, [c, d]))| {
+            let ring = vec![a, b, d, c];
+            if area2(&ring) < 0.0 {
+                (i, ring.into_iter().rev().collect())
+            } else {
+                (i, ring)
+            }
+        })
+        .collect()
+}
+
+/// A downpipe's way down (docs/adr/8044 §8): from its outlet under the gutter back to the wall in a 45° swan neck (kaz
+/// boynu; Archicad's downpipe bends at 45°), then down the wall to the ground.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PipeWay {
+    /// Its outlet's middle in plan: the part's.
+    pub outlet: Vec2,
+    /// Its middle where it runs down, [`PIPE_STANDOFF`] off the wall; the outlet when there is no wall to go back to.
+    pub down: Vec2,
+    /// Its eaves edge's direction, a unit vector: its sides run along it and across it.
+    pub along: Vec2,
+}
+
+/// A downpipe's way down: its eaves the sloping edge nearest its middle; `wall(outlet, inward)` how far in, square to
+/// them, the face of the wall it runs down begins (the drawing's wall, its finish included); none (no wall there, or a
+/// pipe set past the building's corner): straight down from the gutter. None for another part, or a roof without a
+/// sloping edge.
+pub fn downpipe_way(
+    pts: &[Vec2],
+    spec: &RoofSpec,
+    part: &Part,
+    wall: impl Fn(Vec2, Vec2) -> Option<f64>,
+) -> Option<PipeWay> {
+    let n = pts.len();
+    if part.kind != PartKind::Downpipe || n < 3 || spec.slopes.len() != n {
+        return None;
+    }
+    let ccw = area2(pts) >= 0.0;
+    // The nearest sloping edge: its distance, its direction and its outward normal.
+    let mut best: Option<(f64, Vec2, Vec2)> = None;
+    for i in (0..n).filter(|&i| spec.slopes[i].is_some()) {
+        let (a, b) = (pts[i], pts[(i + 1) % n]);
+        let l = js_hypot(b.x - a.x, b.y - a.y);
+        if l <= EPS {
+            continue;
+        }
+        let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
+        let out = if ccw {
+            Vec2::new(along.y, -along.x)
+        } else {
+            Vec2::new(-along.y, along.x)
+        };
+        let (px, py) = (part.at.x - a.x, part.at.y - a.y);
+        let t = js_max(0.0, js_min(l, px * along.x + py * along.y));
+        let d = js_hypot(px - along.x * t, py - along.y * t);
+        if best.is_none_or(|(bd, ..)| d < bd) {
+            best = Some((d, along, out));
+        }
+    }
+    let (_, along, out) = best?;
+    // Back from its outlet to the wall: its middle the clips' standoff and its radius off the wall's face.
+    let back = wall(part.at, Vec2::new(-out.x, -out.y))
+        .map_or(0.0, |w| js_max(0.0, w - PIPE_STANDOFF - part.width / 2.0));
+    Some(PipeWay {
+        outlet: part.at,
+        down: Vec2::new(part.at.x - out.x * back, part.at.y - out.y * back),
+        along,
+    })
+}
+
 /// Its gutter and snow guard as the roof plan draws them (docs/adr/8044 §8; Mimarlık Hizmetleri Şartnamesi 14.3.3 u
 /// "su toplama yerleri", Sivas İmar Yönetmeliği 42/5): the gutter's outer edge outside the eaves, the snow guard a line
 /// in from them with short ticks across it, both narrow; each named once, along the longest of its lines.
@@ -962,12 +1048,99 @@ mod tests {
             "its circle"
         );
         assert!(
-            p.iter().any(|q| matches!(&q.shape, Shape::Text { text, .. } if text == "Ø100")),
+            p.iter()
+                .any(|q| matches!(&q.shape, Shape::Text { text, .. } if text == "Ø100")),
             "its diameter written"
         );
-        // No ring on the roof, no top: no prism in a section.
+        // No ring on the roof, no top: not a chimney's prism; a section takes its way down ([`downpipe_way`]).
         assert_eq!(part_ring(&rect(12.0, 9.0), &s, &s.parts[0]), None);
         assert_eq!(part_top(&rect(12.0, 9.0), &s, &s.parts[0]), None);
+    }
+
+    /// The ring's points, in any order and either way round.
+    fn holds(ring: &[Vec2], want: &[(f64, f64)]) -> bool {
+        ring.len() == want.len()
+            && want.iter().all(|(x, y)| {
+                ring.iter()
+                    .any(|p| (p.x - x).abs() < 1e-12 && (p.y - y).abs() < 1e-12)
+            })
+    }
+
+    #[test]
+    fn a_gutter_is_a_band_outside_every_sloping_eaves_edge() {
+        // A hip roof: four bands 15 cm out, mitred into each other at the corners, counter-clockwise.
+        let hip = RoofSpec {
+            gutter: Some(0.15),
+            ..spec([Some(33.0); 4])
+        };
+        let bands = gutter_bands(&rect(12.0, 9.0), &hip);
+        assert_eq!(bands.iter().map(|b| b.0).collect::<Vec<_>>(), [0, 1, 2, 3]);
+        assert!(holds(
+            &bands[0].1,
+            &[(0.0, 0.0), (12.0, 0.0), (12.15, -0.15), (-0.15, -0.15)]
+        ));
+        assert!(bands.iter().all(|(_, r)| area2(r) > 0.0));
+        // A gable roof: its two eaves only, squared off at the gable ends.
+        let gable = RoofSpec {
+            gutter: Some(0.15),
+            ..spec([Some(33.0), None, Some(33.0), None])
+        };
+        let bands = gutter_bands(&rect(12.0, 9.0), &gable);
+        assert_eq!(bands.iter().map(|b| b.0).collect::<Vec<_>>(), [0, 2]);
+        assert!(holds(
+            &bands[1].1,
+            &[(12.0, 9.0), (0.0, 9.0), (0.0, 9.15), (12.0, 9.15)]
+        ));
+        // Without a gutter, none.
+        assert!(gutter_bands(&rect(12.0, 9.0), &spec([Some(33.0); 4])).is_empty());
+    }
+
+    #[test]
+    fn a_downpipe_goes_back_to_the_wall_and_down() {
+        let s = RoofSpec {
+            gutter: Some(0.15),
+            ..spec([Some(33.0); 4])
+        };
+        let pipe = Part {
+            kind: PartKind::Downpipe,
+            at: Vec2::new(6.0, -0.075),
+            width: 0.1,
+            depth: 0.1,
+            ..Default::default()
+        };
+        // The wall's face 50 cm in from the eaves, 0.575 m in from the outlet (asked square to the south eaves, going
+        // north): back 0.575 − 0.03 − 0.05 = 0.495 m, its middle 8 cm off the wall's face (y 0.5).
+        let wall = |from: Vec2, inward: Vec2| {
+            (inward.x.abs() < 1e-12 && (inward.y - 1.0).abs() < 1e-12).then_some(0.5 - from.y)
+        };
+        let way = downpipe_way(&rect(12.0, 9.0), &s, &pipe, wall).expect("its way");
+        assert_eq!(way.outlet, pipe.at);
+        assert!(
+            (way.down.x - 6.0).abs() < 1e-12 && (way.down.y - 0.42).abs() < 1e-12,
+            "{way:?}"
+        );
+        assert!((way.along.x - 1.0).abs() < 1e-12 && way.along.y.abs() < 1e-12);
+        // No wall there: straight down from the gutter.
+        let straight = downpipe_way(&rect(12.0, 9.0), &s, &pipe, |_, _| None).expect("its way");
+        assert_eq!(straight.down, pipe.at);
+        // Beside the east eaves it goes back west.
+        let east = Part {
+            at: Vec2::new(12.075, 4.0),
+            ..pipe.clone()
+        };
+        let west =
+            |from: Vec2, inward: Vec2| ((inward.x + 1.0).abs() < 1e-12).then_some(from.x - 11.5);
+        let way = downpipe_way(&rect(12.0, 9.0), &s, &east, west).expect("its way");
+        assert!(
+            (way.down.x - 11.58).abs() < 1e-12 && (way.down.y - 4.0).abs() < 1e-12,
+            "{way:?}"
+        );
+        // Not a downpipe: none.
+        let chimney = Part {
+            kind: PartKind::Chimney,
+            ..pipe
+        };
+        assert_eq!(downpipe_way(&rect(12.0, 9.0), &s, &chimney, wall), None);
     }
 
     #[test]

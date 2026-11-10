@@ -142,6 +142,18 @@ pub struct Model {
     pub levels: Vec<(String, String, f64, Option<f64>)>,
     /// The roofs (docs/adr/8044 §5): their eaves' and ridges' levels and their solids.
     pub roofs: Vec<RoofAt>,
+    /// The roofs whose gutters and downpipes are built once every wall and column is in (docs/adr/8044 §8).
+    rain: Vec<Rain>,
+}
+
+/// A roof's gutter and downpipes waiting for the walls they run down (docs/adr/8044 §8).
+#[derive(Clone, Debug)]
+struct Rain {
+    /// The roof's index in [`Model::roofs`].
+    roof: usize,
+    pts: Vec<P>,
+    spec: kentos_geometry_core::geom::roof::RoofSpec,
+    owner: Option<String>,
 }
 
 /// A roof as a section reads it: its eaves' level, its ridge's, its solids (its faces, or its flat slab).
@@ -322,6 +334,9 @@ pub fn model(doc: &Document) -> Model {
             }
             _ => {}
         }
+    }
+    for rain in std::mem::take(&mut m.rain) {
+        rain_water(&rain, &mut m);
     }
     m
 }
@@ -819,11 +834,16 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
         slab.voids = holes.clone();
         push(m, slab, look, owner.clone());
     } else {
+        // Its snow guard's line on each sloping face (docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5).
+        let guards = spec
+            .snow_guard
+            .filter(|d| *d > 1e-9)
+            .map_or_else(Vec::new, |d| core::along_eaves(&pts, &spec, -d));
         for (f, (c, dx, dy)) in faces {
             at.solids.push(m.solids.len());
             // Its windows' outlines on its top (docs/adr/8044 §6): seen where it is, never cut.
             let plane = |q: P| c + dx * q.x + dy * q.y;
-            let marks: Vec<[(P, f64); 2]> = spec
+            let mut marks: Vec<[(P, f64); 2]> = spec
                 .parts
                 .iter()
                 .filter(|part| core::part_face(&pts, &spec, part) == Some(f.edge))
@@ -838,6 +858,12 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
                         .collect::<Vec<_>>()
                 })
                 .collect();
+            marks.extend(
+                guards
+                    .iter()
+                    .filter(|(i, _)| *i == f.edge)
+                    .map(|(_, [a, b])| [(*a, plane(*a)), (*b, plane(*b))]),
+            );
             let sloped = sec::Sloped {
                 top: c,
                 dx,
@@ -871,7 +897,177 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
         stack.finish = None;
         push(m, stack, chimney_look(), owner.clone());
     }
+    if spec.gutter.is_some() {
+        m.rain.push(Rain {
+            roof: k,
+            pts,
+            spec,
+            owner,
+        });
+    }
     m.roofs.push(at);
+}
+
+/// A gutter's or a downpipe's look in a section (docs/adr/8044 §8): sheet metal or PVC, unhatched, outlined light, on
+/// EK-2's own element (Oluk: MM-OLUK-GENEL; Yağmur İniş Borusu: MM-YIBO-GENEL).
+fn rain_look(element: &str) -> Look {
+    Look {
+        key: format!("{element}:genel"),
+        layer: kentos_commands::ek4_layer(element, "Genel"),
+        heavy: false,
+        fill: None,
+    }
+}
+
+/// A roof's gutter and downpipes (docs/adr/8044 §8; Mimarlık Hizmetleri Şartnamesi, görünüşler 14.3.5 e "Yağmur
+/// olukları inişleri … gösterilir" and, uygulama projesinde, h "Yağmur inişleri ve olukları … gösterilir"): the gutter
+/// a half-round band hanging from the eaves, its top at their level; a downpipe from under it back to the wall in a 45°
+/// swan neck, then down the wall to the graded ground (±0.00); without a wall square in from it within
+/// [`PIPE_REACH`] (a roof drawn by its corners, a pipe set past the building's corner) straight down. The wall is the
+/// face the drawing has, its finish included, half a metre under the storey's top the roof stands on. Neither is the
+/// roof's: no level is written for them, no face of theirs is named.
+fn rain_water(rain: &Rain, m: &mut Model) {
+    use kentos_geometry_core::geom::roof as core;
+    use kentos_geometry_core::jsmath::js_hypot;
+    let Rain {
+        roof: k,
+        pts,
+        spec,
+        owner,
+    } = rain;
+    let Some(g) = spec.gutter.filter(|g| *g > 1e-9) else {
+        return;
+    };
+    let bottom = spec.base - g * core::GUTTER_DEPTH;
+    let probe = m.roofs.get(*k).map_or(spec.base, |r| r.seat) - 0.5;
+    let plain = |rings: Vec<Vec<P>>, height: Height| Solid {
+        rings,
+        height,
+        voids: Vec::new(),
+        marks: Vec::new(),
+        finish: None,
+    };
+    let mut made: Vec<(Solid, Look)> = Vec::new();
+    for (_, band) in core::gutter_bands(pts, spec) {
+        let height = Height::Prism {
+            bottom,
+            top: spec.base,
+        };
+        made.push((plain(vec![band], height), rain_look("OLUK")));
+    }
+    for part in spec
+        .parts
+        .iter()
+        .filter(|p| p.kind == core::PartKind::Downpipe)
+    {
+        let wall = |from: P, inward: P| face_ahead(m, from, inward, probe, PIPE_REACH);
+        let Some(way) = core::downpipe_way(pts, spec, part, wall) else {
+            continue;
+        };
+        let half = part.width / 2.0;
+        let (along, across) = (way.along, P::new(-way.along.y, way.along.x));
+        let at = |c: P, s: f64, t: f64| {
+            P::new(
+                c.x + (along.x * s + across.x * t) * half,
+                c.y + (along.y * s + across.y * t) * half,
+            )
+        };
+        let back = js_hypot(way.down.x - way.outlet.x, way.down.y - way.outlet.y);
+        let mut top = bottom;
+        if back > 1e-6 {
+            // The swan neck: its top at the gutter's bottom over the outlet, falling 1:1 to the wall; upright it is
+            // its diameter × √2 thick.
+            let v = P::new(
+                (way.down.x - way.outlet.x) / back,
+                (way.down.y - way.outlet.y) / back,
+            );
+            let thickness = part.width * std::f64::consts::SQRT_2;
+            let mut ring = vec![
+                at(way.outlet, -1.0, 0.0),
+                at(way.down, -1.0, 0.0),
+                at(way.down, 1.0, 0.0),
+                at(way.outlet, 1.0, 0.0),
+            ];
+            if area(&ring) < 0.0 {
+                ring.reverse();
+            }
+            let sloped = sec::Sloped {
+                top: bottom + v.x * way.outlet.x + v.y * way.outlet.y,
+                dx: -v.x,
+                dy: -v.y,
+                thickness,
+                eaves: ring.clone(),
+                roof: *k,
+            };
+            made.push((plain(vec![ring], Height::Sloped(sloped)), rain_look("YIBO")));
+            top = bottom - back - thickness / 2.0;
+        }
+        if top > 1e-6 {
+            let ring = vec![
+                at(way.down, -1.0, -1.0),
+                at(way.down, 1.0, -1.0),
+                at(way.down, 1.0, 1.0),
+                at(way.down, -1.0, 1.0),
+            ];
+            let height = Height::Prism { bottom: 0.0, top };
+            made.push((plain(vec![ring], height), rain_look("YIBO")));
+        }
+    }
+    for (solid, look) in made {
+        push(m, solid, look, owner.clone());
+    }
+}
+
+/// How far a downpipe looks in for the wall it runs down, metres: PAİY 42's widest eaves (1.00 m), the widest gutter
+/// (0.50 m) and as much again.
+const PIPE_REACH: f64 = 2.0;
+
+/// How far from `from` along `dir` (a unit vector) the nearest solid standing at height `z` begins, within `reach`: a
+/// wall's or a column's face, its finish included; none when nothing stands there.
+fn face_ahead(m: &Model, from: P, dir: P, z: f64, reach: f64) -> Option<f64> {
+    let mut best: Option<f64> = None;
+    for s in &m.solids {
+        let Height::Prism { bottom, top } = s.height else {
+            continue;
+        };
+        if z < bottom || z > top {
+            continue;
+        }
+        for ring in &s.rings {
+            let n = ring.len();
+            for i in 0..n {
+                let (a, b) = (ring[i], ring[(i + 1) % n]);
+                let e = P::new(b.x - a.x, b.y - a.y);
+                let den = dir.x * e.y - dir.y * e.x;
+                if den.abs() < 1e-12 {
+                    continue;
+                }
+                let w = P::new(a.x - from.x, a.y - from.y);
+                let t = (w.x * e.y - w.y * e.x) / den;
+                let u = (w.x * dir.y - w.y * dir.x) / den;
+                if t > 1e-9
+                    && t <= reach
+                    && (-1e-9..=1.0 + 1e-9).contains(&u)
+                    && best.is_none_or(|b| t < b)
+                {
+                    best = Some(t);
+                }
+            }
+        }
+    }
+    best
+}
+
+/// A ring's signed area, counter-clockwise positive.
+fn area(ring: &[P]) -> f64 {
+    let n = ring.len();
+    (0..n)
+        .map(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            a.x * b.y - b.x * a.y
+        })
+        .sum::<f64>()
+        / 2.0
 }
 
 /// A stair: each straight leg a flight, each landing a slab, as thick as the slab it arrives at (docs/adr/8042 §3).
@@ -1766,6 +1962,10 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         let Height::Sloped(sl) = &m.solids[c.solid].height else {
             continue;
         };
+        // A downpipe's swan neck slopes too, but it is not a roof's face (docs/adr/8044 §8).
+        if !m.roofs.iter().any(|r| r.solids.contains(&c.solid)) {
+            continue;
+        }
         let ku = sl.dx * frame.right.x + sl.dy * frame.right.y;
         let grade = sl.dx.hypot(sl.dy);
         if ku.abs() <= 1e-6 || (ku.abs() - grade).abs() > 1e-6 * grade.max(1.0) {

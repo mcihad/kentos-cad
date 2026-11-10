@@ -284,13 +284,31 @@ projede çatı planını ister.
   + yarıçap uzakta olmalı (içeride, uzakta ya da kalkan yanında: "…oluğun altında değil"). Şema 239 dosya iniş borusu
   yazamaz; okuyan "şema 240 ister" der.
 - **Planda** gerçek boyutunda daire, yanında çapı milimetreyle ("Ø100"; Şartname 14.5.3 x "gerçek boyutlarında çizilir
-  ve ölçüleri yazılır"). Kesitte prizma yok, çatıda delik yok.
+  ve ölçüleri yazılır"). Çatıda delik yok.
 - **İniş borusu aracı** (Mimari › Yerleştir › Çatı'nın dördüncüsü, `IB`): tıklanan noktaya en yakın eğimli saçağa (1 m
   içinde) iner ve oluğun ortasına oturur; Çap (Ç) seçeneği; çatının oluğu yoksa ya da saçak uzaksa kırmızı ret. Kendi
   katının planında konmaz (çatı orada yalnız kesikli saçak).
 - **Öznitelikler:** "İniş borusu 1", "İniş borusu 2" … satırlarında çap ("Ø0.100 m").
-- **Sonraya (5. bölümün devamı):** görünüşte oluk ve iniş boruları (saçaktan zemine), denetim: kar siperliği olmayan
-  eğimli çatıya Sivas 42/5 uyarısı, PAİY 40/42 ve BYKHY 58/2 sınırları.
+- **Görünüşte ve kesitte:** Şartname'nin görünüşler bölümü ön projede 14.3.5 e "Yağmur olukları inişleri, paratoner
+  inişleri gösterilir", uygulama projesinde h "Yağmur inişleri ve olukları, paratoner inişleri gösterilir" (metinde bu
+  bölüm de 14.5.3 numaralı, planlarınkiyle aynı). Kesit ve görünüş modeline (`sections::rain_water`) üç şey girer:
+  - **Oluk:** planın bandı (`geom::roof::gutter_bands`; gönyeli, kalkanda dik), üstü saçak kotunda, derinliği
+    genişliğinin yarısı (yarım yuvarlak oluk; 15 cm'de 7,5 cm). Kotu saçağınkiyle aynı olduğundan ayrıca yazılmaz.
+  - **İniş borusu** (`geom::roof::downpipe_way`): oluğun altından 45° kaz boynuyla duvara döner, duvarın 3 cm önünden
+    (kelepçe payı) ±0.00'a iner; kesiti çapı kadar kare (görünüşte iki çizgi). Duvar çizimin duvarıdır, sıvası dahil:
+    oluğun ağzından saçağa dik içeri, çatının oturduğu katın tepesinin 0,50 m altında ilk duvar ya da kolon yüzü
+    (`sections::face_ahead`); 2 m içinde yoksa (köşeleri çizilen çatı, binanın köşesinin ötesindeki boru) boru oluktan
+    dümdüz iner. Saçak payından kurulan ilk sürümde boru sıvaya değiyordu: Binadan çizilen saçak duvarın sıvasız
+    yüzünden ölçülüyor, görünüş binasında sıvalı yüz saçaktan 0,477 m içeride (0,50 değil), boşluk 3 cm yerine 0 çıktı.
+    Başka programlar (yalnız görünüş): Archicad'in kütüphanedeki iniş borusu 45° dirsekli; Applicad (çatı tesisatı)
+    "offset to wall: … the horizontal distance to the closest wall" ile dirseği seçer.
+  - **Kar siperliği:** çatı yüzünde saçaktan içerideki çizgisi (%33'te 30 cm içeride, +6.10).
+  Oluk ve boru çatının katmanında değil, EK-2'nin kendi öğelerinde (Oluk: MM-OLUK-GENEL; Yağmur İniş Borusu:
+  MM-YIBO-GENEL), ince ve taramasız; yüzleri cephe malzemesi olarak adlandırılmaz, boyun eğimi "%…" yazdırmaz.
+- **İniş borusu aracı köşede:** binadan çizilmiş çatıda köşeye tıklanan boru saçak ucundan saçak payı + 3 cm + yarıçap
+  (50 cm saçakta 0,58 m) içeri alınır: duvarın köşesinden iner, binanın köşesinin ötesindeki boşluktan değil.
+- **Sonraya (5. bölümün devamı):** denetim: kar siperliği olmayan eğimli çatıya Sivas 42/5 uyarısı, PAİY 40/42 ve
+  BYKHY 58/2 sınırları.
 
 ## Doğrulama
 
@@ -362,11 +380,19 @@ projede çatı planını ister.
   Öznitelikler). Gerçek pencere (`fixtures/interaction/real/cati-inis-borusu.txt`): menü aramasında "İniş borusu"
   (Mimari › Yerleştir); önizleme ve Çap/Yerleşim ipucu; güney saçağına iki boru, köşede oluk bandının içinde daire ve
   "Ø100"; Öznitelikler "İniş borusu 1/2 Ø0.100 m".
+- 5. bölüm, görünüşte oluk ve iniş borusu (§8): çekirdek 21 (`gutter_bands`: kırmada dört gönyeli bant, beşikte iki
+  saçak ve kalkanda dik kesim, oluksuz çatıda yok; `downpipe_way`: duvara 0,495 m geri, duvar yoksa dümdüz, doğu
+  saçağında batıya); uygulama 23 (yeni: güney görünüşünde oluğun önü 13,55 m, +6.00 ile +5.925 arasında; kar
+  siperliği +6.099'da 12,65 m; iki borunun iki yanı ±0.00'dan oluğun altına; doğu görünüşünde boru 10 cm, sıvalı
+  yüzden 3 cm, 45° kaz boynu); etkileşim 14 (köşeye tıklanan boru saçak ucundan 0,58 m içeride). Gerçek pencere
+  (`fixtures/interaction/real/cati-gorunus-oluk.txt`): güney ve doğu görünüşü çıkarıldı; doğu görünüşünde borunun iki
+  yanı arası 26 piksel (10 cm), boru ile duvar arası 8 piksel ≈ 3 cm (saçak payından kurulan ilk sürümde 0); planda
+  köşeye tıklanan boru köşe kolonunun hizasında.
 
 ## Sonraya kalan
 
 - §9: içe dönen köşeli saçak (L, T) ve dereler.
-- Görünüşte oluk ve iniş borusu; PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (kar siperliği; PAİY 40'ın
+- PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (kar siperliği; PAİY 40'ın
   mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır; duman
   bacası mahya + 0,80 m, hava bacası 0,60 m, pencerenin cepheye 1 m ve birbirine 2 m uzaklığı); bacanın duvar içi
   bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);

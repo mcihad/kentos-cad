@@ -1,0 +1,97 @@
+# M44 5. bölüm, görünüşte oluk ve iniş borusu (docs/adr/8044 §8), on fixtures/arch/v1/facade-building.kcad (--modul
+# mimari): 1. kat active; Çatı by Binadan (Oluk 15 cm, Kar siperliği 30 cm); two İniş borusu clicked near the south
+# eaves' ends (each set 0.58 m in from the eaves' end); Görünüş çıkar on the south mark (2) and the east mark (3), each
+# placed right of the plan; everything fitted; close views: the south facade's west corner (the gutter band, the pipe),
+# the east facade's south corner (the 45° swan neck, the pipe 3 cm off the plastered wall down to ±0.00), the plan's
+# south-west corner (the pipe beside the corner column).
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type iniş borusu
+wait 1500
+key Return
+wait 1500
+move 480 800
+wait 1200
+click 480 800
+wait 2000
+move 1050 800
+wait 1200
+click 1050 800
+wait 2000
+key Escape
+wait 800
+shot g0-plan
+key alt+q
+wait 600
+type Görünüş çıkar
+wait 1500
+key Return
+wait 1500
+click 766 927
+wait 1500
+move 1350 250
+wait 1500
+click 1350 250
+wait 3000
+key Escape
+wait 800
+key alt+q
+wait 600
+type Görünüş çıkar
+wait 1500
+key Return
+wait 1500
+click 1196 565
+wait 1500
+move 1350 760
+wait 1500
+click 1350 760
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot g1-genel
+wheel 906 262 7
+wait 1500
+move 1400 120
+wait 800
+shot g2-guney-kose
+click 800 500 middle
+click 800 500 middle
+wait 2000
+wheel 890 622 7
+wait 1500
+move 1400 120
+wait 800
+shot g3-dogu-kose
+click 800 500 middle
+click 800 500 middle
+wait 2000
+wheel 250 840 6
+wait 1500
+move 1400 120
+wait 800
+shot g4-plan-kose

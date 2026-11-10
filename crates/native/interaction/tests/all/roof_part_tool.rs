@@ -250,4 +250,13 @@ fn a_downpipe_goes_under_the_gutter_nearest_the_click() {
         b.last_text(),
         Some("İniş borusu kondu: Ø100, oluğun altında.")
     );
+    // Clicked at a corner it comes down the wall, not the air past the building's corner (docs/adr/8044 §8): its
+    // middle the overhang, the clips' 3 cm and its radius (0.58 m) in from the eaves' end, 8 cm in from the corner.
+    b.click(-0.3, -0.7);
+    let roof = the_roof(&b);
+    let p = &roof.roof.parts[1];
+    assert!(
+        (p.at.x - E - 0.08).abs() < 1e-9 && (p.at.y - N + 0.575).abs() < 1e-9,
+        "{p:?}"
+    );
 }

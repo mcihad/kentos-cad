@@ -284,6 +284,149 @@ fn the_north_facade_sees_the_roofs_fascia_its_hips_and_its_ridge() {
     }
 }
 
+/// The facade building's roof with a 15 cm gutter, a snow guard 30 cm in and a Ø100 downpipe at each end of its
+/// south eaves, set where the İniş borusu tool sets them at a corner (0.58 m in from the eaves' ends, the gutter's
+/// middle).
+fn rained(doc: &Document) -> Document {
+    let mut doc = doc.clone();
+    let eaves = roofs::eaves_from_walls(
+        &doc,
+        kentos_commands::Vec2 { x: 6.0, y: 4.5 },
+        Some("k1"),
+        0.5,
+    )
+    .expect("the walls enclose the point");
+    let y = eaves.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
+    let x0 = eaves.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
+    let x1 = eaves.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max);
+    let pipe = |x: f64| json!({"kind": "downpipe", "at": {"x": x, "y": y - 0.075}, "width": 0.1, "depth": 0.1});
+    let slopes = vec![33.0; eaves.len()];
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create",
+        CallOp::Execute,
+        json!({"layerId": "0", "roofs": [{"pts": eaves, "slopes": slopes, "overhang": 0.5, "gutter": 0.15,
+                                          "snowGuard": 0.3, "parts": [pipe(x0 + 0.58), pipe(x1 - 0.58)],
+                                          "arch": {"level": "k1"}}]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    doc
+}
+
+/// The lines of an elevation's block on the layers starting with `layer`.
+fn lines_on(doc: &Document, m: Uuid, layer: &str) -> Vec<kentos_commands::LineEntity> {
+    doc.block(sections::block_id(m))
+        .unwrap()
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Line(l) if l.base.layer_id.starts_with(layer) => Some(l.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Görünüşte oluk ve iniş borusu (docs/adr/8044 §8; Mimarlık Hizmetleri Şartnamesi 14.3.5 e, uygulama projesi
+/// görünüşleri h: "Yağmur inişleri ve olukları … gösterilir"). The south facade sees the gutter across the eaves, 7.5 cm
+/// deep under +6.00 (half-round: half its width), the snow guard's line on the roof 30 cm in (+6.10), and each downpipe
+/// down to ±0.00; the east facade sees a pipe beside the south wall, 8 cm off it, and its 45° swan neck back to the
+/// gutter's outlet.
+#[test]
+fn the_facades_see_the_gutter_the_snow_guard_and_the_downpipes() {
+    type Line = kentos_commands::LineEntity;
+    let mut doc = rained(&facades());
+    let level = |l: &Line, z: f64| (l.a.y - z).abs() < 1e-6 && (l.b.y - z).abs() < 1e-6;
+    let long = |l: &Line| (l.a.x - l.b.x).abs();
+    // The gutter's front at its bottom (7.5 cm under the eaves: half-round, half its width) and its left end.
+    let front = |lines: &[Line], length: f64| {
+        lines
+            .iter()
+            .find(|l| level(l, 5.925) && (long(l) - length).abs() < 1e-6)
+            .map(|l| l.a.x.min(l.b.x))
+    };
+    // How far a pipe's upright side at `u` runs, the ground to its top, over all its pieces.
+    let span = |lines: &[Line], u: f64| {
+        let ys: Vec<f64> = lines
+            .iter()
+            .filter(|l| (l.a.x - u).abs() < 1e-6 && (l.b.x - u).abs() < 1e-6)
+            .flat_map(|l| [l.a.y, l.b.y])
+            .collect();
+        (
+            ys.iter().copied().fold(f64::INFINITY, f64::min),
+            ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+        )
+    };
+
+    let south = mark(&doc, ViewMarkForm::Elevation, "2");
+    derive(&mut doc, south);
+    let gutter = lines_on(&doc, south, "mm-oluk-genel-");
+    // Its front: 13.25 m of eaves and the two mitres' 15 cm, its top at the eaves (+6.00).
+    let left = front(&gutter, 13.55).unwrap_or_else(|| panic!("the gutter's bottom in {gutter:?}"));
+    assert!(
+        gutter
+            .iter()
+            .any(|l| level(l, 6.0) && (long(l) - 13.55).abs() < 1e-6),
+        "the gutter's top in {gutter:?}"
+    );
+    // The snow guard on the south face: 30 cm in at 33 % (+6.099), between the hips (13.25 − 2 × 0.30 m).
+    let roof = lines_on(&doc, south, "mm-cati-kiremit-");
+    assert!(
+        roof.iter()
+            .any(|l| level(l, 6.099) && (long(l) - 12.65).abs() < 1e-6),
+        "the snow guard in {roof:?}"
+    );
+    // Each downpipe 0.58 m in from the eaves' ends (0.73 m from the gutter's end): its sides 10 cm apart, from the
+    // graded ground (±0.00) up to the gutter's bottom.
+    let pipes = lines_on(&doc, south, "mm-yibo-genel-");
+    for u in [0.68, 0.78, 13.55 - 0.78, 13.55 - 0.68] {
+        let (lo, hi) = span(&pipes, left + u);
+        assert!(
+            lo.abs() < 1e-6 && (hi - 5.925).abs() < 1e-6,
+            "the pipe's side at {u}: {lo}…{hi} in {pipes:?}"
+        );
+    }
+
+    // The east facade: the south-east pipe beside the south wall, from the ground up, 10 cm wide and 3 cm off the
+    // wall's face as the drawing has it (its plaster included: the eaves were drawn 50 cm out of the unplastered face);
+    // its swan neck at 45° from it out to the gutter's outlet.
+    let east = mark(&doc, ViewMarkForm::Elevation, "3");
+    derive(&mut doc, east);
+    let upright = |l: &Line| (l.a.x - l.b.x).abs() < 1e-9 && (l.a.y - l.b.y).abs() > 1e-6;
+    let pipes = lines_on(&doc, east, "mm-yibo-genel-");
+    let mut sides: Vec<f64> = pipes
+        .iter()
+        .filter(|l| upright(l) && l.a.y.min(l.b.y).abs() < 1e-6)
+        .map(|l| l.a.x)
+        .collect();
+    sides.sort_by(f64::total_cmp);
+    sides.dedup_by(|a, b| (*a - *b).abs() < 1e-6);
+    assert!(
+        sides.len() == 2 && (sides[1] - sides[0] - 0.1).abs() < 1e-6,
+        "the pipe's sides {sides:?} in {pipes:?}"
+    );
+    let face = lines_on(&doc, east, "mm-")
+        .iter()
+        .filter(|l| {
+            !l.base.layer_id.starts_with("mm-yibo") && !l.base.layer_id.starts_with("mm-oluk")
+        })
+        .filter(|l| upright(l) && (l.a.y - l.b.y).abs() > 2.0 && l.a.x > sides[1] + 1e-9)
+        .map(|l| l.a.x)
+        .fold(f64::INFINITY, f64::min);
+    assert!(
+        (face - sides[1] - 0.03).abs() < 1e-6,
+        "the wall's face at {face}, the pipe's side at {}",
+        sides[1]
+    );
+    assert!(
+        pipes.iter().any(|l| {
+            let (du, dz) = ((l.b.x - l.a.x).abs(), (l.b.y - l.a.y).abs());
+            du > 0.3 && (du - dz).abs() < 1e-6
+        }),
+        "the swan neck in {pipes:?}"
+    );
+}
+
 /// Ruhsat takımı (docs/adr/8044 §7; PAİY 57(2)(a)): the roof over 1. kat has no storey over it whose plan would draw it
 /// whole: the set gets "Çatı planı" after the storeys' plans, EK-2's PL and CAT (Tablo 2.13, "çatı planı ve
 /// detayları"), its place NNN, its map the roof plan. Without a roof there is none.

@@ -215,7 +215,9 @@ impl RoofPartTool {
         let mut best: Option<(f64, Slot, &RoofEntity, Vec2)> = None;
         for (uid, e) in cx.doc.entities_with_uids() {
             let Entity::Roof(r) = e else { continue };
-            let Some(slot) = cx.doc.slot_of(uid) else { continue };
+            let Some(slot) = cx.doc.slot_of(uid) else {
+                continue;
+            };
             if !cx.doc.layers().is_visible(&r.base.layer_id)
                 || looks.hidden.contains(&slot.0)
                 || looks.roofs.contains(&slot.0)
@@ -253,17 +255,30 @@ impl RoofPartTool {
                 } else {
                     Vec2::new(-dy / l, dx / l)
                 };
-                let half = r.roof.gutter.map_or(0.0, |g| g / 2.0);
-                let place = r
+                // Set at a corner it comes down the wall, not the air past the building's corner (docs/adr/8044 §8):
+                // on a roof drawn from its walls its middle stays the overhang, the clips' standoff and its radius in
+                // from the eaves' ends.
+                let margin = r
                     .roof
-                    .gutter
-                    .map_or(at, |_| Vec2::new(foot.x + out.x * half, foot.y + out.y * half));
+                    .overhang
+                    .map_or(0.0, |o| o + roof::PIPE_STANDOFF + self.width / 2.0);
+                let t = if l > 2.0 * margin {
+                    t.clamp(margin / l, 1.0 - margin / l)
+                } else {
+                    t
+                };
+                let foot = Vec2::new(a.x + dx * t, a.y + dy * t);
+                let half = r.roof.gutter.map_or(0.0, |g| g / 2.0);
+                let place = r.roof.gutter.map_or(at, |_| {
+                    Vec2::new(foot.x + out.x * half, foot.y + out.y * half)
+                });
                 best = Some((d, slot, r, place));
             }
         }
-        best.map(|(_, slot, r, place)| (slot, r.clone(), place)).ok_or_else(|| {
-            "Yakında eğimli bir saçak yok; boruyu çatının oluğunun yanına koyun.".to_owned()
-        })
+        best.map(|(_, slot, r, place)| (slot, r.clone(), place))
+            .ok_or_else(|| {
+                "Yakında eğimli bir saçak yok; boruyu çatının oluğunun yanına koyun.".to_owned()
+            })
     }
 
     /// The part at `at` on `r`: a chimney or a vent squared with the eaves nearest it (its turn the eaves' direction
@@ -642,9 +657,12 @@ impl Tool for RoofPartTool {
         }
         let f = &self.format;
         if self.is_downpipe() {
-            return Prompt::new(title, "borunun yerine, eğimli saçağın oluğunun yanına tıklayın")
-                .option_with("Çap", "Ç", f.length(self.width))
-                .option("Bitir", "Enter");
+            return Prompt::new(
+                title,
+                "borunun yerine, eğimli saçağın oluğunun yanına tıklayın",
+            )
+            .option_with("Çap", "Ç", f.length(self.width))
+            .option("Bitir", "Enter");
         }
         if self.is_window() {
             return Prompt::new(
