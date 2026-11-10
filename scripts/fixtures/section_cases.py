@@ -27,7 +27,8 @@ The rules, as ADR 8042 §2 gives them:
   more than a millionth of a metre. What is left, in pieces longer than a
   millionth of a metre, is seen; an edge two faces share is drawn once.
 - Sloped (docs/adr/8044 §5): a roof's face, its footprint the face's ring, its top z = top + dx·x + dy·y, its bottom
-  `thickness` under it. Cut: along each stretch a band between its bottom and its top. Seen: its top where the plane
+  `thickness` under it. Cut: along each stretch a band between its bottom and its top, less the stretch of each void
+  whose heights hold the band over the part of the stretch it covers (a chimney through the roof, §6). Seen: its top where the plane
   rises into the view (dx·look_x + dy·look_y > 0), its underside where it falls into it (< 0): the footprint cut to
   what is in view and lifted (a cover), and each footprint edge cut to what is in view (an edge); on each footprint
   edge whose middle lies on the roof's eaves line and whose outward normal points back at the viewer, a vertical face
@@ -492,6 +493,17 @@ def section(frame, solids):
             h = solid["height"]
             if "sloped" in h:
                 sl = h["sloped"]
+                z = lambda u: sl["top"] + sl["dx"] * frame.at(u, F(0))[0] + sl["dy"] * frame.at(u, F(0))[1]
+                for v in solid["voids"]:
+                    for va, vb in through([clean(v["ring"])], frame.origin, frame.right, frame.look, F(0), frame.length):
+                        runs = []
+                        for a, b in stretches:
+                            lo, hi = max(a, va), min(b, vb)
+                            if hi <= lo or v["bottom"] > min(z(lo), z(hi)) - sl["thickness"] or v["top"] < max(z(lo), z(hi)):
+                                runs.append((a, b))
+                                continue
+                            runs += [(p, q) for p, q in ((a, lo), (hi, b)) if q > p]
+                        stretches = runs
                 for a, b in stretches:
                     pa, pb = frame.at(a, F(0)), frame.at(b, F(0))
                     za = sl["top"] + sl["dx"] * pa[0] + sl["dy"] * pa[1]
@@ -885,6 +897,13 @@ def cases():
                 (P(10, -1), P(10, 7), False, None), gable_roof()))
     out.append(("Çatı arkasındaki duvarın tepesini örter: kırmaların arasında kalan parçası görünmez",
                 (P(-1, -2), P(9, -2), False, None), hip_roof() + [prism(rect(-1, 8, 9, F("8.25")), 0, 4)]))
+    # docs/adr/8044 §6: a 50 cm chimney through the gable roof's north face, from +3.00 to 0.80 m over its ridge (+4.50):
+    # cut north-south through it, the face's band stops at its sides and the chimney stands cut from +3.00 to +5.30.
+    chimney = rect(F("3.75"), F("4.25"), F("4.25"), F("4.75"))
+    roof = gable_roof()
+    roof[1]["voids"] = [void(chimney, 3, F("5.3"))]
+    out.append(("Baca çatıyı deler: kesilen bant bacanın iki yanında kalır",
+                (P(4, -1), P(4, 7), False, None), roof + [prism(chimney, 3, F("5.3"))]))
     return out
 
 

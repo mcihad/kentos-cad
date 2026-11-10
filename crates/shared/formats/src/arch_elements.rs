@@ -73,6 +73,24 @@ pub fn core_beam(b: &BeamFields) -> Shape {
 
 /// The roof as the core's shape (docs/adr/8044 §1): its eaves line and slopes; its eaves at its offset (a block or a file
 /// without its storeys; the document stands it on its storey).
+/// A roof's part as the core takes it (docs/adr/8044 §6): its rise its kind's when none is given.
+pub fn core_roof_part(p: &kentos_contracts::RoofPart) -> kentos_geometry_core::geom::roof::Part {
+    use kentos_contracts::RoofPartKind;
+    use kentos_geometry_core::geom::roof::PartKind;
+    kentos_geometry_core::geom::roof::Part {
+        kind: match p.kind {
+            RoofPartKind::Chimney => PartKind::Chimney,
+            RoofPartKind::Vent => PartKind::Vent,
+            RoofPartKind::Window => PartKind::Window,
+        },
+        at: kentos_geometry_core::Vec2::new(p.at.x, p.at.y),
+        width: p.width,
+        depth: p.depth,
+        rotation: p.rotation,
+        rise: p.rise_m().unwrap_or(0.0),
+    }
+}
+
 pub fn core_roof(r: &RoofFields) -> Shape {
     Shape::Roof {
         pts: core(&r.pts),
@@ -80,6 +98,7 @@ pub fn core_roof(r: &RoofFields) -> Shape {
             slopes: r.slopes.clone(),
             base: r.offset,
             overhead: false,
+            parts: r.parts.iter().map(core_roof_part).collect(),
         },
     }
 }

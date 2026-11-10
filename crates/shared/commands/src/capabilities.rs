@@ -4124,6 +4124,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_stair",
                 "invalid_ramp",
                 "invalid_beam",
+                "invalid_roof",
                 "not_a_grid",
                 "grids_parallel",
                 "level_not_found",
@@ -4143,7 +4144,7 @@ const ENTRIES: &[Entry] = &[
         targets: || {
             vec![target(
                 None,
-                &["grid", "column", "stair", "ramp", "beam"],
+                &["grid", "column", "stair", "ramp", "beam", "roof"],
                 &[],
                 Some("not_arch_element"),
                 None,

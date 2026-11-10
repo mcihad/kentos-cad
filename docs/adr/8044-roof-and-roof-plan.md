@@ -2,7 +2,8 @@
 
 - **Durum:** sürüyor (10 Kasım 2026); `plan/architecture-advanced.md` ADV-20, M44. 1. bölüm yapıldı: çekirdek
   geometri (§2), çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). 2. bölüm yapıldı: kesit ve görünüşte çatı
-  (§5). Sırada baca, çatı penceresi, oluk ve iniş borusu, kar siperliği, çatı planı paftası ve PAİY 40/42 denetimi.
+  (§5). 3. bölüm yapıldı: baca, hava bacası ve çatı penceresi (§6). Sırada oluk ve iniş borusu, kar siperliği, çatı
+  planı paftası ve PAİY 40/42 denetimi.
 - **Bağlam belgesi:** ADR 8040 (düşey model: kat yükseklikleri, döşemenin katmanları), ADR 8042–8043 (kesit ve görünüş:
   "çizilmeyen: çatı"), ADR 8008 (EK-4 katman anahtarı), ADR 8011 (ölçeğe göre ayrıntı).
 
@@ -16,9 +17,16 @@ projede çatı planını ister.
 
 ### Türkiye mevzuatı
 
-- **PAİY Md. 40:** (2) çatı eğimi idarece, yöresel mimari ve iklime göre belirlenir; (4) mahya yüksekliği en çok 5,00 m;
-  (5) merdiven evi, ışıklık ve baca çatı örtüsünü en çok 0,60 m aşabilir; (6) düz çatı parapeti en çok 1,10 m, kullanılan
-  terasta 1,10 m parapet ya da korkuluk; (7) çatı arasında bağımsız bölüm yapılamaz.
+- **PAİY Md. 40** (mevzuat.gov.tr, resmî metin): (2) çatı eğimi idarece, yöresel mimari ve iklime göre belirlenir; (3)
+  "Çatı eğimi saçak ucundan hesaplanır. Çatılar parapet üzerine oturtulamaz."; (4) mahya yüksekliği 5,00 m'yi geçemez;
+  (5) "Merdiven evleri, ışıklıklar, hava bacaları, alın ve kalkan duvarları … çatı örtüsü düzlemlerini en fazla 0.60
+  metre aşabilir"; zorunlu tesisat hacimleri, güneş panelleri ve "çatı pencerelerinin çatı örtüsünü aşmasına" idare
+  izin verebilir; (6) teras parapeti 1,10 m; (7) çatı arasında bağımsız bölüm yapılamaz. (Eski özet "baca 0,60 m'yi
+  aşamaz" diyordu: maddede geçen hava bacasıdır, duman bacası değil.)
+- **Binaların Yangından Korunması Hakkında Yönetmelik Md. 58(2):** "Baca çekişinin azalmaması bakımından, bacaların
+  mümkün ise, komşu yüksek binalardan en az 6 m uzaklıkta yapılması ve ait olduğu bina mahyasının en az 0.8 m üzerine
+  kadar çıkarılması gerekir." Duman bacası mahyanın 0,80 m üstüne çıkar; hava bacası çatı düzlemini 0,60 m'den çok
+  aşamaz.
 - **PAİY Md. 42:** saçak en çok 1,00 m (plan aksini söylemiyorsa), parsel sınırını aşamaz; çıkma varsa çıkmadan 0,50 m.
 - **Sivas İmar Yönetmeliği:** 40 — mahya 4,00 m'de kaldıkça eğim en çok %40; en az iki yöne eğim (bina derinliği 11,50
   m'ye kadar tek yöne izin); 5 kata kadar kırmızı kiremit; konutta tonoz çatı yasak; çatı penceresi en çok 1,20 × 1,50 m,
@@ -44,6 +52,10 @@ projede çatı planını ister.
   Overhead"; "the part of the element that is above the Floor Plan Cut Plane" overhead çizgileriyle, ayarlarda
   "Overhead Lines: Hidden Line". Kenar kesimleri (edge trims): vertical, perpendicular, horizontal, custom angle.
 - Görüntüler: `.run/gui-evidence/mimari-m44/referans/cati-kesit-referans.png`.
+- **Archicad, Placing and Moving a Skylight** (help.graphisoft.com, Archicad 29): çatı penceresi "Roof or Shell" üstüne
+  tıklanarak, planda ya da 3B'de, Info Box'taki dayanak noktasıyla konur; yüzün eğimine oturur, başka bir çatı yüzüne
+  sürüklenince "will automatically adjust itself to the new location"
+  (`.run/gui-evidence/mimari-m44/referans/archicad-cati-penceresi-koy.png`, `…-tasi.png`).
 
 ## Karar
 
@@ -175,6 +187,54 @@ projede çatı planını ister.
 - **Bulunan eski hata:** kesitin sağındaki kat yüksekliği yazıları ("3,00") π/2 ile döndürülüyordu; metnin dönüşü
   derece olduğu için 90° yerine 1,57° dönüktüler (M42–M43). Artık 90°.
 
+### 6. Baca ve çatı penceresi (3. bölüm)
+
+- **Mevzuat:** Binaların Yangından Korunması Hakkında Yönetmelik 58/2: duman bacası "ait olduğu bina mahyasının en az
+  0.8 m üzerine kadar" çıkar. PAİY 40/5: hava bacası çatı örtüsünün düzlemini "en fazla 0.60 metre" aşar; çatı
+  pencerelerinin örtüyü aşmasına idare izin verir. Sivas İmar Yönetmeliği 40: çatı penceresi en çok 1,20 × 1,50 m,
+  cepheye en az 1 m, birbirine en az 2 m. Mimarlık Hizmetleri Şartnamesi 14.3.3 u: çatı planında "bacalar ve çatıya
+  çıkış delikleri gösterilir"; 14.3.4 g ve 14.5.3 j: bacalar kotlandırılır.
+- **Çatının parçaları (`RoofFields.parts`, `.kcad` şema 238):** duman bacası (`chimney`), hava bacası (`vent`), çatı
+  penceresi (`window`). Her biri planda ortası (`at`), eni ve derinliği; baca ve hava bacasının dönüşü; tepesinin
+  yüksekliği (`rise`): duman bacası mahyanın, hava bacası çatının o yerdeki en yüksek köşesinin üstünde; verilmezse
+  0,80 m ve 0,60 m. Pencerenin yüksekliği verilmez (çatının düzlemindedir); eni yüzün saçağı boyunca, boyu eğim boyunca
+  çatının düzleminde ölçülür (Sivas'ın 1,50 m'si böyle ölçülür), planda boy √(1 + eğim²)'ye bölünür; yüzün eğimine göre
+  döner. En çok 100 parça, her ölçü en çok 10 m. Şema 237 dosyaya parça yazılmaz, okuyan "şema 238 ister" der.
+- **Nereye konur** (`arch_elements::roof_valid`, `cad.roofs.create` ve `cad.arch.edit` ortak): bacanın ortası saçak
+  çizgisinin içinde; pencerenin ortası eğimli bir yüzde, dört köşesi aynı yüzde. Kırmaya, mahyaya, dereye ya da saçağa
+  taşan, düz çatıdaki pencere `invalid_roof` ile reddedilir; çatı düzenlenip penceresinin yüzü kalmazsa düzenleme de.
+- **`cad.arch.edit` çatıyı da düzenler:** eğimler (`slopes`), kot farkı (`offset`, kirişinkiyle aynı alan), kalınlık,
+  saçak, kaplama (`material`; null Kiremit), parçalar (`parts`: hepsi birden yazılır, boş liste kaldırır), kat ve tadilat
+  durumu. Ret metinleri "aks, kolon, kiriş, merdiven, rampa ya da çatı" oldu. 14 yeni ortak durum (72'ye çıktı).
+- **Planda** (`geom::roof::part_pieces`): duman bacası çerçeve ve iki köşegen, hava bacası çerçeve ve bir köşegen, yanında
+  tepesinin kotu; pencere çerçeve ve 5 cm kasa. Çatının kendi katının planında (yalnız kesikli saçak) parçalar çizilmez.
+- **Kesitte ve görünüşte:** baca ve hava bacası, çatının oturduğu katın üstünden tepesine bir prizma: kesilince ANSI31
+  taramalı (tuğla), EK-2'nin Baca öğesinde (MM-BACA-GENEL). Tepesi kot sütununda "+8.49 Baca" / "Hava bacası" (14.3.4
+  g). Pencere yüzün üstünde çerçevesiyle görünür. Çatının yüzleri bacayı boşluk (`Void`) olarak taşır: çekirdekte
+  eğik bandın kesildiği aralıktan, yükseklikleri bandı içine alan boşluğun aralığı çıkar (`geom::section`, duvardaki
+  açıklık gibi); ilk denemede bandın çizgileri bacanın içinden geçiyordu. Bağımsız başvuruya kural ve bir durum eklendi
+  (25'e çıktı): beşik çatının kuzey yüzünü delen 50 cm'lik baca, bant iki yanında iki parça.
+- **Yakın kotlar:** bir kot bir üsttekine yazısının yüksekliğinin 2,2 katından yakınsa (hava bacasının tepesi mahyanın 16
+  cm altında) yazısı kendi genişliği kadar sola alınır, çizgisi binaya kadar uzar: ilk denemede "+7.62 Hava bacası" ile
+  "+7.78 Mahya" üst üste basılıyordu. Sağdaki yükseklik zinciri katların, saçağın ve mahyanın kotlarıyla kalır; baca
+  tepeleri zincire girince 16 cm'lik bir halka ve üst üste binen "0,80 / 0,16" yazıları çıkıyordu. Baca prizması çatının
+  kaplamasını almaz: görünüşün kaplama listesi onu "Kiremit" saymaz.
+- **Araçlar (Mimari › Yerleştir › Çatı ▾: Çatı, Çatı bacası, Çatı penceresi):** şeritte Çatı düğmesi bir aileye döndü,
+  düğme sayısı değişmedi (30). *Çatı bacası* (`CB`): Tür (T) Duman bacası / Hava bacası, En (E) ve Derinlik (D) 40 ×
+  40 cm, Yükseklik (Y) kuralın değeri; en yakın saçağa göre ±45° içinde döner (dik duran binada dönmez). Tür
+  değişince yazılan yükseklik düşer, yeni türün kuralı gelir. *Çatı penceresi* (`CPN`): En (E) 78 cm, Boy (Y, Kolon'un harfi) 118 cm,
+  olağan çatı penceresi. Kısa adlarda Ç C okunduğu için `ÇP` Kopyala'nın `CP`'siyle çakışırdı; `PN` Pencere'nin adıdır.
+  Araçlar tıklanan yerin altındaki çatıyı bulur: görünümün bütün çizdiği önce, sonra saçağı en yüksek; çatının kendi
+  katının planında "bacaları ve pencereleri üst katın planında ya da Bütün katlar'da konur" der. Yazılı nokta (5.2,6.5)
+  da olur. Önizleme parçayı çizer, tepenin kotunu ve mahyayı söyler; 80 cm'den alçak duman bacası, 60 cm'den yüksek hava
+  bacası ve Sivas'ın 1,20 × 1,50 m'sinden büyük pencere kırmızı uyarılır ama yazılır (denetim Mevzuat paneline
+  gelecek). Yazım tek geri alma adımı ("Mimari nesneyi düzenle"); "Duman bacası kondu; tepesi +8.58 (mahyanın 0.800 m
+  üstünde)."
+- **Simgeler:** `roofChimney`, `roofVent`, `roofWindow`, çatı simgeleri gibi cepheden: beşik çatı, üstünde baca, başlıklı
+  boru ya da eğimde pencere.
+- **Öznitelikler:** her parça bir satır, aynı türden birden çoksa numaralı: "Duman bacası — 0.400 × 0.400 m · tepesi
+  +8.58".
+
 ## Doğrulama
 
 - `geom::roof` birim testleri 7 (kırma, beşik, tek eğim, düz ve saat yönü, içe dönen köşe reddi, planın okları ve
@@ -199,13 +259,33 @@ projede çatı planını ister.
   saçak alnı düşey, altı duvarın dış yüzünde +6.00'a oturdu, "+7.78 Mahya" (kot farkı 8,5 cm ile), sağdaki "3,00"lar
   düşey; kuzey görünüşünde saçak alnı, kırmalar, mahya.
 
+- 3. bölüm (§6): `geom::roof` parçaların halkası, tepesi, yüzü ve pencerenin yüzde kalması (duman bacası 80 cm ile
+  "+8.29"); kesit başvurusu 25 durum (yeni: beşik çatının yüzünü delen baca, bant iki parça). KCAD şema 238 örneği
+  (`roof-parts.kcad`), şema 237'de parçanın reddi, şema 239'un reddi; KCAD testleri 244 + 6. Ortak durumlar:
+  `cad.roofs.create` 47 (11 yeni: 2 geçerli, 9 ret), `cad.arch.edit` 72 (14 yeni: parçalar, boş liste, eğimler, kot
+  farkı, kalınlık, saçak, kaplama, kat; dışarıdaki baca, düzleşen çatının penceresi, eksik eğim, sonsuz değerler,
+  başka türün alanı), `cad.arch.edit.distance` 30 (ret metni). Uygulama: `roof_sections` 5 (yeni: B-B bacayı keser,
+  MM-BACA-GENEL taraması, "+8.49 Baca", bir bant fazla, hava bacasının kotu mahyanın solunda, zincirde "1,69" var,
+  "0,80"/"0,16" yok), kesit, görünüş ve ruhsat takımıyla 22. Etkileşim: Çatı bacası/penceresi 4 (mahya + 80 cm, tek
+  geri alma adımı; hava bacası 90 cm'de PAİY 40/5 uyarısı, tür değişince kuralın yüksekliği; pencere yüzde, kırmaya
+  taşan reddedilir, 1,60 m boyda Sivas uyarısı; çatı dışında ve kendi katının planında konmaz), Çatı 7. Masaüstü 169
+  (Mimari sekmesi 30 düğme; Boy her araçta Y; istem ve panel aynı adla; katalog ve kısa adlar).
+- Gerçek pencere (Xvfb 1920 × 1080, gerçek fare ve klavye; `fixtures/interaction/real/cati-baca.txt`,
+  `cati-baca-gorunus.txt`): "baca" araması Baca ve Çatı bacası'nı buldu; önizleme "Tepesi +8.58 · mahyanın 0.800 m
+  üstünde", "Mahya +7.78"; yazılı noktayla (5.2,6.5) B-B üstüne baca; T ile hava bacası, güney yüzde tepesi +7.62;
+  pencereler güney ve batı yüzde (batıdaki yüze göre dönük), kırma yanında kırmızı ret; Öznitelikler dört parçayı
+  ölçü ve tepe kotuyla listeledi; B-B'de taramalı baca, bant iki yanında kesik; kuzey görünüşünde baca ve hava bacası.
+  Gerçek pencerede bulunan iki çizim kusuru düzeltildi (üst üste binen kotlar, zincirdeki baca halkaları); bir harf
+  seçeneği (T) yazılır yazılmaz uygulanır, ardından gelen Enter "Bitir"dir (senaryo buna göre).
+
 ## Sonraya kalan
 
 - §9: içe dönen köşeli saçak (L, T) ve dereler.
-- Baca, çatı penceresi, oluk, iniş borusu, kar siperliği; çatı planı paftası; PAİY 40/42 ve Sivas denetimleri (PAİY 40'ın
-  mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır);
-  çatının Öznitelikler'den düzenlenmesi (kenar eğimi, saçak, kaplama); çatı katmanlarının (kiremit, çıta, tahta,
-  mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi).
+- Oluk, iniş borusu, kar siperliği; çatı planı paftası; PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (PAİY 40'ın
+  mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır; duman
+  bacası mahya + 0,80 m, hava bacası 0,60 m, pencerenin cepheye 1 m ve birbirine 2 m uzaklığı); bacanın duvar içi
+  bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);
+  çatı katmanlarının (kiremit, çıta, tahta, mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi).
 - `scripts/ui/ribbon.py` depodaki `catalog/v1/ribbon.json`'u artık aynen üretmiyor: sonradan eklenen arazi ve nokta
   bulutu girdilerini ve İmar panelini siliyor. Bu adımda çatının iki girdisi dosyaya elle eklendi; betik ayrıca
   güncellenmeli.

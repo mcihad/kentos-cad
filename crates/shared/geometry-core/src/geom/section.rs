@@ -788,7 +788,34 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
                 flight_faces(frame, i, &rings, f, &mut covers, &mut edges);
             }
             Height::Sloped(s) => {
-                for &(a, b) in &stretches {
+                // A void whose heights hold the band where the line crosses it (a chimney through the roof, docs/adr/8044
+                // §6) takes its stretch out of the band.
+                let mut runs = stretches.clone();
+                for v in &solid.voids {
+                    let ring = clean(&v.ring);
+                    for (va, vb) in cut_stretches(frame, std::slice::from_ref(&ring)) {
+                        runs = runs
+                            .into_iter()
+                            .flat_map(|(a, b)| {
+                                let (lo, hi) = (js_max(a, va), js_min(b, vb));
+                                if hi - lo <= EPS {
+                                    return vec![(a, b)];
+                                }
+                                let (zl, zh) = (s.z(frame.at(lo, 0.0)), s.z(frame.at(hi, 0.0)));
+                                if v.bottom > js_min(zl, zh) - s.thickness + EPS
+                                    || v.top < js_max(zl, zh) - EPS
+                                {
+                                    return vec![(a, b)];
+                                }
+                                [(a, lo), (hi, b)]
+                                    .into_iter()
+                                    .filter(|(p, q)| q - p > EPS)
+                                    .collect()
+                            })
+                            .collect();
+                    }
+                }
+                for &(a, b) in &runs {
                     let (ta, tb) = (s.z(frame.at(a, 0.0)), s.z(frame.at(b, 0.0)));
                     let ring = vec![
                         Vec2::new(a, ta - s.thickness),

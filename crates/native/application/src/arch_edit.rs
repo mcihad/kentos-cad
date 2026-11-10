@@ -1,8 +1,8 @@
-//! `cad.arch.edit` v1 (docs/adr/0343 §4, plan/cad.md `CAD-ARCH-31`–`36`): grids, columns, stairs and ramps named by
-//! their persistent ids changed as one undo step “Mimari nesneyi düzenle”, all or none. Değiştir sets their own fields
-//! (Öznitelikler writes through it); Numarala labels grids or tags columns in the order given; Akslara bağla ties
-//! columns to the crossing of two grids; Bağı kopar frees them where they stand. The shared cases are
-//! `fixtures/commands/v1/cad.arch.edit.json`.
+//! `cad.arch.edit` v1 (docs/adr/0343 §4, plan/cad.md `CAD-ARCH-31`–`36`): grids, columns, beams, stairs, ramps and
+//! roofs named by their persistent ids changed as one undo step “Mimari nesneyi düzenle”, all or none. Değiştir sets their
+//! own fields (Öznitelikler writes through it; Çatı bacası and Çatı penceresi a roof's parts, docs/adr/8044 §6);
+//! Numarala labels grids or tags columns in the order given; Akslara bağla ties columns to the crossing of two grids; Bağı
+//! kopar frees them where they stand. The shared cases are `fixtures/commands/v1/cad.arch.edit.json`.
 
 use kentos_commands::{
     ArchChange, ArchEdit, ArchEdited, ArchOperation, CommandResult, CommandWarning, Entity,
@@ -26,6 +26,7 @@ fn kind_name(e: &Entity) -> &'static str {
         Entity::Stair(_) => "merdiven",
         Entity::Ramp(_) => "rampa",
         Entity::Beam(_) => "kiriş",
+        Entity::Roof(_) => "çatı",
         _ => "nesne",
     }
 }
@@ -49,7 +50,10 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const BEAM: &[&str] = &["beam"];
     const RAMP_BEAM: &[&str] = &["ramp", "beam"];
     const TAGGED: &[&str] = &["column", "beam"];
-    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam"];
+    const BEAM_ROOF: &[&str] = &["beam", "roof"];
+    const MADE_OF: &[&str] = &["column", "beam", "roof"];
+    const ROOF: &[&str] = &["roof"];
+    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam", "roof"];
     let mut out = Vec::new();
     let mut add = |on: bool, name: &'static str, kinds: &'static [&'static str]| {
         if on {
@@ -85,9 +89,14 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.base_offset.is_some(), "baseOffset", RAMP_BEAM);
     add(c.height.is_some(), "height", BEAM);
     add(c.justify.is_some(), "justify", BEAM);
-    add(c.offset.is_some(), "offset", BEAM);
+    // A roof's offset is its eaves over its storey's top, its material its covering (docs/adr/8044 §1).
+    add(c.offset.is_some(), "offset", BEAM_ROOF);
     add(c.role.is_some(), "role", BEAM);
-    add(c.material.is_some(), "material", TAGGED);
+    add(c.material.is_some(), "material", MADE_OF);
+    add(c.slopes.is_some(), "slopes", ROOF);
+    add(c.thickness.is_some(), "thickness", ROOF);
+    add(c.overhang.is_some(), "overhang", ROOF);
+    add(c.parts.is_some(), "parts", ROOF);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
     out
@@ -100,6 +109,7 @@ fn tag_of(e: &Entity) -> &'static str {
         Entity::Stair(_) => "stair",
         Entity::Ramp(_) => "ramp",
         Entity::Beam(_) => "beam",
+        Entity::Roof(_) => "roof",
         _ => "",
     }
 }
@@ -124,6 +134,8 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (flat(c.base_offset), "baseOffset", "Kata göre başlangıç kotu"),
         (c.height, "height", "Yükseklik"),
         (c.offset, "offset", "Kot farkı"),
+        (flat(c.thickness), "thickness", "Kalınlık"),
+        (flat(c.overhang), "overhang", "Saçak"),
     ] {
         if let Some(x) = v {
             checks::finite(
@@ -134,7 +146,18 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
             )?;
         }
     }
-    Ok(())
+    // A roof's slopes and parts (docs/adr/8044 §1, §6).
+    for (k, s) in c.slopes.iter().flatten().enumerate() {
+        if let Some(x) = s {
+            checks::finite(
+                *x,
+                "Eğim",
+                "Sonlu bir sayı verin.",
+                &format!("operation.slopes[{k}]"),
+            )?;
+        }
+    }
+    arch_elements::roof_parts_finite(c.parts.as_deref().unwrap_or_default(), "operation")
 }
 
 /// `e` with the fields `c` gives, as yet unchecked.
@@ -286,6 +309,28 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
                 f.material.clone_from(v);
             }
         }
+        // A roof's (docs/adr/8044 §1); its parts all of them, as the tools write them (§6).
+        Entity::Roof(r) => {
+            let f = &mut r.roof;
+            if let Some(v) = &c.slopes {
+                f.slopes.clone_from(v);
+            }
+            if let Some(v) = c.offset {
+                f.offset = v;
+            }
+            if let Some(v) = c.thickness {
+                f.thickness = v;
+            }
+            if let Some(v) = c.overhang {
+                f.overhang = v;
+            }
+            if let Some(v) = &c.material {
+                f.material.clone_from(v);
+            }
+            if let Some(v) = &c.parts {
+                f.parts.clone_from(v);
+            }
+        }
         _ => {}
     }
     if let Some(arch) = arch_mut(&mut e) {
@@ -306,6 +351,7 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Stair(s) => Some(&mut s.stair.arch),
         Entity::Ramp(r) => Some(&mut r.ramp.arch),
         Entity::Beam(b) => Some(&mut b.beam.arch),
+        Entity::Roof(r) => Some(&mut r.roof.arch),
         _ => None,
     }
 }
@@ -343,6 +389,11 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
             }
             Entity::Beam(b)
         }
+        // Its fields, its faces and its parts where they stand (docs/adr/8044 §6): a window on a roof made flat is refused.
+        Entity::Roof(r) => {
+            arch_elements::roof_valid(&r.roof, path)?;
+            Entity::Roof(r)
+        }
         other => other,
     };
     if let Some(arch) = arch_elements::arch_of(&e) {
@@ -379,14 +430,14 @@ type Work = (Vec<CommandWarning>, Vec<(Slot, Entity)>);
 fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
     checks::uids(
         &input.uids,
-        "Düzenlenecek aks, kolon, kiriş, merdiven ya da rampa verilmedi.",
+        "Düzenlenecek aks, kolon, kiriş, merdiven, rampa ya da çatı verilmedi.",
     )?;
     let found = checks::named(doc, &input.uids)?;
     for (at, _, e, _) in &found {
         if arch_elements::arch_of(e).is_none() {
             return Err(fail(
                 codes::NOT_ARCH_ELEMENT,
-                "Nesne aks, kolon, kiriş, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
+                "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
                     .into(),
                 &format!("uids[{at}]"),
             ));

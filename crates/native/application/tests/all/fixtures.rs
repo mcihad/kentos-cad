@@ -1264,8 +1264,27 @@ impl Input for kentos_commands::BeamsCreate {
     }
 }
 
+/// A roof's part's `parts[k].at.x` and `.y`, `.width`, `.depth`, `.rotation`, `.rise` (docs/adr/8044 §6).
+fn roof_part_number<'a>(
+    parts: Option<&'a mut Vec<kentos_commands::RoofPart>>,
+    rest: &str,
+) -> Option<&'a mut f64> {
+    let (k, field) = rest.strip_prefix("parts[")?.split_once("].")?;
+    let part = parts?.get_mut(k.parse::<usize>().ok()?)?;
+    match field {
+        "at.x" => Some(&mut part.at.x),
+        "at.y" => Some(&mut part.at.y),
+        "width" => Some(&mut part.width),
+        "depth" => Some(&mut part.depth),
+        "rotation" => part.rotation.as_mut(),
+        "rise" => part.rise.as_mut(),
+        _ => None,
+    }
+}
+
 impl Input for kentos_commands::RoofsCreate {
-    /// `roofs[0].offset`, `.thickness`, `.overhang`, `.slopes[k]`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/8044 §1).
+    /// `roofs[0].offset`, `.thickness`, `.overhang`, `.slopes[k]`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/8044 §1);
+    /// its parts' (§6).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1276,7 +1295,11 @@ impl Input for kentos_commands::RoofsCreate {
             "offset" => r.offset.as_mut(),
             "thickness" => r.thickness.as_mut(),
             "overhang" => r.overhang.as_mut(),
-            _ => match rest.strip_prefix("slopes[").and_then(|k| k.strip_suffix(']')) {
+            _ if rest.starts_with("parts[") => roof_part_number(r.parts.as_mut(), rest),
+            _ => match rest
+                .strip_prefix("slopes[")
+                .and_then(|k| k.strip_suffix(']'))
+            {
                 Some(k) => r.slopes.get_mut(k.parse::<usize>().ok()?)?.as_mut(),
                 None => named_point(&mut r.pts, "pts", rest),
             },
@@ -1608,7 +1631,20 @@ impl Input for kentos_commands::ArchEdit {
                 // A beam's (docs/adr/8041 §1).
                 "operation.height" => c.height.as_mut(),
                 "operation.offset" => c.offset.as_mut(),
-                _ => None,
+                // A roof's (docs/adr/8044 §1, §6).
+                "operation.thickness" => c.thickness.as_mut().and_then(Option::as_mut),
+                "operation.overhang" => c.overhang.as_mut().and_then(Option::as_mut),
+                _ => {
+                    let rest = path.strip_prefix("operation.")?;
+                    if rest.starts_with("parts[") {
+                        return roof_part_number(c.parts.as_mut(), rest);
+                    }
+                    let k = rest.strip_prefix("slopes[")?.strip_suffix(']')?;
+                    c.slopes
+                        .as_mut()?
+                        .get_mut(k.parse::<usize>().ok()?)?
+                        .as_mut()
+                }
             },
             // Mesafe's `operation.distance` (docs/adr/0712).
             Op::Distance { distance, .. } if path == "operation.distance" => Some(distance),

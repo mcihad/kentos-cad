@@ -1,0 +1,61 @@
+# M44 3. bölüm (docs/adr/8044 §6), on fixtures/arch/v1/facade-building.kcad (--modul mimari): the roof, a chimney typed
+# at (5.2, 6.5) and a vent at (9.5, 2); Görünüş çıkar on the north mark, placed right of the plan: the chimney over the
+# ridge (its front face from where it meets the roof, the ridge hidden behind it), the vent over the roof, their tops
+# among the levels.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Çatı bacası
+wait 1500
+key Return
+wait 1500
+move 900 420
+wait 1000
+type 5.2,6.5
+key Return
+wait 1500
+type T
+wait 800
+type 9.5,2
+key Return
+wait 1500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Görünüş çıkar
+wait 1500
+key Return
+wait 1500
+click 766 203
+wait 1500
+move 1300 560
+wait 1500
+click 1300 560
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot g1-genel

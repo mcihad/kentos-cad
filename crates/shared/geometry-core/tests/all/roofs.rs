@@ -49,6 +49,7 @@ fn every_roof_case_matches_the_reference() {
                 .collect(),
             base: 0.0,
             overhead: false,
+            parts: Vec::new(),
         };
         let want = &c["expect"];
         let got = faces(&pts, &spec).unwrap();

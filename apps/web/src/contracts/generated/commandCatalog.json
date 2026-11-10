@@ -13601,7 +13601,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.edit` v1: grids, columns, stairs and ramps named by their persistent ids changed as one undo step\n“Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
+        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as\none undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,\n`revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -13682,7 +13682,8 @@
               "column",
               "stair",
               "ramp",
-              "beam"
+              "beam",
+              "roof"
             ],
             "refusedWith": "not_arch_element"
           }
@@ -13702,6 +13703,7 @@
           "invalid_stair",
           "invalid_ramp",
           "invalid_beam",
+          "invalid_roof",
           "not_a_grid",
           "grids_parallel",
           "level_not_found",
@@ -111176,7 +111178,7 @@
       "code": "not_arch_element",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Nesne aks, kolon, kiriş, merdiven ya da rampa değil."
+      "meaning": "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil."
     },
     {
       "code": "field_not_for_kind",
@@ -116750,7 +116752,7 @@
               ]
             },
             "material": {
-              "description": "A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.",
+              "description": "A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.",
               "type": [
                 "string",
                 "null"
@@ -116764,13 +116766,32 @@
               ]
             },
             "offset": {
-              "description": "A beam's top over where it hangs.",
+              "description": "A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1).",
               "format": "double",
               "type": [
                 "number",
                 "null"
               ],
               "x-unit": "elevation"
+            },
+            "overhang": {
+              "description": "How far a roof's eaves stand past the walls' outer faces (saçak); null: not said.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "parts": {
+              "description": "A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write\nthe ones it has with theirs; empty: none.",
+              "items": {
+                "$ref": "#/$defs/RoofPart"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
             },
             "phase": {
               "anyOf": [
@@ -116871,12 +116892,36 @@
               ],
               "x-unit": "percent"
             },
+            "slopes": {
+              "description": "A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1).",
+              "items": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "percent"
+            },
             "tag": {
               "description": "A column's.",
               "type": [
                 "string",
                 "null"
               ]
+            },
+            "thickness": {
+              "description": "A roof's build-up, measured upright; null: 0.25 m.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
             },
             "tread": {
               "description": "A stair's.",
@@ -161011,6 +161056,16 @@
           ],
           "x-unit": "length"
         },
+        "parts": {
+          "description": "Its chimneys, vents and roof windows (docs/adr/8044 §6): each chimney's and vent's middle inside its eaves, each\nwindow wholly in one face.",
+          "items": {
+            "$ref": "#/$defs/RoofPart"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "pts": {
           "description": "Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner.",
           "items": {
@@ -188931,6 +188986,13 @@
           ],
           "x-unit": "length"
         },
+        "parts": {
+          "description": "Its chimneys, vents and roof windows (docs/adr/8044 §6).",
+          "items": {
+            "$ref": "#/$defs/RoofPart"
+          },
+          "type": "array"
+        },
         "pts": {
           "description": "Its eaves line, closed: at least three points, either way round.",
           "items": {
@@ -188998,6 +189060,76 @@
         "slopes"
       ],
       "type": "object"
+    },
+    "RoofPart": {
+      "description": "A part of a roof (docs/adr/8044 §6): a chimney, a vent or a roof window.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Vec2",
+          "description": "Its middle in plan.",
+          "x-unit": "length"
+        },
+        "depth": {
+          "description": "Its depth, metres: a window's down its face's slope, in the roof's plane (Sivas's 1.50 m is measured so); a\nchimney's or a vent's across its width.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "kind": {
+          "$ref": "#/$defs/RoofPartKind"
+        },
+        "rise": {
+          "description": "A chimney's top over the roof's ridge, a vent's over the roof at its highest corner, metres; absent: 0.80, 0.60.\nA window has none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "rotation": {
+          "description": "A chimney's or a vent's turn in plan, radians counter-clockwise; absent: 0. A window takes its face's.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "rad"
+        },
+        "width": {
+          "description": "Its width, metres: a window's along its face's eaves (across the slope), a chimney's or a vent's along its turn.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "kind",
+        "at",
+        "width",
+        "depth"
+      ],
+      "type": "object"
+    },
+    "RoofPartKind": {
+      "description": "What a roof's part is (docs/adr/8044 §6).",
+      "oneOf": [
+        {
+          "const": "chimney",
+          "description": "Duman bacası: its top 0.80 m over the ridge unless given.",
+          "type": "string"
+        },
+        {
+          "const": "vent",
+          "description": "Hava bacası: its top 0.60 m over the roof at its place unless given.",
+          "type": "string"
+        },
+        {
+          "const": "window",
+          "description": "Çatı penceresi: in its face's plane, turned with its face's slope.",
+          "type": "string"
+        }
+      ]
     },
     "RouteFound": {
       "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (a grade, between the points kept), its cost, the grid's nodes and those settled.",

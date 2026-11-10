@@ -13880,6 +13880,38 @@
    "tests": 0
   },
   {
+   "id": "tool.roofChimney",
+   "kind": "command",
+   "title": "Çatı bacası",
+   "level": "semantic",
+   "via": [
+    "cad.arch.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.edit",
+   "mcp": "cad.arch.edit",
+   "note": "Tıklanan yerin altındaki çatı ve bacanın ortası, eni, derinliği, dönüşü (en yakın saçağa göre) ve yüksekliği komuta verilir: çatının bacaları ve pencereleri, yenisiyle birlikte (Değiştir: parts). Bacanın tepesinin kotu, planı ve kesiti çizimin hesabıdır (ADR 8044 §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.roofWindow",
+   "kind": "command",
+   "title": "Çatı penceresi",
+   "level": "semantic",
+   "via": [
+    "cad.arch.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.edit",
+   "mcp": "cad.arch.edit",
+   "note": "Tıklanan yerin altındaki çatı ve pencerenin ortası, eni ve boyu komuta verilir (Değiştir: parts). Pencerenin hangi yüzde olduğu, yüzün içinde kalıp kalmadığı komutun denetimi; planı yüzün eğimine göre çizilir (ADR 8044 §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.room",
    "kind": "command",
    "title": "Oda",

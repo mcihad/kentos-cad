@@ -5,6 +5,7 @@ import type { ColumnAnchor } from "./ColumnAnchor";
 import type { ColumnShape } from "./ColumnShape";
 import type { GridBubbles } from "./GridBubbles";
 import type { Railings } from "./Railings";
+import type { RoofPart } from "./RoofPart";
 import type { WallJustify } from "./WallJustify";
 
 /**
@@ -128,7 +129,7 @@ height?: number,
  */
 justify?: WallJustify, 
 /**
- * A beam's top over where it hangs.
+ * A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1).
  */
 offset?: number, 
 /**
@@ -136,9 +137,26 @@ offset?: number,
  */
 role?: BeamRole, 
 /**
- * A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.
+ * A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
  */
 material?: string | null, 
+/**
+ * A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1).
+ */
+slopes?: Array<number | null>, 
+/**
+ * A roof's build-up, measured upright; null: 0.25 m.
+ */
+thickness?: number | null, 
+/**
+ * How far a roof's eaves stand past the walls' outer faces (saçak); null: not said.
+ */
+overhang?: number | null, 
+/**
+ * A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write
+ * the ones it has with theirs; empty: none.
+ */
+parts?: Array<RoofPart>, 
 /**
  * Any kind's.
  */

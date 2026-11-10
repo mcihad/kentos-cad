@@ -2022,8 +2022,25 @@
         "size": "small"
        },
        {
-        "command": "tool.roof",
-        "size": "small"
+        "key": "archRoofs",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.roof",
+          "title": "Çatı",
+          "label": "Çatı"
+         },
+         {
+          "command": "tool.roofChimney",
+          "title": "Çatı",
+          "label": "Çatı bacası"
+         },
+         {
+          "command": "tool.roofWindow",
+          "title": "Çatı",
+          "label": "Çatı penceresi"
+         }
+        ]
        },
        {
         "key": "archGrids",

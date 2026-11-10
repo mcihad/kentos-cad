@@ -18,6 +18,22 @@ fn ring(v: &Value) -> Vec<Vec2> {
     v.as_array().unwrap().iter().map(pt).collect()
 }
 
+/// A solid's voids (a wall's openings, a chimney through a roof's face).
+fn voids(v: &Value) -> Vec<Void> {
+    v["voids"]
+        .as_array()
+        .map(|vs| {
+            vs.iter()
+                .map(|w| Void {
+                    ring: ring(&w["ring"]),
+                    bottom: w["bottom"].as_f64().unwrap(),
+                    top: w["top"].as_f64().unwrap(),
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 fn solid(v: &Value) -> Solid {
     if let Some(sl) = v.get("sloped") {
         return Solid {
@@ -30,7 +46,7 @@ fn solid(v: &Value) -> Solid {
                 eaves: ring(&sl["eaves"]),
                 roof: sl["roof"].as_u64().unwrap() as usize,
             }),
-            voids: Vec::new(),
+            voids: voids(v),
             marks: Vec::new(),
             finish: v["finish"].as_str().map(str::to_owned),
         };
@@ -58,16 +74,7 @@ fn solid(v: &Value) -> Solid {
     Solid {
         rings: v["rings"].as_array().unwrap().iter().map(ring).collect(),
         height,
-        voids: v["voids"]
-            .as_array()
-            .unwrap_or(&none)
-            .iter()
-            .map(|w| Void {
-                ring: ring(&w["ring"]),
-                bottom: w["bottom"].as_f64().unwrap(),
-                top: w["top"].as_f64().unwrap(),
-            })
-            .collect(),
+        voids: voids(v),
         marks: v["marks"]
             .as_array()
             .unwrap_or(&none)
@@ -148,5 +155,5 @@ fn sections_cut_and_see_as_the_reference_says() {
         }
         seen_cases += 1;
     }
-    assert_eq!(seen_cases, 24, "every case read");
+    assert_eq!(seen_cases, 25, "every case read");
 }

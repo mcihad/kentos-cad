@@ -1,0 +1,121 @@
+# M44 3. bölüm (docs/adr/8044 §6), on fixtures/arch/v1/facade-building.kcad ("Görünüş binası", --modul mimari): 1. kat
+# active, Çatı by Binadan near the south wall (eaves +6.085, ridge +7.78). "baca" in the menu search finds Baca (the
+# wall flue) and Çatı bacası. Çatı bacası: its preview on the north face (tag: top and ridge), a chimney typed on B-B's
+# line at (5.2, 6.5) (top +8.58, 0.80 over the ridge); T (a letter acts at once; Enter would end the tool) makes it Hava
+# bacası, one clicked on the south face (top +7.62). Çatı penceresi: one typed on B-B at (5.2, 1.5), one clicked on the
+# west face (turned with it), one hovered near the south-west hip (refused in red). The roof selected: Öznitelikler lists
+# its four parts with their sizes and tops. A close view of the roof plan; Kesit çıkar on B-B: the chimney cut, hatched,
+# the band stopping at its sides, "+8.58 Baca" and "+7.62 Hava bacası" (moved left of "+7.78 Mahya") at the left.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type baca
+wait 1800
+shot p1-arama
+key ctrl+a
+wait 300
+type Çatı bacası
+wait 1500
+key Return
+wait 1500
+move 900 420
+wait 1800
+shot p2-baca-onizleme
+type 5.2,6.5
+key Return
+wait 2000
+move 1400 120
+wait 800
+shot p3-baca
+type T
+wait 800
+move 925 679
+wait 1800
+shot p4-hava-onizleme
+click 925 679
+wait 2000
+key Escape
+wait 800
+key alt+q
+wait 600
+type Çatı penceresi
+wait 1500
+key Return
+wait 1500
+type 5.2,1.5
+key Return
+wait 2000
+move 561 566
+wait 1500
+click 561 566
+wait 2000
+move 520 761
+wait 1800
+shot p5-pencere-ret
+key Escape
+wait 800
+click 465 450
+wait 1500
+move 1400 120
+wait 800
+shot p6-oznitelikler
+wheel 1720 900 -4
+wait 1200
+move 1400 120
+wait 600
+shot p6-oznitelikler-alt
+key Escape
+wait 800
+wheel 730 560 3
+wait 1500
+move 1400 120
+wait 800
+shot p7-yakin
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key alt+q
+wait 600
+type Kesit çıkar
+wait 1500
+key Return
+wait 1500
+move 730 500
+wait 1200
+click 730 500
+wait 1500
+move 1300 560
+wait 1500
+click 1300 560
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot k1-kesit
+wheel 1188 260 3
+wait 1500
+move 1400 120
+wait 800
+shot k2-baca-kesit

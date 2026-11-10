@@ -1493,6 +1493,7 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
                 )?;
             }
         }
+        roof_parts_finite(n.parts.as_deref().unwrap_or_default(), &at)?;
         let r = kentos_commands::RoofFields {
             pts: n.pts.clone(),
             slopes: n.slopes.clone(),
@@ -1500,39 +1501,10 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
             thickness: n.thickness,
             overhang: n.overhang,
             material: n.material.clone(),
+            parts: n.parts.clone().unwrap_or_default(),
             arch: n.arch.clone().unwrap_or_default(),
         };
-        if let Some((field, words)) = r.problem() {
-            return Err(fail(codes::INVALID_ROOF, words, &format!("{at}.{field}")));
-        }
-        let core: Vec<kentos_geometry_core::Vec2> = r
-            .pts
-            .iter()
-            .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
-            .collect();
-        let spec = kentos_geometry_core::geom::roof::RoofSpec {
-            slopes: r.slopes.clone(),
-            ..Default::default()
-        };
-        match kentos_geometry_core::geom::roof::faces(&core, &spec) {
-            Ok(_) => {}
-            Err(kentos_geometry_core::geom::roof::Problem::Concave) => {
-                return Err(fail(
-                    codes::INVALID_ROOF,
-                    "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz çizilmiyor. \
-                     Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün."
-                        .into(),
-                    &format!("{at}.pts"),
-                ));
-            }
-            Err(_) => {
-                return Err(fail(
-                    codes::INVALID_ROOF,
-                    "Saçak çizgisinin alanı yok: noktalar bir doğru üzerinde.".into(),
-                    &format!("{at}.pts"),
-                ));
-            }
-        }
+        roof_valid(&r, &at)?;
         crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
         made.push((
             at,
@@ -1549,6 +1521,111 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
         &input.color,
         Vec::new(),
     )
+}
+
+/// `not_finite` for a part's place or size given as NaN or ±∞ (docs/adr/8044 §6), at `{at}.parts[k]`.
+pub(crate) fn roof_parts_finite(parts: &[kentos_commands::RoofPart], at: &str) -> Result<(), Stop> {
+    for (k, part) in parts.iter().enumerate() {
+        let pat = format!("{at}.parts[{k}]");
+        let whose = part.kind.whose();
+        checks::point(part.at, whose, &format!("{pat}.at"))?;
+        for (v, field, what) in [
+            (Some(part.width), "width", "eni"),
+            (Some(part.depth), "depth", "derinliği"),
+            (part.rotation, "rotation", "dönüşü"),
+            (part.rise, "rise", "yüksekliği"),
+        ] {
+            if let Some(v) = v {
+                checks::finite(
+                    v,
+                    &format!("{whose} {what}"),
+                    "Sonlu bir sayı verin.",
+                    &format!("{pat}.{field}"),
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// `invalid_roof` for a roof that cannot be drawn, at `at` (docs/adr/8044 §1, §2, §6): its fields' own rules, an eaves
+/// line with an area and every corner turning out (a line turning in is not drawn yet: its straight skeleton needs split
+/// events), its parts where they can stand. What `cad.roofs.create` and `cad.arch.edit` both ask.
+pub(crate) fn roof_valid(r: &kentos_commands::RoofFields, at: &str) -> Result<(), Stop> {
+    if let Some((field, words)) = r.problem() {
+        return Err(fail(codes::INVALID_ROOF, words, &format!("{at}.{field}")));
+    }
+    let core: Vec<kentos_geometry_core::Vec2> = r
+        .pts
+        .iter()
+        .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+        .collect();
+    let spec = kentos_geometry_core::geom::roof::RoofSpec {
+        slopes: r.slopes.clone(),
+        ..Default::default()
+    };
+    match kentos_geometry_core::geom::roof::faces(&core, &spec) {
+        Ok(_) => {}
+        Err(kentos_geometry_core::geom::roof::Problem::Concave) => {
+            return Err(fail(
+                codes::INVALID_ROOF,
+                "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz çizilmiyor. \
+                 Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün."
+                    .into(),
+                &format!("{at}.pts"),
+            ));
+        }
+        Err(_) => {
+            return Err(fail(
+                codes::INVALID_ROOF,
+                "Saçak çizgisinin alanı yok: noktalar bir doğru üzerinde.".into(),
+                &format!("{at}.pts"),
+            ));
+        }
+    }
+    // Its parts where they can stand (docs/adr/8044 §6), once its faces are known.
+    roof_parts_placed(&core, &spec, &r.parts, at)
+}
+
+/// `invalid_roof` for a part that cannot stand where it is given (docs/adr/8044 §6): a chimney or a vent whose middle is
+/// outside the eaves; a window whose middle is on no face (a flat roof has none) or that runs across a hip, a ridge, a
+/// valley or the eaves.
+pub(crate) fn roof_parts_placed(
+    pts: &[kentos_geometry_core::Vec2],
+    spec: &kentos_geometry_core::geom::roof::RoofSpec,
+    parts: &[kentos_commands::RoofPart],
+    at: &str,
+) -> Result<(), Stop> {
+    use kentos_commands::RoofPartKind;
+    use kentos_geometry_core::geom::roof as core;
+    for (k, part) in parts.iter().enumerate() {
+        let mine = kentos_formats::arch_elements::core_roof_part(part);
+        let words = match part.kind {
+            RoofPartKind::Chimney | RoofPartKind::Vent => {
+                (!kentos_geometry_core::geometry::point_in_polygon(mine.at, pts)).then(|| {
+                    format!(
+                        "{} ortası saçak çizgisinin dışında; bacayı çatının üstüne koyun.",
+                        part.kind.whose()
+                    )
+                })
+            }
+            RoofPartKind::Window if core::part_face(pts, spec, &mine).is_none() => Some(
+                "Çatı penceresinin ortası hiçbir çatı yüzünün üstünde değil (düz çatıda pencere konmaz).".to_owned(),
+            ),
+            RoofPartKind::Window if !core::window_fits(pts, spec, &mine) => Some(
+                "Çatı penceresi tek bir yüzün içinde kalmalı: kırmaya, mahyaya, dereye ya da saçağa taşıyor.".to_owned(),
+            ),
+            RoofPartKind::Window => None,
+        };
+        if let Some(words) = words {
+            return Err(fail(
+                codes::INVALID_ROOF,
+                words,
+                &format!("{at}.parts[{k}].at"),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn validated(checked: Result<Checked, Stop>) -> CommandResult<()> {

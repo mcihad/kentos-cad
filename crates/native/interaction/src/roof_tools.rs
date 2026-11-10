@@ -184,6 +184,7 @@ impl RoofTool {
             // Drawn by its corners, the walls are not known: no overhang is said.
             overhang: (!self.draws()).then_some(self.overhang),
             material: self.material.clone(),
+            parts: None,
             arch: self.level.arch(),
             attrs: None,
         })

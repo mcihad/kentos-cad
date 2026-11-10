@@ -6602,6 +6602,22 @@ RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sec
 """The names of :class:`RoadSourceKind`, for a plain string."""
 
 
+class RoofPartKind(_StrEnum):
+    """What a roof's part is (docs/adr/8044 §6).
+
+    - ``chimney``: Duman bacası: its top 0.80 m over the ridge unless given.
+    - ``vent``: Hava bacası: its top 0.60 m over the roof at its place unless given.
+    - ``window``: Çatı penceresi: in its face's plane, turned with its face's slope.
+    """
+    CHIMNEY = "chimney"
+    VENT = "vent"
+    WINDOW = "window"
+
+
+RoofPartKindName = Literal["chimney", "vent", "window"]
+"""The names of :class:`RoofPartKind`, for a plain string."""
+
+
 class ScaleBasis(_StrEnum):
     """What a pattern's Ölçek is of (docs/adr/0331 §3).
 
@@ -16271,12 +16287,13 @@ class ArchAudited(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ArchEdit(_Model):
-    """Input of `cad.arch.edit` v1: grids, columns, stairs and ramps named by their persistent ids changed as one undo step
-    “Mimari nesneyi düzenle”, all or none.
+    """Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as
+    one undo step “Mimari nesneyi düzenle”, all or none.
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
     `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-    `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.
+    `invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,
+    `revision_conflict`, `layer_locked`.
     Warnings: those of the stairs and ramps written.
     """
     uids: list[str]
@@ -60017,6 +60034,8 @@ class NewRoof(_Model):
         material: Its covering; absent: Kiremit.
         offset: Its eaves' height over its storey's top (the next storey's floor); absent: 0. Unit: elevation.
         overhang: How far its eaves stand past the walls' outer faces (saçak). Unit: length.
+        parts: Its chimneys, vents and roof windows (docs/adr/8044 §6): each chimney's and vent's middle inside its eaves, each
+            window wholly in one face.
         thickness: Its build-up's thickness, measured upright; absent: 0.25 m. Unit: length.
     """
     pts: list[Vec2]
@@ -60026,6 +60045,7 @@ class NewRoof(_Model):
     material: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     overhang: float | None | Unset = UNSET
+    parts: list[RoofPart] | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -60042,6 +60062,8 @@ class NewRoof(_Model):
             out["offset"] = None if self.offset is None else float(self.offset)
         if self.overhang is not UNSET:
             out["overhang"] = None if self.overhang is None else float(self.overhang)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.thickness is not UNSET:
             out["thickness"] = None if self.thickness is None else float(self.thickness)
         return out
@@ -60056,6 +60078,7 @@ class NewRoof(_Model):
             material=data.get("material", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [RoofPart.from_json(e0) for e0 in data["parts"]],
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
         )
 
@@ -85225,6 +85248,7 @@ class RoofEntity(Entity):
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         overhang: How far its eaves were drawn past the walls' outer faces (saçak), metres. Unit: length.
+        parts: Its chimneys, vents and roof windows (docs/adr/8044 §6).
         symbol: Library symbol overriding the layer's style.
         thickness: Its build-up's thickness (kaplama, çıta, tahta, mertek), metres, measured upright; absent: 0.25. Unit: length.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -85251,6 +85275,7 @@ class RoofEntity(Entity):
     offset: float | Unset = UNSET
     order: int | None | Unset = UNSET
     overhang: float | None | Unset = UNSET
+    parts: list[RoofPart] | Unset = UNSET
     symbol: str | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -85291,6 +85316,8 @@ class RoofEntity(Entity):
             out["order"] = self.order
         if self.overhang is not UNSET:
             out["overhang"] = None if self.overhang is None else float(self.overhang)
+        if self.parts is not UNSET:
+            out["parts"] = [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.thickness is not UNSET:
@@ -85323,10 +85350,54 @@ class RoofEntity(Entity):
             offset=float(data["offset"]) if "offset" in data else UNSET,
             order=data.get("order", UNSET),
             overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
+            parts=[RoofPart.from_json(e0) for e0 in data["parts"]] if "parts" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoofPart(_Model):
+    """A part of a roof (docs/adr/8044 §6): a chimney, a vent or a roof window.
+    Attributes:
+        at: Its middle in plan. Unit: length.
+        width: Its width, metres: a window's along its face's eaves (across the slope), a chimney's or a vent's along its turn. Unit: length.
+        depth: Its depth, metres: a window's down its face's slope, in the roof's plane (Sivas's 1.50 m is measured so); a
+            chimney's or a vent's across its width. Unit: length.
+        rise: A chimney's top over the roof's ridge, a vent's over the roof at its highest corner, metres; absent: 0.80, 0.60.
+            A window has none. Unit: length.
+        rotation: A chimney's or a vent's turn in plan, radians counter-clockwise; absent: 0. A window takes its face's. Unit: rad.
+    """
+    kind: RoofPartKind | RoofPartKindName
+    at: Vec2
+    width: float
+    depth: float
+    rise: float | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["at"] = _vec2_out(self.at)
+        out["width"] = float(self.width)
+        out["depth"] = float(self.depth)
+        if self.rise is not UNSET:
+            out["rise"] = None if self.rise is None else float(self.rise)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoofPart:
+        return cls(
+            kind=_enum_in(RoofPartKind, data["kind"]),
+            at=Vec2.from_json(data["at"]),
+            width=float(data["width"]),
+            depth=float(data["depth"]),
+            rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
         )
 
 
@@ -113657,9 +113728,12 @@ class SetArchOperation(ArchOperation):
         landing: A stair's or a ramp's; null: the width. Unit: length.
         legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
-        material: A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.
+        material: A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
         numbering: A stair's.
-        offset: A beam's top over where it hangs. Unit: elevation.
+        offset: A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1). Unit: elevation.
+        overhang: How far a roof's eaves stand past the walls' outer faces (saçak); null: not said. Unit: length.
+        parts: A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write
+            the ones it has with theirs; empty: none.
         phase: Any kind's.
         post: A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none. Unit: length.
         railings: A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
@@ -113670,7 +113744,9 @@ class SetArchOperation(ArchOperation):
         rotation: A column's, about its reference point. Unit: rad.
         shape: A column's; another than L drops its legs.
         slope: A ramp's. Unit: percent.
+        slopes: A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1). Unit: percent.
         tag: A column's.
+        thickness: A roof's build-up, measured upright; null: 0.25 m. Unit: length.
         tread: A stair's. Unit: length.
         type: A column's type.
         width: A column's, a stair's, a ramp's or a beam's. Unit: length.
@@ -113695,6 +113771,8 @@ class SetArchOperation(ArchOperation):
     material: str | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
     offset: float | None | Unset = UNSET
+    overhang: float | None | Unset = UNSET
+    parts: list[RoofPart] | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     post: float | None | Unset = UNSET
     railings: Railings | RailingsName | None | Unset = UNSET
@@ -113705,7 +113783,9 @@ class SetArchOperation(ArchOperation):
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     slope: float | None | Unset = UNSET
+    slopes: list[float | None] | None | Unset = UNSET
     tag: str | None | Unset = UNSET
+    thickness: float | None | Unset = UNSET
     tread: float | None | Unset = UNSET
     type: str | None | Unset = UNSET
     width: float | None | Unset = UNSET
@@ -113750,6 +113830,10 @@ class SetArchOperation(ArchOperation):
             out["numbering"] = self.numbering
         if self.offset is not UNSET:
             out["offset"] = None if self.offset is None else float(self.offset)
+        if self.overhang is not UNSET:
+            out["overhang"] = None if self.overhang is None else float(self.overhang)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.post is not UNSET:
@@ -113770,8 +113854,12 @@ class SetArchOperation(ArchOperation):
             out["shape"] = None if self.shape is None else _enum_out(self.shape)
         if self.slope is not UNSET:
             out["slope"] = None if self.slope is None else float(self.slope)
+        if self.slopes is not UNSET:
+            out["slopes"] = None if self.slopes is None else [None if e0 is None else float(e0) for e0 in self.slopes]
         if self.tag is not UNSET:
             out["tag"] = self.tag
+        if self.thickness is not UNSET:
+            out["thickness"] = None if self.thickness is None else float(self.thickness)
         if self.tread is not UNSET:
             out["tread"] = None if self.tread is None else float(self.tread)
         if self.type is not UNSET:
@@ -113802,6 +113890,8 @@ class SetArchOperation(ArchOperation):
             material=data.get("material", UNSET),
             numbering=data.get("numbering", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [RoofPart.from_json(e0) for e0 in data["parts"]],
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             post=UNSET if "post" not in data else None if data["post"] is None else float(data["post"]),
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
@@ -113812,7 +113902,9 @@ class SetArchOperation(ArchOperation):
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+            slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else [None if e0 is None else float(e0) for e0 in data["slopes"]],
             tag=data.get("tag", UNSET),
+            thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
             tread=UNSET if "tread" not in data else None if data["tread"] is None else float(data["tread"]),
             type=data.get("type", UNSET),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
@@ -137396,6 +137488,9 @@ __all__ = [
     "RoadsEdit",
     "RoadsEdited",
     "RoofEntity",
+    "RoofPart",
+    "RoofPartKind",
+    "RoofPartKindName",
     "RoofsCreate",
     "RoofsCreated",
     "RoofsPlan",

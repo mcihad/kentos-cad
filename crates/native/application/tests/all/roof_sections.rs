@@ -153,6 +153,80 @@ fn without_a_roof_the_section_still_says_it_is_missing() {
     assert!(!t.iter().any(|x| x.contains("Mahya")), "{t:?}");
 }
 
+/// The roof's cut outlines in a section: one for each band.
+fn bands(doc: &Document, m: Uuid) -> usize {
+    doc.block(sections::block_id(m))
+        .unwrap()
+        .entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Polyline(p) if p.base.layer_id == "mm-cati-kiremit"))
+        .count()
+}
+
+#[test]
+fn b_b_cuts_the_chimney_on_its_line_and_writes_its_top() {
+    let mut plain = roofed(&building());
+    let b = mark(&plain, ViewMarkForm::Section, "B");
+    derive(&mut plain, b);
+    let without = bands(&plain, b);
+    // A chimney on B-B's line (x 5.2) north of the ridge, a vent off it (docs/adr/8044 §6).
+    let mut doc = roofed(&building());
+    let roof = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| matches!(e, Entity::Roof(_)).then_some(u))
+        .unwrap();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.arch.edit",
+        CallOp::Execute,
+        json!({"uids": [roof.to_string()], "operation": {"kind": "set", "parts": [
+            {"kind": "chimney", "at": {"x": 5.2, "y": 6.5}, "width": 0.4, "depth": 0.4},
+            {"kind": "vent", "at": {"x": 9.5, "y": 2.0}, "width": 0.4, "depth": 0.4}
+        ]}}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let b = mark(&doc, ViewMarkForm::Section, "B");
+    derive(&mut doc, b);
+    let block = doc.block(sections::block_id(b)).unwrap();
+    // Cut: hatched as masonry on EK-2's Baca.
+    assert!(
+        block
+            .entities
+            .iter()
+            .any(|e| matches!(e, Entity::Hatch(h) if h.base.layer_id.starts_with("mm-baca-genel"))),
+        "the chimney's hatch"
+    );
+    // Its top 80 cm over the ridge (+7.69): "+8.49 Baca" among the levels (Mimarlar Odası 14.3.4 g).
+    let t = texts(&doc, b);
+    assert!(t.iter().any(|x| x == "+8.49 Baca"), "{t:?}");
+    // The north face's band stops at the chimney's sides: one band more than without it.
+    assert_eq!(bands(&doc, b), without + 1);
+    // The vent's top, 16 cm under the ridge, is written left of the ridge's level, not over it.
+    let at = |prefix: &str| {
+        doc.block(sections::block_id(b))
+            .unwrap()
+            .entities
+            .iter()
+            .find_map(|e| match e {
+                Entity::Text(t) if t.text.ends_with(prefix) => {
+                    Some((t.p.x, t.text.chars().count(), t.height))
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("{prefix} in {t:?}"))
+    };
+    let (vent, chars, height) = at("Hava bacası");
+    let (ridge, _, _) = at("Mahya");
+    assert!(
+        vent + chars as f64 * height * 0.6 <= ridge,
+        "{vent} {ridge}"
+    );
+    // The heights chain at the right stays the building's: the roof's 1,69, no link to the vent's or the chimney's top.
+    assert!(t.iter().any(|x| x == "1,69"), "{t:?}");
+    assert!(!t.iter().any(|x| x == "0,80" || x == "0,16"), "{t:?}");
+}
+
 /// The facade building (fixtures/arch/v1/facade-building.kcad): the section building with four elevation marks.
 fn facades() -> Document {
     let snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(

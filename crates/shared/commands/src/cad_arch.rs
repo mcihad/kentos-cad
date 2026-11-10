@@ -948,6 +948,11 @@ pub struct NewRoof {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// Its chimneys, vents and roof windows (docs/adr/8044 §6): each chimney's and vent's middle inside its eaves, each
+    /// window wholly in one face.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parts: Option<Vec<crate::RoofPart>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -1210,7 +1215,7 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub justify: Option<crate::WallJustify>,
-    /// A beam's top over where it hangs.
+    /// A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
@@ -1219,7 +1224,7 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub role: Option<crate::BeamRole>,
-    /// A column's or a beam's material (docs/adr/8041 §2); null: Betonarme.
+    /// A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -1228,6 +1233,36 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub material: Option<Option<String>>,
+    /// A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub slopes: Option<Vec<Option<f64>>>,
+    /// A roof's build-up, measured upright; null: 0.25 m.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: Option<Option<f64>>,
+    /// How far a roof's eaves stand past the walls' outer faces (saçak); null: not said.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub overhang: Option<Option<f64>>,
+    /// A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write
+    /// the ones it has with theirs; empty: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parts: Option<Vec<crate::RoofPart>>,
     /// Any kind's.
     #[serde(
         default,
@@ -1281,12 +1316,13 @@ pub enum ArchOperation {
     },
 }
 
-/// Input of `cad.arch.edit` v1: grids, columns, stairs and ramps named by their persistent ids changed as one undo step
-/// “Mimari nesneyi düzenle”, all or none.
+/// Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as
+/// one undo step “Mimari nesneyi düzenle”, all or none.
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
 /// `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-/// `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.
+/// `invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,
+/// `revision_conflict`, `layer_locked`.
 /// Warnings: those of the stairs and ramps written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

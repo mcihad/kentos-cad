@@ -4,6 +4,7 @@ import type { Attachment } from "./Attachment";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { RoofPart } from "./RoofPart";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
 
@@ -97,4 +98,8 @@ overhang?: number,
 /**
  * Its covering (çatı kaplaması); absent: Kiremit.
  */
-material?: string, arch?: ArchInfo, };
+material?: string, 
+/**
+ * Its chimneys, vents and roof windows (docs/adr/8044 §6).
+ */
+parts?: Array<RoofPart>, arch?: ArchInfo, };

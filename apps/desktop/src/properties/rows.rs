@@ -1640,6 +1640,30 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 geo.push(metres("Saçak", o));
             }
             geo.push(Row::text("Kaplama", x.material_name()));
+            // Its chimneys, vents and windows (docs/adr/8044 §6), numbered within their kind when more than one: each
+            // one's size and a chimney's or a vent's top over ±0.00.
+            if let kentos_geometry_core::entity::Shape::Roof { pts, roof: spec } =
+                kentos_native_application::geometry::roof_shape(r, settings)
+            {
+                for (k, (part, core)) in x.parts.iter().zip(&spec.parts).enumerate() {
+                    let of_kind = x.parts.iter().filter(|p| p.kind == part.kind).count();
+                    let nth = x.parts[..=k].iter().filter(|p| p.kind == part.kind).count();
+                    let label = if of_kind > 1 {
+                        format!("{} {nth}", part.kind.label())
+                    } else {
+                        part.kind.label().to_owned()
+                    };
+                    let size = format!("{} × {}", f.length_bare(part.width), f.length(part.depth));
+                    let text = match kentos_geometry_core::geom::roof::part_top(&pts, &spec, core) {
+                        Some(top) => format!(
+                            "{size} · tepesi {}",
+                            kentos_geometry_core::geom::roof::level_words(top)
+                        ),
+                        None => size,
+                    };
+                    geo.push(Row::text(label, text));
+                }
+            }
             geo.push(metres("Çevre", length_of.unwrap_or(0.0)));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }

@@ -128,8 +128,10 @@ pub const TOOLS: &[&str] = &[
     arch_tools::RAMP_ID,
     // docs/adr/8041 §1: Kiriş.
     crate::beam_tools::BEAM_ID,
-    // docs/adr/8044 §4: Çatı.
+    // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
+    crate::roof_part_tools::CHIMNEY_ID,
+    crate::roof_part_tools::WINDOW_ID,
     arch_tools::GRID_NUMBER_ID,
     crate::grid_system::ID,
     crate::module_place::ID,
@@ -556,6 +558,12 @@ impl Session {
             arch_tools::RAMP_ID => Box::new(arch_tools::FlightTool::ramp()),
             crate::beam_tools::BEAM_ID => Box::new(crate::beam_tools::BeamTool::new()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
+            crate::roof_part_tools::CHIMNEY_ID => {
+                Box::new(crate::roof_part_tools::RoofPartTool::chimney())
+            }
+            crate::roof_part_tools::WINDOW_ID => {
+                Box::new(crate::roof_part_tools::RoofPartTool::window())
+            }
             arch_tools::GRID_NUMBER_ID => Box::new(arch_tools::GridNumberTool::new()),
             crate::grid_system::ID => Box::new(crate::grid_system::GridSystemTool::new()),
             crate::module_place::ID => Box::new(crate::module_place::ModulePlace::new()),

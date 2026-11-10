@@ -6,6 +6,10 @@
 //! - Its eaves stand at its storey's top (the next storey's floor) and its offset; without a storey at its offset over
 //!   ±0.00.
 //! - Its overhang (saçak) is how far its eaves were drawn past the walls' outer faces: PAİY 42 allows 1.00 m.
+//! - Its parts (docs/adr/8044 §6): chimneys (duman bacası), vents (hava bacası) and roof windows (çatı penceresi), each
+//!   by its middle in plan and its size; a chimney's top 0.80 m over the ridge unless given (Binaların Yangından
+//!   Korunması Hakkında Yönetmelik 58/2), a vent's 0.60 m over the roof at its place (PAİY 40/5: at most that), a window
+//!   in its face's plane, its depth down the slope (Sivas İmar Yönetmeliği 40: at most 1.20 × 1.50 m).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -28,6 +32,94 @@ pub const MAX_ROOF_OVERHANG: f64 = 5.0;
 pub const MAX_ROOF_TEXT: usize = 120;
 /// A roof's build-up when none is given, metres: tiles on battens, boarding and rafters.
 pub const DEFAULT_ROOF_THICKNESS: f64 = 0.25;
+/// The most parts a roof holds.
+pub const MAX_ROOF_PARTS: usize = 100;
+/// The largest a roof's part is across, metres.
+pub const MAX_ROOF_PART: f64 = 10.0;
+/// A chimney's top over the ridge when none is given, metres: Binaların Yangından Korunması Hakkında Yönetmelik 58/2
+/// ("ait olduğu bina mahyasının en az 0.8 m üzerine kadar çıkarılması gerekir").
+pub const CHIMNEY_OVER_RIDGE: f64 = 0.8;
+/// A vent's top over the roof at its place when none is given, metres: PAİY 40/5 allows "hava bacaları … en fazla 0.60
+/// metre" over the roof's planes.
+pub const VENT_OVER_ROOF: f64 = 0.6;
+
+/// What a roof's part is (docs/adr/8044 §6).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RoofPartKind {
+    /// Duman bacası: its top 0.80 m over the ridge unless given.
+    #[default]
+    Chimney,
+    /// Hava bacası: its top 0.60 m over the roof at its place unless given.
+    Vent,
+    /// Çatı penceresi: in its face's plane, turned with its face's slope.
+    Window,
+}
+
+impl RoofPartKind {
+    /// Its name in Turkish, as the drawing and Öznitelikler say it.
+    pub fn label(self) -> &'static str {
+        match self {
+            RoofPartKind::Chimney => "Duman bacası",
+            RoofPartKind::Vent => "Hava bacası",
+            RoofPartKind::Window => "Çatı penceresi",
+        }
+    }
+
+    /// Its name in the genitive: "Duman bacasının", "Çatı penceresinin".
+    pub fn whose(self) -> &'static str {
+        match self {
+            RoofPartKind::Chimney => "Duman bacasının",
+            RoofPartKind::Vent => "Hava bacasının",
+            RoofPartKind::Window => "Çatı penceresinin",
+        }
+    }
+}
+
+/// A part of a roof (docs/adr/8044 §6): a chimney, a vent or a roof window.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoofPart {
+    pub kind: RoofPartKind,
+    /// Its middle in plan.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Vec2,
+    /// Its width, metres: a window's along its face's eaves (across the slope), a chimney's or a vent's along its turn.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    /// Its depth, metres: a window's down its face's slope, in the roof's plane (Sivas's 1.50 m is measured so); a
+    /// chimney's or a vent's across its width.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub depth: f64,
+    /// A chimney's or a vent's turn in plan, radians counter-clockwise; absent: 0. A window takes its face's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub rotation: Option<f64>,
+    /// A chimney's top over the roof's ridge, a vent's over the roof at its highest corner, metres; absent: 0.80, 0.60.
+    /// A window has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rise: Option<f64>,
+}
+
+impl RoofPart {
+    /// Its top's rise: its own, else its kind's (a window's none).
+    pub fn rise_m(&self) -> Option<f64> {
+        match self.kind {
+            RoofPartKind::Chimney => Some(self.rise.unwrap_or(CHIMNEY_OVER_RIDGE)),
+            RoofPartKind::Vent => Some(self.rise.unwrap_or(VENT_OVER_ROOF)),
+            RoofPartKind::Window => None,
+        }
+    }
+}
 
 fn is_zero(v: &f64) -> bool {
     *v == 0.0
@@ -66,6 +158,10 @@ pub struct RoofFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// Its chimneys, vents and roof windows (docs/adr/8044 §6).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RoofPart>>"))]
+    pub parts: Vec<RoofPart>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -171,6 +267,61 @@ impl RoofFields {
                 format!("Çatının saçağı {o}; sıfırla {MAX_ROOF_OVERHANG} m arasında olmalı."),
             ));
         }
+        if self.parts.len() > MAX_ROOF_PARTS {
+            return Some((
+                "parts".into(),
+                format!(
+                    "Bir çatıda en çok {MAX_ROOF_PARTS} baca ya da pencere olur; {} verildi.",
+                    self.parts.len()
+                ),
+            ));
+        }
+        for (i, part) in self.parts.iter().enumerate() {
+            let at = |field: &str| format!("parts[{i}].{field}");
+            if !(part.at.x.is_finite() && part.at.y.is_finite()) {
+                return Some((
+                    at("at"),
+                    format!("{} yeri sonlu olmalı.", part.kind.whose()),
+                ));
+            }
+            for (v, field, words) in [
+                (part.width, "width", "eni"),
+                (part.depth, "depth", "derinliği"),
+            ] {
+                if !(v.is_finite() && v > 0.0 && v <= MAX_ROOF_PART) {
+                    return Some((
+                        at(field),
+                        format!(
+                            "{} {words} {v}; sıfırdan büyük, en çok {MAX_ROOF_PART} m olmalı.",
+                            part.kind.whose()
+                        ),
+                    ));
+                }
+            }
+            if let Some(r) = part.rotation
+                && !r.is_finite()
+            {
+                return Some((at("rotation"), "Dönüş sonlu olmalı.".into()));
+            }
+            match (part.kind, part.rise) {
+                (RoofPartKind::Window, Some(_)) => {
+                    return Some((
+                        at("rise"),
+                        "Çatı penceresi çatının düzlemindedir; yüksekliği verilmez.".into(),
+                    ));
+                }
+                (_, Some(r)) if !(r.is_finite() && r.abs() <= MAX_ROOF_OFFSET) => {
+                    return Some((
+                        at("rise"),
+                        format!(
+                            "{} yüksekliği {r}; en çok ±{MAX_ROOF_OFFSET} m olmalı.",
+                            part.kind.whose()
+                        ),
+                    ));
+                }
+                _ => {}
+            }
+        }
         if let Some(t) = &self.material
             && (t.trim().is_empty()
                 || t.trim() != t
@@ -186,6 +337,11 @@ impl RoofFields {
         }
         None
     }
+}
+
+/// Whether `e` is a roof with parts: a file of schema 238 holds them (docs/adr/8044 §6).
+pub fn needs_roof_parts(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Roof(r) if !r.roof.parts.is_empty())
 }
 
 /// A roof (docs/adr/8044 §1).

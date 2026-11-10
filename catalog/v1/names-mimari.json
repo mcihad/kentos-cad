@@ -18,6 +18,8 @@
     { "name": "RM", "command": "tool.ramp" },
     { "name": "KR", "command": "tool.beam" },
     { "name": "CT", "command": "tool.roof" },
+    { "name": "CB", "command": "tool.roofChimney" },
+    { "name": "CPN", "command": "tool.roofWindow", "why": "CP Kopyala'nın (COPY) adıdır; Ç komut adlarında C okunur. PN Pencere'nin adı, önüne Çatı'nın C'si." },
     { "name": "MD", "command": "tool.casework" },
     { "name": "ET", "command": "tool.tag" },
     { "name": "DONATI", "command": "block.library" },

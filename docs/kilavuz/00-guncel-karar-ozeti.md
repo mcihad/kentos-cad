@@ -361,6 +361,14 @@
     çatının kırma ve mahyası bir kez). Bant TS 5319 SN23 ile, MM-CATI-<kaplama>; kot sütununda "+6.00 Saçak" (PAİY 4:
     son kat tavan döşemesinin üst kotu) ve "+7.78 Mahya"; eğim doğrultusunda kesilen yüze "%33". Binadan'da kot farkı
     boşsa çatının altı duvarın dış yüzünde katın üstüne oturur (Revit Truss). Kesitin "3,00" yazıları 90° (π/2 dereceydi).
+  - **Baca ve çatı penceresi (M44 3. bölüm, ADR 8044 §6):** çatının `parts`'ı (`.kcad` 238): duman bacası (tepesi mahya +
+    0,80 m, BYKHY 58/2), hava bacası (çatı + 0,60 m, PAİY 40/5), çatı penceresi (yüzün düzleminde, eni saçak boyunca,
+    boyu eğim boyunca). Nereye konur kuralı `arch_elements::roof_valid`'de, `cad.roofs.create` ile `cad.arch.edit`
+    ortak; `cad.arch.edit` artık çatının eğimlerini, kot farkını, kalınlığını, saçağını, kaplamasını ve parçalarını
+    (hepsi birden) değiştirir. Araçlar Çatı ▾ ailesinde: Çatı bacası `CB` (T, E, D, Y), Çatı penceresi `CPN` (E, Y;
+    `ÇP` = `CP` Kopyala ile çakışırdı). Kesitte baca ANSI31 taramalı prizma (MM-BACA-GENEL), tepesi "+8.49 Baca";
+    çatı yüzü bacayı `Void` olarak taşır, eğik bant bacanın iki yanında kesilir (çekirdek ve başvuru, 25 durum). Bir
+    kot üsttekine yazı boyunun 2,2 katından yakınsa yazısı sola alınır; yükseklik zinciri baca tepelerini almaz.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

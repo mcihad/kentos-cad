@@ -42,6 +42,173 @@ pub struct RoofSpec {
     /// dashed and narrow, as Mimarlar Odası asks of what lies between the plan's cut and the ceiling ("Saçak … nokta nokta
     /// işlenir"). A view's, never read from nor written to JSON (as a stair's `upper`, a slab's `overhead`).
     pub overhead: bool,
+    /// Its chimneys, vents and roof windows (docs/adr/8044 §6).
+    pub parts: Vec<Part>,
+}
+
+/// What a roof's part is (docs/adr/8044 §6).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum PartKind {
+    /// Duman bacası.
+    #[default]
+    Chimney,
+    /// Hava bacası.
+    Vent,
+    /// Çatı penceresi.
+    Window,
+}
+
+impl PartKind {
+    fn name(self) -> &'static str {
+        match self {
+            PartKind::Chimney => "chimney",
+            PartKind::Vent => "vent",
+            PartKind::Window => "window",
+        }
+    }
+}
+
+impl crate::api::json::ToJson for PartKind {
+    fn write_json(&self, out: &mut String) {
+        self.name().write_json(out);
+    }
+}
+
+impl crate::api::json::FromJson for PartKind {
+    fn from_json(v: &crate::api::json::Json) -> Result<Self, String> {
+        match v {
+            crate::api::json::Json::Str(s) => [PartKind::Chimney, PartKind::Vent, PartKind::Window]
+                .into_iter()
+                .find(|k| k.name() == s)
+                .ok_or_else(|| format!("çatı parçası türü değil: {s}")),
+            _ => Err("çatı parçasının türü bekleniyordu".into()),
+        }
+    }
+}
+
+/// A roof's part (docs/adr/8044 §6): a chimney or a vent standing through the roof, a window in its face.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Part {
+    pub kind: PartKind,
+    /// Its middle in plan.
+    pub at: Vec2,
+    /// A window's along its face's eaves; a chimney's or a vent's along its turn.
+    pub width: f64,
+    /// A window's down its face's slope, in the roof's plane; a chimney's or a vent's across its width.
+    pub depth: f64,
+    /// A chimney's or a vent's turn in plan, radians; none: 0. A window takes its face's.
+    pub rotation: Option<f64>,
+    /// A chimney's top over the ridge, a vent's over the roof at its highest corner, metres.
+    pub rise: f64,
+}
+
+crate::json_struct!(Part {
+    kind,
+    at,
+    width,
+    depth,
+    rotation,
+    rise
+});
+
+/// The part's outline in plan, counter-clockwise (docs/adr/8044 §6): a chimney or a vent its rectangle turned about its
+/// middle; a window its rectangle in the face holding its middle, its width along that face's eaves, its depth down the
+/// fall line as the plan shows it (its depth in the roof's plane over √(1 + slope²)). None for a window whose middle is
+/// on no face (a flat roof's, or outside the eaves).
+pub fn part_ring(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<Vec<Vec2>> {
+    let (along, down, w, d) = match part.kind {
+        PartKind::Chimney | PartKind::Vent => {
+            let r = part.rotation.unwrap_or(0.0);
+            let (sin, cos) = (crate::jsmath::sin(r), crate::jsmath::cos(r));
+            (
+                Vec2::new(cos, sin),
+                Vec2::new(-sin, cos),
+                part.width,
+                part.depth,
+            )
+        }
+        PartKind::Window => {
+            let (ring, edges) = checked(pts, spec).ok()?;
+            let n = ring.len();
+            let face = faces(pts, spec)
+                .ok()?
+                .into_iter()
+                .find(|f| inside(&f.ring, part.at))?;
+            let k = edges.iter().position(|e| e.0 == face.edge)?;
+            let (a, b) = (ring[k], ring[(k + 1) % n]);
+            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
+            // Up the slope: the eaves' inward normal (counter-clockwise: its left).
+            let up = Vec2::new(-along.y, along.x);
+            let s = face.slope / 100.0;
+            (along, up, part.width, part.depth / js_hypot(1.0, s))
+        }
+    };
+    let (hw, hd) = (w / 2.0, d / 2.0);
+    let c = part.at;
+    let corner = |sa: f64, sd: f64| {
+        Vec2::new(
+            c.x + along.x * sa * hw + down.x * sd * hd,
+            c.y + along.y * sa * hw + down.y * sd * hd,
+        )
+    };
+    Some(vec![
+        corner(-1.0, -1.0),
+        corner(1.0, -1.0),
+        corner(1.0, 1.0),
+        corner(-1.0, 1.0),
+    ])
+}
+
+/// Whether `p` lies inside the convex counter-clockwise `ring` or on its outline.
+fn inside(ring: &[Vec2], p: Vec2) -> bool {
+    let n = ring.len();
+    n >= 3
+        && (0..n).all(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) >= -EPS
+        })
+}
+
+/// A chimney's or a vent's top over ±0.00 (docs/adr/8044 §6): a chimney's its rise over the ridge's top (the roof's
+/// highest point), a vent's over the roof's highest point under its outline; none for a window.
+pub fn part_top(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<f64> {
+    match part.kind {
+        PartKind::Window => None,
+        PartKind::Chimney => Some(spec.base + ridge_rise(pts, spec).ok()? + part.rise),
+        PartKind::Vent => {
+            let ring = part_ring(pts, spec, part)?;
+            let high = ring
+                .iter()
+                .map(|q| height_at(pts, spec, *q).unwrap_or(0.0))
+                .fold(f64::NEG_INFINITY, js_max);
+            Some(spec.base + high + part.rise)
+        }
+    }
+}
+
+/// The face a window lies in: its eaves edge's index as given, the face its middle is on; none for a chimney, a vent
+/// or a window on no face.
+pub fn part_face(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<usize> {
+    if part.kind != PartKind::Window {
+        return None;
+    }
+    faces(pts, spec)
+        .ok()?
+        .into_iter()
+        .find(|f| inside(&f.ring, part.at))
+        .map(|f| f.edge)
+}
+
+/// Whether a window lies wholly in its face (not across a hip, a ridge or a valley, nor past the eaves).
+pub fn window_fits(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> bool {
+    let Some(ring) = part_ring(pts, spec, part) else {
+        return false;
+    };
+    faces(pts, spec)
+        .ok()
+        .and_then(|fs| fs.into_iter().find(|f| inside(&f.ring, part.at)))
+        .is_some_and(|f| ring.iter().all(|q| inside(&f.ring, *q)))
 }
 
 /// What a line of a roof's plan is.
@@ -521,6 +688,59 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
             TextAlign::BottomCenter,
         )));
     }
+    out.extend(part_pieces(pts, spec, h));
+    out
+}
+
+/// Its parts as the roof plan draws them (docs/adr/8044 §6; Mimarlar Odası 14.3.3 u: "bacalar ve çatıya çıkış delikleri
+/// gösterilir", 14.3.4 g: "bacalar kotlandırılır"): a chimney its outline and both diagonals, a vent its outline and one,
+/// each with its top's level beside it; a window its outline and its frame 5 cm in.
+fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
+    let mut out = Vec::new();
+    for part in &spec.parts {
+        let Some(ring) = part_ring(pts, spec, part) else {
+            continue;
+        };
+        out.push(piece(outline(&ring)));
+        match part.kind {
+            PartKind::Chimney => {
+                out.push(piece(segment(ring[0], ring[2])));
+                out.push(piece(segment(ring[1], ring[3])));
+            }
+            PartKind::Vent => out.push(piece(segment(ring[0], ring[2]))),
+            PartKind::Window => {
+                let frame = 0.05;
+                // The frame: each corner moved 5 cm in along both of the window's own sides.
+                let along = Vec2::new(ring[1].x - ring[0].x, ring[1].y - ring[0].y);
+                let down = Vec2::new(ring[3].x - ring[0].x, ring[3].y - ring[0].y);
+                let (la, ld) = (js_hypot(along.x, along.y), js_hypot(down.x, down.y));
+                if la > 2.0 * frame && ld > 2.0 * frame {
+                    let (ua, ud) = (
+                        Vec2::new(along.x / la * frame, along.y / la * frame),
+                        Vec2::new(down.x / ld * frame, down.y / ld * frame),
+                    );
+                    let inner = vec![
+                        Vec2::new(ring[0].x + ua.x + ud.x, ring[0].y + ua.y + ud.y),
+                        Vec2::new(ring[1].x - ua.x + ud.x, ring[1].y - ua.y + ud.y),
+                        Vec2::new(ring[2].x - ua.x - ud.x, ring[2].y - ua.y - ud.y),
+                        Vec2::new(ring[3].x + ua.x - ud.x, ring[3].y + ua.y - ud.y),
+                    ];
+                    out.push(piece(outline(&inner)));
+                }
+            }
+        }
+        if let Some(z) = part_top(pts, spec, part) {
+            let right = ring.iter().map(|q| q.x).fold(f64::NEG_INFINITY, js_max);
+            let mid = ring.iter().map(|q| q.y).sum::<f64>() / ring.len() as f64;
+            out.push(piece(text(
+                Vec2::new(right + h * 0.5, mid),
+                level_words(z),
+                h,
+                0.0,
+                TextAlign::MiddleLeft,
+            )));
+        }
+    }
     out
 }
 
@@ -542,6 +762,7 @@ mod tests {
             slopes: slopes.to_vec(),
             base: 6.0,
             overhead: false,
+            parts: Vec::new(),
         }
     }
 
@@ -644,6 +865,118 @@ mod tests {
     }
 
     #[test]
+    fn a_roofs_parts_stand_where_they_are_given() {
+        // 12 × 9 m at 33 %, its eaves at +6.00: its ridge 1.485 m over them.
+        let pts = rect(12.0, 9.0);
+        let s = spec([Some(33.0); 4]);
+        let chimney = Part {
+            kind: PartKind::Chimney,
+            at: Vec2::new(9.0, 6.0),
+            width: 0.4,
+            depth: 0.4,
+            rotation: None,
+            rise: 0.8,
+        };
+        let ring = part_ring(&pts, &s, &chimney).unwrap();
+        assert!((ring[0].x - 8.8).abs() < 1e-12 && (ring[0].y - 5.8).abs() < 1e-12);
+        assert!((ring[2].x - 9.2).abs() < 1e-12 && (ring[2].y - 6.2).abs() < 1e-12);
+        // 0.80 m over the ridge's top (BYKHY 58/2).
+        let top = part_top(&pts, &s, &chimney).unwrap();
+        assert!((top - (6.0 + 0.33 * 4.5 + 0.8)).abs() < 1e-9, "{top}");
+        assert_eq!(part_face(&pts, &s, &chimney), None);
+        // A vent: 0.60 m over the roof's highest point under it.
+        let vent = Part {
+            kind: PartKind::Vent,
+            at: Vec2::new(3.0, 2.0),
+            width: 0.6,
+            depth: 0.6,
+            rotation: None,
+            rise: 0.6,
+        };
+        let high = part_ring(&pts, &s, &vent)
+            .unwrap()
+            .iter()
+            .map(|q| height_at(&pts, &s, *q).unwrap())
+            .fold(f64::NEG_INFINITY, js_max);
+        assert!((part_top(&pts, &s, &vent).unwrap() - (6.0 + high + 0.6)).abs() < 1e-12);
+        // A window on the south face: its width along the eaves, its 1.18 m down the slope 1.13 m in plan.
+        let window = Part {
+            kind: PartKind::Window,
+            at: Vec2::new(6.0, 1.5),
+            width: 0.78,
+            depth: 1.18,
+            rotation: None,
+            rise: 0.0,
+        };
+        assert_eq!(part_face(&pts, &s, &window), Some(0));
+        let ring = part_ring(&pts, &s, &window).unwrap();
+        assert!((ring[1].x - ring[0].x - 0.78).abs() < 1e-12);
+        let plan = 1.18 / (1.0 + 0.33_f64 * 0.33).sqrt();
+        assert!(
+            (ring[3].y - ring[0].y - plan).abs() < 1e-12,
+            "{}",
+            ring[3].y - ring[0].y
+        );
+        assert!(window_fits(&pts, &s, &window));
+        // Near the corner it runs across the hip; past the eaves it has no face.
+        let across = Part {
+            at: Vec2::new(1.0, 0.7),
+            ..window.clone()
+        };
+        assert_eq!(part_face(&pts, &s, &across), Some(0));
+        assert!(!window_fits(&pts, &s, &across));
+        let outside = Part {
+            at: Vec2::new(6.0, -1.0),
+            ..window.clone()
+        };
+        assert_eq!(part_face(&pts, &s, &outside), None);
+        assert!(part_ring(&pts, &s, &outside).is_none());
+        // A flat roof has no face for a window.
+        assert_eq!(part_face(&pts, &spec([None; 4]), &window), None);
+    }
+
+    #[test]
+    fn the_roof_plan_draws_its_parts_and_their_tops() {
+        let mut s = spec([Some(33.0); 4]);
+        let bare = pieces_at(&rect(12.0, 9.0), &s, 100.0, Level::Whole).len();
+        s.parts = vec![
+            Part {
+                kind: PartKind::Chimney,
+                at: Vec2::new(9.0, 6.0),
+                width: 0.4,
+                depth: 0.4,
+                rotation: None,
+                rise: 0.8,
+            },
+            Part {
+                kind: PartKind::Window,
+                at: Vec2::new(6.0, 1.5),
+                width: 0.78,
+                depth: 1.18,
+                rotation: None,
+                rise: 0.0,
+            },
+        ];
+        let p = pieces_at(&rect(12.0, 9.0), &s, 100.0, Level::Whole);
+        // The chimney: its outline, both diagonals and its top's level; the window: its outline and its frame.
+        assert_eq!(p.len(), bare + 4 + 2);
+        let words: Vec<String> = p
+            .iter()
+            .filter_map(|q| match &q.shape {
+                Shape::Text { text, .. } => Some(text.clone()),
+                _ => None,
+            })
+            .collect();
+        assert!(words.iter().any(|w| w == "+8.29"), "{words:?}");
+        // Over its own storey's plan: the eaves alone, no parts.
+        s.overhead = true;
+        assert_eq!(
+            pieces_at(&rect(12.0, 9.0), &s, 100.0, Level::Whole).len(),
+            1
+        );
+    }
+
+    #[test]
     fn over_its_own_storeys_plan_a_roof_is_its_eaves_dashed() {
         let mut s = spec([Some(33.0); 4]);
         s.overhead = true;
@@ -671,6 +1004,7 @@ mod tests {
             slopes: vec![Some(33.0); 6],
             base: 0.0,
             overhead: false,
+            parts: Vec::new(),
         };
         assert_eq!(faces(&l, &s), Err(Problem::Concave));
         // Its plan draws its eaves alone.

@@ -152,6 +152,8 @@ pub struct RoofAt {
     /// The top of the storey it stands on: PAİY 4's saçak seviyesi ("son kat tavan döşemesinin üst kotu").
     pub seat: f64,
     pub solids: Vec<usize>,
+    /// Its chimneys' and vents' tops (docs/adr/8044 §6), each with its solid and its word in the levels ("Baca").
+    pub tops: Vec<(f64, usize, &'static str)>,
 }
 
 fn fold(s: &str) -> String {
@@ -740,6 +742,22 @@ fn roof_look(r: &kentos_commands::RoofFields) -> Look {
     }
 }
 
+/// A chimney's or a vent's look in a section (docs/adr/8044 §6): masonry, hatched as the plan's brick (ANSI31), on EK-2's
+/// own element (Baca: MM-BACA-GENEL), outlined heavy.
+fn chimney_look() -> Look {
+    Look {
+        key: "BACA:genel".into(),
+        layer: kentos_commands::ek4_layer("BACA", "Genel"),
+        heavy: true,
+        fill: Some(Fill {
+            pattern: "ANSI31".into(),
+            scale: 1.0,
+            angle: 0.0,
+            color: None,
+        }),
+    }
+}
+
 /// A roof (docs/adr/8044 §5): each face a sloped slab, its top the roof's plane over it (the eaves at its storey's
 /// top and its offset), the roof's thickness under it; a flat roof a slab of its thickness under its eaves. Its eaves'
 /// and ridge's levels are kept for the drawing.
@@ -761,6 +779,7 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
         ridge: spec.base + core::ridge_rise(&pts, &spec).unwrap_or(0.0),
         seat: spec.base - r.roof.offset,
         solids: Vec::new(),
+        tops: Vec::new(),
     };
     let solid = |rings: Vec<Vec<P>>, height: Height| Solid {
         rings,
@@ -769,23 +788,56 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
         marks: Vec::new(),
         finish: finish.clone(),
     };
+    // Its chimneys and vents (docs/adr/8044 §6): from the top of the storey it stands on up to their tops, through it:
+    // where the line cuts one, the roof's band stops at its sides.
+    let stacks: Vec<(&core::Part, Vec<P>, f64)> = spec
+        .parts
+        .iter()
+        .filter_map(|part| {
+            let ring = core::part_ring(&pts, &spec, part)?;
+            let top = core::part_top(&pts, &spec, part)?;
+            (top > at.seat + 1e-6).then_some((part, ring, top))
+        })
+        .collect();
+    let holes: Vec<sec::Void> = stacks
+        .iter()
+        .map(|(_, ring, top)| sec::Void {
+            ring: ring.clone(),
+            bottom: at.seat,
+            top: *top,
+        })
+        .collect();
     if faces.is_empty() {
         at.solids.push(m.solids.len());
-        push(
-            m,
-            solid(
-                vec![pts.clone()],
-                Height::Prism {
-                    bottom: spec.base - thickness,
-                    top: spec.base,
-                },
-            ),
-            look,
-            owner,
+        let mut slab = solid(
+            vec![pts.clone()],
+            Height::Prism {
+                bottom: spec.base - thickness,
+                top: spec.base,
+            },
         );
+        slab.voids = holes.clone();
+        push(m, slab, look, owner.clone());
     } else {
         for (f, (c, dx, dy)) in faces {
             at.solids.push(m.solids.len());
+            // Its windows' outlines on its top (docs/adr/8044 §6): seen where it is, never cut.
+            let plane = |q: P| c + dx * q.x + dy * q.y;
+            let marks: Vec<[(P, f64); 2]> = spec
+                .parts
+                .iter()
+                .filter(|part| core::part_face(&pts, &spec, part) == Some(f.edge))
+                .filter_map(|part| core::part_ring(&pts, &spec, part))
+                .flat_map(|ring| {
+                    let n = ring.len();
+                    (0..n)
+                        .map(|i| {
+                            let (a, b) = (ring[i], ring[(i + 1) % n]);
+                            [(a, plane(a)), (b, plane(b))]
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect();
             let sloped = sec::Sloped {
                 top: c,
                 dx,
@@ -794,13 +846,30 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
                 eaves: pts.clone(),
                 roof: k,
             };
-            push(
-                m,
-                solid(vec![f.ring], Height::Sloped(sloped)),
-                look.clone(),
-                owner.clone(),
-            );
+            let mut face = solid(vec![f.ring], Height::Sloped(sloped));
+            face.marks = marks;
+            face.voids = holes.clone();
+            push(m, face, look.clone(), owner.clone());
         }
+    }
+    for (part, ring, top) in stacks {
+        at.solids.push(m.solids.len());
+        at.tops.push((
+            top,
+            m.solids.len(),
+            match part.kind {
+                core::PartKind::Vent => "Hava bacası",
+                _ => "Baca",
+            },
+        ));
+        let height = Height::Prism {
+            bottom: at.seat,
+            top,
+        };
+        // Masonry, not the roof's covering: an elevation does not name its faces "Kiremit".
+        let mut stack = solid(vec![ring], height);
+        stack.finish = None;
+        push(m, stack, chimney_look(), owner.clone());
     }
     m.roofs.push(at);
 }
@@ -1624,17 +1693,46 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         if r.ridge > r.eaves + 1e-6 {
             marks.push((r.ridge, Some("Mahya")));
         }
+        // Its chimneys' and vents' tops the drawing shows (14.3.4 g: "bacalar kotlandırılır").
+        marks.extend(
+            r.tops
+                .iter()
+                .filter(|(_, solid, _)| shown.contains(solid))
+                .map(|(top, _, word)| (*top, Some(*word))),
+        );
     }
     marks.sort_by(|a, b| a.0.total_cmp(&b.0).then(b.1.is_some().cmp(&a.1.is_some())));
     marks.dedup_by(|a, b| (a.0 - b.0).abs() < 1e-6);
-    let zs: Vec<f64> = marks.iter().map(|m| m.0).collect();
+    // The heights chain at the right and the finishes' scan: the storeys', the eaves' and the ridge's levels, not a
+    // chimney's or a vent's top (its level is written; a 16 cm link between a vent's top and the ridge only crowds it).
+    let zs: Vec<f64> = marks
+        .iter()
+        .filter(|(_, word)| !matches!(word, Some("Baca" | "Hava bacası")))
+        .map(|m| m.0)
+        .collect();
     let x0 = bx0 - 1.0;
-    for (z, word) in &marks {
-        let tip = P::new(x0, *z);
+    let words: Vec<String> = marks
+        .iter()
+        .map(|(z, word)| match word {
+            Some(w) => format!("{} {w}", level_words(*z)),
+            None => level_words(*z),
+        })
+        .collect();
+    // A level nearer the next one up than its words are tall (a vent's top 16 cm under the ridge) is moved left by its
+    // words' width, beside it, its line drawn on to the building: printed over each other neither could be read.
+    let mut shift = vec![0.0; marks.len()];
+    for k in (0..marks.len().saturating_sub(1)).rev() {
+        if marks[k + 1].0 - marks[k].0 < text * 2.2 {
+            shift[k] = shift[k + 1] + words[k].chars().count() as f64 * text * 0.6 + text;
+        }
+    }
+    for (k, (z, _)) in marks.iter().enumerate() {
+        let x = x0 - shift[k];
+        let tip = P::new(x, *z);
         let w = text * 0.6;
         out.line(
             "MM-XXXX-OLCU",
-            P::new(x0 - 0.9, *z),
+            P::new(x - 0.9, *z),
             P::new(bx0 - 0.15, *z),
             FAINT,
         );
@@ -1649,18 +1747,14 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         );
         out.line(
             "MM-XXXX-OLCU",
-            P::new(x0 - 0.8, *z + w * 1.2),
-            P::new(x0 + 0.1, *z + w * 1.2),
+            P::new(x - 0.8, *z + w * 1.2),
+            P::new(x + 0.1, *z + w * 1.2),
             FAINT,
         );
-        let words = match word {
-            Some(w) => format!("{} {w}", level_words(*z)),
-            None => level_words(*z),
-        };
         out.text(
             "MM-XXXX-OLCU",
-            P::new(x0 - 0.75, *z + w * 1.2 + text * 0.4),
-            &words,
+            P::new(x - 0.75, *z + w * 1.2 + text * 0.4),
+            &words[k],
             text,
             "bottomLeft",
         );

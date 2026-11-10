@@ -60,6 +60,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import arch_cases as ac  # noqa: E402  (the stair's risers, the ramp's run)
+import roof_cases as roof_core  # noqa: E402  (a roof's faces, exact: docs/adr/8044 §2)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
@@ -1508,9 +1509,99 @@ def roof_fields(n):
     for k in ("thickness", "overhang", "material"):
         if n.get(k) is not None:
             f[k] = n[k]
+    if n.get("parts"):
+        f["parts"] = n["parts"]
     if n.get("arch"):
         f["arch"] = n["arch"]
     return f
+
+
+PART_WHOSE = {"chimney": "Duman bacasının", "vent": "Hava bacasının", "window": "Çatı penceresinin"}
+
+
+def roof_parts_not_finite(parts, at):
+    """A part's place, then its width, depth, turn and rise, as the command checks them (docs/adr/8044 §6)."""
+    for k, part in enumerate(parts or []):
+        path = f"{at}.parts[{k}]"
+        whose = PART_WHOSE[part["kind"]]
+        r = point_not_finite(part["at"], whose, f"{path}.at")
+        if r:
+            return r
+        for field, what in (("width", "eni"), ("depth", "derinliği"), ("rotation", "dönüşü"), ("rise", "yüksekliği")):
+            v = part.get(field)
+            if v is not None and not math.isfinite(v):
+                return not_finite(f"{whose} {what}", f"{path}.{field}")
+    return None
+
+
+def roof_parts_problem(parts, path):
+    """RoofFields::problem's rule for its parts, in its order (docs/adr/8044 §6)."""
+    if len(parts) > 100:
+        return refusal("invalid_roof", f"Bir çatıda en çok 100 baca ya da pencere olur; {len(parts)} verildi.", f"{path}.parts")
+    for i, part in enumerate(parts):
+        whose = PART_WHOSE[part["kind"]]
+        for field, words in (("width", "eni"), ("depth", "derinliği")):
+            v = part[field]
+            if not (math.isfinite(v) and 0 < v <= 10.0):
+                return refusal("invalid_roof", f"{whose} {words} {num(v)}; sıfırdan büyük, en çok 10 m olmalı.",
+                               f"{path}.parts[{i}].{field}")
+        r = part.get("rise")
+        if r is not None and part["kind"] == "window":
+            return refusal("invalid_roof", "Çatı penceresi çatının düzlemindedir; yüksekliği verilmez.", f"{path}.parts[{i}].rise")
+        if r is not None and not (math.isfinite(r) and abs(r) <= 10.0):
+            return refusal("invalid_roof", f"{whose} yüksekliği {num(r)}; en çok ±10 m olmalı.", f"{path}.parts[{i}].rise")
+    return None
+
+
+def even_odd(ring, p):
+    odd = False
+    n = len(ring)
+    for i in range(n):
+        a, b = ring[i], ring[(i + 1) % n]
+        if (a[1] > p[1]) != (b[1] > p[1]) and p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]):
+            odd = not odd
+    return odd
+
+
+def convex_holds(ring, p, eps=1e-9):
+    n = len(ring)
+    return all((float(ring[(i + 1) % n][0]) - float(ring[i][0])) * (p[1] - float(ring[i][1]))
+               - (float(ring[(i + 1) % n][1]) - float(ring[i][1])) * (p[0] - float(ring[i][0])) >= -eps for i in range(n))
+
+
+def roof_parts_placed(f, path):
+    """A chimney's or a vent's middle inside the eaves; a window's middle on a face and its outline wholly in it, its
+    width along the face's eaves and its depth down the fall line over √(1 + slope²) in plan (docs/adr/8044 §6)."""
+    pts = [(F(p["x"]), F(p["y"])) for p in f["pts"]]
+    faces = None
+    for k, part in enumerate(f.get("parts", [])):
+        at = (float(part["at"]["x"]), float(part["at"]["y"]))
+        whose = PART_WHOSE[part["kind"]]
+        where = f"{path}.parts[{k}].at"
+        if part["kind"] != "window":
+            if not even_odd([(float(x), float(y)) for x, y in pts], at):
+                return refusal("invalid_roof", f"{whose} ortası saçak çizgisinin dışında; bacayı çatının üstüne koyun.", where)
+            continue
+        if faces is None:
+            faces = roof_core.faces(pts, f["slopes"]) or []
+            ring, edges = roof_core.ccw(pts, f["slopes"])
+        face = next((x for x in faces if convex_holds(x["ring"], at)), None)
+        if face is None:
+            return refusal("invalid_roof", "Çatı penceresinin ortası hiçbir çatı yüzünün üstünde değil (düz çatıda pencere "
+                                           "konmaz).", where)
+        kk = next(j for j, e in enumerate(edges) if e[0] == face["edge"])
+        a, b = ring[kk], ring[(kk + 1) % len(ring)]
+        l = math.hypot(float(b[0] - a[0]), float(b[1] - a[1]))
+        along = (float(b[0] - a[0]) / l, float(b[1] - a[1]) / l)
+        up = (-along[1], along[0])
+        s = float(face["slope"]) / 100.0
+        hw, hd = part["width"] / 2.0, part["depth"] / math.hypot(1.0, s) / 2.0
+        corners = [(at[0] + along[0] * sa * hw + up[0] * sd * hd, at[1] + along[1] * sa * hw + up[1] * sd * hd)
+                   for sa, sd in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+        if not all(convex_holds(face["ring"], q) for q in corners):
+            return refusal("invalid_roof", "Çatı penceresi tek bir yüzün içinde kalmalı: kırmaya, mahyaya, dereye ya da "
+                                           "saçağa taşıyor.", where)
+    return None
 
 
 def roof_problem(f, path):
@@ -1537,6 +1628,9 @@ def roof_problem(f, path):
     h = f.get("overhang")
     if h is not None and not (math.isfinite(h) and 0 <= h <= 5.0):
         return refusal("invalid_roof", f"Çatının saçağı {num(h)}; sıfırla 5 m arasında olmalı.", f"{path}.overhang")
+    r = roof_parts_problem(f.get("parts", []), path)
+    if r:
+        return r
     v = f.get("material")
     if v is not None and (not v.strip() or v.strip() != v or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in v) or len(v) > 120):
         return refusal("invalid_roof", "Boş, kenarı boşluklu ya da denetim karakterli metin yazılmaz; en çok 120 karakter.",
@@ -1554,7 +1648,7 @@ def roof_problem(f, path):
             return refusal("invalid_roof", "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz "
                                            "çizilmiyor. Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün.",
                            f"{path}.pts")
-    return None
+    return roof_parts_placed(f, path)
 
 
 def roofs_create(d, inp, conflict=False):
@@ -1572,6 +1666,7 @@ def roofs_create(d, inp, conflict=False):
                 if x is not None and not math.isfinite(x):
                     r = not_finite("Eğim", f"{at}.slopes[{k}]")
                     break
+        r = r or roof_parts_not_finite(n.get("parts"), at)
         if r:
             return r, None
         f = roof_fields(n)
@@ -2283,6 +2378,11 @@ def beam_cases():
     return c.cases
 
 
+CHIMNEY = {"kind": "chimney", "at": {"x": 9.0, "y": 56.0}, "width": 0.4, "depth": 0.4}
+VENT = {"kind": "vent", "at": {"x": 3.0, "y": 52.0}, "width": 0.6, "depth": 0.6}
+WINDOW = {"kind": "window", "at": {"x": 6.0, "y": 51.5}, "width": 0.78, "depth": 1.18}
+
+
 def roof(**kw):
     r = {"pts": [P(0, 50), P(12, 50), P(12, 59), P(0, 59)], "slopes": [33.0, 33.0, 33.0, 33.0]}
     r.update(kw)
@@ -2305,6 +2405,8 @@ def roof_cases():
         ("iki çatı tek adımda", {"layerId": "cizim", "roofs": [roof()["roofs"][0],
                                                           roof(pts=[P(20, 50), P(28, 50), P(28, 56), P(20, 56)])["roofs"][0]]}),
         ("renkli ve kalın çatı", {**roof(), "color": "#cc3300", "lineWeight": 0.35}),
+        ("duman bacası ve çatı penceresi", roof(parts=[CHIMNEY, WINDOW])),
+        ("50 cm'lik, dönük hava bacası", roof(parts=[{**VENT, "rotation": 0.5, "rise": 0.5}])),
     ]:
         c.add(name, [create_step(Drawing(), ROOFS, "execute", inp)])
     refusals(c, ROOFS, [
@@ -2325,6 +2427,15 @@ def roof_cases():
         ("L biçimli saçak henüz reddedilir", roof(pts=[P(0, 50), P(10, 50), P(10, 54), P(4, 54), P(4, 60), P(0, 60)],
                                                   slopes=[33.0] * 6), {}),
         ("olmayan kat reddedilir", roof(arch={"level": "yok"}), {}),
+        ("sonsuz baca yeri reddedilir", roof(parts=[CHIMNEY]), {"non_finite": {"roofs[0].parts[0].at.y": "NaN"}}),
+        ("sonsuz pencere derinliği reddedilir", roof(parts=[WINDOW]), {"non_finite": {"roofs[0].parts[0].depth": "Infinity"}}),
+        ("sıfır enli baca reddedilir", roof(parts=[{**CHIMNEY, "width": 0.0}]), {}),
+        ("pencereye yükseklik verilmez", roof(parts=[{**WINDOW, "rise": 0.3}]), {}),
+        ("12 m yükselen hava bacası reddedilir", roof(parts=[{**VENT, "rise": 12.0}]), {}),
+        ("çatının dışındaki baca reddedilir", roof(parts=[{**CHIMNEY, "at": P(15, 55)}]), {}),
+        ("kırmaya taşan pencere reddedilir", roof(parts=[{**WINDOW, "at": P(1, 50.7)}]), {}),
+        ("saçağın dışındaki pencere reddedilir", roof(parts=[{**WINDOW, "at": P(6, 49)}]), {}),
+        ("düz çatıya pencere konmaz", roof(slopes=[None] * 4, parts=[WINDOW]), {}),
     ])
     common_refusals(c, ROOFS, roof())
     return c.cases
@@ -2523,19 +2634,23 @@ FIELDS = [  # wire name, kinds, nullable
     ("railings", ("stair", "ramp"), True),
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
     # A beam's (docs/adr/8041 §1).
-    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False), ("role", ("beam",), False),
-    # A column's or a beam's (docs/adr/8041 §2).
-    ("material", ("column", "beam"), True),
-    ("level", ("grid", "column", "stair", "ramp", "beam"), True), ("phase", ("grid", "column", "stair", "ramp", "beam"), True),
+    # A beam's (docs/adr/8041 §1); a roof's offset its eaves over its storey's top (docs/adr/8044 §1).
+    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam", "roof"), False), ("role", ("beam",), False),
+    # A column's, a beam's (docs/adr/8041 §2) or a roof's.
+    ("material", ("column", "beam", "roof"), True),
+    # A roof's (docs/adr/8044 §1, §6).
+    ("slopes", ("roof",), False), ("thickness", ("roof",), True), ("overhang", ("roof",), True), ("parts", ("roof",), False),
+    ("level", ("grid", "column", "stair", "ramp", "beam", "roof"), True),
+    ("phase", ("grid", "column", "stair", "ramp", "beam", "roof"), True),
 ]
-KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş"}
+KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş", "roof": "çatı"}
 DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False,
-            "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam"}
+            "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam", "parts": []}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width", "Genişlik"), ("depth", "Boy"),
            ("legs[0]", "L kolonun kolu"), ("legs[1]", "L kolonun kolu"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
            ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu"),
-           ("height", "Yükseklik"), ("offset", "Kot farkı")]
+           ("height", "Yükseklik"), ("offset", "Kot farkı"), ("thickness", "Kalınlık"), ("overhang", "Saçak")]
 
 
 def set_field(f, name, value):
@@ -2569,13 +2684,13 @@ def set_field(f, name, value):
 
 def problem_of(kind, f, path):
     return {"grid": grid_problem, "column": column_problem, "stair": stair_problem, "ramp": ramp_problem,
-            "beam": beam_problem}[kind](f, path)
+            "beam": beam_problem, "roof": roof_problem}[kind](f, path)
 
 
 def edit(d, inp, conflict=False):
     uids = inp["uids"]
     if not uids:
-        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven ya da rampa verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
+        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven, rampa ya da çatı verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
     for i, u in enumerate(uids):
         if not is_uid(u):
             return refusal("invalid_uid", f"“{u}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", f"uids[{i}]"), None
@@ -2590,7 +2705,7 @@ def edit(d, inp, conflict=False):
         found.append((i, oid))
     for i, oid in found:
         if d.objs[oid][0] not in KIND_NAME:
-            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
+            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
     op = inp["operation"]
     out, warnings = [], []
     if op["kind"] == "set":
@@ -2606,6 +2721,13 @@ def edit(d, inp, conflict=False):
             v = op.get("legs", [None, None])[int(n[5])] if n.startswith("legs[") else op.get(n)
             if v is not None and not math.isfinite(v):
                 return not_finite(name, f"operation.{n}"), None
+        # A roof's slopes and parts (docs/adr/8044 §1, §6).
+        for k, x in enumerate(op.get("slopes") or []):
+            if x is not None and not math.isfinite(x):
+                return not_finite("Eğim", f"operation.slopes[{k}]"), None
+        r = roof_parts_not_finite(op.get("parts"), "operation")
+        if r:
+            return r, None
         if "riserHeight" in op and op.get("heightFromLevel") is True:
             return refusal("invalid_stair", "Rıht yüksekliği ya kendisi (riserHeight) ya katın yüksekliğinden (heightFromLevel) "
                                             "verilir; ikisi birden verilmez.", "operation.heightFromLevel"), None
@@ -2783,6 +2905,47 @@ def edit_cases():
     c.add("Değiştir: kolona kirişin yüksekliği reddedilir", [one(d, [uid_of(9)], {"kind": "set", "height": 0.5})])
     d, made, k = with_beam()
     c.add("Değiştir: kirişe kolonun dolgusu reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "fill": True})])
+    # A roof's fields and parts (docs/adr/8044 §1, §6): its chimneys and windows written whole, as the tools add them.
+    def with_roof(**kw):
+        d = Drawing()
+        made = create_step(d, ROOFS, "execute", roof(**kw), with_command=True)
+        return d, made, d.next - 1
+
+    d, made, k = with_roof()
+    c.add("Değiştir: çatıya duman bacası ve çatı penceresi", [made, one(d, [uid_of(k)], {"kind": "set", "parts": [CHIMNEY, WINDOW]})])
+    d, made, k = with_roof(parts=[CHIMNEY, VENT])
+    c.add("Değiştir: boş liste çatının bacalarını kaldırır", [made, one(d, [uid_of(k)], {"kind": "set", "parts": []})])
+    d, made, k = with_roof(overhang=0.5)
+    c.add("Değiştir: çatının eğimleri, kot farkı, kalınlığı, saçağı ve kaplaması",
+          [made, one(d, [uid_of(k)], {"kind": "set", "slopes": [40.0, None, 40.0, None], "offset": 0.1, "thickness": 0.35,
+                                      "overhang": 0.6, "material": "Kayrak"})])
+    d, made, k = with_roof(offset=0.1, thickness=0.3, overhang=0.5, material="Kayrak")
+    c.add("Değiştir: null çatının kalınlığını, saçağını ve kaplamasını kaldırır, sıfır kot farkı yazılmaz",
+          [made, one(d, [uid_of(k)], {"kind": "set", "offset": 0.0, "thickness": None, "overhang": None, "material": None})])
+    d, made, k = with_roof()
+    c.add("Değiştir: çatının katı ve tadilat durumu", [made, one(d, [uid_of(k)], {"kind": "set", "level": "kat-1", "phase": "new"})])
+    d, made, k = with_roof()
+    c.add("Değiştir: çatının dışındaki baca reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "parts": [{**CHIMNEY, "at": P(15, 55)}]})])
+    d, made, k = with_roof(parts=[WINDOW])
+    c.add("Değiştir: düzleşen çatının penceresi reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "slopes": [None] * 4})])
+    d, made, k = with_roof()
+    c.add("Değiştir: eğim sayısı kenarlardan az reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "slopes": [33.0, 33.0]})])
+    d, made, k = with_roof()
+    c.add("Değiştir: sonsuz çatı eğimi reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "slopes": [33.0] * 4}, non_finite={"operation.slopes[2]": "NaN"})])
+    d, made, k = with_roof()
+    c.add("Değiştir: sonsuz baca eni reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "parts": [CHIMNEY]}, non_finite={"operation.parts[0].width": "Infinity"})])
+    d, made, k = with_roof()
+    c.add("Değiştir: sonsuz saçak reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "overhang": 0.5}, non_finite={"operation.overhang": "NaN"})])
+    d, made, k = with_roof()
+    c.add("Değiştir: sıfır kalınlıklı çatı reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "thickness": 0.0})])
+    d, made, k = with_roof()
+    c.add("Değiştir: çatıya kirişin yüksekliği reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "height": 0.5})])
+    d = Drawing()
+    c.add("Değiştir: merdivene çatının bacaları reddedilir", [one(d, [uid_of(8)], {"kind": "set", "parts": []})])
     d = Drawing()
     c.add("Değiştir: null rampanın eğimini kaldırır, başlangıç kotu", [one(d, [uid_of(9)], {"kind": "set", "slope": None, "base": 0.45})])
     d = Drawing()

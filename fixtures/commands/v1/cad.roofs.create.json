@@ -1834,6 +1834,276 @@
       ]
     },
     {
+      "name": "duman bacası ve çatı penceresi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "chimney",
+                    "at": {
+                      "x": 9.0,
+                      "y": 56.0
+                    },
+                    "width": 0.4,
+                    "depth": 0.4
+                  },
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 6.0,
+                      "y": 51.5
+                    },
+                    "width": 0.78,
+                    "depth": 1.18
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "chimney",
+                    "at": {
+                      "x": 9.0,
+                      "y": 56.0
+                    },
+                    "width": 0.4,
+                    "depth": 0.4
+                  },
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 6.0,
+                      "y": 51.5
+                    },
+                    "width": 0.78,
+                    "depth": 1.18
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "50 cm'lik, dönük hava bacası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "vent",
+                    "at": {
+                      "x": 3.0,
+                      "y": 52.0
+                    },
+                    "width": 0.6,
+                    "depth": 0.6,
+                    "rotation": 0.5,
+                    "rise": 0.5
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "vent",
+                    "at": {
+                      "x": 3.0,
+                      "y": 52.0
+                    },
+                    "width": 0.6,
+                    "depth": 0.6,
+                    "rotation": 0.5,
+                    "rise": 0.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "çatı verilmezse reddedilir",
       "steps": [
         {
@@ -2774,6 +3044,662 @@
               "code": "level_not_found",
               "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
               "path": "roofs[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz baca yeri reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "chimney",
+                    "at": {
+                      "x": 9.0,
+                      "y": 56.0
+                    },
+                    "width": 0.4,
+                    "depth": 0.4
+                  }
+                ]
+              }
+            ]
+          },
+          "nonFinite": {
+            "roofs[0].parts[0].at.y": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Duman bacasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "roofs[0].parts[0].at.y"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz pencere derinliği reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 6.0,
+                      "y": 51.5
+                    },
+                    "width": 0.78,
+                    "depth": 1.18
+                  }
+                ]
+              }
+            ]
+          },
+          "nonFinite": {
+            "roofs[0].parts[0].depth": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Çatı penceresinin derinliği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "roofs[0].parts[0].depth"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır enli baca reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "chimney",
+                    "at": {
+                      "x": 9.0,
+                      "y": 56.0
+                    },
+                    "width": 0.0,
+                    "depth": 0.4
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Duman bacasının eni 0; sıfırdan büyük, en çok 10 m olmalı.",
+              "path": "roofs[0].parts[0].width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pencereye yükseklik verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 6.0,
+                      "y": 51.5
+                    },
+                    "width": 0.78,
+                    "depth": 1.18,
+                    "rise": 0.3
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatı penceresi çatının düzlemindedir; yüksekliği verilmez.",
+              "path": "roofs[0].parts[0].rise"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 m yükselen hava bacası reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "vent",
+                    "at": {
+                      "x": 3.0,
+                      "y": 52.0
+                    },
+                    "width": 0.6,
+                    "depth": 0.6,
+                    "rise": 12.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Hava bacasının yüksekliği 12; en çok ±10 m olmalı.",
+              "path": "roofs[0].parts[0].rise"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çatının dışındaki baca reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "chimney",
+                    "at": {
+                      "x": 15.0,
+                      "y": 55.0
+                    },
+                    "width": 0.4,
+                    "depth": 0.4
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Duman bacasının ortası saçak çizgisinin dışında; bacayı çatının üstüne koyun.",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kırmaya taşan pencere reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 1.0,
+                      "y": 50.7
+                    },
+                    "width": 0.78,
+                    "depth": 1.18
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatı penceresi tek bir yüzün içinde kalmalı: kırmaya, mahyaya, dereye ya da saçağa taşıyor.",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "saçağın dışındaki pencere reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 6.0,
+                      "y": 49.0
+                    },
+                    "width": 0.78,
+                    "depth": 1.18
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatı penceresinin ortası hiçbir çatı yüzünün üstünde değil (düz çatıda pencere konmaz).",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "düz çatıya pencere konmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  null,
+                  null,
+                  null,
+                  null
+                ],
+                "parts": [
+                  {
+                    "kind": "window",
+                    "at": {
+                      "x": 6.0,
+                      "y": 51.5
+                    },
+                    "width": 0.78,
+                    "depth": 1.18
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatı penceresinin ortası hiçbir çatı yüzünün üstünde değil (düz çatıda pencere konmaz).",
+              "path": "roofs[0].parts[0].at"
             }
           },
           "expect": {
