@@ -37,7 +37,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
@@ -916,6 +916,14 @@ verir, dışındaki kendi kotunu korur; `breaks` ile düz kenarlar TIN kenarlar�
 bölünmez); yeni `off_surface`; tek geri alma adımı. Delaunay'ı elle kuran 21 bağımsız durum, Python, MCP (yıkıcı),
 masaüstünde Eğimle kot ver › Hedef Yüzeyden ve resimler. Açık: yüzeye göreli kot, çok parçalı nesne, dönen ve yaylı
 referans bağı.
+
+**10 Kasım 2026, dokuzuncu tur — Yüzeyden kot ver'de yüzeye göreli kot ve köşe aralığı ([ADR 4580](../docs/adr/4580-drape-relative-height-and-range.md)).**
+Kapsam: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Set Elevations From Surface'ı (Relative Elevation to Surface
+farkı, Partial) ve göreli özellik çizgileri (dinamik; yüzey değişince farkı korur). Kanıtlanan: `cad.entities.drape`'in
+`offset`'i alınan her kotu (ara kırık noktaları dahil) yüzeyin kotu artı fark yapar; `range` tek nesnenin köşe aralığına
+kot verir, kırık noktası yalnız aradaki kenarlara girer (dış halka; kapanış kenarı, delik, öbür parçalar dışarıda);
+yeni `wrong_place` reddi. 34 bağımsız durum (13 yeni), Python, MCP, masaüstünde Kot farkı ve Aralık (Sahneden seç,
+çizimde işaret) ve resimler. Açık: yüzeye bağlı (dinamik) kot, çok parçalı nesne, dönen ve yaylı referans bağı.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

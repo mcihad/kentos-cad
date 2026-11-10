@@ -96,6 +96,7 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-06, sekizinci tur. Durum: taslak. ADR 129
 
 ## Sonra
 
-- Göreli kot (yüzeye bağlı, aralıklı); nesnenin bir kısmı.
+- Göreli kot ve nesnenin bir kısmı: [ADR 4580](4580-drape-relative-height-and-range.md) (fark ve köşe aralığı); yüzeye
+  bağlı (dinamik) kot açık.
 - Çok parçalı nesne; dönen ve yaylı referansın bağı (MAP-06'nın kalanı).
 - Web (TODOS §0.2).

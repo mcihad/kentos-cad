@@ -4072,8 +4072,11 @@ impl Input for kentos_commands::EntitiesGrade {
     }
 }
 impl Input for kentos_commands::EntitiesDrape {
-    fn number(&mut self, _path: &str) -> Option<&mut f64> {
-        None
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "offset" => self.offset.as_mut(),
+            _ => None,
+        }
     }
 }
 impl Input for kentos_commands::EntitiesRaise {

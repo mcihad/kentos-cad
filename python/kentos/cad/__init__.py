@@ -958,6 +958,7 @@ __all__ = [
     "DrainagePondsAsk",
     "DrainageQueried",
     "DrainageQuery",
+    "DrapeRange",
     "DrapedObject",
     "DrawingAudit",
     "DrawingAudited",

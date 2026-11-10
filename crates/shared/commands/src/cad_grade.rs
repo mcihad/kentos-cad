@@ -223,7 +223,10 @@ pub struct EntitiesRaised {
 /// Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180), as Civil 3D's Elevations From Surface: each vertex of the
 /// objects takes the project's terrain surface's height under it; one off the surface keeps its own. With `breaks`,
 /// as its Insert Intermediate Grade Break Points, a vertex is put wherever a straight edge crosses an edge of the
-/// surface's triangles. The heights are not kept tied to the surface. One undo step “Yüzeyden kot ver”.
+/// surface's triangles. With `offset` (docs/adr/4580, its Relative Elevation to Surface's offset) the vertices take the
+/// surface's height plus it; with `range` (its Partial) only one object's vertices from `from` to `to` take heights and
+/// only the edges between them take break points. The heights are not kept tied to the surface. One undo step
+/// “Yüzeyden kot ver”.
 pub const CAD_ENTITIES_DRAPE: &str = "cad.entities.drape";
 pub const CAD_ENTITIES_DRAPE_VERSION: u32 = 1;
 
@@ -233,12 +236,15 @@ pub const MAX_DRAPED: usize = 10_000;
 /// Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),
 /// the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
 /// only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
-/// keeps its two ends.
+/// keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
+/// none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
+/// vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
-/// `invalid_input` (no object, more than 10 000, one given twice), `invalid_uid`, `entity_not_found`, `not_a_path`
-/// (not a point, a line, a polyline or an area), `terrain_unbuildable`, `off_surface` (no vertex of them on the
-/// surface), `layer_locked`.
+/// `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
+/// object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
+/// range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+/// vertex of them, or of the range, on the surface), `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -250,10 +256,32 @@ pub struct EntitiesDrape {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub breaks: bool,
+    /// Docs/adr/4580: the height above (positive) or below (negative) the surface, m.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub offset: Option<f64>,
+    /// Docs/adr/4580: only these vertices of the one object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub range: Option<DrapeRange>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DrapeRange {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub from: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub to: u32,
 }
 
 /// One object as `cad.entities.drape` leaves it: its vertices given the surface's height, those off the surface (kept

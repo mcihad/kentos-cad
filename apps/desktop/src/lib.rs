@@ -384,6 +384,8 @@ mod grade_reference_tests;
 #[cfg(test)]
 mod grade_surface_tests;
 #[cfg(test)]
+mod grade_surface_relative_tests;
+#[cfg(test)]
 mod grade_window_tests;
 #[cfg(test)]
 mod clean_report_window_tests;

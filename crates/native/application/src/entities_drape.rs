@@ -3,13 +3,16 @@
 //! the project's terrain surface's height under it, read by the surface's own query; a vertex off the surface keeps
 //! its own. With `breaks` (Insert Intermediate Grade Break Points) a vertex with the surface's height goes wherever a
 //! straight edge crosses an edge of the surface's triangles: in polylines and areas that carry no measures (M) nor
-//! widths; an arc is not split, a line keeps its two ends. The heights are not kept tied to the surface. One undo step.
-//! The shared cases are `fixtures/commands/v1/cad.entities.drape.json`.
+//! widths; an arc is not split, a line keeps its two ends. Docs/adr/4580: with `offset` (Relative Elevation to Surface's
+//! offset) every height is the surface's plus it; with `range` (Partial) only one object's vertices from `from` to `to`
+//! (a line's ends, a polyline's or an area's outer ring) take heights, only the edges between them break points. The
+//! heights are not kept tied to the surface. One undo step. The shared cases are
+//! `fixtures/commands/v1/cad.entities.drape.json`.
 
 use std::collections::{BTreeSet, HashSet};
 
 use kentos_commands::{
-    CommandResult, DrapedObject, EntitiesDrape, EntitiesDraped, Entity, MAX_DRAPED, Vec2,
+    CommandResult, DrapeRange, DrapedObject, EntitiesDrape, EntitiesDraped, Entity, MAX_DRAPED, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_road::surface::Surface;
@@ -76,10 +79,28 @@ fn crossings(p: Vec2, q: Vec2, edges: &[([f64; 2], [f64; 2])]) -> Vec<f64> {
     ts
 }
 
-/// A ring's or a path's vertices draped: each takes the surface's height (one off it keeps its own); with `split`
-/// each straight edge (bulge 0) is split where it crosses the surface's edges, the new vertex with the surface's height
-/// and no bulge. The new vertices, bulges (as long as the old ones were, per vertex) and elevations; how many were set,
-/// how many are off the surface, how many went in.
+/// How a ring is draped: the height over the surface and the vertices taken (docs/adr/4580; none: all).
+#[derive(Clone, Copy)]
+struct Over {
+    offset: f64,
+    range: Option<(usize, usize)>,
+}
+
+impl Over {
+    fn takes(&self, k: usize) -> bool {
+        self.range.is_none_or(|(a, b)| a <= k && k <= b)
+    }
+
+    /// Whether the edge from vertex `k` (to the next) is in the range: the closing edge never is with a range.
+    fn edge(&self, k: usize) -> bool {
+        self.range.is_none_or(|(a, b)| a <= k && k < b)
+    }
+}
+
+/// A ring's or a path's vertices draped: each taken takes the surface's height plus the offset (one off it keeps its
+/// own; one not taken is left); with `split` each straight edge (bulge 0) taken is split where it crosses the surface's
+/// edges, the new vertex with the surface's height plus the offset and no bulge. The new vertices, bulges (as long as
+/// the old ones were, per vertex) and elevations; how many were set, how many are off the surface, how many went in.
 #[allow(clippy::type_complexity)]
 fn ring(
     pts: &[Vec2],
@@ -88,6 +109,7 @@ fn ring(
     closed: bool,
     surface: &Surface,
     edges: Option<&[([f64; 2], [f64; 2])]>,
+    over: Over,
 ) -> (Vec<Vec2>, Option<Vec<f64>>, Vec<Option<f64>>, u32, u32, u32) {
     let n = pts.len();
     let (mut set, mut outside, mut inserted) = (0u32, 0u32, 0u32);
@@ -97,14 +119,18 @@ fn ring(
     for k in 0..n {
         let p = pts[k];
         let own = zs.and_then(|z| z.get(k).copied().flatten());
-        match surface.height(p.x, p.y).z {
-            Some(h) => {
-                set += 1;
-                out_zs.push(Some(h));
-            }
-            None => {
-                outside += 1;
-                out_zs.push(own);
+        if !over.takes(k) {
+            out_zs.push(own);
+        } else {
+            match surface.height(p.x, p.y).z {
+                Some(h) => {
+                    set += 1;
+                    out_zs.push(Some(h + over.offset));
+                }
+                None => {
+                    outside += 1;
+                    out_zs.push(own);
+                }
             }
         }
         out_pts.push(p);
@@ -121,14 +147,14 @@ fn ring(
             None
         };
         let (Some(edges), Some(q)) = (edges, next) else { continue };
-        if bulge.unwrap_or(0.0) != 0.0 {
+        if bulge.unwrap_or(0.0) != 0.0 || !over.edge(k) {
             continue;
         }
         for t in crossings(p, q, edges) {
             let at = Vec2 { x: p.x + t * (q.x - p.x), y: p.y + t * (q.y - p.y) };
             let Some(h) = surface.height(at.x, at.y).z else { continue };
             out_pts.push(at);
-            out_zs.push(Some(h));
+            out_zs.push(Some(h + over.offset));
             // An inserted vertex's edge is straight; the list keeps its length's meaning (per vertex) only when the old
             // one had this edge's entry.
             if let (Some(list), Some(_)) = (out_bulges.as_mut(), bulge) {
@@ -145,8 +171,15 @@ fn stored(zs: Vec<Option<f64>>) -> Option<Vec<Option<f64>>> {
     zs.iter().any(Option::is_some).then_some(zs)
 }
 
-/// An object draped, and its row; none for a kind without vertices.
-fn draped(e: &Entity, uid: &str, surface: &Surface, edges: Option<&[([f64; 2], [f64; 2])]>) -> Option<(Entity, DrapedObject)> {
+/// An object draped, and its row; none for a kind without vertices. With a range (docs/adr/4580) only the outer ring's
+/// (the first part's) vertices in it, a line's ends in it.
+fn draped(
+    e: &Entity,
+    uid: &str,
+    surface: &Surface,
+    edges: Option<&[([f64; 2], [f64; 2])]>,
+    over: Over,
+) -> Option<(Entity, DrapedObject)> {
     let mut row = DrapedObject { uid: uid.to_owned(), set: 0, outside: 0, inserted: 0, unsplit: false };
     let mut next = e.clone();
     let count = |s: u32, o: u32, i: u32, row: &mut DrapedObject| {
@@ -157,16 +190,19 @@ fn draped(e: &Entity, uid: &str, surface: &Surface, edges: Option<&[([f64; 2], [
     match &mut next {
         Entity::Point(p) => match surface.height(p.p.x, p.p.y).z {
             Some(h) => {
-                p.z = Some(h);
+                p.z = Some(h + over.offset);
                 count(1, 0, 0, &mut row);
             }
             None => count(0, 1, 0, &mut row),
         },
         Entity::Line(l) => {
-            for (at, z) in [(l.a, &mut l.za), (l.b, &mut l.zb)] {
+            for (k, (at, z)) in [(l.a, &mut l.za), (l.b, &mut l.zb)].into_iter().enumerate() {
+                if !over.takes(k) {
+                    continue;
+                }
                 match surface.height(at.x, at.y).z {
                     Some(h) => {
-                        *z = Some(h);
+                        *z = Some(h + over.offset);
                         count(1, 0, 0, &mut row);
                     }
                     None => count(0, 1, 0, &mut row),
@@ -180,26 +216,32 @@ fn draped(e: &Entity, uid: &str, surface: &Surface, edges: Option<&[([f64; 2], [
                 || p.parts.iter().flatten().any(|q| q.ms.as_ref().is_some_and(|m| m.iter().any(Option::is_some)))
                 || p.widths.is_some();
             let split = if measured { None } else { edges };
-            let (pts, bulges, zs, s, o, i) = ring(&p.pts, p.bulges.as_ref(), p.zs.as_ref(), area || p.closed, surface, split);
+            let (pts, bulges, zs, s, o, i) = ring(&p.pts, p.bulges.as_ref(), p.zs.as_ref(), area || p.closed, surface, split, over);
             p.pts = pts;
             p.bulges = bulges;
             p.zs = stored(zs);
             count(s, o, i, &mut row);
+            // With a range only the outer ring (of the first part) takes heights.
+            let whole = Over { range: None, ..over };
+            if over.range.is_some() {
+                row.unsplit = edges.is_some() && measured;
+                return Some((next, row));
+            }
             for h in p.holes.iter_mut().flatten() {
-                let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split);
+                let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split, whole);
                 h.pts = pts;
                 h.bulges = bulges;
                 h.zs = stored(zs);
                 count(s, o, i, &mut row);
             }
             for part in p.parts.iter_mut().flatten() {
-                let (pts, bulges, zs, s, o, i) = ring(&part.pts, part.bulges.as_ref(), part.zs.as_ref(), area, surface, split);
+                let (pts, bulges, zs, s, o, i) = ring(&part.pts, part.bulges.as_ref(), part.zs.as_ref(), area, surface, split, whole);
                 part.pts = pts;
                 part.bulges = bulges;
                 part.zs = stored(zs);
                 count(s, o, i, &mut row);
                 for h in part.holes.iter_mut().flatten() {
-                    let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split);
+                    let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split, whole);
                     h.pts = pts;
                     h.bulges = bulges;
                     h.zs = stored(zs);
@@ -235,6 +277,17 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
             return Err(fail(codes::INVALID_INPUT, format!("“{uid}” nesnesi iki kez verildi."), &format!("uids[{i}]")));
         }
     }
+    // Docs/adr/4580: the height over the surface and the range.
+    if input.offset.is_some_and(|v| !v.is_finite()) {
+        return Err(fail(codes::INVALID_INPUT, "Yüzeyle kot farkı sonlu bir sayı olmalı (m).".into(), "offset"));
+    }
+    if input.range.is_some() && input.uids.len() != 1 {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Köşe aralığı tek bir nesneye verilir; {} nesne verildi.", input.uids.len()),
+            "range",
+        ));
+    }
     let mut objects = Vec::with_capacity(input.uids.len());
     for (i, uid) in input.uids.iter().enumerate() {
         let path = format!("uids[{i}]");
@@ -258,16 +311,37 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
                 &path,
             ));
         }
+        if let Some(DrapeRange { from, to }) = input.range {
+            let count = match e {
+                Entity::Line(_) => 2,
+                Entity::Polyline(p) | Entity::Polygon(p) => p.pts.len(),
+                _ => {
+                    return Err(fail(
+                        codes::NOT_A_PATH,
+                        "Nokta tek köşelidir: köşe aralığı çizgi, çoklu çizgi ya da alanın köşelerine verilir.".into(),
+                        "range",
+                    ));
+                }
+            };
+            if !(from < to && (to as usize) < count) {
+                return Err(fail(
+                    codes::WRONG_PLACE,
+                    format!("Köşe aralığı {from}–{to} olamaz: nesnenin {count} köşesi var (0'dan), başlangıç bitişten önce olmalı."),
+                    "range",
+                ));
+            }
+        }
         objects.push((slot, e.clone(), uid.clone()));
     }
     let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let edges = input.breaks.then(|| edges_of(surface));
+    let over = Over { offset: input.offset.unwrap_or(0.0), range: input.range.map(|r| (r.from as usize, r.to as usize)) };
     let mut changed = Vec::new();
     let mut rows = Vec::new();
     for (slot, e, uid) in &objects {
-        let Some((after, row)) = draped(e, uid, surface, edges.as_deref()) else { continue };
+        let Some((after, row)) = draped(e, uid, surface, edges.as_deref(), over) else { continue };
         changed.push((*slot, after));
         rows.push(row);
     }
@@ -275,7 +349,13 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
     if set == 0 {
         return Err(fail(
             codes::OFF_SURFACE,
-            format!("Nesnelerin hiçbir köşesi “{}” yüzeyinin üstünde değil; yüzeyin içindeki nesneleri seçin.", def.name),
+            match input.range {
+                Some(r) => format!(
+                    "Köşe aralığının ({}–{}) hiçbir köşesi “{}” yüzeyinin üstünde değil; aralığı yüzeyin içinde seçin.",
+                    r.from, r.to, def.name
+                ),
+                None => format!("Nesnelerin hiçbir köşesi “{}” yüzeyinin üstünde değil; yüzeyin içindeki nesneleri seçin.", def.name),
+            },
             "uids",
         ));
     }

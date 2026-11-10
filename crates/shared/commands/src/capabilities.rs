@@ -2480,7 +2480,7 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
-    // Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180).
+    // Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180; the range's wrong_place, docs/adr/4580).
     Entry {
         id: "cad.entities.drape",
         refusals: &[
@@ -2492,6 +2492,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_uid",
                 "entity_not_found",
                 "not_a_path",
+                "wrong_place",
                 "terrain_unbuildable",
                 "off_surface",
                 "layer_locked",

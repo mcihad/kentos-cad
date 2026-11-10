@@ -25,6 +25,7 @@ from .types import (  # noqa: F401
     DivideEnds,
     DivideEndsName,
     Division,
+    DrapeRange,
     EditOperation,
     EditOperationName,
     EntitiesAdjoin,
@@ -1839,10 +1840,16 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
     Points gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü (M) ya da genişlikli çoklu
     çizgi bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz. Cevap: her nesnenin kot
     verilen, yüzey dışında kalan ve eklenen köşe sayısı ve toplamlar. Tek geri alma
-    adımı “Yüzeyden kot ver”. Retler: invalid_revision, revision_conflict,
+    adımı “Yüzeyden kot ver”. offset (ADR 4580, Civil 3D'nin Relative Elevation to
+    Surface farkı) köşelere yüzeyin kotu artı bu farkı verir (artı üstte, eksi altta);
+    range (Partial) tek nesnenin from ile to arasındaki köşelerine (çizginin uçları,
+    çoklu çizginin ya da alanın dış halkası, 0'dan) kot verir, ara kırık noktası yalnız
+    aradaki kenarlara girer. Retler: invalid_revision, revision_conflict,
     not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10 000'den çok, biri
-    iki kez), invalid_uid, entity_not_found, not_a_path, terrain_unbuildable,
-    off_surface (yüzeyde köşe yok), layer_locked.
+    iki kez, kot farkı sonlu değil, aralık birden çok nesneye), invalid_uid,
+    entity_not_found, not_a_path (noktaya aralık da), wrong_place (aralık köşelerin
+    dışında ya da başı sonundan önce değil), terrain_unbuildable, off_surface (yüzeyde
+    köşe yok), layer_locked.
     """
     __slots__ = ()
     id = "cad.entities.drape"
@@ -1862,6 +1869,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
         surface: str,
         breaks: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        offset: float | None | Unset = UNSET,
+        range: DrapeRange | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesDraped:
@@ -1873,11 +1882,16 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
         eklenir (Insert Intermediate Grade Break Points gibi); yay bölünmez, çizgi iki ucunu
         tutar, ölçülü (M) ya da genişlikli çoklu çizgi bölünmez (unsplit). Kotlar yüzeye
         bağlı kalmaz. Cevap: her nesnenin kot verilen, yüzey dışında kalan ve eklenen köşe
-        sayısı ve toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. Retler:
-        invalid_revision, revision_conflict, not_a_road_project, unknown_terrain,
-        invalid_input (nesne yok, 10 000'den çok, biri iki kez), invalid_uid,
-        entity_not_found, not_a_path, terrain_unbuildable, off_surface (yüzeyde köşe yok),
-        layer_locked.
+        sayısı ve toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. offset (ADR 4580, Civil
+        3D'nin Relative Elevation to Surface farkı) köşelere yüzeyin kotu artı bu farkı
+        verir (artı üstte, eksi altta); range (Partial) tek nesnenin from ile to arasındaki
+        köşelerine (çizginin uçları, çoklu çizginin ya da alanın dış halkası, 0'dan) kot
+        verir, ara kırık noktası yalnız aradaki kenarlara girer. Retler: invalid_revision,
+        revision_conflict, not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10
+        000'den çok, biri iki kez, kot farkı sonlu değil, aralık birden çok nesneye),
+        invalid_uid, entity_not_found, not_a_path (noktaya aralık da), wrong_place (aralık
+        köşelerin dışında ya da başı sonundan önce değil), terrain_unbuildable, off_surface
+        (yüzeyde köşe yok), layer_locked.
 
         Args:
             doc: The drawing it works on.
@@ -1885,6 +1899,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
             surface:
             breaks:
             expected_revision:
+            offset: Docs/adr/4580: the height above (positive) or below (negative) the surface, m. Unit: m.
+            range: Docs/adr/4580: only these vertices of the one object.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1902,6 +1918,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
             surface=surface,
             breaks=breaks,
             expected_revision=expected_revision,
+            offset=offset,
+            range=range,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1913,6 +1931,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
         surface: str,
         breaks: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        offset: float | None | Unset = UNSET,
+        range: DrapeRange | None | Unset = UNSET,
     ) -> EntitiesDraped:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -1922,6 +1942,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
             surface=surface,
             breaks=breaks,
             expected_revision=expected_revision,
+            offset=offset,
+            range=range,
         ))
 
     def validate(
@@ -1933,6 +1955,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
         surface: str,
         breaks: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        offset: float | None | Unset = UNSET,
+        range: DrapeRange | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1942,6 +1966,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
             surface=surface,
             breaks=breaks,
             expected_revision=expected_revision,
+            offset=offset,
+            range=range,
         ))
 
     def answer(
@@ -1953,6 +1979,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
         surface: str,
         breaks: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        offset: float | None | Unset = UNSET,
+        range: DrapeRange | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1967,6 +1995,8 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
             surface=surface,
             breaks=breaks,
             expected_revision=expected_revision,
+            offset=offset,
+            range=range,
         ), op=op, request_id=request_id, expected=expected)
 
 

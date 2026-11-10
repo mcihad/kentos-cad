@@ -4,7 +4,7 @@
  "command": "cad.entities.drape",
  "commandVersion": 1,
  "title": "Yüzeyden kot ver",
- "note": "ADR 4180. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört noktanın Delaunay üçgenleri boş çember sınamasıyla, düzlem kotları ve kenar kesişimleri kesirlerle; KentOS kodu yok.",
+ "note": "ADR 4180 ve 4580. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört noktanın Delaunay üçgenleri boş çember sınamasıyla, düzlem kotları ve kenar kesişimleri kesirlerle; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -2899,6 +2899,1016 @@
        "code": "layer_locked",
        "message": "“Kilitli” katmanı kilitli: nesnenin kotları yazılamaz. Kilidi açın.",
        "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kot farkı 0,15 m: her köşe ve ara kırık noktası yüzeyin 0,15 m üstünde; dışındaki kendi kotunu korur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-000000000006",
+       "0192f5c0-4180-7000-8000-000000000007",
+       "0192f5c0-4180-7000-8000-000000000008",
+       "0192f5c0-4180-7000-8000-000000000009"
+      ],
+      "surface": "t-1",
+      "breaks": true,
+      "offset": 0.15
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000005",
+         "set": 1,
+         "outside": 0,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000006",
+         "set": 0,
+         "outside": 1,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000007",
+         "set": 1,
+         "outside": 1,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 3,
+         "outside": 0,
+         "inserted": 1
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000009",
+         "set": 8,
+         "outside": 0,
+         "inserted": 4
+        }
+       ],
+       "set": 13,
+       "outside": 2,
+       "inserted": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "5": {
+        "z": 104.55
+       },
+       "6": {
+        "z": 99.0
+       },
+       "7": {
+        "za": 103.39,
+        "zb": 98.5
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400036.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         103.87,
+         105.55,
+         105.55,
+         104.75
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400056.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400024.0
+         }
+        ],
+        "zs": [
+         102.35,
+         103.95,
+         108.55,
+         108.79,
+         105.91,
+         103.75
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500047.5,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400032.0
+           }
+          ],
+          "zs": [
+           104.75,
+           105.23,
+           106.03,
+           105.85,
+           105.31,
+           104.95
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "5": {},
+       "6": {
+        "z": 99.0
+       },
+       "7": {
+        "zb": 98.5
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kot farkı eksi: kotlu çoklu çizgi yüzeyin 0,5 m altına iner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-00000000000f"
+      ],
+      "surface": "t-1",
+      "offset": -0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000f",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 2,
+       "outside": 0,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "15": {
+        "pts": [
+         {
+          "x": 500015.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400020.0
+         }
+        ],
+        "zs": [
+         101.78,
+         103.3
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "15": {
+        "pts": [
+         {
+          "x": 500015.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400020.0
+         }
+        ],
+        "zs": [
+         90.0,
+         91.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık 0–1: köşegeni kesen ilk kenar ara kırık noktası alır, üçüncü köşe kotsuz kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000008"
+      ],
+      "surface": "t-1",
+      "breaks": true,
+      "range": {
+       "from": 0,
+       "to": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 2,
+         "outside": 0,
+         "inserted": 1
+        }
+       ],
+       "set": 2,
+       "outside": 0,
+       "inserted": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400036.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         103.72,
+         105.4,
+         105.4,
+         null
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık 1–2: köşegeni kesen kenar aralığın dışında, bölünmez; ilk köşe kotsuz kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000008"
+      ],
+      "surface": "t-1",
+      "breaks": true,
+      "range": {
+       "from": 1,
+       "to": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 2,
+       "outside": 0,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         null,
+         105.4,
+         104.6
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık 0–2, kot farkıyla: alanın dış halkasında üç köşe ve bir ara kırık noktası; kapanış kenarı ve delik olduğu gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000009"
+      ],
+      "surface": "t-1",
+      "breaks": true,
+      "offset": 0.15,
+      "range": {
+       "from": 0,
+       "to": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000009",
+         "set": 3,
+         "outside": 0,
+         "inserted": 1
+        }
+       ],
+       "set": 3,
+       "outside": 0,
+       "inserted": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400056.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         }
+        ],
+        "zs": [
+         102.35,
+         103.95,
+         108.55,
+         108.79,
+         null
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık, iki parçalı çoklu çizgi: yalnız ilk parça kot alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000011"
+      ],
+      "surface": "t-1",
+      "breaks": true,
+      "range": {
+       "from": 0,
+       "to": 1
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000011",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 2,
+       "outside": 0,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "17": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400090.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400060.0
+         }
+        ],
+        "zs": [
+         106.12,
+         106.48
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500060.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500070.0,
+            "y": 4400070.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "17": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400090.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400060.0
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500060.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500070.0,
+            "y": 4400070.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000009"
+      ],
+      "surface": "t-1",
+      "breaks": true,
+      "range": {
+       "from": 0,
+       "to": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000009",
+         "set": 3,
+         "outside": 0,
+         "inserted": 1
+        }
+       ],
+       "set": 3,
+       "outside": 0,
+       "inserted": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kot farkı sonlu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1",
+      "offset": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Yüzeyle kot farkı sonlu bir sayı olmalı (m).",
+       "path": "offset"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "nonFinite": {
+      "offset": "NaN"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık iki nesneye verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000008",
+       "0192f5c0-4180-7000-8000-000000000009"
+      ],
+      "surface": "t-1",
+      "range": {
+       "from": 0,
+       "to": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Köşe aralığı tek bir nesneye verilir; 2 nesne verildi.",
+       "path": "range"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Noktaya aralık verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1",
+      "range": {
+       "from": 0,
+       "to": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_path",
+       "message": "Nokta tek köşelidir: köşe aralığı çizgi, çoklu çizgi ya da alanın köşelerine verilir.",
+       "path": "range"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralığın başı sonundan önce değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000008"
+      ],
+      "surface": "t-1",
+      "range": {
+       "from": 2,
+       "to": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Köşe aralığı 2–1 olamaz: nesnenin 3 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+       "path": "range"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralık köşelerin dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000008"
+      ],
+      "surface": "t-1",
+      "range": {
+       "from": 1,
+       "to": 3
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Köşe aralığı 1–3 olamaz: nesnenin 3 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+       "path": "range"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aralığın hiçbir köşesi yüzeyde değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-00000000000e"
+      ],
+      "surface": "t-1",
+      "range": {
+       "from": 0,
+       "to": 1
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "off_surface",
+       "message": "Köşe aralığının (0–1) hiçbir köşesi “Zemin” yüzeyinin üstünde değil; aralığı yüzeyin içinde seçin.",
+       "path": "uids"
       }
      },
      "expect": {

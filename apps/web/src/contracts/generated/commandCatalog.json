@@ -56916,7 +56916,7 @@
       "id": "cad.entities.drape",
       "version": 1,
       "title": "Yüzeyden kot ver",
-      "summary": "Noktaların, çizgilerin, çoklu çizgilerin ve alanların her köşesine (her parça ve delik) projenin arazi yüzeyinin altındaki kotunu verir (Civil 3D'nin Elevations From Surface'ı gibi; ADR 4180); yüzeyin dışındaki köşe kendi kotunu korur. surface Harita ya da Yol projesinin yüzeyinin kimliği ya da adıdır. breaks ile düz bir kenarın yüzeyin üçgenlerinin kenarlarını kestiği her yere kotlu ara köşe eklenir (Insert Intermediate Grade Break Points gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü (M) ya da genişlikli çoklu çizgi bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz. Cevap: her nesnenin kot verilen, yüzey dışında kalan ve eklenen köşe sayısı ve toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10 000'den çok, biri iki kez), invalid_uid, entity_not_found, not_a_path, terrain_unbuildable, off_surface (yüzeyde köşe yok), layer_locked.",
+      "summary": "Noktaların, çizgilerin, çoklu çizgilerin ve alanların her köşesine (her parça ve delik) projenin arazi yüzeyinin altındaki kotunu verir (Civil 3D'nin Elevations From Surface'ı gibi; ADR 4180); yüzeyin dışındaki köşe kendi kotunu korur. surface Harita ya da Yol projesinin yüzeyinin kimliği ya da adıdır. breaks ile düz bir kenarın yüzeyin üçgenlerinin kenarlarını kestiği her yere kotlu ara köşe eklenir (Insert Intermediate Grade Break Points gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü (M) ya da genişlikli çoklu çizgi bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz. Cevap: her nesnenin kot verilen, yüzey dışında kalan ve eklenen köşe sayısı ve toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. offset (ADR 4580, Civil 3D'nin Relative Elevation to Surface farkı) köşelere yüzeyin kotu artı bu farkı verir (artı üstte, eksi altta); range (Partial) tek nesnenin from ile to arasındaki köşelerine (çizginin uçları, çoklu çizginin ya da alanın dış halkası, 0'dan) kot verir, ara kırık noktası yalnız aradaki kenarlara girer. Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10 000'den çok, biri iki kez, kot farkı sonlu değil, aralık birden çok nesneye), invalid_uid, entity_not_found, not_a_path (noktaya aralık da), wrong_place (aralık köşelerin dışında ya da başı sonundan önce değil), terrain_unbuildable, off_surface (yüzeyde köşe yok), layer_locked.",
       "aliases": [
         "yuzeydenkot",
         "drape",
@@ -56936,7 +56936,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),\nthe map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go\nonly into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line\nkeeps its two ends.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,\n`invalid_input` (no object, more than 10 000, one given twice), `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a point, a line, a polyline or an area), `terrain_unbuildable`, `off_surface` (no vertex of them on the\nsurface), `layer_locked`.",
+        "description": "Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),\nthe map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go\nonly into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line\nkeeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;\nnone: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's\nvertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,\n`invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one\nobject), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a\nrange), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no\nvertex of them, or of the range, on the surface), `layer_locked`.",
         "properties": {
           "breaks": {
             "type": "boolean"
@@ -56947,6 +56947,26 @@
               "string",
               "null"
             ]
+          },
+          "offset": {
+            "description": "Docs/adr/4580: the height above (positive) or below (negative) the surface, m.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrapeRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Docs/adr/4580: only these vertices of the one object."
           },
           "surface": {
             "type": "string"
@@ -57067,6 +57087,7 @@
           "invalid_uid",
           "entity_not_found",
           "not_a_path",
+          "wrong_place",
           "terrain_unbuildable",
           "off_surface",
           "layer_locked"
@@ -57077,6 +57098,20 @@
           "title": "Bordür çizgisi zemin yüzeyinden, ara kırık noktalarıyla",
           "input": {
             "breaks": true,
+            "surface": "Zemin",
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+            ]
+          }
+        },
+        {
+          "title": "Bordür üstü zeminin 15 cm üstünde, yalnız 2.–5. köşeler",
+          "input": {
+            "offset": 0.15,
+            "range": {
+              "from": 1,
+              "to": 4
+            },
             "surface": "Zemin",
             "uids": [
               "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
@@ -133579,6 +133614,29 @@
       },
       "required": [
         "surface"
+      ],
+      "type": "object"
+    },
+    "DrapeRange": {
+      "additionalProperties": false,
+      "description": "The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.",
+      "properties": {
+        "from": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "to": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "from",
+        "to"
       ],
       "type": "object"
     },

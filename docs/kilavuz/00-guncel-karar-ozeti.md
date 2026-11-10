@@ -273,6 +273,10 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Yüzeyden kot ver'de göreli kot ve aralık (10 Kasım 2026; MAP-06, [ADR 4580](../../docs/adr/4580-drape-relative-height-and-range.md)).**
+  `cad.entities.drape`'in `offset`'i (yüzeyin kotu artı fark) ve `range`'i (tek nesnenin köşe aralığı, dış halka; kırık
+  noktası yalnız aradaki kenarlarda); yeni `wrong_place`. Eğimle kot ver › Yüzeyden › Kot farkı ve Aralık. Kotlar yüzeye
+  bağlı kalmaz. CAD (Harita + Yol).
 - **GNSS ağının seyrek çözümü (10 Kasım 2026; MAP-05, [ADR 4560](../../docs/adr/4560-gnss-network-sparse-solution.md)).**
   `gnss::adjust`: ters Cuthill–McKee sırası, zarfında Cholesky, Takahashi ile seçili ters; 1500 bilinmeyen sınırı yerine
   zarf en çok 30 milyon girdi (19 600 istasyon 6 s, sürüm). GNSS baz ağı özeti ağın büyüklüğünü söyler. Harita + CBS.

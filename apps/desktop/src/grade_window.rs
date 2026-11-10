@@ -113,9 +113,12 @@ pub struct State {
     pub by: By,
     pub difference: f64,
     pub raised: Option<Result<EntitiesRaised, String>>,
-    /// Yüzeyden (docs/adr/4180): the surface's id, whether break points go in, the command's plan.
+    /// Yüzeyden (docs/adr/4180): the surface's id, whether break points go in, the command's plan; the height over the
+    /// surface and whether only the range from Başlangıç to Bitiş takes heights (docs/adr/4580).
     pub surface: String,
     pub breaks: bool,
+    pub above: f64,
+    pub partial: bool,
     pub draped: Option<Result<kentos_commands::EntitiesDraped, String>>,
 }
 
@@ -136,9 +139,11 @@ pub enum Event {
     Height(f64),
     By(By),
     Difference(f64),
-    /// Yüzeyden's surface and break points.
+    /// Yüzeyden's surface and break points; the height over it and the range (docs/adr/4580).
     Surface(String),
     Breaks(bool),
+    Above(f64),
+    Partial(bool),
     /// Sahneden seç: the range by two clicks, its start then its end; for Referanstan the reference, then the vertex.
     Pick,
     Apply,
@@ -233,6 +238,8 @@ impl App {
             raised: None,
             surface: self.grade_surfaces().first().map(|(id, _)| id.clone()).unwrap_or_default(),
             breaks: false,
+            above: 0.0,
+            partial: false,
             draped: None,
         };
         self.grade_plan();
@@ -258,6 +265,8 @@ impl App {
             Event::Difference(v) => self.grade.difference = v,
             Event::Surface(id) => self.grade.surface = id,
             Event::Breaks(on) => self.grade.breaks = on,
+            Event::Above(v) => self.grade.above = v,
+            Event::Partial(on) => self.grade.partial = on,
             Event::Pick => {
                 let first = if self.grade.target == Target::Reference { Pick::Reference } else { Pick::Start };
                 self.start_grade_pick(first);
@@ -339,8 +348,8 @@ impl App {
         if open && self.grade.target == Target::Reference {
             return self.reference_marks();
         }
-        // Yüzeyden takes the whole object: no range to mark.
-        if self.grade.target == Target::Surface {
+        // Yüzeyden takes the whole object unless its range is on (docs/adr/4580): then the range is marked too.
+        if self.grade.target == Target::Surface && !self.grade.partial {
             return (Vec::new(), Vec::new());
         }
         let Some(doc) = self.document.as_ref().filter(|_| open) else { return (Vec::new(), Vec::new()) };

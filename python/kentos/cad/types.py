@@ -30816,6 +30816,30 @@ class DrainageQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DrapeRange(_Model):
+    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.
+    Attributes:
+        from_: Unit: index.
+        to: Unit: index.
+    """
+    from_: int
+    to: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrapeRange:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DrapedObject(_Model):
     """One object as `cad.entities.drape` leaves it: its vertices given the surface's height, those off the surface (kept
     as they were), the break points put in, and whether breaks were asked of an object that takes none (a point, a
@@ -33139,17 +33163,25 @@ class EntitiesDrape(_Model):
     """Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),
     the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
     only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
-    keeps its two ends.
+    keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
+    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
+    vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
-    `invalid_input` (no object, more than 10 000, one given twice), `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a point, a line, a polyline or an area), `terrain_unbuildable`, `off_surface` (no vertex of them on the
-    surface), `layer_locked`.
+    `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
+    object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
+    range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+    vertex of them, or of the range, on the surface), `layer_locked`.
+    Attributes:
+        offset: Docs/adr/4580: the height above (positive) or below (negative) the surface, m. Unit: m.
+        range: Docs/adr/4580: only these vertices of the one object.
     """
     uids: list[str]
     surface: str
     breaks: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    range: DrapeRange | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -33159,6 +33191,10 @@ class EntitiesDrape(_Model):
             out["breaks"] = self.breaks
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.range is not UNSET:
+            out["range"] = None if self.range is None else self.range.to_json()
         return out
 
     @classmethod
@@ -33168,6 +33204,8 @@ class EntitiesDrape(_Model):
             surface=data["surface"],
             breaks=data.get("breaks", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            range=UNSET if "range" not in data else None if data["range"] is None else DrapeRange.from_json(data["range"]),
         )
 
 
@@ -133392,6 +133430,7 @@ __all__ = [
     "DrainagePondsAsk",
     "DrainageQueried",
     "DrainageQuery",
+    "DrapeRange",
     "DrapedObject",
     "DrawingAudit",
     "DrawingAudited",

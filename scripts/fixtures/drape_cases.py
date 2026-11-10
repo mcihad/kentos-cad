@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.entities.drape` (Yüzeyden kot ver; plan/map-cad.md MAP-06, docs/adr/4180), without
-KentOS code.
+"""The shared cases of `cad.entities.drape` (Yüzeyden kot ver; plan/map-cad.md MAP-06, docs/adr/4180 and 4580),
+without KentOS code.
 
     python3 scripts/fixtures/drape_cases.py           # writes fixtures/commands/v1/cad.entities.drape.json
     python3 scripts/fixtures/drape_cases.py --check   # writes nothing; compares
@@ -18,7 +18,11 @@ Elevations From Surface):
   1e-9 m of an end is that end), with the surface's height there, in order along the edge, its bulge 0; an arc is not
   split; a point, a line and a polyline with measures take none and are `unsplit`;
 - the answer: each object's vertices set, outside and inserted, the totals and the surface's id; no vertex on the
-  surface: `off_surface`.
+  surface: `off_surface`;
+- ADR 4580 (Civil 3D's Relative Elevation to Surface offset and Partial): with `offset` every height taken (vertices
+  and break points) is the surface's plus it; with `range` (one object; a line's ends, a polyline's or an area's outer
+  ring's vertices, 0-based, from < to) only the vertices from `from` to `to` take heights and are counted, only the edges
+  between them (never the closing one) take break points, holes and further parts are left as they were.
 
 Heights and crossings are exact fractions in the project's own coordinates (from X0, Y0).
 """
@@ -122,21 +126,24 @@ def crossings(p, q):
     return sorted(set(out))
 
 
-def ring(pts, zs, bulges, closed, split):
-    """A ring draped: (pts, zs, bulges, set, outside, inserted)."""
+def ring(pts, zs, bulges, closed, split, offset=F(0), rng=None):
+    """A ring draped: (pts, zs, bulges, set, outside, inserted); `rng` the vertices taken (ADR 4580; none: all)."""
     n = len(pts)
     out_p, out_z, out_b = [], [], ([] if bulges is not None else None)
     s = o = ins = 0
     for k in range(n):
         x, y = local(pts[k])
-        h = height(x, y)
         own = zs[k] if zs is not None else None
-        if h is None:
+        taken = rng is None or rng[0] <= k <= rng[1]
+        h = height(x, y) if taken else None
+        if not taken:
+            out_z.append(own)
+        elif h is None:
             o += 1
             out_z.append(own)
         else:
             s += 1
-            out_z.append(float(h))
+            out_z.append(float(h + offset))
         out_p.append(pts[k])
         bulge = bulges[k] if bulges is not None and k < len(bulges) else None
         if out_b is not None and bulge is not None:
@@ -144,20 +151,23 @@ def ring(pts, zs, bulges, closed, split):
         nxt = k + 1 if k + 1 < n else (0 if closed and n > 2 else None)
         if not split or nxt is None or (bulge or 0.0) != 0.0:
             continue
+        # With a range only the edges from its first vertex to its last take break points (never the closing one).
+        if rng is not None and not (rng[0] <= k < rng[1]):
+            continue
         qx, qy = local(pts[nxt])
         for t in crossings((x, y), (qx, qy)):
             ax, ay = x + t * (qx - x), y + t * (qy - y)
             h = height(ax, ay)
             out_p.append({"x": X0 + float(ax), "y": Y0 + float(ay)})
-            out_z.append(float(h))
+            out_z.append(float(h + offset))
             if out_b is not None and bulge is not None:
                 out_b.append(0.0)
             ins += 1
     return out_p, out_z, out_b, s, o, ins
 
 
-def draped(e, split):
-    """The object after and its row (without the uid)."""
+def draped(e, split, offset=F(0), rng=None):
+    """The object after and its row (without the uid); `offset` and `rng` as ADR 4580's."""
     after = copy.deepcopy(e)
     row = {"set": 0, "outside": 0, "inserted": 0}
 
@@ -170,33 +180,36 @@ def draped(e, split):
         if h is None:
             add(0, 1, 0)
         else:
-            after["z"] = float(h)
+            after["z"] = float(h + offset)
             add(1, 0, 0)
     elif e["kind"] == "line":
-        for key, zk in (("a", "za"), ("b", "zb")):
+        for k, (key, zk) in enumerate((("a", "za"), ("b", "zb"))):
+            if rng is not None and not rng[0] <= k <= rng[1]:
+                continue
             h = height(*local(e[key]))
             if h is None:
                 add(0, 1, 0)
             else:
-                after[zk] = float(h)
+                after[zk] = float(h + offset)
                 add(1, 0, 0)
     else:
         area = e["kind"] == "polygon"
         measured = any(m is not None for m in e.get("ms", [])) or "widths" in e
         brk = split and not measured
 
-        def do(r, closed):
-            pts, zs, bulges, s, o, i = ring(r["pts"], r.get("zs"), r.get("bulges"), closed, brk)
+        def do(r, closed, within=None):
+            pts, zs, bulges, s, o, i = ring(r["pts"], r.get("zs"), r.get("bulges"), closed, brk, offset, within)
             r["pts"] = pts
             if any(z is not None for z in zs):
                 r["zs"] = zs
             if bulges is not None:
                 r["bulges"] = bulges
             add(s, o, i)
-        do(after, area or e.get("closed", False))
-        for h in after.get("holes", []):
+        do(after, area or e.get("closed", False), rng)
+        # With a range only the outer ring (the first part's) takes heights.
+        for h in ([] if rng is not None else after.get("holes", [])):
             do(h, True)
-        for part in after.get("parts", []):
+        for part in ([] if rng is not None else after.get("parts", [])):
             do(part, area)
             for h in part.get("holes", []):
                 do(h, True)
@@ -251,11 +264,11 @@ def setup(work="map", extra_surface=False):
 KEYS = ["z", "za", "zb", "pts", "zs", "bulges", "holes", "parts", "ms"]
 
 
-def ok(name, names, breaks=False, op="execute", surface="t-1", note=None):
+def ok(name, names, breaks=False, op="execute", surface="t-1", note=None, offset=None, rng=None):
     rows, fields = [], {}
     for n in names:
         e = ENTS[SLOT[n] - 1]
-        after, row = draped(e, breaks)
+        after, row = draped(e, breaks, F(str(offset)) if offset is not None else F(0), rng)
         rows.append(dict({"uid": uid(SLOT[n])}, **row))
         fields[str(SLOT[n])] = {k: after[k] for k in KEYS if k in after}
     totals = {k: sum(r[k] for r in rows) for k in ("set", "outside", "inserted")}
@@ -263,6 +276,10 @@ def ok(name, names, breaks=False, op="execute", surface="t-1", note=None):
     input_ = {"uids": [uid(SLOT[n]) for n in names], "surface": surface}
     if breaks:
         input_["breaks"] = True
+    if offset is not None:
+        input_["offset"] = offset
+    if rng is not None:
+        input_["range"] = {"from": rng[0], "to": rng[1]}
     if op == "validate":
         result = {"status": "completed", "output": None, "warnings": []}
     else:
@@ -345,12 +362,49 @@ def cases():
                 "seçin.", "uids"),
         refused("Kilitli katman", {"uids": [uid(SLOT["P1"]), uid(SLOT["LOCKED"])], "surface": "t-1"}, "layer_locked",
                 "“Kilitli” katmanı kilitli: nesnenin kotları yazılamaz. Kilidi açın.", "uids[1]"),
+    ] + relative_cases()
+
+
+def relative_cases():
+    """ADR 4580: the height over the surface (Relative Elevation to Surface's offset) and the range (Partial)."""
+    pl, poly, point = uid(SLOT["PL"]), uid(SLOT["POLY"]), uid(SLOT["P1"])
+    off_nan = refused("Kot farkı sonlu değil", {"uids": [point], "surface": "t-1", "offset": 0.0}, "invalid_input",
+                      "Yüzeyle kot farkı sonlu bir sayı olmalı (m).", "offset")
+    off_nan["steps"][0]["nonFinite"] = {"offset": "NaN"}
+    return [
+        ok("Kot farkı 0,15 m: her köşe ve ara kırık noktası yüzeyin 0,15 m üstünde; dışındaki kendi kotunu korur",
+           ["P1", "P2", "LINE", "PL", "POLY"], breaks=True, offset=0.15),
+        ok("Kot farkı eksi: kotlu çoklu çizgi yüzeyin 0,5 m altına iner", ["KOTLU"], offset=-0.5),
+        ok("Aralık 0–1: köşegeni kesen ilk kenar ara kırık noktası alır, üçüncü köşe kotsuz kalır", ["PL"], breaks=True,
+           rng=(0, 1)),
+        ok("Aralık 1–2: köşegeni kesen kenar aralığın dışında, bölünmez; ilk köşe kotsuz kalır", ["PL"], breaks=True,
+           rng=(1, 2)),
+        ok("Aralık 0–2, kot farkıyla: alanın dış halkasında üç köşe ve bir ara kırık noktası; kapanış kenarı ve delik "
+           "olduğu gibi", ["POLY"], breaks=True, offset=0.15, rng=(0, 2)),
+        ok("Aralık, iki parçalı çoklu çizgi: yalnız ilk parça kot alır", ["PARTS"], breaks=True, rng=(0, 1)),
+        ok("Aralık plan yazmaz", ["POLY"], breaks=True, rng=(0, 2), op="plan"),
+        off_nan,
+        refused("Aralık iki nesneye verilmez", {"uids": [pl, poly], "surface": "t-1", "range": {"from": 0, "to": 1}},
+                "invalid_input", "Köşe aralığı tek bir nesneye verilir; 2 nesne verildi.", "range"),
+        refused("Noktaya aralık verilmez", {"uids": [point], "surface": "t-1", "range": {"from": 0, "to": 1}},
+                "not_a_path", "Nokta tek köşelidir: köşe aralığı çizgi, çoklu çizgi ya da alanın köşelerine verilir.",
+                "range"),
+        refused("Aralığın başı sonundan önce değil", {"uids": [pl], "surface": "t-1", "range": {"from": 2, "to": 1}},
+                "wrong_place", "Köşe aralığı 2–1 olamaz: nesnenin 3 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+                "range"),
+        refused("Aralık köşelerin dışında", {"uids": [pl], "surface": "t-1", "range": {"from": 1, "to": 3}},
+                "wrong_place", "Köşe aralığı 1–3 olamaz: nesnenin 3 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+                "range"),
+        refused("Aralığın hiçbir köşesi yüzeyde değil", {"uids": [uid(SLOT["FAR"])], "surface": "t-1",
+                                                           "range": {"from": 0, "to": 1}}, "off_surface",
+                "Köşe aralığının (0–1) hiçbir köşesi “Zemin” yüzeyinin üstünde değil; aralığı yüzeyin içinde seçin.",
+                "uids"),
     ]
 
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.entities.drape", "commandVersion": 1,
-           "title": "Yüzeyden kot ver", "note": "ADR 4180. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört "
+           "title": "Yüzeyden kot ver", "note": "ADR 4180 ve 4580. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört "
            "noktanın Delaunay üçgenleri boş çember sınamasıyla, düzlem kotları ve kenar kesişimleri kesirlerle; "
            "KentOS kodu yok.", "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
