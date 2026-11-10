@@ -96,7 +96,7 @@ projede çatı planını ister.
   alçak ucu saçağın dışa dönen köşesindeyse kırma, içe dönendeyse dere, değilse mahya (yatay ya da iki iç nokta arasında
   eğik). Mahya yüksekliği yüzlerin köşelerinin en yükseği.
 - Saat yönünde verilen saçak çizgisi ters çevrilir, kenarlar eğimlerini korur.
-- **Henüz yok:** içe dönen köşesi olan saçak çizgisi (L, T): düz iskeleti bölünme olayları ister; reddedilir (§9).
+- **Henüz yok:** içe dönen köşesi olan saçak çizgisi (L, T): düz iskeleti bölünme olayları ister; reddedilir (§10).
 - **Bağımsız başvuru:** `scripts/fixtures/roof_cases.py` (KentOS kodu olmadan, tam kesirlerle) 9 durum: 12 × 9 m kırma
   (%33: mahya 3 m, 1,485 m yüksek), beşik (%40: mahya kalkandan kalkana, 1,80 m), tek eğim (%10: 0,90 m), düz, ön %30 arka
   %45 (mahya dik yüze kayar), saat yönünde beşik, kare kırma (mahyasız tepe), 6-8-10 kenarlı beşgen (iki eğik mahya, beş
@@ -139,9 +139,9 @@ projede çatı planını ister.
 - **Değerler ve harfler** (ADR 8003): Eğim **M** (Rampa'nın Eğim'i gibi; yüzde, `33` ya da `%33`), Saçak **A**, Kalınlık
   **E**, Kot farkı **F** (boş: çatı duvara oturur, §5), Kaplama **P** (K Kapat'ın), Kat **L**. Varsayılanlar: %33 (18°; kiremitli çatının olağan
   eğimi, Sivas İmar Yönetmeliği'nin %40'ının altında), saçak 50 cm (PAİY 42 en çok 1,00 m), kalınlık 25 cm, Kiremit.
-- **Önizleme** yazılacak çatıyı planıyla çizer; etiketi türünü, eğimini, mahyanın kotunu ve yüksekliğini söyler. Mahya
-  saçaktan 5,00 m'den yüksekse (PAİY 40/4) etiket kırmızıya döner ve "PAİY 40: mahya en çok 5,00 m yüksek olur" der;
-  yazmayı engellemez (denetim Mevzuat paneline gelecek).
+- **Önizleme** yazılacak çatıyı planıyla çizer; etiketi türünü, eğimini, mahyanın kotunu ve saçak seviyesinden (kot
+  farkı dahil; §9 denetimiyle aynı ölçü) yüksekliğini söyler. 5,00 m'yi aşarsa (PAİY 40/4) etiket kırmızıya döner ve
+  "PAİY 40: mahya en çok 5,00 m yüksek olur" der; yazmayı engellemez (denetim Mevzuat panelinde, §9).
 - Yazınca: "Kırma çatı çizildi; mahya +4.65. Kat planında saçağı kesikli; bütünü “Çatı” planında ve Bütün katlar'da."
   (üstte kat yoksa yalnız Bütün katlar). Önizleme bütün çatıyı çizer; yazılınca planda kesikli saçak kalır, kullanıcı
   çatısının nereye gittiğini aramasın diye söylenir. Araç açık kalır.
@@ -307,8 +307,30 @@ projede çatı planını ister.
   MM-YIBO-GENEL), ince ve taramasız; yüzleri cephe malzemesi olarak adlandırılmaz, boyun eğimi "%…" yazdırmaz.
 - **İniş borusu aracı köşede:** binadan çizilmiş çatıda köşeye tıklanan boru saçak ucundan saçak payı + 3 cm + yarıçap
   (50 cm saçakta 0,58 m) içeri alınır: duvarın köşesinden iner, binanın köşesinin ötesindeki boşluktan değil.
-- **Sonraya (5. bölümün devamı):** denetim: kar siperliği olmayan eğimli çatıya Sivas 42/5 uyarısı, PAİY 40/42 ve
-  BYKHY 58/2 sınırları.
+
+### 9. Çatının mevzuat denetimi (5. bölümün son adımı)
+
+Denetim › Mevzuat her çatıyı çizimden ölçer (`roof_audit`), bulgu ölçüyü, sınırı, maddeyi ve Resmî Gazete'yi yazar.
+Maddeler resmî metinden okundu: PAİY 40 ve 42 (RG 3.7.2017/30113; 40/5'e 25.2.2022'de yalnız fotovoltaik panel ibaresi
+eklendi), Sivas İmar Yönetmeliği 40/5 ve 42/5 (RG 10.11.2022/32009), BYKHY 58/2 (RG 19.12.2007/26735).
+
+| Kod | Kural | Ölçü |
+|---|---|---|
+| `paiy_ridge_high` | PAİY 40/4 "Mahya yüksekliği 5.00 metreyi geçmemek kaydıyla"; Sivas 40/5-g "mahya yüksekliği 4.00 m'yi geçmemek kaydıyla" | mahyanın tepesi saçak seviyesinden (PAİY 4/ppp "son kat tavan döşemesi üst kotu": çatının oturduğu katın tepesi, kot farkı sayılır) |
+| `paiy_eaves_wide` | PAİY 42/1 "1.00 metreyi geçmeyen saçak" | binadan çizilen çatının saçak payı (köşeleri çizilende bilinmez, okunmaz) |
+| `paiy_roof_vent_high` | PAİY 40/5 hava bacaları "çatı örtüsü düzlemlerini en fazla 0.60 metre aşabilir" | hava bacasının yüksekliği (en yüksek köşesinde, aracın koyduğu gibi); düzeltmesi 0,60 m |
+| `bykhy_chimney_low` | BYKHY 58/2 "bina mahyasının en az 0.8 m üzerine" | duman bacasının mahyayı aşan yüksekliği; düzeltmesi 0,80 m |
+| `local_roof_slope_steep` | Sivas 40/5-g "çatı yüzeyi en fazla % 40 eğimle" | en dik kenar; düzeltmesi dik kenarları %40'a indirir |
+| `local_snow_guard_missing` | Sivas 42/5 "kar siperliklerinin yapılması mecburidir" | eğimli çatıda kar siperliği; düzeltmesi saçaktan 30 cm |
+| `local_roof_window_large` | Sivas 40/5-e-2 "Çatı yüzeyine paralel pencere ölçüleri (en çok): 1.20 m X 1.50 m (en/boy)" | en saçak boyunca, boy çatının düzleminde eğim boyunca |
+| `local_roof_window_close` | Sivas 40/5-e-3 "bina cephe hatlarına 1 m'den ve birbirlerine 2 m'den fazla yaklaşamaz" | planda cephe hattına (saçaktan saçak payı içeride; köşeleri çizilende saçak); iki pencere arası çatının üstünde, uzayda |
+
+- `local_` kodları yalnız projenin yerel yönetmeliği Sivas iken okunur; Sivas'ın mahya sınırı PAİY'nin 5,00 m'sinin
+  üstüne okunur, sıkı olan bağlar ve iletide öbürü de yazılır ("4.47 m > 4.00 m — Sivas 40/5-g; PAİY 40/4: 5.00 m").
+  Kod adı belediyeye bağlı değil: başka bir yerel yönetmelik aynı kodlarla kendi değerlerini getirir.
+- Düz çatıda mahya, eğim, kar siperliği ve pencere kuralı okunmaz. Pencerenin mahyayı kesmemesi (40/5-e-3) çizimde
+  zaten zorunlu: pencere tek yüzde kalır.
+- Düzeltmeler `cad.arch.edit`'in çatı üstündeki işlemi; tek geri alma adımı.
 
 ## Doğrulama
 
@@ -388,14 +410,25 @@ projede çatı planını ister.
   (`fixtures/interaction/real/cati-gorunus-oluk.txt`): güney ve doğu görünüşü çıkarıldı; doğu görünüşünde borunun iki
   yanı arası 26 piksel (10 cm), boru ile duvar arası 8 piksel ≈ 3 cm (saçak payından kurulan ilk sürümde 0); planda
   köşeye tıklanan boru köşe kolonunun hizasında.
+- 5. bölüm, mevzuat denetimi (§9): `roof_audit` birim 3 (uzayda iki doğru parçası arası, saçaktan içeri uzaklık,
+  Sivas pencere ölçüsü); `roof_sections` 8 (yeni: PAİY tek başına 3 bulgu — saçak 1.20 m, hava bacası 0.90 m, baca
+  0.50 m; mahya 4.47 m PAİY'nin 5.00'ı içinde —; Sivas ile 9 bulgu kod sırasıyla: mahya "4.47 m > 4.00 m — Sivas 40/5-g;
+  PAİY 40/4: 5.00 m", eğim %75, kar siperliği, 1.40 × 1.60 m pencere, cephe hattına 0.66 m, iki pencere arası 1.50 m;
+  kural "Sivas İmar Yön. 42/5 · RG 10.11.2022/32009"; kar siperliği düzeltmesi `cad.arch.edit`, bulgu düşer); masaüstü
+  Mevzuat 4; sözleşme 5; bağlamalar 1856; katalog 4. Etkileşim 15 (yeni: Kar siperliği adımında Enter tek başına "yok"
+  der, Çatı sürer; sayı soran adımda adımdan çıkar). Gerçek pencere (`fixtures/interaction/real/cati-mevzuat.txt`,
+  `cati-bos-enter.txt`): %45, 1,20 m saçaklı, kar siperliksiz çatı ve mahyanın 0,50 m üstünde baca; Proje ayarları ›
+  Mimari › Yerel imar yönetmeliği: Sivas; Denetim › Mevzuat'ta 4 çatı bulgusu (11–14; önce 10 satır, çatı yok); kar
+  siperliği satırı Düzelt ile kalktı (14 → 13), durum çubuğu "Düzeltildi: Kar siperliği ver (saçaktan 30 cm)".
+- Gerçek pencerede bulunan hata: değer soran adımda Enter tek başına Çatı'yı (ve çatı parçası araçlarını) kapatıyordu;
+  adım "boş: yok" diyordu, Dolap ve Dizi adımdan çıkıyordu. Artık boşun anlamı olan adımda (Oluk, Kar siperliği, Kot
+  farkı, Kaplama) o yanıt, öbürlerinde adımdan çıkış. "yok" yazmak için komut satırına tıklamak gerekiyor: çizim
+  klavyeyi tutarken "y" ve "o" kısayol sayılıyor (seçenek değilse uyarı veriliyor); Enter tek başına artık yetiyor.
 
 ## Sonraya kalan
 
-- §9: içe dönen köşeli saçak (L, T) ve dereler.
-- PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (kar siperliği; PAİY 40'ın
-  mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır; duman
-  bacası mahya + 0,80 m, hava bacası 0,60 m, pencerenin cepheye 1 m ve birbirine 2 m uzaklığı); bacanın duvar içi
-  bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);
+- §10: içe dönen köşeli saçak (L, T) ve dereler.
+- Bacanın duvar içi bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);
   çatı katmanlarının (kiremit, çıta, tahta, mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi).
 - `scripts/ui/ribbon.py` depodaki `catalog/v1/ribbon.json`'u artık aynen üretmiyor: sonradan eklenen arazi ve nokta
   bulutu girdilerini ve İmar panelini siliyor. Bu adımda çatının iki girdisi dosyaya elle eklendi; betik ayrıca

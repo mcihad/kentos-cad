@@ -12,7 +12,7 @@
 //! - **Plan** (Mimarlar Odası, Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w: "Meyiller, su toplama yerleri,
 //!   dereler ... gösterilir ve gerekli kotlar verilir"): the eaves and gable ends at the object's pen, ridges, hips and
 //!   valleys narrow, an arrow down each face with its slope ("%33"), the ridge's height ("+8.45").
-//! - **Not yet** (docs/adr/8044 §9): an eaves line that turns in (an L or a T): its straight skeleton needs split events.
+//! - **Not yet** (docs/adr/8044 §10): an eaves line that turns in (an L or a T): its straight skeleton needs split events.
 //!   [`faces`] refuses it ([`Problem::Concave`]).
 
 use crate::Vec2;
@@ -269,7 +269,7 @@ pub enum Problem {
     Shape,
     /// No area.
     Degenerate,
-    /// The eaves turn in somewhere (docs/adr/8044 §9).
+    /// The eaves turn in somewhere (docs/adr/8044 §10).
     Concave,
 }
 

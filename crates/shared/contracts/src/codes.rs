@@ -2801,13 +2801,30 @@ codes! {
     PAIY_SECTIONS_MISSING = "paiy_sections_missing", Warning, false, "Mimari projede Planlı Alanlar İmar Yönetmeliği 57/2-a-6'nın istediği en az iki kesit çıkarılmamış.";
     PAIY_SECTION_STAIR_MISSING = "paiy_section_stair_missing", Warning, false, "Çıkarılmış kesitlerin hiçbiri ortak merdivenden geçmiyor (Planlı Alanlar İmar Yönetmeliği 57/2-a-6).";
     PAIY_ELEVATIONS_MISSING = "paiy_elevations_missing", Warning, false, "Binanın bir cephesinin görünüşü çıkarılmamış: Planlı Alanlar İmar Yönetmeliği 57/2-a-6 yeteri sayıda görünüş ister, Mimarlar Odası standartlarında bütün görünüşler çizilir.";
+    /// A roof's ridge over the saçak seviyesi higher than PAİY 40/4 or the local regulation allows (docs/adr/8044 §9).
+    PAIY_RIDGE_HIGH = "paiy_ridge_high", Warning, false, "Çatının mahyası saçak seviyesinden Planlı Alanlar İmar Yönetmeliği 40/4'ün 5,00 metresinden (ya da yerel yönetmeliğin en çoğundan) yüksek.";
+    /// A roof drawn from its walls overhanging them more than PAİY 42/1 allows (docs/adr/8044 §9).
+    PAIY_EAVES_WIDE = "paiy_eaves_wide", Warning, false, "Saçak Planlı Alanlar İmar Yönetmeliği 42/1'in 1,00 metresinden geniş.";
+    /// A vent standing over the roof's planes more than PAİY 40/5 allows (docs/adr/8044 §9).
+    PAIY_ROOF_VENT_HIGH = "paiy_roof_vent_high", Warning, false, "Hava bacası çatı örtüsünü Planlı Alanlar İmar Yönetmeliği 40/5'in 0,60 metresinden çok aşıyor.";
     REGULATION_CONFLICT = "regulation_conflict", Warning, false, "Ölçü yerel imar yönetmeliğine uyuyor, Planlı Alanlar İmar Yönetmeliği'ne uymuyor: çelişkide idare karar verir.";
+    /// A roof steeper than the local regulation allows (Sivas 40/5-g: 40 %; docs/adr/8044 §9).
+    LOCAL_ROOF_SLOPE_STEEP = "local_roof_slope_steep", Warning, false, "Çatının eğimi yerel imar yönetmeliğinin en çoğundan dik (Sivas 40/5-g: %40).";
+    /// A sloping roof without the snow guard the local regulation makes mandatory (Sivas 42/5; docs/adr/8044 §9).
+    LOCAL_SNOW_GUARD_MISSING = "local_snow_guard_missing", Warning, false, "Eğimli çatıda yerel imar yönetmeliğinin zorunlu tuttuğu kar siperliği yok (Sivas 42/5).";
+    /// A roof window larger than the local regulation allows (Sivas 40/5-e-2: 1.20 × 1.50 m; docs/adr/8044 §9).
+    LOCAL_ROOF_WINDOW_LARGE = "local_roof_window_large", Warning, false, "Çatı penceresi yerel imar yönetmeliğinin en büyük ölçüsünden büyük (Sivas 40/5-e-2: 1,20 × 1,50 metre).";
+    /// A roof window nearer a facade line or another window than the local regulation allows (Sivas 40/5-e-3: 1 m and
+    /// 2 m; docs/adr/8044 §9).
+    LOCAL_ROOF_WINDOW_CLOSE = "local_roof_window_close", Warning, false, "Çatı penceresi yerel imar yönetmeliğine göre cephe hattına ya da başka bir pencereye fazla yakın (Sivas 40/5-e-3: 1 ve 2 metre).";
     BYKHY_ESCAPE_DISTANCE_OVER = "bykhy_escape_distance_over", Warning, false, "Kaçış uzaklığı Binaların Yangından Korunması Hakkında Yönetmelik'in (32/4, 48/2, 48/4, Ek-5/B) en çoğunu aşıyor.";
     BYKHY_ESCAPE_NO_ROUTE = "bykhy_escape_no_route", Warning, false, "Mahalden kat çıkışına ya da daire kapısına yürünerek ulaşılmıyor (Binaların Yangından Korunması Hakkında Yönetmelik 33/6-b, 48/2).";
     BYKHY_EXIT_WIDTH_BELOW = "bykhy_exit_width_below", Warning, false, "Kaçış merdiveni ya da çıkış kapısı kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 33/1, 33/2'nin istediğinden dar.";
     BYKHY_EXIT_COUNT_BELOW = "bykhy_exit_count_below", Warning, false, "Kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 39/2'nin istediği çıkış sayısı yok.";
     BYKHY_CORRIDOR_NARROW = "bykhy_corridor_narrow", Warning, false, "Kaçış yolu olan koridor Binaların Yangından Korunması Hakkında Yönetmelik 33/1'in 1,10 metresinden (yüksek binada 33/2'nin 1,20 metresinden) dar.";
     BYKHY_STAIR_COUNT_BELOW = "bykhy_stair_count_below", Warning, false, "Yapı yüksekliğine göre Binaların Yangından Korunması Hakkında Yönetmelik 48/5'in istediği kaçış merdiveni sayısı yok.";
+    /// A chimney not standing the 0.80 m over the ridge BYKHY 58/2 asks (docs/adr/8044 §9).
+    BYKHY_CHIMNEY_LOW = "bykhy_chimney_low", Warning, false, "Duman bacası Binaların Yangından Korunması Hakkında Yönetmelik 58/2'nin istediği gibi mahyanın en az 0,80 metre üstüne çıkmıyor.";
     PARKING_SHORT = "parking_short", Warning, false, "Çizimdeki otopark yeri (Otopark ya da Garaj mahallerinin net alanı ÷ 20 m²) Otopark Yönetmeliği Ek-1'in istediğinden az.";
     SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
     SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";

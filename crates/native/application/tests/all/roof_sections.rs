@@ -480,3 +480,119 @@ fn the_permit_set_gives_a_roof_no_storey_draws_whole_a_roof_plan() {
     assert_eq!(level.id, "k1");
     assert!(level.roof && !level.below, "{level:?}");
 }
+
+/// Denetim › Mevzuat, çatılar (docs/adr/8044 §9). On the facade building, a hip roof drawn from its walls with 1.20 m
+/// eaves (14.65 × 11.65 m) at 75 %, 10 cm over its storey, no snow guard; a vent 0.90 m over the roof, a chimney 0.50 m
+/// over the ridge; a 1.40 × 1.60 m window on the south face 2.50 m in from the eaves (its foot 1.86 m in: 0.66 m from the
+/// facade line) and a 0.78 × 1.18 m one 1.50 m east of it. PAİY alone says the eaves, the vent and the chimney (the ridge,
+/// 4.47 m over the saçak seviyesi, is within its 5.00 m); Sivas's rules read over it say the ridge (4.00 m), the slope,
+/// the snow guard and the windows too, in the codes' order. The snow guard's fix gives the roof one and its finding
+/// goes.
+#[test]
+fn the_regulation_measures_the_roof_its_chimneys_and_its_windows() {
+    let mut doc = facades();
+    let eaves = roofs::eaves_from_walls(
+        &doc,
+        kentos_commands::Vec2 { x: 6.0, y: 4.5 },
+        Some("k1"),
+        1.2,
+    )
+    .expect("the walls enclose the point");
+    let x0 = eaves.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
+    let y0 = eaves.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
+    let at = |x: f64, y: f64| json!({"x": x0 + x, "y": y0 + y});
+    let slopes = vec![75.0; eaves.len()];
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create",
+        CallOp::Execute,
+        json!({"layerId": "0", "roofs": [{"pts": eaves, "slopes": slopes, "overhang": 1.2, "offset": 0.1,
+            "arch": {"level": "k1"}, "parts": [
+                {"kind": "vent", "at": at(10.0, 8.0), "width": 0.4, "depth": 0.4, "rise": 0.9},
+                {"kind": "chimney", "at": at(7.0, 8.5), "width": 0.4, "depth": 0.4, "rise": 0.5},
+                {"kind": "window", "at": at(4.0, 2.5), "width": 1.4, "depth": 1.6},
+                {"kind": "window", "at": at(6.59, 3.5), "width": 0.78, "depth": 1.18}
+            ]}]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let roof_codes = [
+        "paiy_ridge_high",
+        "paiy_eaves_wide",
+        "paiy_roof_vent_high",
+        "bykhy_chimney_low",
+        "local_roof_slope_steep",
+        "local_snow_guard_missing",
+        "local_roof_window_large",
+        "local_roof_window_close",
+    ];
+    let regulation = |doc: &mut Document| -> Vec<serde_json::Value> {
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.arch.audit",
+            CallOp::Execute,
+            json!({"checks": ["regulation"]}),
+        )
+        .unwrap();
+        answer["output"]["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| roof_codes.contains(&f["code"].as_str().unwrap_or_default()))
+            .cloned()
+            .collect()
+    };
+    let said = |found: &[serde_json::Value]| -> Vec<String> {
+        found
+            .iter()
+            .map(|f| f["message"].as_str().unwrap_or_default().to_owned())
+            .collect()
+    };
+    assert_eq!(
+        said(&regulation(&mut doc)),
+        [
+            "Saçak genişliği 1.20 m > 1.00 m — PAİY 42/1",
+            "Hava bacasının çatı örtüsünü aşan yüksekliği 0.90 m > 0.60 m — PAİY 40/5",
+            "Duman bacasının mahyayı aşan yüksekliği 0.50 m < 0.80 m — BYKHY 58/2",
+        ]
+    );
+    let mut s = doc.settings().clone();
+    s.arch.as_mut().expect("arch settings").local_rules = Some(kentos_commands::LocalRules::Sivas);
+    doc.set_settings(s);
+    let found = regulation(&mut doc);
+    assert_eq!(
+        said(&found),
+        [
+            "Mahya yüksekliği (saçak seviyesinden) 4.47 m > 4.00 m — Sivas 40/5-g; PAİY 40/4: 5.00 m",
+            "Saçak genişliği 1.20 m > 1.00 m — PAİY 42/1",
+            "Hava bacasının çatı örtüsünü aşan yüksekliği 0.90 m > 0.60 m — PAİY 40/5",
+            "Duman bacasının mahyayı aşan yüksekliği 0.50 m < 0.80 m — BYKHY 58/2",
+            "Çatının eğimi %75 > %40 — Sivas 40/5-g",
+            "Eğimli çatının saçağında kar siperliği yok — Sivas 42/5",
+            "Çatı penceresi 1.40 × 1.60 m, en çok 1.20 × 1.50 m (en/boy) — Sivas 40/5-e-2",
+            "Çatı penceresinin bina cephe hattına uzaklığı 0.66 m < 1.00 m — Sivas 40/5-e-3",
+            "İki çatı penceresi arası 1.50 m < 2.00 m — Sivas 40/5-e-3",
+        ]
+    );
+    // Each names its article and gazette; the snow guard's fix is cad.arch.edit's on the roof.
+    let guard = found
+        .iter()
+        .find(|f| f["code"] == "local_snow_guard_missing")
+        .expect("the snow guard's finding");
+    assert_eq!(guard["rule"], "Sivas İmar Yön. 42/5 · RG 10.11.2022/32009");
+    let step = &guard["fix"]["step"];
+    assert_eq!(step["command"], "cad.arch.edit", "{guard}");
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.arch.edit",
+        CallOp::Execute,
+        step["input"].clone(),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    assert!(
+        !regulation(&mut doc)
+            .iter()
+            .any(|f| f["code"] == "local_snow_guard_missing")
+    );
+}

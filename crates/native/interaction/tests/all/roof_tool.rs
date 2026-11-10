@@ -321,3 +321,21 @@ fn a_roof_gets_a_gutter_and_a_snow_guard_unless_emptied() {
         "a flat roof sheds no water off an eaves edge"
     );
 }
+
+/// The step asking Kar siperliği says "boş: yok": Enter alone there takes the snow guard away and keeps Çatı running
+/// (the real window found Enter ending the tool, docs/adr/8044 §9); Enter at a step asking a number leaves the step.
+#[test]
+fn enter_alone_answers_the_step_asking_a_value() {
+    let mut b = building();
+    b.start("roof");
+    assert!(b.type_text("K"));
+    b.confirm();
+    assert!(b.session.is_running(), "Çatı still runs");
+    assert!(b.options().contains(&"K"), "back at its main step");
+    b.click(6.0, 1.0);
+    let r = newest_roof(&b);
+    assert_eq!((r.roof.gutter, r.roof.snow_guard), (Some(0.15), None));
+    assert!(b.type_text("M"));
+    b.confirm();
+    assert!(b.session.is_running() && b.options().contains(&"M"));
+}

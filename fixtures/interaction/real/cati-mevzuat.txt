@@ -1,0 +1,108 @@
+# M44 5. bölüm, çatının mevzuat denetimi (docs/adr/8044 §9), on fixtures/arch/v1/facade-building.kcad (--modul
+# mimari): 1. kat active; Çatı by Binadan with the command line (clicked right of its chips): Eğim 45, Saçak 1.2, Kar
+# siperliği yok; Çatı bacası with Yükseklik 0.5 over the ridge; Proje ayarları › Mimari › Yerel imar yönetmeliği: Sivas;
+# Denetim › Mevzuat, the panel taller and scrolled: the eaves (PAİY 42/1), the chimney (BYKHY 58/2), the slope (Sivas
+# 40/5-g) and the snow guard (Sivas 42/5); the snow guard's row and Düzelt: the roof gets 30 cm, the finding goes.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+click 1400 1032
+wait 600
+type M
+key Return
+wait 500
+type 45
+key Return
+wait 500
+type A
+key Return
+wait 500
+type 1.2
+key Return
+wait 500
+type K
+key Return
+wait 500
+type yok
+key Return
+wait 800
+move 765 735
+wait 1500
+shot m1-cati-ayar
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+key ctrl+a
+type Çatı bacası
+wait 1500
+key Return
+wait 1500
+click 1400 1032
+wait 600
+type Y
+key Return
+wait 500
+type 0.5
+key Return
+wait 800
+move 765 420
+wait 1500
+click 765 420
+wait 2000
+key Escape
+wait 800
+shot m2-cati
+click 1258 57
+wait 2500
+wheel 960 590 -5
+wait 1000
+click 1035 531
+wait 1000
+shot m3-secim
+click 980 595
+wait 800
+shot m4-sivas
+click 1395 919
+wait 2500
+click 1162 111
+wait 3000
+click 195 712
+wait 1000
+type mevzuat
+wait 800
+shot m5-arama
+click 188 779
+wait 1000
+click 65 712
+wait 3000
+move 1300 400
+wait 800
+shot m6-mevzuat
+drag 760 663 760 330
+wait 1500
+wheel 800 800 -15
+wait 1200
+move 1300 250
+wait 800
+shot m7-cati-bulgulari
+click 600 841
+wait 1000
+shot m8-secili
+click 1480 413
+wait 3000
+move 1300 250
+wait 800
+shot m9-duzeltildi

@@ -37,7 +37,8 @@ pub const ROOF_ID: &str = "roof";
 pub const ROOF_SLOPE: f64 = 33.0;
 /// How far the eaves stand past the walls when none is given, metres; PAİY 42 allows 1.00 m.
 pub const ROOF_OVERHANG: f64 = 0.5;
-/// PAİY 40 (4): a ridge stands at most 5.00 m over the eaves.
+/// PAİY 40 (4): a ridge stands at most 5.00 m over the saçak seviyesi (PAİY 4/ppp: its storey's top; the roof's kot
+/// farkı counted), as Denetim › Mevzuat measures it (docs/adr/8044 §9).
 pub const PAIY_RIDGE: f64 = 5.0;
 
 /// How the eaves are given.
@@ -246,10 +247,11 @@ impl RoofTool {
                     return Err(String::new());
                 };
                 let shape = kentos_native_application::geometry::roof_shape(r, cx.doc.settings());
+                // Its ridge's top, and its height over the saçak seviyesi (the storey's top: the kot farkı counted).
                 let (top, rise) = match &shape {
                     Shape::Roof { pts, roof } => {
                         let rise = roof::ridge_rise(pts, roof).unwrap_or(0.0);
-                        (roof.base + rise, rise)
+                        (roof.base + rise, rise + r.roof.offset)
                     }
                     _ => (0.0, 0.0),
                 };
@@ -763,6 +765,21 @@ impl Tool for RoofTool {
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        // Enter alone answers the step asking a value and never ends Çatı (as Dolap and Dizi do): where the step says
+        // what empty means (Oluk and Kar siperliği none, Kot farkı seated on the walls, Kaplama Kiremit) it is that
+        // answer, elsewhere it leaves the step. The real window found it (docs/adr/8044 §9): the step said "boş: yok"
+        // and Enter ended the tool.
+        if let Some(ask) = self.ask {
+            if matches!(
+                ask,
+                Ask::Gutter | Ask::SnowGuard | Ask::Offset | Ask::Material
+            ) {
+                self.input("", cx);
+            } else {
+                self.ask = None;
+            }
+            return Flow::Stay;
+        }
         if self.draws() && self.pts.len() >= 3 {
             let corners = self.pts.clone();
             self.write(None, Some(&corners), cx);
@@ -783,7 +800,7 @@ impl Tool for RoofTool {
                     let mut lines = vec![
                         format!("{kind} · {}", roof::slope_words(self.slope)),
                         format!(
-                            "Mahya {} · {} yüksek",
+                            "Mahya {} · saçak seviyesinden {}",
                             roof::level_words(top),
                             format.length(rise)
                         ),

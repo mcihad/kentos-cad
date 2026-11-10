@@ -819,6 +819,11 @@ impl Tool for RoofPartTool {
     }
 
     fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        // Enter alone leaves a step asking a value, as the other tools do (docs/adr/8044 §9); from the main step it
+        // ends the tool.
+        if self.ask.take().is_some() {
+            return Flow::Stay;
+        }
         Flow::Exit
     }
 

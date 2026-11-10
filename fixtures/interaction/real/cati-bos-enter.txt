@@ -1,0 +1,25 @@
+# M44 5. bölüm (docs/adr/8044 §9), on fixtures/arch/v1/facade-building.kcad (--modul mimari): Çatı, K (Kar siperliği:
+# "boş: yok"), then Enter alone: Kar siperliği Yok and Çatı still runs (before the fix Enter ended the tool).
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1000
+type K
+wait 800
+shot e1-adim
+key Return
+wait 1000
+move 765 735
+wait 1200
+shot e2-enter

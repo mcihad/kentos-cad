@@ -388,6 +388,12 @@
     `face_ahead`) ve ±0.00'a (`geom::roof::downpipe_way`; 2 m içinde duvar yoksa dümdüz) kurar; katmanlar
     MM-OLUK-GENEL, MM-YIBO-GENEL.
     Kar siperliği çatı yüzünde çizgi. Araç köşedeki boruyu saçak ucundan saçak payı + 3 cm + yarıçap içeri alır.
+  - **Çatının mevzuat denetimi (M44 5. bölüm, ADR 8044 §9):** `roof_audit` Denetim › Mevzuat'ta: mahya saçak
+    seviyesinden (kot farkı dahil) 5,00 m `paiy_ridge_high` (Sivas 40/5-g 4,00), saçak 1,00 m `paiy_eaves_wide`, hava
+    bacası 0,60 m `paiy_roof_vent_high`, duman bacası mahya + 0,80 m `bykhy_chimney_low`; Sivas'ta eğim %40
+    `local_roof_slope_steep`, kar siperliği `local_snow_guard_missing`, çatı penceresi 1,20 × 1,50 m
+    `local_roof_window_large`, cepheye 1 m ve birbirine (çatının üstünde) 2 m `local_roof_window_close`. Düzeltmeler
+    `cad.arch.edit`: eğim %40, kar siperliği 30 cm, baca 0,80 m, hava bacası 0,60 m.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
