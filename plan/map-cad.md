@@ -981,14 +981,14 @@ kot verir, kırık noktası yalnız aradaki kenarlara girer (dış halka; kapan�
 yeni `wrong_place` reddi. 34 bağımsız durum (13 yeni), Python, MCP, masaüstünde Kot farkı ve Aralık (Sahneden seç,
 çizimde işaret) ve resimler. Açık: yüzeye bağlı (dinamik) kot, çok parçalı nesne, dönen ve yaylı referans bağı.
 
-**11 Kasım 2026, onuncu tur — Eğimle kot ver'de ve Yüzeyden kot ver'de aralığın parçası ve halkası ([ADR 4980](../docs/adr/4980-range-on-any-part-and-ring.md)).**
+**11 Kasım 2026, onuncu tur — Kot araçlarında çok parçalı nesne ([ADR 4980](../docs/adr/4980-range-on-any-part-and-ring.md)).**
 Kapsam: **CAD (Harita + Yol)**. Araştırma: BÖHHBÜY Ek-2 UVDF'in GRUP tipi ve boşluk alanı; QGIS'in köşe adresi (part,
 ring, vertex) ve köşe düzenleyicisinin aralığı; Netcad'in wiki'si TLS hatasıyla okunamadı. Kanıtlanan: çok parçalı nesne
-alt maddesinin kot araçlarındaki parçası. `cad.entities.drape`'in `range`'i ve `cad.entities.grade` `part` ile `ring`
-alır (0 ilk parça ve dış halka, 1'den sonraki parçalar ve delikler); aralık o halkanın köşeleridir (yüksek/alçak
-noktanın köşesi o halkaya eklenir), öbür halkalar olduğu gibi kalır; olmayan parça ya da delik `wrong_place`. İki
-komutta 17 yeni bağımsız durum (43 ve 43; iki parçalı, delikli yeni alanlar, iki parçalı çoklu çizgi), bozma denemesi,
-Python, MCP, masaüstünde Halka listesi (Eğim, Bitiş kotu, Yüksek/alçak nokta, Yüzeyden › Aralık) ve Sahneden seç'in ilk
+alt maddesinin kot araçlarındaki parçası. `cad.entities.drape`'in `range`'i, `cad.entities.grade` ve `cad.entities.raise`
+`part` ile `ring` alır (0 ilk parça ve dış halka, 1'den sonraki parçalar ve delikler); aralık o halkanın köşeleridir (yüksek/alçak
+noktanın köşesi o halkaya eklenir; Referanstan'ın köşesi o halkanındır), öbür halkalar olduğu gibi kalır; olmayan parça
+ya da delik `wrong_place`. Üç komutta 24 yeni bağımsız durum (43, 43, 34; iki parçalı, delikli alanlar, iki parçalı
+çoklu çizgiler), bozma denemesi, Python, MCP, masaüstünde her Hedef'te Halka listesi ve Sahneden seç'in köşe
 tıklamasının halkayı seçmesi, çizimde işaret ve resimler. Açık: Paralel kaydır'da çok parçalı nesne (bugün “önce
 Parçalara ayır” der), yüzeye bağlı (dinamik) kot, dönen ve yaylı referans bağı.
 

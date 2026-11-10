@@ -4,7 +4,7 @@
  "command": "cad.entities.raise",
  "commandVersion": 1,
  "title": "Referanstan kot ver",
- "note": "ADR 3780. Bağımsız başvuru scripts/fixtures/raise_cases.py: referanstan yatay uzaklık, köşenin yeni kotu ve öbür kotların kayması elle; KentOS kodu yok.",
+ "note": "ADR 3780, 4980. Bağımsız başvuru scripts/fixtures/raise_cases.py: referanstan yatay uzaklık, köşenin yeni kotu ve öbür kotların kayması elle; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -1788,6 +1788,625 @@
        "code": "invalid_revision",
        "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
        "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan: ikinci parçanın köşesi eğimle; bütün kotlar aynı farkla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 2,
+      "part": 1,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 80.62257748298549,
+       "before": 121.4,
+       "after": 122.36245154965971,
+       "by": 0.9624515496597041,
+       "grade": 0.02,
+       "moved": 9,
+       "unset": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "3": {
+        "zs": [
+         120.9624515496597,
+         121.1624515496597,
+         121.4624515496597,
+         121.2624515496597
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           120.86245154965971,
+           120.9124515496597,
+           120.9624515496597
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.9624515496597,
+           null,
+           122.36245154965971
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "3": {
+        "zs": [
+         120.0,
+         120.2,
+         120.5,
+         120.3
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           119.9,
+           119.95,
+           120.0
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.0,
+           null,
+           121.4
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan: ilk parçanın deliğinin köşesi, kot farkıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 1,
+      "ring": 1,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "difference": -0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 47.16990566028302,
+       "before": 119.95,
+       "after": 120.25,
+       "by": 0.29999999999999716,
+       "grade": -0.0105999788000636,
+       "moved": 9,
+       "unset": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "3": {
+        "zs": [
+         120.3,
+         120.5,
+         120.8,
+         120.6
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           120.2,
+           120.25,
+           120.3
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.3,
+           null,
+           121.7
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "3": {
+        "zs": [
+         120.0,
+         120.2,
+         120.5,
+         120.3
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           119.9,
+           119.95,
+           120.0
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.0,
+           null,
+           121.4
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu çizginin ikinci parçasının köşesi; ilk parça aynı farkla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000007",
+      "at": 2,
+      "part": 1,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 472.65209192385896,
+       "before": 861.8,
+       "after": 854.4765209192386,
+       "by": -7.323479080761331,
+       "grade": 0.01,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "7": {
+        "zs": [
+         852.6765209192387,
+         853.1765209192387
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400060.0
+           }
+          ],
+          "zs": [
+           853.6765209192387,
+           null,
+           854.4765209192386
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "7": {
+        "zs": [
+         860.0,
+         860.5
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400060.0
+           }
+          ],
+          "zs": [
+           861.0,
+           null,
+           861.8
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan parça",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 0,
+      "part": 2,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Nesnenin 2 parçası var (0'dan): 2. parça yok.",
+       "path": "part"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan delik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 0,
+      "ring": 2,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "0. parçanın 1 deliği var: 2. halka yok (0 dış halka, 1'den delikler).",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Deliğin köşe sayısının dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 3,
+      "part": 1,
+      "ring": 1,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "3. köşe yok: 1. parçanın 1. halkasının 3 köşesi var, sıra 0'dan başlar.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kotsuz delikteki köşe",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 0,
+      "part": 1,
+      "ring": 1,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "elevation_missing",
+       "message": "0. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin.",
+       "path": "at"
       }
      },
      "expect": {

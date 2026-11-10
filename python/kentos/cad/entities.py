@@ -4477,6 +4477,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesRaised:
@@ -4502,6 +4504,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference: Unit: length.
             expected_revision:
             grade: Unit: grade.
+            part: Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+            ring: Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -4521,6 +4525,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -4534,6 +4540,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
     ) -> EntitiesRaised:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -4545,6 +4553,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ))
 
     def validate(
@@ -4558,6 +4568,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -4569,6 +4581,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ))
 
     def answer(
@@ -4582,6 +4596,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -4598,6 +4614,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ), op=op, request_id=request_id, expected=expected)
 
 

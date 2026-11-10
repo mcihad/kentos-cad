@@ -9,7 +9,9 @@ On the shared cases' two-part area (each part with a hole) and two-part polyline
   are left;
 - 5 % ahead and 3 % back on the polyline's second part meet on its arc: a vertex goes in there (the reading's place and
   elevation), the first part is left;
-- a part or a hole the object has not is refused (`wrong_place` at `part` or `ring`), nothing written.
+- a part or a hole the object has not is refused (`wrong_place` at `part` or `ring`), nothing written;
+- Referanstan kot ver (`cad.entities.raise`) on the two-part area's first part's hole's vertex: it takes the
+  reference's elevation 0.5 m down, every other elevation of the area moves by as much (raise_cases.py's reading).
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ from kentos import cad  # noqa: E402
 import grade_cases as gc  # noqa: E402
 import kcad  # noqa: E402  (the independent reader)
 import kcad_v2_reference as kr  # noqa: E402
+import raise_cases as rc  # noqa: E402
 
 ISLAND, TWO = gc.uid(6), gc.uid(7)
 
@@ -74,6 +77,20 @@ class GradePartRing(unittest.TestCase):
         for got, w in zip(part["bulges"], after["parts"][0]["bulges"]):
             self.assertAlmostEqual(got, w, places=9)
         self.assertEqual((e["pts"], e.get("zs")), (before["pts"], before.get("zs")), "the first part is left")
+
+    def test_a_hole_s_vertex_raised_by_a_reference(self) -> None:
+        doc = cad.Document.from_bytes(kr.container(kr.document(rc.setup())))
+        area = rc.uid(3)
+        ref = rc.YAZILAN
+        after, want = rc.raised(rc.AREA, 1, ref, difference=-0.5, rg=(0, 1))
+        out = cad.entities.raise_(doc, uid=area, at=1, part=0, ring=1, difference=-0.5,
+                                  reference=cad.RaiseReference(x=ref["x"], y=ref["y"], z=ref["z"]))
+        self.assertAlmostEqual(out.after, ref["z"] - 0.5, places=9)
+        self.assertAlmostEqual(out.by, want["by"], places=9)
+        e = saved(doc, area)
+        self.assertAlmostEqual(e["holes"][0]["zs"][1], ref["z"] - 0.5, places=9)
+        for got, w in zip(e["zs"] + e["parts"][0]["zs"], after["zs"] + after["parts"][0]["zs"]):
+            self.assertTrue((got is None and w is None) or abs(got - w) < 1e-9, (got, w))
 
     def test_refusals(self) -> None:
         command = cad.command("cad.entities.grade")

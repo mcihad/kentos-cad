@@ -35981,18 +35981,21 @@ class EntitiesPropertiesSet(_Model):
 @dataclass(kw_only=True, slots=True)
 class EntitiesRaise(_Model):
     """Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given
-    (0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and
+    (0-based: a line's ends 0 and 1, a polyline's or an area's vertices of the ring `ring` of the part `part`,
+    docs/adr/4980, both 0 when absent: the first part's outer ring), the reference, and
     exactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the
     difference (the vertex's elevation minus the reference's, m).
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`
+    (not a line, a polyline or an area), `wrong_place` (no such part, ring or vertex), `invalid_input` (both or neither of `grade`
     and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
     from), `layer_locked`.
     Attributes:
         at: Unit: index.
         difference: Unit: length.
         grade: Unit: grade.
+        part: Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+        ring: Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
     """
     uid: str
     at: int
@@ -36000,6 +36003,8 @@ class EntitiesRaise(_Model):
     difference: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36012,6 +36017,10 @@ class EntitiesRaise(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         return out
 
     @classmethod
@@ -36023,6 +36032,8 @@ class EntitiesRaise(_Model):
             difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
         )
 
 

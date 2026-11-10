@@ -89,7 +89,6 @@ pub enum Pick {
 #[derive(Clone, Debug, Default)]
 pub struct State {
     pub uid: String,
-    pub vertices: u32,
     /// From and to, numbered from 1.
     pub from: f64,
     pub to: f64,
@@ -225,7 +224,6 @@ impl App {
         let kept = kept.referenced.then_some(kept);
         self.grade = State {
             uid: uid.to_string(),
-            vertices: n as u32,
             from: 1.0,
             to: n as f64,
             start: z0.unwrap_or(0.0),
@@ -279,8 +277,9 @@ impl App {
             Event::Ring(id) => {
                 if let Some((part, ring)) = id.split_once(':').and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?))) {
                     self.grade.ring = (part, ring);
-                    // The new ring's vertices from its first to its last.
+                    // The new ring's vertices from its first to its last; Referanstan's its first.
                     self.grade.from = 1.0;
+                    self.grade.at = 1.0;
                     self.grade.to = self.grade_vertices().len().max(1) as f64;
                 }
             }
@@ -351,7 +350,7 @@ impl App {
     /// The ring the window works on: its vertices and bulges (see `grade_vertices`).
     fn grade_ring(&self) -> (Vec<kentos_commands::Vec2>, Option<Vec<f64>>) {
         let Some(e) = self.grade_object() else { return (Vec::new(), None) };
-        let at = if self.grade.target == Target::Reference { (0, 0) } else { self.grade.ring };
+        let at = self.grade.ring;
         crate::grade_surface::rings(e).into_iter().find(|r| r.0 == at).map_or((Vec::new(), None), |r| (r.1, r.2))
     }
 
@@ -437,8 +436,9 @@ impl App {
             self.reference_picked(p, reach);
             return true;
         }
-        // The range starts on whichever ring the click is nearest (docs/adr/4980); its end on the same ring.
-        if end == Pick::Start {
+        // The range starts, and Referanstan's vertex is, on whichever ring the click is nearest (docs/adr/4980); the
+        // range's end on the same ring.
+        if matches!(end, Pick::Start | Pick::Vertex) {
             let rings = self.grade_object().map(crate::grade_surface::rings).unwrap_or_default();
             let nearest = rings
                 .iter()
@@ -447,8 +447,13 @@ impl App {
                 .min_by(|a, b| a.2.total_cmp(&b.2));
             if let Some((at, i, _)) = nearest {
                 self.grade.ring = at;
-                self.grade.from = (i + 1) as f64;
-                self.start_grade_pick(Pick::End);
+                if end == Pick::Vertex {
+                    self.grade.at = (i + 1) as f64;
+                    self.grade_plan();
+                } else {
+                    self.grade.from = (i + 1) as f64;
+                    self.start_grade_pick(Pick::End);
+                }
                 return true;
             }
         }

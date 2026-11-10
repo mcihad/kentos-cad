@@ -1,5 +1,5 @@
-//! `cad.entities.raise` v1 (plan/map-cad.md MAP-06, docs/adr/3780): Referanstan kot ver, as Civil 3D's Raise/Lower by
-//! Reference. The vertex `at` takes the reference's elevation plus the grade times its horizontal distance from the
+//! `cad.entities.raise` v1 (plan/map-cad.md MAP-06, docs/adr/3780): Referanstan kot ver. The vertex `at` (on the ring
+//! `part`, `ring` names, docs/adr/4980) takes the reference's elevation plus the grade times its horizontal distance from the
 //! reference (or plus the difference); every other elevation of the object (a polygon's holes, every part's) moves by
 //! as much, so the object's own grades stay. A vertex without an elevation stays without, as Kot ver's Artır leaves it
 //! (docs/adr/0142). One undo step. The shared cases are `fixtures/commands/v1/cad.entities.raise.json`.
@@ -17,21 +17,57 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
-/// The vertices the command numbers (`at`): a line's two ends, a polyline's first part's, an area's outer ring's;
-/// each with its elevation.
-fn numbered(e: &Entity) -> Option<Vec<(kentos_commands::Vec2, Option<f64>)>> {
+/// The vertices the command numbers (`at`): a line's two ends, a polyline's or an area's ring `ring` of the part `part`
+/// (docs/adr/4980; 0, 0: the first part's outer ring); each with its elevation. None for another kind or no such ring.
+fn numbered(e: &Entity, (part, ring): (usize, usize)) -> Option<Vec<(kentos_commands::Vec2, Option<f64>)>> {
+    let list = |pts: &[kentos_commands::Vec2], zs: &Option<Vec<Option<f64>>>| {
+        pts.iter().enumerate().map(|(i, q)| (*q, zs.as_ref().and_then(|z| z.get(i).copied().flatten()))).collect()
+    };
     match e {
-        Entity::Line(l) => Some(vec![(l.a, l.za), (l.b, l.zb)]),
+        Entity::Line(l) if (part, ring) == (0, 0) => Some(vec![(l.a, l.za), (l.b, l.zb)]),
         Entity::Polyline(p) | Entity::Polygon(p) => {
-            Some(p.pts.iter().enumerate().map(|(i, q)| (*q, p.zs.as_ref().and_then(|z| z.get(i).copied().flatten()))).collect())
+            let (pts, zs, holes) = match part {
+                0 => (&p.pts, &p.zs, &p.holes),
+                k => {
+                    let q = p.parts.as_ref()?.get(k - 1)?;
+                    (&q.pts, &q.zs, &q.holes)
+                }
+            };
+            match ring {
+                0 => Some(list(pts, zs)),
+                h => holes.as_ref()?.get(h - 1).map(|r| list(&r.pts, &r.zs)),
+            }
         }
         _ => None,
     }
 }
 
+/// Why the object has no ring `at` (docs/adr/4980, `cad.entities.grade`'s words): the field and the message.
+fn no_ring(e: &Entity, (part, ring): (usize, usize)) -> Stop {
+    let (at, why) = match e {
+        Entity::Polyline(p) | Entity::Polygon(p) => {
+            let parts = 1 + p.parts.as_ref().map_or(0, Vec::len);
+            if part >= parts {
+                ("part", format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok."))
+            } else {
+                let holes = match part {
+                    0 => p.holes.as_ref().map_or(0, Vec::len),
+                    k => p.parts.as_ref().and_then(|q| q.get(k - 1)).and_then(|q| q.holes.as_ref()).map_or(0, Vec::len),
+                };
+                ("ring", format!("{part}. parçanın {holes} deliği var: {ring}. halka yok (0 dış halka, 1'den delikler)."))
+            }
+        }
+        _ => (
+            if part != 0 { "part" } else { "ring" },
+            "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.".to_owned(),
+        ),
+    };
+    fail(codes::WRONG_PLACE, why, at)
+}
+
 /// Every elevation of the object moved by `by`, the vertex `at` set to `after` itself (no rounding left over from the
 /// sum); those without one stay without. How many moved and how many have none.
-fn raised(e: &Entity, at: usize, by: f64, after: f64) -> (Entity, u32, u32) {
+fn raised(e: &Entity, (part, ring): (usize, usize), at: usize, by: f64, after: f64) -> (Entity, u32, u32) {
     let (mut moved, mut unset) = (0u32, 0u32);
     let mut lift = |zs: &mut Option<Vec<Option<f64>>>, n: usize| match zs {
         Some(zs) => {
@@ -68,7 +104,20 @@ fn raised(e: &Entity, at: usize, by: f64, after: f64) -> (Entity, u32, u32) {
                     lift(&mut h.zs, h.pts.len());
                 }
             }
-            if let Some(z) = p.zs.as_mut().and_then(|zs| zs.get_mut(at)) {
+            // The vertex on its ring (docs/adr/4980) takes the result itself.
+            let zs = match (part, ring) {
+                (0, 0) => Some(&mut p.zs),
+                (0, h) => p.holes.as_mut().and_then(|r| r.get_mut(h - 1)).map(|r| &mut r.zs),
+                (k, 0) => p.parts.as_mut().and_then(|q| q.get_mut(k - 1)).map(|q| &mut q.zs),
+                (k, h) => p
+                    .parts
+                    .as_mut()
+                    .and_then(|q| q.get_mut(k - 1))
+                    .and_then(|q| q.holes.as_mut())
+                    .and_then(|r| r.get_mut(h - 1))
+                    .map(|r| &mut r.zs),
+            };
+            if let Some(z) = zs.and_then(|zs| zs.as_mut()).and_then(|zs| zs.get_mut(at)) {
                 *z = Some(after);
             }
         }
@@ -86,18 +135,23 @@ fn check(doc: &Document, input: &EntitiesRaise) -> Result<(Slot, Entity, Entitie
     else {
         return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{}” kimlikli nesne çizimde yok.", input.uid), "uid"));
     };
-    let Some(vertices) = numbered(e) else {
+    if !matches!(e, Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)) {
         return Err(fail(
             codes::NOT_A_PATH,
             "Nesne çizgi, çoklu çizgi ya da alan değil; referanstan kot verilemez. Noktaya kotu Kot ver yazar.".into(),
             "uid",
         ));
+    }
+    let ring = (input.part as usize, input.ring as usize);
+    let Some(vertices) = numbered(e, ring) else {
+        return Err(no_ring(e, ring));
     };
     let at = input.at as usize;
     let Some(&(p, z)) = vertices.get(at) else {
+        let whose = if ring == (0, 0) { "nesnenin".to_owned() } else { format!("{}. parçanın {}. halkasının", ring.0, ring.1) };
         return Err(fail(
             codes::WRONG_PLACE,
-            format!("{}. köşe yok: nesnenin {} köşesi var, sıra 0'dan başlar.", input.at, vertices.len()),
+            format!("{}. köşe yok: {whose} {} köşesi var, sıra 0'dan başlar.", input.at, vertices.len()),
             "at",
         ));
     };
@@ -137,7 +191,7 @@ fn check(doc: &Document, input: &EntitiesRaise) -> Result<(Slot, Entity, Entitie
             "uid",
         ));
     }
-    let (next, moved, unset) = raised(e, at, by, after);
+    let (next, moved, unset) = raised(e, ring, at, by, after);
     // The grade given is the grade; a difference's is what it makes over the distance. None on the reference itself,
     // where no grade reaches the vertex.
     let grade = (distance > 0.0).then(|| input.grade.unwrap_or((after - r.z) / distance));
@@ -194,7 +248,7 @@ mod tests {
             "zs": [100.0, null, 101.0],
             "holes": [{"pts": [{"x": 1.0, "y": 1.0}, {"x": 2.0, "y": 1.0}, {"x": 2.0, "y": 2.0}]}]
         }));
-        let (next, moved, unset) = raised(&area, 2, 0.1 + 0.2, 101.3);
+        let (next, moved, unset) = raised(&area, (0, 0), 2, 0.1 + 0.2, 101.3);
         let Entity::Polygon(p) = next else { panic!("an area") };
         assert_eq!(p.zs, Some(vec![Some(100.0 + (0.1 + 0.2)), None, Some(101.3)]));
         assert_eq!((moved, unset), (2, 4), "two moved; one vertex and the hole's three have none");
@@ -202,7 +256,7 @@ mod tests {
             "kind": "line", "id": 2, "layerId": "0", "attrs": {},
             "a": {"x": 0.0, "y": 0.0}, "b": {"x": 3.0, "y": 4.0}, "za": 5.0
         }));
-        let (next, moved, unset) = raised(&line, 0, -1.0, 4.0);
+        let (next, moved, unset) = raised(&line, (0, 0), 0, -1.0, 4.0);
         let Entity::Line(l) = next else { panic!("a line") };
         assert_eq!((l.za, l.zb, moved, unset), (Some(4.0), None, 1, 1));
     }
