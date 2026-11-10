@@ -13896,6 +13896,22 @@
    "tests": 0
   },
   {
+   "id": "tool.roofDownpipe",
+   "kind": "command",
+   "title": "İniş borusu",
+   "level": "semantic",
+   "via": [
+    "cad.arch.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.edit",
+   "mcp": "cad.arch.edit",
+   "note": "Tıklanan yere en yakın eğimli saçağın çatısı ve borunun ortası (saçağa dik izdüşüm, oluğun genişliğinin yarısı kadar dışarıda) ve çapı komuta verilir (Değiştir: parts). Oluğun altında olup olmadığı komutun denetimi (ADR 8044 §8).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.roofWindow",
    "kind": "command",
    "title": "Çatı penceresi",

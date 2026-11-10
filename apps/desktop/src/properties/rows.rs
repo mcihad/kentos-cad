@@ -1660,7 +1660,11 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     } else {
                         part.kind.label().to_owned()
                     };
-                    let size = format!("{} × {}", f.length_bare(part.width), f.length(part.depth));
+                    let size = if part.kind == kentos_commands::RoofPartKind::Downpipe {
+                        format!("Ø{}", f.length(part.width))
+                    } else {
+                        format!("{} × {}", f.length_bare(part.width), f.length(part.depth))
+                    };
                     let text = match kentos_geometry_core::geom::roof::part_top(&pts, &spec, core) {
                         Some(top) => format!(
                             "{size} · tepesi {}",

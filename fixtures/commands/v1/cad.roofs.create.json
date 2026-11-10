@@ -2314,6 +2314,150 @@
       ]
     },
     {
+      "name": "oluğun altında iki iniş borusu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "gutter": 0.15,
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 6.0,
+                      "y": 49.9
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  },
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": -0.075,
+                      "y": 49.925
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "gutter": 0.15,
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 6.0,
+                      "y": 49.9
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  },
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": -0.075,
+                      "y": 49.925
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "çatı verilmezse reddedilir",
       "steps": [
         {
@@ -4099,6 +4243,371 @@
               "code": "invalid_roof",
               "message": "Kar siperliğinin saçaktan uzaklığı -0.1; sıfırla 2 m arasında olmalı.",
               "path": "roofs[0].snowGuard"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "oluksuz çatıya iniş borusu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 6.0,
+                      "y": 49.9
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "İniş borusu oluğa bağlanır; çatının oluğu yok. Önce çatıya oluk verin.",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "saçağın içindeki iniş borusu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "gutter": 0.15,
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 6.0,
+                      "y": 51.0
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "İniş borusunun ortası oluğun altında değil; boruyu eğimli bir saçağın dışına, oluğun altına koyun.",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "oluktan uzak iniş borusu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "gutter": 0.15,
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 6.0,
+                      "y": 49.0
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "İniş borusunun ortası oluğun altında değil; boruyu eğimli bir saçağın dışına, oluğun altına koyun.",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kalkanın yanındaki iniş borusu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  null,
+                  33.0,
+                  null
+                ],
+                "gutter": 0.15,
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 12.1,
+                      "y": 54.5
+                    },
+                    "width": 0.1,
+                    "depth": 0.1
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "İniş borusunun ortası oluğun altında değil; boruyu eğimli bir saçağın dışına, oluğun altına koyun.",
+              "path": "roofs[0].parts[0].at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iniş borusuna yükseklik verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "gutter": 0.15,
+                "parts": [
+                  {
+                    "kind": "downpipe",
+                    "at": {
+                      "x": 6.0,
+                      "y": 49.9
+                    },
+                    "width": 0.1,
+                    "depth": 0.1,
+                    "rise": 1.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "İniş borusu oluktan zemine iner; yüksekliği verilmez.",
+              "path": "roofs[0].parts[0].rise"
             }
           },
           "expect": {

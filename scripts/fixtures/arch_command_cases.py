@@ -1516,7 +1516,8 @@ def roof_fields(n):
     return f
 
 
-PART_WHOSE = {"chimney": "Duman bacasının", "vent": "Hava bacasının", "window": "Çatı penceresinin"}
+PART_WHOSE = {"chimney": "Duman bacasının", "vent": "Hava bacasının", "window": "Çatı penceresinin",
+              "downpipe": "İniş borusunun"}
 
 
 def roof_parts_not_finite(parts, at):
@@ -1548,6 +1549,8 @@ def roof_parts_problem(parts, path):
         r = part.get("rise")
         if r is not None and part["kind"] == "window":
             return refusal("invalid_roof", "Çatı penceresi çatının düzlemindedir; yüksekliği verilmez.", f"{path}.parts[{i}].rise")
+        if r is not None and part["kind"] == "downpipe":
+            return refusal("invalid_roof", "İniş borusu oluktan zemine iner; yüksekliği verilmez.", f"{path}.parts[{i}].rise")
         if r is not None and not (math.isfinite(r) and abs(r) <= 10.0):
             return refusal("invalid_roof", f"{whose} yüksekliği {num(r)}; en çok ±10 m olmalı.", f"{path}.parts[{i}].rise")
     return None
@@ -1569,6 +1572,13 @@ def convex_holds(ring, p, eps=1e-9):
                - (float(ring[(i + 1) % n][1]) - float(ring[i][1])) * (p[0] - float(ring[i][0])) >= -eps for i in range(n))
 
 
+def seg_dist(p, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    l2 = dx * dx + dy * dy
+    t = min(1.0, max(0.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2)) if l2 > 0 else 0.0
+    return math.hypot(a[0] + dx * t - p[0], a[1] + dy * t - p[1])
+
+
 def roof_parts_placed(f, path):
     """A chimney's or a vent's middle inside the eaves; a window's middle on a face and its outline wholly in it, its
     width along the face's eaves and its depth down the fall line over √(1 + slope²) in plan (docs/adr/8044 §6)."""
@@ -1578,6 +1588,20 @@ def roof_parts_placed(f, path):
         at = (float(part["at"]["x"]), float(part["at"]["y"]))
         whose = PART_WHOSE[part["kind"]]
         where = f"{path}.parts[{k}].at"
+        if part["kind"] == "downpipe":
+            # Hung off the gutter (docs/adr/8044 §8): outside the eaves, within the gutter's width and its own half of a
+            # sloping eaves edge.
+            g = f.get("gutter")
+            if g is None:
+                return refusal("invalid_roof", "İniş borusu oluğa bağlanır; çatının oluğu yok. Önce çatıya oluk verin.", where)
+            fp = [(float(x), float(y)) for x, y in pts]
+            n = len(fp)
+            near = min((seg_dist(at, fp[i], fp[(i + 1) % n]) for i in range(n) if f["slopes"][i] is not None),
+                       default=math.inf)
+            if (near > 1e-9 and even_odd(fp, at)) or near > g + part["width"] / 2.0 + 1e-9:
+                return refusal("invalid_roof", "İniş borusunun ortası oluğun altında değil; boruyu eğimli bir saçağın dışına, "
+                                               "oluğun altına koyun.", where)
+            continue
         if part["kind"] != "window":
             if not even_odd([(float(x), float(y)) for x, y in pts], at):
                 return refusal("invalid_roof", f"{whose} ortası saçak çizgisinin dışında; bacayı çatının üstüne koyun.", where)
@@ -2389,6 +2413,7 @@ def beam_cases():
 CHIMNEY = {"kind": "chimney", "at": {"x": 9.0, "y": 56.0}, "width": 0.4, "depth": 0.4}
 VENT = {"kind": "vent", "at": {"x": 3.0, "y": 52.0}, "width": 0.6, "depth": 0.6}
 WINDOW = {"kind": "window", "at": {"x": 6.0, "y": 51.5}, "width": 0.78, "depth": 1.18}
+DOWNPIPE = {"kind": "downpipe", "at": {"x": 6.0, "y": 49.9}, "width": 0.1, "depth": 0.1}
 
 
 def roof(**kw):
@@ -2417,6 +2442,7 @@ def roof_cases():
         ("50 cm'lik, dönük hava bacası", roof(parts=[{**VENT, "rotation": 0.5, "rise": 0.5}])),
         ("oluklu ve kar siperlikli çatı", roof(gutter=0.15, snowGuard=0.3)),
         ("saçak ucundaki kar siperliği", roof(slopes=[40.0, None, 40.0, None], snowGuard=0.0)),
+        ("oluğun altında iki iniş borusu", roof(gutter=0.15, parts=[DOWNPIPE, {**DOWNPIPE, "at": P(-0.075, 49.925)}])),
     ]:
         c.add(name, [create_step(Drawing(), ROOFS, "execute", inp)])
     refusals(c, ROOFS, [
@@ -2449,6 +2475,12 @@ def roof_cases():
         ("sonsuz oluk reddedilir", roof(gutter=0.15), {"non_finite": {"roofs[0].gutter": "Infinity"}}),
         ("60 cm oluk reddedilir", roof(gutter=0.6), {}),
         ("eksi kar siperliği reddedilir", roof(snowGuard=-0.1), {}),
+        ("oluksuz çatıya iniş borusu reddedilir", roof(parts=[DOWNPIPE]), {}),
+        ("saçağın içindeki iniş borusu reddedilir", roof(gutter=0.15, parts=[{**DOWNPIPE, "at": P(6, 51)}]), {}),
+        ("oluktan uzak iniş borusu reddedilir", roof(gutter=0.15, parts=[{**DOWNPIPE, "at": P(6, 49)}]), {}),
+        ("kalkanın yanındaki iniş borusu reddedilir",
+         roof(slopes=[33.0, None, 33.0, None], gutter=0.15, parts=[{**DOWNPIPE, "at": P(12.1, 54.5)}]), {}),
+        ("iniş borusuna yükseklik verilmez", roof(gutter=0.15, parts=[{**DOWNPIPE, "rise": 1.0}]), {}),
     ])
     common_refusals(c, ROOFS, roof())
     return c.cases

@@ -3,4 +3,4 @@
 /**
  * What a roof's part is (docs/adr/8044 §6).
  */
-export type RoofPartKind = "chimney" | "vent" | "window";
+export type RoofPartKind = "chimney" | "vent" | "window" | "downpipe";

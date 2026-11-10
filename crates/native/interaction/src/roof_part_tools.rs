@@ -9,8 +9,12 @@
 //!   usual roof window; its middle on a sloping face and its outline wholly in it. Sivas İmar Yönetmeliği 40 allows at
 //!   most 1.20 × 1.50 m: the preview says when it is larger.
 //!
-//! The roof is the one whose eaves are round the click among those the view shows; one the view draws whole before one
-//! it draws by its eaves alone (its own storey's plan, where its parts are not drawn), then the highest.
+//! - İniş borusu (docs/adr/8044 §8): Çap (Ç, Ø100 mm); a click near a sloping eaves edge puts it under the gutter, its
+//!   middle at the gutter's middle (Mimarlık Hizmetleri Şartnamesi 14.5.3 x: drawn at its real size, its size written).
+//!
+//! The roof is the one whose eaves are round the click among those the view shows (a downpipe's: whose sloping eaves
+//! the click is nearest); one the view draws whole before one it draws by its eaves alone (its own storey's plan, where
+//! its parts are not drawn), then the highest.
 
 use kentos_commands::{
     ArchChange, ArchEdit, ArchOperation, CommandResult, Entity, RoofEntity, RoofPart, RoofPartKind,
@@ -30,6 +34,9 @@ use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Stroke,
 
 pub const CHIMNEY_ID: &str = "roofChimney";
 pub const WINDOW_ID: &str = "roofWindow";
+pub const DOWNPIPE_ID: &str = "roofDownpipe";
+/// How far from a sloping eaves edge a click still means a downpipe under its gutter, metres.
+const DOWNPIPE_REACH: f64 = 1.0;
 
 /// A chimney's and a vent's width and depth when none is given, metres: a flue in brick, as drawn on permit sets.
 pub const CHIMNEY_SIZE: f64 = 0.4;
@@ -82,6 +89,12 @@ impl RoofPartTool {
         Self::of(RoofPartKind::Window, WINDOW_SIZE.0, WINDOW_SIZE.1)
     }
 
+    /// İniş borusu.
+    pub fn downpipe() -> Self {
+        let d = kentos_commands::DEFAULT_DOWNPIPE;
+        Self::of(RoofPartKind::Downpipe, d, d)
+    }
+
     fn of(kind: RoofPartKind, width: f64, depth: f64) -> Self {
         Self {
             kind,
@@ -99,6 +112,10 @@ impl RoofPartTool {
 
     fn is_window(&self) -> bool {
         self.kind == RoofPartKind::Window
+    }
+
+    fn is_downpipe(&self) -> bool {
+        self.kind == RoofPartKind::Downpipe
     }
 
     /// A chimney made a vent or back: its rise its new kind's rule (80 cm over the ridge, 60 cm over the roof) again.
@@ -125,12 +142,12 @@ impl RoofPartTool {
         }
     }
 
-    /// The part's name in a sentence's object: "bacayı", "pencereyi".
+    /// The part's name in a sentence's object: "bacayı", "pencereyi", "boruyu".
     fn object_word(&self) -> &'static str {
-        if self.is_window() {
-            "pencereyi"
-        } else {
-            "bacayı"
+        match self.kind {
+            RoofPartKind::Window => "pencereyi",
+            RoofPartKind::Downpipe => "boruyu",
+            _ => "bacayı",
         }
     }
 
@@ -190,10 +207,69 @@ impl RoofPartTool {
         Ok((*slot, (*r).clone()))
     }
 
+    /// The roof whose sloping eaves are nearest `at`, within [`DOWNPIPE_REACH`], among those the view draws whole; the
+    /// downpipe's middle under its gutter there: the click moved square onto the nearest sloping eaves edge, then out by
+    /// half the gutter's width (as it is, when the roof has no gutter: the command says so).
+    fn downpipe_at(&self, at: Vec2, cx: &Context<'_>) -> Result<(Slot, RoofEntity, Vec2), String> {
+        let (_, looks) = cx.spatial.level_looks();
+        let mut best: Option<(f64, Slot, &RoofEntity, Vec2)> = None;
+        for (uid, e) in cx.doc.entities_with_uids() {
+            let Entity::Roof(r) = e else { continue };
+            let Some(slot) = cx.doc.slot_of(uid) else { continue };
+            if !cx.doc.layers().is_visible(&r.base.layer_id)
+                || looks.hidden.contains(&slot.0)
+                || looks.roofs.contains(&slot.0)
+                || !cx.spatial.view_shown(slot)
+            {
+                continue;
+            }
+            let pts = &r.roof.pts;
+            let n = pts.len();
+            let ccw = pts
+                .iter()
+                .enumerate()
+                .map(|(i, a)| {
+                    let b = pts[(i + 1) % n];
+                    a.x * b.y - b.x * a.y
+                })
+                .sum::<f64>()
+                >= 0.0;
+            for i in (0..n).filter(|i| r.roof.slopes.get(*i).is_some_and(Option::is_some)) {
+                let (a, b) = (pts[i], pts[(i + 1) % n]);
+                let (dx, dy) = (b.x - a.x, b.y - a.y);
+                let len2 = dx * dx + dy * dy;
+                if len2 <= 0.0 {
+                    continue;
+                }
+                let t = (((at.x - a.x) * dx + (at.y - a.y) * dy) / len2).clamp(0.0, 1.0);
+                let foot = Vec2::new(a.x + dx * t, a.y + dy * t);
+                let d = (foot.x - at.x).hypot(foot.y - at.y);
+                if d > DOWNPIPE_REACH || best.as_ref().is_some_and(|(bd, ..)| *bd <= d) {
+                    continue;
+                }
+                let l = len2.sqrt();
+                let out = if ccw {
+                    Vec2::new(dy / l, -dx / l)
+                } else {
+                    Vec2::new(-dy / l, dx / l)
+                };
+                let half = r.roof.gutter.map_or(0.0, |g| g / 2.0);
+                let place = r
+                    .roof
+                    .gutter
+                    .map_or(at, |_| Vec2::new(foot.x + out.x * half, foot.y + out.y * half));
+                best = Some((d, slot, r, place));
+            }
+        }
+        best.map(|(_, slot, r, place)| (slot, r.clone(), place)).ok_or_else(|| {
+            "Yakında eğimli bir saçak yok; boruyu çatının oluğunun yanına koyun.".to_owned()
+        })
+    }
+
     /// The part at `at` on `r`: a chimney or a vent squared with the eaves nearest it (its turn the eaves' direction
     /// within ±45°: an upright building's chimney is not turned); a window takes its face's.
     fn part_at(&self, at: Vec2, r: &RoofEntity) -> RoofPart {
-        let rotation = (!self.is_window())
+        let rotation = (!self.is_window() && !self.is_downpipe())
             .then(|| {
                 let pts = &r.roof.pts;
                 let k = kentos_native_application::roofs::nearest_edge(pts, points::wire(at));
@@ -212,7 +288,7 @@ impl RoofPartTool {
             width: self.width,
             depth: self.depth,
             rotation,
-            rise: (!self.is_window()).then(|| self.rise_now()),
+            rise: (!self.is_window() && !self.is_downpipe()).then(|| self.rise_now()),
         }
     }
 
@@ -233,7 +309,12 @@ impl RoofPartTool {
     /// What the plan writes for a part at `at`: the input, what it makes and the part's outline (a chimney's with its
     /// diagonals); why it writes none.
     fn planned(&self, at: Vec2, cx: &Context<'_>) -> Result<(ArchEdit, Made, Vec<Stroke>), String> {
-        let (slot, r) = self.roof_at(at, cx)?;
+        let (slot, r, at) = if self.is_downpipe() {
+            self.downpipe_at(at, cx)?
+        } else {
+            let (slot, r) = self.roof_at(at, cx)?;
+            (slot, r, at)
+        };
         let input = Self::input(slot, &r, self.part_at(at, &r), cx).ok_or_else(String::new)?;
         let written = match arch_edit::plan_in(cx.doc, &input) {
             CommandResult::Completed { output, .. } => output,
@@ -253,7 +334,18 @@ impl RoofPartTool {
         let Some(part) = spec.parts.last() else {
             return Err(String::new());
         };
-        let ring = roof::part_ring(&pts, &spec, part).unwrap_or_default();
+        // A downpipe round, at its size.
+        let ring = if self.is_downpipe() {
+            let r = part.width / 2.0;
+            (0..24)
+                .map(|k| {
+                    let a = std::f64::consts::TAU * f64::from(k) / 24.0;
+                    Vec2::new(part.at.x + r * a.cos(), part.at.y + r * a.sin())
+                })
+                .collect()
+        } else {
+            roof::part_ring(&pts, &spec, part).unwrap_or_default()
+        };
         let made = Made {
             ridge: spec.base + roof::ridge_rise(&pts, &spec).unwrap_or(0.0),
             top: roof::part_top(&pts, &spec, part),
@@ -272,7 +364,7 @@ impl RoofPartTool {
             let diagonals: &[[usize; 2]] = match self.kind {
                 RoofPartKind::Chimney => &[[0, 2], [1, 3]],
                 RoofPartKind::Vent => &[[0, 2]],
-                RoofPartKind::Window => &[],
+                RoofPartKind::Window | RoofPartKind::Downpipe => &[],
             };
             strokes.extend(diagonals.iter().map(|[i, j]| Stroke {
                 pts: vec![ring[*i], ring[*j]],
@@ -320,6 +412,10 @@ impl RoofPartTool {
         }
         let f = cx.format();
         let said = match (self.kind, made.top) {
+            (RoofPartKind::Downpipe, _) => format!(
+                "İniş borusu kondu: Ø{}, oluğun altında.",
+                (self.width * 1000.0).round()
+            ),
             (RoofPartKind::Window, _) => format!(
                 "Çatı penceresi kondu: {}{}.",
                 size(&f, self.width, self.depth),
@@ -393,6 +489,9 @@ impl RoofPartTool {
     }
 
     fn ask_of(&self, key: &str) -> Option<Ask> {
+        if self.is_downpipe() {
+            return (key == "Ç").then_some(Ask::Width);
+        }
         Some(match key {
             "E" => Ask::Width,
             "Y" if self.is_window() => Ask::Depth,
@@ -428,6 +527,11 @@ impl RoofPartTool {
                 );
                 return false;
             }
+            // A downpipe is round: its depth its width.
+            Ask::Width if self.is_downpipe() => {
+                self.width = v;
+                self.depth = v;
+            }
             Ask::Width => self.width = v,
             Ask::Depth => self.depth = v,
             Ask::Rise if v.abs() > top => {
@@ -454,6 +558,7 @@ fn kind_name(kind: RoofPartKind) -> &'static str {
         RoofPartKind::Chimney => "chimney",
         RoofPartKind::Vent => "vent",
         RoofPartKind::Window => "window",
+        RoofPartKind::Downpipe => "downpipe",
     }
 }
 
@@ -463,6 +568,7 @@ fn kind_icon(kind: RoofPartKind) -> &'static str {
         RoofPartKind::Chimney => "roofChimney",
         RoofPartKind::Vent => "roofVent",
         RoofPartKind::Window => "roofWindow",
+        RoofPartKind::Downpipe => "roofDownpipe",
     }
 }
 
@@ -477,18 +583,18 @@ impl Tool for RoofPartTool {
     }
 
     fn id(&self) -> &'static str {
-        if self.is_window() {
-            WINDOW_ID
-        } else {
-            CHIMNEY_ID
+        match self.kind {
+            RoofPartKind::Window => WINDOW_ID,
+            RoofPartKind::Downpipe => DOWNPIPE_ID,
+            _ => CHIMNEY_ID,
         }
     }
 
     fn label(&self) -> &'static str {
-        if self.is_window() {
-            "Çatı penceresi"
-        } else {
-            "Çatı bacası"
+        match self.kind {
+            RoofPartKind::Window => "Çatı penceresi",
+            RoofPartKind::Downpipe => "İniş borusu",
+            _ => "Çatı bacası",
         }
     }
 
@@ -513,6 +619,9 @@ impl Tool for RoofPartTool {
         let title = self.label();
         let words = |label: &'static str| Prompt::new(title, label).option("Geri", "G");
         match self.ask {
+            Some(Ask::Width) if self.is_downpipe() => {
+                return words("borunun çapını yazın (10 cm gibi)");
+            }
             Some(Ask::Width) if self.is_window() => {
                 return words("pencerenin saçak boyunca enini yazın (78 cm gibi)");
             }
@@ -532,6 +641,11 @@ impl Tool for RoofPartTool {
             None => {}
         }
         let f = &self.format;
+        if self.is_downpipe() {
+            return Prompt::new(title, "borunun yerine, eğimli saçağın oluğunun yanına tıklayın")
+                .option_with("Çap", "Ç", f.length(self.width))
+                .option("Bitir", "Enter");
+        }
         if self.is_window() {
             return Prompt::new(
                 title,
@@ -603,6 +717,17 @@ impl Tool for RoofPartTool {
     fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
         use crate::tool_settings::Setting;
         let mut out = Vec::new();
+        if self.is_downpipe() {
+            out.push(Setting::text("Ç", "Çap", f.length(self.width)));
+            out.push(Setting::hint(
+                "TH",
+                "Yerleşim",
+                "Boru oluğun altına, ortası oluğun ortasına gelecek biçimde konur; planda gerçek boyunda çizilir ve çapı \
+                 yazılır (Mimarlık Hizmetleri Şartnamesi 14.5.3 x). Çap yağış ve çatı alanına göre TS EN 12056-3 ile \
+                 seçilir.",
+            ));
+            return out;
+        }
         if !self.is_window() {
             out.push(Setting::choice("T", "Tür", self.kind_choices()));
         }
@@ -686,11 +811,15 @@ impl Tool for RoofPartTool {
             lines: match (&self.why, self.made) {
                 (Some(why), _) => vec![self.label().to_owned(), why.clone()],
                 (_, Some(made)) => {
-                    let mut lines = vec![format!(
-                        "{} · {}",
-                        self.kind.label(),
-                        size(format, self.width, self.depth)
-                    )];
+                    let mut lines = vec![if self.is_downpipe() {
+                        format!("İniş borusu · Ø{}", (self.width * 1000.0).round())
+                    } else {
+                        format!(
+                            "{} · {}",
+                            self.kind.label(),
+                            size(format, self.width, self.depth)
+                        )
+                    }];
                     match (made.top, made.slope) {
                         (Some(top), _) => lines.push(format!(
                             "Tepesi {} · {} {} üstünde",

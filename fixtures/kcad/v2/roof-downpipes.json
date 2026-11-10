@@ -1,0 +1,131 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İniş borulu çatı",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "k1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "cati",
+      "name": "MM-CATI-KIREMIT",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cati",
+  "uids": [
+    "0192f5a1-8044-7000-8000-000000000001"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "roof",
+      "id": 1,
+      "layerId": "cati",
+      "attrs": {},
+      "pts": [
+        {
+          "x": -0.5,
+          "y": -0.5
+        },
+        {
+          "x": 12.5,
+          "y": -0.5
+        },
+        {
+          "x": 12.5,
+          "y": 9.5
+        },
+        {
+          "x": -0.5,
+          "y": 9.5
+        }
+      ],
+      "slopes": [
+        33.0,
+        33.0,
+        33.0,
+        33.0
+      ],
+      "overhang": 0.5,
+      "material": "Kiremit",
+      "arch": {
+        "level": "k1"
+      },
+      "gutter": 0.15,
+      "snowGuard": 0.3,
+      "parts": [
+        {
+          "kind": "downpipe",
+          "at": {
+            "x": -0.575,
+            "y": -0.575
+          },
+          "width": 0.1,
+          "depth": 0.1
+        },
+        {
+          "kind": "downpipe",
+          "at": {
+            "x": 12.575,
+            "y": -0.575
+          },
+          "width": 0.1,
+          "depth": 0.1
+        }
+      ]
+    }
+  ]
+}

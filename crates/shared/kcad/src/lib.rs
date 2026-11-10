@@ -941,11 +941,13 @@ pub const SCHEMA_WITH_ROOFS: u32 = 237;
 pub const SCHEMA_WITH_ROOF_PARTS: u32 = 238;
 /// Schema 239 (docs/adr/8044 §8): a roof's gutter and snow guard (`gutter`, `snowGuard` of a roof).
 pub const SCHEMA_WITH_ROOF_EDGES: u32 = 239;
+/// Schema 240 (docs/adr/8044 §8): a roof's downpipes (`downpipe` among a roof's parts' kinds).
+pub const SCHEMA_WITH_ROOF_DOWNPIPES: u32 = 240;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 237] = [
+pub const SCHEMAS: [u32; 238] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1183,6 +1185,7 @@ pub const SCHEMAS: [u32; 237] = [
     SCHEMA_WITH_ROOFS,
     SCHEMA_WITH_ROOF_PARTS,
     SCHEMA_WITH_ROOF_EDGES,
+    SCHEMA_WITH_ROOF_DOWNPIPES,
 ];
 
 /// The file a drawing is saved as.

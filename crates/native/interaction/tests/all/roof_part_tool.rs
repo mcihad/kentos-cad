@@ -211,3 +211,43 @@ fn the_roof_plan_draws_every_roof_whole_and_no_storey_s_inside() {
         "{plan:?}"
     );
 }
+
+/// İniş borusu (docs/adr/8044 §8): without a gutter nothing, said; with a 15 cm gutter a click 10 cm inside the south
+/// eaves puts a Ø100 downpipe under it, its middle at the gutter's middle, 7.5 cm outside the eaves.
+#[test]
+fn a_downpipe_goes_under_the_gutter_nearest_the_click() {
+    let mut b = roofed();
+    b.start("roofDownpipe");
+    assert_eq!(b.options(), ["Ç", "Enter"]);
+    b.click(6.0, -0.4);
+    assert_eq!(the_roof(&b).roof.parts.len(), 0);
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("İniş borusu oluğa bağlanır")),
+        "{:?}",
+        b.last_text()
+    );
+    let uid = b
+        .doc
+        .entities_with_uids()
+        .find_map(|(u, e)| matches!(e, Entity::Roof(_)).then_some(u))
+        .expect("the roof");
+    run(
+        &mut b,
+        "cad.arch.edit",
+        json!({"uids": [uid.to_string()], "operation": {"kind": "set", "gutter": 0.15}}),
+    );
+    b.click(6.0, -0.4);
+    let roof = the_roof(&b);
+    let p = &roof.roof.parts[0];
+    assert_eq!(p.kind, RoofPartKind::Downpipe);
+    assert!(
+        (p.at.x - E - 6.0).abs() < 1e-9 && (p.at.y - N + 0.575).abs() < 1e-9,
+        "{p:?}"
+    );
+    assert_eq!((p.width, p.depth, p.rise), (0.1, 0.1, None));
+    assert_eq!(
+        b.last_text(),
+        Some("İniş borusu kondu: Ø100, oluğun altında.")
+    );
+}

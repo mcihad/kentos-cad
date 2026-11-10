@@ -278,8 +278,19 @@ projede çatı planını ister.
 - **Çatı aracı:** Oluk (O, 15 cm) ve Kar siperliği (K, 30 cm: saçak ucunda, Sivas 42/5 zorunlu kıldığı için açık
   başlar); boş ya da "yok" yazılınca yok; düz çatıya ikisi de yazılmaz.
 - **Öznitelikler:** "Oluk" ve "Kar siperliği" satırları (yoksa "Yok").
-- **Sonraya (5. bölümün devamı):** iniş borusu (oluğa bağlı, Ø100, planda gerçek boyutunda ve çapı yazılı), görünüşte
-  oluk ve iniş boruları, denetim: kar siperliği olmayan eğimli çatıya Sivas 42/5 uyarısı.
+- **İniş borusu (`RoofPartKind::Downpipe`, `.kcad` 240):** çatının bir parçası; genişliği çapı (varsayılan Ø100).
+  Yüksekliği verilmez ("İniş borusu oluktan zemine iner"). Oluğa bağlanır: oluğu olmayan çatıya konmaz ("İniş borusu
+  oluğa bağlanır; çatının oluğu yok."); ortası eğimli bir saçağın dışında ya da üstünde, saçaktan en çok oluk genişliği
+  + yarıçap uzakta olmalı (içeride, uzakta ya da kalkan yanında: "…oluğun altında değil"). Şema 239 dosya iniş borusu
+  yazamaz; okuyan "şema 240 ister" der.
+- **Planda** gerçek boyutunda daire, yanında çapı milimetreyle ("Ø100"; Şartname 14.5.3 x "gerçek boyutlarında çizilir
+  ve ölçüleri yazılır"). Kesitte prizma yok, çatıda delik yok.
+- **İniş borusu aracı** (Mimari › Yerleştir › Çatı'nın dördüncüsü, `IB`): tıklanan noktaya en yakın eğimli saçağa (1 m
+  içinde) iner ve oluğun ortasına oturur; Çap (Ç) seçeneği; çatının oluğu yoksa ya da saçak uzaksa kırmızı ret. Kendi
+  katının planında konmaz (çatı orada yalnız kesikli saçak).
+- **Öznitelikler:** "İniş borusu 1", "İniş borusu 2" … satırlarında çap ("Ø0.100 m").
+- **Sonraya (5. bölümün devamı):** görünüşte oluk ve iniş boruları (saçaktan zemine), denetim: kar siperliği olmayan
+  eğimli çatıya Sivas 42/5 uyarısı, PAİY 40/42 ve BYKHY 58/2 sınırları.
 
 ## Doğrulama
 
@@ -344,11 +355,18 @@ projede çatı planını ister.
   kaldırır, 60 cm oluk reddedilir, düz çatıda yok); masaüstü 20 (seçenek harfleri, Öznitelikler). Gerçek pencere
   (`fixtures/interaction/real/cati-oluk.txt`): köşede dışta oluk, içte çentikli kar siperliği, adları güney saçakta;
   araç ayarlarında ve Öznitelikler'de "Oluk 0.150 m", "Kar siperliği 0.300 m".
+- 5. bölüm, iniş borusu (§8): çekirdek 13 (daire gerçek boyunda, "Ø100", halka ve tepe yok); KCAD 250 (şema 240 örneği
+  `roof-downpipes.kcad`, şema 239'da ret, şema 241'in reddi; başvuru `--check` 1788 dosya); ortak durumlar
+  `cad.roofs.create` 58 (6 yeni: 1 geçerli, 5 ret: oluksuz çatı, saçağın içinde, oluktan uzak, kalkan yanında,
+  yükseklik verilmiş); etkileşim 14 (boru tıklamaya en yakın saçağın oluğuna iner); masaüstü 20 (harfler,
+  Öznitelikler). Gerçek pencere (`fixtures/interaction/real/cati-inis-borusu.txt`): menü aramasında "İniş borusu"
+  (Mimari › Yerleştir); önizleme ve Çap/Yerleşim ipucu; güney saçağına iki boru, köşede oluk bandının içinde daire ve
+  "Ø100"; Öznitelikler "İniş borusu 1/2 Ø0.100 m".
 
 ## Sonraya kalan
 
 - §9: içe dönen köşeli saçak (L, T) ve dereler.
-- Oluk, iniş borusu, kar siperliği; PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (PAİY 40'ın
+- Görünüşte oluk ve iniş borusu; PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (kar siperliği; PAİY 40'ın
   mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır; duman
   bacası mahya + 0,80 m, hava bacası 0,60 m, pencerenin cepheye 1 m ve birbirine 2 m uzaklığı); bacanın duvar içi
   bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);

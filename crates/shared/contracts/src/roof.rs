@@ -46,6 +46,8 @@ pub const CHIMNEY_OVER_RIDGE: f64 = 0.8;
 /// A vent's top over the roof at its place when none is given, metres: PAİY 40/5 allows "hava bacaları … en fazla 0.60
 /// metre" over the roof's planes.
 pub const VENT_OVER_ROOF: f64 = 0.6;
+/// A downpipe's diameter when the tool gives one, metres: Ø100 mm.
+pub const DEFAULT_DOWNPIPE: f64 = 0.1;
 /// The widest a roof's gutter is, metres.
 pub const MAX_ROOF_GUTTER: f64 = 0.5;
 /// The farthest a roof's snow guard stands in from its eaves, metres.
@@ -69,6 +71,8 @@ pub enum RoofPartKind {
     Vent,
     /// Çatı penceresi: in its face's plane, turned with its face's slope.
     Window,
+    /// İniş borusu (docs/adr/8044 §8): under the gutter, outside the eaves, its width its diameter.
+    Downpipe,
 }
 
 impl RoofPartKind {
@@ -78,6 +82,7 @@ impl RoofPartKind {
             RoofPartKind::Chimney => "Duman bacası",
             RoofPartKind::Vent => "Hava bacası",
             RoofPartKind::Window => "Çatı penceresi",
+            RoofPartKind::Downpipe => "İniş borusu",
         }
     }
 
@@ -87,6 +92,7 @@ impl RoofPartKind {
             RoofPartKind::Chimney => "Duman bacasının",
             RoofPartKind::Vent => "Hava bacasının",
             RoofPartKind::Window => "Çatı penceresinin",
+            RoofPartKind::Downpipe => "İniş borusunun",
         }
     }
 }
@@ -128,7 +134,7 @@ impl RoofPart {
         match self.kind {
             RoofPartKind::Chimney => Some(self.rise.unwrap_or(CHIMNEY_OVER_RIDGE)),
             RoofPartKind::Vent => Some(self.rise.unwrap_or(VENT_OVER_ROOF)),
-            RoofPartKind::Window => None,
+            RoofPartKind::Window | RoofPartKind::Downpipe => None,
         }
     }
 }
@@ -351,6 +357,12 @@ impl RoofFields {
                         "Çatı penceresi çatının düzlemindedir; yüksekliği verilmez.".into(),
                     ));
                 }
+                (RoofPartKind::Downpipe, Some(_)) => {
+                    return Some((
+                        at("rise"),
+                        "İniş borusu oluktan zemine iner; yüksekliği verilmez.".into(),
+                    ));
+                }
                 (_, Some(r)) if !(r.is_finite() && r.abs() <= MAX_ROOF_OFFSET) => {
                     return Some((
                         at("rise"),
@@ -383,6 +395,11 @@ impl RoofFields {
 /// Whether `e` is a roof with parts: a file of schema 238 holds them (docs/adr/8044 §6).
 pub fn needs_roof_parts(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Roof(r) if !r.roof.parts.is_empty())
+}
+
+/// Whether `e` is a roof with a downpipe: a file of schema 240 holds them (docs/adr/8044 §8).
+pub fn needs_roof_downpipes(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Roof(r) if r.roof.parts.iter().any(|p| p.kind == RoofPartKind::Downpipe))
 }
 
 /// Whether `e` is a roof with a gutter or a snow guard: a file of schema 239 holds them (docs/adr/8044 §8).

@@ -63,14 +63,24 @@ pub enum PartKind {
     Vent,
     /// Çatı penceresi.
     Window,
+    /// İniş borusu (docs/adr/8044 §8): under the gutter, its width its diameter.
+    Downpipe,
 }
 
 impl PartKind {
+    const ALL: [PartKind; 4] = [
+        PartKind::Chimney,
+        PartKind::Vent,
+        PartKind::Window,
+        PartKind::Downpipe,
+    ];
+
     fn name(self) -> &'static str {
         match self {
             PartKind::Chimney => "chimney",
             PartKind::Vent => "vent",
             PartKind::Window => "window",
+            PartKind::Downpipe => "downpipe",
         }
     }
 }
@@ -84,7 +94,7 @@ impl crate::api::json::ToJson for PartKind {
 impl crate::api::json::FromJson for PartKind {
     fn from_json(v: &crate::api::json::Json) -> Result<Self, String> {
         match v {
-            crate::api::json::Json::Str(s) => [PartKind::Chimney, PartKind::Vent, PartKind::Window]
+            crate::api::json::Json::Str(s) => PartKind::ALL
                 .into_iter()
                 .find(|k| k.name() == s)
                 .ok_or_else(|| format!("çatı parçası türü değil: {s}")),
@@ -124,6 +134,8 @@ crate::json_struct!(Part {
 /// on no face (a flat roof's, or outside the eaves).
 pub fn part_ring(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<Vec<Vec2>> {
     let (along, down, w, d) = match part.kind {
+        // A downpipe is round and hangs off the gutter: no ring on the roof.
+        PartKind::Downpipe => return None,
         PartKind::Chimney | PartKind::Vent => {
             let r = part.rotation.unwrap_or(0.0);
             let (sin, cos) = (crate::jsmath::sin(r), crate::jsmath::cos(r));
@@ -181,7 +193,7 @@ fn inside(ring: &[Vec2], p: Vec2) -> bool {
 /// highest point), a vent's over the roof's highest point under its outline; none for a window.
 pub fn part_top(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<f64> {
     match part.kind {
-        PartKind::Window => None,
+        PartKind::Window | PartKind::Downpipe => None,
         PartKind::Chimney => Some(spec.base + ridge_rise(pts, spec).ok()? + part.rise),
         PartKind::Vent => {
             let ring = part_ring(pts, spec, part)?;
@@ -848,6 +860,20 @@ fn edge_pieces(pts: &[Vec2], spec: &RoofSpec, scale: f64, h: f64) -> Vec<Piece> 
 fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
     let mut out = Vec::new();
     for part in &spec.parts {
+        // A downpipe at its real size, its diameter written beside it in millimetres (Mimarlık Hizmetleri Şartnamesi
+        // 14.5.3 x: "Yağmur iniş boruları gerçek boyutlarında çizilir ve ölçüleri yazılır").
+        if part.kind == PartKind::Downpipe {
+            let r = part.width / 2.0;
+            out.push(piece(Shape::Circle { c: part.at, r }));
+            out.push(piece(text(
+                Vec2::new(part.at.x + r + h * 0.5, part.at.y),
+                format!("Ø{}", crate::jsmath::js_round(part.width * 1000.0)),
+                h,
+                0.0,
+                TextAlign::MiddleLeft,
+            )));
+            continue;
+        }
         let Some(ring) = part_ring(pts, spec, part) else {
             continue;
         };
@@ -858,6 +884,7 @@ fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
                 out.push(piece(segment(ring[1], ring[3])));
             }
             PartKind::Vent => out.push(piece(segment(ring[0], ring[2]))),
+            PartKind::Downpipe => {}
             PartKind::Window => {
                 let frame = 0.05;
                 // The frame: each corner moved 5 cm in along both of the window's own sides.
@@ -913,6 +940,34 @@ mod tests {
             base: 6.0,
             ..Default::default()
         }
+    }
+
+    #[test]
+    fn a_downpipe_is_drawn_at_its_size_with_its_diameter() {
+        let s = RoofSpec {
+            gutter: Some(0.15),
+            parts: vec![Part {
+                kind: PartKind::Downpipe,
+                at: Vec2::new(6.0, -0.075),
+                width: 0.1,
+                depth: 0.1,
+                ..Default::default()
+            }],
+            ..spec([Some(33.0); 4])
+        };
+        let p = pieces_at(&rect(12.0, 9.0), &s, 100.0, Level::Whole);
+        assert!(
+            p.iter().any(|q| matches!(&q.shape, Shape::Circle { c, r }
+                if (c.x - 6.0).abs() < 1e-12 && (c.y + 0.075).abs() < 1e-12 && (r - 0.05).abs() < 1e-12)),
+            "its circle"
+        );
+        assert!(
+            p.iter().any(|q| matches!(&q.shape, Shape::Text { text, .. } if text == "Ø100")),
+            "its diameter written"
+        );
+        // No ring on the roof, no top: no prism in a section.
+        assert_eq!(part_ring(&rect(12.0, 9.0), &s, &s.parts[0]), None);
+        assert_eq!(part_top(&rect(12.0, 9.0), &s, &s.parts[0]), None);
     }
 
     #[test]

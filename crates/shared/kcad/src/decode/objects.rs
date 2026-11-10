@@ -478,6 +478,8 @@ pub(super) struct Features {
     pub(super) roof_parts: bool,
     /// Schema 239 (docs/adr/8044 §8): a roof's gutter and snow guard.
     pub(super) roof_edges: bool,
+    /// Schema 240 (docs/adr/8044 §8): a roof's downpipes.
+    pub(super) roof_downpipes: bool,
     /// Schema 235 (docs/adr/8041 §2): a column's material.
     pub(super) column_material: bool,
     /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
@@ -794,6 +796,7 @@ impl Features {
             roofs: schema >= crate::SCHEMA_WITH_ROOFS,
             roof_parts: schema >= crate::SCHEMA_WITH_ROOF_PARTS,
             roof_edges: schema >= crate::SCHEMA_WITH_ROOF_EDGES,
+            roof_downpipes: schema >= crate::SCHEMA_WITH_ROOF_DOWNPIPES,
             column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
             beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
@@ -2637,6 +2640,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::UnknownField,
             "çatının oluğu ve kar siperliği (gutter, snowGuard) şema 239 ister",
+        ));
+    }
+    // Schema 240 (docs/adr/8044 §8): a roof's downpipes.
+    if kentos_contracts::needs_roof_downpipes(&entity) && !has.roof_downpipes {
+        return Err(r.fail(
+            Code::UnknownField,
+            "çatının iniş boruları (downpipe) şema 240 ister",
         ));
     }
     // Schema 236 (docs/adr/8041 §3): a beam's role and base.

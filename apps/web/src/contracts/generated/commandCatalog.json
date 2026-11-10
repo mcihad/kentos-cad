@@ -189195,6 +189195,11 @@
           "const": "window",
           "description": "Çatı penceresi: in its face's plane, turned with its face's slope.",
           "type": "string"
+        },
+        {
+          "const": "downpipe",
+          "description": "İniş borusu (docs/adr/8044 §8): under the gutter, outside the eaves, its width its diameter.",
+          "type": "string"
         }
       ]
     },

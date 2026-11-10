@@ -2039,6 +2039,11 @@
           "command": "tool.roofWindow",
           "title": "Çatı",
           "label": "Çatı penceresi"
+         },
+         {
+          "command": "tool.roofDownpipe",
+          "title": "Çatı",
+          "label": "İniş borusu"
          }
         ]
        },

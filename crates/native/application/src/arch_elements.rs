@@ -1566,6 +1566,7 @@ pub(crate) fn roof_valid(r: &kentos_commands::RoofFields, at: &str) -> Result<()
         .collect();
     let spec = kentos_geometry_core::geom::roof::RoofSpec {
         slopes: r.slopes.clone(),
+        gutter: r.gutter,
         ..Default::default()
     };
     match kentos_geometry_core::geom::roof::faces(&core, &spec) {
@@ -1589,6 +1590,22 @@ pub(crate) fn roof_valid(r: &kentos_commands::RoofFields, at: &str) -> Result<()
     }
     // Its parts where they can stand (docs/adr/8044 §6), once its faces are known.
     roof_parts_placed(&core, &spec, &r.parts, at)
+}
+
+/// The distance from `p` to the segment from `a` to `b`.
+fn segment_distance(
+    p: kentos_geometry_core::Vec2,
+    a: kentos_geometry_core::Vec2,
+    b: kentos_geometry_core::Vec2,
+) -> f64 {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let len2 = dx * dx + dy * dy;
+    let t = if len2 > 0.0 {
+        (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    (a.x + dx * t - p.x).hypot(a.y + dy * t - p.y)
 }
 
 /// `invalid_roof` for a part that cannot stand where it is given (docs/adr/8044 §6): a chimney or a vent whose middle is
@@ -1620,6 +1637,24 @@ pub(crate) fn roof_parts_placed(
                 "Çatı penceresi tek bir yüzün içinde kalmalı: kırmaya, mahyaya, dereye ya da saçağa taşıyor.".to_owned(),
             ),
             RoofPartKind::Window => None,
+            // Hung off the gutter (docs/adr/8044 §8): the roof has one, and the downpipe's middle is outside the eaves
+            // (or on them), within the gutter's width and its own half of a sloping eaves edge.
+            RoofPartKind::Downpipe if spec.gutter.is_none() => Some(
+                "İniş borusu oluğa bağlanır; çatının oluğu yok. Önce çatıya oluk verin.".to_owned(),
+            ),
+            RoofPartKind::Downpipe => {
+                let n = pts.len();
+                let near = (0..n)
+                    .filter(|i| spec.slopes.get(*i).is_some_and(Option::is_some))
+                    .map(|i| segment_distance(mine.at, pts[i], pts[(i + 1) % n]))
+                    .fold(f64::INFINITY, f64::min);
+                let reach = spec.gutter.unwrap_or(0.0) + part.width / 2.0;
+                let inside = near > 1e-9 && kentos_geometry_core::geometry::point_in_polygon(mine.at, pts);
+                (inside || near > reach + 1e-9).then(|| {
+                    "İniş borusunun ortası oluğun altında değil; boruyu eğimli bir saçağın dışına, oluğun altına koyun."
+                        .to_owned()
+                })
+            }
         };
         if let Some(words) = words {
             return Err(fail(

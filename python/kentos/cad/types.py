@@ -6608,13 +6608,15 @@ class RoofPartKind(_StrEnum):
     - ``chimney``: Duman bacası: its top 0.80 m over the ridge unless given.
     - ``vent``: Hava bacası: its top 0.60 m over the roof at its place unless given.
     - ``window``: Çatı penceresi: in its face's plane, turned with its face's slope.
+    - ``downpipe``: İniş borusu (docs/adr/8044 §8): under the gutter, outside the eaves, its width its diameter.
     """
     CHIMNEY = "chimney"
     VENT = "vent"
     WINDOW = "window"
+    DOWNPIPE = "downpipe"
 
 
-RoofPartKindName = Literal["chimney", "vent", "window"]
+RoofPartKindName = Literal["chimney", "vent", "window", "downpipe"]
 """The names of :class:`RoofPartKind`, for a plain string."""
 
 

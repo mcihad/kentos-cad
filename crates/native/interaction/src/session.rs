@@ -132,6 +132,7 @@ pub const TOOLS: &[&str] = &[
     crate::roof_tools::ROOF_ID,
     crate::roof_part_tools::CHIMNEY_ID,
     crate::roof_part_tools::WINDOW_ID,
+    crate::roof_part_tools::DOWNPIPE_ID,
     arch_tools::GRID_NUMBER_ID,
     crate::grid_system::ID,
     crate::module_place::ID,
@@ -563,6 +564,9 @@ impl Session {
             }
             crate::roof_part_tools::WINDOW_ID => {
                 Box::new(crate::roof_part_tools::RoofPartTool::window())
+            }
+            crate::roof_part_tools::DOWNPIPE_ID => {
+                Box::new(crate::roof_part_tools::RoofPartTool::downpipe())
             }
             arch_tools::GRID_NUMBER_ID => Box::new(arch_tools::GridNumberTool::new()),
             crate::grid_system::ID => Box::new(crate::grid_system::GridSystemTool::new()),

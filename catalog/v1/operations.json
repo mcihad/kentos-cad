@@ -2239,6 +2239,13 @@
       ],
       "note": "Tıklanan yerin altındaki çatı ve pencerenin ortası, eni ve boyu komuta verilir (Değiştir: parts). Pencerenin hangi yüzde olduğu, yüzün içinde kalıp kalmadığı komutun denetimi; planı yüzün eğimine göre çizilir (ADR 8044 §6)."
     },
+    "tool.roofDownpipe": {
+      "level": "semantic",
+      "via": [
+        "cad.arch.edit"
+      ],
+      "note": "Tıklanan yere en yakın eğimli saçağın çatısı ve borunun ortası (saçağa dik izdüşüm, oluğun genişliğinin yarısı kadar dışarıda) ve çapı komuta verilir (Değiştir: parts). Oluğun altında olup olmadığı komutun denetimi (ADR 8044 §8)."
+    },
     "tool.casework": {
       "level": "semantic",
       "via": [

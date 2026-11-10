@@ -378,6 +378,10 @@
     içeri uzaklık), `.kcad` 239; eğimli her saçak kenarı boyunca (kalkanda yok), `geom::roof::along_eaves` gönyeli ve
     kalkanda dik; planda oluk dışta, kar siperliği içte çentikli, her biri bir kez adlı. Çatı aracı O (15 cm) ve K (30 cm,
     Sivas 42/5 "saçak uçlarında kar siperliği mecburi"), boş/"yok" kaldırır; düz çatıda yok.
+  - **İniş borusu (M44 5. bölüm, ADR 8044 §8):** çatının parçası `RoofPartKind::Downpipe` (`.kcad` 240), genişliği çapı
+    (Ø100), yüksekliği yok. Oluksuz çatıya konmaz; ortası eğimli saçağın dışında, oluk genişliği + yarıçap içinde olmalı.
+    Planda gerçek boyunda daire ve "Ø100" (Şartname 14.5.3 x); kesitte yok. İniş borusu aracı (`IB`, Çatı ▾ dördüncü)
+    tıklamaya en yakın saçağın oluğunun ortasına koyar.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

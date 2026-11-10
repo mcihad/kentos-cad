@@ -1,0 +1,56 @@
+# M44 5. bölüm, iniş borusu (docs/adr/8044 §8), on fixtures/arch/v1/facade-building.kcad (--modul mimari):
+# 1. kat active; Çatı by Binadan near the south wall (Oluk 15 cm by default); İniş borusu from the menu search: its
+# preview near the south-west corner, two downpipes clicked near the south eaves' ends; a close view of the south-west
+# corner: the pipe's circle under the gutter, "Ø100" beside it; the roof selected: Öznitelikler's "İniş borusu 1/2".
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type iniş borusu
+wait 1500
+shot b1-arama
+key Return
+wait 1500
+move 520 790
+wait 1800
+shot b2-onizleme
+click 520 790
+wait 2000
+move 1010 790
+wait 1200
+click 1010 790
+wait 2000
+key Escape
+wait 800
+wheel 505 800 6
+wait 1500
+move 1400 120
+wait 800
+shot b3-kose
+click 800 500 middle
+click 800 500 middle
+wait 2000
+click 465 450
+wait 1500
+wheel 1720 900 -4
+wait 1200
+move 1400 120
+wait 800
+shot b4-oznitelikler

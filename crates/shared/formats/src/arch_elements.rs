@@ -82,6 +82,7 @@ pub fn core_roof_part(p: &kentos_contracts::RoofPart) -> kentos_geometry_core::g
             RoofPartKind::Chimney => PartKind::Chimney,
             RoofPartKind::Vent => PartKind::Vent,
             RoofPartKind::Window => PartKind::Window,
+            RoofPartKind::Downpipe => PartKind::Downpipe,
         },
         at: kentos_geometry_core::Vec2::new(p.at.x, p.at.y),
         width: p.width,
