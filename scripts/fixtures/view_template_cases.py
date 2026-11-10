@@ -34,7 +34,7 @@ E0, N0 = 487000, 4420000
 style = {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}
 PENS = ["walls", "openings", "columns", "stairs", "slabs", "spaces", "dimensions", "tags", "texts", "hatches", "blocks",
         "grids", "viewmarks", "others"]
-PEN_LABELS = {"walls": "Duvarlar", "openings": "Kapı ve pencereler", "columns": "Kolonlar", "stairs": "Merdiven ve rampalar",
+PEN_LABELS = {"walls": "Duvarlar", "openings": "Kapı ve pencereler", "columns": "Kolon ve kirişler", "stairs": "Merdiven ve rampalar",
               "slabs": "Döşemeler", "spaces": "Mahaller", "dimensions": "Ölçüler", "tags": "Etiketler", "texts": "Yazılar",
               "hatches": "Taramalar", "blocks": "Bloklar ve donatı", "grids": "Akslar", "viewmarks": "Görünüm işaretleri",
               "others": "Öbür çizgiler"}

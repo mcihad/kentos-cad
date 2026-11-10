@@ -800,6 +800,7 @@ impl Store {
             | Shape::Space { .. }
             | Shape::Grid { .. }
             | Shape::Column { .. }
+            | Shape::Beam { .. }
             | Shape::Stair { .. }
             | Shape::Ramp { .. }
             | Shape::Tag { .. }
@@ -852,8 +853,15 @@ impl Store {
                         annotation_origin: None,
                     }]
                 }),
-            // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2) and level (docs/adr/3011).
-            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
+            // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2) and level (docs/adr/3011); a
+            // beam's dashed band and, from 1:50, its number and size (docs/adr/3041 §1).
+            Shape::Grid { .. }
+            | Shape::Column { .. }
+            | Shape::Beam { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. }
+            | Shape::Tag { .. }
+            | Shape::ViewMark { .. } => {
                 crate::geom::arch::pieces_in(shape, view)
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2); a slab's edge at its level.
@@ -885,8 +893,8 @@ impl Store {
         self.expanded_of(self.with_line_group(shape, pieces, view), b)
     }
 
-    /// `pieces` at the view's line group (docs/adr/3013): the model's lines (a wall, an opening, a column, a stair, a
-    /// ramp, a slab, furniture) take the group's share of their pen, as Revit's model line weights go by the view's
+    /// `pieces` at the view's line group (docs/adr/3013): the model's lines (a wall, an opening, a column, a beam, a
+    /// stair, a ramp, a slab, furniture) take the group's share of their pen, as Revit's model line weights go by the view's
     /// scale; annotation (a grid, a tag, a view mark, a room's outline and label) keeps its own. Nothing changes at a
     /// share of 1: on a 1:21–1:50 plan, or while every object keeps its own pen.
     fn with_line_group(
@@ -910,6 +918,7 @@ impl Store {
             Shape::Wall { .. }
             | Shape::Opening { .. }
             | Shape::Column { .. }
+            | Shape::Beam { .. }
             | Shape::Stair { .. }
             | Shape::Ramp { .. } => true,
             Shape::Space { space, .. } => space.slab.is_some(),

@@ -421,6 +421,31 @@ impl crate::api::json::Flat for RampSpec {
 }
 to_json_flat!(RampSpec);
 
+impl crate::api::json::Flat for crate::geom::beam::BeamSpec {
+    const NAMES: &'static [&'static str] = &["width", "middle", "height", "tag"];
+
+    fn read_flat(v: &Json) -> Result<Self, String> {
+        Ok(crate::geom::beam::BeamSpec {
+            width: number(v, "width")?.unwrap_or(0.0),
+            middle: number(v, "middle")?.unwrap_or(0.0),
+            height: number(v, "height")?.unwrap_or(0.0),
+            tag: word(v, "tag"),
+        })
+    }
+
+    fn write_flat(&self, out: &mut String, first: &mut bool) {
+        field(out, first, "width", &self.width);
+        if self.middle != 0.0 {
+            field(out, first, "middle", &self.middle);
+        }
+        field(out, first, "height", &self.height);
+        if let Some(t) = &self.tag {
+            field(out, first, "tag", t.as_str());
+        }
+    }
+}
+to_json_flat!(crate::geom::beam::BeamSpec);
+
 impl RampSpec {
     pub fn landing(&self) -> f64 {
         self.landing.unwrap_or(self.width)
@@ -717,7 +742,7 @@ fn circle_ring(c: Vec2, r: f64) -> Vec<Vec2> {
 
 /// How much of an architectural object a drawing shows (docs/adr/3011), from its view ([`level_of`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Level {
+pub(crate) enum Level {
     /// Everything as it was drawn before the levels: its tools' previews and the reference cases ([`pieces`]).
     Whole,
     /// Schematic beyond 1:150 (1:200): a column without its words, a stair and a ramp without railings, a stair
@@ -1916,6 +1941,8 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
         }
         Shape::Stair { pts, stair } => stair_band(pts, stair),
         Shape::Ramp { pts, ramp } => polygon(band(pts, ramp.width / 2.0)),
+        // A beam's band (docs/adr/3041 §1).
+        Shape::Beam { pts, beam } => crate::geom::beam::outline(pts, beam),
         // A tag's middle: its frame is sized on paper (docs/adr/0344 §1).
         Shape::Tag { at, .. } => Shape::Point {
             p: *at,
@@ -1953,6 +1980,7 @@ pub fn pieces_in(shape: &Shape, view: crate::geom::wall::View) -> Vec<Piece> {
         ),
         Shape::Stair { pts, stair } => stair_pieces_at(pts, stair, scale, level),
         Shape::Ramp { pts, ramp } => ramp_pieces_at(pts, ramp, scale, level),
+        Shape::Beam { pts, beam } => crate::geom::beam::pieces_at(pts, beam, scale, level),
         _ => pieces(shape, scale),
     }
 }
@@ -1964,6 +1992,7 @@ pub fn pieces(shape: &Shape, scale: f64) -> Vec<Piece> {
         Shape::Column { at, column } => column_pieces(*at, column, scale),
         Shape::Stair { pts, stair } => stair_pieces(pts, stair, scale),
         Shape::Ramp { pts, ramp } => ramp_pieces(pts, ramp, scale),
+        Shape::Beam { pts, beam } => crate::geom::beam::pieces_at(pts, beam, scale, Level::Whole),
         Shape::Tag { at, tag } => crate::geom::tag::pieces(*at, tag, scale),
         Shape::ViewMark { points, mark } => crate::geom::viewmark::pieces(points, mark, scale),
         _ => Vec::new(),
@@ -1973,7 +2002,10 @@ pub fn pieces(shape: &Shape, scale: f64) -> Vec<Piece> {
 /// A grid's, stair's or ramp's path; none for another shape.
 pub fn path_pts(shape: &Shape) -> Option<&[Vec2]> {
     match shape {
-        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => Some(pts),
+        Shape::Grid { pts, .. }
+        | Shape::Stair { pts, .. }
+        | Shape::Ramp { pts, .. }
+        | Shape::Beam { pts, .. } => Some(pts),
         _ => None,
     }
 }
@@ -1993,6 +2025,10 @@ pub fn with_pts(shape: &Shape, pts: Vec<Vec2>) -> Option<Shape> {
         Shape::Ramp { ramp, .. } => Shape::Ramp {
             pts,
             ramp: ramp.clone(),
+        },
+        Shape::Beam { beam, .. } => Shape::Beam {
+            pts,
+            beam: beam.clone(),
         },
         _ => return None,
     })

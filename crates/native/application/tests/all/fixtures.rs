@@ -107,7 +107,7 @@ use kentos_native_application::{
     walls_joins, walls_partition, walls_rectangle,
 };
 use kentos_native_application::{
-    arch_edit, columns_create, grids_create, ramps_create, stairs_create,
+    arch_edit, beams_create, columns_create, grids_create, ramps_create, stairs_create,
 };
 use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
@@ -1245,6 +1245,23 @@ impl Input for kentos_commands::RampsCreate {
     }
 }
 
+impl Input for kentos_commands::BeamsCreate {
+    /// `beams[0].width`, `.height`, `.offset`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/3041 §1).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("beams[")?.split_once("].")?;
+        let b = self.beams.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "width" => Some(&mut b.width),
+            "height" => Some(&mut b.height),
+            "offset" => b.offset.as_mut(),
+            _ => named_point(&mut b.pts, "pts", rest),
+        }
+    }
+}
+
 impl Input for kentos_commands::TagsCreate {
     /// `tags[0].at.x` and `.y`, `tags[0].size`, `lineWeight` (docs/adr/0344).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -1566,6 +1583,9 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.ends" => c.ends.as_mut().and_then(Option::as_mut),
                 "operation.legs[0]" => c.legs.as_mut().map(|l| &mut l[0]),
                 "operation.legs[1]" => c.legs.as_mut().map(|l| &mut l[1]),
+                // A beam's (docs/adr/3041 §1).
+                "operation.height" => c.height.as_mut(),
+                "operation.offset" => c.offset.as_mut(),
                 _ => None,
             },
             // Mesafe's `operation.distance` (docs/adr/0712).
@@ -5341,6 +5361,9 @@ fn run_op(
         }
         kentos_commands::CAD_RAMPS_CREATE => {
             run!(ramps_create, kentos_commands::RampsCreate)
+        }
+        kentos_commands::CAD_BEAMS_CREATE => {
+            run!(beams_create, kentos_commands::BeamsCreate)
         }
         kentos_commands::CAD_ARCH_EDIT => {
             run!(arch_edit, kentos_commands::ArchEdit)

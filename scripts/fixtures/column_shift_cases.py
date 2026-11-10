@@ -371,12 +371,12 @@ def distances_cases():
 
 
 def edit(state, inp):
-    got = named(inp, "Düzenlenecek aks, kolon, merdiven ya da rampa verilmedi.")
+    got = named(inp, "Düzenlenecek aks, kolon, kiriş, merdiven ya da rampa verilmedi.")
     if isinstance(got, dict):
         return got, None
     for at, i in got:
         if state[i]["kind"] not in ("grid", "column", "stair", "ramp"):
-            return refusal("not_arch_element", "Nesne aks, kolon, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
+            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
                            f"uids[{at}]"), None
     op = inp["operation"]
     if len(got) != 1:

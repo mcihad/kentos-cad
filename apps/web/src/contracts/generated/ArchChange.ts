@@ -4,6 +4,7 @@ import type { ColumnAnchor } from "./ColumnAnchor";
 import type { ColumnShape } from "./ColumnShape";
 import type { GridBubbles } from "./GridBubbles";
 import type { Railings } from "./Railings";
+import type { WallJustify } from "./WallJustify";
 
 /**
  * The fields of a grid, column, stair or ramp to change; absent ones stay, a nullable one's null takes it away. A field
@@ -31,7 +32,7 @@ ends?: number | null,
  */
 shape?: ColumnShape, 
 /**
- * A column's, a stair's or a ramp's.
+ * A column's, a stair's, a ramp's or a beam's.
  */
 width?: number, 
 /**
@@ -116,6 +117,22 @@ base?: number | null,
  * base staying where it is. Not with `base`.
  */
 baseOffset?: number | null, 
+/**
+ * A beam's height (docs/adr/3041 §1).
+ */
+height?: number, 
+/**
+ * A beam's justification on its axis.
+ */
+justify?: WallJustify, 
+/**
+ * A beam's top over where it hangs.
+ */
+offset?: number, 
+/**
+ * A beam's material; null: Betonarme.
+ */
+material?: string | null, 
 /**
  * Any kind's.
  */

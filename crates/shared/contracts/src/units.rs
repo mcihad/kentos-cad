@@ -537,6 +537,16 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
                 *d = s.apply(*d);
             }
         }
+        // Its axis and sizes are lengths, its top a height (docs/adr/3041 §1).
+        Entity::Beam(e) => {
+            let f = &mut e.beam;
+            s.points(&mut f.pts);
+            f.width = s.apply(f.width);
+            f.height = s.apply(f.height);
+            let mut offset = Some(f.offset);
+            s.height(&mut offset);
+            f.offset = offset.unwrap_or(f.offset);
+        }
         Entity::Stair(e) => {
             let f = &mut e.stair;
             s.points(&mut f.pts);

@@ -104,8 +104,8 @@ SELECT_KINDS = ["edit.selectFilter.point", "edit.selectFilter.line", "edit.selec
     "edit.selectFilter.dimension", "edit.selectFilter.hatch", "edit.selectFilter.insert", "edit.selectFilter.leader",
     "edit.selectFilter.table", "edit.selectFilter.image"]
 ARCH_KINDS = ["edit.selectFilter.wall", "edit.selectFilter.opening", "edit.selectFilter.space",
-    "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.stair", "edit.selectFilter.ramp",
-    "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
+    "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.beam", "edit.selectFilter.stair",
+    "edit.selectFilter.ramp", "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
 def select_filter(cad):
     # The status bar's Süzgeç lists the kinds; the drop-down is the same list. The architectural kinds are a building's
     # (docs/adr/0802): KentOS Mimari's, never KentOS Harita's or a CBS project's.
@@ -393,7 +393,7 @@ CAD = [
             ]}, L("tool.room")]),
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
-            S("tool.column"),
+            S("tool.column"), S("tool.beam"),
             {"key": "archGrids", "size": "small", "split": [
                 {"command": "tool.grid", "title": "Aks", "label": "Aks"},
                 {"command": "tool.gridSystem", "title": "Aks", "label": "Aks ağı"},

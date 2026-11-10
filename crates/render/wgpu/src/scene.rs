@@ -1400,7 +1400,7 @@ fn shape(entity: &Entity) -> Shape {
         Entity::Space(_) => kentos_native_style::entity_shape(entity),
         // A slab (docs/adr/0722): its rings and its edge, likewise.
         Entity::Slab(_) => kentos_native_style::entity_shape(entity),
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             kentos_native_style::entity_shape(entity)
         }
         // A point cloud (docs/adr/0207): its plan, the points pass's paint.

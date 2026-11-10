@@ -1008,6 +1008,7 @@ fn building_first(e: &Entity, sections: &mut Vec<Section>) {
             | Entity::Slab(_)
             | Entity::Stair(_)
             | Entity::Ramp(_)
+            | Entity::Beam(_)
             | Entity::Column(_)
             | Entity::Grid(_)
     ) {
@@ -1500,10 +1501,11 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .editor(number(Field::WallHeight(slot))),
             );
             if x.height.is_none() && height.is_some() {
-                geo.push(Row::note(if doc.model.wall_under_slab(x) {
-                    "Üst döşemenin altına kadar"
-                } else {
-                    "Katın yüksekliği"
+                geo.push(Row::note(match doc.model.wall_top_from(x) {
+                    Some(kentos_domain::WallTop::Slab) => "Üst döşemenin altına kadar",
+                    // Docs/adr/3041 §1: a beam over it.
+                    Some(kentos_domain::WallTop::Beam) => "Kirişin altına kadar",
+                    None => "Katın yüksekliği",
                 }));
             }
             let levels = doc
@@ -1575,6 +1577,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
         | Entity::Column(_)
         | Entity::Stair(_)
         | Entity::Ramp(_)
+        | Entity::Beam(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) => {
             geo.extend(arch::rows(doc, slot, e, locked, &f));

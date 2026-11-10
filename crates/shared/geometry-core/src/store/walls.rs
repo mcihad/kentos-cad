@@ -315,3 +315,58 @@ fn a_line_group_weighs_the_models_lines_only() {
     s.set_wall_view(standard);
     assert_eq!((shares(&s, 1.0), shares(&s, 2.0)), (wall, window));
 }
+
+/// A beam (docs/adr/3041 §1) is drawn by its pieces at the view, as a column is: dashed and narrow at every scale, its
+/// number at 1:100, its number and size from 1:50, none at 1:200; its band's corners are snapped to and the line group
+/// weighs it. A beam the store left undrawn was seen in the real window: it was written but showed nothing.
+#[test]
+fn a_beam_is_drawn_dashed_by_the_view_and_snapped_to() {
+    let mut s = Store::new();
+    s.put_json(
+        r#"[{"id":1,"layerId":"a","kind":"beam","pts":[{"x":0,"y":0},{"x":4,"y":0}],"width":0.25,"height":0.5,"tag":"K101"}]"#,
+    )
+    .unwrap();
+    let words = |s: &Store| -> Vec<String> {
+        s.get(1.0)
+            .unwrap()
+            .shapes()
+            .filter_map(|p| match p {
+                Shape::Text { text, .. } => Some(text.clone()),
+                _ => None,
+            })
+            .collect()
+    };
+    let dashed = |s: &Store| -> Vec<Option<String>> {
+        let x = s.get(1.0).unwrap().expanded.clone().expect("its pieces");
+        x.strokes
+            .iter()
+            .zip(&x.shapes)
+            .filter(|(_, p)| !matches!(p, Shape::Text { .. }))
+            .map(|(k, _)| k.line_type.clone())
+            .collect()
+    };
+    for (view, said) in [
+        (View::new(Detail::Schematic, 200.0), vec![]),
+        (View::new(Detail::Schematic, 100.0), vec!["K101".to_owned()]),
+        (View::new(Detail::Standard, 50.0), vec!["K101 25/50".to_owned()]),
+    ] {
+        s.set_wall_view(view);
+        assert_eq!(dashed(&s), [Some("dashed".to_owned())], "{view:?}");
+        assert_eq!(words(&s), said, "{view:?}");
+    }
+    // Its band's corner, 0.125 off its axis.
+    let all = SnapKind::ALL.iter().fold(0, |k, s| k | s.bit());
+    assert_eq!(
+        s.snap(Vec2::new(4.01, 0.13), 0.03, all, None).map(|h| (h.point, h.kind)),
+        Some((Vec2::new(4.0, 0.125), SnapKind::Endpoint))
+    );
+    // Picked on its edge.
+    assert_eq!(s.hit(Vec2::new(2.0, 0.125), 0.01), Some(1.0));
+    // A 1:100 plan's line group halves its pen too: the narrow line's half, a quarter.
+    s.set_wall_view(View {
+        pens: 0.5,
+        ..View::new(Detail::Schematic, 100.0)
+    });
+    let x = s.get(1.0).unwrap().expanded.clone().unwrap();
+    assert_eq!(x.strokes[0].weight_scale, Some(0.25));
+}

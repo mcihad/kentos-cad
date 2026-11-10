@@ -2194,6 +2194,13 @@
       ],
       "note": "Orta çizginin noktaları, yükseklik ve eğim komuta verilir; eğimin denetimi komutun (ADR 0343 §2, §4)."
     },
+    "tool.beam": {
+      "level": "semantic",
+      "via": [
+        "cad.beams.create"
+      ],
+      "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 3041 §1)."
+    },
     "tool.casework": {
       "level": "semantic",
       "via": [

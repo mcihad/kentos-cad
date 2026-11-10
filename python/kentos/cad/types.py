@@ -6538,6 +6538,7 @@ class SelectKind(_StrEnum):
     - ``tag``: Etiket (docs/adr/0344 §5).
     - ``viewMark``: Görünüm işareti (docs/adr/0345 §5).
     - ``slab``: Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
+    - ``beam``: Kiriş (docs/adr/3041 §1); after it for the same reason.
     """
     POINT = "point"
     LINE = "line"
@@ -6566,9 +6567,10 @@ class SelectKind(_StrEnum):
     TAG = "tag"
     VIEW_MARK = "viewMark"
     SLAB = "slab"
+    BEAM = "beam"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab", "beam"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -9532,6 +9534,7 @@ class Entity(_Union):
     - :class:`SlabEntity` (``kind: slab``)
     - :class:`GridEntity` (``kind: grid``)
     - :class:`ColumnEntity` (``kind: column``)
+    - :class:`BeamEntity` (``kind: beam``)
     - :class:`StairEntity` (``kind: stair``)
     - :class:`RampEntity` (``kind: ramp``)
     - :class:`TagEntity` (``kind: tag``)
@@ -18161,6 +18164,230 @@ class BatchRowRan(_Model):
             index=data["index"],
             label=data["label"],
             ran=ProcessingRan.from_json(data["ran"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BeamEntity(Entity):
+    """A beam (docs/adr/3041 §1).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Its axis: straight stretches from point to point, at least two points. Unit: length.
+        width: Its web's width (gövde genişliği), metres. Unit: length.
+        height: Its height (kiriş yüksekliği), metres: its top to its underside, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        justify: How it lies on its axis: its middle (absent), its left face or its right face, as a wall's.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        material: Its material; absent: Betonarme.
+        offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top), metres;
+            absent: 0. Unit: elevation.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        symbol: Library symbol overriding the layer's style.
+        tag: Its number ("K101").
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "beam"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    width: float
+    height: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    order: int | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "beam"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.justify is not UNSET:
+            out["justify"] = _enum_out(self.justify)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BeamEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            height=float(data["height"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else UNSET,
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            material=data.get("material", UNSET),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            order=data.get("order", UNSET),
+            symbol=data.get("symbol", UNSET),
+            tag=data.get("tag", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BeamsCreate(_Model):
+    """Input of `cad.beams.create` v1 (“Kiriş”, docs/adr/3041 §1): beams on a named layer, as one undo step.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_beam`, `level_not_found`, `invalid_line_weight`,
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
+    `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    beams: list[NewBeam]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["beams"] = [e0.to_json() for e0 in self.beams]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BeamsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            beams=[NewBeam.from_json(e0) for e0 in data["beams"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BeamsCreated(_Model):
+    """Output of `cad.beams.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BeamsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BeamsPlan(_Model):
+    """What `cad.beams.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    beams: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["beams"] = [e0.to_json() for e0 in self.beams]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BeamsPlan:
+        return cls(
+            beams=[Entity.from_json(e0) for e0 in data["beams"]],
+            revision=data["revision"],
         )
 
 
@@ -56616,6 +56843,62 @@ class NetworkTurns(_Model):
             left=float(data["left"]) if "left" in data else UNSET,
             right=float(data["right"]) if "right" in data else UNSET,
             straight=float(data["straight"]) if "straight" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewBeam(_Model):
+    """One beam to draw (docs/adr/3041 §1): its fields, and its attributes.
+    Attributes:
+        pts: Its axis: straight stretches from point to point. Unit: length.
+        width: Its web's width (gövde genişliği). Unit: length.
+        height: Its height, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
+        justify: How it lies on its axis; absent: centred.
+        material: Its material; absent: Betonarme.
+        offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top); absent: 0. Unit: elevation.
+        tag: Its number ("K101").
+    """
+    pts: list[Vec2]
+    width: float
+    height: float
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.justify is not UNSET:
+            out["justify"] = None if self.justify is None else _enum_out(self.justify)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewBeam:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            height=float(data["height"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
+            material=data.get("material", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            tag=data.get("tag", UNSET),
         )
 
 
@@ -105573,13 +105856,17 @@ class SetArchOperation(ArchOperation):
         depth: A column's; null: its width. Unit: length.
         ends: A grid's gapped end segments, millimetres on paper (docs/adr/0725 §5); null: the whole grid. Unit: paper-mm.
         fill: A column's.
+        height: A beam's height (docs/adr/3041 §1). Unit: length.
         height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
             risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+        justify: A beam's justification on its axis.
         label: A grid's.
         landing: A stair's or a ramp's; null: the width. Unit: length.
         legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
+        material: A beam's material; null: Betonarme.
         numbering: A stair's.
+        offset: A beam's top over where it hangs. Unit: elevation.
         phase: Any kind's.
         post: A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none. Unit: length.
         railings: A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
@@ -105592,7 +105879,7 @@ class SetArchOperation(ArchOperation):
         tag: A column's.
         tread: A stair's. Unit: length.
         type: A column's type.
-        width: A column's, a stair's or a ramp's. Unit: length.
+        width: A column's, a stair's, a ramp's or a beam's. Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
     anchor: ColumnAnchor | ColumnAnchorName | None | Unset = UNSET
@@ -105604,12 +105891,16 @@ class SetArchOperation(ArchOperation):
     depth: float | None | Unset = UNSET
     ends: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
+    height: float | None | Unset = UNSET
     height_from_level: bool | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     landing: float | None | Unset = UNSET
     legs: list[float] | None | Unset = UNSET
     level: str | None | Unset = UNSET
+    material: str | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     post: float | None | Unset = UNSET
     railings: Railings | RailingsName | None | Unset = UNSET
@@ -105644,8 +105935,12 @@ class SetArchOperation(ArchOperation):
             out["ends"] = None if self.ends is None else float(self.ends)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
         if self.height_from_level is not UNSET:
             out["heightFromLevel"] = self.height_from_level
+        if self.justify is not UNSET:
+            out["justify"] = None if self.justify is None else _enum_out(self.justify)
         if self.label is not UNSET:
             out["label"] = self.label
         if self.landing is not UNSET:
@@ -105654,8 +105949,12 @@ class SetArchOperation(ArchOperation):
             out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.level is not UNSET:
             out["level"] = self.level
+        if self.material is not UNSET:
+            out["material"] = self.material
         if self.numbering is not UNSET:
             out["numbering"] = self.numbering
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.post is not UNSET:
@@ -105696,12 +105995,16 @@ class SetArchOperation(ArchOperation):
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             fill=data.get("fill", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             height_from_level=data.get("heightFromLevel", UNSET),
+            justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             label=data.get("label", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
             legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             level=data.get("level", UNSET),
+            material=data.get("material", UNSET),
             numbering=data.get("numbering", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             post=UNSET if "post" not in data else None if data["post"] is None else float(data["post"]),
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
@@ -125685,7 +125988,7 @@ _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField
 _ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveElevationsOperation, "refresh": RefreshElevationsOperation, "release": ReleaseElevationsOperation}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"ellipseAxis": EllipseAxisEntityEdit, "update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -126335,6 +126638,10 @@ __all__ = [
     "BatchRow",
     "BatchRowFailed",
     "BatchRowRan",
+    "BeamEntity",
+    "BeamsCreate",
+    "BeamsCreated",
+    "BeamsPlan",
     "BearingsMeeting",
     "BetweenPartitionExtent",
     "BezierPaperCadGeometry",
@@ -127991,6 +128298,7 @@ __all__ = [
     "NetworkTurns",
     "NetworkUTurns",
     "NetworkUTurnsName",
+    "NewBeam",
     "NewColumn",
     "NewConstraint",
     "NewGrid",

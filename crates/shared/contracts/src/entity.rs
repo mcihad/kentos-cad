@@ -1860,6 +1860,8 @@ pub enum Entity {
     Grid(crate::GridEntity),
     /// A column (docs/adr/0343): its centre, outline and the grids it stands on.
     Column(crate::ColumnEntity),
+    /// A beam (docs/adr/3041 §1): its axis, its web's width and height, its top; drawn dashed in a plan.
+    Beam(crate::BeamEntity),
     /// A stair (docs/adr/0343): its walking line and its risers, treads and landings.
     Stair(crate::StairEntity),
     /// A ramp (docs/adr/0343): its centre line, width, rise and landings.
@@ -1925,6 +1927,7 @@ impl Entity {
             Entity::Space(e) => &e.base,
             Entity::Grid(e) => &e.base,
             Entity::Column(e) => &e.base,
+            Entity::Beam(e) => &e.base,
             Entity::Stair(e) => &e.base,
             Entity::Ramp(e) => &e.base,
             Entity::Tag(e) => &e.base,
@@ -1961,6 +1964,7 @@ impl Entity {
             Entity::Space(e) => &mut e.base,
             Entity::Grid(e) => &mut e.base,
             Entity::Column(e) => &mut e.base,
+            Entity::Beam(e) => &mut e.base,
             Entity::Stair(e) => &mut e.base,
             Entity::Ramp(e) => &mut e.base,
             Entity::Tag(e) => &mut e.base,
@@ -1989,6 +1993,7 @@ impl Entity {
             Entity::Space(x) => x.space.arch.phase,
             Entity::Grid(x) => x.grid.arch.phase,
             Entity::Column(x) => x.column.arch.phase,
+            Entity::Beam(x) => x.beam.arch.phase,
             Entity::Stair(x) => x.stair.arch.phase,
             Entity::Ramp(x) => x.ramp.arch.phase,
             Entity::Insert(x) => x.arch.phase,
@@ -2076,6 +2081,7 @@ impl Entity {
             Entity::Slab(x) => x.slab.arch.level.as_deref(),
             Entity::Grid(x) => x.grid.arch.level.as_deref(),
             Entity::Column(x) => x.column.arch.level.as_deref(),
+            Entity::Beam(x) => x.beam.arch.level.as_deref(),
             Entity::Stair(x) => x.stair.arch.level.as_deref(),
             Entity::Ramp(x) => x.ramp.arch.level.as_deref(),
             Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.level.as_deref()),
@@ -2131,6 +2137,7 @@ impl Entity {
             Entity::Slab(_) => "slab",
             Entity::Grid(_) => "grid",
             Entity::Column(_) => "column",
+            Entity::Beam(_) => "beam",
             Entity::Stair(_) => "stair",
             Entity::Ramp(_) => "ramp",
             Entity::Tag(_) => "tag",

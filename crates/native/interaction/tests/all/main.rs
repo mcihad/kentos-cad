@@ -6,6 +6,7 @@ mod adjoin;
 mod aids;
 mod area;
 mod arrange;
+mod beam_tool;
 mod array_path;
 mod audit;
 mod block_library;

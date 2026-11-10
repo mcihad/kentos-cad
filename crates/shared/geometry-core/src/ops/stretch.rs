@@ -106,7 +106,10 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         }
         // A grid's, stair's or ramp's points in the window move; a column moves whole when its reference point is
         // (docs/adr/0343 §2, 0725 §2).
-        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => {
+        Shape::Grid { pts, .. }
+        | Shape::Stair { pts, .. }
+        | Shape::Ramp { pts, .. }
+        | Shape::Beam { pts, .. } => {
             any(pts).then(|| crate::geom::arch::with_pts(&geom.shape, pts.iter().map(|&p| mv(p)).collect()))??
         }
         Shape::Column { at, column } => inside(*at, r).then(|| Shape::Column {

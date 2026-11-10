@@ -85,6 +85,7 @@ enum Kind {
     Tag,
     ViewMark,
     Slab,
+    Beam,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -122,6 +123,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("tag", Kind::Tag),
     ("viewmark", Kind::ViewMark),
     ("slab", Kind::Slab),
+    ("beam", Kind::Beam),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -445,6 +447,8 @@ pub(super) struct Features {
     pub(super) slab_layers: bool,
     /// Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan.
     pub(super) room_heights: bool,
+    /// Schema 222 (docs/adr/3041 §1): beams.
+    pub(super) beams: bool,
     /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
     pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -741,6 +745,7 @@ impl Features {
             opening_phases: schema >= crate::SCHEMA_WITH_OPENING_PHASES,
             slab_layers: schema >= crate::SCHEMA_WITH_SLAB_LAYERS,
             room_heights: schema >= crate::SCHEMA_WITH_ROOM_HEIGHTS,
+            beams: schema >= crate::SCHEMA_WITH_BEAMS,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
@@ -832,6 +837,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Tag => key == "tag",
             Kind::ViewMark => key == "viewmark",
             Kind::Slab => key == "slab",
+            Kind::Beam => key == "beam",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -1045,6 +1051,7 @@ struct Fields {
     viewmark: Option<kentos_contracts::ViewMarkFields>,
     /// A slab's fields (docs/adr/0722).
     slab: Option<kentos_contracts::SlabFields>,
+    beam: Option<kentos_contracts::BeamFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -1331,6 +1338,7 @@ pub(super) fn object(
             && (has.tags || *kind != Kind::Tag)
             && (has.viewmarks || *kind != Kind::ViewMark)
             && (has.slabs || *kind != Kind::Slab)
+            && (has.beams || *kind != Kind::Beam)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -1378,6 +1386,10 @@ pub(super) fn object(
     // Nor a slab: its walls are the drawing's (docs/adr/0722 §1).
     if kind == Kind::Slab && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında döşeme olamaz"));
+    }
+    // Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/3041 §1).
+    if kind == Kind::Beam && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1655,6 +1667,7 @@ pub(super) fn object(
             }
             // Schema 123 (docs/adr/0722): a slab's fields.
             "slab" if kind == Kind::Slab => f.slab = Some(json_part(r, "döşemenin alanları")?.0),
+            "beam" if kind == Kind::Beam => f.beam = Some(json_part(r, "kirişin alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) =
@@ -2880,6 +2893,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Slab(kentos_contracts::SlabEntity { base, slab })
+        }
+        Kind::Beam => {
+            let beam = required(r, f.beam.take(), "beam")?;
+            if let Some((_, problem)) = beam.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Beam(kentos_contracts::BeamEntity { base, beam })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

@@ -3175,6 +3175,20 @@
    "tests": 0
   },
   {
+   "id": "edit.selectFilter.beam",
+   "kind": "command",
+   "title": "Seçim süzgecinde Kiriş",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.circle",
    "kind": "command",
    "title": "Seçim süzgecinde Daire",
@@ -11100,6 +11114,22 @@
    "python": "kentos.cad.drawing.audit",
    "mcp": "cad.drawing.audit",
    "note": "Onarım ve temizlenecek stil türleri komuta verilir; bozuk ilişkileri, kayıp stilleri ve kullanılmayan kaynakları komut bulur, önizleme komutun planıdır (ADR 0306).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.beam",
+   "kind": "command",
+   "title": "Kiriş",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 3041 §1).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

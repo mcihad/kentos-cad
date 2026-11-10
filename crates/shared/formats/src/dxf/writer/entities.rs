@@ -90,6 +90,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Column(_) => "Kolon",
         Entity::Stair(_) => "Merdiven",
         Entity::Ramp(_) => "Rampa",
+        Entity::Beam(_) => "Kiriş",
         Entity::Tag(_) => "Etiket",
         Entity::ViewMark(_) => "Görünüm işareti",
     }
@@ -210,6 +211,7 @@ fn finite(e: &Entity) -> bool {
         Entity::Column(c) => ok(c.column.at) && nums_ok(&[c.column.width, c.column.rotation]),
         Entity::Stair(s) => all_ok(&s.stair.pts) && nums_ok(&[s.stair.width, s.stair.tread]),
         Entity::Ramp(r) => all_ok(&r.ramp.pts) && nums_ok(&[r.ramp.width, r.ramp.rise]),
+        Entity::Beam(b) => all_ok(&b.beam.pts) && nums_ok(&[b.beam.width, b.beam.height, b.beam.offset]),
         Entity::Tag(t) => ok(t.tag.at),
         Entity::ViewMark(m) => m.mark.points.iter().all(|p| ok(*p)),
         Entity::Table(t) => {
@@ -736,6 +738,7 @@ impl Writer<'_> {
             | Entity::Column(_)
             | Entity::Stair(_)
             | Entity::Ramp(_)
+            | Entity::Beam(_)
             | Entity::Tag(_)
             | Entity::ViewMark(_)
                 if self.wholes.contains_key(&e.base().id) =>
@@ -758,7 +761,7 @@ impl Writer<'_> {
                 false
             }
             // Nor a grid, column, stair or ramp: its pieces (`writer::plain_walls`, docs/adr/0343 §5).
-            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
+            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
                 self.report.skip("Mimari nesne", "parçalarına açılmadan yazılamaz", 0);
                 false
             }

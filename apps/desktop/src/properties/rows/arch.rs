@@ -502,6 +502,53 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 kentos_native_application::arch_elements::ramp_warnings(x, ""),
             ));
         }
+        // A beam (docs/adr/3041 §1): its number and sizes, how it lies on its axis, its top and underside where it
+        // hangs, its material and length.
+        Entity::Beam(b) => {
+            let x = &b.beam;
+            out.push(text(
+                "Numara",
+                x.tag.clone().unwrap_or_default(),
+                ArchField::Tag,
+            ));
+            out.push(length("Genişlik", x.width, ArchField::Width));
+            out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
+            let justify = kentos_commands::WallJustify::ALL
+                .iter()
+                .map(|&j| {
+                    pick(
+                        j.label().to_owned(),
+                        j == x.justify,
+                        set(
+                            slot,
+                            ArchChange {
+                                justify: Some(j),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(
+                Row::text("Hiza", x.justify.label())
+                    .editor(edit(select(x.justify.label().to_owned(), justify))),
+            );
+            out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
+            if let Some(top) = doc.model.beam_top(x) {
+                out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
+                out.push(
+                    Row::figure("Alt kot", f.length_bare(top - x.height)).unit(f.length_unit_label()),
+                );
+            }
+            out.push(text(
+                "Malzeme",
+                x.material_name().to_owned(),
+                ArchField::BeamMaterial,
+            ));
+            out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
+            out.extend(arch_rows(doc, slot, &x.arch, &edit));
+        }
         Entity::Tag(t) => {
             let x = &t.tag;
             let tag = |c: TagChange| Message::Properties(Event::Tag(slot, c));

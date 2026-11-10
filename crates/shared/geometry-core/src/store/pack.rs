@@ -204,7 +204,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 38.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 39.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -740,8 +740,9 @@ impl Reader<'_> {
                     opening: <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
                 }
             }
-            // docs/adr/0343, 0344, 0345: a grid, a column, a stair, a ramp, a tag or a view mark as its JSON text.
-            31..=36 => {
+            // docs/adr/0343, 0344, 0345, 3041: a grid, a column, a stair, a ramp, a tag, a view mark or a beam as its JSON
+            // text.
+            31..=36 | 39 => {
                 let text = self.string()?.unwrap_or_default();
                 let v = Json::parse(&text).map_err(|e| format!("mimari nesne okunamadı: {e}"))?;
                 let shape = <Shape as crate::api::json::FromJson>::from_json(&v)?;
@@ -751,6 +752,7 @@ impl Reader<'_> {
                     33 => matches!(shape, Shape::Stair { .. }),
                     34 => matches!(shape, Shape::Ramp { .. }),
                     35 => matches!(shape, Shape::Tag { .. }),
+                    39 => matches!(shape, Shape::Beam { .. }),
                     _ => matches!(shape, Shape::ViewMark { .. }),
                 };
                 if !want {
@@ -1407,6 +1409,7 @@ impl Packer {
             | Shape::Column { .. }
             | Shape::Stair { .. }
             | Shape::Ramp { .. }
+            | Shape::Beam { .. }
             | Shape::Tag { .. }
             | Shape::ViewMark { .. } => {
                 let kind = match shape {
@@ -1415,6 +1418,7 @@ impl Packer {
                     Shape::Stair { .. } => 33.0,
                     Shape::Ramp { .. } => 34.0,
                     Shape::Tag { .. } => 35.0,
+                    Shape::Beam { .. } => 39.0,
                     _ => 36.0,
                 };
                 self.put(&[kind]);

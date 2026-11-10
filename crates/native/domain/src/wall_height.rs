@@ -11,8 +11,12 @@
 //! - Its foot is its level's floor (the level's elevation; none without a level: 0); with a floor slab under it, that
 //!   slab's structure's top: the masonry is laid on the concrete before the screed and the finish (§2). Its top is the
 //!   slab over it's structure's underside: the ceiling's plaster covers both.
+//! - A beam over it (docs/adr/3041 §1) is its top as a slab is: a beam whose band holds the middle of its path, its
+//!   underside more than 10 cm over its foot; the lowest of the slabs' and the beams' undersides.
+//! - A beam's top is where it hangs: the structure's top of the slab over its storey at the middle of its axis (within
+//!   its storey), else its storey's top; its offset added. Its underside is its top less its height.
 
-use kentos_contracts::{Entity, SlabFields, Vec2, WallFields};
+use kentos_contracts::{BeamFields, Entity, SlabFields, Vec2, WallFields};
 
 use crate::document::Document;
 
@@ -31,7 +35,7 @@ impl Document {
             return storey;
         };
         let foot = self.slab_structure_top_under(at, floor).unwrap_or(floor);
-        let under = self.slab_underside_over(at, foot);
+        let under = self.underside_over(at, foot).map(|(u, _)| u);
         // Never past its storey's top: the next floor.
         let top = storey.map(|h| floor + h);
         match (under, top) {
@@ -51,21 +55,68 @@ impl Document {
             .unwrap_or(floor)
     }
 
-    /// Whether the wall's height comes from the slab over it (no height of its own, a slab over it lower than its
-    /// storey's top): Öznitelikler says so.
+    /// Whether the wall's height comes from a slab or a beam over it (no height of its own, its underside lower than
+    /// its storey's top): Öznitelikler says so.
     pub fn wall_under_slab(&self, w: &WallFields) -> bool {
+        self.wall_top_from(w).is_some()
+    }
+
+    /// What the wall stops under when it is not its own height nor its storey's: the slab over it or a beam over it
+    /// (docs/adr/3041 §1).
+    pub fn wall_top_from(&self, w: &WallFields) -> Option<WallTop> {
         if w.height.is_some() {
-            return false;
+            return None;
         }
         let (floor, storey) = self.wall_storey(w);
-        let Some(at) = middle(w) else {
-            return false;
-        };
+        let at = middle(w)?;
         let foot = self.slab_structure_top_under(at, floor).unwrap_or(floor);
-        let Some(under) = self.slab_underside_over(at, foot) else {
-            return false;
-        };
-        storey.is_none_or(|h| under < floor + h - 1e-9)
+        let (under, from) = self.underside_over(at, foot)?;
+        storey.is_none_or(|h| under < floor + h - 1e-9).then_some(from)
+    }
+
+    /// The lowest underside over `foot` at `at`, a slab's or a beam's, and whose.
+    fn underside_over(&self, at: Vec2, foot: f64) -> Option<(f64, WallTop)> {
+        let slab = self.slab_underside_over(at, foot).map(|u| (u, WallTop::Slab));
+        let beam = self.beam_underside_over(at, foot).map(|u| (u, WallTop::Beam));
+        match (slab, beam) {
+            (Some(s), Some(b)) => Some(if b.0 < s.0 { b } else { s }),
+            (s, b) => s.or(b),
+        }
+    }
+
+    /// The lowest underside, of the beams whose band holds `at`, more than [`OVER`] above `foot`.
+    fn beam_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
+        self.entities()
+            .filter_map(|e| match e {
+                Entity::Beam(b) => Some(&b.beam),
+                _ => None,
+            })
+            .filter(|b| beam_holds(b, at))
+            .filter_map(|b| self.beam_underside(b))
+            .filter(|u| *u > foot + OVER)
+            .min_by(f64::total_cmp)
+    }
+
+    /// A beam's top, metres over ±0.00 (docs/adr/3041 §1): the structure's top of the slab over its storey at the
+    /// middle of its axis (its underside over its storey's floor, its top within its storey), else its storey's top;
+    /// its offset added. None without either.
+    pub fn beam_top(&self, b: &BeamFields) -> Option<f64> {
+        let (floor, storey) = self.storey_of(&b.arch);
+        let at = axis_middle(&b.pts)?;
+        let slab = self
+            .slabs_holding(at)
+            .filter(|(s, f)| {
+                s.structure_underside(*f) > floor + OVER
+                    && storey.is_none_or(|h| s.structure_top(*f) <= floor + h + OVER)
+            })
+            .min_by(|a, b| a.0.structure_top(a.1).total_cmp(&b.0.structure_top(b.1)))
+            .map(|(s, f)| s.structure_top(f));
+        Some(slab.or(storey.map(|h| floor + h))? + b.offset)
+    }
+
+    /// A beam's underside, metres over ±0.00: its top less its height.
+    pub fn beam_underside(&self, b: &BeamFields) -> Option<f64> {
+        Some(self.beam_top(b)? - b.height)
     }
 
     /// The structure's top of the floor slab under `at` on the storey whose floor is `floor`.
@@ -123,6 +174,42 @@ impl Document {
             .filter(|u| *u > foot + OVER)
             .min_by(f64::total_cmp)
     }
+}
+
+/// What a wall stops under (docs/adr/3040 §1, 3041 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WallTop {
+    Slab,
+    Beam,
+}
+
+/// Whether the beam's band holds `at`.
+fn beam_holds(b: &BeamFields, at: Vec2) -> bool {
+    let kentos_geometry_core::entity::Shape::Beam { pts, beam } = kentos_formats::arch_elements::core_beam(b) else {
+        return false;
+    };
+    let band = kentos_geometry_core::geom::beam::band(&pts, &beam);
+    kentos_geometry_core::geometry::point_in_polygon(kentos_geometry_core::Vec2::new(at.x, at.y), &band)
+}
+
+/// The middle of a path of straight stretches by its length.
+fn axis_middle(pts: &[Vec2]) -> Option<Vec2> {
+    let first = *pts.first()?;
+    let length = |a: Vec2, b: Vec2| ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
+    let total: f64 = pts.windows(2).map(|p| length(p[0], p[1])).sum();
+    let mut left = total / 2.0;
+    for p in pts.windows(2) {
+        let l = length(p[0], p[1]);
+        if left <= l {
+            let k = if l > 0.0 { left / l } else { 0.0 };
+            return Some(Vec2 {
+                x: p[0].x + (p[1].x - p[0].x) * k,
+                y: p[0].y + (p[1].y - p[0].y) * k,
+            });
+        }
+        left -= l;
+    }
+    Some(first)
 }
 
 /// The middle of the wall's path by its length (its straight stretches; a bulge's chord), none for no path.
@@ -201,7 +288,9 @@ pub(crate) mod tests {
         });
         for (i, s) in slabs.as_array().unwrap().iter().enumerate() {
             let mut e = s.clone();
-            e["kind"] = serde_json::json!("slab");
+            if e.get("kind").is_none() {
+                e["kind"] = serde_json::json!("slab");
+            }
             e["id"] = serde_json::json!(i + 1);
             e["layerId"] = serde_json::json!("0");
             e["attrs"] = serde_json::json!({});
@@ -275,6 +364,38 @@ pub(crate) mod tests {
         // No slab over the storey above: from its concrete to the next floor (3.00 + 0.07).
         let top = doc.wall_height(&wall("k1", 0.0, 4.0, None)).unwrap();
         assert!((top - 3.07).abs() < 1e-9, "{top}");
+    }
+
+    /// A beam over the wall (docs/adr/3041 §1): it hangs from the slab over its storey (its structure's top, 3.00) and
+    /// the wall stops under it, 3.00 − 0.50 = 2.50; out of its band the slab's 2.85; without the slab it hangs from its
+    /// storey's top; its offset moves it.
+    #[test]
+    fn a_wall_under_a_beam_stops_at_its_underside() {
+        let beam = |x0: f64, x1: f64, extra: serde_json::Value| {
+            let mut b = serde_json::json!({
+                "kind": "beam", "pts": [{"x": x0, "y": 2.0}, {"x": x1, "y": 2.0}], "width": 0.25, "height": 0.5,
+                "arch": {"level": "zemin"}
+            });
+            for (k, v) in extra.as_object().unwrap() {
+                b[k] = v.clone();
+            }
+            b
+        };
+        let doc = document(serde_json::json!([
+            slab("k1", -1.0, 10.0, 0.15, 0.0),
+            beam(-0.5, 6.0, serde_json::json!({}))
+        ]));
+        let h = doc.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
+        assert!((h - 2.5).abs() < 1e-9, "{h}");
+        assert_eq!(doc.wall_top_from(&wall("zemin", 0.0, 4.0, None)), Some(WallTop::Beam));
+        // Out of the beam's band: the slab's.
+        let off = doc.wall_height(&wall("zemin", 7.0, 9.0, None)).unwrap();
+        assert!((off - 2.85).abs() < 1e-9, "{off}");
+        assert_eq!(doc.wall_top_from(&wall("zemin", 7.0, 9.0, None)), Some(WallTop::Slab));
+        // No slab: from its storey's top (3.00); 5 cm lower by its offset: 2.45.
+        let bare = document(serde_json::json!([beam(-0.5, 6.0, serde_json::json!({"offset": -0.05}))]));
+        let b = bare.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
+        assert!((b - 2.45).abs() < 1e-9, "{b}");
     }
 
     #[test]

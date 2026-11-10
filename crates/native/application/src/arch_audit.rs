@@ -1297,8 +1297,9 @@ impl Audit<'_> {
         out
     }
 
-    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a stair, a ramp or a room separator on no
-    /// level or on one the project lacks; each fixed by giving it `level` (`cad.levels.assign`) unless locked.
+    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a beam (docs/adr/3041 §1), a stair, a ramp
+    /// or a room separator on no level or on one the project lacks; each fixed by giving it `level`
+    /// (`cad.levels.assign`) unless locked.
     fn levels(&self, level: Option<&ArchLevel>) -> Vec<ArchAuditFinding> {
         let levels = self
             .doc
@@ -1317,6 +1318,7 @@ impl Audit<'_> {
                 Entity::Wall(w) => ("Duvarın", first(&w.wall.pts)),
                 Entity::Space(s) => ("Mahalın", space_point(&s.space.parts)),
                 Entity::Column(c) => ("Kolonun", core(c.column.at)),
+                Entity::Beam(b) => ("Kirişin", first(&b.beam.pts)),
                 Entity::Stair(s) => ("Merdivenin", first(&s.stair.pts)),
                 Entity::Ramp(r) => ("Rampanın", first(&r.ramp.pts)),
                 Entity::Polyline(p) => ("Mahal ayırıcının", first(&p.pts)),

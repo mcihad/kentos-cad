@@ -821,6 +821,7 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
             "edit.selectFilter.wall",
             "edit.selectFilter.space",
             "edit.selectFilter.slab",
+            "edit.selectFilter.beam",
             "edit.selectFilter.viewmark",
             // CBS's spatial statistics, sampling, suitability, remote sensing and meshes, its geostatistics, raster
             // analysis, hydrology, distance and generalization.

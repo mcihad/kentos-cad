@@ -290,6 +290,7 @@ mod architecture_level;
 mod space_level;
 mod space_sources;
 pub mod arch_tools;
+pub mod beam_tools;
 pub mod casework;
 pub mod grid_system;
 pub mod module_place;

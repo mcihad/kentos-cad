@@ -25,6 +25,7 @@ fn kind_name(e: &Entity) -> &'static str {
         Entity::Column(_) => "kolon",
         Entity::Stair(_) => "merdiven",
         Entity::Ramp(_) => "rampa",
+        Entity::Beam(_) => "kiriş",
         _ => "nesne",
     }
 }
@@ -43,9 +44,11 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const COLUMN: &[&str] = &["column"];
     const STAIR: &[&str] = &["stair"];
     const RAMP: &[&str] = &["ramp"];
-    const WIDE: &[&str] = &["column", "stair", "ramp"];
+    const WIDE: &[&str] = &["column", "stair", "ramp", "beam"];
     const FLIGHT: &[&str] = &["stair", "ramp"];
-    const ALL: &[&str] = &["grid", "column", "stair", "ramp"];
+    const BEAM: &[&str] = &["beam"];
+    const TAGGED: &[&str] = &["column", "beam"];
+    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam"];
     let mut out = Vec::new();
     let mut add = |on: bool, name: &'static str, kinds: &'static [&'static str]| {
         if on {
@@ -63,7 +66,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.anchor.is_some(), "anchor", COLUMN);
     add(c.rotation.is_some(), "rotation", COLUMN);
     add(c.kind.is_some(), "type", COLUMN);
-    add(c.tag.is_some(), "tag", COLUMN);
+    add(c.tag.is_some(), "tag", TAGGED);
     add(c.fill.is_some(), "fill", COLUMN);
     add(c.risers.is_some(), "risers", STAIR);
     add(c.riser_height.is_some(), "riserHeight", STAIR);
@@ -78,6 +81,10 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.slope.is_some(), "slope", RAMP);
     add(c.base.is_some(), "base", RAMP);
     add(c.base_offset.is_some(), "baseOffset", RAMP);
+    add(c.height.is_some(), "height", BEAM);
+    add(c.justify.is_some(), "justify", BEAM);
+    add(c.offset.is_some(), "offset", BEAM);
+    add(c.material.is_some(), "material", BEAM);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
     out
@@ -89,6 +96,7 @@ fn tag_of(e: &Entity) -> &'static str {
         Entity::Column(_) => "column",
         Entity::Stair(_) => "stair",
         Entity::Ramp(_) => "ramp",
+        Entity::Beam(_) => "beam",
         _ => "",
     }
 }
@@ -111,6 +119,8 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (flat(c.slope), "slope", "Eğim"),
         (flat(c.base), "base", "Başlangıç kotu"),
         (flat(c.base_offset), "baseOffset", "Kata göre başlangıç kotu"),
+        (c.height, "height", "Yükseklik"),
+        (c.offset, "offset", "Kot farkı"),
     ] {
         if let Some(x) = v {
             checks::finite(
@@ -240,6 +250,28 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
                 f.railings = v;
             }
         }
+        // A beam's (docs/adr/3041 §1).
+        Entity::Beam(b) => {
+            let f = &mut b.beam;
+            if let Some(v) = c.width {
+                f.width = v;
+            }
+            if let Some(v) = c.height {
+                f.height = v;
+            }
+            if let Some(v) = c.justify {
+                f.justify = v;
+            }
+            if let Some(v) = c.offset {
+                f.offset = v;
+            }
+            if let Some(v) = &c.tag {
+                f.tag.clone_from(v);
+            }
+            if let Some(v) = &c.material {
+                f.material.clone_from(v);
+            }
+        }
         _ => {}
     }
     if let Some(arch) = arch_mut(&mut e) {
@@ -259,6 +291,7 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Column(c) => Some(&mut c.column.arch),
         Entity::Stair(s) => Some(&mut s.stair.arch),
         Entity::Ramp(r) => Some(&mut r.ramp.arch),
+        Entity::Beam(b) => Some(&mut b.beam.arch),
         _ => None,
     }
 }
@@ -289,6 +322,12 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
         Entity::Ramp(r) => {
             ramp_valid(&r.ramp, path)?;
             Entity::Ramp(r)
+        }
+        Entity::Beam(b) => {
+            if let Some((field, words)) = b.beam.problem() {
+                return Err(fail(codes::INVALID_BEAM, words, &format!("{path}.{field}")));
+            }
+            Entity::Beam(b)
         }
         other => other,
     };
@@ -326,14 +365,14 @@ type Work = (Vec<CommandWarning>, Vec<(Slot, Entity)>);
 fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
     checks::uids(
         &input.uids,
-        "Düzenlenecek aks, kolon, merdiven ya da rampa verilmedi.",
+        "Düzenlenecek aks, kolon, kiriş, merdiven ya da rampa verilmedi.",
     )?;
     let found = checks::named(doc, &input.uids)?;
     for (at, _, e, _) in &found {
         if arch_elements::arch_of(e).is_none() {
             return Err(fail(
                 codes::NOT_ARCH_ELEMENT,
-                "Nesne aks, kolon, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
+                "Nesne aks, kolon, kiriş, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
                     .into(),
                 &format!("uids[{at}]"),
             ));

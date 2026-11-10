@@ -115,6 +115,7 @@ mod road_sections;
 mod view_area;
 pub use view_area::ViewArea;
 pub use room_height::{CeilingFrom, FloorFrom, RoomHeight};
+pub use wall_height::WallTop;
 pub mod arch_options;
 mod source_steps;
 mod lineage;

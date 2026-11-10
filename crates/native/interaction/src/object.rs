@@ -262,6 +262,7 @@ impl ObjectAction {
             Shape::Column { .. } => "kolon",
             Shape::Stair { .. } => "merdiven",
             Shape::Ramp { .. } => "rampa",
+            Shape::Beam { .. } => "kiriş",
             Shape::Tag { .. } => "etiket",
             Shape::ViewMark { .. } => "görünüm işareti",
             Shape::Xline { .. } => "yardımcı çizgi",

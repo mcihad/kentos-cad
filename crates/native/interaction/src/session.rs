@@ -126,6 +126,8 @@ pub const TOOLS: &[&str] = &[
     arch_tools::STAIR_ID,
     arch_tools::SPIRAL_ID,
     arch_tools::RAMP_ID,
+    // docs/adr/3041 §1: Kiriş.
+    crate::beam_tools::BEAM_ID,
     arch_tools::GRID_NUMBER_ID,
     crate::grid_system::ID,
     crate::module_place::ID,
@@ -547,6 +549,7 @@ impl Session {
             arch_tools::STAIR_ID => Box::new(arch_tools::FlightTool::stair()),
             arch_tools::SPIRAL_ID => Box::new(arch_tools::FlightTool::curved_stair()),
             arch_tools::RAMP_ID => Box::new(arch_tools::FlightTool::ramp()),
+            crate::beam_tools::BEAM_ID => Box::new(crate::beam_tools::BeamTool::new()),
             arch_tools::GRID_NUMBER_ID => Box::new(arch_tools::GridNumberTool::new()),
             crate::grid_system::ID => Box::new(crate::grid_system::GridSystemTool::new()),
             crate::module_place::ID => Box::new(crate::module_place::ModulePlace::new()),

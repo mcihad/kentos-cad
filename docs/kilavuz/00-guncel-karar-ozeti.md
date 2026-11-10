@@ -278,6 +278,14 @@
       (2,20), mahal adından sınıflanır (`room_names::height_class`); kod `paiy_inside_height_below`.
     - Öznitelikler'de yükseklik satırları sayıyı hücrede, nereden geldiğini altındaki notta söyler (ADR 0687): "İç
       yükseklik 2.760 / Üst döşemenin altına kadar".
+  - **Kiriş (M41 1. bölüm, [ADR 3041](../adr/3041-beams-lintels-column-wall-joins.md) §1):**
+    - `Entity::Beam` (`.kcad` şema 222): ekseni, gövde genişliği, yüksekliği (döşeme içinde, TBDY 2018 7.4.1.1 b), hizası,
+      kot farkı, numarası, malzemesi. Tepesi katın üstündeki döşemenin taşıyıcı üstü (yoksa katın tepesi).
+    - Planda bandı kesikli ve ince (üst kat döşemesinin kalemi); yazısı kolonunki gibi: 1:200'de yok, 1:100'de numarası,
+      1:50'den "K101 25/50", bandın yanında, okunacak yöne dönük. Yazı açısı derecedir (`Shape::Text.rotation`).
+    - Duvar kirişin altında biter (`WallTop::Beam`, "Kirişin altına kadar"); metraj ve iç görünüşler aynı kuralı okur.
+    - Mimari › Yerleştir › Kiriş: varsayılan 25/50, numara her kirişten sonra ilerler; katmanı MM-TASI-KIRIS (EK-2'de
+      Kiriş öğesi yok, Taşıyıcı altında). Seçim süzgecinde Kiriş türü (listenin sonunda, eski süzgeç bitleri korunur).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

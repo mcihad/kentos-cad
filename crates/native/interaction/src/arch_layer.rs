@@ -34,6 +34,8 @@ pub enum Kind {
     Column,
     Stair,
     Ramp,
+    /// A beam (docs/adr/3041 §1): EK-2 Tablo 2.3 has no Kiriş; it is a Taşıyıcı (TASI), its type KIRIS.
+    Beam,
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -65,6 +67,7 @@ impl Kind {
             Kind::Column => "KOLN",
             Kind::Stair => "MERD",
             Kind::Ramp => "RAMP",
+            Kind::Beam => "TASI",
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -91,6 +94,7 @@ impl Kind {
             Kind::Symbol => word("SEMBOL"),
             Kind::Legend => word("LEJANT"),
             Kind::Schedule => word("CIZELGE"),
+            Kind::Beam => word("KIRIS"),
             Kind::Door
             | Kind::Window
             | Kind::Flue
@@ -137,6 +141,7 @@ impl Kind {
             Kind::Column => "Kolon",
             Kind::Stair => "Merdiven",
             Kind::Ramp => "Rampa",
+            Kind::Beam => "Kiriş",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -162,6 +167,7 @@ impl Kind {
             Kind::Column => "kolon",
             Kind::Stair => "merdiven",
             Kind::Ramp => "rampa",
+            Kind::Beam => "kiriş",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -190,7 +196,8 @@ impl Kind {
             | Kind::Niche
             | Kind::Flue
             | Kind::Stair
-            | Kind::Ramp => look("ink", 0.25),
+            | Kind::Ramp
+            | Kind::Beam => look("ink", 0.25),
             Kind::Grid => LayerStyle {
                 line_type: LineType::Dashdot,
                 ..look("#E06C75", 0.18)
@@ -382,6 +389,7 @@ mod tests {
             Kind::Symbol,
             Kind::Legend,
             Kind::Schedule,
+            Kind::Beam,
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -397,6 +405,7 @@ mod tests {
         assert_eq!(names[13], "MM-TEFR-MUTFAK");
         assert_eq!(names[14], "MM-TEFR-VITRIFIYE");
         assert_eq!(names[15], "MM-XXXX-OLCU");
+        assert_eq!(names[20], "MM-TASI-KIRIS");
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }
 

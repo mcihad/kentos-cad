@@ -564,6 +564,18 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("slab", Val::Json(serde_json::to_value(&e.slab).unwrap_or_default())));
             }
+            // A beam (docs/adr/3041 §1): its fields as one map; only the drawing's.
+            Entity::Beam(e) => {
+                if uid.is_none() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
+                }
+                if let Some((_, problem)) = e.beam.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("beam", Val::Json(serde_json::to_value(&e.beam).unwrap_or_default())));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;

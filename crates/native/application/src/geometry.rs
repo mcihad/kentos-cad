@@ -848,6 +848,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Column(c) => kentos_formats::arch_elements::core_column(&c.column),
         Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
         Entity::Ramp(r) => kentos_formats::arch_elements::core_ramp(&r.ramp),
+        Entity::Beam(b) => kentos_formats::arch_elements::core_beam(&b.beam),
         Entity::Tag(t) => kentos_formats::arch_elements::core_tag(&t.tag),
         Entity::ViewMark(m) => kentos_formats::arch_elements::core_viewmark(&m.mark),
         Entity::Arc(a) => Shape::Arc {
@@ -1449,6 +1450,19 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.ramp.width = ramp.width;
             e.ramp.rise = ramp.rise;
             e.ramp.landing = ramp.landing;
+        }
+        // Its axis, its sizes; which side its body lies by where its middle went (a mirror turns it over).
+        (Entity::Beam(e), Shape::Beam { pts, beam }) => {
+            e.beam.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+            e.beam.width = beam.width;
+            e.beam.height = beam.height;
+            e.beam.justify = if beam.middle.abs() <= beam.width * 1e-9 {
+                kentos_commands::WallJustify::Center
+            } else if beam.middle < 0.0 {
+                kentos_commands::WallJustify::Left
+            } else {
+                kentos_commands::WallJustify::Right
+            };
         }
         (Entity::Opening(e), Shape::Opening { at, width, place, .. }) => {
             e.opening.at = at;
@@ -2164,6 +2178,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         | Shape::Column { .. }
         | Shape::Stair { .. }
         | Shape::Ramp { .. }
+        | Shape::Beam { .. }
         | Shape::Tag { .. }
         | Shape::ViewMark { .. } => return None,
     })

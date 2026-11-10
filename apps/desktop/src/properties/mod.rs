@@ -224,6 +224,10 @@ pub enum ArchField {
     MarkNumber,
     /// A view mark's words' height on paper, mm; empty 2.5.
     MarkSize,
+    /// A beam's height, its top's offset (empty 0) and its material (empty: Betonarme; docs/adr/3041 §1).
+    BeamHeight,
+    BeamOffset,
+    BeamMaterial,
 }
 
 /// The value a cell edits.
@@ -1982,6 +1986,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     | ArchField::Post
                     | ArchField::LegA
                     | ArchField::LegB
+                    | ArchField::BeamHeight
+                    | ArchField::BeamOffset
             );
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
@@ -1995,7 +2001,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             if !t.is_empty()
                 && !n.is_finite()
-                && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type)
+                && !matches!(
+                    which,
+                    ArchField::Label | ArchField::Tag | ArchField::Type | ArchField::BeamMaterial
+                )
             {
                 return Vec::new();
             }
@@ -2013,6 +2022,14 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 ArchField::Type => ArchChange {
                     kind: Some(words),
+                    ..Default::default()
+                },
+                ArchField::BeamMaterial => ArchChange {
+                    material: Some(words),
+                    ..Default::default()
+                },
+                ArchField::BeamOffset => ArchChange {
+                    offset: Some(words.map_or(0.0, |_| n)),
                     ..Default::default()
                 },
                 ArchField::BubbleSize => ArchChange {
@@ -2089,6 +2106,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 ArchField::Rise => ArchChange {
                     rise: Some(n),
+                    ..Default::default()
+                },
+                ArchField::BeamHeight => ArchChange {
+                    height: Some(n),
                     ..Default::default()
                 },
                 ArchField::TagContent

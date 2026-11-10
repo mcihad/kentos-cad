@@ -164,6 +164,7 @@ pub fn kind_title(kind: &str) -> &'static str {
         "space" => "Mahal",
         "grid" => "Aks",
         "column" => "Kolon",
+        "beam" => "Kiriş",
         "stair" => "Merdiven",
         "ramp" => "Rampa",
         "tag" => "Etiket",
