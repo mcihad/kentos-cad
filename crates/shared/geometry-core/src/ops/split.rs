@@ -393,7 +393,8 @@ fn anchor(s: &Shape) -> Option<f64> {
         | Shape::Grid { pts, .. }
         | Shape::Stair { pts, .. }
         | Shape::Ramp { pts, .. }
-        | Shape::Beam { pts, .. } => pts.first()?.x,
+        | Shape::Beam { pts, .. }
+        | Shape::Roof { pts, .. } => pts.first()?.x,
         Shape::Column { at, .. } | Shape::Tag { at, .. } => at.x,
         Shape::ViewMark { points, .. } => points.first()?.x,
         Shape::Opening { place, .. } => place.first()?.x,

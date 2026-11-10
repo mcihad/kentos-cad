@@ -117,7 +117,8 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::Grid { pts, .. }
         | Shape::Stair { pts, .. }
         | Shape::Ramp { pts, .. }
-        | Shape::Beam { pts, .. } => pts.clone(),
+        | Shape::Beam { pts, .. }
+        | Shape::Roof { pts, .. } => pts.clone(),
         Shape::Column { at, .. } | Shape::Tag { at, .. } => vec![*at],
         Shape::ViewMark { points, .. } => points.clone(),
         Shape::Line { a, b } => vec![*a, *b],
@@ -416,7 +417,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Grid { pts, .. }
         | Shape::Stair { pts, .. }
         | Shape::Ramp { pts, .. }
-        | Shape::Beam { pts, .. } => {
+        | Shape::Beam { pts, .. }
+        | Shape::Roof { pts, .. } => {
             let mut pts = pts.clone();
             *pts.get_mut(index)? = p;
             crate::geom::arch::with_pts(&e.shape, pts)?

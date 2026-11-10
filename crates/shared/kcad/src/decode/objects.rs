@@ -86,6 +86,7 @@ enum Kind {
     ViewMark,
     Slab,
     Beam,
+    Roof,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -124,6 +125,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("viewmark", Kind::ViewMark),
     ("slab", Kind::Slab),
     ("beam", Kind::Beam),
+    ("roof", Kind::Roof),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -472,6 +474,7 @@ pub(super) struct Features {
     pub(super) room_heights: bool,
     /// Schema 234 (docs/adr/8041 §1): beams.
     pub(super) beams: bool,
+    pub(super) roofs: bool,
     /// Schema 235 (docs/adr/8041 §2): a column's material.
     pub(super) column_material: bool,
     /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
@@ -785,6 +788,7 @@ impl Features {
             slab_layers: schema >= crate::SCHEMA_WITH_SLAB_LAYERS,
             room_heights: schema >= crate::SCHEMA_WITH_ROOM_HEIGHTS,
             beams: schema >= crate::SCHEMA_WITH_BEAMS,
+            roofs: schema >= crate::SCHEMA_WITH_ROOFS,
             column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
             beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
@@ -879,6 +883,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::ViewMark => key == "viewmark",
             Kind::Slab => key == "slab",
             Kind::Beam => key == "beam",
+            Kind::Roof => key == "roof",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -1093,6 +1098,7 @@ struct Fields {
     /// A slab's fields (docs/adr/0722).
     slab: Option<kentos_contracts::SlabFields>,
     beam: Option<kentos_contracts::BeamFields>,
+    roof: Option<kentos_contracts::RoofFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -1380,6 +1386,7 @@ pub(super) fn object(
             && (has.viewmarks || *kind != Kind::ViewMark)
             && (has.slabs || *kind != Kind::Slab)
             && (has.beams || *kind != Kind::Beam)
+            && (has.roofs || *kind != Kind::Roof)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -1431,6 +1438,10 @@ pub(super) fn object(
     // Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/8041 §1).
     if kind == Kind::Beam && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
+    }
+    // Nor a roof: it stands on the drawing's storeys (docs/adr/8044 §1).
+    if kind == Kind::Roof && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında çatı olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1709,6 +1720,7 @@ pub(super) fn object(
             // Schema 123 (docs/adr/0722): a slab's fields.
             "slab" if kind == Kind::Slab => f.slab = Some(json_part(r, "döşemenin alanları")?.0),
             "beam" if kind == Kind::Beam => f.beam = Some(json_part(r, "kirişin alanları")?.0),
+            "roof" if kind == Kind::Roof => f.roof = Some(json_part(r, "çatının alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) =
@@ -2952,6 +2964,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Beam(kentos_contracts::BeamEntity { base, beam })
+        }
+        Kind::Roof => {
+            let roof = required(r, f.roof.take(), "roof")?;
+            if let Some((_, problem)) = roof.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Roof(kentos_contracts::RoofEntity { base, roof })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

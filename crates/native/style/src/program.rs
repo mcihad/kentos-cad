@@ -418,6 +418,7 @@ pub fn layer_call(
         | Entity::Stair(_)
         | Entity::Ramp(_)
         | Entity::Beam(_)
+        | Entity::Roof(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) = e
             && let Some(x) = opts.view.expanded(store, f64::from(base.id))

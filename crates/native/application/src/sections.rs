@@ -78,6 +78,9 @@ pub struct Look {
 pub enum Left {
     /// The roof: the model has none (ADV-20).
     Roof,
+    /// The roof the model has (docs/adr/8044 §1): not drawn in a section or an elevation yet (M44, part 2). Said apart
+    /// from [`Left::Roof`]: "modelde yok" was false once the model could hold one.
+    RoofNotDrawn,
     /// The natural ground: the model has no survey of it (EK-4 4.30).
     NaturalGround,
     /// A curved wall or stair: drawn as its chords, not as a curve.
@@ -99,6 +102,7 @@ impl Left {
     pub fn words(self) -> &'static str {
         match self {
             Left::Roof => "çatı (modelde yok)",
+            Left::RoofNotDrawn => "çatı (kesit ve görünüşte henüz çizilmiyor)",
             Left::NaturalGround => "tabii zemin (modelde yok)",
             Left::Curved => "eğri duvar ya da merdiven (kirişleriyle)",
             Left::Ramp => "rampa",
@@ -262,7 +266,15 @@ pub fn model(doc: &Document) -> Model {
         levels: levels(doc),
         ..Model::default()
     };
-    m.left.insert((Left::Roof, None));
+    let roofed = doc.entities().any(|e| matches!(e, Entity::Roof(_)));
+    m.left.insert((
+        if roofed {
+            Left::RoofNotDrawn
+        } else {
+            Left::Roof
+        },
+        None,
+    ));
     m.left.insert((Left::NaturalGround, None));
     let entities: Vec<(Uuid, &Entity)> = doc.entities_with_uids().collect();
     let slabs: Vec<SlabAt> = entities

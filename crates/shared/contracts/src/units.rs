@@ -551,6 +551,16 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             s.height(&mut offset);
             f.offset = offset.unwrap_or(f.offset);
         }
+        // Its eaves are lengths, its offset a height, its slopes ratios (docs/adr/8044 §1).
+        Entity::Roof(e) => {
+            let f = &mut e.roof;
+            s.points(&mut f.pts);
+            let mut offset = Some(f.offset);
+            s.height(&mut offset);
+            f.offset = offset.unwrap_or(f.offset);
+            f.thickness = f.thickness.map(|t| s.apply(t));
+            f.overhang = f.overhang.map(|o| s.apply(o));
+        }
         Entity::Stair(e) => {
             let f = &mut e.stair;
             s.points(&mut f.pts);

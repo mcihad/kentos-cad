@@ -105,7 +105,8 @@ SELECT_KINDS = ["edit.selectFilter.point", "edit.selectFilter.line", "edit.selec
     "edit.selectFilter.table", "edit.selectFilter.image"]
 ARCH_KINDS = ["edit.selectFilter.wall", "edit.selectFilter.opening", "edit.selectFilter.space",
     "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.beam", "edit.selectFilter.stair",
-    "edit.selectFilter.ramp", "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
+    "edit.selectFilter.ramp", "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab",
+    "edit.selectFilter.roof"]
 def select_filter(cad):
     # The status bar's Süzgeç lists the kinds; the drop-down is the same list. The architectural kinds are a building's
     # (docs/adr/0802): KentOS Mimari's, never KentOS Harita's or a CBS project's.
@@ -393,14 +394,17 @@ CAD = [
             ]}, L("tool.room")]),
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
-            S("tool.column"), S("tool.beam"),
+            S("tool.column"), S("tool.beam"), S("tool.roof"),
             {"key": "archGrids", "size": "small", "split": [
                 {"command": "tool.grid", "title": "Aks", "label": "Aks"},
                 {"command": "tool.gridSystem", "title": "Aks", "label": "Aks ağı"},
+            # Rampa under Merdiven ▾ (docs/adr/8044 §4): the way up, as Revit's Circulation panel, one family in the code
+            # too (FlightTool); its button went to Çatı, the tab's 30th.
             ]}, {"key": "archStairs", "size": "small", "split": [
                 {"command": "tool.stair", "title": "Merdiven", "label": "Merdiven"},
                 {"command": "tool.stairCurved", "title": "Merdiven", "label": "Döner merdiven"},
-            ]}, S("tool.ramp")]),
+                {"command": "tool.ramp", "title": "Merdiven", "label": "Rampa"},
+            ]}]),
         # Döşeme (docs/adr/0722) beside the rooms it covers.
         P("Mahal", "space", [{"key": "archSpaces", "size": "large", "split": [
                 {"command": "tool.space", "title": "Mahal", "label": "Mahal"},

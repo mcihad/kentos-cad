@@ -3414,6 +3414,20 @@
    "tests": 0
   },
   {
+   "id": "edit.selectFilter.roof",
+   "kind": "command",
+   "title": "Seçim süzgecinde Çatı",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.slab",
    "kind": "command",
    "title": "Seçim süzgecinde Döşeme",
@@ -13880,6 +13894,22 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.roof",
+   "kind": "command",
+   "title": "Çatı",
+   "level": "semantic",
+   "via": [
+    "cad.roofs.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.roofs.create",
+   "mcp": "cad.roofs.create",
+   "note": "Saçağın köşeleri ve her kenarın eğimi (kalkan: yok), kot farkı, kalınlık, saçak, kaplama ve kat komuta verilir. Binadan'da saçağı aracın kendisi bulur: duvarların dış yüzü (Döşeme'nin Dış yüzler'i), saçak kadar dışarıda; eğimleri türe ve ön kenara göre verir. Yüzler, mahya, kırma ve kotlar komutun ve çizimin hesabıdır (ADR 8044 §1, §2, §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.room",

@@ -2766,6 +2766,37 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_ROOFS_CREATE.into(),
+            version: crate::CAD_ROOFS_CREATE_VERSION,
+            title: "Çatı".into(),
+            summary: "Çatılar ekler (docs/adr/8044 §1); tek geri alma adımı “Çatı”. Her biri saçak çizgisi (pts: en az 3, en çok 1000 nokta, kapalı, iki yönde de; her köşesi dışa dönük — içe dönen köşeli saçak henüz çizilmez, invalid_roof), her kenarın eğimi (slopes: pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null kalkan — Revit'in roof by footprint'indeki “eğim verir” gibi: hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz çatı), kot farkı (offset: saçağın katının tepesinden — üstündeki katın döşemesinden — farkı; en çok ±10 m), kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa 0,25 m), saçak (overhang: saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama (material; yoksa Kiremit), kat ve tadilat durumu (arch). Planda saçak ve kalkanlar nesnenin kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı bakan eğim oku ve yüzdesi (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoofsCreate>(),
+            output: schema::<crate::RoofsCreated>(),
+            plan: Some(schema::<crate::RoofsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "12 × 9 m binaya 50 cm saçaklı %33 kırma çatı".into(),
+                    input: json!({ "layerId": "cati", "roofs": [{ "pts": [{ "x": -0.5, "y": -0.5 }, { "x": 12.5, "y": -0.5 }, { "x": 12.5, "y": 9.5 }, { "x": -0.5, "y": 9.5 }], "slopes": [33.0, 33.0, 33.0, 33.0], "overhang": 0.5, "arch": { "level": "k1" } }] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Beşik çatı: uzun kenarlar %40, kısalar kalkan".into(),
+                    input: json!({ "layerId": "cati", "roofs": [{ "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 12.0, "y": 0.0 }, { "x": 12.0, "y": 9.0 }, { "x": 0.0, "y": 9.0 }], "slopes": [40.0, null, 40.0, null] }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ARCH_EDIT.into(),
             version: crate::CAD_ARCH_EDIT_VERSION,
             title: "Mimari nesneyi düzenle".into(),
@@ -16351,6 +16382,9 @@ mod tests {
                     }
                     crate::CAD_BEAMS_CREATE => {
                         serde_json::from_value::<crate::BeamsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ROOFS_CREATE => {
+                        serde_json::from_value::<crate::RoofsCreate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ARCH_EDIT => {
                         serde_json::from_value::<crate::ArchEdit>(e.input.clone()).map(|_| ())

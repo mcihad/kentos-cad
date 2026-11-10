@@ -107,7 +107,7 @@ use kentos_native_application::{
     walls_joins, walls_partition, walls_rectangle,
 };
 use kentos_native_application::{
-    arch_edit, beams_create, columns_create, grids_create, ramps_create, stairs_create,
+    arch_edit, beams_create, columns_create, grids_create, ramps_create, roofs_create, stairs_create,
 };
 use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
@@ -1260,6 +1260,26 @@ impl Input for kentos_commands::BeamsCreate {
             "offset" => b.offset.as_mut(),
             "baseOffset" => b.base_offset.as_mut(),
             _ => named_point(&mut b.pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for kentos_commands::RoofsCreate {
+    /// `roofs[0].offset`, `.thickness`, `.overhang`, `.slopes[k]`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/8044 §1).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("roofs[")?.split_once("].")?;
+        let r = self.roofs.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "offset" => r.offset.as_mut(),
+            "thickness" => r.thickness.as_mut(),
+            "overhang" => r.overhang.as_mut(),
+            _ => match rest.strip_prefix("slopes[").and_then(|k| k.strip_suffix(']')) {
+                Some(k) => r.slopes.get_mut(k.parse::<usize>().ok()?)?.as_mut(),
+                None => named_point(&mut r.pts, "pts", rest),
+            },
         }
     }
 }
@@ -5517,6 +5537,9 @@ fn run_op(
         }
         kentos_commands::CAD_BEAMS_CREATE => {
             run!(beams_create, kentos_commands::BeamsCreate)
+        }
+        kentos_commands::CAD_ROOFS_CREATE => {
+            run!(roofs_create, kentos_commands::RoofsCreate)
         }
         kentos_commands::CAD_ARCH_EDIT => {
             run!(arch_edit, kentos_commands::ArchEdit)

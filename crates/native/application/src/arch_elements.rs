@@ -22,14 +22,15 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    ArchInfo, BeamsCreate, BeamsCreated, BeamsPlan, ColumnEntity, ColumnFields, ColumnsCreate, ColumnsCreated,
-    ColumnsPlan,
-    CommandResult, CommandWarning, Entity, EntityBase, GridEntity, GridFields, GridSystem,
-    GridsCreate, GridsCreated, GridsPlan, RadialGridSystem, RampEntity, RampFields, RampsCreate, RampsCreated,
-    RampsPlan, SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, SystemColumns, Vec2,
+    ArchInfo, BeamsCreate, BeamsCreated, BeamsPlan, ColumnEntity, ColumnFields, ColumnsCreate,
+    ColumnsCreated, ColumnsPlan, CommandResult, CommandWarning, Entity, EntityBase, GridEntity,
+    GridFields, GridSystem, GridsCreate, GridsCreated, GridsPlan, RadialGridSystem, RampEntity,
+    RampFields, RampsCreate, RampsCreated, RampsPlan, RoofsCreate, RoofsCreated, RoofsPlan,
+    SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, SystemColumns,
+    Vec2,
 };
-use kentos_domain::{Document, Uuid};
 use kentos_domain::arch_follow;
+use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::arch;
 
 use crate::ExecutionContext;
@@ -42,6 +43,8 @@ pub const STAIR_STEP: &str = "Merdiven";
 pub const RAMP_STEP: &str = "Rampa";
 /// A beam's undo step (docs/adr/8041 §1).
 pub const BEAM_STEP: &str = "Kiriş";
+/// The undo step's name of `cad.roofs.create` (docs/adr/8044 §1).
+pub const ROOF_STEP: &str = "Çatı";
 
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
@@ -1457,6 +1460,97 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
     )
 }
 
+/// `cad.roofs.create`'s check (docs/adr/8044 §1): each roof's numbers, its fields, its eaves turning out at every
+/// corner (a line turning in is not drawn yet: its straight skeleton needs split events), its level.
+fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
+    if input.roofs.is_empty() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak çatı verilmedi. En az bir çatının saçak çizgisini ve kenarlarının eğimini verin.".into(),
+            "roofs",
+        ));
+    }
+    too_many(input.roofs.len(), codes::INVALID_ROOF, "çatı", "roofs")?;
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.roofs.iter().enumerate() {
+        let at = format!("roofs[{i}]");
+        points(&n.pts, &at)?;
+        finite_each(
+            &[
+                (n.offset, "offset", "Kot farkı"),
+                (n.thickness, "thickness", "Kalınlık"),
+                (n.overhang, "overhang", "Saçak"),
+            ],
+            &at,
+        )?;
+        for (k, s) in n.slopes.iter().enumerate() {
+            if let Some(x) = s {
+                checks::finite(
+                    *x,
+                    "Eğim",
+                    "Sonlu bir sayı verin.",
+                    &format!("{at}.slopes[{k}]"),
+                )?;
+            }
+        }
+        let r = kentos_commands::RoofFields {
+            pts: n.pts.clone(),
+            slopes: n.slopes.clone(),
+            offset: n.offset.unwrap_or(0.0),
+            thickness: n.thickness,
+            overhang: n.overhang,
+            material: n.material.clone(),
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        if let Some((field, words)) = r.problem() {
+            return Err(fail(codes::INVALID_ROOF, words, &format!("{at}.{field}")));
+        }
+        let core: Vec<kentos_geometry_core::Vec2> = r
+            .pts
+            .iter()
+            .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+            .collect();
+        let spec = kentos_geometry_core::geom::roof::RoofSpec {
+            slopes: r.slopes.clone(),
+            ..Default::default()
+        };
+        match kentos_geometry_core::geom::roof::faces(&core, &spec) {
+            Ok(_) => {}
+            Err(kentos_geometry_core::geom::roof::Problem::Concave) => {
+                return Err(fail(
+                    codes::INVALID_ROOF,
+                    "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz çizilmiyor. \
+                     Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün."
+                        .into(),
+                    &format!("{at}.pts"),
+                ));
+            }
+            Err(_) => {
+                return Err(fail(
+                    codes::INVALID_ROOF,
+                    "Saçak çizgisinin alanı yok: noktalar bir doğru üzerinde.".into(),
+                    &format!("{at}.pts"),
+                ));
+            }
+        }
+        crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Roof(kentos_commands::RoofEntity { base, roof: r })),
+        ));
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        Vec::new(),
+    )
+}
+
 fn validated(checked: Result<Checked, Stop>) -> CommandResult<()> {
     match checked {
         Ok((warnings, _)) => CommandResult::Completed {
@@ -1657,6 +1751,17 @@ create_command!(
     CAD_RAMPS_CREATE_VERSION
 );
 create_command!(
+    roofs_create,
+    RoofsCreate,
+    RoofsPlan,
+    roofs,
+    RoofsCreated,
+    roofs_check,
+    ROOF_STEP,
+    CAD_ROOFS_CREATE,
+    CAD_ROOFS_CREATE_VERSION
+);
+create_command!(
     beams_create,
     BeamsCreate,
     BeamsPlan,
@@ -1676,6 +1781,7 @@ pub fn arch_of(e: &Entity) -> Option<&ArchInfo> {
         Entity::Stair(s) => Some(&s.stair.arch),
         Entity::Ramp(r) => Some(&r.ramp.arch),
         Entity::Beam(b) => Some(&b.beam.arch),
+        Entity::Roof(r) => Some(&r.roof.arch),
         _ => None,
     }
 }

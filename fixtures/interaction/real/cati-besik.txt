@@ -1,0 +1,31 @@
+# M44 1. bölüm (docs/adr/8044 §4), on fixtures/arch/v1/facade-building.kcad: Beşik from the ribbon's Çatı (Mimari ›
+# Yerleştir), its Tür typed (T, no Enter: the letter is the option; Enter ends the tool), the click near the west wall:
+# the ridge runs north–south between gable ends on the north and south, the arrows down to the west and the east; "Mahya
+# +8.19 · 2.186 m yüksek".
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+click 357 57
+wait 1500
+type T
+wait 1000
+shot b0-tur
+move 520 600
+wait 1800
+shot b1-besik-onizleme
+click 520 600
+wait 2500
+move 1400 120
+wait 1000
+shot b2-besik
+key Escape
+wait 600
+wheel 765 565 3
+wait 1500
+move 1400 120
+wait 800
+shot b3-yakin

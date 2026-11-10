@@ -37,6 +37,7 @@ impl Document {
                     | kentos_contracts::Entity::Stair(_)
                     | kentos_contracts::Entity::Ramp(_)
                     | kentos_contracts::Entity::Beam(_)
+                    | kentos_contracts::Entity::Roof(_)
                     | kentos_contracts::Entity::Tag(_)
                     | kentos_contracts::Entity::ViewMark(_)
             )

@@ -2,8 +2,8 @@
 //! core's shapes, which draw them.
 
 use kentos_contracts::{
-    BeamFields, ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, StairFields, TagFields, TagShape,
-    Vec2, WallJustify,
+    BeamFields, ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, RoofFields, StairFields,
+    TagFields, TagShape, Vec2, WallJustify,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::Shape;
@@ -67,6 +67,19 @@ pub fn core_beam(b: &BeamFields) -> Shape {
             middle,
             height: b.height,
             tag: b.tag.clone(),
+        },
+    }
+}
+
+/// The roof as the core's shape (docs/adr/8044 §1): its eaves line and slopes; its eaves at its offset (a block or a file
+/// without its storeys; the document stands it on its storey).
+pub fn core_roof(r: &RoofFields) -> Shape {
+    Shape::Roof {
+        pts: core(&r.pts),
+        roof: kentos_geometry_core::geom::roof::RoofSpec {
+            slopes: r.slopes.clone(),
+            base: r.offset,
+            overhead: false,
         },
     }
 }
@@ -169,6 +182,7 @@ pub fn core_of(e: &Entity) -> Option<Shape> {
         Entity::Stair(s) => core_stair(&s.stair),
         Entity::Ramp(r) => core_ramp(&r.ramp),
         Entity::Beam(b) => core_beam(&b.beam),
+        Entity::Roof(r) => core_roof(&r.roof),
         Entity::Tag(t) => core_tag(&t.tag),
         Entity::ViewMark(m) => core_viewmark(&m.mark),
         _ => return None,
@@ -271,7 +285,7 @@ pub fn simple(e: &Entity) -> Option<Entity> {
                 r: c.column.width / 2.0,
             })
         }
-        Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) => {
+        Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) => {
             Entity::Polygon(path(e.base(), outline_points(e)?, None))
         }
         // A view mark a point at its first point, its words its label (docs/adr/0345 §1).

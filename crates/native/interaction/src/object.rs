@@ -263,6 +263,7 @@ impl ObjectAction {
             Shape::Stair { .. } => "merdiven",
             Shape::Ramp { .. } => "rampa",
             Shape::Beam { .. } => "kiriş",
+            Shape::Roof { .. } => "çatı",
             Shape::Tag { .. } => "etiket",
             Shape::ViewMark { .. } => "görünüm işareti",
             Shape::Xline { .. } => "yardımcı çizgi",

@@ -1583,6 +1583,66 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
         | Entity::ViewMark(_) => {
             geo.extend(arch::rows(doc, slot, e, locked, &f));
         }
+        // A roof (docs/adr/8044 §1): what it is by its slopes, its slopes and gable ends, its eaves' and ridge's heights
+        // (PAİY 40/4: the ridge at most 5.00 m over the eaves), its overhang (PAİY 42: 1.00 m), its covering, its storey.
+        Entity::Roof(r) => {
+            let x = &r.roof;
+            let settings = doc.model.settings();
+            geo.push(Row::text("Tür", x.kind_name()));
+            let mut slopes: Vec<f64> = x.slopes.iter().flatten().copied().collect();
+            slopes.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+            if !slopes.is_empty() {
+                let words: Vec<String> = slopes
+                    .iter()
+                    .map(|s| kentos_geometry_core::geom::roof::slope_words(*s))
+                    .collect();
+                geo.push(Row::text("Eğim", words.join(" / ")));
+            }
+            let gables = x.slopes.iter().filter(|s| s.is_none()).count();
+            if gables > 0 && gables < x.slopes.len() {
+                geo.push(Row::text("Kalkan", format!("{gables} kenar")));
+            }
+            let eaves =
+                kentos_native_application::geometry::storey_top(settings, x.arch.level.as_deref())
+                    .unwrap_or(0.0)
+                    + x.offset;
+            let core: Vec<kentos_geometry_core::Vec2> = x
+                .pts
+                .iter()
+                .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+                .collect();
+            let spec = kentos_geometry_core::geom::roof::RoofSpec {
+                slopes: x.slopes.clone(),
+                base: eaves,
+                ..Default::default()
+            };
+            geo.push(Row::text(
+                "Saçak kotu",
+                kentos_geometry_core::geom::roof::level_words(eaves),
+            ));
+            match kentos_geometry_core::geom::roof::ridge_rise(&core, &spec) {
+                Ok(rise) => {
+                    geo.push(Row::text(
+                        "Mahya kotu",
+                        kentos_geometry_core::geom::roof::level_words(eaves + rise),
+                    ));
+                    geo.push(metres("Mahya yüksekliği", rise));
+                }
+                Err(kentos_geometry_core::geom::roof::Problem::Concave) => {
+                    geo.push(Row::text(
+                        "Mahya kotu",
+                        "İçe dönen köşeli saçak henüz hesaplanmıyor",
+                    ));
+                }
+                Err(_) => {}
+            }
+            if let Some(o) = x.overhang {
+                geo.push(metres("Saçak", o));
+            }
+            geo.push(Row::text("Kaplama", x.material_name()));
+            geo.push(metres("Çevre", length_of.unwrap_or(0.0)));
+            geo.extend(area(area_of.unwrap_or(0.0)));
+        }
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
         // boundary, each written through `cad.spaces.edit`; why it lost its walls.
         Entity::Space(sp) => {

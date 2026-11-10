@@ -304,7 +304,8 @@ impl PenCategory {
             // Beams too (docs/adr/8041 §1): the bearing frame draws with one pen.
             PenCategory::Columns => "Kolon ve kirişler",
             PenCategory::Stairs => "Merdiven ve rampalar",
-            PenCategory::Slabs => "Döşemeler",
+            // Roofs too (docs/adr/8044 §1): the roof plan draws with the slabs' pen.
+            PenCategory::Slabs => "Döşeme ve çatılar",
             PenCategory::Spaces => "Mahaller",
             PenCategory::Dimensions => "Ölçüler",
             PenCategory::Tags => "Etiketler",
@@ -324,7 +325,7 @@ impl PenCategory {
             "opening" => PenCategory::Openings,
             "column" | "beam" => PenCategory::Columns,
             "stair" | "ramp" => PenCategory::Stairs,
-            "slab" => PenCategory::Slabs,
+            "slab" | "roof" => PenCategory::Slabs,
             "space" => PenCategory::Spaces,
             "dimension" => PenCategory::Dimensions,
             "tag" => PenCategory::Tags,

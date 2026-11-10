@@ -7,6 +7,7 @@ mod aids;
 mod area;
 mod arrange;
 mod beam_tool;
+mod roof_tool;
 mod array_path;
 mod audit;
 mod block_library;

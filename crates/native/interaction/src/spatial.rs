@@ -499,7 +499,9 @@ impl Spatial {
             looks.hidden.sort_unstable();
             looks.hidden.dedup();
         }
-        self.sync_upper(doc, &looks.upper, &looks.overhead);
+        // A roof over its own plan's cut is drawn dashed as a slab of the level above is (docs/adr/8044 §3).
+        let dashed: Vec<u32> = looks.overhead.iter().chain(&looks.roofs).copied().collect();
+        self.sync_upper(doc, &looks.upper, &dashed);
         // What is faint and what is seen from above or below is snapped to, never picked.
         let unpicked = |l: &crate::level_view::LevelLooks| {
             l.faded
@@ -516,6 +518,7 @@ impl Spatial {
                 faded: looks.faded,
                 upper: looks.upper,
                 overhead: looks.overhead,
+                roofs: looks.roofs,
                 elsewhere: Vec::new(),
             };
             let mut hidden = kentos_native_application::viewport_scope::hidden_entities(doc);
@@ -535,6 +538,7 @@ impl Spatial {
             faded: looks.faded,
             upper: looks.upper,
             overhead: looks.overhead,
+            roofs: looks.roofs,
             elsewhere: Vec::new(),
         };
         if *self.level_looks != shown {
@@ -571,8 +575,8 @@ impl Spatial {
         self.store.set_phase_hidden(hidden);
     }
 
-    /// Puts the stairs of `upper` as the plan of the level above theirs shows them (docs/adr/0724 §4), the slabs of
-    /// `overhead` as the plan of the level under theirs shows them (docs/adr/8012, step 3), and those that left either
+    /// Puts the stairs of `upper` as the plan of the level above theirs shows them (docs/adr/0724 §4), the slabs and
+    /// roofs of `overhead` dashed as a plan under them shows them (docs/adr/8012 step 3, 8044 §3), and those that left either
     /// as their own level's plan does; one put again by a sync came back as its own plan's and is put once more. Their
     /// labels' texts come again with them.
     fn sync_upper(&mut self, doc: &Document, upper: &[u32], overhead: &[u32]) {
@@ -582,6 +586,7 @@ impl Spatial {
             store.get(f64::from(id)).is_some_and(|it| match &it.shape {
                 Shape::Stair { stair, .. } => stair.upper,
                 Shape::Space { space, .. } => space.slab.as_ref().is_some_and(|l| l.overhead),
+                Shape::Roof { roof, .. } => roof.overhead,
                 _ => false,
             })
         };
@@ -620,6 +625,7 @@ impl Spatial {
                             look.overhead = overhead.contains(&e.base().id);
                         }
                     }
+                    Shape::Roof { roof, .. } => roof.overhead = overhead.contains(&e.base().id),
                     _ => {}
                 }
                 Some((id, layer, label, shape))
