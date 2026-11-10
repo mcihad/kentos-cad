@@ -84,11 +84,12 @@ impl Document {
         }
     }
 
-    /// The lowest underside, of the beams whose band holds `at`, more than [`OVER`] above `foot`.
+    /// The lowest underside, of the beams whose band holds `at`, more than [`OVER`] above `foot`. A lintel and a bond
+    /// beam sit in the wall, which runs on round them (docs/adr/3041 §3): only a beam of the frame stops it.
     fn beam_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
         self.entities()
             .filter_map(|e| match e {
-                Entity::Beam(b) => Some(&b.beam),
+                Entity::Beam(b) if b.beam.role == kentos_contracts::BeamRole::Beam => Some(&b.beam),
                 _ => None,
             })
             .filter(|b| beam_holds(b, at))
@@ -99,9 +100,13 @@ impl Document {
 
     /// A beam's top, metres over ±0.00 (docs/adr/3041 §1): the structure's top of the slab over its storey at the
     /// middle of its axis (its underside over its storey's floor, its top within its storey), else its storey's top;
-    /// its offset added. None without either.
+    /// its offset added. None without either. One with a base over its storey's floor (a lintel at its opening's head,
+    /// docs/adr/3041 §3) sits there: its top that and its height over the floor.
     pub fn beam_top(&self, b: &BeamFields) -> Option<f64> {
         let (floor, storey) = self.storey_of(&b.arch);
+        if let Some(base) = b.base_offset {
+            return Some(floor + base + b.height);
+        }
         let at = axis_middle(&b.pts)?;
         let slab = self
             .slabs_holding(at)
@@ -112,6 +117,23 @@ impl Document {
             .min_by(|a, b| a.0.structure_top(a.1).total_cmp(&b.0.structure_top(b.1)))
             .map(|(s, f)| s.structure_top(f));
         Some(slab.or(storey.map(|h| floor + h))? + b.offset)
+    }
+
+    /// The structure's thickness of the slab a beam hangs from (docs/adr/3041 §3), within its height: the part of it the
+    /// slab's volume holds. None for one that sits at its base or hangs from no slab.
+    pub fn beam_slab(&self, b: &BeamFields) -> Option<f64> {
+        if b.base_offset.is_some() || b.role != kentos_contracts::BeamRole::Beam {
+            return None;
+        }
+        let (floor, storey) = self.storey_of(&b.arch);
+        let at = axis_middle(&b.pts)?;
+        self.slabs_holding(at)
+            .filter(|(s, f)| {
+                s.structure_underside(*f) > floor + OVER
+                    && storey.is_none_or(|h| s.structure_top(*f) <= floor + h + OVER)
+            })
+            .min_by(|a, b| a.0.structure_top(a.1).total_cmp(&b.0.structure_top(b.1)))
+            .map(|(s, _)| s.thickness.min(b.height))
     }
 
     /// A beam's underside, metres over ±0.00: its top less its height.
@@ -396,6 +418,19 @@ pub(crate) mod tests {
         let bare = document(serde_json::json!([beam(-0.5, 6.0, serde_json::json!({"offset": -0.05}))]));
         let b = bare.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
         assert!((b - 2.45).abs() < 1e-9, "{b}");
+        // A lintel (docs/adr/3041 §3) sits at its base, 2.10 to 2.30 over the floor, in the wall: the wall runs on to the
+        // slab (2.85).
+        let lintel = document(serde_json::json!([
+            slab("k1", -1.0, 10.0, 0.15, 0.0),
+            beam(-0.5, 6.0, serde_json::json!({"role": "lintel", "baseOffset": 2.1, "height": 0.2}))
+        ]));
+        let w = wall("zemin", 0.0, 4.0, None);
+        assert!((lintel.wall_height(&w).unwrap() - 2.85).abs() < 1e-9);
+        let Some(kentos_contracts::Entity::Beam(l)) = lintel.entities().find(|e| e.kind() == "beam") else {
+            panic!("the lintel")
+        };
+        assert!((lintel.beam_top(&l.beam).unwrap() - 2.3).abs() < 1e-9);
+        assert!((lintel.beam_underside(&l.beam).unwrap() - 2.1).abs() < 1e-9);
     }
 
     #[test]

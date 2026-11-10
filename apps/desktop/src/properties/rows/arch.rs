@@ -513,6 +513,28 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 x.tag.clone().unwrap_or_default(),
                 ArchField::Tag,
             ));
+            // Kiriş, lento ya da hatıl (docs/adr/3041 §3).
+            let roles = kentos_commands::BeamRole::ALL
+                .iter()
+                .map(|&r| {
+                    pick(
+                        r.label().to_owned(),
+                        r == x.role,
+                        set(
+                            slot,
+                            ArchChange {
+                                role: Some(r),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(
+                Row::text("Tür", x.role.label())
+                    .editor(edit(select(x.role.label().to_owned(), roles))),
+            );
             out.push(length("Genişlik", x.width, ArchField::Width));
             out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
             let justify = kentos_commands::WallJustify::ALL
@@ -536,7 +558,24 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 Row::text("Hiza", x.justify.label())
                     .editor(edit(select(x.justify.label().to_owned(), justify))),
             );
-            out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
+            // A lintel or a bond beam sits at its height over its storey's floor; a beam hangs, its offset from its slab.
+            if x.role == kentos_commands::BeamRole::Beam && x.base_offset.is_none() {
+                out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
+            } else {
+                out.push(
+                    Row::figure(
+                        "Kattan yükseklik",
+                        x.base_offset.map_or_else(String::new, |v| f.length_bare(v)),
+                    )
+                    .unit(f.length_unit_label())
+                    .editor(edit(Editor::Number(Field::Arch(slot, ArchField::BeamBase)))),
+                );
+                out.push(Row::note(if x.base_offset.is_some() {
+                    "Alt yüzü katın döşemesinden"
+                } else {
+                    "Boş: üst döşemeden asılır"
+                }));
+            }
             if let Some(top) = doc.model.beam_top(x) {
                 out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
                 out.push(

@@ -1,0 +1,48 @@
+# M41 3. bölüm (docs/adr/3041 §3): the survey flat (Daire). Mimari › Kiriş, its Tür Lento in the settings pane, Numara
+# L101; a click on each of the two windows in the lower wall and on the entrance door puts L101, L102, L103 over them on
+# MM-LENT-GENEL ("Lento kondu: L103 25/20."). Zoomed: the lintel's dashed ends 20 cm past the jambs and its number.
+# Metraj › Kirişler: L101 and L102 1.600 m (1.20 + 2 × 0.20) 0.080 m³, L103 1.400 m 0.070 m³.
+fit KentOS Mimari — Daire
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+click 588 20     # Mimari
+wait 1000
+click 277 111    # Kiriş
+wait 1500
+click 1806 752   # Tür
+wait 1000
+click 1744 816   # Lento
+wait 1200
+shot 00-lento-arac
+click 1806 839   # Numara
+wait 600
+key ctrl+a
+type L101
+key Return
+wait 1000
+move 256 668
+wait 1200
+shot 01-lento-onizleme
+click 256 668    # the left window in the lower wall
+wait 1500
+click 483 668    # the middle window
+wait 1500
+click 473 216    # the entrance door
+wait 1500
+key Escape
+wait 800
+move 1200 960
+wait 800
+shot 02-lentolar
+wheel 256 668 3
+wait 2000
+move 1200 960
+wait 800
+shot 03-yakin
+click 965 111    # Metraj
+wait 2500
+click 1085 318   # Kirişler
+wait 1500
+shot 04-metraj-kirisler

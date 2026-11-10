@@ -83,6 +83,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         transitions: Vec::new(),
         ramps: Vec::new(),
         stairs: Vec::new(),
+        beams: Vec::new(),
         materials: Vec::new(),
         totals: QuantityTotals::default(),
     };
@@ -246,6 +247,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     out.stairs.push(stair_row(uid(e), &s.stair));
                 }
             }
+            // Docs/adr/3041 §3.
+            Entity::Beam(b) if input.usages.is_none() => {
+                if takes(e, &b.beam.arch) {
+                    out.beams.push(beam_row(doc, uid(e), &b.beam));
+                }
+            }
             Entity::Wall(w) if input.usages.is_none() => {
                 let x = &w.wall;
                 if !takes(e, &x.arch) {
@@ -322,8 +329,35 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         stair_area: out.stairs.iter().map(|s| s.area).sum::<f64>() + 0.0,
         stair_railing_length: out.stairs.iter().map(|s| s.railing_length).sum::<f64>() + 0.0,
         stair_risers: out.stairs.iter().map(|s| s.risers).fold(0u32, u32::saturating_add),
+        beam_volume: total(out.beams.iter().map(|b| b.volume)),
     };
     Ok(out)
+}
+
+/// A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length; a beam's volume under the slab it
+/// hangs from, a lintel's and a bond beam's whole.
+pub(crate) fn beam_row(doc: &Document, uid: String, b: &kentos_commands::BeamFields) -> kentos_commands::BeamRow {
+    let length = b.length();
+    let slab = doc.beam_slab(b);
+    let below = b.height - slab.unwrap_or(0.0);
+    kentos_commands::BeamRow {
+        uid,
+        role: b.role,
+        tag: b.tag.clone(),
+        level: b.arch.level.clone(),
+        width: b.width,
+        height: b.height,
+        length,
+        slab,
+        volume: b.width * below * length,
+        rule: match (b.role, slab) {
+            (kentos_commands::BeamRole::Beam, Some(_)) => {
+                "hacim: genişlik × (yükseklik − taşıdığı döşemenin taşıyıcısı) × eksenin boyu: döşemenin altında kalan;                  döşemenin içindeki kısmı döşemenin hacmindedir"
+            }
+            _ => "hacim: genişlik × yükseklik × eksenin boyu",
+        }
+        .into(),
+    }
 }
 
 /// A sum that is +0 when empty: Rust's f64 `Sum` starts from -0 (+0 added makes it +0), so an empty column said “-0.0” in the API's JSON

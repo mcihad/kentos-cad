@@ -293,6 +293,14 @@
       görünüşünü alır, dış çizgisi katmanın içinde çizilmez: perde + kolon tek kesit (TS EN ISO 128-3, 7.2).
     - Depo duvarların kesilmemiş çizimini (`wall_whole`) ve kolonların ayak izini (`column_feet`) tutar; kolon değişince
       yeri `wall_dirty`'ye düşer. SN46 (1:20) yalnız betonarme kolonda. Etiketin `{size}`'ı kolonda "30/50", "Ø40".
+  - **Lento ve hatıl (M41 3. bölüm, [ADR 3041](../adr/3041-beams-lintels-column-wall-joins.md) §3):**
+    - `BeamFields.role` (kiriş, `lintel`, `bondBeam`) ve `baseOffset` (alt yüzü katın döşemesinden; kot farkıyla birlikte
+      olmaz), `.kcad` şema 224. Duvar yalnız kirişin altında biter.
+    - Lento açıklıktan kurulur (`arch_elements::lintel_over`): sövelerden 20 cm taşar, duvar kalınlığında, 20 cm, alt
+      yüzü açıklığın başı (TBDY 2018 11.5.3'ün en azları 20 cm ve 15 cm). Kiriş aracının Tür'ü (T) Lento iken açıklığa
+      tek tıklama. Katmanlar MM-LENT-GENEL, MM-HATL-GENEL.
+    - Metraj › Kirişler: kirişin hacmi döşemenin altında kalan kısmı (döşemenin hacmiyle iki kez sayılmaz), lento ve
+      hatılınki tamamı; toplam `beamVolume`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

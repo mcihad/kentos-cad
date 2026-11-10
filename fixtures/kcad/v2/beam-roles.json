@@ -1,0 +1,117 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Lento ve hatıl",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kiris",
+      "name": "Kiriş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "kiris",
+  "uids": [
+    "0192f5a1-7234-7000-8000-000000000001",
+    "0192f5a1-7234-7000-8000-000000000002"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "beam",
+      "id": 1,
+      "layerId": "kiris",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.8,
+          "y": 0.0
+        },
+        {
+          "x": 2.3,
+          "y": 0.0
+        }
+      ],
+      "width": 0.2,
+      "height": 0.2,
+      "role": "lintel",
+      "baseOffset": 2.1,
+      "tag": "L101",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "beam",
+      "id": 2,
+      "layerId": "kiris",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 4.0
+        },
+        {
+          "x": 5.0,
+          "y": 4.0
+        }
+      ],
+      "width": 0.2,
+      "height": 0.3,
+      "role": "bondBeam",
+      "baseOffset": 1.35,
+      "tag": "H101",
+      "arch": {
+        "level": "zemin"
+      }
+    }
+  ]
+}

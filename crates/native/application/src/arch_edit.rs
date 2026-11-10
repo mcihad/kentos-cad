@@ -47,6 +47,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const WIDE: &[&str] = &["column", "stair", "ramp", "beam"];
     const FLIGHT: &[&str] = &["stair", "ramp"];
     const BEAM: &[&str] = &["beam"];
+    const RAMP_BEAM: &[&str] = &["ramp", "beam"];
     const TAGGED: &[&str] = &["column", "beam"];
     const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam"];
     let mut out = Vec::new();
@@ -80,10 +81,12 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.rise.is_some(), "rise", RAMP);
     add(c.slope.is_some(), "slope", RAMP);
     add(c.base.is_some(), "base", RAMP);
-    add(c.base_offset.is_some(), "baseOffset", RAMP);
+    // A ramp's base over its level (docs/adr/0723 §2), a beam's underside over its storey's floor (docs/adr/3041 §3).
+    add(c.base_offset.is_some(), "baseOffset", RAMP_BEAM);
     add(c.height.is_some(), "height", BEAM);
     add(c.justify.is_some(), "justify", BEAM);
     add(c.offset.is_some(), "offset", BEAM);
+    add(c.role.is_some(), "role", BEAM);
     add(c.material.is_some(), "material", TAGGED);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
@@ -268,6 +271,13 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = c.offset {
                 f.offset = v;
+            }
+            // Its role and its base (docs/adr/3041 §3); null base: it hangs again.
+            if let Some(v) = c.role {
+                f.role = v;
+            }
+            if let Some(v) = c.base_offset {
+                f.base_offset = v;
             }
             if let Some(v) = &c.tag {
                 f.tag.clone_from(v);

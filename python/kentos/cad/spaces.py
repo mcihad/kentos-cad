@@ -928,8 +928,12 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
     yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık
     sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata
     bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
-    rampRailingLength. levels, phases, usages ve layers verilen kat, tadilat durumu,
-    kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
+    rampRailingLength. Kiriş (beams, docs/adr/3041 §3): numara, tür (kiriş, lento,
+    hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab)
+    ve beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik −
+    döşeme) × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın
+    tamamı; toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat
+    durumu, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -975,9 +979,13 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta
         çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç
         ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu;
-        toplamlarda rampArea ve rampRailingLength. levels, phases, usages ve layers verilen
-        kat, tadilat durumu, kullanım ve katmanlarla süzer (usages verilince yalnız
-        mahaller).
+        toplamlarda rampArea ve rampRailingLength. Kiriş (beams, docs/adr/3041 §3): numara,
+        tür (kiriş, lento, hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı
+        döşemenin taşıyıcısı (slab) ve beton hacmi: kirişin döşemenin altında kalan kısmı
+        (genişlik × (yükseklik − döşeme) × boy; döşemenin içindeki kısmı döşemenin
+        hacmindedir), lento ve hatılın tamamı; toplamı beamVolume. levels, phases, usages ve
+        layers verilen kat, tadilat durumu, kullanım ve katmanlarla süzer (usages verilince
+        yalnız mahaller).
 
         Args:
             doc: The drawing it works on.

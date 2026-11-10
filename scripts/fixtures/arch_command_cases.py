@@ -1439,6 +1439,11 @@ def beam_fields(n):
         f["justify"] = n["justify"]
     if n.get("offset") is not None and n["offset"] != 0.0:
         f["offset"] = n["offset"]
+    # Its role and its base over its storey's floor (docs/adr/3041 §3).
+    if n.get("role", "beam") != "beam":
+        f["role"] = n["role"]
+    if n.get("baseOffset") is not None:
+        f["baseOffset"] = n["baseOffset"]
     for k in ("tag", "material"):
         if n.get(k) is not None:
             f[k] = n[k]
@@ -1459,6 +1464,12 @@ def beam_problem(f, path):
         return refusal("invalid_beam", f"Kirişin genişliği {num(w)}; sıfırdan büyük, en çok 3 m olmalı.", f"{path}.width")
     if not (math.isfinite(h) and 0 < h <= 5.0):
         return refusal("invalid_beam", f"Kirişin yüksekliği {num(h)}; sıfırdan büyük, en çok 5 m olmalı.", f"{path}.height")
+    b = f.get("baseOffset")
+    if b is not None:
+        if not (math.isfinite(b) and abs(b) <= 10.0):
+            return refusal("invalid_beam", f"Kirişin kattan yüksekliği {num(b)}; en çok ±10 m olmalı.", f"{path}.baseOffset")
+        if o != 0.0:
+            return refusal("invalid_beam", "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.", f"{path}.offset")
     if not (math.isfinite(o) and abs(o) <= 10.0):
         return refusal("invalid_beam", f"Kirişin kot farkı {num(o)}; en çok ±10 m olmalı.", f"{path}.offset")
     for k in ("tag", "material"):
@@ -1475,7 +1486,8 @@ def beams_create(d, inp, conflict=False):
     for i, n in enumerate(inp["beams"]):
         at = f"beams[{i}]"
         r = points_not_finite(n["pts"], at) or finite_each(
-            [(n["width"], "width", "Genişlik"), (n["height"], "height", "Yükseklik"), (n.get("offset"), "offset", "Kot farkı")], at)
+            [(n["width"], "width", "Genişlik"), (n["height"], "height", "Yükseklik"), (n.get("offset"), "offset", "Kot farkı"),
+             (n.get("baseOffset"), "baseOffset", "Kattan yükseklik")], at)
         if r:
             return r, None
         f = beam_fields(n)
@@ -2160,6 +2172,10 @@ def beam_cases():
         ("tadilatta ilave kiriş", beam(arch={"level": "kat-1", "phase": "new"})),
         ("iki kiriş tek adımda", {"layerId": "cizim", "beams": [beam()["beams"][0], beam(pts=[P(5, 50), P(5, 55)], tag="K103")["beams"][0]]}),
         ("renkli ve kalın kiriş", {**beam(), "color": "#cc3300", "lineWeight": 0.35}),
+        # Lintels and bond beams (docs/adr/3041 §3).
+        ("kapının başında lento: kattan yüksekliğiyle", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, tag="L101")),
+        ("duvarın içinde hatıl", beam(width=0.2, height=0.2, role="bondBeam", baseOffset=1.0, tag="H101")),
+        ("kirişin varsayılan türü yazılmaz", beam(role="beam")),
     ]:
         c.add(name, [create_step(Drawing(), BEAMS, "execute", inp)])
     refusals(c, BEAMS, [
@@ -2173,6 +2189,9 @@ def beam_cases():
         ("3 m'den geniş kiriş reddedilir", beam(width=3.5), {}),
         ("6 m yükseklik reddedilir", beam(height=6.0), {}),
         ("12 m kot farkı reddedilir", beam(offset=12.0), {}),
+        ("kattan yükseklik ve kot farkı birlikte reddedilir", beam(role="lintel", baseOffset=2.1, offset=0.1), {}),
+        ("12 m kattan yükseklik reddedilir", beam(baseOffset=12.0), {}),
+        ("sonsuz kattan yükseklik reddedilir", beam(baseOffset=1.0), {"non_finite": {"beams[0].baseOffset": "NaN"}}),
         ("boşluklu numara reddedilir", beam(tag=" K1"), {}),
         ("olmayan kat reddedilir", beam(arch={"level": "yok"}), {}),
     ])
@@ -2371,16 +2390,16 @@ FIELDS = [  # wire name, kinds, nullable
     ("post", ("stair",), True), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
-    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp",), True),
+    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
     # A beam's (docs/adr/3041 §1).
-    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False),
+    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False), ("role", ("beam",), False),
     # A column's or a beam's (docs/adr/3041 §2).
     ("material", ("column", "beam"), True),
     ("level", ("grid", "column", "stair", "ramp", "beam"), True), ("phase", ("grid", "column", "stair", "ramp", "beam"), True),
 ]
 KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş"}
 DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False,
-            "anchor": "center", "justify": "center", "offset": 0.0}
+            "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam"}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width", "Genişlik"), ("depth", "Boy"),
            ("legs[0]", "L kolonun kolu"), ("legs[1]", "L kolonun kolu"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
@@ -2618,6 +2637,13 @@ def edit_cases():
           [made, one(d, [uid_of(k)], {"kind": "set", "justify": "center", "offset": 0.0, "tag": None, "material": None})])
     d, made, k = with_beam()
     c.add("Değiştir: kirişin katı ve tadilat durumu", [made, one(d, [uid_of(k)], {"kind": "set", "level": "zemin", "phase": "existing"})])
+    # Its role and base (docs/adr/3041 §3): a beam made a lintel at 2.10; null base and the beam's role back.
+    d, made, k = with_beam()
+    c.add("Değiştir: kirişi lentoya çevirir, kattan yüksekliğiyle",
+          [made, one(d, [uid_of(k)], {"kind": "set", "role": "lintel", "baseOffset": 2.1, "height": 0.2})])
+    d, made, k = with_beam(role="bondBeam", baseOffset=1.0)
+    c.add("Değiştir: null kattan yükseklik ve kiriş türü varsayılana döner",
+          [made, one(d, [uid_of(k)], {"kind": "set", "role": "beam", "baseOffset": None})])
     d, made, k = with_beam()
     c.add("Değiştir: kirişe 6 m yükseklik reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "height": 6.0})])
     d, made, k = with_beam()

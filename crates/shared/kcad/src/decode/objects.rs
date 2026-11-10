@@ -451,6 +451,8 @@ pub(super) struct Features {
     pub(super) beams: bool,
     /// Schema 223 (docs/adr/3041 §2): a column's material.
     pub(super) column_material: bool,
+    /// Schema 224 (docs/adr/3041 §3): a beam's role and base.
+    pub(super) beam_roles: bool,
     /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
     pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -749,6 +751,7 @@ impl Features {
             room_heights: schema >= crate::SCHEMA_WITH_ROOM_HEIGHTS,
             beams: schema >= crate::SCHEMA_WITH_BEAMS,
             column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
+            beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
@@ -2568,6 +2571,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::UnknownField,
             "kapı ve pencerenin kendi tadilat durumu (phase) şema 218 ister",
+        ));
+    }
+    // Schema 224 (docs/adr/3041 §3): a beam's role and base.
+    if kentos_contracts::needs_beam_roles(&entity) && !has.beam_roles {
+        return Err(r.fail(
+            Code::UnknownField,
+            "kirişin türü (role) ve kattan yüksekliği (baseOffset) şema 224 ister",
         ));
     }
     // Schema 223 (docs/adr/3041 §2): a column's material.

@@ -117,7 +117,8 @@ fn segment_segment(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> (f64, Vec2, Vec2) {
         .into_iter()
         .map(|(p, q)| ((p.x - q.x).hypot(p.y - q.y), p, q))
         .min_by(|x, y| x.0.total_cmp(&y.0))
-        .expect("four pairs")
+        // Four pairs: there is always a nearest.
+        .unwrap_or((0.0, a, a))
 }
 
 /// The stretch of `ab` (its parameters 0…1) segment `cd` faces when parallel to it; none otherwise.

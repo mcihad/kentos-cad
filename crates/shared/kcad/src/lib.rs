@@ -898,11 +898,14 @@ pub const SCHEMA_WITH_ROOM_HEIGHTS: u32 = 221;
 pub const SCHEMA_WITH_BEAMS: u32 = 222;
 /// Schema 223 (docs/adr/3041 §2): a column's material (`material` of a column).
 pub const SCHEMA_WITH_COLUMN_MATERIAL: u32 = 223;
+/// Schema 224 (docs/adr/3041 §3): a beam's role (`role`: lintel, bond beam) and its base over its storey's floor
+/// (`baseOffset`).
+pub const SCHEMA_WITH_BEAM_ROLES: u32 = 224;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 221] = [
+pub const SCHEMAS: [u32; 222] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1124,6 +1127,7 @@ pub const SCHEMAS: [u32; 221] = [
     SCHEMA_WITH_ROOM_HEIGHTS,
     SCHEMA_WITH_BEAMS,
     SCHEMA_WITH_COLUMN_MATERIAL,
+    SCHEMA_WITH_BEAM_ROLES,
 ];
 
 /// The file a drawing is saved as.

@@ -1071,6 +1071,46 @@ pub struct QuantityTotals {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stair_risers: u32,
+    /// The beams', lintels' and bond beams' concrete (docs/adr/3041 §3).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub beam_volume: f64,
+}
+
+/// A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length and its concrete's volume. A beam's
+/// volume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the
+/// slab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,
+/// in their wall, is the whole.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BeamRow {
+    pub uid: String,
+    pub role: crate::BeamRole,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tag: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+    /// Its axis's length.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    /// The slab's structure it hangs from, within its height; none: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub slab: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+    pub rule: String,
 }
 
 /// Output of `cad.spaces.quantities` v1 (its plan's too).
@@ -1099,6 +1139,10 @@ pub struct SpacesQuantified {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StairRow>>", optional))]
     pub stairs: Vec<StairRow>,
+    /// The beams, lintels and bond beams (docs/adr/3041 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BeamRow>>", optional))]
+    pub beams: Vec<BeamRow>,
     /// The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
     /// order, then the text ones in the drawing's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

@@ -224,9 +224,11 @@ pub enum ArchField {
     MarkNumber,
     /// A view mark's words' height on paper, mm; empty 2.5.
     MarkSize,
-    /// A beam's height and its top's offset (empty 0; docs/adr/3041 §1).
+    /// A beam's height and its top's offset (empty 0; docs/adr/3041 §1); a lintel's or a bond beam's underside over its
+    /// storey's floor (empty: it hangs; docs/adr/3041 §3).
     BeamHeight,
     BeamOffset,
+    BeamBase,
     /// A column's or a beam's material (empty: Betonarme; docs/adr/3041 §2).
     Material,
 }
@@ -1989,6 +1991,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     | ArchField::LegB
                     | ArchField::BeamHeight
                     | ArchField::BeamOffset
+                    | ArchField::BeamBase
             );
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
@@ -2031,6 +2034,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 ArchField::BeamOffset => ArchChange {
                     offset: Some(words.map_or(0.0, |_| n)),
+                    ..Default::default()
+                },
+                ArchField::BeamBase => ArchChange {
+                    base_offset: Some(words.map(|_| n)),
                     ..Default::default()
                 },
                 ArchField::BubbleSize => ArchChange {

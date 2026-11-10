@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 224 (docs/adr/3041 §3): a beam's role or its base over its storey's floor.
+    if objs.iter().any(kentos_contracts::needs_beam_roles) {
+        return crate::SCHEMA_WITH_BEAM_ROLES;
+    }
     // Schema 223 (docs/adr/3041 §2): a column's material.
     if objs
         .iter()

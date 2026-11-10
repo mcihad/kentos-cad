@@ -1179,6 +1179,253 @@
       ]
     },
     {
+      "name": "kapının başında lento: kattan yüksekliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "tag": "L101"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "tag": "L101"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvarın içinde hatıl",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "bondBeam",
+                "baseOffset": 1.0,
+                "tag": "H101"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "bondBeam",
+                "baseOffset": 1.0,
+                "tag": "H101"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kirişin varsayılan türü yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "role": "beam"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "kiriş verilmezse reddedilir",
       "steps": [
         {
@@ -1645,6 +1892,161 @@
               "code": "invalid_beam",
               "message": "Kirişin kot farkı 12; en çok ±10 m olmalı.",
               "path": "beams[0].offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kattan yükseklik ve kot farkı birlikte reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "offset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.",
+              "path": "beams[0].offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 m kattan yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "baseOffset": 12.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Kirişin kattan yüksekliği 12; en çok ±10 m olmalı.",
+              "path": "beams[0].baseOffset"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz kattan yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "baseOffset": 1.0
+              }
+            ]
+          },
+          "nonFinite": {
+            "beams[0].baseOffset": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kattan yükseklik sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "beams[0].baseOffset"
             }
           },
           "expect": {

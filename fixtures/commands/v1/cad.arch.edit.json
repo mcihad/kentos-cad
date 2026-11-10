@@ -1818,6 +1818,331 @@
       ]
     },
     {
+      "name": "Değiştir: kirişi lentoya çevirir, kattan yüksekliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "role": "lintel",
+              "baseOffset": 2.1,
+              "height": 0.2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "beam",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 50.0
+                    }
+                  ],
+                  "width": 0.25,
+                  "height": 0.2,
+                  "baseOffset": 2.1,
+                  "role": "lintel"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.2,
+                "baseOffset": 2.1,
+                "role": "lintel"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: null kattan yükseklik ve kiriş türü varsayılana döner",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.beams.create",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "role": "bondBeam",
+                "baseOffset": 1.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "role": "bondBeam",
+                "baseOffset": 1.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "role": "beam",
+              "baseOffset": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "beam",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 50.0
+                    }
+                  ],
+                  "width": 0.25,
+                  "height": 0.5
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: kirişe 6 m yükseklik reddedilir",
       "steps": [
         {

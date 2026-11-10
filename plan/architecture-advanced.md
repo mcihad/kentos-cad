@@ -898,7 +898,14 @@ ve etiketi gizli. **M39 yapıldı.**
 
 ### 4.3 Yapı modeli ve türetilmiş çizimler
 
-#### ADV-18 — Düşey model ve taşıyıcı sistem [ ]
+#### ADV-18 — Düşey model ve taşıyıcı sistem [x]
+
+_Durum (10 Kasım 2026):_ M40 yapıldı ([ADR 3040](../docs/adr/3040-vertical-model.md)): duvar betonarmeden betonarmeye,
+katın yüksekliğini geçmez; kat yüksekliği değişince üstteki katlar ve duvar tepeleri izler; döşeme katmanları; mahalin
+döşeme kotu, asma tavanı ve iç yüksekliği (PAİY 28/4–6). M41 yapıldı ([ADR 3041](../docs/adr/3041-beams-lintels-column-wall-joins.md)):
+kiriş planda kesikli, numarası ve ölçüsü ölçeğe göre; duvar kirişin altında biter; kolonun malzemesi, duvar kolonun
+yüzünde kesilir, perde + kolon tek kesit (TS EN ISO 128-3, 7.2), tuğla kolonda biter; lento (TBDY 11.5.3) ve hatıl
+kirişin türleri; Metraj › Kirişler. Üç kabul de gerçek pencerede doğrulandı. **ADV-18 yapıldı.**
 
 **Kullanıcı sonucu:** Kat yüksekliği değişince duvar tepeleri izler. Kiriş planda kesikli görünür. Kolon ile duvarın
 taraması kesintisiz birleşir. Dayanak S20; Dijital Yönetmelik Md. 9(1) (çizim ile model uyumu).
@@ -1171,7 +1178,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | M40 | Düşey model | ADV-18 | Duvar tepeleri kata bağlı; döşeme katmanları **(M40, ADR 3040: duvar betonarmeden betonarmeye, katın yüksekliğini geçmez; kat yüksekliği değişince üstteki katlar ve duvar tepeleri izler; döşemenin kaplama, şap, yalıtım ve sıva katmanları, metrajı katman katman, `.kcad` 220; mahalin döşeme kot farkı, asma tavanı ve iç yüksekliği, PAİY 28/4–6 denetimi, `.kcad` 221; yapıldı)** |
-| M41 | Kiriş, lento, kolon–duvar birleşimi | ADV-18 | Kesikli kiriş; sürekli tarama **(M41 1. ve 2. bölüm, ADR 3041: kiriş nesnesi, planda kesikli ve ince, 1:100'de numarası, 1:50'den "K101 25/50"; duvar kirişin altında biter; Mimari › Kiriş aracı, numara K101 → K102; `.kcad` 222; kolonun malzemesi, duvar kolonun yüzünde kesilir, kolon kendi malzemesindeki duvar katmanıyla tek kesit: perde + kolon kesintisiz, tuğla kolonda biter; etiketin `{size}`'ı "30/50"; `.kcad` 223; sürüyor)** |
+| M41 | Kiriş, lento, kolon–duvar birleşimi | ADV-18 | Kesikli kiriş; sürekli tarama **(M41, ADR 3041: kiriş nesnesi, planda kesikli ve ince, 1:100'de numarası, 1:50'den "K101 25/50"; duvar kirişin altında biter; Mimari › Kiriş aracı, numara K101 → K102; `.kcad` 222; kolonun malzemesi, duvar kolonun yüzünde kesilir, kolon kendi malzemesindeki duvar katmanıyla tek kesit: perde + kolon kesintisiz, tuğla kolonda biter; etiketin `{size}`'ı "30/50"; `.kcad` 223; kirişin türü (lento, hatıl) ve kattan yüksekliği, lento açıklığa tıklanarak (TBDY 11.5.3), Metraj › Kirişler; `.kcad` 224; yapıldı)** |
 | M42 | Kesit türetimi | ADV-19 | 1:50 kesit; eskime işareti |
 | M43 | Görünüş türetimi | ADV-19 | Dört cephe |
 | M44 | Çatı ve çatı planı | ADV-20 | Çatı planı paftası |

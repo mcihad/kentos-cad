@@ -152,7 +152,8 @@ impl Document {
         .unwrap_or_else(|| s.to_owned())
     }
 
-    pub(crate) fn wall_of(&self, host: &str) -> Option<kentos_contracts::WallFields> {
+    /// The wall whose persistent id is `host` (an opening's host); none for another object or none.
+    pub fn wall_of(&self, host: &str) -> Option<kentos_contracts::WallFields> {
         let uid = crate::identity::Uuid::parse_str(host).ok()?;
         let slot = self.store.slot_of(uid)?;
         match &*self.store.get(slot)?.entity {

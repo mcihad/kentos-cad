@@ -31,4 +31,8 @@ rampArea?: number, rampRailingLength?: number,
 /**
  * The stairs' plan area, their railings' length and their risers (docs/adr/0724 §5).
  */
-stairArea?: number, stairRailingLength?: number, stairRisers?: number, };
+stairArea?: number, stairRailingLength?: number, stairRisers?: number, 
+/**
+ * The beams', lintels' and bond beams' concrete (docs/adr/3041 §3).
+ */
+beamVolume?: number, };

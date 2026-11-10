@@ -844,6 +844,19 @@ BatchOnErrorName = Literal["stop", "continue"]
 """The names of :class:`BatchOnError`, for a plain string."""
 
 
+class BeamRole(_StrEnum):
+    """What a beam is (docs/adr/3041 §3): a beam of the frame (kiriş), a lintel over an opening (lento, TBDY 2018 11.5.3) or
+    a bond beam in a wall (hatıl, TBDY 2018 7.12, 11.3.7).
+    """
+    BEAM = "beam"
+    LINTEL = "lintel"
+    BOND_BEAM = "bondBeam"
+
+
+BeamRoleName = Literal["beam", "lintel", "bondBeam"]
+"""The names of :class:`BeamRole`, for a plain string."""
+
+
 class BlendMode(_StrEnum):
     """How a layer's picture meets what is under it (docs/adr/0226 §4: the W3C's
     separable blending modes, and addition).
@@ -18178,6 +18191,8 @@ class BeamEntity(Entity):
         height: Its height (kiriş yüksekliği), metres: its top to its underside, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        base_offset: Its underside's height over its storey's floor, metres (docs/adr/3041 §3): a lintel's at its opening's head;
+            absent: it hangs from where its top is (a beam's). Not with an offset. Unit: length.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -18198,6 +18213,7 @@ class BeamEntity(Entity):
             absent: 0. Unit: elevation.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        role: What it is (docs/adr/3041 §3): a beam (absent), a lintel or a bond beam.
         symbol: Library symbol overriding the layer's style.
         tag: Its number ("K101").
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -18213,6 +18229,7 @@ class BeamEntity(Entity):
     height: float
     arch: ArchInfo | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    base_offset: float | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | Unset = UNSET
@@ -18225,6 +18242,7 @@ class BeamEntity(Entity):
     material: str | None | Unset = UNSET
     offset: float | Unset = UNSET
     order: int | None | Unset = UNSET
+    role: BeamRole | BeamRoleName | Unset = UNSET
     symbol: str | None | Unset = UNSET
     tag: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -18242,6 +18260,8 @@ class BeamEntity(Entity):
             out["arch"] = self.arch.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.base_offset is not UNSET:
+            out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -18266,6 +18286,8 @@ class BeamEntity(Entity):
             out["offset"] = float(self.offset)
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.role is not UNSET:
+            out["role"] = _enum_out(self.role)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.tag is not UNSET:
@@ -18287,6 +18309,7 @@ class BeamEntity(Entity):
             height=float(data["height"]),
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else UNSET,
@@ -18299,10 +18322,68 @@ class BeamEntity(Entity):
             material=data.get("material", UNSET),
             offset=float(data["offset"]) if "offset" in data else UNSET,
             order=data.get("order", UNSET),
+            role=_enum_in(BeamRole, data["role"]) if "role" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             tag=data.get("tag", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BeamRow(_Model):
+    """A beam, a lintel or a bond beam measured (docs/adr/3041 §3): its axis's length and its concrete's volume. A beam's
+    volume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the
+    slab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,
+    in their wall, is the whole.
+    Attributes:
+        width: Unit: length.
+        height: Unit: length.
+        length: Its axis's length. Unit: length.
+        volume: Unit: volume.
+        slab: The slab's structure it hangs from, within its height; none: none. Unit: length.
+    """
+    uid: str
+    role: BeamRole | BeamRoleName
+    width: float
+    height: float
+    length: float
+    volume: float
+    rule: str
+    level: str | None | Unset = UNSET
+    slab: float | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["role"] = _enum_out(self.role)
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        out["length"] = float(self.length)
+        out["volume"] = float(self.volume)
+        out["rule"] = self.rule
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.slab is not UNSET:
+            out["slab"] = None if self.slab is None else float(self.slab)
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BeamRow:
+        return cls(
+            uid=data["uid"],
+            role=_enum_in(BeamRole, data["role"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+            length=float(data["length"]),
+            volume=float(data["volume"]),
+            rule=data["rule"],
+            level=data.get("level", UNSET),
+            slab=UNSET if "slab" not in data else None if data["slab"] is None else float(data["slab"]),
+            tag=data.get("tag", UNSET),
         )
 
 
@@ -56859,9 +56940,12 @@ class NewBeam(_Model):
         pts: Its axis: straight stretches from point to point. Unit: length.
         width: Its web's width (gövde genişliği). Unit: length.
         height: Its height, the slab within it (TBDY 2018 7.4.1.1 b). Unit: length.
+        base_offset: Its underside's height over its storey's floor (docs/adr/3041 §3): a lintel's at its opening's head; absent: it
+            hangs (a beam's). Not with an offset. Unit: length.
         justify: How it lies on its axis; absent: centred.
         material: Its material; absent: Betonarme.
         offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top); absent: 0. Unit: elevation.
+        role: What it is (docs/adr/3041 §3): absent a beam; a lintel; a bond beam.
         tag: Its number ("K101").
     """
     pts: list[Vec2]
@@ -56869,9 +56953,11 @@ class NewBeam(_Model):
     height: float
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    base_offset: float | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     material: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
+    role: BeamRole | BeamRoleName | None | Unset = UNSET
     tag: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -56883,12 +56969,16 @@ class NewBeam(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.base_offset is not UNSET:
+            out["baseOffset"] = None if self.base_offset is None else float(self.base_offset)
         if self.justify is not UNSET:
             out["justify"] = None if self.justify is None else _enum_out(self.justify)
         if self.material is not UNSET:
             out["material"] = self.material
         if self.offset is not UNSET:
             out["offset"] = None if self.offset is None else float(self.offset)
+        if self.role is not UNSET:
+            out["role"] = None if self.role is None else _enum_out(self.role)
         if self.tag is not UNSET:
             out["tag"] = self.tag
         return out
@@ -56901,9 +56991,11 @@ class NewBeam(_Model):
             height=float(data["height"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             material=data.get("material", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(BeamRole, data["role"]),
             tag=data.get("tag", UNSET),
         )
 
@@ -73324,6 +73416,7 @@ class QuantityTotals(_Model):
         openings: Unit: count.
         opening_area: Unit: area.
         baseboard_length: The rooms' baseboards, metres (docs/adr/0722 §5). Unit: length.
+        beam_volume: The beams', lintels' and bond beams' concrete (docs/adr/3041 §3). Unit: volume.
         parapet_length: Unit: length.
         railing_length: The railings' and parapets' length along the slabs' free sides, metres. Unit: length.
         ramp_area: The ramps' plan area and their railings' length (docs/adr/0723 §3). Unit: area.
@@ -73341,6 +73434,7 @@ class QuantityTotals(_Model):
     openings: int
     opening_area: float
     baseboard_length: float | Unset = UNSET
+    beam_volume: float | Unset = UNSET
     parapet_length: float | Unset = UNSET
     railing_length: float | Unset = UNSET
     ramp_area: float | Unset = UNSET
@@ -73361,6 +73455,8 @@ class QuantityTotals(_Model):
         out["openingArea"] = float(self.opening_area)
         if self.baseboard_length is not UNSET:
             out["baseboardLength"] = float(self.baseboard_length)
+        if self.beam_volume is not UNSET:
+            out["beamVolume"] = float(self.beam_volume)
         if self.parapet_length is not UNSET:
             out["parapetLength"] = float(self.parapet_length)
         if self.railing_length is not UNSET:
@@ -73392,6 +73488,7 @@ class QuantityTotals(_Model):
             openings=data["openings"],
             opening_area=float(data["openingArea"]),
             baseboard_length=float(data["baseboardLength"]) if "baseboardLength" in data else UNSET,
+            beam_volume=float(data["beamVolume"]) if "beamVolume" in data else UNSET,
             parapet_length=float(data["parapetLength"]) if "parapetLength" in data else UNSET,
             railing_length=float(data["railingLength"]) if "railingLength" in data else UNSET,
             ramp_area=float(data["rampArea"]) if "rampArea" in data else UNSET,
@@ -86834,6 +86931,7 @@ class SpacesPlan(_Model):
 class SpacesQuantified(_Model):
     """Output of `cad.spaces.quantities` v1 (its plan's too).
     Attributes:
+        beams: The beams, lintels and bond beams (docs/adr/3041 §3).
         materials: The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
             order, then the text ones in the drawing's.
         ramps: The ramps (docs/adr/0723 §3).
@@ -86845,6 +86943,7 @@ class SpacesQuantified(_Model):
     walls: list[WallRow]
     openings: list[OpeningRow]
     totals: QuantityTotals
+    beams: list[BeamRow] | Unset = UNSET
     materials: list[MaterialRow] | Unset = UNSET
     ramps: list[RampRow] | Unset = UNSET
     slabs: list[SlabRow] | Unset = UNSET
@@ -86857,6 +86956,8 @@ class SpacesQuantified(_Model):
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["openings"] = [e0.to_json() for e0 in self.openings]
         out["totals"] = self.totals.to_json()
+        if self.beams is not UNSET:
+            out["beams"] = [e0.to_json() for e0 in self.beams]
         if self.materials is not UNSET:
             out["materials"] = [e0.to_json() for e0 in self.materials]
         if self.ramps is not UNSET:
@@ -86876,6 +86977,7 @@ class SpacesQuantified(_Model):
             walls=[WallRow.from_json(e0) for e0 in data["walls"]],
             openings=[OpeningRow.from_json(e0) for e0 in data["openings"]],
             totals=QuantityTotals.from_json(data["totals"]),
+            beams=[BeamRow.from_json(e0) for e0 in data["beams"]] if "beams" in data else UNSET,
             materials=[MaterialRow.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             ramps=[RampRow.from_json(e0) for e0 in data["ramps"]] if "ramps" in data else UNSET,
             slabs=[SlabRow.from_json(e0) for e0 in data["slabs"]] if "slabs" in data else UNSET,
@@ -105860,7 +105962,8 @@ class SetArchOperation(ArchOperation):
         anchor: A column's anchor (docs/adr/0725 §2): its reference point stays, its body moves round it.
         base: A ramp's; null: 0. A ramp bound to its level is freed from it (docs/adr/0723 §2). Unit: elevation.
         base_offset: A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
-            base staying where it is. Not with `base`. Unit: elevation.
+            base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/3041 §3): a
+            lintel's or a bond beam's; null: it hangs from its slab again. Unit: elevation.
         bubble_size: A grid's; null: 8 mm. Unit: paper-mm.
         bubbles: A grid's.
         cut: A stair's. Unit: index.
@@ -105884,6 +105987,7 @@ class SetArchOperation(ArchOperation):
         rise: A ramp's. Unit: elevation.
         riser_height: A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1). Unit: length.
         risers: A stair's. Unit: count.
+        role: A beam's role (docs/adr/3041 §3): a beam, a lintel or a bond beam.
         rotation: A column's, about its reference point. Unit: rad.
         shape: A column's; another than L drops its legs.
         slope: A ramp's. Unit: percent.
@@ -105918,6 +106022,7 @@ class SetArchOperation(ArchOperation):
     rise: float | None | Unset = UNSET
     riser_height: float | None | Unset = UNSET
     risers: int | None | Unset = UNSET
+    role: BeamRole | BeamRoleName | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     slope: float | None | Unset = UNSET
@@ -105978,6 +106083,8 @@ class SetArchOperation(ArchOperation):
             out["riserHeight"] = None if self.riser_height is None else float(self.riser_height)
         if self.risers is not UNSET:
             out["risers"] = self.risers
+        if self.role is not UNSET:
+            out["role"] = None if self.role is None else _enum_out(self.role)
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.shape is not UNSET:
@@ -106022,6 +106129,7 @@ class SetArchOperation(ArchOperation):
             rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
             riser_height=UNSET if "riserHeight" not in data else None if data["riserHeight"] is None else float(data["riserHeight"]),
             risers=data.get("risers", UNSET),
+            role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(BeamRole, data["role"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
@@ -126650,6 +126758,9 @@ __all__ = [
     "BatchRowFailed",
     "BatchRowRan",
     "BeamEntity",
+    "BeamRole",
+    "BeamRoleName",
+    "BeamRow",
     "BeamsCreate",
     "BeamsCreated",
     "BeamsPlan",

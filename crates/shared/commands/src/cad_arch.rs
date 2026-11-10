@@ -834,6 +834,16 @@ pub struct NewBeam {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: Option<f64>,
+    /// What it is (docs/adr/3041 §3): absent a beam; a lintel; a bond beam.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub role: Option<crate::BeamRole>,
+    /// Its underside's height over its storey's floor (docs/adr/3041 §3): a lintel's at its opening's head; absent: it
+    /// hangs (a beam's). Not with an offset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub base_offset: Option<f64>,
     /// Its number ("K101").
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -1084,7 +1094,8 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base: Option<Option<f64>>,
     /// A ramp's start over its level's (docs/adr/0723 §2): its base follows the level; null: freed from its level, its
-    /// base staying where it is. Not with `base`.
+    /// base staying where it is. Not with `base`. A beam's underside over its storey's floor (docs/adr/3041 §3): a
+    /// lintel's or a bond beam's; null: it hangs from its slab again.
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -1108,6 +1119,10 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: Option<f64>,
+    /// A beam's role (docs/adr/3041 §3): a beam, a lintel or a bond beam.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub role: Option<crate::BeamRole>,
     /// A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
     #[serde(
         default,

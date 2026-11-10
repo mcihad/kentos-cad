@@ -2778,7 +2778,7 @@
       "id": "tool.beam",
       "title": "Kiriş",
       "icon": "beam",
-      "description": "Kirişin ekseninin noktaları, Enter yazar (docs/adr/3041 §1). Genişlik (E), Yükseklik (Y: döşeme dahil), Hiza (H: orta, sol, sağ), Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), Numara (N: K101 gibi; her kirişten sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır; altındaki duvar kirişin altında biter. Etkin kata, MM-TASI-KIRIS katmanına yazılır.",
+      "description": "Tür (T): Kiriş, Lento ya da Hatıl (docs/adr/3041 §1, §3). Kiriş ve hatıl: eksenin noktaları, Enter yazar; Genişlik (E), Yükseklik (Y: kirişte döşeme dahil), Hiza (H: orta, sol, sağ), kirişte Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), hatılda Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği). Lento: kapıya ya da pencereye tıklanır; açıklığın başında, duvar kalınlığında, iki yanda Oturma (O) kadar uzanır (TBDY 2018 11.5.3: en az 20 cm; yüksekliği en az 15 cm). Numara (N: K101, L101, H101 gibi; her birinden sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır. Kirişin altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir. Etkin kata, kendi katmanına yazılır: MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL.",
       "aliases": [
         "BEAM",
         "KIRIS",

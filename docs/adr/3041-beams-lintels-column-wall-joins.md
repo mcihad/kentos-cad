@@ -1,11 +1,12 @@
 # 3041 — Kiriş, lento, kolon–duvar birleşimi
 
-Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
+Tarih: 2026-11-10. Durum: kabul (M41; ADV-18; üç bölüm tamam).
 - §1: kiriş nesnesi; planda kesikli ve ince çizilir, 1:100'de numarası, 1:50'den numarası ve ölçüsü yazılır; altındaki
   duvar kirişin altında biter; `.kcad` 222.
 - §2: kolonun malzemesi; duvar kolonun yüzünde kesilir, kolon kendi malzemesindeki duvar katmanıyla tek kesittir
   (perde + kolon kesintisiz, tuğla kolonun yüzünde biter); etiketin `{size}`'ı; `.kcad` 223.
-- §3 (lento ve hatıl) sonraki bölümde.
+- §3: kirişin türü (kiriş, lento, hatıl) ve kattan yüksekliği; lento kapıya ya da pencereye tıklanarak konur (TBDY
+  2018 11.5.3); Metraj › Kirişler; `.kcad` 224.
 
 ## Sorun
 
@@ -22,6 +23,8 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
     kolonun SN46'sı perdenin grisinin üstüne biniyordu. ADV-18'in ikinci kabulü "perde + kolon + tuğla düğümünde tarama
     süreklidir" tutmuyordu.
   - Kolonun malzemesi yoktu: her kolon 1:20'de betonarme (SN46) taranıyordu, çelik kolon da.
+- **Lento ve hatıl yoktu (§3).** Kapı ve pencerenin üstündeki lento, duvarın içindeki hatıl çizilemiyor, metraja
+  girmiyordu; kirişin de metrajı yoktu.
 
 ## Araştırma (10 Kasım 2026)
 
@@ -43,6 +46,15 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
   - EK-5 Tablo 5.1: IfcBeam "Kiriş", kısaltma KRS.
 - **Mimarlar Odası çizim standardı** (kolon için; ADR 3011): ön projede (1:100) kolon adı, uygulama projesinde (1:50)
   adı ve ölçüsü yazılır.
+
+### Lento ve hatıl (§3)
+
+- **TBDY 2018 11.5.3:** kapı ve pencere boşluklarının üstünde betonarme lento yapılır; duvara oturan bölümünün boyu en
+  az 200 mm, yüksekliği en az 150 mm.
+- **TBDY 2018 7.12:** betonarme binalarda bölme, parapet ve kalkan duvarlarındaki yatay ve düşey hatıllar Bölüm 11'e
+  göredir. 11.3.7: yığma binada döşemenin oturduğu yatay hatıl en az 300 mm yüksek, duvar kalınlığı genişliğinde, düşeyde
+  en çok 4 m arayla.
+- **Dijital Hazırlama Yönetmeliği** EK-2 Tablo 2.3: Lento (LENT) ve Hatıl (HATL) kendi öğeleridir.
 
 ### Kesitte tarama (§2)
 
@@ -148,6 +160,36 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
     (test yakaladı).
 - **Etiketin `{size}`'ı** kolonda planın yazdığı ölçüdür: "30/50", yuvarlakta "Ø40" (`ColumnFields::size_text`).
 
+### 3. Lento ve hatıl
+
+- **Model** (`BeamFields.role`, `BeamFields.baseOffset`; `.kcad` şema 224): kirişin türü kiriş (yazılmaz), lento
+  (`lintel`) ya da hatıl (`bondBeam`); kattan yüksekliği alt yüzünün katın döşemesinden yüksekliğidir (en çok ±10 m).
+  - Kattan yüksekliği olan kiriş o yükseklikte oturur, döşemeden asılmaz. Kot farkıyla birlikte verilemez
+    (`invalid_beam`).
+  - Türlü ya da kattan yükseklikli kirişi olan dosya 224 olur; olmayan eski şemasıyla bayt bayt aynıdır. Şema 223 bu
+    alanları `unknown_field` ile reddeder. Çok yeni şema örneği 225'e kaydı.
+  - `cad.beams.create` ikisini alır; `cad.arch.edit` `role`'ü kirişe, `baseOffset`'i (rampanınkiyle aynı alan) kirişe de
+    yazar, null döşemeden asar.
+- **Duvar yalnız kirişin altında biter.** Lento ve hatıl duvarın içindedir, duvar onların üstünden sürer.
+- **Lento açıklıktan kurulur** (`arch_elements::lintel_over`): açıklığın duvar eksenindeki sövelerinden iki yanda
+  oturma kadar taşar. Genişliği sövedeki duvar kalınlığı, alt yüzü açıklığın başıdır (kendi başı; yoksa kapıda 2,10,
+  pencerede 2,20 — birleşim listesinin varsayılanları). Katı duvarının katıdır.
+  - Varsayılan yükseklik 20 cm (TBDY 11.5.3'ün en azı 15), oturma 20 cm (en azı).
+  - Lento açıklığı izlemez: açıklık taşınırsa lento yeniden konur (sınır).
+- **Araç: Mimari › Kiriş'in Tür'ü** (T): Kiriş, Lento, Hatıl. Her türün kendi ölçüleri vardır.
+  - Lento: kapıya ya da pencereye tek tıklama; Yükseklik (Y), Oturma (O), Numara (N). Açıklık olmayan yerde "Burada
+    kapı ya da pencere yok.".
+  - Hatıl: kiriş gibi eksen; Kattan yükseklik (A), varsayılan 20/20, 1,00 m.
+  - Katmanlar: MM-LENT-GENEL ve MM-HATL-GENEL (EK-2'nin öğeleri). Numaralar L101, H101 gibi ilerler.
+  - Öznitelikler'de kirişin Tür satırı ve, kattan yükseklikli kirişte, Kot farkı yerine "Kattan yükseklik".
+- **Metraj › Kirişler** (`cad.spaces.quantities`'in `beams`'i, toplamı `beamVolume`): numara, tür, kat, ölçü, eksenin
+  boyu, taşıdığı döşemenin taşıyıcısı ve beton hacmi.
+  - Kirişin hacmi döşemenin altında kalan kısmıdır: genişlik × (yükseklik − döşemenin taşıyıcısı) × boy. Döşemenin
+    içindeki kısmı döşemenin hacmindedir, iki kez sayılmaz.
+  - Lento ve hatılın hacmi tamamıdır: genişlik × yükseklik × boy.
+- Metraj penceresinin "Excel ve ODS: bu kat süzgecindeki yedi tablo" yazısı tablo sayısı değişince yanlış kalmıştı;
+  "bütün tablolar" oldu.
+
 ## Doğrulama
 
 - Geometri (`geom::beam`): ortalı bant ±0,125; sol yüzü eksende bant 0 ile −0,25 arası; L kirişte dış köşe gönyeli.
@@ -222,6 +264,27 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
     yerlerine `js_min`/`js_max`/`js_hypot`.
   - Disk, takım koşarken doldu (`No space left on device`). Yeniden üretilebilen artımlı derleme klasörü (122 GB)
     silindi ve kalan paketler yeniden koşuldu.
+- Lento ve hatıl, §3:
+  - Domain (`a_wall_under_a_beam_stops_at_its_underside`): 2,10'da oturan 20 cm lentonun üstü 2,30, altı 2,10; altındaki
+    duvar döşemeye kadar (2,85) sürer.
+  - Araç (`beam_tool`), 10 m duvarın ortasındaki 1 m kapı:
+    - Tür Lento ile kapıya tıklama lentoyu x 4,30 ile 5,70 arasına, duvar ekseninde, duvar kalınlığında, 20 cm, kapının
+      başında, MM-LENT-GENEL'e L101 olarak yazdı.
+    - Duvarın açıklıksız yerine tıklama bir şey yazmadı.
+    - Hatıl 20/20, 1,00 m'de, MM-HATL-GENEL'de.
+  - Metraj (`a_beam_counts_its_concrete_under_its_slab_and_a_lintel_the_whole`): 15 cm döşemenin altında 25/50 × 5 m
+    kiriş 0,4375 m³; 20/20 × 1,40 m lento 0,056 m³; toplam 0,4935; 1. kat süzgecinde kiriş yok.
+  - Ortak durumlar: `cad.beams.create` 34 durum (lento, hatıl, varsayılan tür; kattan yükseklik ile kot farkı birlikte,
+    12 m, sonsuz retleri), `cad.arch.edit` 58 durum (kirişi lentoya çevirme, null kattan yükseklik); bütün durum
+    dosyaları (19 348) Rust'ta bağımsız başvuruyla aynı.
+  - KCAD: `beam-roles` örneği ve şema 223'teki bozuk dosyası; 1731 dosya bağımsız okuyucuyla tutarlı; Rust 255 geçerli
+    örnek.
+  - Gerçek pencere (iz `fixtures/interaction/real/lento.txt`, 1920×1080, Daire):
+    - Kiriş aracında Tür Lento, Numara L101. Alttaki iki pencereye ve giriş kapısına tıklandı: L101, L102, L103.
+    - MM-LENT-GENEL 3 nesneyle açıldı; durum çubuğu "Lento kondu: L103 25/20.".
+    - Yakında lentonun söveden 20 cm taşan kesikli uçları ve numarası görünür.
+    - Metraj › Kirişler: L101 ve L102 1,600 m (1,20 + 2 × 0,20), 0,080 m³; L103 1,400 m, 0,070 m³.
+    - ÖNCE (M39'un ikilisi): lento yok, Metraj'da Kirişler sekmesi yok.
 
 ## Sınırlar
 
@@ -238,3 +301,8 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
   duvarlar (ADR 0788 §4) kesilmez.
 - §2: kesilen eğri duvar çizgisi, kesik parçalarında kısa düz parçalarla çizilir.
 - §2: kolon–duvar birleşiminde kullanıcı kararı yok: duvar her zaman kolonda biter.
+- §3: lento açıklığı izlemez. Açıklık taşınınca ya da genişleyince lento yerinde kalır; silinip yeniden konur.
+- §3: planda lento ve hatıl duvarın yüzleriyle çakışır. Kesikli çizgileri yalnız açıklığın üstünde ve taşmalarında
+  görünür; kesit türetimi (M42) onları kesitte çizecek.
+- §3: TBDY 11.5.3 denetimi yok. Lentonun 15 cm'den alçak, oturmasının 20 cm'den kısa olması Denetim'de söylenmez.
+- §3: hatıl yalnız yatay; düşey hatıl (11.5.5–6) yok.
