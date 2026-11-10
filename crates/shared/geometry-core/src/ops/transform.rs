@@ -819,6 +819,11 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 beam: spec,
             }
         }
+        // Its eaves map; its slopes are ratios and its heights stay (docs/adr/8044 §1).
+        Shape::Roof { pts, roof } => Shape::Roof {
+            pts: pts.iter().map(|q| apply(m, *q)).collect(),
+            roof: roof.clone(),
+        },
         // Its jambs map (the document reads its place along its wall from them, docs/adr/0341 §3); its lengths scale.
         Shape::Opening {
             at,

@@ -180,7 +180,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 32] = [
+pub const KINDS: [&str; 33] = [
     "point",
     "line",
     "polyline",
@@ -213,6 +213,7 @@ pub const KINDS: [&str; 32] = [
     "viewmark",
     "slab",
     "beam",
+    "roof",
 ];
 
 const COLOR: u32 = 1;
@@ -437,6 +438,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::ViewMark(_) => 29,
         Entity::Slab(_) => 30,
         Entity::Beam(_) => 31,
+        Entity::Roof(_) => 32,
     }
 }
 
@@ -1541,10 +1543,28 @@ impl Packer {
             // A tag (docs/adr/0344 §1): its fields as one JSON text.
             Entity::Tag(e) => self.text(&serde_json::to_value(&e.tag).unwrap_or_default().to_string()),
             // A view mark (docs/adr/0345 §1): its fields as one JSON text.
-            Entity::ViewMark(e) => self.text(&serde_json::to_value(&e.mark).unwrap_or_default().to_string()),
-            Entity::Slab(e) => self.text(&serde_json::to_value(&e.slab).unwrap_or_default().to_string()),
+            Entity::ViewMark(e) => self.text(
+                &serde_json::to_value(&e.mark)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
+            Entity::Slab(e) => self.text(
+                &serde_json::to_value(&e.slab)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
             // A beam (docs/adr/8041 §1): its fields as one JSON text.
-            Entity::Beam(e) => self.text(&serde_json::to_value(&e.beam).unwrap_or_default().to_string()),
+            Entity::Beam(e) => self.text(
+                &serde_json::to_value(&e.beam)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
+            // A roof (docs/adr/8044 §1): its fields as one JSON text.
+            Entity::Roof(e) => self.text(
+                &serde_json::to_value(&e.roof)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
             // A space (docs/adr/0342 §1): its source as one JSON text.
             Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {
                 self.text(&serde_json::to_value(space).unwrap_or_default().to_string());
@@ -3505,6 +3525,15 @@ fn geometry(
                 return Err(broken(&problem));
             }
             Entity::Beam(kentos_contracts::BeamEntity { base, beam })
+        }
+        32 => {
+            let text = c.text(|| "çatının alanları".into())?;
+            let roof: kentos_contracts::RoofFields =
+                serde_json::from_str(&text).map_err(|_| broken("çatının alanları"))?;
+            if let Some((_, problem)) = roof.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Roof(kentos_contracts::RoofEntity { base, roof })
         }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;

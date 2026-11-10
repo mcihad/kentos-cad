@@ -158,7 +158,7 @@ fn left_out(drawn: &Drawn) -> Vec<BuildingSectionLeftOut> {
         .iter()
         .map(|(why, uid)| BuildingSectionLeftOut {
             why: match why {
-                Left::Roof => BuildingSectionLeft::Roof,
+                Left::Roof | Left::RoofNotDrawn => BuildingSectionLeft::Roof,
                 Left::NaturalGround => BuildingSectionLeft::NaturalGround,
                 Left::Curved => BuildingSectionLeft::Curved,
                 Left::Ramp => BuildingSectionLeft::Ramp,

@@ -2648,6 +2648,8 @@ codes! {
     INVALID_RAMP = "invalid_ramp", Failed, false, "Rampanın alanları bir rampa tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, sonlu yükseklik.";
     /// A beam's fields that make none (docs/adr/8041 §1).
     INVALID_BEAM = "invalid_beam", Failed, false, "Kirişin alanları bir kiriş tanımlamıyor: en az iki noktalı eksen, sıfırdan büyük genişlik ve yükseklik, sınırları içinde kot farkı.";
+    /// A roof's fields that make none (docs/adr/8044 §1).
+    INVALID_ROOF = "invalid_roof", Failed, false, "Çatının alanları bir çatı tanımlamıyor: en az üç noktalı saçak çizgisi, her kenara bir eğim ya da kalkan, sınırları içinde kalınlık, saçak ve kot farkı.";
     /// An object that is no grid where a grid is asked.
     NOT_A_GRID = "not_a_grid", Failed, false, "Nesne aks değil.";
     /// An object that is no column where a column is asked (docs/adr/0712).

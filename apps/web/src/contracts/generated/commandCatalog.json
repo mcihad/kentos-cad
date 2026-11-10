@@ -13372,6 +13372,216 @@
       ]
     },
     {
+      "id": "cad.roofs.create",
+      "version": 1,
+      "title": "Çatı",
+      "summary": "Çatılar ekler (docs/adr/8044 §1); tek geri alma adımı “Çatı”. Her biri saçak çizgisi (pts: en az 3, en çok 1000 nokta, kapalı, iki yönde de; her köşesi dışa dönük — içe dönen köşeli saçak henüz çizilmez, invalid_roof), her kenarın eğimi (slopes: pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null kalkan — Revit'in roof by footprint'indeki “eğim verir” gibi: hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz çatı), kot farkı (offset: saçağın katının tepesinden — üstündeki katın döşemesinden — farkı; en çok ±10 m), kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa 0,25 m), saçak (overhang: saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama (material; yoksa Kiremit), kat ve tadilat durumu (arch). Planda saçak ve kalkanlar nesnenin kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı bakan eğim oku ve yüzdesi (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.roofs.create` v1 (“Çatı”, docs/adr/8044 §1): roofs on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_roof`, `level_not_found`, `invalid_line_weight`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,\n`attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "properties": {
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "lineWeight": {
+            "format": "double",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "roofs": {
+            "items": {
+              "$ref": "#/$defs/NewRoof"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layerId",
+          "roofs"
+        ],
+        "title": "RoofsCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.roofs.create` v1.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "ids",
+          "revision"
+        ],
+        "title": "RoofsCreated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.roofs.create` would write (plan mode): the objects as they would be stored, their `id` 0.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "roofs": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "roofs",
+          "revision"
+        ],
+        "title": "RoofsPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_objects",
+          "not_finite",
+          "invalid_roof",
+          "level_not_found",
+          "invalid_line_weight",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "12 × 9 m binaya 50 cm saçaklı %33 kırma çatı",
+          "input": {
+            "layerId": "cati",
+            "roofs": [
+              {
+                "arch": {
+                  "level": "k1"
+                },
+                "overhang": 0.5,
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 12.5,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 12.5,
+                    "y": 9.5
+                  },
+                  {
+                    "x": -0.5,
+                    "y": 9.5
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Beşik çatı: uzun kenarlar %40, kısalar kalkan",
+          "input": {
+            "layerId": "cati",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 9.0
+                  }
+                ],
+                "slopes": [
+                  40.0,
+                  null,
+                  40.0,
+                  null
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arch.edit",
       "version": 1,
       "title": "Mimari nesneyi düzenle",
@@ -26570,6 +26780,7 @@
               "grid",
               "column",
               "beam",
+              "roof",
               "stair",
               "ramp",
               "slab",
@@ -94469,6 +94680,7 @@
               "grid",
               "column",
               "beam",
+              "roof",
               "stair",
               "ramp",
               "slab",
@@ -94478,7 +94690,7 @@
               "viewmark"
             ],
             "refusedWith": "no_straight_edge",
-            "note": "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz."
+            "note": "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, kirişin, merdivenin ve rampanın çevresi, çatının saçak çizgisi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz."
           }
         ],
         "refusals": [
@@ -110929,6 +111141,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Kirişin alanları bir kiriş tanımlamıyor: en az iki noktalı eksen, sıfırdan büyük genişlik ve yükseklik, sınırları içinde kot farkı."
+    },
+    {
+      "code": "invalid_roof",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çatının alanları bir çatı tanımlamıyor: en az üç noktalı saçak çizgisi, her kenara bir eğim ya da kalkan, sınırları içinde kalınlık, saçak ve kot farkı."
     },
     {
       "code": "not_a_grid",
@@ -136617,6 +136835,20 @@
           "type": "object"
         },
         {
+          "$ref": "#/$defs/RoofEntity",
+          "description": "A roof (docs/adr/8044 §1): its eaves line and each edge's slope; drawn by its faces' lines in a plan.",
+          "properties": {
+            "kind": {
+              "const": "roof",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
           "$ref": "#/$defs/StairEntity",
           "description": "A stair (docs/adr/0343): its walking line and its risers, treads and landings.",
           "properties": {
@@ -160728,6 +160960,90 @@
         "pts",
         "width",
         "rise"
+      ],
+      "type": "object"
+    },
+    "NewRoof": {
+      "additionalProperties": false,
+      "description": "One roof to draw (docs/adr/8044 §1): its fields, and its attributes.",
+      "properties": {
+        "arch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "material": {
+          "description": "Its covering; absent: Kiremit.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "description": "Its eaves' height over its storey's top (the next storey's floor); absent: 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "overhang": {
+          "description": "How far its eaves stand past the walls' outer faces (saçak).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "pts": {
+          "description": "Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "slopes": {
+          "description": "Each edge's slope from its eaves, per cent (the edge from `pts[i]` to the next point); null: a gable end.",
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array",
+          "x-unit": "percent"
+        },
+        "thickness": {
+          "description": "Its build-up's thickness, measured upright; absent: 0.25 m.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "pts",
+        "slopes"
       ],
       "type": "object"
     },
@@ -188490,6 +188806,199 @@
         }
       ]
     },
+    "RoofEntity": {
+      "description": "A roof (docs/adr/8044 §1).",
+      "properties": {
+        "arch": {
+          "$ref": "#/$defs/ArchInfo"
+        },
+        "attachments": {
+          "description": "The photos and documents it carries, in their order (docs/adr/0225\n§1); none on a block's objects.",
+          "items": {
+            "$ref": "#/$defs/Attachment"
+          },
+          "type": "array"
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+          "type": "object"
+        },
+        "byLayer": {
+          "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
+          "items": {
+            "$ref": "#/$defs/LookPart"
+          },
+          "type": "array"
+        },
+        "color": {
+          "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelPins": {
+          "description": "Its labels moved, turned, pinned or hidden by hand (docs/adr/0212\n§3.7), one a class at most.",
+          "items": {
+            "$ref": "#/$defs/LabelPin"
+          },
+          "type": "array"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "linePattern": {
+          "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own line type; absent: its source's (the layer's, or the insert's in a block)."
+        },
+        "lineTypeScale": {
+          "description": "Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "lineWeight": {
+          "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+          "format": "double",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "material": {
+          "description": "Its covering (çatı kaplaması); absent: Kiremit.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "description": "Its eaves' height over its storey's top (the next storey's floor), else over ±0.00, metres; absent: 0.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "order": {
+          "description": "Its place in its layer's drawing order: lower first, equals in the\ndocument's order; absent: 0; a 32-bit integer. Only a drawing's object has it.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "overhang": {
+          "description": "How far its eaves were drawn past the walls' outer faces (saçak), metres.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "pts": {
+          "description": "Its eaves line, closed: at least three points, either way round.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "slopes": {
+          "description": "Each edge's slope from its eaves, per cent (rise ÷ run × 100), the edge from `pts[i]` to the next point (the last\nback to the first); none: a gable end (kalkan). As many as the points.",
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array",
+          "x-unit": "percent"
+        },
+        "symbol": {
+          "description": "Library symbol overriding the layer's style.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thickness": {
+          "description": "Its build-up's thickness (kaplama, çıta, tahta, mertek), metres, measured upright; absent: 0.25.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "transparency": {
+          "description": "How transparent it is, 0 to 0.9; absent: its source's (none for a layer).",
+          "format": "double",
+          "maximum": 0.9,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "wipeout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Wipeout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+        }
+      },
+      "required": [
+        "id",
+        "layerId",
+        "attrs",
+        "pts",
+        "slopes"
+      ],
+      "type": "object"
+    },
     "RouteFound": {
       "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (a grade, between the points kept), its cost, the grid's nodes and those settled.",
       "properties": {
@@ -190263,6 +190772,11 @@
         {
           "const": "beam",
           "description": "Kiriş (docs/adr/8041 §1); after it for the same reason.",
+          "type": "string"
+        },
+        {
+          "const": "roof",
+          "description": "Çatı (docs/adr/8044 §1); after it for the same reason.",
           "type": "string"
         }
       ]

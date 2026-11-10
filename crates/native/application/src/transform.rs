@@ -1015,6 +1015,7 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         Shape::Stair { pts: p, stair } => pts(p) && stair.width.is_finite() && stair.tread.is_finite(),
         Shape::Ramp { pts: p, ramp } => pts(p) && ramp.width.is_finite() && ramp.rise.is_finite(),
         Shape::Beam { pts: p, beam } => pts(p) && beam.width.is_finite() && beam.height.is_finite(),
+        Shape::Roof { pts: p, roof } => pts(p) && roof.slopes.iter().flatten().all(|s| s.is_finite()) && roof.base.is_finite(),
         Shape::Tag { at, .. } => pt(at),
         Shape::ViewMark { points, mark } => points.iter().all(pt) && mark.at.as_ref().is_none_or(pt),
         Shape::Space { parts, space } => {

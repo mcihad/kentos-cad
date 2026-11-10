@@ -439,6 +439,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/8044 §1); the drawing's only.
+        Roof(x) => {
+            if in_block {
+                return Err("Blok tanımında çatı olamaz".into());
+            }
+            if let Some((_, why)) = x.roof.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0344 §1); the drawing's only.
         Tag(x) => {
             if in_block {
@@ -794,6 +803,7 @@ fn projection_of(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         | Entity::Stair(_)
         | Entity::Ramp(_)
         | Entity::Beam(_)
+        | Entity::Roof(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) => {
             return projection(&kentos_formats::arch_elements::simple(e)?, blocks);

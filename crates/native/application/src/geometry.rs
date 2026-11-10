@@ -790,6 +790,40 @@ pub fn contract_cloud(shape: Shape) -> Option<kentos_commands::PointCloudFields>
     })
 }
 
+/// A storey's top (docs/adr/8044 §1): its floor and its height, else the next storey's floor; none for a storey the
+/// project does not have.
+pub fn storey_top(settings: &kentos_commands::ProjectSettings, level: Option<&str>) -> Option<f64> {
+    let levels = settings
+        .arch
+        .as_ref()
+        .map(|a| a.levels.as_slice())
+        .unwrap_or(&[]);
+    let l = levels.iter().find(|l| Some(l.id.as_str()) == level)?;
+    Some(match l.height {
+        Some(h) => l.elevation + h,
+        None => levels
+            .iter()
+            .map(|o| o.elevation)
+            .filter(|e| *e > l.elevation)
+            .fold(None, |m: Option<f64>, e| Some(m.map_or(e, |m| m.min(e))))
+            .unwrap_or(l.elevation),
+    })
+}
+
+/// A roof as the store draws it (docs/adr/8044 §1): its eaves at its storey's top and its offset, so its ridge's height
+/// is written over ±0.00.
+pub fn roof_shape(
+    r: &kentos_commands::RoofEntity,
+    settings: &kentos_commands::ProjectSettings,
+) -> Shape {
+    let mut shape = kentos_formats::arch_elements::core_roof(&r.roof);
+    if let Shape::Roof { roof, .. } = &mut shape {
+        roof.base =
+            storey_top(settings, r.roof.arch.level.as_deref()).unwrap_or(0.0) + r.roof.offset;
+    }
+    shape
+}
+
 /// An object's geometry as the geometry core takes it.
 pub fn shape(entity: &Entity) -> Shape {
     match entity {
@@ -849,6 +883,8 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
         Entity::Ramp(r) => kentos_formats::arch_elements::core_ramp(&r.ramp),
         Entity::Beam(b) => kentos_formats::arch_elements::core_beam(&b.beam),
+        // Its eaves at its offset here; the store stands it on its storey ([`roof_shape`]).
+        Entity::Roof(r) => kentos_formats::arch_elements::core_roof(&r.roof),
         Entity::Tag(t) => kentos_formats::arch_elements::core_tag(&t.tag),
         Entity::ViewMark(m) => kentos_formats::arch_elements::core_viewmark(&m.mark),
         Entity::Arc(a) => Shape::Arc {
@@ -1464,7 +1500,16 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 kentos_commands::WallJustify::Right
             };
         }
-        (Entity::Opening(e), Shape::Opening { at, width, place, .. }) => {
+        // Its eaves; its slopes stay with their edges (docs/adr/8044 §1).
+        (Entity::Roof(e), Shape::Roof { pts, .. }) => {
+            e.roof.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+        }
+        (
+            Entity::Opening(e),
+            Shape::Opening {
+                at, width, place, ..
+            },
+        ) => {
             e.opening.at = at;
             e.opening.width = width;
             e.opening.place = place.iter().map(|q| Point { x: q.x, y: q.y }).collect();
@@ -2179,6 +2224,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         | Shape::Stair { .. }
         | Shape::Ramp { .. }
         | Shape::Beam { .. }
+        | Shape::Roof { .. }
         | Shape::Tag { .. }
         | Shape::ViewMark { .. } => return None,
     })

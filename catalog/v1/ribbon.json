@@ -1753,7 +1753,8 @@
            "edit.selectFilter.ramp",
            "edit.selectFilter.tag",
            "edit.selectFilter.viewmark",
-           "edit.selectFilter.slab"
+           "edit.selectFilter.slab",
+           "edit.selectFilter.roof"
           ],
           "works": [
            "architecture"
@@ -2021,6 +2022,10 @@
         "size": "small"
        },
        {
+        "command": "tool.roof",
+        "size": "small"
+       },
+       {
         "key": "archGrids",
         "size": "small",
         "split": [
@@ -2049,12 +2054,13 @@
           "command": "tool.stairCurved",
           "title": "Merdiven",
           "label": "Döner merdiven"
+         },
+         {
+          "command": "tool.ramp",
+          "title": "Merdiven",
+          "label": "Rampa"
          }
         ]
-       },
-       {
-        "command": "tool.ramp",
-        "size": "small"
        }
       ]
      },

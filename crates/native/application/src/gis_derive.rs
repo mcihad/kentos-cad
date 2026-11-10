@@ -496,7 +496,8 @@ pub fn derive_entity(doc: &Document, e: &Entity, o: &Options) -> Outcome {
         | Entity::Column(_)
         | Entity::Stair(_)
         | Entity::Ramp(_)
-        | Entity::Beam(_) => arch_row(doc, e, o),
+        | Entity::Beam(_)
+        | Entity::Roof(_) => arch_row(doc, e, o),
         other => {
             let (kind, reason) = left(other);
             Outcome::Left { kind, reason }
@@ -515,6 +516,7 @@ pub fn arch_name(kind: &str) -> &'static str {
         "stair" => "merdiven",
         "ramp" => "rampa",
         "beam" => "kiris",
+        "roof" => "cati",
         _ => "nesne",
     }
 }

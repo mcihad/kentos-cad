@@ -109,9 +109,10 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         Shape::Grid { pts, .. }
         | Shape::Stair { pts, .. }
         | Shape::Ramp { pts, .. }
-        | Shape::Beam { pts, .. } => {
-            any(pts).then(|| crate::geom::arch::with_pts(&geom.shape, pts.iter().map(|&p| mv(p)).collect()))??
-        }
+        | Shape::Beam { pts, .. }
+        | Shape::Roof { pts, .. } => any(pts).then(|| {
+            crate::geom::arch::with_pts(&geom.shape, pts.iter().map(|&p| mv(p)).collect())
+        })??,
         Shape::Column { at, column } => inside(*at, r).then(|| Shape::Column {
             at: mv(*at),
             column: column.clone(),

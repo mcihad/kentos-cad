@@ -6879,6 +6879,7 @@ class SelectKind(_StrEnum):
     - ``viewMark``: Görünüm işareti (docs/adr/0345 §5).
     - ``slab``: Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
     - ``beam``: Kiriş (docs/adr/8041 §1); after it for the same reason.
+    - ``roof``: Çatı (docs/adr/8044 §1); after it for the same reason.
     """
     POINT = "point"
     LINE = "line"
@@ -6908,9 +6909,10 @@ class SelectKind(_StrEnum):
     VIEW_MARK = "viewMark"
     SLAB = "slab"
     BEAM = "beam"
+    ROOF = "roof"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab", "beam"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab", "beam", "roof"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -9903,6 +9905,7 @@ class Entity(_Union):
     - :class:`GridEntity` (``kind: grid``)
     - :class:`ColumnEntity` (``kind: column``)
     - :class:`BeamEntity` (``kind: beam``)
+    - :class:`RoofEntity` (``kind: roof``)
     - :class:`StairEntity` (``kind: stair``)
     - :class:`RampEntity` (``kind: ramp``)
     - :class:`TagEntity` (``kind: tag``)
@@ -60006,6 +60009,58 @@ class NewRamp(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewRoof(_Model):
+    """One roof to draw (docs/adr/8044 §1): its fields, and its attributes.
+    Attributes:
+        pts: Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner. Unit: length.
+        slopes: Each edge's slope from its eaves, per cent (the edge from `pts[i]` to the next point); null: a gable end. Unit: percent.
+        material: Its covering; absent: Kiremit.
+        offset: Its eaves' height over its storey's top (the next storey's floor); absent: 0. Unit: elevation.
+        overhang: How far its eaves stand past the walls' outer faces (saçak). Unit: length.
+        thickness: Its build-up's thickness, measured upright; absent: 0.25 m. Unit: length.
+    """
+    pts: list[Vec2]
+    slopes: list[float | None]
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    overhang: float | None | Unset = UNSET
+    thickness: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["slopes"] = [None if e0 is None else float(e0) for e0 in self.slopes]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.overhang is not UNSET:
+            out["overhang"] = None if self.overhang is None else float(self.overhang)
+        if self.thickness is not UNSET:
+            out["thickness"] = None if self.thickness is None else float(self.thickness)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewRoof:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            slopes=[None if e0 is None else float(e0) for e0 in data["slopes"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            material=data.get("material", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
+            thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewSlab(_Model):
     """One slab to make: with its outline `parts` drawn, or found from the walls round `seed`.
     Attributes:
@@ -85136,6 +85191,226 @@ class RoadsEdited(_Model):
             removed=list(data["removed"]),
             count=data["count"],
             skipped=data["skipped"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoofEntity(Entity):
+    """A roof (docs/adr/8044 §1).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Its eaves line, closed: at least three points, either way round. Unit: length.
+        slopes: Each edge's slope from its eaves, per cent (rise ÷ run × 100), the edge from `pts[i]` to the next point (the last
+            back to the first); none: a gable end (kalkan). As many as the points. Unit: percent.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        material: Its covering (çatı kaplaması); absent: Kiremit.
+        offset: Its eaves' height over its storey's top (the next storey's floor), else over ±0.00, metres; absent: 0. Unit: elevation.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        overhang: How far its eaves were drawn past the walls' outer faces (saçak), metres. Unit: length.
+        symbol: Library symbol overriding the layer's style.
+        thickness: Its build-up's thickness (kaplama, çıta, tahta, mertek), metres, measured upright; absent: 0.25. Unit: length.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "roof"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    slopes: list[float | None]
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    order: int | None | Unset = UNSET
+    overhang: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    thickness: float | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "roof"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["slopes"] = [None if e0 is None else float(e0) for e0 in self.slopes]
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.overhang is not UNSET:
+            out["overhang"] = None if self.overhang is None else float(self.overhang)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.thickness is not UNSET:
+            out["thickness"] = None if self.thickness is None else float(self.thickness)
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoofEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            slopes=[None if e0 is None else float(e0) for e0 in data["slopes"]],
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            material=data.get("material", UNSET),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            order=data.get("order", UNSET),
+            overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
+            symbol=data.get("symbol", UNSET),
+            thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoofsCreate(_Model):
+    """Input of `cad.roofs.create` v1 (“Çatı”, docs/adr/8044 §1): roofs on a named layer, as one undo step.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_roof`, `level_not_found`, `invalid_line_weight`,
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
+    `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    roofs: list[NewRoof]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["roofs"] = [e0.to_json() for e0 in self.roofs]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoofsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            roofs=[NewRoof.from_json(e0) for e0 in data["roofs"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoofsCreated(_Model):
+    """Output of `cad.roofs.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoofsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoofsPlan(_Model):
+    """What `cad.roofs.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    roofs: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["roofs"] = [e0.to_json() for e0 in self.roofs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoofsPlan:
+        return cls(
+            roofs=[Entity.from_json(e0) for e0 in data["roofs"]],
             revision=data["revision"],
         )
 
@@ -133654,7 +133929,7 @@ _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField
 _ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveElevationsOperation, "refresh": RefreshElevationsOperation, "release": ReleaseElevationsOperation}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "roof": RoofEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"ellipseAxis": EllipseAxisEntityEdit, "update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -136044,6 +136319,7 @@ __all__ = [
     "NewObject",
     "NewOpening",
     "NewRamp",
+    "NewRoof",
     "NewSlab",
     "NewSlabEdge",
     "NewSpace",
@@ -137119,6 +137395,10 @@ __all__ = [
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",
+    "RoofEntity",
+    "RoofsCreate",
+    "RoofsCreated",
+    "RoofsPlan",
     "RotateBlockAction",
     "RotateItemsPaperOp",
     "RotateTransform",

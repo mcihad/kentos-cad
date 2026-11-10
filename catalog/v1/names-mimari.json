@@ -17,6 +17,7 @@
     { "name": "MR", "command": "tool.stair" },
     { "name": "RM", "command": "tool.ramp" },
     { "name": "KR", "command": "tool.beam" },
+    { "name": "CT", "command": "tool.roof" },
     { "name": "MD", "command": "tool.casework" },
     { "name": "ET", "command": "tool.tag" },
     { "name": "DONATI", "command": "block.library" },

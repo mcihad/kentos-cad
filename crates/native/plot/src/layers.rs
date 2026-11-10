@@ -150,14 +150,15 @@ pub fn level_looks(
     (l.hidden.into_iter().collect(), l.faded.into_iter().collect())
 }
 
-/// Whether a map of `level` shows a stair of the level under it from above (docs/adr/0724 §4) or a slab of the level
-/// over it dashed (docs/adr/8012, step 3): then it draws from a store whose level view is the map's.
+/// Whether a map of `level` shows a stair of the level under it from above (docs/adr/0724 §4), a slab of the level
+/// over it dashed (docs/adr/8012, step 3) or a roof of its own over its cut dashed (docs/adr/8044 §3): then it draws
+/// from a store whose level view is the map's.
 pub fn shows_from_above(
     doc: &kentos_domain::Document,
     level: &kentos_sheet::kinds::MapLevel,
 ) -> bool {
     let l = kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id));
-    !l.upper.is_empty() || !l.overhead.is_empty()
+    !l.upper.is_empty() || !l.overhead.is_empty() || !l.roofs.is_empty()
 }
 
 /// A colour on white paper as faint as a faded object (`PHASE_FADED`, docs/adr/0716): its mix with white, its own

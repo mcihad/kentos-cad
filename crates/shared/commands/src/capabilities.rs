@@ -13,7 +13,7 @@
 use crate::{CommandCapabilities, CommandTarget};
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 31] = [
+pub const KINDS: [&str; 32] = [
     "point",
     "line",
     "polyline",
@@ -41,6 +41,7 @@ pub const KINDS: [&str; 31] = [
     "grid",
     "column",
     "beam",
+    "roof",
     "stair",
     "ramp",
     "tag",
@@ -3853,8 +3854,8 @@ const ENTRIES: &[Entry] = &[
             vec![target(
                 None,
                 &[
-                    "wall", "space", "grid", "column", "beam", "stair", "ramp", "slab", "polyline",
-                    "insert",
+                    "wall", "space", "grid", "column", "beam", "roof", "stair", "ramp", "slab",
+                    "polyline", "insert",
                 ],
                 &[],
                 Some("not_levelled"),
@@ -4081,6 +4082,23 @@ const ENTRIES: &[Entry] = &[
                 "no_objects",
                 "not_finite",
                 "invalid_beam",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.roofs.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_roof",
                 "level_not_found",
                 "invalid_line_weight",
             ],
@@ -7002,6 +7020,7 @@ const ENTRIES: &[Entry] = &[
                         "grid",
                         "column",
                         "beam",
+                        "roof",
                         "stair",
                         "ramp",
                         "slab",
@@ -7013,7 +7032,7 @@ const ENTRIES: &[Entry] = &[
                     &[],
                     Some("no_straight_edge"),
                     Some(
-                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, kirişin, merdivenin ve rampanın çevresi, çatının saçak çizgisi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
                 ),
             ]

@@ -28,6 +28,9 @@ pub const CAD_RAMPS_CREATE_VERSION: u32 = 1;
 /// Beams (docs/adr/8041 §1).
 pub const CAD_BEAMS_CREATE: &str = "cad.beams.create";
 pub const CAD_BEAMS_CREATE_VERSION: u32 = 1;
+/// Roofs (docs/adr/8044 §1).
+pub const CAD_ROOFS_CREATE: &str = "cad.roofs.create";
+pub const CAD_ROOFS_CREATE_VERSION: u32 = 1;
 pub const CAD_ARCH_EDIT: &str = "cad.arch.edit";
 pub const CAD_ARCH_EDIT_VERSION: u32 = 1;
 /// A column's temporary distances (docs/adr/0712): on each side the clear distance to the nearest parallel face.
@@ -909,6 +912,99 @@ pub struct BeamsCreated {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct BeamsPlan {
     pub beams: Vec<Entity>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// One roof to draw (docs/adr/8044 §1): its fields, and its attributes.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NewRoof {
+    /// Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    /// Each edge's slope from its eaves, per cent (the edge from `pts[i]` to the next point); null: a gable end.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub slopes: Vec<Option<f64>>,
+    /// Its eaves' height over its storey's top (the next storey's floor); absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub offset: Option<f64>,
+    /// Its build-up's thickness, measured upright; absent: 0.25 m.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: Option<f64>,
+    /// How far its eaves stand past the walls' outer faces (saçak).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub overhang: Option<f64>,
+    /// Its covering; absent: Kiremit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+}
+
+/// Input of `cad.roofs.create` v1 (“Çatı”, docs/adr/8044 §1): roofs on a named layer, as one undo step.
+///
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_roof`, `level_not_found`, `invalid_line_weight`,
+/// `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
+/// `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoofsCreate {
+    pub layer_id: String,
+    pub roofs: Vec<NewRoof>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.roofs.create` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoofsCreated {
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub ids: Vec<u32>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.roofs.create` would write (plan mode): the objects as they would be stored, their `id` 0.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoofsPlan {
+    pub roofs: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
