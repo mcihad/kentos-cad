@@ -76,6 +76,7 @@ raporda ayırt edilsin” satırı.
   `scripts/fixtures/survey_baselines_cases.py` (numpy, KentOS kodu yok) kendi yinelemesiyle; Huber (c 1,5: 14 adım,
   B → C 0,2199), Danimarka (6 adım, B → C 5·10⁻⁵), Huber c 2,5 (18 adım), kaba hatasız ağda 1 adım ve hiç düşmeyen
   çarpan, metinle verilen ağ, c = 0 reddi. Bozma denemesi: iki beklenen değer değiştirilince koşucu tam onları yakalar.
+  Aynı 31 durum Python'un tipli katmanından da geçer (`python/tests/test_command_cases.py`, `KENTOS_CASES_ONLY`).
 - **Python** (`python/tests/test_gnss_robust.py`): 8 × 8 ızgara (64 istasyon, 161 baz, birinde 9 cm kaba hata),
   testin kendi numpy IRLS'i: Huber ve Danimarka çarpanları 10⁻⁹, koordinatlar 1 µm içinde; en küçük çarpan kaba
   hatalı bazın; Danimarka onu Huber'den çok düşürür.
