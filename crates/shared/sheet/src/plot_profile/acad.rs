@@ -1,4 +1,4 @@
-//! AutoCAD plot style tables read into a KentOS plot profile (docs/adr/1130): a colour-dependent `.ctb` (255 pens, one
+//! Plot style tables (.ctb, .stb) read into a KentOS plot profile (docs/adr/1130): a colour-dependent `.ctb` (255 pens, one
 //! per ACI 1–255) or a named `.stb`. The file is a 60-byte header — `PIAFILEVERSION_2.0,CTBVER1,compress\r\npmzlibcodec`
 //! (or `STBVER1`), then three little-endian u32: an Adler-32, the inflated length and the compressed length — and a
 //! zlib stream of `key=value` text in `name{ … }` blocks. Every field is mapped explicitly; what KentOS cannot draw the
@@ -21,9 +21,9 @@ const HEADER: usize = 60;
 /// A colour that is the object's: `-1`, and the ACI-typed `0xC3FFFFFF` some writers give.
 const OBJECT_COLOR: i64 = -1;
 const OBJECT_COLOR2: i64 = -1_006_632_961;
-/// The linetype that is the object's; 0 is continuous, 1–30 AutoCAD's own plot patterns.
+/// The linetype that is the object's; 0 is continuous, 1–30 the tables' own plot patterns.
 const OBJECT_LINETYPE: i64 = 31;
-/// AutoCAD's plot linetypes 1–30, as its editor names them (0 is Solid).
+/// The tables' plot linetypes 1–30, as its editor names them (0 is Solid).
 pub const LINETYPES: [&str; 31] = [
     "Solid",
     "Dashed",
@@ -58,7 +58,7 @@ pub const LINETYPES: [&str; 31] = [
     "ISO Double Dash Triple Dot",
 ];
 
-/// Which AutoCAD table a file is.
+/// Which plot style table a file is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -85,7 +85,7 @@ pub struct PlotSource {
     pub file: String,
 }
 
-/// How much a reported field differs from what AutoCAD plots.
+/// How much a reported field differs from what the table's own program plots.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -95,7 +95,7 @@ pub struct PlotSource {
 pub enum Severity {
     /// Not carried: the object's own look is plotted instead.
     Lost,
-    /// Carried by KentOS's nearest rule, which may differ from AutoCAD's.
+    /// Carried by KentOS's nearest rule, which may differ from the table's own program's.
     Approximate,
     /// Said for the record; what is plotted is the same.
     Note,
@@ -148,15 +148,15 @@ impl LossKind {
         match self {
             ColorKind => "Renk türü RGB ya da ACI değil; nesnenin rengi basılır.",
             ModeColor => "mode_color rengi color'dan farklı; anlamı belgelenmediği için kullanılmadı.",
-            Grayscale => "Gri tonlama KentOS'un sRGB parlaklık kuralıyla (0,2126 R + 0,7152 G + 0,0722 B) yapılır; AutoCAD'in dönüşümü farklı olabilir.",
+            Grayscale => "Gri tonlama KentOS'un sRGB parlaklık kuralıyla (0,2126 R + 0,7152 G + 0,0722 B) yapılır; başka programların dönüşümü farklı olabilir.",
             GrayscaleColor => "Gri tonlama ve açık renk birlikte: rengin gri karşılığı parlaklık kuralıyla hesaplandı.",
             Dither => "Titreşim (dither) yok: tarama beyaz kâğıda düz karışım rengi olarak basılır.",
-            ScreenWithoutDither => "Titreşim kapalıyken AutoCAD taramayı uygulamaz; renk tam yoğunlukta basılır.",
+            ScreenWithoutDither => "Titreşim kapalıyken tarama uygulanmaz; renk tam yoğunlukta basılır.",
             PolicyBits => "color_policy'de bilinmeyen bitler var; yok sayıldı.",
             PhysicalPen => "Fiziksel kalem numarası kalemli çiziciye özgüdür; PDF ve resim çıktısında kullanılmaz.",
             VirtualPen => "Sanal kalem numarası sürücüye özgüdür; kullanılmaz.",
-            Linetype => "AutoCAD'in baskı çizgi tipi KentOS desenine eşlenmedi; nesnenin çizgi tipi basılır.",
-            LineweightOutside => "Kalınlık kalınlık tablosunun dışında; nesnenin kalınlığı basılır (bu değerin AutoCAD'de “Nesnenin kalınlığı” olduğu bağımsız olarak doğrulanmadı).",
+            Linetype => "Tablonun baskı çizgi tipi KentOS desenine eşlenmedi; nesnenin çizgi tipi basılır.",
+            LineweightOutside => "Kalınlık kalınlık tablosunun dışında; nesnenin kalınlığı basılır (bu değerin “Nesnenin kalınlığı” anlamına geldiği bağımsız olarak doğrulanmadı).",
             LineweightRounded => "Kalınlık mikrometreye yuvarlandı (yarım sıfırdan uzağa).",
             EndStyle => "Elmas uç KentOS'ta yok; nesnenin ucu basılır.",
             JoinStyle => "Elmas birleşim KentOS'ta yok; nesnenin birleşimi basılır.",
@@ -568,7 +568,7 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
     } else {
         return Err(bad(
             "unsupported_plot_style_file",
-            "Dosya bir AutoCAD baskı stili tablosu (.ctb/.stb, PIAFILEVERSION_2.0 üst bilgisi) değil; KentOS profili için .kplot'u Baskı profilleri penceresinden açın.",
+            "Dosya bir baskı stili tablosu (.ctb/.stb, PIAFILEVERSION_2.0 üst bilgisi) değil; KentOS profili için .kplot'u Baskı profilleri penceresinden açın.",
         ));
     };
     if bytes.len() < HEADER {

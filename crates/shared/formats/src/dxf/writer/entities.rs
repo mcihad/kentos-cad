@@ -271,7 +271,7 @@ fn app(p: CoreVec2) -> Vec2 {
 
 /// A TEXT value that reads back as `s`: one line (DXF text cannot break), a
 /// caret in DXF's notation ("^ "), percent signs doubled into "%%%" when the
-/// text holds "%%" (AutoCAD's control codes). The bool: line breaks or
+/// text holds "%%" (DXF's control codes). The bool: line breaks or
 /// control characters became spaces.
 fn text_value(s: &str) -> (String, bool) {
     let mut changed = false;
@@ -336,7 +336,7 @@ pub(super) struct Writer<'a> {
     /// The LTYPE records given a handle before the table is written: the
     /// dashed types a dimension's lines take (docs/adr/0205 §6).
     pub ltypes: &'a mut Vec<(kentos_contracts::LineType, u64)>,
-    /// AutoCAD's arrow blocks written for leaders' arrowheads, their block
+    /// the standard arrow blocks written for leaders' arrowheads, their block
     /// records (docs/adr/0205 §7).
     pub arrows: &'a mut Vec<(kentos_contracts::LeaderArrow, u64)>,
     /// What a block's objects are drawn with now (`block_head`).
@@ -575,13 +575,13 @@ impl Writer<'_> {
         }
     }
 
-    /// The object's extended data, last of its groups (without the attributes if they are too large for AutoCAD).
+    /// The object's extended data, last of its groups (without the attributes if they are too large for DXF readers).
     fn end(&mut self, mut meta: Meta) {
         let mut groups = xdata::groups(&meta);
         if xdata::size(&groups) > xdata::MAX_BYTES {
             self.report.note(
                 "Öznitelikler",
-                "bir nesnenin etiketi, öznitelikleri ve sembolü AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için yazılmadı",
+                "bir nesnenin etiketi, öznitelikleri ve sembolü DXF'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için yazılmadı",
                 0,
             );
             meta.label = None;
@@ -905,7 +905,7 @@ impl Writer<'_> {
 
     /// An insert's attributes no definition of its block holds (docs/adr/3980) that go out as invisible ATTRIBs: each
     /// with a value of one line, so it comes back as it was. Its tag is its name where DXF's tags hold it; else, as a
-    /// definition's tag is written (docs/adr/0144 §7), its white space and control characters "_" (AutoCAD's DXF
+    /// definition's tag is written (docs/adr/0144 §7), its white space and control characters "_" (DXF
     /// reference: a tag “cannot contain spaces”), and a tag the insert already has but for case gets "_2", "_3" …
     /// (docs/adr/4380): the name is then kept in KentOS's data under the tag, and said. A value on more lines stays in
     /// KentOS's data alone, and that is said. Answers each one's name, tag and value.
@@ -1667,7 +1667,7 @@ impl Writer<'_> {
             meta.table = None;
             self.report.note(
                 "Tablo",
-                "AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için tablo olarak değil, yalnız çizgi ve yazıları olarak yazıldı; KentOS'a blok olarak geri okunur",
+                "DXF'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için tablo olarak değil, yalnız çizgi ve yazıları olarak yazıldı; KentOS'a blok olarak geri okunur",
                 0,
             );
         }
@@ -1742,7 +1742,7 @@ impl Writer<'_> {
             look.ext_line_type,
         );
         let text_pen = self.dimension_pen(look.text_color.as_deref(), None, None);
-        // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.
+        // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as DXF writers write it.
         let record = self.handles.take();
         let block_form = self.forms.dimensions == kentos_contracts::DxfForm::Block;
         // Its look as a block of its own (docs/adr/0327 §6): an anonymous *U an INSERT places, not a *D.
@@ -1836,7 +1836,7 @@ impl Writer<'_> {
         self.out.int(70, def.kind | dim::OWN_BLOCK | east);
         self.out.int(71, 5);
         self.out.real(42, l.value);
-        // A mark writes no value: a space is AutoCAD's “no text” (docs/adr/0322).
+        // A mark writes no value: a space is DXF's “no text” (docs/adr/0322).
         let none = d.style.is_some_and(DimensionStyle::is_mark);
         self.out.str(
             1,
@@ -1951,7 +1951,7 @@ impl Writer<'_> {
                 meta.object = None;
                 self.report.note(
                     what,
-                    "AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için KentOS verisi yazılmadı; KentOS blok olarak geri okur",
+                    "DXF'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için KentOS verisi yazılmadı; KentOS blok olarak geri okur",
                     0,
                 );
             }
@@ -2084,7 +2084,7 @@ impl Writer<'_> {
                     }
                     self.out.str(100, "AcDbRotatedDimension");
                 } else if let (Some(a), Some(b)) = (def.p13, def.p14) {
-                    // AutoCAD takes an aligned dimension's direction from its points; ezdxf from group 50.
+                    // a DXF reader takes an aligned dimension's direction from its points; another from group 50.
                     self.out.real(50, deg(atan2(b.y - a.y, b.x - a.x)));
                 }
             }
@@ -2201,7 +2201,7 @@ impl Writer<'_> {
     }
 
     /// A filled disc of radius `r` about `c` (a dimension's dot): a closed
-    /// polyline of two half circles of radius r/2, r wide (AutoCAD's DONUT).
+    /// polyline of two half circles of radius r/2, r wide (a DONUT).
     fn block_dot(&mut self, record: u64, c: Vec2, r: f64) {
         self.block_head("LWPOLYLINE", record);
         let o = &mut *self.blocks;
@@ -2381,7 +2381,7 @@ impl Writer<'_> {
             }
         }
         self.out.int(75, 0);
-        // A pattern of the library is AutoCAD's predefined one of that name; another is custom.
+        // A pattern of the library is DXF's predefined one of that name; another is custom.
         self.out.int(
             76,
             match kind {
@@ -2658,7 +2658,7 @@ fn mtext_chunks(o: &mut Out, text: &str) {
     o.str(1, rest);
 }
 
-/// Standard's sizes overridden to the app's for one dimension (AutoCAD's
+/// Standard's sizes overridden to the app's for one dimension (the format's
 /// DSTYLE data): text height, oblique ticks, the extension lines' gap and
 /// overshoot, the text above the line with the app's gap, aligned with it,
 /// and the project's decimals and angle unit, for a program that redraws it;
@@ -2690,7 +2690,7 @@ fn dim_overrides(
     match look.arrow {
         // Oblique ticks: DIMTSZ is half a 45° tick's length along the line.
         None => real("142", size * std::f64::consts::FRAC_1_SQRT_2),
-        // Arrowheads (DIMBLK's filled arrow): their size; none, 0 (AutoCAD then draws none).
+        // Arrowheads (DIMBLK's filled arrow): their size; none, 0 (a reader then draws none).
         Some(arrow) => {
             real("142", 0.0);
             real(

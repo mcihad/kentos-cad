@@ -174064,7 +174064,7 @@
       "type": "string"
     },
     "PaperPlotLossSeverity": {
-      "description": "How much a reported field differs from what AutoCAD plots.",
+      "description": "How much a reported field differs from what the table's own program plots.",
       "oneOf": [
         {
           "const": "lost",
@@ -174073,7 +174073,7 @@
         },
         {
           "const": "approximate",
-          "description": "Carried by KentOS's nearest rule, which may differ from AutoCAD's.",
+          "description": "Carried by KentOS's nearest rule, which may differ from the table's own program's.",
           "type": "string"
         },
         {
@@ -174339,7 +174339,7 @@
       "type": "object"
     },
     "PaperPlotStyleFormat": {
-      "description": "Which AutoCAD table a file is.",
+      "description": "Which plot style table a file is.",
       "enum": [
         "ctb",
         "stb"

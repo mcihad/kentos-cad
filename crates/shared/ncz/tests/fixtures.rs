@@ -55,7 +55,7 @@ fn attr<'a>(e: &'a Entity, key: &str) -> Option<&'a str> {
 #[test]
 fn every_record_type_on_its_layer_with_the_files_system() {
     let r = read("01-her-tur.ncz");
-    assert_eq!(fact(&r, "Sürüm"), Some("Netcad 5.2.0.1035N"));
+    assert_eq!(fact(&r, "Sürüm"), Some("NCZ 5.2.0.1035N"));
     // MPROJ says TM, ITRF, zone 39; TILED_XML names it: EPSG:5257, said, never reprojected.
     let crs = r.declared_crs.as_ref().expect("a declared system");
     assert_eq!((crs.srid, crs.source), (Some(5257), CrsSource::Ncz));
@@ -278,7 +278,7 @@ fn a_cut_file_gives_the_whole_records_before_the_cut() {
 #[test]
 fn netcad_8_smart_objects_become_their_symbols_on_the_layers_drawn_on_top() {
     let r = read("07-akilli-nesneler.ncz");
-    assert_eq!(fact(&r, "Sürüm"), Some("Netcad 8.5.6.1095"));
+    assert_eq!(fact(&r, "Sürüm"), Some("NCZ 8.5.6.1095"));
     assert_eq!(
         layers(&r),
         [
@@ -537,7 +537,7 @@ fn what_is_not_an_ncz_is_refused_with_the_reason() {
     );
     assert!(
         dxf.as_ref()
-            .is_err_and(|e| e.starts_with("Bu dosyada Netcad NCZ çizimi bulunamadı")),
+            .is_err_and(|e| e.starts_with("Bu dosyada NCZ çizimi bulunamadı")),
         "{dxf:?}"
     );
     let kcad = kentos_ncz::read(b"KCAD\x02\x00", &NczReadOptions::default(), &mut Quiet);

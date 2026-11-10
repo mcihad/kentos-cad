@@ -33,7 +33,7 @@ pub fn tool() -> Tool {
         description: "Komşu alanların ortak kenarlarını bir kez sadeleştirir; aralarında boşluk ya da örtüşme açılmaz.".into(),
         help: Some([
             "Örnekler: il, ilçe ve mahalle sınırlarını küçük ölçeğe indirmek, parsel katmanının köşelerini azaltmak.",
-            "Üç ya da daha çok alanın buluştuğu köşeler kalır; aralarındaki kenarlar Visvalingam–Whyatt'la sadeleşir (GEOS'un ve QGIS'in kuralı): üçgeninin alanı toleransın karesinden küçük köşe atılır, üçgeninde başka bir köşe varsa kalır. Sınırı koru açıkken dış sınır değişmez.",
+            "Üç ya da daha çok alanın buluştuğu köşeler kalır; aralarındaki kenarlar Visvalingam–Whyatt'la sadeleşir (GEOS'un kuralı): üçgeninin alanı toleransın karesinden küçük köşe atılır, üçgeninde başka bir köşe varsa kalır. Sınırı koru açıkken dış sınır değişmez.",
             "Komşular ortak köşelerini tam aynı koordinatla paylaşmalıdır; paylaşmayanların sınırı ayrı ayrı sadeleşir (önce Topolojik temizlik). Kotlar köşeleriyle kalır.",
         ]
         .join("\n\n")),

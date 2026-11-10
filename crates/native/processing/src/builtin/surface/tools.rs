@@ -280,7 +280,7 @@ pub fn curvature() -> Tool {
     p.extend(ends("-egrilik", "Eğrilik"));
     tool(
         ("surface.curvature", "Eğrilik", "curvature"),
-        "Yüzeyin toplam, profil ya da plan eğriliğini (ArcGIS'teki gibi 1/100 m⁻¹) yazar.",
+        "Yüzeyin toplam, profil ya da plan eğriliğini (1/100 m⁻¹) yazar.",
         &[
             "Zevenbergen ve Thorne'un yüzeyinden: toplamda artı tepe, eksi çukur; profilde eksi dışbükey (akış yavaşlar), artı içbükey; planda artı sırt, eksi dere.",
             "Eğrilik dik pikselli raster ister (afinin eksenleri dik).",

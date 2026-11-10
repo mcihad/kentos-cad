@@ -93,7 +93,7 @@ struct LayerDef {
     frozen: bool,
 }
 
-/// AutoCAD's name for a DXF version.
+/// The product name of a DXF version.
 fn version_name(v: &str) -> String {
     let name = match v {
         "AC1006" => "R10",
@@ -114,7 +114,7 @@ fn version_name(v: &str) -> String {
             };
         }
     };
-    format!("AutoCAD {name} ({v})")
+    format!("DXF {name} ({v})")
 }
 
 /// $INSUNITS as words.
@@ -241,7 +241,7 @@ fn decide_units(
         }
     }
     };
-    // AutoCAD's own blocks (model and paper space, a dimension's or a table's) are in the drawing's unit.
+    // the format's own blocks (model and paper space, a dimension's or a table's) are in the drawing's unit.
     let file = declared.unwrap_or(0);
     let blocks: Vec<BlockUnit> = records
         .iter()
@@ -691,7 +691,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-/// The encoding of the drawing's strings: UTF-8 from AutoCAD 2007 on or
+/// The encoding of the drawing's strings: UTF-8 from DXF R2007 on or
 /// when an older file's non-ASCII bytes are UTF-8 (some programs write it
 /// whatever the version), else the declared code page (Turkish when none).
 /// An ASCII-only file reads the same either way; the report then names the
@@ -721,7 +721,7 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
 
 /// Reads an ASCII DXF file, telling `watch` how far it is (thousandths of
 /// the file's bytes) and stopping when it says so (`Err(STOPPED)`).
-/// How many AutoCAD constraint groups a DXF holds: the objects named `ACDBASSOC2DCONSTRAINTGROUP` (docs/adr/0338 §4).
+/// How many constraint groups a DXF holds: the objects named `ACDBASSOC2DCONSTRAINTGROUP` (docs/adr/0338 §4).
 fn constraint_groups(bytes: &[u8]) -> usize {
     const NAME: &[u8] = b"ACDBASSOC2DCONSTRAINTGROUP";
     // Only where an `A` stands: a large file is read once, byte by byte, without a window at every place.
@@ -784,10 +784,10 @@ fn read_once(
     let total = bytes.len().max(1) as u64;
     let mut ask = |pos: usize| watch.step((pos as u64).min(total) * 950 / total, 1000);
     if bytes.starts_with(b"AutoCAD Binary DXF") {
-        return Err("Bu dosya ikili (binary) DXF. KentOS ASCII DXF okur: dosyayı AutoCAD'de DXF olarak, “ASCII” seçeneğiyle kaydedip yeniden deneyin.".into());
+        return Err("Bu dosya ikili (binary) DXF. KentOS ASCII DXF okur: dosyayı çizim programında DXF olarak, “ASCII” seçeneğiyle kaydedip yeniden deneyin.".into());
     }
     if bytes.len() >= 6 && bytes.starts_with(b"AC1") && bytes[3..6].iter().all(u8::is_ascii_digit) {
-        return Err("Bu bir DWG dosyası. DWG kapalı (tescilli) bir biçimdir ve KentOS okuyamaz; dosyayı AutoCAD ya da Netcad'de DXF olarak kaydedip onu açın.".into());
+        return Err("Bu bir DWG dosyası. DWG kapalı (tescilli) bir biçimdir ve KentOS okuyamaz; dosyayı çizim programında DXF olarak kaydedip onu açın.".into());
     }
     let limit = if opts.max_entities == 0 {
         DEFAULT_LIMIT
@@ -883,13 +883,13 @@ fn read_once(
             0,
         );
     }
-    // AutoCAD's constraints (docs/adr/0338 §4): their objects are not read; the geometry comes as drawn.
+    // The format's constraints (docs/adr/0338 §4): their objects are not read; the geometry comes as drawn.
     let groups = constraint_groups(bytes);
     if groups > 0 {
         em.out.report.note(
             "Kısıt",
             &format!(
-                "dosyadaki {groups} AutoCAD kısıt grubu (ACDBASSOC2DCONSTRAINTGROUP) okunmadı; geometri kısıtsız alındı"
+                "dosyadaki {groups} kısıt grubu (ACDBASSOC2DCONSTRAINTGROUP) okunmadı; geometri kısıtsız alındı"
             ),
             0,
         );
@@ -1083,7 +1083,7 @@ fn read_once(
     if out.exhausted {
         out.report.skip(
             "Blok (INSERT)",
-            &format!("iç içe bloklar {} nesneden fazlasını dolaştırdı; kalan eklemeler açılmadı (blokları AutoCAD'de patlatıp ya da dosyayı bölüp yeniden kaydedin)", out.visit_limit),
+            &format!("iç içe bloklar {} nesneden fazlasını dolaştırdı; kalan eklemeler açılmadı (blokları çizim programında patlatıp ya da dosyayı bölüp yeniden kaydedin)", out.visit_limit),
             0,
         );
     }

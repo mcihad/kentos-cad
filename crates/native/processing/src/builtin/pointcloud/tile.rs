@@ -47,7 +47,7 @@ pub fn tool() -> Tool {
             number("size", "Karo boyu", 100.0, 1.0, 100_000.0, "m"),
             ParamDef::new("vpc", "Sanal bulut da yaz", ParamKind::Boolean)
                 .default_value(json!(true))
-                .describe("Karoların yanına <ad>.vpc yazılır (QGIS ve PDAL'ın sanal bulutu)."),
+                .describe("Karoların yanına <ad>.vpc yazılır (sanal nokta bulutu, VPC)."),
             format_param(),
             output_param("", &[".laz", ".las"]),
             add_param(),

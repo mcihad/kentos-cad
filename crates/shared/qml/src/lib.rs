@@ -1,15 +1,15 @@
-//! A layer's style as a QGIS layer style file, `.qml` (docs/adr/0555, plan/gis.md CBS-17): QGIS 4.2's `renderer-v2`
+//! A layer's style as a QML layer style file, `.qml` (docs/adr/0555, plan/gis.md CBS-17): the QML's `renderer-v2`
 //! with its single symbol, categorized, graduated and rule-based renderers, and its simple fill, simple line, simple
-//! marker and centroid fill symbol layers. Unlike SLD (docs/adr/0516) a QML says what QGIS draws: sizes keep their
+//! marker and centroid fill symbol layers. Unlike SLD (docs/adr/0516) a QML says what its reader draws: sizes keep their
 //! unit (mm, pixel, metres in map units), a symbol keeps its opacity, a disabled layer stays disabled, rules nest.
 //! What KentOS's style has and these classes have not (a hatch, a gradient, a pattern, a marker line, an SVG or text
 //! marker, a data-defined value, an expression the filter grammar cannot say) is named, never dropped in silence;
-//! read back, what QGIS has and KentOS has not (another symbol layer class, a label, a data-defined property) is
+//! read back, what QML has and KentOS has not (another symbol layer class, a label, a data-defined property) is
 //! named too.
 //!
 //! A QML is for one geometry type: the layer's objects choose it (areas before lines before points). Rule filters are
-//! QGIS expressions: `"Ad" = 'x'` where KentOS writes `[Ad] = 'x'`; both go through the filter grammar SLD's writer
-//! and reader share (`sld::Filter`). QGIS turns markers clockwise, KentOS counter-clockwise.
+//! QML expressions: `"Ad" = 'x'` where KentOS writes `[Ad] = 'x'`; both go through the filter grammar SLD's writer
+//! and reader share (`sld::Filter`). QML turns markers clockwise, KentOS counter-clockwise.
 
 use std::fmt::Write as _;
 
@@ -27,7 +27,7 @@ mod thematic;
 /// A point (1/72 inch), mm.
 const POINT_MM: f64 = 25.4 / 72.0;
 
-/// KentOS's marker shapes and QGIS's names for them; the others are named lost.
+/// KentOS's marker shapes and QML's names for them; the others are named lost.
 const SHAPES: [(&str, &str); 15] = [
     ("circle", "circle"),
     ("square", "square"),
@@ -46,7 +46,7 @@ const SHAPES: [(&str, &str); 15] = [
     ("semicircle", "semi_circle"),
 ];
 
-/// QGIS's names KentOS draws as another shape of its own (read only).
+/// QML's names KentOS draws as another shape of its own (read only).
 const SHAPES_IN: [(&str, &str); 3] = [
     ("equilateral_triangle", "triangle"),
     ("quarter_circle", "quartercircle"),
@@ -55,7 +55,7 @@ const SHAPES_IN: [(&str, &str); 3] = [
 
 // ─── Expressions ──────────────────────────────────────────────────────────────────────────────────────
 
-/// A filter as QGIS's expression.
+/// A filter as QML's expression.
 fn qgis_text(f: &Filter) -> String {
     let field = |n: &str| format!("\"{}\"", n.replace('"', "\"\""));
     let lit = |l: &Lit| match l {
@@ -105,7 +105,7 @@ fn op_text(op: Op) -> &'static str {
 
 // ─── Writing ──────────────────────────────────────────────────────────────────────────────────────────
 
-/// A KentOS unit as QGIS's.
+/// A KentOS unit as QML's.
 fn unit_out(unit: &str) -> &'static str {
     match unit {
         "m" => "RenderMetersInMapUnits",
@@ -114,7 +114,7 @@ fn unit_out(unit: &str) -> &'static str {
     }
 }
 
-/// A colour as QGIS writes it, `r,g,b,a`.
+/// A colour as a QML writes it, `r,g,b,a`.
 fn rgba(v: &Value) -> Option<String> {
     let (rgb, a) = colour(v)?;
     let h = &rgb[1..];
@@ -155,7 +155,7 @@ enum VTok {
     Close,
 }
 
-/// The tokens of `src`, KentOS's (`[Ad]` or a bare word a field) or QGIS's (`"Ad"` or a bare word a field).
+/// The tokens of `src`, KentOS's (`[Ad]` or a bare word a field) or QML's (`"Ad"` or a bare word a field).
 fn value_tokens(src: &str, qgis: bool) -> Option<Vec<VTok>> {
     let c: Vec<char> = src.chars().collect();
     let mut out = Vec::new();
@@ -256,7 +256,7 @@ fn value_text(toks: &[VTok], field: &dyn Fn(&str) -> String) -> String {
     s
 }
 
-/// KentOS's value expression as QGIS's, when it is fields, numbers and arithmetic.
+/// KentOS's value expression as QML's, when it is fields, numbers and arithmetic.
 fn qgis_value(kentos: &str) -> Option<String> {
     let Some(toks) = value_tokens(kentos, false) else {
         // With functions, word by word (docs/adr/0635 §6).
@@ -267,7 +267,7 @@ fn qgis_value(kentos: &str) -> Option<String> {
     }))
 }
 
-/// QGIS's value expression as KentOS's, when it is fields, numbers and arithmetic.
+/// QML's value expression as KentOS's, when it is fields, numbers and arithmetic.
 fn kentos_value(qgis: &str) -> Option<String> {
     let Some(toks) = value_tokens(qgis, true) else {
         return kentos_formats::style_expr::to_kentos(qgis);
@@ -294,7 +294,7 @@ fn negated(e: &str) -> String {
     format!("-({e})")
 }
 
-/// A layer's number at `key`: fixed, or data-defined when its expression says itself in QGIS's (then QGIS's
+/// A layer's number at `key`: fixed, or data-defined when its expression says itself in QML's (then QML's
 /// property `prop` takes it, `negate` for an angle turned the other way) and the fallback is written.
 fn num_value(
     layer: &Value,
@@ -315,7 +315,7 @@ fn num_value(
     sld::fixed_for(layer, key, lost, what, "QML'e").and_then(Value::as_f64)
 }
 
-/// A layer's colour at `key`: fixed, or data-defined when its expression says itself in QGIS's (then QGIS's property
+/// A layer's colour at `key`: fixed, or data-defined when its expression says itself in QML's (then QML's property
 /// `prop` takes it) and the fallback is written (a transparent colour without one).
 fn colour_value(
     layer: &Value,
@@ -392,7 +392,7 @@ fn layer_open(class: &str, layer: &Value, pad: &str) -> String {
     )
 }
 
-/// What of a layer's KentOS look no QGIS class here says.
+/// What of a layer's KentOS look no QML class here says.
 fn layer_losses(layer: &Value, lost: &mut Vec<String>, what: &str) {
     if layer
         .get("opacity")
@@ -490,7 +490,7 @@ fn fill_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> O
         return None;
     };
     layer_losses(layer, lost, what);
-    // KentOS draws a fill's outline as its own line layer: QGIS's outline stays off.
+    // KentOS draws a fill's outline as its own line layer: QML's outline stays off.
     let mut s = layer_open("SimpleFill", layer, pad);
     s.push_str(&options(
         &[
@@ -511,8 +511,8 @@ fn fill_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> O
     Some(s)
 }
 
-/// What a marker layer's three kinds share: its unit (QGIS's name), size and angle (each data-defined when its
-/// expression says itself), and the losses of what QGIS's marker layers lack (offset, anchor).
+/// What a marker layer's three kinds share: its unit (QML's name), size and angle (each data-defined when its
+/// expression says itself), and the losses of what QML's marker layers lack (offset, anchor).
 fn marker_common(
     layer: &Value,
     default_size: f64,
@@ -522,7 +522,7 @@ fn marker_common(
 ) -> (String, f64, f64) {
     let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
     let size = num_value(layer, "size", "size", false, dds, lost, what).unwrap_or(default_size);
-    // KentOS turns counter-clockwise, QGIS clockwise.
+    // KentOS turns counter-clockwise, QML clockwise.
     let angle = num_value(layer, "rotation", "angle", true, dds, lost, what)
         .map_or(0.0, |r| if r == 0.0 { 0.0 } else { -r });
     if layer
@@ -543,7 +543,7 @@ fn marker_common(
     (unit_out(unit).to_owned(), size, angle)
 }
 
-/// A marker layer as QGIS's: a shape as `SimpleMarker`, an SVG drawing as `SvgMarker` (its text inside the QML,
+/// A marker layer as QML's: a shape as `SimpleMarker`, an SVG drawing as `SvgMarker` (its text inside the QML,
 /// `base64:`), a text as `FontMarker`.
 fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
     let t = layer.get("type").and_then(Value::as_str).unwrap_or("");
@@ -565,18 +565,18 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
     let name = match SHAPES.iter().find(|(k, _)| *k == shape) {
         Some(&(_, q)) => q,
         None if shape == "ring" => {
-            lost.push(format!("{what}: halka işareti QGIS'te yok; daire yazıldı"));
+            lost.push(format!("{what}: halka işareti QML'de yok; daire yazıldı"));
             "circle"
         }
         None if shape == "rectangle" => {
             lost.push(format!(
-                "{what}: dikdörtgen işaret QGIS'in basit işaretinde yok; kare yazıldı"
+                "{what}: dikdörtgen işaret QML'in basit işaretinde yok; kare yazıldı"
             ));
             "square"
         }
         None => {
             lost.push(format!(
-                "{what}: “{shape}” şekli QGIS'in basit işaretinde yok; işaret yazılmadı"
+                "{what}: “{shape}” şekli QML'in basit işaretinde yok; işaret yazılmadı"
             ));
             return None;
         }
@@ -668,7 +668,7 @@ fn svg_marker_layer(
                 "outline_color",
                 stroke.clone().unwrap_or_else(|| "0,0,0,0".into()),
             ),
-            // KentOS's SVG marker has no outline width: a drawing's own strokes take QGIS's usual 0.2.
+            // KentOS's SVG marker has no outline width: a drawing's own strokes take QML's usual 0.2.
             (
                 "outline_width",
                 if stroke.is_some() { "0.2" } else { "0" }.into(),
@@ -686,7 +686,7 @@ fn svg_marker_layer(
     Some(s)
 }
 
-/// A text marker as `FontMarker`: QGIS's marker is one character (the first of the text), its font family and style
+/// A text marker as `FontMarker`: QML's marker is one character (the first of the text), its font family and style
 /// (KentOS's weight from 600 is bold), colour, halo as the outline, size and angle.
 fn font_marker_layer(
     layer: &Value,
@@ -718,7 +718,7 @@ fn font_marker_layer(
     }
     if chr.chars().count() > 1 {
         lost.push(format!(
-            "{what}: QGIS'in yazı işareti tek karakterdir; metnin yalnız ilk karakteri yazıldı"
+            "{what}: QML'in yazı işareti tek karakterdir; metnin yalnız ilk karakteri yazıldı"
         ));
     }
     let first: String = chr.chars().take(1).collect();
@@ -785,9 +785,9 @@ fn font_marker_layer(
     Some(s)
 }
 
-/// A gradient as `GradientFill` (docs/adr/0571 §1). QGIS draws a linear gradient from its first reference point to
+/// A gradient as `GradientFill` (docs/adr/0571 §1). QML draws a linear gradient from its first reference point to
 /// its second, a radial one from the first outward to the second's distance; its fractions are of the object's box.
-/// So KentOS's linear gradient is the box's west-to-east pair turned by the angle (QGIS turns counter-clockwise too);
+/// So KentOS's linear gradient is the box's west-to-east pair turned by the angle (QML turns counter-clockwise too);
 /// the sphere is the box's centre out to its corner; the cylinder is the half-box with `spread` reflecting.
 fn gradient_layer(
     layer: &Value,
@@ -815,7 +815,7 @@ fn gradient_layer(
         .and_then(Value::as_str)
         .unwrap_or("linear");
     let inverted = layer.get("inverted") == Some(&Value::Bool(true));
-    // QGIS's first colour is where its gradient starts: the box's west (linear), its edge (cylinder), its centre (sphere).
+    // QML's first colour is where its gradient starts: the box's west (linear), its edge (cylinder), its centre (sphere).
     let swap = match shape {
         "spherical" => !inverted,
         _ => inverted,
@@ -840,7 +840,7 @@ fn gradient_layer(
     };
     if shape != "spherical" && angle.rem_euclid(90.0) != 0.0 {
         lost.push(format!(
-            "{what}: açılı degradenin uçları QGIS'te kutunun yan kenarlarına oturur (KentOS'ta kutunun doğrultudaki izdüşümüne); 0, 90, 180 ve 270 dışındaki açıda renk geçişi biraz kısalır"
+            "{what}: açılı degradenin uçları QML'de kutunun yan kenarlarına oturur (KentOS'ta kutunun doğrultudaki izdüşümüne); 0, 90, 180 ve 270 dışındaki açıda renk geçişi biraz kısalır"
         ));
     }
     layer_losses(layer, lost, what);
@@ -896,11 +896,11 @@ fn pattern_layer(
     };
     if more("jitter", 0.0) || more("coverage", 1.0) || more("seed", 0.0) {
         lost.push(format!(
-            "{what}: desenin rastgele sapması, doluluğu ve tohumu QML'e yazılmadı (QGIS'in nokta deseninde sabit dizilim vardır)"
+            "{what}: desenin rastgele sapması, doluluğu ve tohumu QML'e yazılmadı (QML'in nokta deseninde sabit dizilim vardır)"
         ));
     }
     lost.push(format!(
-        "{what}: desenin dizilimi QGIS'te nesnenin kutusundan, KentOS'ta çizimin başlangıç noktasından başlar; işaretlerin yeri bir hücre kayabilir"
+        "{what}: desenin dizilimi QML'de nesnenin kutusundan, KentOS'ta çizimin başlangıç noktasından başlar; işaretlerin yeri bir hücre kayabilir"
     ));
     layer_losses(layer, lost, what);
     let stagger = layer.get("stagger") == Some(&Value::Bool(true));
@@ -921,7 +921,7 @@ fn pattern_layer(
             (
                 "angle",
                 num(round3(
-                    // KentOS turns the grid counter-clockwise, QGIS clockwise.
+                    // KentOS turns the grid counter-clockwise, QML clockwise.
                     -layer.get("angle").and_then(Value::as_f64).unwrap_or(0.0) + 0.0,
                 )),
             ),
@@ -940,7 +940,7 @@ fn pattern_layer(
             ("distance_y_unit", u.clone()),
             ("offset_x", num(round3(offset.0))),
             ("offset_x_unit", u.clone()),
-            // QGIS counts the offset's y downward, KentOS northward.
+            // QML counts the offset's y downward, KentOS northward.
             ("offset_y", num(round3(-offset.1 + 0.0))),
             ("offset_y_unit", u),
             ("outline_width_unit", "MM".into()),
@@ -955,7 +955,7 @@ fn pattern_layer(
     Some(s)
 }
 
-/// A hatch as QGIS's line pattern fill: the lines' angle (both counter-clockwise from east), spacing and offset,
+/// A hatch as QML's line pattern fill: the lines' angle (both counter-clockwise from east), spacing and offset,
 /// its line a simple line of the hatch's colour, width and dashes.
 fn hatch_layer(
     layer: &Value,
@@ -1027,7 +1027,7 @@ fn hatch_layer(
     Some(s)
 }
 
-/// KentOS's marker line placements and QGIS's names for them.
+/// KentOS's marker line placements and QML's names for them.
 const PLACEMENTS: [(&str, &str); 7] = [
     ("interval", "Interval"),
     ("vertex", "Vertex"),
@@ -1038,7 +1038,7 @@ const PLACEMENTS: [(&str, &str); 7] = [
     ("segmentCenter", "SegmentCenter"),
 ];
 
-/// A marker line as QGIS's: its placement, interval, offset along the line, rotation and marker.
+/// A marker line as QML's: its placement, interval, offset along the line, rotation and marker.
 fn marker_line_layer(
     layer: &Value,
     name: &str,
@@ -1050,7 +1050,7 @@ fn marker_line_layer(
     let placement = layer.get("placement").and_then(Value::as_str).unwrap_or("");
     let Some(&(_, q)) = PLACEMENTS.iter().find(|(k, _)| *k == placement) else {
         lost.push(format!(
-            "{what}: işaretli çizginin “{placement}” yerleşimi QGIS'te yok; katman yazılmadı"
+            "{what}: işaretli çizginin “{placement}” yerleşimi QML'de yok; katman yazılmadı"
         ));
         return None;
     };
@@ -1114,7 +1114,7 @@ fn marker_line_layer(
     Some(s)
 }
 
-/// A symbol as QGIS's `<symbol>`, named `name`, of the class `key` (`fill`, `line`, `marker`); none when no layer
+/// A symbol as QML's `<symbol>`, named `name`, of the class `key` (`fill`, `line`, `marker`); none when no layer
 /// could be written.
 fn symbol_xml(
     sym: &Value,
@@ -1234,7 +1234,7 @@ fn set_symbol(
     }
 }
 
-/// The symbols the writer gathers: each one's XML, numbered as QGIS numbers them.
+/// The symbols the writer gathers: each one's XML, numbered as QML numbers them.
 struct Symbols {
     key: &'static str,
     xml: Vec<String>,
@@ -1312,7 +1312,7 @@ fn rules_xml(
                     Some(f) => Some(f),
                     None => {
                         lost.push(format!(
-                            "{what}: “{src}” ifadesi QGIS'in ifadesine çevrilemedi; kural ve alt kuralları yazılmadı"
+                            "{what}: “{src}” ifadesi QML'in ifadesine çevrilemedi; kural ve alt kuralları yazılmadı"
                         ));
                         continue;
                     }
@@ -1361,7 +1361,7 @@ fn rules_xml(
     }
 }
 
-/// A renderer as QGIS's `<renderer-v2>` element (its symbols for `key`'s class) and the classes and rules written;
+/// A renderer as QML's `<renderer-v2>` element (its symbols for `key`'s class) and the classes and rules written;
 /// nothing when no symbol could be written.
 fn element(
     renderer: &Value,
@@ -1392,7 +1392,7 @@ fn element(
                 Some(f) => f,
                 None => {
                     lost.push(format!(
-                        "Kategorili görünüşün “{expr}” ifadesi bir alan değil; QGIS'in ifadesine çevrilemedi, sınıflar yazılmadı"
+                        "Kategorili görünüşün “{expr}” ifadesi bir alan değil; QML'in ifadesine çevrilemedi, sınıflar yazılmadı"
                     ));
                     String::new()
                 }
@@ -1455,7 +1455,7 @@ fn element(
                 Some(f) => f,
                 None => {
                     lost.push(format!(
-                        "Aralıklı görünüşün “{expr}” ifadesi bir alan değil; QGIS'in ifadesine çevrilemedi, sınıflar yazılmadı"
+                        "Aralıklı görünüşün “{expr}” ifadesi bir alan değil; QML'in ifadesine çevrilemedi, sınıflar yazılmadı"
                     ));
                     String::new()
                 }
@@ -1498,7 +1498,7 @@ fn element(
                 }
                 if rules > 1 {
                     lost.push(
-                        "QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç); sınıf sınırındaki değer bir alttaki sınıfa düşer".into(),
+                        "QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç); sınıf sınırındaki değer bir alttaki sınıfa düşer".into(),
                     );
                 }
             }
@@ -1603,7 +1603,7 @@ fn child<'a, 'i>(n: Node<'a, 'i>, name: &str) -> Option<Node<'a, 'i>> {
         .find(|c| c.is_element() && c.tag_name().name() == name)
 }
 
-/// A symbol layer's options: QGIS 3's `<Option type="Map">` or QGIS 2's `<prop k v>`.
+/// A symbol layer's options: QML 3's `<Option type="Map">` or QML 2's `<prop k v>`.
 fn props(layer: Node<'_, '_>) -> Map<String, Value> {
     let mut m = Map::new();
     if let Some(map) = child(layer, "Option") {
@@ -1632,7 +1632,7 @@ fn prop_num(m: &Map<String, Value>, k: &str) -> Option<f64> {
     prop(m, k).and_then(|v| v.trim().parse::<f64>().ok())
 }
 
-/// A QGIS colour (`r,g,b,a[,rgb:…]`, or `#rrggbb`) as KentOS's; none when it is fully transparent.
+/// A QML colour (`r,g,b,a[,rgb:…]`, or `#rrggbb`) as KentOS's; none when it is fully transparent.
 fn colour_in(text: Option<&str>) -> Option<String> {
     let t = text?.trim();
     if t.starts_with('#') {
@@ -1654,7 +1654,7 @@ fn colour_in(text: Option<&str>) -> Option<String> {
     Some(colour_with(&rgb, Some(f64::from(a) / 255.0)))
 }
 
-/// A size in QGIS's unit as KentOS's: the value and its unit, or none (a percentage).
+/// A size in QML's unit as KentOS's: the value and its unit, or none (a percentage).
 fn size_in(v: f64, unit: Option<&str>) -> Option<(f64, &'static str)> {
     Some(match unit.unwrap_or("MM") {
         "MM" => (v, "mm"),
@@ -1674,7 +1674,7 @@ fn size_as(v: f64, unit: Option<&str>, to: &str) -> Option<f64> {
 }
 
 /// What a symbol layer has that the reader leaves.
-/// A symbol layer's active data-defined properties, in order: the property's name and its expression as QGIS writes
+/// A symbol layer's active data-defined properties, in order: the property's name and its expression as QML writes
 /// it (a field is `"field"`).
 fn dd_props(layer: Node<'_, '_>) -> Vec<(String, String)> {
     let mut out = Vec::new();
@@ -1710,7 +1710,7 @@ fn dd_props(layer: Node<'_, '_>) -> Vec<(String, String)> {
     out
 }
 
-/// One data-defined property KentOS takes: QGIS's name, the KentOS layer type it goes to, the key it becomes and
+/// One data-defined property KentOS takes: QML's name, the KentOS layer type it goes to, the key it becomes and
 /// whether it turns the other way (an angle).
 type DdTake = (&'static str, &'static str, &'static str, bool);
 
@@ -1725,7 +1725,7 @@ fn take_dd(
     for (name, q) in dd_props(layer) {
         let Some(&(_, kind, key, negate)) = supported.iter().find(|(p, _, _, _)| *p == name) else {
             lost.push(format!(
-                "{what}: QGIS'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı"
+                "{what}: QML'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı"
             ));
             continue;
         };
@@ -1740,7 +1740,7 @@ fn take_dd(
             .find(|t| t.get("type").and_then(Value::as_str) == Some(kind))
         else {
             lost.push(format!(
-                "{what}: QGIS'in “{name}” veriye bağlı değerinin katmanı alınmadı; değer alınmadı"
+                "{what}: QML'in “{name}” veriye bağlı değerinin katmanı alınmadı; değer alınmadı"
             ));
             continue;
         };
@@ -1946,7 +1946,7 @@ fn read_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Va
         }
     }
     if let Some(a) = prop_num(m, "angle").filter(|a| *a != 0.0) {
-        // QGIS turns clockwise, KentOS counter-clockwise.
+        // QML turns clockwise, KentOS counter-clockwise.
         v["rotation"] = json!(-a);
     }
     if prop(m, "offset").is_some_and(|o| {
@@ -1995,7 +1995,7 @@ fn read_svg_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -
         if !a.iter().any(|x| x.id == id) {
             a.push(StyleAsset {
                 id: id.clone(),
-                name: "QGIS'ten gelen SVG işareti".into(),
+                name: "QML'den gelen SVG işareti".into(),
                 svg,
             });
         }
@@ -2018,7 +2018,7 @@ fn read_svg_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -
     Some(v)
 }
 
-/// What a QGIS marker layer's angle, offset and anchor say about a KentOS marker (the angle turns the other way).
+/// What a QML marker layer's angle, offset and anchor say about a KentOS marker (the angle turns the other way).
 fn marker_pose(m: &Map<String, Value>, v: &mut Value, lost: &mut Vec<String>, what: &str) {
     if let Some(a) = prop_num(m, "angle").filter(|a| *a != 0.0) {
         v["rotation"] = json!(-a);
@@ -2108,7 +2108,7 @@ fn read_gradient(
         colour_in(prop(m, "gradient_color2")),
     );
     if prop(m, "color_type") == Some("1") {
-        // QGIS 4 writes the ramp's colours in the layer's own properties, QGIS 3 in a `<colorramp>` of its own.
+        // QML 4 writes the ramp's colours in the layer's own properties, QML 3 in a `<colorramp>` of its own.
         let r = child(layer, "colorramp").map_or_else(|| m.clone(), props);
         match (colour_in(prop(&r, "color1")), colour_in(prop(&r, "color2"))) {
             (Some(a), Some(b)) => {
@@ -2144,7 +2144,7 @@ fn read_gradient(
     }
     let mut g = json!({ "id": format!("g{i}"), "type": "gradientFill", "shape": shape });
     let mut takes: Vec<DdTake> = Vec::new();
-    // QGIS's first colour is where its gradient starts: the box's west or edge, or the sphere's centre.
+    // QML's first colour is where its gradient starts: the box's west or edge, or the sphere's centre.
     let (k1, k2) = if shape == "spherical" {
         ("color2", "color")
     } else {
@@ -2174,7 +2174,7 @@ fn read_gradient(
         };
         if !standard(p1, p2) || angle.rem_euclid(90.0) != 0.0 {
             lost.push(format!(
-                "{what}: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu"
+                "{what}: degradenin uçları QML'de kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu"
             ));
         }
     }
@@ -2244,7 +2244,7 @@ fn read_pattern(
         )),
     }
     if let Some(a) = prop_num(m, "angle").filter(|a| *a != 0.0) {
-        // QGIS turns the grid clockwise, KentOS counter-clockwise.
+        // QML turns the grid clockwise, KentOS counter-clockwise.
         v["angle"] = json!(-a);
     }
     let ox = prop_num(m, "offset_x").unwrap_or(0.0);
@@ -2254,7 +2254,7 @@ fn read_pattern(
             size_as(ox, prop(m, "offset_x_unit"), unit),
             size_as(oy, prop(m, "offset_y_unit"), unit),
         ) {
-            // QGIS counts the offset's y downward, KentOS northward.
+            // QML counts the offset's y downward, KentOS northward.
             (Some(x), Some(y)) => v["offset"] = json!([x, -y + 0.0]),
             _ => lost.push(format!(
                 "{what}: nokta deseninin başlangıç kaymasının birimi aralığınkinden başka; alınmadı"
@@ -2424,7 +2424,7 @@ fn read_marker_line(
     Some(l)
 }
 
-/// A QGIS `<symbol>` as KentOS's, and its class key.
+/// A QML `<symbol>` as KentOS's, and its class key.
 fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(String, Value)> {
     let t = s.attribute("type").unwrap_or("");
     let key = match t {
@@ -2560,7 +2560,7 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                     _ => lost.push(format!("{what}: merkez işaretinin simgesi alınmadı")),
                 }
             }
-            // QGIS's other marker and fill layers (docs/adr/0635 §7).
+            // QML's other marker and fill layers (docs/adr/0635 §7).
             ("marker", "EllipseMarker") => {
                 supported = vec![
                     ("angle", "shape", "rotation", true),
@@ -2579,14 +2579,14 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
             }
             ("fill", "ShapeburstFill") => {
                 lost.push(format!(
-                    "{what}: QGIS'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı"
+                    "{what}: QML'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı"
                 ));
                 if let Some(c) = colour_in(prop(&m, "color")) {
                     taken.push(json!({ "id": format!("f{i}"), "type": "simpleFill", "color": c }));
                 }
             }
             (_, other) => lost.push(format!(
-                "{what}: QGIS'in “{other}” simge katmanı KentOS'un katmanına çevrilmedi"
+                "{what}: QML'in “{other}” simge katmanı KentOS'un katmanına çevrilmedi"
             )),
         }
         take_dd(layer, &supported, &mut taken, lost, what);
@@ -2709,7 +2709,7 @@ pub fn read(text: &str) -> Result<Read, String> {
     Ok(read)
 }
 
-/// KentOS's renderer of QGIS's `<renderer-v2>` and the classes and rules taken; `labels` when the QML has labels
+/// KentOS's renderer of QML's `<renderer-v2>` and the classes and rules taken; `labels` when the QML has labels
 /// (a single symbol KentOS cannot draw is then said, not refused).
 fn renderer_in(
     r: Node<'_, '_>,
@@ -2839,7 +2839,7 @@ fn renderer_in(
                 classes.push(cl);
             }
             if classes.len() > 1 {
-                lost.push("QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer".into());
+                lost.push("QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer".into());
             }
             if child(r, "sizescale").is_some_and(|s| s.attribute("scalemethod").is_some())
                 || r.attribute("graduatedMethod") == Some("GraduatedSize")
@@ -2861,7 +2861,7 @@ fn renderer_in(
         }
         other => {
             return Err(format!(
-                "QGIS'in “{other}” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş alınır)."
+                "QML'in “{other}” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş alınır)."
             ));
         }
     };
@@ -2873,13 +2873,13 @@ fn read_in(text: &str) -> Result<Read, String> {
         .map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
     let root = doc.root_element();
     if root.tag_name().name() != "qgis" {
-        return Err("Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil.".into());
+        return Err("Dosya bir QML stil dosyası değil: kök öğe <qgis> değil.".into());
     }
     let mut lost = Vec::new();
     let classes = labels::read(root, &mut lost);
     let Some(r) = child(root, "renderer-v2") else {
         if classes.is_empty() {
-            return Err("QML'de QGIS'in görünüşü (renderer-v2) yok.".into());
+            return Err("QML'de görünüş (renderer-v2) yok.".into());
         }
         let labels = kentos_formats::style_labels::labelling(classes, &mut lost);
         return Ok(Read {
@@ -3131,7 +3131,7 @@ mod tests {
         ]));
         let w = write(&r, &[], area(), &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
-        // The sphere's first QGIS colour is its centre, KentOS's second.
+        // The sphere's first QML colour is its centre, KentOS's second.
         assert!(w.xml.contains("name=\"color2\" type=\"Map\""), "{}", w.xml);
         let back = read(&w.xml).expect("reads");
         assert_eq!(back.lost, Vec::<String>::new());
@@ -3170,7 +3170,7 @@ mod tests {
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("dizilimi"), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"PointPatternFill\""), "{}", w.xml);
-        // QGIS turns the grid clockwise and counts the offset's y downward.
+        // QML turns the grid clockwise and counts the offset's y downward.
         assert!(w.xml.contains("name=\"angle\" type=\"QString\" value=\"-30\""), "{}", w.xml);
         assert!(w.xml.contains("name=\"offset_y\" type=\"QString\" value=\"-2\""), "{}", w.xml);
         assert!(w.xml.contains("name=\"displacement_x\" type=\"QString\" value=\"3\""), "{}", w.xml);
@@ -3183,7 +3183,7 @@ mod tests {
         assert_eq!(l["angle"], 30.0);
         assert_eq!(l["offset"], json!([1.0, 2.0]));
         assert_eq!(l["marker"]["layers"][0]["shape"], "star");
-        // What KentOS's pattern has and QGIS's has not is said.
+        // What KentOS's pattern has and QML's has not is said.
         let more = area_look(json!([
             { "id": "p", "type": "patternFill", "unit": "mm", "spacingX": 6, "spacingY": 4, "jitter": 0.3, "coverage": 0.5,
               "marker": { "type": "marker", "layers": [{ "id": "m", "type": "shape", "shape": "circle", "size": 2 }] } },
@@ -3238,7 +3238,7 @@ mod tests {
         assert_eq!(t["rotation"], 15.0);
         assert_eq!(t["color"], json!({ "expr": "[Renk]", "fallback": "#aa0000" }));
         assert_eq!(t["halo"], json!({ "color": "#ffffff", "width": 0.4 }));
-        // QGIS's marker is one character, and its character may come from a field.
+        // QML's marker is one character, and its character may come from a field.
         let long = point_look(json!([{ "id": "t", "type": "text", "text": { "expr": "[Kod]", "fallback": "AB" }, "size": 3 }]));
         let w = write(&long, &[], points(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);

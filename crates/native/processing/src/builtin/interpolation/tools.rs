@@ -103,7 +103,7 @@ pub fn idw() -> Tool {
         INTERPOLATION,
         "Noktalardan yüzey: her hücre en yakın noktaların uzaklıklarının ters üssüyle ağırlıklı ortalamasıdır.",
         &[
-            "Hücrenin değeri Σ wᵢ zᵢ / Σ wᵢ, wᵢ = 1 / dᵢ^üs; en yakın Nokta sayısı kadar nokta (eşit uzaklıkta önce sırası küçük olan), Arama yarıçapı verilmişse onun içindekiler. Bir nokta hücrenin merkezindeyse değer onunkidir. GDAL'ın invdistnn'iyle aynı tanım.",
+            "Hücrenin değeri Σ wᵢ zᵢ / Σ wᵢ, wᵢ = 1 / dᵢ^üs; en yakın Nokta sayısı kadar nokta (eşit uzaklıkta önce sırası küçük olan), Arama yarıçapı verilmişse onun içindekiler. Bir nokta hücrenin merkezindeyse değer onunkidir.",
             HELP_POINTS,
             HELP_GRID,
             HELP_CROSS,
@@ -184,7 +184,7 @@ pub fn tin() -> Tool {
         INTERPOLATION,
         "Noktaların Delaunay üçgenlemesinden yüzey: her hücre içinde kaldığı üçgende doğrusal.",
         &[
-            "Noktalar Delaunay üçgenlerine bölünür; hücrenin değeri içinde kaldığı üçgenin üç köşesinden doğrusal hesaplanır. Kabuğun dışı boş kalır. GDAL'ın linear'ıyla aynı tanım; eş çemberli noktalarda (düzgün ızgara) üçgenleme tek değildir.",
+            "Noktalar Delaunay üçgenlerine bölünür; hücrenin değeri içinde kaldığı üçgenin üç köşesinden doğrusal hesaplanır. Kabuğun dışı boş kalır. Doğrusal üçgen ara değeri; eş çemberli noktalarda (düzgün ızgara) üçgenleme tek değildir.",
             HELP_POINTS,
             HELP_GRID,
             HELP_CROSS,
@@ -226,9 +226,9 @@ pub fn spline() -> Tool {
     tool(
         ("interpolation.spline", "Spline", "splineSurface"),
         INTERPOLATION,
-        "Noktalardan geçen en az eğrilikli yüzey (ArcGIS'in Spline'ı): düzenlemeli ya da gerilimli.",
+        "Noktalardan geçen en az eğrilikli yüzey (eğri yüzey uydurma): düzenlemeli ya da gerilimli.",
         &[
-            "Her hücrede en yakın Nokta sayısı kadar noktadan geçen eğri (Mitas ve Mitasova 1988, ArcGIS'in tanımı); komşu kümesi değiştikçe yüzeyde küçük basamaklar olabilir. Doğru üzerindeki komşularla düzenlemeli spline çözülmez, hücre boş kalır.",
+            "Her hücrede en yakın Nokta sayısı kadar noktadan geçen eğri (Mitas ve Mitasova 1988); komşu kümesi değiştikçe yüzeyde küçük basamaklar olabilir. Doğru üzerindeki komşularla düzenlemeli spline çözülmez, hücre boş kalır.",
             HELP_POINTS,
             HELP_GRID,
             HELP_CROSS,
@@ -340,7 +340,7 @@ pub fn kernel_density() -> Tool {
             "Boş bırakılırsa her nokta 1 sayılır; seçilirse nesnenin bu alandaki sayısı (eksi değer alınmaz).",
         ),
         number("radius", "Yarıçap", 0.0, 0.0, 1e7, "m")
-            .describe("0: kendiliğinden (Silverman'ın kuralı, ArcGIS'in varsayılanı)."),
+            .describe("0: kendiliğinden (Silverman'ın kuralı)."),
         options(
             "kernel",
             "Çekirdek",
@@ -370,7 +370,7 @@ pub fn kernel_density() -> Tool {
         DENSITY,
         "Noktaların yoğunluğu: her nokta yarıçap içindeki hücrelere çekirdeğiyle yayılır (ısı haritası).",
         &[
-            "Hücrenin değeri Σ ağırlık · K(d / r) / r², d < r olan noktalar üstünden; çekirdeğin düzlemdeki integrali 1'dir, yoğunluğun toplamı ağırlıkların toplamına yaklaşır. Yarıçap 0 ise ArcGIS'in Silverman kuralı: 0,9 · min(standart uzaklık, √(1/ln 2) · ortanca uzaklık) · n^−0,2.",
+            "Hücrenin değeri Σ ağırlık · K(d / r) / r², d < r olan noktalar üstünden; çekirdeğin düzlemdeki integrali 1'dir, yoğunluğun toplamı ağırlıkların toplamına yaklaşır. Yarıçap 0 ise Silverman kuralı: 0,9 · min(standart uzaklık, √(1/ln 2) · ortanca uzaklık) · n^−0,2.",
             "Kapsam noktaların kutusu yarıçap kadar büyütülerek; değeri 0 olan hücreler çizimde boştur.",
             HELP_OUTPUT,
         ],

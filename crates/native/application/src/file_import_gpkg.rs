@@ -282,7 +282,7 @@ pub(crate) fn run_with(
     write: bool,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let mut read = read_file(input, area)?;
-    // The file's relations and QGIS styles (docs/adr/0627 §6, §7): another writer's relations become reference fields
+    // The file's relations and layer styles (QML) (docs/adr/0627 §6, §7): another writer's relations become reference fields
     // of their tables before the tables are taken; the relations and the styles join the drawing after, in the step.
     // A bound layer (`fresh`) keeps its file's relations as they are (docs/adr/0532) and its own look.
     let path = Path::new(&input.path);
@@ -386,7 +386,7 @@ fn take_indexes(
     out.revision = doc.revision().to_string();
 }
 
-/// The file's QGIS styles as the looks of the layers the import made for their tables, and its relations whose two
+/// The file's layer styles (QML) as the looks of the layers the import made for their tables, and its relations whose two
 /// tables were taken as the project's (docs/adr/0627 §6, §7), in the import's step; what was not taken in `left`.
 fn take_profile(
     doc: &mut Document,
@@ -422,12 +422,12 @@ fn take_profile(
                 out.styles += 1;
                 if !style.lost.is_empty() {
                     left.push(format!(
-                        "“{table}” tablosunun QGIS stilinden alınamayanlar: {}",
+                        "“{table}” tablosunun katman stilinden (QML) alınamayanlar: {}",
                         style.lost.join(", ")
                     ));
                 }
             }
-            Err(why) => left.push(format!("“{table}” tablosunun QGIS stili alınmadı: {why}")),
+            Err(why) => left.push(format!("“{table}” tablosunun katman stili (QML) alınmadı: {why}")),
         }
     }
     // The tables' descriptions as datasets, on the layers the import made (docs/adr/0633 §5).

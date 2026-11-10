@@ -6,7 +6,7 @@
 //! on, data and unit type, and per border (top, horizontal inside, bottom, left, vertical inside, right) its
 //! lineweight, visibility and colour. Sizes are drawing units at the plot scale (paper mm in a table style of
 //! KentOS's); colours ACI. What these groups cannot say exactly (one margin pair for all three cell styles, an RGB
-//! colour, a weight between AutoCAD's) is said in the report; the KENTOS data of each object carries the style
+//! colour, a weight between DXF's) is said in the report; the KENTOS data of each object carries the style
 //! itself, so KentOS reads it back exactly.
 
 use kentos_contracts::{TableAlign, TableCellStyleDef, TableStyleDef, TextStyleDef};
@@ -17,7 +17,7 @@ use super::styles::StyleNames;
 use crate::dxf::{aci, xdata};
 use crate::report::Report;
 
-/// AutoCAD's metric default cell margin, paper mm (the table style dialog's 1.5).
+/// DXF tables' metric default cell margin, paper mm (the table style dialog's 1.5).
 const DEFAULT_MARGIN_MM: f64 = 1.5;
 /// AcValue's general data type (90) and the unitless unit type (91).
 const GENERAL: i64 = 512;
@@ -111,7 +111,7 @@ pub fn write(
                 lost.push("projede olmayan yazı stili Standard yazıldı");
             }
             out.str(7, style);
-            // A cell style without a height: the table's own; AutoCAD's data and heading default (0,18 in), the
+            // A cell style without a height: the table's own; the format's data and heading default (0,18 in), the
             // title's (0,25 in) as paper mm.
             out.real(140, length(c.height.unwrap_or(if i == 1 { 6.35 } else { 4.572 })));
             out.int(170, alignment(c.align, i == 0));
@@ -143,7 +143,7 @@ pub fn write(
                 lost.push("renkler en yakın ACI rengi olarak yazıldı");
             }
             if weight_changed {
-                lost.push("kenar kalınlığı AutoCAD'in en yakın çizgi kalınlığı olarak yazıldı");
+                lost.push("kenar kalınlığı DXF'in en yakın çizgi kalınlığı olarak yazıldı");
             }
         }
         let meta = xdata::Meta { table_style: serde_json::to_string(s).ok(), ..Default::default() };

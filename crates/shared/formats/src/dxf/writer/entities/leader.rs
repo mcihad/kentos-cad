@@ -5,7 +5,7 @@
 //! and that names it back (its reactor), where the leader's layout puts the
 //! note, the middle of its left or right there (71 = 4 or 6), over the
 //! drawing's background when the leader has a mask (90 = 3). Its arrowhead
-//! is AutoCAD's block of it (`_Open30` …, written once, the arrowhead one
+//! is the standard block of it (`_Open30` …, written once, the arrowhead one
 //! long, its tip at the origin and its line along −x) and its length
 //! (DIMASZ), its own changes to Standard (ACAD's DSTYLE data; docs/adr/0205
 //! §7); the filled one is Standard's. KentOS's data has its note and turn,
@@ -30,7 +30,7 @@ use crate::math::{atan2, deg, hypot, sin_cos_deg};
 use crate::num::dxf_real;
 
 const WHAT: &str = "Kılavuz";
-const ARROW: &str = "ok başının AutoCAD bloğu çizimin bir bloğunun adıyla aynı olduğu için KentOS verisi olarak yazıldı; başka programlar dolu ok gösterir, KentOS geri okur";
+const ARROW: &str = "ok başının standart bloğu çizimin bir bloğunun adıyla aynı olduğu için KentOS verisi olarak yazıldı; başka programlar dolu ok gösterir, KentOS geri okur";
 
 /// The turn (degrees) a reader takes from the direction written for
 /// `rotation` (an MTEXT's 11, a LEADER's 211): its angle, from 0 up to 360.
@@ -254,7 +254,7 @@ impl Writer<'_> {
         true
     }
 
-    /// The block record of AutoCAD's arrow block `name` for `arrow`
+    /// The block record of the standard arrow block `name` for `arrow`
     /// (docs/adr/0205 §7), written the first time: the arrowhead one long,
     /// its tip at the origin, its line along −x, its areas filled (SOLIDs, a
     /// dot a donut), its lines polylines, a blank dot a circle; BYBLOCK's
@@ -356,7 +356,7 @@ impl Writer<'_> {
         let (s, c) = sin_cos_deg(l.rotation);
         self.out.xyz(11, v(c, s));
         if l.mask {
-            // The drawing's background behind it (AutoCAD's “use the drawing background”).
+            // The drawing's background behind it (“use the drawing background”).
             self.out.int(90, 3);
             self.out.int(63, 256);
             self.out.real(45, 1.5);

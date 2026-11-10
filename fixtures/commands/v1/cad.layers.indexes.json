@@ -9637,7 +9637,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_indexes",
-       "message": "“Belge” alanı bayt tutar; dizine girmez (ArcGIS de BLOB alanına dizin kurmaz).",
+       "message": "“Belge” alanı bayt tutar; dizine girmez.",
        "path": "indexes/0/fields/0"
       }
      },

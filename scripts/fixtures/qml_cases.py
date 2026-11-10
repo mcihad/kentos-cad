@@ -488,7 +488,7 @@ def take_dd(layer, supported, taken, lost, what):
     for name, q in dd_props(layer):
         found = next((s for s in supported if s[0] == name), None)
         if found is None:
-            lost.append(f"{what}: QGIS'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı")
+            lost.append(f"{what}: QML'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı")
             continue
         e = kentos_value(q)
         if e is None:
@@ -497,7 +497,7 @@ def take_dd(layer, supported, taken, lost, what):
         _, kind, key, neg = found
         target = next((t for t in taken if t.get("type") == kind), None)
         if target is None:
-            lost.append(f"{what}: QGIS'in “{name}” veriye bağlı değerinin katmanı alınmadı; değer alınmadı")
+            lost.append(f"{what}: QML'in “{name}” veriye bağlı değerinin katmanı alınmadı; değer alınmadı")
             continue
         expr = negated(e) if neg else e
         target[key] = {"expr": expr, "fallback": target[key]} if target.get(key) is not None else {"expr": expr}
@@ -652,7 +652,7 @@ def read_svg_marker(m, lost, what):
         return None
     ident = asset_id("qml", svg)
     if not any(a["id"] == ident for a in ASSETS):
-        ASSETS.append({"id": ident, "name": "QGIS'ten gelen SVG işareti", "svg": svg})
+        ASSETS.append({"id": ident, "name": "QML'den gelen SVG işareti", "svg": svg})
     sz = fnum(m.get("size"))
     got = size_in(2.0 if sz is None else sz, m.get("size_unit"))
     if got is None:
@@ -761,7 +761,7 @@ def read_gradient(layer, m, i, lost, what):
                                ((0.5, 1.0), (0.5, 0.0))] or half(a, b))
 
         if not standard(p1, p2) or angle % 90.0 != 0.0:
-            lost.append(f"{what}: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu")
+            lost.append(f"{what}: degradenin uçları QML'de kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu")
     if m.get("coordinate_mode") == "1":
         lost.append(f"{what}: degradenin görünüm kutusuna göre koordinatı alınmadı (KentOS nesnenin kutusunu kullanır)")
     if nonzero_pair(m.get("offset")):
@@ -1042,13 +1042,13 @@ def read_symbol(s, lost, what):
             supported = [("size", "shape", "size", False), ("angle", "shape", "rotation", True)]
             taken.append(read_marker(filled_props(layer, m, lost, what), lost, what))
         elif key == "fill" and cls == "ShapeburstFill":
-            lost.append(f"{what}: QGIS'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz "
+            lost.append(f"{what}: QML'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz "
                         "dolgu alındı")
             c = colour_in(m.get("color"))
             if c is not None:
                 taken.append({"id": f"f{i}", "type": "simpleFill", "color": c})
         else:
-            lost.append(f"{what}: QGIS'in “{cls}” simge katmanı KentOS'un katmanına çevrilmedi")
+            lost.append(f"{what}: QML'in “{cls}” simge katmanı KentOS'un katmanına çevrilmedi")
         take_dd(layer, supported, taken, lost, what)
         if layer.get("enabled") == "0":
             for t in taken:
@@ -1204,7 +1204,7 @@ def read_settings(st, name, when, geom, lost, families):
         if g == 0:
             more["point"] = "center" if place == 1 else "around"
             if place not in (0, 1, 6):
-                lost.append(f"{what}: QGIS'in {place} yerleşimi noktada KentOS'ta yok; çevresine alındı")
+                lost.append(f"{what}: QML'in {place} yerleşimi noktada KentOS'ta yok; çevresine alındı")
         elif g == 1:
             more["line"] = {3: "curved", 4: "horizontal"}.get(place, "parallel")
             fv = attr_num(p, "placementFlags")
@@ -1324,7 +1324,7 @@ def read_labels(root, lost):
         if rules is not None:
             read_label_rules(rules, None, geom, lost, families, out)
     else:
-        lost.append(f"QGIS'in “{kind or ''}” etiketlemesi KentOS'a çevrilmedi")
+        lost.append(f"QML'in “{kind or ''}” etiketlemesi KentOS'a çevrilmedi")
     if families:
         lost.append(SL.families_lost(families))
     return out
@@ -1581,7 +1581,7 @@ def renderer_in(r, labels, lost):
             if c.get("render") == "false":
                 lost.append(f"kapalı “{c.get('label', '')}” sınıfı açık alındı (KentOS'un aralıklarında kapatma yok)")
         if len(classes) > 1:
-            lost.append("QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler "
+            lost.append("QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler "
                         "üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer")
         ss = child(r, "sizescale")
         if (ss is not None and ss.get("scalemethod") is not None) or r.get("graduatedMethod") == "GraduatedSize":
@@ -1593,7 +1593,7 @@ def renderer_in(r, labels, lost):
         lst_rules = read_rules(top, symbols, lost, count) if top is not None else []
         renderer, rules = {"type": "rules", "rules": lst_rules}, count[0]
     else:
-        return (f"QGIS'in “{kind}” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş "
+        return (f"QML'in “{kind}” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş "
                 "alınır).")
     return renderer, rules
 
@@ -1605,13 +1605,13 @@ def read(text: str):
     except ET.ParseError:
         return "Dosya okunabilir bir XML değil."
     if root.tag != "qgis":
-        return "Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil."
+        return "Dosya bir QML stil dosyası değil: kök öğe <qgis> değil."
     lost = []
     label_classes = read_labels(root, lost)
     r = child(root, "renderer-v2")
     if r is None:
         if not label_classes:
-            return "QML'de QGIS'in görünüşü (renderer-v2) yok."
+            return "QML'de görünüş (renderer-v2) yok."
         return None, lost, 0, SL.labelling(label_classes, lost)
     op = child(root, "layerOpacity")
     if op is not None and fnum(op.text) is not None and fnum(op.text) < 1.0:

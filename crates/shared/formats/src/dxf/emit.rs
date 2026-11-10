@@ -50,7 +50,7 @@ const MAX_ARRAY: i64 = 10_000;
 /// Curves sampled into points stay within this of the true curve (1 mm).
 const SAMPLE_TOLERANCE: f64 = 1e-3;
 /// Width of a DXF text in ems: measured in Arimo, the app's face with Arial's widths, the metrics of
-/// AutoCAD's Standard style (the file does not say which face drew it).
+/// DXF's Standard style (the file does not say which face drew it).
 fn text_em(text: &str) -> f64 {
     kentos_geometry_core::text::width_em(text, kentos_geometry_core::text::Font::from_id("arimo"))
 }
@@ -561,7 +561,7 @@ pub struct Emitter<'l> {
     /// in the order met: each one's place is its reader id's number.
     pub text_used: Vec<String>,
     pub dim_used: Vec<String>,
-    /// What AutoCAD's own blocks (“_…”) said while read: the drawing's only
+    /// What the format's own blocks (“_…”) said while read: the drawing's only
     /// if an insert places them (`keep_used`), a leader's arrow block not.
     aside: HashMap<BlockId, Report>,
     /// A closed LWPOLYLINE or POLYLINE KentOS did not mark is a closed line,
@@ -595,7 +595,7 @@ impl<'l> Emitter<'l> {
 
     /// The names KentOS kept for a block's attribute tags DXF's tags could not hold (docs/adr/4800): each ATTDEF's own
     /// KentOS data holds its name under the tag it was written with. The file wins: the name is taken only while the
-    /// ATTDEF's tag is still that one, case-blind as DXF's tags are (AutoCAD writes them in capitals), and no other
+    /// ATTDEF's tag is still that one, case-blind as DXF's tags are (DXF writers write them in capitals), and no other
     /// ATTDEF of the block has the name as its tag (KentOS's data edited by hand); a name taken by an earlier tag is
     /// not given twice. Upper-case tag → name; and the tags whose record no longer fits (tag, the record's tag, its
     /// name), to be said.
@@ -835,7 +835,7 @@ impl<'l> Emitter<'l> {
     /// external reference) as a definition, in the file's order: its objects
     /// in its own frame, on layer 0 (docs/adr/0144 §5), ids 1, 2, … as the
     /// reader numbers them. An insert inside one that would make a block hold
-    /// itself is left out, and said. AutoCAD's own blocks (a name starting
+    /// itself is left out, and said. the format's own blocks (a name starting
     /// with “_”: dimension arrows) are left out unless an insert places them.
     /// None, and the file's inserts opened, when blocks nest deeper than a
     /// drawing allows (the caller reads again with Blokları patlat).
@@ -856,7 +856,7 @@ impl<'l> Emitter<'l> {
             let handles = std::mem::take(&mut self.out.handles);
             let holes = std::mem::take(&mut self.out.holes);
             let pending = std::mem::take(&mut self.pending);
-            // What AutoCAD's own block says is set aside until an insert is known to place it.
+            // What the format's own block says is set aside until an insert is known to place it.
             let own = n.starts_with('_');
             let outer = own.then(|| std::mem::take(&mut self.out.report));
             self.defining = true;
@@ -922,7 +922,7 @@ impl<'l> Emitter<'l> {
         Some(defs)
     }
 
-    /// Leaves out AutoCAD's own blocks (“_…”) that no insert places, in the
+    /// Leaves out the format's own blocks (“_…”) that no insert places, in the
     /// drawing or in a definition kept; says how many blocks came and how many
     /// of them nothing places.
     pub fn keep_used(&mut self, defs: Vec<BlockDefinition>) -> Vec<BlockDefinition> {
@@ -942,7 +942,7 @@ impl<'l> Emitter<'l> {
             .zip(used)
             .filter(|(d, used)| *used || !d.name.starts_with('_'))
             .collect();
-        // What AutoCAD's own blocks kept said; the others' goes with them.
+        // What the format's own blocks kept said; the others' goes with them.
         for (d, _) in &kept {
             if let Some(said) = self.aside.remove(&d.id) {
                 self.out.report.absorb(said);
@@ -950,7 +950,7 @@ impl<'l> Emitter<'l> {
         }
         self.aside.clear();
         let unused = kept.iter().filter(|(_, used)| !used).count();
-        // A definition's object on a layer of its own shows as AutoCAD shows it: with that layer's look, while that
+        // A definition's object on a layer of its own shows as DXF readers show it: with that layer's look, while that
         // layer shows (docs/adr/0315 §2); nothing to say.
         if !kept.is_empty() {
             let mut fact = format!("{} tanım", kept.len());
@@ -1887,7 +1887,7 @@ impl<'l> Emitter<'l> {
                     | "EXTRUDEDSURFACE" | "LOFTEDSURFACE" | "REVOLVEDSURFACE" | "SWEPTSURFACE"
                     | "MESH" | "POLYFACE" => "3B katı, yüzey ve bölge nesneleri alınmaz",
                     "MLINE" => {
-                        "çoklu çizgi (MLINE) alınmaz; AutoCAD'de patlatıp (EXPLODE) yeniden kaydedin"
+                        "çoklu çizgi (MLINE) alınmaz; çizim programında patlatıp (EXPLODE) yeniden kaydedin"
                     }
                     "VIEWPORT" => "görünüm pencereleri pafta düzenine aittir",
                     "SHAPE" => "şekil (SHAPE) yazı tipi dosyası gerektirir; alınmaz",
@@ -2364,7 +2364,7 @@ impl<'l> Emitter<'l> {
                 return self.skip(
                     "Eğri (SPLINE)",
                     &format!(
-                        "derecesi {p}; en çok {} okunur (AutoCAD en çok 11 yazar)",
+                        "derecesi {p}; en çok {} okunur (DXF yazıcıları en çok 11 yazar)",
                         nurbs::MAX_DEGREE
                     ),
                     e.line,
@@ -2539,7 +2539,7 @@ impl<'l> Emitter<'l> {
             });
         }
         let align = justify::align_of(t.halign, t.valign);
-        // AutoCAD writes a justified text's start (10) as it draws it; where the text stands is 11.
+        // DXF writers write a justified text's start (10) as it draws it; where the text stands is 11.
         let anchor = match align {
             Some(_) => second.unwrap_or(start),
             None => start,

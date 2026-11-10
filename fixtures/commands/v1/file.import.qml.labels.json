@@ -1948,13 +1948,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "QGIS'in “pal” etiketlemesi KentOS'a çevrilmedi"
+        "QML'in “pal” etiketlemesi KentOS'a çevrilmedi"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: QGIS'in “pal” etiketlemesi KentOS'a çevrilmedi.",
+        "message": "QML'in bazı parçaları alınamadı: QML'in “pal” etiketlemesi KentOS'a çevrilmedi.",
         "path": "path"
        }
       ]
@@ -2929,14 +2929,14 @@
         "point": "around"
        },
        "lost": [
-        "“Etiket” etiketi: QGIS'in 5 yerleşimi noktada KentOS'ta yok; çevresine alındı",
+        "“Etiket” etiketi: QML'in 5 yerleşimi noktada KentOS'ta yok; çevresine alındı",
         "etiketin yazı tipi (DejaVu Sans) alınmadı; KentOS etiketleri projenin yazı tipiyle çizer"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “Etiket” etiketi: QGIS'in 5 yerleşimi noktada KentOS'ta yok; çevresine alındı; etiketin yazı tipi (DejaVu Sans) alınmadı; KentOS etiketleri projenin yazı tipiyle çizer.",
+        "message": "QML'in bazı parçaları alınamadı: “Etiket” etiketi: QML'in 5 yerleşimi noktada KentOS'ta yok; çevresine alındı; etiketin yazı tipi (DejaVu Sans) alınmadı; KentOS etiketleri projenin yazı tipiyle çizer.",
         "path": "path"
        }
       ]
@@ -5006,13 +5006,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“0” simgesi: QGIS'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı"
+        "“0” simgesi: QML'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: QGIS'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı.",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: QML'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı.",
         "path": "path"
        }
       ]
@@ -5174,13 +5174,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“0” simgesi: QGIS'in “ArrowLine” simge katmanı KentOS'un katmanına çevrilmedi"
+        "“0” simgesi: QML'in “ArrowLine” simge katmanı KentOS'un katmanına çevrilmedi"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: QGIS'in “ArrowLine” simge katmanı KentOS'un katmanına çevrilmedi.",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: QML'in “ArrowLine” simge katmanı KentOS'un katmanına çevrilmedi.",
         "path": "path"
        }
       ]

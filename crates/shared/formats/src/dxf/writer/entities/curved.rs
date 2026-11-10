@@ -1,5 +1,5 @@
 //! A text along a curve (docs/adr/0196 §5) in DXF: DXF has no such text
-//! (AutoCAD's ARCTEXT is an Express Tools object other programs do not
+//! (ARCTEXT is an add-on object other programs do not
 //! read), so its letters are written as TEXTs in an anonymous block (*U),
 //! each where it stands on the curve and turned as the curve there, in the
 //! text's own frame; an INSERT places the block at the text's point, turned
@@ -149,7 +149,7 @@ impl Writer<'_> {
             meta.along = None;
             self.report.note(
                 WHAT,
-                "AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için yalnız harfleri olarak yazıldı; KentOS'a blok olarak geri okunur",
+                "DXF'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için yalnız harfleri olarak yazıldı; KentOS'a blok olarak geri okunur",
                 0,
             );
         }

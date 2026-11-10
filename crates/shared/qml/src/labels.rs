@@ -1,6 +1,6 @@
-//! Labels in QML (docs/adr/0635 §3): a layer's label classes as QGIS's labelling, a `simple` one for a single label
-//! and a `rule-based` one for classes, each class's `<settings>` with its text (a field, or a QGIS expression joining
-//! fields and texts), font, buffer, placement and rendering; and back. QGIS's placements are said for the QML's one
+//! Labels in QML (docs/adr/0635 §3): a layer's label classes as QML's labelling, a `simple` one for a single label
+//! and a `rule-based` one for classes, each class's `<settings>` with its text (a field, or a QML expression joining
+//! fields and texts), font, buffer, placement and rendering; and back. QML's placements are said for the QML's one
 //! geometry (`layerGeometryType`); its sizes in millimetres, points and pixels turn into KentOS's pixels at 96 dpi.
 
 use std::fmt::Write as _;
@@ -11,7 +11,7 @@ use super::{Node, child, colour_in, esc, num, qgis_text, rgba};
 use kentos_formats::sld::{filter_text, parse_filter, parse_qgis};
 use kentos_formats::style_labels::{self as sl, Class, ClassIn, Piece};
 
-/// A class's settings QGIS's labelling here has not.
+/// A class's settings QML's labelling here has not.
 const UNMAPPED: [(&str, &str); 9] = [
     ("callout", "çağrı çizgisi"),
     ("background", "zemin"),
@@ -31,14 +31,14 @@ fn r3(v: f64) -> f64 {
     (v * 1000.0).round() / 1000.0
 }
 
-/// QGIS's placement and line flags for the class on the QML's geometry (0 points, 1 lines, 2 areas).
+/// QML's placement and line flags for the class on the QML's geometry (0 points, 1 lines, 2 areas).
 fn placement(style: &Value, geom: u8, what: &str, lost: &mut Vec<String>) -> (u8, u8) {
     match geom {
         0 => match sl::point_mode(style) {
             "center" => (1, 0),
             "corner" => {
                 lost.push(format!(
-                    "{what}: kutunun köşesinden etiket QGIS'te yok; noktanın üstüne yazıldı"
+                    "{what}: kutunun köşesinden etiket QML'de yok; noktanın üstüne yazıldı"
                 ));
                 (1, 0)
             }
@@ -56,7 +56,7 @@ fn placement(style: &Value, geom: u8, what: &str, lost: &mut Vec<String>) -> (u8
                 "curved" => (3, flags),
                 "contour" => {
                     lost.push(format!(
-                        "{what}: eş yükseltinin yokuş yukarı etiketi QGIS'te yok; eğri boyunca yazıldı"
+                        "{what}: eş yükseltinin yokuş yukarı etiketi QML'de yok; eğri boyunca yazıldı"
                     ));
                     (3, flags)
                 }
@@ -69,14 +69,14 @@ fn placement(style: &Value, geom: u8, what: &str, lost: &mut Vec<String>) -> (u8
             "perimeter" => (2, 2 | 8),
             "boundary" => {
                 lost.push(format!(
-                    "{what}: alanın sınırı boyunca yinelenen etiket QGIS'te yok; çevresi boyunca yazıldı"
+                    "{what}: alanın sınırı boyunca yinelenen etiket QML'de yok; çevresi boyunca yazıldı"
                 ));
                 (7, 2 | 8)
             }
             "parcel" => (5, 0),
             "corner" => {
                 lost.push(format!(
-                    "{what}: kutunun köşesinden etiket QGIS'te yok; alanın içine yazıldı"
+                    "{what}: kutunun köşesinden etiket QML'de yok; alanın içine yazıldı"
                 ));
                 (4, 0)
             }
@@ -184,7 +184,7 @@ fn settings_xml(
         .get("minFeaturePx")
         .and_then(Value::as_f64)
         .map_or(0.0, |px| r3(px / PX_PER_MM));
-    // QGIS's `scaleMax` is the most zoomed out (the largest denominator), `scaleMin` the most zoomed in.
+    // QML's `scaleMax` is the most zoomed out (the largest denominator), `scaleMin` the most zoomed in.
     let _ = writeln!(
         s,
         "{pad} <rendering drawLabels=\"1\" scaleVisibility=\"{}\" scaleMin=\"{}\" scaleMax=\"{}\" mergeLines=\"{}\" minFeatureSize=\"{}\"/>",
@@ -204,14 +204,14 @@ fn settings_xml(
     }
     if !unmapped.is_empty() {
         lost.push(format!(
-            "{what}: {} QGIS'in buradaki etiketinde yok; yazılmadı",
+            "{what}: {} QML'in buradaki etiketinde yok; yazılmadı",
             unmapped.join(", ")
         ));
     }
     s
 }
 
-/// The label classes as QGIS's labelling, or nothing; how many it wrote.
+/// The label classes as QML's labelling, or nothing; how many it wrote.
 pub(super) fn labeling_xml(
     classes: &[Class<'_>],
     geom: u8,
@@ -247,7 +247,7 @@ pub(super) fn labeling_xml(
                 Some(f) => Some(f),
                 None => {
                     lost.push(format!(
-                        "{what}: “{src}” koşulu QGIS'in ifadesine çevrilemedi; yazılmadı"
+                        "{what}: “{src}” koşulu QML'in ifadesine çevrilemedi; yazılmadı"
                     ));
                     continue;
                 }
@@ -309,7 +309,7 @@ fn attr_num(n: Node<'_, '_>, name: &str) -> Option<f64> {
         .filter(|v| v.is_finite())
 }
 
-/// A size in QGIS's unit as pixels at 96 dpi; none for a map unit or a percentage.
+/// A size in QML's unit as pixels at 96 dpi; none for a map unit or a percentage.
 fn px_of(v: f64, unit: Option<&str>) -> Option<f64> {
     Some(match unit.unwrap_or("MM") {
         "Pixel" => v,
@@ -320,7 +320,7 @@ fn px_of(v: f64, unit: Option<&str>) -> Option<f64> {
     })
 }
 
-/// A class read from QGIS's `<settings>`, named `name` with condition `when`; none, said, when it cannot be.
+/// A class read from QML's `<settings>`, named `name` with condition `when`; none, said, when it cannot be.
 fn read_settings(
     st: Node<'_, '_>,
     name: &str,
@@ -428,7 +428,7 @@ fn read_settings(
                 );
                 if !matches!(place, 0 | 1 | 6) {
                     lost.push(format!(
-                        "{what}: QGIS'in {place} yerleşimi noktada KentOS'ta yok; çevresine alındı"
+                        "{what}: QML'in {place} yerleşimi noktada KentOS'ta yok; çevresine alındı"
                     ));
                 }
             }
@@ -622,7 +622,7 @@ pub(super) fn read(root: Node<'_, '_>, lost: &mut Vec<String>) -> Vec<ClassIn> {
             }
         }
         other => lost.push(format!(
-            "QGIS'in “{}” etiketlemesi KentOS'a çevrilmedi",
+            "QML'in “{}” etiketlemesi KentOS'a çevrilmedi",
             other.unwrap_or("")
         )),
     }

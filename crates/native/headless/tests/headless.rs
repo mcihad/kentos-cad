@@ -2109,7 +2109,7 @@ fn layer_looks_go_out_as_sld_and_come_back() {
             assert!(lost.contains("degrade") && lost.contains("hücre aralığı"), "{out}");
             assert!(text.contains("<se:GraphicFill>"), "{text}");
         } else if *kind == "dd" {
-            assert!(out["output"]["lost"].to_string().contains("QGIS SLD'deki alana bağlı rengi okumaz"), "{out}");
+            assert!(out["output"]["lost"].to_string().contains("her SLD okuyucusu alana bağlı rengi okumaz"), "{out}");
         } else if *kind == "marks" {
             assert!(out["output"].get("lost").is_none(), "{out}");
             assert!(text.contains("image/svg+xml") && text.contains("ttf://Arial"), "{text}");

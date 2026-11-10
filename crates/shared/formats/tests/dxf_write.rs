@@ -625,7 +625,7 @@ fn every_kind_reads_back_as_the_same_object() {
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
     assert!(
-        facts.contains(&("Sürüm", "AutoCAD 2007 (AC1021)")),
+        facts.contains(&("Sürüm", "DXF 2007 (AC1021)")),
         "{facts:?}"
     );
     assert!(facts.contains(&("Karakter kodlaması", "UTF-8")));

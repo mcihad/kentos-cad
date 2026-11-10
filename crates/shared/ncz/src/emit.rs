@@ -12,7 +12,7 @@
 //! | Circle | a circle, centre and radius (not the plugin's 72 chords) |
 //! | Arc | an arc, its ends from the plugin's own reading of the angles |
 //! | Text | a text on its baseline, height and rotation |
-//! | Netcad 8 smart object | its symbol: circles, lines and texts, turned and scaled as the object; its values as attributes of the symbol's first object |
+//! | NCZ 8 smart object | its symbol: circles, lines and texts, turned and scaled as the object; its values as attributes of the symbol's first object |
 //! | other smart objects | a point (no rectangle) or an area, the token as an attribute |
 //!
 //! A point keeps its height, and a line, a polyline and an area the height of
@@ -22,8 +22,8 @@
 //!
 //! A record's own colour is kept only where it is not its layer's; black and
 //! white are the app's `ink`, which is black on paper and white on a dark
-//! drawing, as DXF colour 7 is. The texts Netcad writes on an area (a parcel
-//! number, an id) are not drawn by Netcad and are not labels here either:
+//! drawing, as DXF colour 7 is. The texts an NCZ holds on an area (a parcel
+//! number, an id) are not drawn by its own program and are not labels here either:
 //! they are the `Etiket` attribute, or every area of a plan would show a
 //! number beside the plan's own number texts.
 
@@ -89,7 +89,7 @@ fn type_words(t: usize) -> String {
 }
 
 /// A colour of the file as the app writes one: `#RRGGBB`; black and white,
-/// and what is all but black or white, the app's `ink`. Netcad draws a plan
+/// and what is all but black or white, the app's `ink`. its own program draws a plan
 /// in black on a white page, and not always in exact black: the Sivas UİP's
 /// settlement symbols are #101410, its Emsal layer #000100. On a dark drawing
 /// those would vanish; `ink` is black on paper and white on a dark drawing,
@@ -148,7 +148,7 @@ impl Place {
 
 /// The elevations a record's vertices hold, in the objects' form (docs/adr/0142):
 /// none unless some vertex has a Z above or below 0 (a 2D drawing's Z is 0, and
-/// so is what Netcad writes for a vertex it has no height for); a Z that is not a
+/// so is what an NCZ holds for a vertex it has no height for); a Z that is not a
 /// number is none. Only a record whose vertices the file gave (a line, a
 /// polyline, an area drawn point by point) says what its heights are.
 fn heights(coords: &[format::Coord]) -> Option<Vec<Option<f64>>> {
@@ -217,7 +217,7 @@ impl format::Sink for Emitter {
         match self.place(e, layer) {
             Ok(()) => {
                 // The pen, tenths of a millimetre: the object's own weight, as the C++ reader
-                // gives it (docs/adr/0139). Zero, a negative width (Netcad's own DXF export
+                // gives it (docs/adr/0139). Zero, a negative width (the NCZ program's own DXF export
                 // writes those as the thinnest line) or one past 100 mm is the layer's.
                 if e.line_width.is_finite() && e.line_width > 0.0 && e.line_width <= 1000.0 {
                     let mm = e.line_width / 10.0;
@@ -704,7 +704,7 @@ impl Emitter {
         Ok(())
     }
 
-    /// A Netcad 8 smart object as the symbol it is: its strokes turned,
+    /// An NCZ 8 smart object as the symbol it is: its strokes turned,
     /// scaled and placed as the object; its values as attributes of the
     /// symbol's first object. A class this reader does not draw is a point.
     fn planet(
@@ -740,7 +740,7 @@ impl Emitter {
         };
         let mut size = e.scale;
         if !(size.is_finite() && size > 0.0 && size <= 1000.0) {
-            size = 1.0; // Netcad's own default object size
+            size = 1.0; // the NCZ program's own default object size
             self.unsized_objects += 1;
         }
         let rotation = if e.rotation.is_finite() {
@@ -881,7 +881,7 @@ impl Emitter {
         }
         if header.swept_entities > 0 {
             self.report.note_n(
-                "Netcad 8 düzeni",
+                "NCZ 8 düzeni",
                 &format!(
                     "nesne, eski NCZ okuyucularının atladığı {} bölümden okundu (ayarlar geometrinin arasında)",
                     header.swept_blocks
@@ -920,7 +920,7 @@ impl Emitter {
         }
         self.report.note_n(
             "Akıllı nesne boyutu",
-            "okunamadı; Netcad'in varsayılanı olan 1 ile çizildi",
+            "okunamadı; NCZ'nin varsayılanı olan 1 ile çizildi",
             0,
             self.unsized_objects,
         );
@@ -1019,7 +1019,7 @@ impl Emitter {
 
     /// The layers the objects landed on, in the order they are made in the
     /// drawing, whose first layer is drawn on top: the layers of smart objects
-    /// first (the symbols read over the plan, as in Netcad; a layer counts as
+    /// first (the symbols read over the plan, as in its own program; a layer counts as
     /// one when most of its objects draw one), then the rest; each in the
     /// file's table order, then by name.
     fn layers(&self) -> Vec<ImportLayer> {
@@ -1072,7 +1072,7 @@ impl Emitter {
 }
 
 /// The values of a smart object as attributes: its class, and every value the
-/// user entered and did not switch off, under the label Netcad gives it. A
+/// user entered and did not switch off, under the label the NCZ gives it. A
 /// settlement symbol's three distances say which garden they are.
 fn properties(e: &format::Entity) -> BTreeMap<String, String> {
     let mut attrs = BTreeMap::new();
@@ -1132,7 +1132,7 @@ fn wrapped(text: &str, width: f64, height: f64, font: Font) -> Vec<String> {
     out
 }
 
-/// Reads a Netcad NCZ drawing. `watch` hears how far the read is, in
+/// Reads an NCZ drawing. `watch` hears how far the read is, in
 /// thousandths (`PROGRESS_TOTAL`), and may stop it (`Err(STOPPED)`). A file
 /// that holds no NCZ blocks at all is refused with the reason; one whose
 /// blocks hold no geometry reads as empty, and the report says why.
@@ -1159,13 +1159,13 @@ pub fn read(
         || header.unsupported.iter().any(|&n| n > 0)
         || !em.out.is_empty();
     if !recognised {
-        return Err("Bu dosyada Netcad NCZ çizimi bulunamadı: katman tablosu, sürüm ya da geometri kaydı yok. Dosyanın bir .ncz olduğunu denetleyin; Netcad'de açılıyorsa DXF olarak kaydedip onu deneyin.".into());
+        return Err("Bu dosyada NCZ çizimi bulunamadı: katman tablosu, sürüm ya da geometri kaydı yok. Dosyanın bir .ncz olduğunu denetleyin; kendi programında açılıyorsa DXF olarak kaydedip onu deneyin.".into());
     }
     em.tally(&header, &tables);
     let mut report = std::mem::take(&mut em.report);
     report.fact(
         "Sürüm",
-        version(&fin).map_or_else(|| "belirtilmemiş".to_owned(), |v| format!("Netcad {v}")),
+        version(&fin).map_or_else(|| "belirtilmemiş".to_owned(), |v| format!("NCZ {v}")),
     );
     report.fact("Karakter kodlaması", "Windows-1254 (Türkçe)");
     if let Some(d) = crs::declared(&fin) {

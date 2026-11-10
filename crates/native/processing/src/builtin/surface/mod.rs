@@ -66,7 +66,7 @@ pub fn method_param() -> ParamDef {
         ],
     )
     .describe(
-        "Horn: sekiz komşu, gdaldem'in ve ArcGIS'in varsayılanı; Zevenbergen-Thorne: dört komşu.",
+        "Horn: sekiz komşu, yaygın varsayılan; Zevenbergen-Thorne: dört komşu.",
     )
 }
 

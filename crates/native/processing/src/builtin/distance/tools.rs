@@ -518,7 +518,7 @@ pub fn corridor() -> Tool {
         ("distance.corridor", "Maliyet koridoru", "costCorridor"),
         "İki uçtan birikimli maliyetlerin toplamını yazar: en küçük toplam en ucuz yolun maliyetidir, koridor onun çevresidir.",
         &[
-            "Koridor K = A'dan birikimli maliyet + B'den birikimli maliyettir; ikisinden biri tanımlı değilse hücre değersizdir. En küçük K, en ucuz A–B yolunun maliyetidir ve yol bu hücrelerden geçer. Eşik: yok, en küçük toplamın yüzdesi (K ≤ en küçük · (1 + yüzde/100)) ya da bir birikimli maliyet; eşiği aşan hücre değersizdir (ArcGIS'in Least Cost Corridor'ı).",
+            "Koridor K = A'dan birikimli maliyet + B'den birikimli maliyettir; ikisinden biri tanımlı değilse hücre değersizdir. En küçük K, en ucuz A–B yolunun maliyetidir ve yol bu hücrelerden geçer. Eşik: yok, en küçük toplamın yüzdesi (K ≤ en küçük · (1 + yüzde/100)) ya da bir birikimli maliyet; eşiği aşan hücre değersizdir.",
             HELP_COST,
             HELP_STEP,
             HELP_SURFACE,

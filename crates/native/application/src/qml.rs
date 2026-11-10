@@ -1,4 +1,4 @@
-//! A layer's look as a QGIS layer style file (docs/adr/0555, plan/gis.md CBS-17): what `file.export.qml` writes and
+//! A layer's look as a QML layer style file (docs/adr/0555, plan/gis.md CBS-17): what `file.export.qml` writes and
 //! `file.import.qml` reads. The writing and reading are the QML crate's (`kentos_qml`); here, as for SLD
 //! (`crate::sld`), the drawing gives the layer's renderer (or its simple look as a single symbol), the project
 //! library's symbols for the renderer's references and the geometry its objects have; and a QML's renderer goes to the
@@ -61,7 +61,7 @@ pub fn export(
         return Err(Box::new(error(
             codes::NOTHING_TO_EXPORT,
             format!(
-                "“{}” katmanının görünüşünde QGIS'in buradaki simge katmanlarıyla çizilebilecek bir sınıf ya da kural yok: {}",
+                "“{}” katmanının görünüşünde QML'in buradaki simge katmanlarıyla çizilebilecek bir sınıf ya da kural yok: {}",
                 node.name,
                 written.lost.join("; ")
             ),

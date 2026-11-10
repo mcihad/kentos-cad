@@ -378,7 +378,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[2]"
               },
               {
@@ -393,7 +393,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[6]"
               }
             ]
@@ -670,7 +670,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -761,7 +761,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -1278,7 +1278,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[1]"
               }
             ]
@@ -2374,7 +2374,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[2]"
               },
               {
@@ -2389,7 +2389,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[6]"
               }
             ]
@@ -2504,7 +2504,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[2]"
               },
               {
@@ -2519,7 +2519,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[6]"
               }
             ]
@@ -3117,7 +3117,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“SHX Big” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“SHX Big” stili kentos-uni.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -3223,7 +3223,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“SHX Big” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“SHX Big” stili kentos-uni.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -3314,7 +3314,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“SHX yazı” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“SHX yazı” stili kentos-uni.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -3619,7 +3619,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Çit” stili fence.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Çit” stili fence.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -3724,7 +3724,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Ters” stili kentos-big.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Ters” stili kentos-big.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -3830,7 +3830,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“İki uni” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“İki uni” stili kentos-uni.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -3950,7 +3950,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[1]"
               }
             ]
@@ -4719,7 +4719,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Başka” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Başka” stili romans.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -5099,7 +5099,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Şekil BF” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "message": "“Şekil BF” stili kentos-uni.shx yazı tipini adlandırıyor (SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]

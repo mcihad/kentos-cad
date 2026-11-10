@@ -624,13 +624,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer"
+        "QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer.",
+        "message": "QML'in bazı parçaları alınamadı: QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer.",
         "path": "path"
        }
       ]
@@ -2507,14 +2507,14 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“0” simgesi: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu",
+        "“0” simgesi: degradenin uçları QML'de kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu",
         "“3” simgesi: konik degrade KentOS'ta yok; doğrusal alındı"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu; “3” simgesi: konik degrade KentOS'ta yok; doğrusal alındı.",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: degradenin uçları QML'de kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu; “3” simgesi: konik degrade KentOS'ta yok; doğrusal alındı.",
         "path": "path"
        }
       ]
@@ -3589,13 +3589,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“0” simgesi: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu"
+        "“0” simgesi: degradenin uçları QML'de kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: degradenin uçları QGIS'te kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu.",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: degradenin uçları QML'de kutunun kesirleriyle verilir; KentOS'ta kutunun doğrultudaki izdüşümüdür; yön alındı, renk geçişinin uzunluğu kutuya oturtuldu.",
         "path": "path"
        }
       ]
@@ -5761,13 +5761,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer"
+        "QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer.",
+        "message": "QML'in bazı parçaları alınamadı: QML'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer.",
         "path": "path"
        }
       ]
@@ -6305,7 +6305,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_qml",
-       "message": "Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil.",
+       "message": "Dosya bir QML stil dosyası değil: kök öğe <qgis> değil.",
        "path": "path"
       }
      },
@@ -6335,7 +6335,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_qml",
-       "message": "QML'de QGIS'in görünüşü (renderer-v2) yok.",
+       "message": "QML'de görünüş (renderer-v2) yok.",
        "path": "path"
       }
      },
@@ -6525,7 +6525,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_qml",
-       "message": "QGIS'in “25dRenderer” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş alınır).",
+       "message": "QML'in “25dRenderer” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş alınır).",
        "path": "path"
       }
      },

@@ -4,7 +4,7 @@
 //! own name when it can; a name that repeats takes its groups in front
 //! ("Kadastro - Sınır"), a character DXF refuses becomes "_", and every
 //! change is reported. Line types are written with their dashes sized for
-//! paper at the plot scale; line weights as AutoCAD's nearest weight.
+//! paper at the plot scale; line weights as DXF's nearest weight.
 
 use std::collections::{HashMap, HashSet};
 
@@ -16,13 +16,13 @@ use super::Out;
 use super::template::{self, LAYER_TABLE, LAYER_ZERO, LTYPE_TABLE, MATERIAL, PLOT_STYLE};
 use crate::report::Report;
 
-/// AutoCAD's line weights (hundredths of a millimetre); no other value is valid.
+/// DXF's line weights (hundredths of a millimetre); no other value is valid.
 const LINE_WEIGHTS: [i64; 24] = [
     0, 5, 9, 13, 15, 18, 20, 25, 30, 35, 40, 50, 53, 60, 70, 80, 90, 100, 106, 120, 140, 158, 200,
     211,
 ];
 
-/// Characters AutoCAD refuses in a symbol name.
+/// Characters DXF refuses in a symbol name.
 pub(super) const REFUSED: &[char] = &[
     '<', '>', '/', '\\', '"', ':', ';', '?', '*', '|', '=', '`', '\'',
 ];
@@ -182,7 +182,7 @@ fn pattern_record(
     references
 }
 
-/// The AutoCAD weight nearest to `mm`, and whether it differs.
+/// The DXF weight nearest to `mm`, and whether it differs.
 pub(super) fn line_weight(mm: f64) -> (i64, bool) {
     if !(mm >= 0.0) || !mm.is_finite() {
         return (-3, true);
@@ -328,7 +328,7 @@ impl Layers {
                 report.note(
                     "Çizgi kalınlığı",
                     &format!(
-                        "“{name}”: {} mm, AutoCAD'in en yakın kalınlığı {} mm olarak yazıldı",
+                        "“{name}”: {} mm, DXF'in en yakın kalınlığı {} mm olarak yazıldı",
                         l.line_weight,
                         weight as f64 / 100.0
                     ),
