@@ -883,12 +883,24 @@ class Model:
                 used = [a["id"] for a in sv.get("adjustments", []) if b["id"] in a["baselines"]]
                 if used:
                     row["adjustments"] = used
+                # docs/adr/4920: the baseline session it is in.
+                inside = [x["id"] for x in sv.get("baselineSessions", []) if b["id"] in x["baselines"]]
+                if inside:
+                    row["session"] = inside[0]
                 rows.append(row)
             out["baselines"] = rows
         if sv.get("known"):
             out["known"] = copy.deepcopy(sv["known"])
         if sv.get("adjustments"):
             out["adjustments"] = copy.deepcopy(sv["adjustments"])
+        # docs/adr/4920: the baseline sessions and the place limits kept in the project; `places` judges by the kept
+        # limits when the input gives none.
+        if sv.get("baselineSessions"):
+            out["baselineSessions"] = copy.deepcopy(sv["baselineSessions"])
+        if "tolerance" in sv:
+            out["tolerance"] = copy.deepcopy(sv["tolerance"])
+            if tolerance is None and places:
+                tolerance = {k: v for k, v in sv["tolerance"].items() if k in ("horizontal", "vertical")}
         if places and sv.get("known"):
             out["knownPlaces"] = [self.known_place(k) for k in sv["known"]]
             # docs/adr/4520: each place against the user's tolerance: beyond when its horizontal distance passes the

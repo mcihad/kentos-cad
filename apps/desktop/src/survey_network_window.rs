@@ -12,14 +12,18 @@
 //! VX, VY, VZ, m/yr, docs/adr/2520), else along the campaign's velocity grid, said in the summary and in Bilinen
 //! noktalar. With three known points or more the summary says BÖHHBÜY Madde 15(1)(c)'s similarity (the
 //! scale, its test and the class's limit) and Bilinen noktalar its residuals (docs/adr/2160).
+//!
+//! Docs/adr/4920: Oturum korelasyonları adjusts each baseline session's baselines by their full covariance (`correlations:
+//! session`), Yeni noktaların hızı reads each new mark's velocity from the campaign's velocity grid; the summary says
+//! which correlations went in and from which grid, Noktalar the velocities, Bazlar each baseline's session.
 
 use std::path::PathBuf;
 
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, KnownMovedBy, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkEpochFrom,
-    NetworkStage,
+    CommandResult, KnownMovedBy, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkCorrelations,
+    NetworkEpochFrom, NetworkStage,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_survey_network};
@@ -39,6 +43,8 @@ const CLOSE: &str = "Kapat";
 const ACCEPT: &str = "Kabul et";
 const IMPORT: &str = "Baz içe aktar…";
 const ADD: &str = "Bilinen nokta ekle";
+const CORRELATED: &str = "Oturum korelasyonları";
+const VELOCITIES: &str = "Yeni noktaların hızı";
 
 /// What the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -152,6 +158,9 @@ pub struct State {
     pub bars: bool,
     /// Each ellipse's semi-axes written beside it (docs/adr/3760).
     pub labels: bool,
+    /// Docs/adr/4920: the sessions' full covariance used, and the new marks' velocities read from the grid.
+    pub correlated: bool,
+    pub velocities: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -173,6 +182,9 @@ pub enum Event {
     Bars(bool),
     /// The ellipses' labels (docs/adr/3760).
     Labels(bool),
+    /// Docs/adr/4920: the sessions' correlations, the new marks' velocities.
+    Correlated(bool),
+    Velocities(bool),
     Accept,
     Close,
 }
@@ -270,9 +282,44 @@ fn similarity_line(a: &MapSurveyNetworked) -> (Kind, String) {
     )
 }
 
+/// The summary's line of what docs/adr/4920 adds: which correlations went in, and the velocity grid; none when neither
+/// was asked for nor the baselines have sessions.
+pub(crate) fn sessions_line(a: &MapSurveyNetworked) -> Option<(Kind, String)> {
+    let mut parts = Vec::new();
+    let mut kind = Kind::Info;
+    if let Some(c) = &a.correlations {
+        parts.push(match c.used {
+            NetworkCorrelations::Session if c.sessions.is_empty() => {
+                "Oturum korelasyonları istendi; dengelemeye giren bazların ortak oturumu yok".to_owned()
+            }
+            NetworkCorrelations::Session => format!(
+                "{} baz oturumu ({}) tam kovaryansıyla girdi, bazlar korelasyonlu ölçü gibi bileşen bileşen sınandı",
+                c.sessions.len(),
+                c.sessions.join(", ")
+            ),
+            NetworkCorrelations::None => {
+                kind = Kind::Warn;
+                format!(
+                    "{} baz oturumunun ({}) korelasyonları kullanılmadı; aynı oturumun bazları bağımsız sayıldı",
+                    c.unused.len(),
+                    c.unused.join(", ")
+                )
+            }
+        });
+    }
+    if let Some(g) = &a.velocity_grid {
+        parts.push(format!("yeni noktaların hızı “{}” hız ızgarasından", g.name));
+    }
+    let text = parts.join("; ");
+    let mut chars = text.chars();
+    let first = chars.next()?;
+    Some((kind, format!("{}{}.", first.to_uppercase(), chars.as_str())))
+}
+
 /// A row of Bazlar: an archive baseline and, when it went into the network, its free stage's test.
 struct BaselineRow {
     id: String,
+    session: String,
     from: String,
     to: String,
     length: f64,
@@ -313,6 +360,8 @@ impl App {
             class: self.survey_network.class.id(),
             scale: (self.survey_network.scale != 1.0).then_some(self.survey_network.scale),
             epoch,
+            correlations: self.survey_network.correlated.then_some(NetworkCorrelations::Session),
+            velocities: self.survey_network.velocities,
             ..MapSurveyNetwork::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -391,6 +440,8 @@ impl App {
             rules: None,
             hold: None,
             epoch: number(&self.survey_network.epoch, "Ölçme epoku").ok().flatten(),
+            correlations: self.survey_network.correlated.then_some(NetworkCorrelations::Session),
+            velocities: self.survey_network.velocities,
             layer: None,
             // On the layer chosen in Katmanlar, else the active one (docs/adr/2960).
             ellipses: self.survey_network.ellipses.then(|| kentos_commands::NetworkEllipses {
@@ -438,6 +489,14 @@ impl App {
             Event::Ellipses(on) => self.survey_network.ellipses = on,
             Event::Bars(on) => self.survey_network.bars = on,
             Event::Labels(on) => self.survey_network.labels = on,
+            Event::Correlated(on) => {
+                self.survey_network.correlated = on;
+                self.survey_network_run();
+            }
+            Event::Velocities(on) => {
+                self.survey_network.velocities = on;
+                self.survey_network_run();
+            }
             Event::Magnify(v) => {
                 if v > 0.0 {
                     self.survey_network.magnify = v;
@@ -537,6 +596,24 @@ impl App {
             )
             .field("Varyans çarpanı", NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(140))
             .field(
+                "Korelasyon ve hız",
+                row![
+                    fields::check(
+                        if s.correlated { Check::Checked } else { Check::Unchecked },
+                        CORRELATED,
+                        Some(msg(Event::Correlated(!s.correlated)))
+                    ),
+                    fields::check(
+                        if s.velocities { Check::Checked } else { Check::Unchecked },
+                        VELOCITIES,
+                        Some(msg(Event::Velocities(!s.velocities)))
+                    ),
+                    label::caption("Oturumun bazları tam kovaryansıyla girer; hız arazi ölçümünün hız ızgarasından okunur.")
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .field(
                 "Ölçme epoku",
                 row![
                     container(
@@ -590,6 +667,9 @@ impl App {
                 if let Some(text) = region_line(a) {
                     lines.push(words::text_line(Kind::Info, text));
                 }
+                if let Some((kind, text)) = sessions_line(a) {
+                    lines.push(words::text_line(kind, text));
+                }
                 if let Some(r) = &a.rules {
                     let confidence = r.confidence.map_or("Baarda α₀ = 0,001".to_owned(), |c| format!("güven {c}"));
                     lines.push(words::text_line(
@@ -630,6 +710,7 @@ impl App {
                             num("σ kuzey (mm)", 90.0),
                             num("σ doğu (mm)", 90.0),
                             num("σ yukarı (mm)", 90.0),
+                            col("Hız D/K/Y (mm/yıl)", 130.0),
                             col("Güven bölgesi a/b, yön, kot (mm)", 190.0),
                             num("ΔY (mm)", 80.0),
                             num("ΔX (mm)", 80.0),
@@ -651,6 +732,8 @@ impl App {
                                     mm(st.sigma[0]),
                                     mm(st.sigma[1]),
                                     mm(st.sigma[2]),
+                                    // Docs/adr/4920: from the campaign's grid, east/north/up.
+                                    st.velocity.map_or(String::new(), |v| format!("{}/{}/{}", mm(v[0]), mm(v[1]), mm(v[2]))),
                                     // The error ellipse's semi-axes, its direction (a semt), the height's interval.
                                     st.ellipse.as_ref().map_or(String::new(), |e| {
                                         let way = e.azimuth.map_or("yönsüz".to_owned(), |d| self.format().bearing(d * 10.0 / 9.0));
@@ -685,6 +768,7 @@ impl App {
                                         };
                                         BaselineRow {
                                             id: b.id.clone(),
+                                            session: sv.session_of(&b.id).map(|x| x.id.clone()).unwrap_or_default(),
                                             from: b.from.clone(),
                                             to: b.to.clone(),
                                             length: (b.d[0] * b.d[0] + b.d[1] * b.d[1] + b.d[2] * b.d[2]).sqrt(),
@@ -701,6 +785,7 @@ impl App {
                         road_dialog::grid_table(
                             vec![
                                 col("Baz", 56.0),
+                                col("Oturum", 56.0),
                                 col("Başlangıç", 80.0),
                                 col("Bitiş", 80.0),
                                 num("Uzunluk (m)", 96.0),
@@ -717,13 +802,14 @@ impl App {
                                 let number = |t: String| -> Element<'_, Message> { kentos_ui::widget::table::number(t).into() };
                                 match k {
                                     0 => text(b.id.clone()),
-                                    1 => text(b.from.clone()),
-                                    2 => text(b.to.clone()),
-                                    3 => number(format!("{:.3}", b.length)),
-                                    4 => number(b.up.map_or(String::new(), mm)),
-                                    5 => number(b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))),
-                                    6 => text(b.state.to_owned()),
-                                    7 => text(b.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() })),
+                                    1 => text(b.session.clone()),
+                                    2 => text(b.from.clone()),
+                                    3 => text(b.to.clone()),
+                                    4 => number(format!("{:.3}", b.length)),
+                                    5 => number(b.up.map_or(String::new(), mm)),
+                                    6 => number(b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))),
+                                    7 => text(b.state.to_owned()),
+                                    8 => text(b.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() })),
                                     _ => {
                                         let (words, event) = if b.excluded {
                                             ("Geri al", Event::Include(b.id.clone()))
@@ -873,6 +959,8 @@ impl App {
             Control::Press(ACCEPT) => Some(msg(Event::Accept)),
             Control::Press(IMPORT) => Some(msg(Event::Import)),
             Control::Press(ADD) => Some(msg(Event::AddKnown)),
+            Control::Press(CORRELATED) => Some(msg(Event::Correlated(!self.survey_network.correlated))),
+            Control::Press(VELOCITIES) => Some(msg(Event::Velocities(!self.survey_network.velocities))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

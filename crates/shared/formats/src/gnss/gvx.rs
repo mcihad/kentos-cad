@@ -3,9 +3,14 @@
 //! its `INITIAL_POINT_ID`'s point to its `TERMINAL_POINT_ID`'s; a point's `NAME` is the mark. `ECEF_DELTAS` are the
 //! mark-to-mark components (the antenna heights applied) in metres; `CORRELATION_MATRIX` gives the standard deviations
 //! `SDX`, `SDY`, `SDZ` (m) and the correlations `PXY`, `PXZ`, `PYZ`, so the covariance is xx = SDX², xy = PXY·SDX·SDY
-//! and so on. Times are GPS time (`YYYY-MM-DDThh:mm:ss.ss`). A `SESSION`'s cross-correlations between vectors are not
-//! read: the vectors go in as independent (a warning says so). The independent reference is
-//! `scripts/fixtures/map_survey_network_cases.py` (Python's ElementTree).
+//! and so on. Times are GPS time (`YYYY-MM-DDThh:mm:ss.ss`).
+//!
+//! A `SESSION` (docs/adr/4920) holds vectors processed together: its `CROSS_CORRELATION_MATRIX` (`ORDER` “XYZ”) has a
+//! `CCM_BLOCK` for each pair of its vectors (`VECTOR_ID_ROW`, `VECTOR_ID_COL`), nine correlations row by row: the rows
+//! the row vector's X, Y, Z, the columns the column vector's (the document's Figure A1 against A3). Its vectors are those
+//! its blocks name (GVX does not mark a vector's session). A session naming fewer than two vectors, or fewer than its
+//! `TOTAL_VECTORS`, is not kept; one without all n(n − 1)/2 blocks is kept and said to be incomplete. The independent
+//! reference is `scripts/fixtures/map_survey_network_cases.py` (Python's ElementTree).
 
 use kentos_contracts::{BaselineSolution, covariance_ok, survey_time};
 
@@ -30,11 +35,33 @@ pub struct GvxVector {
     pub line: u32,
 }
 
-/// A file's vectors in its order and what was not read.
+/// A session kept: its id, its time (GPS, `…Z`), its vectors' ids in the file's order, its blocks (row vector, column
+/// vector, nine correlations row by row) and the line it is on.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GvxSession {
+    pub id: String,
+    pub start: Option<String>,
+    pub end: Option<String>,
+    pub vectors: Vec<String>,
+    pub blocks: Vec<(String, String, [f64; 9])>,
+    pub line: u32,
+}
+
+impl GvxSession {
+    /// Whether every pair of its vectors has its block.
+    pub fn complete(&self) -> bool {
+        let n = self.vectors.len();
+        self.blocks.len() == n * (n - 1) / 2
+    }
+}
+
+/// A file's vectors in its order, its sessions and what was not read: sessions not kept, sessions kept incomplete.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GvxRead {
     pub vectors: Vec<GvxVector>,
-    pub warnings: Vec<String>,
+    pub sessions: Vec<GvxSession>,
+    pub ignored: Vec<String>,
+    pub incomplete: Vec<String>,
 }
 
 /// Whether the bytes are a GVX file: XML whose root is `GVX`.
@@ -210,17 +237,103 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
     if out.vectors.is_empty() {
         return Err("GVX dosyasında GNSS_VECTOR yok.".into());
     }
-    let crossed = root
-        .children()
-        .filter(|c| c.is_element() && c.tag_name().name() == "SESSION")
-        .filter(|s| child(*s, "CROSS_CORRELATION_MATRIX").is_some())
-        .count();
-    if crossed > 0 {
-        out.warnings.push(format!(
-            "{crossed} oturumun vektörler arası çapraz korelasyonları okunmadı; vektörler birbirinden bağımsız dengelenir."
-        ));
-    }
+    sessions(root, &line, &mut out)?;
     Ok(out)
+}
+
+/// The file's sessions (docs/adr/4920): each kept with its vectors and blocks, or said not to be.
+fn sessions(root: Node<'_, '_>, line: &dyn Fn(Node<'_, '_>) -> u32, out: &mut GvxRead) -> Result<(), String> {
+    let order: std::collections::HashMap<&str, usize> =
+        out.vectors.iter().enumerate().map(|(k, v)| (v.id.as_str(), k)).collect();
+    let mut taken: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    let mut kept = Vec::new();
+    for s in root.children().filter(|c| c.is_element() && c.tag_name().name() == "SESSION") {
+        let n = line(s);
+        let id = s.attribute("ID").map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned);
+        let Some(id) = id else {
+            return Err(format!("Satır {n}: SESSION öğesinin ID'si yok."));
+        };
+        let time = |tag: &str| -> Result<Option<String>, String> {
+            match at(s, &["SESSION_TIME", tag]) {
+                None => Ok(None),
+                Some(t) => gps_time(&t)
+                    .map(Some)
+                    .ok_or_else(|| format!("Satır {n}: “{id}” oturumunun zamanı “{t}” YYYY-AA-GGTss:dd:sn biçiminde değil.")),
+            }
+        };
+        let (start, end) = (time("START")?, time("END")?);
+        let mut blocks: Vec<(String, String, [f64; 9])> = Vec::new();
+        let mut pairs = std::collections::HashSet::new();
+        if let Some(m) = child(s, "CROSS_CORRELATION_MATRIX") {
+            let axes = m.attribute("ORDER").map_or("XYZ", str::trim);
+            if axes != "XYZ" {
+                return Err(format!("Satır {}: “{id}” oturumunun ORDER'ı “{axes}”; KentOS XYZ sırasını okur.", line(m)));
+            }
+            for b in m.children().filter(|c| c.is_element() && c.tag_name().name() == "CCM_BLOCK") {
+                let bn = line(b);
+                let end_of = |name: &str| -> Result<String, String> {
+                    let v = b.attribute(name).map(str::trim).unwrap_or_default();
+                    if order.contains_key(v) {
+                        Ok(v.to_owned())
+                    } else {
+                        Err(format!("Satır {bn}: “{id}” oturumunun bloğundaki {name} “{v}” dosyada bir GNSS_VECTOR değil."))
+                    }
+                };
+                let (row, col) = (end_of("VECTOR_ID_ROW")?, end_of("VECTOR_ID_COL")?);
+                if row == col {
+                    return Err(format!("Satır {bn}: “{id}” oturumunun bloğu “{row}” vektörünü kendisiyle eşliyor."));
+                }
+                let pair = if row < col { (row.clone(), col.clone()) } else { (col.clone(), row.clone()) };
+                if !pairs.insert(pair) {
+                    return Err(format!("Satır {bn}: “{id}” oturumunda “{row}” ile “{col}” bloğu iki kez verilmiş."));
+                }
+                let text = text_of(child(b, "CORRELATIONS")).unwrap_or_default();
+                let values: Vec<f64> = text.split(',').filter_map(|t| t.trim().parse::<f64>().ok()).collect();
+                if values.len() != 9 || text.split(',').count() != 9 {
+                    return Err(format!("Satır {bn}: “{id}” oturumunun “{row}”–“{col}” bloğu virgülle ayrılmış 9 sayı olmalı."));
+                }
+                if !values.iter().all(|r| r.is_finite() && (-1.0..=1.0).contains(r)) {
+                    return Err(format!("Satır {bn}: “{id}” oturumunun “{row}”–“{col}” korelasyonları −1 ile 1 arasında olmalı."));
+                }
+                let mut r = [0.0; 9];
+                r.copy_from_slice(&values);
+                blocks.push((row, col, r));
+            }
+        }
+        let mut vectors: Vec<String> = blocks.iter().flat_map(|(a, b, _)| [a.clone(), b.clone()]).collect();
+        vectors.sort_by_key(|v| order.get(v.as_str()).copied().unwrap_or(usize::MAX));
+        vectors.dedup();
+        let total = s.attribute("TOTAL_VECTORS").and_then(|t| t.trim().parse::<usize>().ok());
+        if vectors.len() < 2 || total.is_some_and(|t| t != vectors.len()) {
+            out.ignored.push(match total {
+                Some(t) if vectors.len() >= 2 => format!(
+                    "“{id}” oturumunun TOTAL_VECTORS'ı {t}, blokları {} vektör anıyor; oturumun korelasyonları alınmadı.",
+                    vectors.len()
+                ),
+                _ => format!("“{id}” oturumu iki vektörü bile anmıyor; korelasyonları alınmadı."),
+            });
+            continue;
+        }
+        for v in &vectors {
+            if let Some(other) = taken.insert(v.clone(), id.clone()) {
+                return Err(format!("Satır {n}: “{v}” vektörü hem “{other}” hem “{id}” oturumunda."));
+            }
+        }
+        let session = GvxSession { id, start, end, vectors, blocks, line: n };
+        if !session.complete() {
+            let k = session.vectors.len();
+            out.incomplete.push(format!(
+                "“{}” oturumunun {} vektörü için {} blok olmalı, {} var; oturum korelasyonlarıyla dengelenemez.",
+                session.id,
+                k,
+                k * (k - 1) / 2,
+                session.blocks.len()
+            ));
+        }
+        kept.push(session);
+    }
+    out.sessions = kept;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -231,7 +344,7 @@ mod tests {
 <GVX VERSION="1.0">
   <REFERENCE_SYSTEM><ID>153</ID><NAME>IGS14</NAME><LINEAR_UNIT><NAME>meters</NAME></LINEAR_UNIT></REFERENCE_SYSTEM>
   <SURVEY_SETUP><ID>S1</ID><SOLUTION_TYPE>Post-processed</SOLUTION_TYPE>
-    <PROCESSING_SOFTWARE><NAME>TBC</NAME><VERSION>5.90</VERSION></PROCESSING_SOFTWARE></SURVEY_SETUP>
+    <PROCESSING_SOFTWARE><NAME>Isleyici</NAME><VERSION>5.90</VERSION></PROCESSING_SOFTWARE></SURVEY_SETUP>
   <POINT><ID>P1</ID><NAME>ANKR</NAME></POINT>
   <POINT><ID>P2</ID><NAME>N1</NAME></POINT>
   <GNSS_VECTOR><ID>V1</ID><INITIAL_POINT_ID>P1</INITIAL_POINT_ID><TERMINAL_POINT_ID>P2</TERMINAL_POINT_ID>
@@ -254,9 +367,9 @@ mod tests {
         assert_eq!(v.covariance, [0.002 * 0.002, -0.5 * 0.002 * 0.004, 0.25 * 0.002 * 0.003, 0.004 * 0.004, 0.1 * 0.004 * 0.003, 0.003 * 0.003]);
         assert_eq!(v.start.as_deref(), Some("2026-11-03T08:00:00.00Z"));
         assert_eq!(v.solution, Some(BaselineSolution::PostProcessed));
-        assert_eq!(v.software.as_deref(), Some("TBC 5.90"));
+        assert_eq!(v.software.as_deref(), Some("Isleyici 5.90"));
         assert_eq!((v.epochs, v.satellites), (Some(481), Some(17)));
-        assert!(r.warnings.is_empty());
+        assert!(r.ignored.is_empty() && r.incomplete.is_empty() && r.sessions.is_empty());
     }
 
     #[test]
@@ -268,6 +381,38 @@ mod tests {
         assert!(read(ONE.replace("<TERMINAL_POINT_ID>P2", "<TERMINAL_POINT_ID>P9").as_bytes()).unwrap_err().contains("P9"));
         assert!(read(ONE.replace("<NAME>N1</NAME>", "<NAME>ANKR</NAME>").as_bytes()).unwrap_err().contains("aynı işaret"));
         let crossed = ONE.replace("</GVX>", "<SESSION ID=\"S\" TOTAL_VECTORS=\"2\"><CROSS_CORRELATION_MATRIX ORDER=\"XYZ\"/></SESSION></GVX>");
-        assert_eq!(read(crossed.as_bytes()).expect("read").warnings.len(), 1);
+        assert_eq!(read(crossed.as_bytes()).expect("read").ignored.len(), 1);
+    }
+
+    /// Three vectors from one base: a session's blocks, row by row, its members in the file's order.
+    #[test]
+    fn a_session_keeps_its_blocks_and_says_when_one_is_missing() {
+        let mut three = ONE.to_owned();
+        let v1 = &ONE[ONE.find("<GNSS_VECTOR>").unwrap()..ONE.find("</GVX>").unwrap()];
+        for k in [2, 3] {
+            three = three.replace("</GVX>", &format!("{}</GVX>", v1.replace("<ID>V1</ID>", &format!("<ID>V{k}</ID>"))));
+        }
+        let block = |r: &str, c: &str| {
+            format!("<CCM_BLOCK VECTOR_ID_ROW=\"{r}\" VECTOR_ID_COL=\"{c}\"><CORRELATIONS>0.1,0,0,0,0.2,0,0,0,0.3</CORRELATIONS></CCM_BLOCK>")
+        };
+        let session = |blocks: &str| {
+            three.replace(
+                "</GVX>",
+                &format!("<SESSION ID=\"O1\" TOTAL_VECTORS=\"3\"><SESSION_TIME><START>2026-11-03T08:00:00.00</START><END>2026-11-03T10:00:00.00</END></SESSION_TIME><CROSS_CORRELATION_MATRIX ORDER=\"XYZ\">{blocks}</CROSS_CORRELATION_MATRIX></SESSION></GVX>"),
+            )
+        };
+        let full = read(session(&[block("V2", "V3"), block("V1", "V2"), block("V1", "V3")].concat()).as_bytes()).expect("read");
+        assert_eq!(full.sessions.len(), 1);
+        let s = &full.sessions[0];
+        assert_eq!(s.vectors, ["V1", "V2", "V3"]);
+        assert!(s.complete() && full.incomplete.is_empty());
+        assert_eq!(s.blocks[0], ("V2".into(), "V3".into(), [0.1, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.3]));
+        assert_eq!(s.start.as_deref(), Some("2026-11-03T08:00:00.00Z"));
+        let short = read(session(&[block("V1", "V2"), block("V1", "V3")].concat()).as_bytes()).expect("read");
+        assert_eq!((short.sessions.len(), short.incomplete.len()), (1, 1));
+        assert!(read(session(&[block("V1", "V2"), block("V2", "V1")].concat()).as_bytes()).unwrap_err().contains("iki kez"));
+        assert!(read(session(&block("V1", "V9")).as_bytes()).unwrap_err().contains("V9"));
+        assert!(read(session(&block("V1", "V2").replace("0.3", "1.3")).as_bytes()).unwrap_err().contains("−1 ile 1"));
+        assert_eq!(read(session(&block("V1", "V2")).as_bytes()).expect("read").ignored.len(), 1);
     }
 }

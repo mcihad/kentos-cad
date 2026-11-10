@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `239`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-240.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `240`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-241.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1002,6 +1002,16 @@ SHA-256'sının ilk 16 hanesidir. `road.rebuildWhole` (mantıksal; yalnız `true
 kendiliğinden de her çizimi bütün çizer; yazılmamışsa yalnız değişeni yazar (ADR 4320). Yazıcı 238'i böyle bir çizim,
 `layer` kaynağı ya da `rebuildWhole` varken seçer; 237 ve öncesi üçünü de `bad_value` sayar
 (`broken/sheet-contour-drawing-in-schema-237.kcad`). Örnek `map-sheet-contours.json/.kcad`.
+
+**Şema 240** (ADR 4920; MAP-03): GNSS arşivinin baz oturumları (`mapSurvey.baselineSessions`: `bo-N`, arazi ölçümü,
+dosyadaki adı `name`, isteğe bağlı `start`/`end`, 2–100 bazı `baselines` (bir baz en çok bir oturumda), korelasyon
+blokları `blocks` (`row`, `col`: oturumun iki ayrı bazı, her çift bir kez, en çok n(n − 1)/2; `r`: satır satır dokuz
+korelasyon, −1 ile 1 arasında), isteğe bağlı GVX `file`); ağ dengelemesinin oturumları (`adjustments[].sessions`);
+bilinen noktaların kabul farkı sınırı (`mapSurvey.tolerance`: `horizontal` ve/veya `vertical` 0'dan büyük metre,
+`source` 1–500 karakter); ağ noktasının hızı (`points[].result.velocity`: `enu` m/yıl, her biri en çok 1; `grid` adı ve
+SHA-256'sı). Yazıcı 240'ı bunlardan biri varken seçer; 239 ve öncesi alanları `unknown_field` sayar
+(`broken/map-survey-sessions-in-schema-239.kcad`); tek bazlı oturum, 1'i aşan korelasyon ve 0 sınır `bad_value`. Örnek
+`map-survey-sessions.json/.kcad`.
 
 **Şema 239** (ADR 4880; MAP-01): harita işi öğesinin tipli katman profili (`mapWork.items[].profile`): `name` (veri
 profilinin adı, başında ve sonunda boşluk olmayan 1–200 karakter) ve `classes` (sınıf kimlikleri, her biri bir kez, en

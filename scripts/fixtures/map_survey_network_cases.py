@@ -50,6 +50,17 @@ Z by PROJ (TUREF 3D → geocentric and back), before the campaign's velocity gri
 (`velocity` or `grid`). The cases give BN1 and BN2 the grid's own velocity at their places (PROJ's deformation over a
 year, as X, Y, Z, rounded to 0.01 mm/yr as a table would print it), so the network fits as it does with the grid.
 
+ADR 4920 adds the baseline sessions: with `correlations: session` each session's used baselines (two or more) go in
+by their full covariance — the baselines' own 3×3 blocks and, off them, Σᵢⱼ = ρᵢⱼ·σᵢ·σⱼ from the GVX block's nine
+correlations row by row (the row baseline's X, Y, Z against the column baseline's) — Σ times the variance factor, P =
+Σ⁻¹ whole (numpy); a pair of used baselines without its block is refused, a session block numpy's Cholesky does not
+factor is refused. Then every baseline component is tested as a correlated observation: w = |(P·v)ᵢ| / √((P·Qvv·P)ᵢᵢ)
+with Qvv = Σ − A·Q·Aᵀ, r = (Qvv·P)ᵢᵢ (Baarda's w-test; Teunissen, Testing Theory, 2006); a weighted known point's
+pseudo-observations as before. The answer says which correlations were used (`session` or `none`, the sessions in, the
+sessions left out), a warning when the used baselines have sessions and `none` was used. With `velocities` each new
+mark's velocity east, north, up is PROJ's move along the campaign's velocity grid over one year (from the network's
+epoch, 2005.0 without one), read in the mark's east, north, up; without the grid it is refused.
+
 ADR 2160 adds BÖHHBÜY Madde 15(1)(c): with three known points or more, the 3D similarity given = T + λ·R·free between
 their given coordinates (at the measurement epoch) and the free stage's, by Horn's closed-form absolute orientation
 (unit quaternions; Horn 1987), the scale λ = Σ g'·Rf' / Σ|f'|²; the rotations from R's antisymmetric part (arc-seconds);
@@ -221,11 +232,11 @@ def gvx(version="1.0", crossed=True):
            "<CONVERTED_DATE>2026-11-07T00:00:00.00</CONVERTED_DATE></CONVERTED_BY></SOURCE_DATA>",
            "  <REFERENCE_SYSTEM><ID>153</ID><NAME>IGS14</NAME><LINEAR_UNIT><NAME>meters</NAME></LINEAR_UNIT>"
            "<ANGULAR_UNIT><NAME>decimal degrees</NAME></ANGULAR_UNIT></REFERENCE_SYSTEM>",
-           "  <EQUIPMENT><ID>E1</ID><RECEIVER><TYPE>TRIMBLE R10</TYPE><SERIAL_NUMBER>5123K40001</SERIAL_NUMBER>"
+           "  <EQUIPMENT><ID>E1</ID><RECEIVER><TYPE>ORNEK R10</TYPE><SERIAL_NUMBER>5123K40001</SERIAL_NUMBER>"
            "<FIRMWARE_VERSION>5.52</FIRMWARE_VERSION></RECEIVER><ANTENNA><TYPE>TRM57971.00     NONE</TYPE>"
            "<SERIAL_NUMBER>1441112222</SERIAL_NUMBER></ANTENNA></EQUIPMENT>",
            "  <SURVEY_SETUP><ID>S1</ID><SOLUTION_TYPE>Post-processed</SOLUTION_TYPE><OPERATOR>Ayşe Demir</OPERATOR>"
-           "<PROCESSING_SOFTWARE><NAME>TBC</NAME><VERSION>5.90</VERSION></PROCESSING_SOFTWARE></SURVEY_SETUP>"]
+           "<PROCESSING_SOFTWARE><NAME>Baz isleyici</NAME><VERSION>5.90</VERSION></PROCESSING_SOFTWARE></SURVEY_SETUP>"]
     for mark in ("BN1", "BN2", "N1", "N4", "N5"):
         lat, lon, h = geodetic(TRUE[mark])
         out.append(f"  <POINT><ID>P-{mark}</ID><NAME>{mark}</NAME><EQUIPMENT_ID>E1</EQUIPMENT_ID>"
@@ -265,7 +276,30 @@ def text_file():
     return ("\n".join(lines) + "\n").encode()
 
 
-WRITTEN = {"ag.gvx": gvx(), "ag-v2.gvx": gvx(version="2.0"), "ag.txt": text_file()}
+# Two sessions: BN1 → N1, BN2 → N1 and BN1 → N4 observed together; N1 → N5 and BN1 → N5 together. Each block's
+# correlations row by row (the row baseline's X, Y, Z against the column baseline's), as a processor gives them.
+BLOCK_A = [0.35, 0.04, -0.02, 0.03, 0.32, 0.05, -0.01, 0.06, 0.38]
+BLOCK_B = [0.28, -0.03, 0.02, 0.01, 0.25, -0.04, 0.03, 0.02, 0.30]
+
+
+def gvx_short():
+    """ADR 4920: the network's file with two sessions: O1 names V1, V2, V3 but gives two of their three blocks; O2
+    names V5 alone (a block of V5 with V5 is not GVX's; O2 has none and TOTAL_VECTORS 1)."""
+    body = gvx(crossed=False).decode()
+    blocks = "".join(f'<CCM_BLOCK VECTOR_ID_ROW="{r}" VECTOR_ID_COL="{c}"><CORRELATIONS>'
+                     f'{",".join(f"{x:.6f}" for x in BLOCK_A)}</CORRELATIONS></CCM_BLOCK>'
+                     for r, c in (("V1", "V2"), ("V2", "V3")))
+    sessions = (f'  <SESSION ID="O1" TOTAL_VECTORS="3"><SESSION_TIME><START>2026-11-03T08:00:00.00</START>'
+                f'<END>2026-11-03T10:00:00.00</END></SESSION_TIME><CROSS_CORRELATION_MATRIX ORDER="XYZ">{blocks}'
+                f'</CROSS_CORRELATION_MATRIX></SESSION>\n'
+                '  <SESSION ID="O2" TOTAL_VECTORS="1"><SESSION_TIME><START>2026-11-03T10:00:00.00</START>'
+                '<END>2026-11-03T12:00:00.00</END></SESSION_TIME><CROSS_CORRELATION_MATRIX ORDER="XYZ"/>'
+                '</SESSION>\n')
+    return body.replace("</GVX>", sessions + "</GVX>").encode()
+
+
+WRITTEN = {"ag.gvx": gvx(), "ag-v2.gvx": gvx(version="2.0"), "ag.txt": text_file(),
+           "ag-oturum-eksik.gvx": gvx_short()}
 
 
 def read_gvx(data):
@@ -296,8 +330,17 @@ def read_gvx(data):
         rec["satellites"] = int(v.findtext("QUALITY_CONTROL/SATELLITE_USED/TOTAL"))
         rec["source"] = v.findtext("ID")
         out.append(rec)
-    crossed = sum(1 for s in root.findall("SESSION") if s.find("CROSS_CORRELATION_MATRIX") is not None)
-    return out, crossed
+    # ADR 4920: a session's vectors are those its blocks name, in the file's order; its blocks row by row.
+    order = [v.findtext("ID") for v in root.findall("GNSS_VECTOR")]
+    sessions = []
+    for sn in root.findall("SESSION"):
+        blocks = [(b.get("VECTOR_ID_ROW"), b.get("VECTOR_ID_COL"),
+                   [float(x) for x in b.findtext("CORRELATIONS").split(",")])
+                  for b in sn.findall("CROSS_CORRELATION_MATRIX/CCM_BLOCK")]
+        members = sorted({x for r, c, _ in blocks for x in (r, c)}, key=order.index)
+        sessions.append({"id": sn.get("ID"), "start": sn.findtext("SESSION_TIME/START") + "Z",
+                         "end": sn.findtext("SESSION_TIME/END") + "Z", "vectors": members, "blocks": blocks})
+    return out, sessions
 
 
 def read_text(data):
@@ -343,9 +386,10 @@ def first_defect(n):
     return None
 
 
-def stage(names, xyz, fixed, weights, baselines, scale):
+def stage(names, xyz, fixed, weights, baselines, scale, sessions=(), correlated=False):
     """One stage: names in order; xyz the known X, Y, Z (or None); fixed; weights a station's X, Y, Z covariance (or
-    None); the baselines (from, to, d, covariance)."""
+    None); the baselines (from, to, d, covariance); ADR 4920's sessions ((members, [(row, col, 3×3 covariance)])) and
+    whether the baselines are tested as correlated observations."""
     slot, u = [], 0
     for f in fixed:
         slot.append(None if f else u)
@@ -392,6 +436,10 @@ def stage(names, xyz, fixed, weights, baselines, scale):
     sigma = np.zeros((n_obs, n_obs))
     for k, blk in enumerate(blocks):
         sigma[3 * k:3 * k + 3, 3 * k:3 * k + 3] = blk
+    for _, cross in sessions:
+        for i, j, c in cross:
+            sigma[3 * i:3 * i + 3, 3 * j:3 * j + 3] = np.array(c) * scale
+            sigma[3 * j:3 * j + 3, 3 * i:3 * i + 3] = (np.array(c) * scale).T
     p = np.linalg.inv(sigma)
     nmat = a.T @ p @ a
     bad = first_defect(nmat) if u else None
@@ -407,7 +455,19 @@ def stage(names, xyz, fixed, weights, baselines, scale):
     m0 = math.sqrt(omega / f) if f > 0 else None
     s0 = m0 if m0 is not None else 1.0
     comps = []
+    nb = len(baselines)
+    if correlated and u:
+        # ADR 4920: the baselines' components as correlated observations.
+        qvv_all = sigma - a @ q @ a.T
+        pv = p @ v
+        pqp = p @ qvv_all @ p
+        qp = qvv_all @ p
+        for i in range(3 * nb):
+            r, den = qp[i, i], pqp[i, i]
+            comps.append(None if not (r >= UNCONTROLLED and den > 0) else abs(pv[i]) / math.sqrt(den))
     for k, blk in enumerate(blocks):
+        if correlated and u and k < nb:
+            continue
         li = np.linalg.inv(np.linalg.cholesky(blk))
         ab = li @ a[3 * k:3 * k + 3]
         vb = li @ v[3 * k:3 * k + 3]
@@ -628,6 +688,10 @@ def analyse(m, inp, prefix=""):
         raise Refused("no_baselines", "Dengelemeye girecek baz yok: bazları içe aktarın, dışlananları geri alın ya da "
                                       "dengeleme seçimini açın.", held_wrong)
     camp = m.get("campaigns", used[0]["campaign"])
+    if inp.get("velocities") and not (camp and camp.get("velocity")):
+        raise Refused("no_velocity_grid", "Yeni noktaların hızı arazi ölçümünün hız ızgarasından okunur; KentOS hız "
+                                          "uydurmaz. Arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar).",
+                      path("velocities"))
     key = lambda c: (c.get("epoch"), c.get("velocity")) if c else None  # noqa: E731
     for b in used[1:]:
         if key(m.get("campaigns", b["campaign"])) != key(camp):
@@ -717,9 +781,48 @@ def analyse(m, inp, prefix=""):
     ids = [b["id"] for b in used]
     known_ids = [of[x]["id"] if x in of else None for x in marks]
     limit = float(norm.ppf((1.0 + klass["confidence"]) / 2.0)) if klass and "confidence" in klass else BAARDA
+    # ADR 4920: the used baselines' sessions, their full covariance when asked for.
+    place_of = {b["id"]: k for k, b in enumerate(used)}
+    relevant = []
+    for bs in sv.get("baselineSessions", []):
+        members = [place_of[b] for b in bs["baselines"] if b in place_of]
+        if len(members) >= 2:
+            relevant.append((bs, members))
+    correlated = inp.get("correlations") == "session"
+    sessions = []
+    if correlated:
+        for bs, members in relevant:
+            cross = []
+            for x, i in enumerate(members):
+                for j in members[x + 1:]:
+                    bi, bj = used[i]["id"], used[j]["id"]
+                    blk = next(((i, j, b["r"]) for b in bs["blocks"] if (b["row"], b["col"]) == (bi, bj)), None) or \
+                        next(((j, i, b["r"]) for b in bs["blocks"] if (b["row"], b["col"]) == (bj, bi)), None)
+                    if blk is None:
+                        raise Refused("session_blocks_missing",
+                                      f"“{bs['id']}” baz oturumunda “{bi}” ile “{bj}” bazları arasındaki korelasyon "
+                                      "bloğu yok; oturum korelasyonsuz dengelenebilir (correlations none) ya da dosya "
+                                      "yeniden alınmalı.", held_wrong)
+                    row, col, rr = blk
+                    sr = [math.sqrt(used[row]["covariance"][k]) for k in (0, 3, 5)]
+                    sc = [math.sqrt(used[col]["covariance"][k]) for k in (0, 3, 5)]
+                    cross.append((row, col, [[rr[3 * x_ + y_] * sr[x_] * sc[y_] for y_ in range(3)] for x_ in range(3)]))
+            whole = np.zeros((3 * len(members), 3 * len(members)))
+            for x, i in enumerate(members):
+                whole[3 * x:3 * x + 3, 3 * x:3 * x + 3] = full(used[i]["covariance"]) * scale
+            for i, j, c in cross:
+                xi, xj = members.index(i), members.index(j)
+                whole[3 * xi:3 * xi + 3, 3 * xj:3 * xj + 3] = np.array(c) * scale
+                whole[3 * xj:3 * xj + 3, 3 * xi:3 * xi + 3] = (np.array(c) * scale).T
+            try:
+                np.linalg.cholesky(whole)
+            except np.linalg.LinAlgError:
+                raise Refused("session_covariance_invalid",
+                              f"“{bs['id']}” oturumunun tam kovaryansı pozitif tanımlı değil.", held_wrong)
+            sessions.append((members, cross))
     try:
         free = stage(marks, xyz, [x in of and of[x]["id"] == hold["id"] for x in marks], [None] * len(marks), used,
-                     scale)
+                     scale, sessions, correlated)
         weights = []
         for x in marks:
             k = of.get(x)
@@ -729,7 +832,8 @@ def analyse(m, inp, prefix=""):
                 weights.append(r.T @ np.diag([g[1] * g[1], g[0] * g[0], g[2] * g[2]]) @ r)
             else:
                 weights.append(None)
-        held = stage(marks, xyz, [x in of and "sigma" not in of[x] for x in marks], weights, used, scale)
+        held = stage(marks, xyz, [x in of and "sigma" not in of[x] for x in marks], weights, used, scale, sessions,
+                     correlated)
     except Refused as e:
         raise Refused(e.code, e.message, held_wrong)
     free_s, free_t = tests(free, ids, known_ids, limit, [hold["mark"]], marks, len(used))
@@ -801,19 +905,32 @@ def analyse(m, inp, prefix=""):
                 ok = sne[0] <= klass["horizontal"] and sne[1] <= klass["horizontal"] and sne[2] <= klass["height"]
                 row["rules"] = ok
                 failed_s += not ok
-            new.append({"mark": x, "lat": lat, "lon": lon, "height": h, "sigma": sne, "placed": pl})
+            velocity = None
+            if inp.get("velocities"):
+                # ADR 4920: PROJ's move along the campaign's grid over one year, in the mark's east, north, up.
+                e0 = epoch if epoch is not None else 2005.0
+                s_ = ms.gc.transformed([ms.cv.pt(lon, lat, h)], frm={"srid": srid, "epoch": e0, "heights": ms.ELL},
+                                       to={"srid": srid, "epoch": e0 + 1.0, "heights": ms.ELL}, vel=vel)
+                q_ = s_["result"]["output"]["points"][0]
+                velocity = [float(c) for c in rows(lat, lon) @ (ecef(q_["y"], q_["x"], q_["z"]) - ecef(lat, lon, h))]
+                row["velocity"] = velocity
+            new.append({"mark": x, "lat": lat, "lon": lon, "height": h, "sigma": sne, "placed": pl,
+                        "velocity": velocity})
         if ce is not None:
             row["ellipse"] = ellipse(ce, klass.get("confidence", 0.95) if klass else 0.95)
         srows.append(row)
     # The same network accepted already: its baselines, known points, held point, factor and class, and every new
     # mark's point carrying that adjustment now.
     class_of = (klass["id"], f"{package['id']}@{package['release']}") if klass else None
+    used_sessions = [bs["id"] for bs, _ in relevant] if correlated else []
     current = None
     for a in reversed(sv.get("adjustments", [])):
         theirs = (a["class"], a["rules"]) if "class" in a and "rules" in a else None
         if (a["baselines"] == ids and a["known"] == [k["id"] for k in kn] and a["hold"] == hold["id"]
                 and a["scale"] == scale and a.get("epoch") == epoch and theirs == class_of and new
-                and all(any(p["mark"] == n["mark"] and p["result"].get("adjustment") == a["id"] for p in sv["points"])
+                and a.get("sessions", []) == used_sessions
+                and all(any(p["mark"] == n["mark"] and p["result"].get("adjustment") == a["id"]
+                            and ("velocity" in p["result"]) == bool(inp.get("velocities")) for p in sv["points"])
                         for n in new)):
             current = a["id"]
             break
@@ -854,12 +971,23 @@ def analyse(m, inp, prefix=""):
         out["rules"] = r
     if current:
         out["current"] = current
+    if "correlations" in inp or relevant:
+        ids_ = [bs["id"] for bs, _ in relevant]
+        c_ = {"used": "session" if correlated else "none"}
+        if correlated and ids_:
+            c_["sessions"] = ids_
+        if not correlated and ids_:
+            c_["unused"] = ids_
+        out["correlations"] = c_
+    if inp.get("velocities"):
+        out["velocityGrid"] = dict(vel)
     out["acceptable"] = not why
     if why:
         out["why"] = why
     out["revision"] = "$current"
     facts = {"ids": ids, "known": [k["id"] for k in kn], "hold": hold["id"], "scale": scale, "class": klass,
-             "package": package, "new": new, "camp": camp}
+             "package": package, "new": new, "camp": camp, "sessions": used_sessions,
+             "grid": dict(vel) if inp.get("velocities") else None}
     return out, facts
 
 
@@ -873,6 +1001,12 @@ def warnings_of(out, prefix=""):
         w.append({"code": "network_rules_failed", "message": f"{r['class']} sınıfı ({r['package']} {r['articles']}) "
                                                              f"tutmuyor: {r['baselines']} baz ve {r['stations']} "
                                                              f"nokta sınırı aşıyor{scale}.", "path": prefix + "class"})
+    c = out.get("correlations")
+    if c and c.get("unused"):
+        w.append({"code": "session_correlations_unused",
+                  "message": f"{', '.join(c['unused'])} baz oturumunun korelasyonları kullanılmadı; aynı oturumun "
+                             "bazları birbirinden bağımsız sayıldı. Oturum korelasyonlarıyla dengelemek için "
+                             "correlations session verin.", "path": prefix + "correlations"})
     if out["free"]["dof"] == 0:
         w.append({"code": "network_unchecked", "message": "Ağda fazla ölçü yok; uyuşumsuz baz ve model sınanamaz."})
     return w
@@ -911,6 +1045,68 @@ def case(name, m, steps, note=None):
 
 def with_errors(errs):
     return [record(k + 1, vector(f, t, errs.get((f, t), ERRS[(f, t)]))) for k, (f, t) in enumerate(PAIRS)]
+
+
+# ── ADR 4920: baseline sessions ──────────────────────────────────────────────────────────────────────────────────
+
+def sessioned(blocks_a=None, blocks_b=None, survey=None):
+    """The network with its two baseline sessions (bo-1: bz-1, bz-2, bz-3; bo-2: bz-6, bz-7)."""
+    m = survey or networked()
+    a = blocks_a if blocks_a is not None else [{"row": "bz-1", "col": "bz-2", "r": list(BLOCK_A)},
+                                               {"row": "bz-1", "col": "bz-3", "r": list(BLOCK_A)},
+                                               {"row": "bz-2", "col": "bz-3", "r": list(BLOCK_A)}]
+    b = blocks_b if blocks_b is not None else [{"row": "bz-6", "col": "bz-7", "r": list(BLOCK_B)}]
+    m.survey["baselineSessions"] = [
+        {"id": "bo-1", "campaign": "kp-1", "name": "O1", "baselines": ["bz-1", "bz-2", "bz-3"], "blocks": a},
+        {"id": "bo-2", "campaign": "kp-1", "name": "O2", "baselines": ["bz-6", "bz-7"], "blocks": b}]
+    return m
+
+
+def session_cases():
+    both = sessioned()
+    out = [case("İki baz oturumu, oturum korelasyonlarıyla (correlations session): her oturumun bazları tam "
+                "kovaryansıyla girer, bazlar korelasyonlu ölçü gibi bileşen bileşen sınanır", both,
+                [ask(both, {"correlations": "session"})]),
+           case("Aynı ağ korelasyonsuz (correlations none): oturumlar kullanılmadı diye söylenir, uyarı", both,
+                [ask(both, {"correlations": "none"})]),
+           case("Oturumlu ağ, correlations verilmedi: korelasyonsuz dengelenir, söylenir", both, [ask(both, {})]),
+           case("Oturum korelasyonlarıyla, BÖHHBÜY C2 sınıfı", both, [ask(both, {"correlations": "session",
+                                                                                "class": "C2"})])]
+    zero = sessioned(blocks_a=[{"row": r, "col": c, "r": [0.0] * 9} for r, c in
+                               (("bz-1", "bz-2"), ("bz-1", "bz-3"), ("bz-2", "bz-3"))],
+                     blocks_b=[{"row": "bz-6", "col": "bz-7", "r": [0.0] * 9}])
+    out.append(case("Çapraz korelasyonları sıfır oturum: koordinatlar korelasyonsuz dengelemeninkiyle aynı; test "
+                    "bileşen bileşen", zero, [ask(zero, {"correlations": "session"})]))
+    flipped = sessioned(blocks_a=[{"row": "bz-2", "col": "bz-1",
+                                   "r": [BLOCK_A[0], BLOCK_A[3], BLOCK_A[6], BLOCK_A[1], BLOCK_A[4], BLOCK_A[7],
+                                         BLOCK_A[2], BLOCK_A[5], BLOCK_A[8]]},
+                                  {"row": "bz-1", "col": "bz-3", "r": list(BLOCK_A)},
+                                  {"row": "bz-2", "col": "bz-3", "r": list(BLOCK_A)}])
+    out.append(case("Blok ters yönde yazılmış (satır bz-2, sütun bz-1, dokuz sayı devrik): aynı oturum", flipped,
+                    [ask(flipped, {"correlations": "session"})]))
+    left = sessioned()
+    left.survey["baselines"][2]["excluded"] = "Float çözüm"
+    out.append(case("Oturumun bir bazı dışlandı: kalan iki bazın bloğu girer", left,
+                    [ask(left, {"correlations": "session"})]))
+    alone = sessioned()
+    alone.survey["baselines"][6]["adjust"] = False
+    out.append(case("Oturumun tek bazı kaldı: oturum korelasyonsuz kalır", alone,
+                    [ask(alone, {"correlations": "session"})]))
+    missing = sessioned(blocks_a=[{"row": "bz-1", "col": "bz-2", "r": list(BLOCK_A)},
+                                  {"row": "bz-2", "col": "bz-3", "r": list(BLOCK_A)}])
+    out.append(case("Oturumun bir bloğu eksik: oturum korelasyonlarıyla dengelenmez", missing,
+                    [ask(missing, {"correlations": "session"}), ask(missing, {})]))
+    strong = [0.99, 0.9, 0.9, 0.9, 0.99, 0.9, 0.9, 0.9, 0.99]
+    bad = sessioned(blocks_b=[{"row": "bz-6", "col": "bz-7", "r": strong}])
+    out.append(case("Oturumun tam kovaryansı pozitif tanımlı değil", bad, [ask(bad, {"correlations": "session"})]))
+    # Velocities of the new marks from the campaign's grid (the timed network: its grid and observation times).
+    moving = timed()
+    out.append(case("Yeni noktaların hızı arazi ölçümünün hız ızgarasından (velocities): doğu, kuzey, yukarı m/yıl, "
+                    "ızgaranın adı ve SHA-256'sı", moving, [ask(moving, {"velocities": True})]))
+    still = networked()
+    out.append(case("Hız ızgarası olmayan arazi ölçümünde yeni noktaların hızı istenmez", still,
+                    [ask(still, {"velocities": True})]))
+    return out
 
 
 def network_cases():
@@ -977,6 +1173,7 @@ def network_cases():
     # it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); the new marks go back to the decision, 2005.0.
     for name, m, inp in timed_cases():
         out.append(case(name, m, [ask(m, inp)]))
+    out.extend(session_cases())
     out.append(case("Plan aynı cevabı verir", base, [ask(base, {"class": "C2"}, op="plan")]))
     out.append(case("Doğrulama", base, [ask(base, {}, op="validate")]))
     # Refusals, in their order.
@@ -1109,6 +1306,8 @@ def any_numbers(survey):
                 for k in ("lat", "lon", "height", "sigma"):
                     if k in r:
                         r[k] = "$any"
+                if "velocity" in r:
+                    r["velocity"]["enu"] = "$any"
     for a in s.get("adjustments", []):
         for k in ("freeM0", "m0"):
             if k in a:
@@ -1337,6 +1536,8 @@ def accept(m, inp, layer="gnss", ellipses=None):
         if pl["z"] is not None:
             r["z"] = pl["z"]
         r.update(chain=pl["chain"], adjustment=da)
+        if n.get("velocity") is not None and facts["grid"]:
+            r["velocity"] = {"enu": n["velocity"], "grid": facts["grid"]}
         old = next((p for p in sv["points"] if p["mark"] == n["mark"]), None)
         if old:
             r["revision"] = old["result"]["revision"] + 1
@@ -1368,6 +1569,8 @@ def accept(m, inp, layer="gnss", ellipses=None):
     a.update(dof=out["constrained"]["dof"], srid=out["srid"])
     if "epoch" in out:
         a["epoch"] = out["epoch"]
+    if facts["sessions"]:
+        a["sessions"] = facts["sessions"]
     sv.setdefault("adjustments", []).append(a)
     for p in sv["points"]:
         if str(p["uid"]).startswith("$uidOf:"):
@@ -1478,6 +1681,15 @@ def query_cases():
         ("Kabul farkı sınırı: yatay 1 cm içinde, düşey 2 cm içinde", {"horizontal": 0.01, "vertical": 0.02}),
     ]:
         out.append(ms.case(name, [ms.ask(on_n1, places=True, tolerance=tol)], d=on_n1))
+    # docs/adr/4920: the limits kept in the project judge the places when the input gives none; the input's win.
+    kept = on_n1.clone()
+    kept.survey["tolerance"] = {"horizontal": 0.005, "vertical": 0.02, "source": "İdarenin şartnamesi (örnek)"}
+    out.append(ms.case("Projede saklı kabul farkı sınırı (yatay 5 mm, düşey 2 cm): N1 yatayda aşar",
+                       [ms.ask(kept, places=True)], d=kept))
+    out.append(ms.case("Girdinin sınırı projedekini yener: yatay 1 cm, N1 içinde",
+                       [ms.ask(kept, places=True, tolerance={"horizontal": 0.01})], d=kept))
+    out.append(ms.case("Saklı sınır yerler istenmeden değerlendirilmez, ağaçta kaynağıyla görünür", [ms.ask(kept)],
+                       d=kept))
     for name, input_, message, path in [
         ("Kabul farkı sınırı yerler olmadan", {"tolerance": {"horizontal": 0.01}},
          "Kabul farkı sınırı bilinen noktaların yerleriyle okunur: places'i de verin.", "tolerance"),
@@ -1497,19 +1709,50 @@ def edit_cases():
     out = []
     base = BASE
     # baselines from a GVX file and from KentOS's text
-    vecs, crossed = read_gvx(WRITTEN["ag.gvx"])
+    vecs, sessions = read_gvx(WRITTEN["ag.gvx"])
     after = base.clone()
-    after.survey["baselines"] = [dict(v, id=f"bz-{k + 1}", campaign="kp-1",
-                                      file={"path": fx("ag.gvx"), "revision": sha(WRITTEN["ag.gvx"]), "format": "gvx"},
+    gvx_file = {"path": fx("ag.gvx"), "revision": sha(WRITTEN["ag.gvx"]), "format": "gvx"}
+    after.survey["baselines"] = [dict(v, id=f"bz-{k + 1}", campaign="kp-1", file=dict(gvx_file),
                                       adjust=True) for k, v in enumerate(vecs)]
     ids = [b["id"] for b in after.survey["baselines"]]
-    out.append(ms.case("GVX 1.0 dosyasından sekiz baz: işaretten işarete ECEF bileşenleri, korelasyon matrisinden "
-                       "kovaryans, GPS zamanı, çözüm türü ve yazılım; oturumun çapraz korelasyonları okunmaz",
+    # ADR 4920: the file's session kept as bo-1, its vectors and blocks by their bz-N.
+    bz = {v["source"]: f"bz-{k + 1}" for k, v in enumerate(vecs)}
+    after.survey["baselineSessions"] = [
+        {"id": f"bo-{k + 1}", "campaign": "kp-1", "name": g["id"], "start": g["start"], "end": g["end"],
+         "baselines": [bz[v] for v in g["vectors"]],
+         "blocks": [{"row": bz[r], "col": bz[c], "r": rr} for r, c, rr in g["blocks"]], "file": dict(gvx_file)}
+        for k, g in enumerate(sessions)]
+    out.append(ms.case("GVX 1.0 dosyasından sekiz baz ve bir baz oturumu: işaretten işarete ECEF bileşenleri, "
+                       "korelasyon matrisinden kovaryans, GPS zamanı, çözüm türü ve yazılım; oturumun çapraz "
+                       "korelasyonları bo-1 olarak saklanır",
                        write(base, after, {"op": "baselines", "campaign": "kp-1", "file": fx("ag.gvx")},
-                             {"id": "bz-1", "records": ids}, "Baz ekle",
+                             {"id": "bz-1", "records": ids + [x["id"] for x in after.survey["baselineSessions"]]},
+                             "Baz ekle")))
+    # ADR 4920: a file whose session lacks a block keeps it and says so; one naming a single vector is not kept.
+    short = WRITTEN["ag-oturum-eksik.gvx"]
+    vecs3, sessions3 = read_gvx(short)
+    after = base.clone()
+    short_file = {"path": fx("ag-oturum-eksik.gvx"), "revision": sha(short), "format": "gvx"}
+    after.survey["baselines"] = [dict(v, id=f"bz-{k + 1}", campaign="kp-1", file=dict(short_file), adjust=True)
+                                 for k, v in enumerate(vecs3)]
+    bz3 = {v["source"]: f"bz-{k + 1}" for k, v in enumerate(vecs3)}
+    kept = [g for g in sessions3 if len(g["vectors"]) >= 2]
+    after.survey["baselineSessions"] = [
+        {"id": f"bo-{k + 1}", "campaign": "kp-1", "name": g["id"], "start": g["start"], "end": g["end"],
+         "baselines": [bz3[v] for v in g["vectors"]],
+         "blocks": [{"row": bz3[r], "col": bz3[c], "r": rr} for r, c, rr in g["blocks"]], "file": dict(short_file)}
+        for k, g in enumerate(kept)]
+    out.append(ms.case("GVX oturumunun bir bloğu eksik: oturum saklanır, eksik olduğu söylenir; tek vektör anan "
+                       "oturum alınmaz",
+                       write(base, after, {"op": "baselines", "campaign": "kp-1", "file": fx("ag-oturum-eksik.gvx")},
+                             {"id": "bz-1", "records": [b["id"] for b in after.survey["baselines"]]
+                              + [x["id"] for x in after.survey["baselineSessions"]]}, "Baz ekle",
                              warnings=[{"code": "gvx_correlations_ignored",
-                                        "message": f"{crossed} oturumun vektörler arası çapraz korelasyonları okunmadı; "
-                                                   "vektörler birbirinden bağımsız dengelenir.",
+                                        "message": "“O2” oturumu iki vektörü bile anmıyor; korelasyonları alınmadı.",
+                                        "path": "operation.file"},
+                                       {"code": "gvx_session_incomplete",
+                                        "message": "“O1” oturumunun 3 vektörü için 3 blok olmalı, 2 var; oturum "
+                                                   "korelasyonlarıyla dengelenemez.",
                                         "path": "operation.file"}])))
     vecs, stations = read_text(WRITTEN["ag.txt"])
     after = base.clone()
@@ -1533,7 +1776,7 @@ def edit_cases():
     one = VECTORS[0]
     manual = {"op": "baseline", "campaign": "kp-1", "from": "BN1", "to": "N1", "d": one["d"],
               "covariance": one["covariance"], "start": "2026-11-03T08:00:00Z", "end": "2026-11-03T10:00:00Z",
-              "solution": "postProcessed", "recipe": "TBC 5.90, kesin yörünge, %10 maske"}
+              "solution": "postProcessed", "recipe": "Baz isleyici 5.90, kesin yörünge, %10 maske"}
     after = base.clone()
     after.survey["baselines"] = [record(1, one, start=manual["start"], end=manual["end"], solution="postProcessed",
                                         recipe=manual["recipe"])]
@@ -1690,6 +1933,76 @@ def edit_cases():
                        write(with_known, after_c2, {"op": "network", "class": "C2"}, {"id": da, "records": records},
                              "Ağ dengelemesini kabul et", extra={"ids": sorted(after_c2.entities), "fields": fields},
                              then_undo=False), d=with_known))
+    # ADR 4920: accepted with the sessions' correlations; with the new marks' velocities; the kept place limits; the
+    # sessions' records taken away.
+    sess = sessioned(survey=with_known.clone())
+    after_s, _, da, records, fields = accept(sess, {"correlations": "session"})
+    out.append(ms.case("Ağı oturum korelasyonlarıyla kabul et: dengeleme kaydı kullandığı baz oturumlarını tutar",
+                       write(sess, after_s, {"op": "network", "correlations": "session"},
+                             {"id": da, "records": records}, "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_s.entities), "fields": fields}), d=sess))
+    after_n, res_n, da, records, fields = accept(sess, {})
+    out.append(ms.case("Oturumlu ağı korelasyonsuz kabul et: oturumların kullanılmadığı söylenir",
+                       write(sess, after_n, {"op": "network"}, {"id": da, "records": records},
+                             "Ağ dengelemesini kabul et", warnings=warnings_of(res_n, "operation."),
+                             extra={"ids": sorted(after_n.entities), "fields": fields}, then_undo=False), d=sess))
+    bad_s = sessioned(survey=with_known.clone(), blocks_b=[{"row": "bz-6", "col": "bz-7",
+                                                            "r": [0.99, 0.9, 0.9, 0.9, 0.99, 0.9, 0.9, 0.9, 0.99]}])
+    out.append(ms.case("Ağı oturum korelasyonlarıyla kabul et: oturumun tam kovaryansı pozitif tanımlı değil", [refusal(
+        {"op": "network", "correlations": "session"}, "session_covariance_invalid",
+        "“bo-2” oturumunun tam kovaryansı pozitif tanımlı değil.", "operation")], d=bad_s))
+    moving_v = timed()
+    after_v, _, da, records, fields = accept(moving_v, {"velocities": True})
+    out.append(ms.case("Ağı yeni noktaların hızıyla kabul et: her nokta hızını (doğu, kuzey, yukarı m/yıl) ve hız "
+                       "ızgarasının adını, SHA-256'sını tutar",
+                       write(moving_v, after_v, {"op": "network", "velocities": True},
+                             {"id": da, "records": records}, "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_v.entities), "fields": fields}), d=moving_v))
+    out.append(ms.case("Ağı yeni noktaların hızıyla kabul et: hız ızgarası yok", [refusal(
+        {"op": "network", "velocities": True}, "no_velocity_grid",
+        "Yeni noktaların hızı arazi ölçümünün hız ızgarasından okunur; KentOS hız uydurmaz. Arazi ölçümüne hız "
+        "ızgarasını verin (Proje ayarları › Izgaralar).", "operation.velocities")], d=with_known))
+    missing_s = sessioned(survey=with_known.clone(),
+                          blocks_a=[{"row": "bz-1", "col": "bz-2", "r": list(BLOCK_A)},
+                                    {"row": "bz-2", "col": "bz-3", "r": list(BLOCK_A)}])
+    out.append(ms.case("Ağı oturum korelasyonlarıyla kabul et: oturumun bloğu eksik", [refusal(
+        {"op": "network", "correlations": "session"}, "session_blocks_missing",
+        "“bo-1” baz oturumunda “bz-1” ile “bz-3” bazları arasındaki korelasyon bloğu yok; oturum korelasyonsuz "
+        "dengelenebilir (correlations none) ya da dosya yeniden alınmalı.", "operation")], d=missing_s))
+    limits = {"horizontal": 0.02, "vertical": 0.03, "source": "İdarenin şartnamesi (örnek), BÖHHBÜY m. 103(1)(c)"}
+    after_tol = with_known.clone()
+    after_tol.survey["tolerance"] = dict(limits)
+    out.append(ms.case("Kabul farkı sınırı projeye yazılır, kaynağıyla",
+                       write(with_known, after_tol, {"op": "tolerance", **limits}, {}, "Kabul farkı sınırı"),
+                       d=with_known))
+    kept = after_tol.clone()
+    out.append(ms.case("Kabul farkı sınırı aynı: değişecek bir şey yok", [refusal(
+        {"op": "tolerance", **limits}, "nothing_to_set", "Değişecek bir şey yok.", "operation")], d=kept))
+    cleared = kept.clone()
+    cleared.survey.pop("tolerance")
+    out.append(ms.case("Kabul farkı sınırı kaldırılır",
+                       write(kept, cleared, {"op": "tolerance"}, {}, "Kabul farkı sınırını kaldır"), d=kept))
+    for name, op_, message, path_ in [
+        ("Kabul farkı sınırının kaynağı yok", {"op": "tolerance", "horizontal": 0.02},
+         "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi.", "operation.source"),
+        ("Kabul farkı sınırı: yatay 0", {"op": "tolerance", "horizontal": 0.0, "source": limits["source"]},
+         "Yatay sınır 0'dan büyük bir uzunluk olmalı (m).", "operation.horizontal"),
+        ("Kabul farkı sınırı: yalnız kaynak", {"op": "tolerance", "source": limits["source"]},
+         "Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).", "operation.horizontal"),
+    ]:
+        out.append(ms.case(name, [refusal(op_, "invalid_survey_value", message, path_)], d=with_known))
+    out.append(ms.case("Oturumdaki baz arşivden çıkmaz", [refusal(
+        {"op": "remove", "id": "bz-6"}, "survey_in_use",
+        "“bz-6” bazı “bo-2” baz oturumunda; önce oturumu çıkarın ya da bazı dışlayın.", "operation.id")], d=sess))
+    gone = sess.clone()
+    gone.survey["baselineSessions"] = [x for x in gone.survey["baselineSessions"] if x["id"] != "bo-2"]
+    out.append(ms.case("Baz oturumu arşivden çıkar: bazları kalır, korelasyonları gider",
+                       write(sess, gone, {"op": "remove", "id": "bo-2"}, {"id": "bo-2", "removed": 1}, "Arşivden çıkar"),
+                       d=sess))
+    accepted_s = materialized(after_s)
+    out.append(ms.case("Ağ dengelemesindeki baz oturumu arşivden çıkmaz", [refusal(
+        {"op": "remove", "id": "bo-1"}, "survey_in_use",
+        "“bo-1” baz oturumu “da-1” ağ dengelemesinde; önce dengelemeyi çıkarın.", "operation.id")], d=accepted_s))
     # after it: a baseline excluded puts the network's points out of date
     later = after.clone()
     later.survey["baselines"][2]["excluded"] = "Yeniden işlenecek"

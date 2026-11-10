@@ -2,7 +2,7 @@
 
 /**
  * How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal
- * distance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a
+ * distance and their height difference (m), as a point comparison report takes a horizontal and a
  * vertical tolerance; either may be left out, not both.
  */
 export type SurveyPlaceTolerance = { horizontal?: number, vertical?: number, };

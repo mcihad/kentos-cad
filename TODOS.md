@@ -240,6 +240,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   raporu penceresi (iki katalog seçici, Sınıflar | Alanlar | Kodlar | Kararlar, Karar isteyenleri seç).
 - MAP-04 / ADR 4540: web'in `map.features.reconcile` işleyicisinde kayıtlı kararların yeniden uygulanması (`reapply`,
   `reapplied`; map.features.reconcile.json'un 4 yeni durumu) ve web Detay eşleştirme'de Önceki kararlar anahtarı.
+- MAP-03 / ADR 4920: web'in `map.survey.network` ve `map.survey.edit` işleyicilerinde baz oturumları (`baselineSessions`,
+  `correlations`, korelasyonlu w-testi), yeni noktaların hızı (`velocities`, `velocityGrid`) ve `tolerance` işlemi;
+  `map.survey.query`'de saklı sınır (network.json'un 13, edit.json'un ağ durumlarının 16, query.json'un 3 yeni durumu;
+  `.kcad` şema 240) ve web GNSS ağ dengelemesi ile GNSS arşivi'nde kutular.
 - MAP-03 / ADR 4520: web'in `map.survey.query` işleyicisinde kabul farkı sınırı (`tolerance`, `horizontal`, `beyond`;
   map.survey.query.json'un 8 yeni durumu) ve web GNSS arşivi'nde sınır kutuları.
 - MAP-02 / ADR 4500: web'in `cad.survey.points` işleyicisinde ve WASM çekirdeğinde karşılıklı başucu açıları

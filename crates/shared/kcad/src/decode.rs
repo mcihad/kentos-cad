@@ -1125,6 +1125,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.known_velocities && v.has_velocities() {
                     return Err(r.fail_at(Code::UnknownField, at, "bilinen noktada velocity (şema 207'den önce yok)"));
                 }
+                // Schema 240 (docs/adr/4920): baseline sessions, an adjustment's sessions, kept limits, a point's velocity.
+                if !has.gnss_sessions && v.has_sessions() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "GNSS arşivinde baselineSessions, dengelemenin sessions'ı, tolerance ya da noktanın velocity'si (şema 240'tan önce yok)",
+                    ));
+                }
                 map_survey = Some(v);
             }
             "mapWork" if has.map_work => {

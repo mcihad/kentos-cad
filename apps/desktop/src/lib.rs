@@ -488,6 +488,8 @@ mod map_survey_network_rows_tests;
 #[cfg(test)]
 mod map_survey_limits_tests;
 #[cfg(test)]
+mod gnss_sessions_tests;
+#[cfg(test)]
 mod network_ellipses_tests;
 #[cfg(test)]
 mod route_window_tests;

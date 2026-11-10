@@ -10,4 +10,9 @@ export type SurveyAdjustment = {
 /**
  * `da-N`.
  */
-id: string, baselines: Array<string>, known: Array<string>, hold: string, scale: number, class?: string, rules?: string, rulesPassed?: boolean, freeM0?: number, freeDof: number, m0?: number, dof: number, srid: number, epoch?: number, };
+id: string, baselines: Array<string>, known: Array<string>, hold: string, scale: number, class?: string, rules?: string, rulesPassed?: boolean, freeM0?: number, freeDof: number, m0?: number, dof: number, srid: number, epoch?: number, 
+/**
+ * The baseline sessions `bo-N` whose full covariance it was adjusted with (docs/adr/4920); none: each baseline's
+ * own 3×3 alone.
+ */
+sessions?: Array<string>, };

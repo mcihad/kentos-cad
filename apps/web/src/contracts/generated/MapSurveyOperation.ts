@@ -2,6 +2,7 @@
 import type { AcceptMethod } from "./AcceptMethod";
 import type { BaselineSolution } from "./BaselineSolution";
 import type { GnssRules } from "./GnssRules";
+import type { NetworkCorrelations } from "./NetworkCorrelations";
 import type { NetworkEllipses } from "./NetworkEllipses";
 import type { SolutionKind } from "./SolutionKind";
 import type { SurveyAntenna } from "./SurveyAntenna";
@@ -16,8 +17,16 @@ export type MapSurveyOperation = { "op": "campaign", name: string, work?: string
 /**
  * The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it.
  */
-epoch?: number, layer?: string, 
+epoch?: number, 
+/**
+ * The sessions' cross-correlations used or not (docs/adr/4920), as `map.survey.network` takes them.
+ */
+correlations?: NetworkCorrelations, 
+/**
+ * Each new point's velocity read from the campaign's velocity grid and kept with it (docs/adr/4920).
+ */
+velocities?: boolean, layer?: string, 
 /**
  * Each point's error ellipse drawn in the same step (docs/adr/2960).
  */
-ellipses?: NetworkEllipses, } | { "op": "accept", mark: string, solutions: Array<string>, method?: AcceptMethod, layer?: string, } | { "op": "regenerate", point: string, solutions?: Array<string>, method?: AcceptMethod, } | { "op": "use", uids: Array<string>, points: Array<string>, operation: string, } | { "op": "remove", id: string, };
+ellipses?: NetworkEllipses, } | { "op": "accept", mark: string, solutions: Array<string>, method?: AcceptMethod, layer?: string, } | { "op": "regenerate", point: string, solutions?: Array<string>, method?: AcceptMethod, } | { "op": "use", uids: Array<string>, points: Array<string>, operation: string, } | { "op": "tolerance", horizontal?: number, vertical?: number, source?: string, } | { "op": "remove", id: string, };

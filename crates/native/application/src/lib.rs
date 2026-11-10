@@ -356,6 +356,7 @@ pub mod map_survey;
 pub mod map_survey_edit;
 pub mod map_survey_network;
 pub mod map_survey_places;
+pub(crate) mod map_survey_sessions;
 pub mod map_features_reconcile;
 pub mod road_corridors_draw;
 pub mod road_corridors_edit;

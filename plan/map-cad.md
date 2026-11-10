@@ -34,7 +34,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880 | öğe türüne göre önerilen profil (kurum profiliyle); kaymanın kullanıcının seçtiği resmî değerle (yanılma sınırı) karşılaştırılması | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900 | datum dönüşümlerinin alan çokgenleri ve koordinat sistemi penceresinde harita; atlamalı trigonometrik nivelman | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920 | bağımsız baz önerisi (oturum başına n − 1); oturumun bloklarının pencerede gösterilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
@@ -593,6 +593,25 @@ kullanıcı verir). Kanıtlanan: `map.survey.query`'nin `tolerance`'ı (`places`
 uzaklığını taşır, sınırla `beyond`; değerlendirecek bir şeyi olmayan yer söylenmez; dört ret. 8 yeni bağımsız durum
 (36), Python, MCP; GNSS arşivi'nde Kabul farkı sınırı satırı, aşan satır uyarı rengiyle. Açık: sınırların projede
 saklanması (şema), GVX oturum korelasyonları, yeni noktaların hızı.
+
+**11 Kasım 2026, onuncu tur — GNSS baz oturumlarının korelasyonları, yeni noktaların hızı, sınırın projede saklanması ([ADR 4920](../docs/adr/4920-gnss-sessions-new-point-velocity-kept-limits.md)).**
+Kapsam: **Harita + CBS** (pencere Harita'nın). Araştırma: Netcad önce (wiki açılamadı, TLS; ürün sayfasında GNSS ağı yok),
+GVX 1.0 Ek A (dokuz korelasyon satır satır, n(n − 1)/2 blok), korelasyonun ihmali üzerine iki J. Surv. Eng. makalesi,
+Baarda/Teunissen'in korelasyonlu w-testi, BÖHHBÜY m. 15, 19, 21 (2025), 22, 103(1)(c), Geçici Madde 2. Kanıtlanan:
+- GVX okuyucusu oturumları okur; arşivde baz oturumu `bo-N` (bazları, blokları, dosyası); eksik bloklu oturum saklanır ve
+  söylenir, iki vektör anmayan alınmaz; `remove` `bo-N`'i çıkarır, oturumdaki bazı ve dengelemedeki oturumu çıkarmaz;
+- `correlations: session`: oturumun dengelemeye giren bazları 3n×3n tam kovaryansıyla; **baz testi kararı:** bazlar kendi
+  bileşenleri üzerinde korelasyonlu w-testiyle (w = |Pv|ᵢ/√(PQvvP)ᵢᵢ), sıraya bağlı değil; eksik blok ve pozitif tanımsız
+  matris gerekçeli ret; cevap hangi korelasyonun kullanıldığını söyler, dengeleme kaydı oturumları tutar;
+- `velocities`: yeni noktaların hızı arazi ölçümünün hız ızgarasından (koordinat zinciriyle bir yıl), ızgaranın adı ve
+  SHA-256'sıyla kabul edilen noktada; ızgarasız ret (hız uydurulmaz);
+- kabul farkı sınırı kaynağıyla projede (`edit tolerance`), `places` saklı sınırı okur; `.kcad` şema 240 (bağımsız okuyucu,
+  başvuru yazıcısı, örnek ve dört bozuk dosya; bilinmeyen sürüm örneği 241);
+- bağımsız başvuru (numpy GLS, PROJ): network 54 (13 yeni), edit'in ağ durumları 62 (16 yeni), query 3 yeni; bozma denemesi
+  iki değeri yakaladı; Python (bağımsız `.kcad` okuyucusuyla), MCP; masaüstünde Oturum korelasyonları, Yeni noktaların
+  hızı, Bazlar'da Oturum, GNSS arşivi'nde Kaynak ve Projeye yaz; resimler `.run/gui-evidence/gnss-oturum-hiz-4920/`.
+Açık: bağımsız baz önerisi, oturum bloklarının pencerede gösterilmesi, HGM hız modelinin dosyası (sahibin işi, beklemede),
+web (TODOS §0.2). Madde `[ ]` kalır.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

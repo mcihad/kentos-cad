@@ -9,4 +9,9 @@ import type { ErrorEllipse } from "./ErrorEllipse";
  * (project units), whether the class's limits hold for it, and its confidence region when it is not held fixed
  * (docs/adr/2560).
  */
-export type NetworkStation = { mark: string, known?: string, held: boolean, lat: number, lon: number, height: number, sigma: [number, number, number], point?: string, x?: number, y?: number, z?: number, dx?: number, dy?: number, dz?: number, rules?: boolean, ellipse?: ErrorEllipse, };
+export type NetworkStation = { mark: string, known?: string, held: boolean, lat: number, lon: number, height: number, sigma: [number, number, number], point?: string, x?: number, y?: number, z?: number, dx?: number, dy?: number, dz?: number, rules?: boolean, ellipse?: ErrorEllipse, 
+/**
+ * With `velocities`: a new mark's velocity east, north, up (m/yr) read from the campaign's velocity grid
+ * (docs/adr/4920).
+ */
+velocity?: [number, number, number], };

@@ -382,6 +382,8 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
         baselines,
         known: survey.known.clone(),
         adjustments: survey.adjustments.clone(),
+        baseline_sessions: survey.baseline_sessions.clone(),
+        tolerance: survey.tolerance.clone(),
         // Docs/adr/4120: the known points' own places, when asked.
         known_places: if places { crate::map_survey_places::known_places(doc, survey) } else { Vec::new() },
         object,
@@ -417,6 +419,7 @@ fn baseline_row(survey: &MapSurvey, b: &SurveyBaseline, deep: bool) -> SurveyBas
         }),
         source: b.source.clone(),
         adjustments: survey.adjustments.iter().filter(|a| a.baselines.contains(&b.id)).map(|a| a.id.clone()).collect(),
+        session: survey.session_of(&b.id).map(|s| s.id.clone()),
     }
 }
 
@@ -620,6 +623,7 @@ pub(crate) fn compute(
         chain: placed.chain,
         reasons: Vec::new(),
         adjustment: None,
+        velocity: None,
     })
 }
 
@@ -708,11 +712,16 @@ fn tolerance_checked(input: &MapSurveyQuery) -> Result<(), Stop> {
     Ok(())
 }
 
-/// The archive as asked: the tolerance checked first, the known places judged against it (docs/adr/4520).
+/// The archive as asked: the tolerance checked first, the known places judged against it (docs/adr/4520), else
+/// against the limits kept in the project (docs/adr/4920).
 fn asked_tree(doc: &Document, input: &MapSurveyQuery) -> Result<MapSurveyTree, Stop> {
     tolerance_checked(input)?;
     let mut out = tree(doc, input.deep, input.uid.as_deref(), input.places)?;
-    if let Some(t) = &input.tolerance {
+    let kept = out.tolerance.as_ref().filter(|_| input.places).map(|t| kentos_commands::SurveyPlaceTolerance {
+        horizontal: t.horizontal,
+        vertical: t.vertical,
+    });
+    if let Some(t) = input.tolerance.as_ref().or(kept.as_ref()) {
         crate::map_survey_places::judged(&mut out.known_places, t);
     }
     Ok(out)

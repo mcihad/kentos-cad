@@ -7,7 +7,8 @@
 use std::path::Path;
 
 use kentos_commands::{
-    AcceptMethod, CommandResult, CommandWarning, Entity, EntityBase, EntityId, GnssPoint, MapSurvey, MapSurveyEdit,
+    AcceptMethod, CommandResult, CommandWarning, CorrelationBlock, Entity, EntityBase, EntityId, GnssPoint, MapSurvey,
+    MapSurveyEdit, PointVelocity, SurveyBaselineSession, SurveyTolerance,
     MapSurveyEdited, MapSurveyNetwork, MapSurveyOperation as Op, PointEntity, PointRevision, SolutionKind,
     SurveyAdjustment, SurveyAntenna, SurveyBaseline, SurveyCampaign, SurveyFile, SurveyFileFormat, SurveyGrid,
     SurveyKnown, SurveyPoint, SurveyReceiver, SurveyResult, SurveySession, SurveySolution, SurveyUse, TimeSystem, Vec2,
@@ -416,9 +417,14 @@ fn layer_ok(doc: &Document, layer: &str, at: &str, words: &str) -> Result<(), St
     Ok(())
 }
 
-/// A baseline file's vectors (records without their id, campaign and file yet), its format and what was not read: a
-/// GVX 1.0 file, else KentOS's baseline text (docs/adr/1740).
-fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, SurveyFileFormat, Vec<CommandWarning>), Stop> {
+/// A baseline file's sessions (docs/adr/4920): the GVX session's id, its time, its vectors' ids in the file and its
+/// blocks by those ids.
+type FileSessions = Vec<kentos_formats::gnss::gvx::GvxSession>;
+
+/// A baseline file's vectors (records without their id, campaign and file yet), its sessions, its format and what was
+/// not read: a GVX 1.0 file, else KentOS's baseline text (docs/adr/1740).
+#[allow(clippy::type_complexity)]
+fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, FileSessions, SurveyFileFormat, Vec<CommandWarning>), Stop> {
     use kentos_formats::gnss::gvx;
     let blank = |from: String, to: String, d: [f64; 3], covariance: [f64; 6], source: String| SurveyBaseline {
         id: String::new(),
@@ -442,13 +448,21 @@ fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, SurveyFileFormat
     let mut warnings = Vec::new();
     if gvx::is_gvx(bytes) {
         let read = gvx::read(bytes).map_err(|why| fail(codes::UNREADABLE_GNSS_FILE, why, "operation.file"))?;
-        if !read.warnings.is_empty() {
+        if !read.ignored.is_empty() {
             warnings.push(CommandWarning {
                 code: codes::GVX_CORRELATIONS_IGNORED.into(),
-                message: read.warnings.join(" "),
+                message: read.ignored.join(" "),
                 path: Some("operation.file".into()),
             });
         }
+        if !read.incomplete.is_empty() {
+            warnings.push(CommandWarning {
+                code: codes::GVX_SESSION_INCOMPLETE.into(),
+                message: read.incomplete.join(" "),
+                path: Some("operation.file".into()),
+            });
+        }
+        let sessions = read.sessions;
         let out = read
             .vectors
             .into_iter()
@@ -462,7 +476,7 @@ fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, SurveyFileFormat
                 ..blank(v.from, v.to, v.d, v.covariance, v.id)
             })
             .collect();
-        return Ok((out, SurveyFileFormat::Gvx, warnings));
+        return Ok((out, sessions, SurveyFileFormat::Gvx, warnings));
     }
     let (enc, bom) = kentos_formats::text::sniff(bytes);
     let body = kentos_formats::text::decode(&bytes[bom..], enc);
@@ -486,7 +500,7 @@ fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, SurveyFileFormat
         });
     }
     let out = vectors.into_iter().enumerate().map(|(k, v)| blank(v.from, v.to, v.d, v.cov, format!("B{}", k + 1))).collect();
-    Ok((out, SurveyFileFormat::Text, warnings))
+    Ok((out, Vec::new(), SurveyFileFormat::Text, warnings))
 }
 
 /// The network adjusted and accepted (docs/adr/1740): refused while a stage has a blunder or fails its model test or a
@@ -577,6 +591,8 @@ fn network(
             chain: placed.chain.clone(),
             reasons: Vec::new(),
             adjustment: Some(da.clone()),
+            // docs/adr/4920: its velocity read from the grid the user gave, kept with the grid's name and SHA-256.
+            velocity: n.velocity.zip(a.velocity_grid.clone()).map(|(enu, grid)| PointVelocity { enu, grid }),
         };
         match now.points.iter().find(|p| p.mark == n.mark) {
             Some(old) => {
@@ -655,6 +671,7 @@ fn network(
         dof: a.out.constrained.dof,
         srid: a.out.srid,
         epoch: a.out.epoch,
+        sessions: a.sessions.clone(),
     });
     // Each point's error ellipse, recorded as made from the points at their revisions now (docs/adr/2960).
     if let Some(with) = ellipses {
@@ -1094,11 +1111,12 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 return Err(unknown("arazi ölçümü", campaign, "operation.campaign"));
             }
             let (bytes, sha) = file_at(file, "operation.file")?;
-            let (vectors, format, mut warnings) = read_baselines(&bytes)?;
+            let (vectors, sessions, format, mut warnings) = read_baselines(&bytes)?;
             if now.baselines.len() + vectors.len() > kentos_commands::MAX_SURVEY_BASELINES {
                 return Err(full("100 000 baz"));
             }
             let mut ids = Vec::new();
+            let mut by_source: std::collections::HashMap<String, String> = std::collections::HashMap::new();
             for v in vectors {
                 let id = next_survey_id(next.baselines.iter().map(|x| x.id.as_str()), "bz-");
                 let b = SurveyBaseline {
@@ -1113,7 +1131,33 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                         format!("“{}” bazı ({}): {why}.", b.source.clone().unwrap_or_default(), field),
                     ));
                 }
+                by_source.insert(b.source.clone().unwrap_or_default(), id.clone());
                 next.baselines.push(b);
+                ids.push(id);
+            }
+            // docs/adr/4920: each GVX session kept as `bo-N`, its vectors and blocks by their new `bz-N`.
+            if next.baseline_sessions.len() + sessions.len() > kentos_commands::MAX_BASELINE_SESSIONS {
+                return Err(full("10 000 baz oturumu"));
+            }
+            for g in sessions {
+                if g.vectors.len() > kentos_commands::MAX_SESSION_BASELINES {
+                    return Err(value(
+                        "operation.file",
+                        format!("“{}” oturumunda {} baz var; bir oturumda en çok 100 baz alınır.", g.id, g.vectors.len()),
+                    ));
+                }
+                let bz = |v: &String| by_source.get(v).cloned().unwrap_or_default();
+                let id = next_survey_id(next.baseline_sessions.iter().map(|x| x.id.as_str()), "bo-");
+                next.baseline_sessions.push(SurveyBaselineSession {
+                    id: id.clone(),
+                    campaign: campaign.clone(),
+                    name: g.id.clone(),
+                    start: g.start.clone(),
+                    end: g.end.clone(),
+                    baselines: g.vectors.iter().map(bz).collect(),
+                    blocks: g.blocks.iter().map(|(r, c, v)| CorrelationBlock { row: bz(r), col: bz(c), r: *v }).collect(),
+                    file: Some(SurveyFile { path: file.clone(), revision: sha.clone(), format }),
+                });
                 ids.push(id);
             }
             let first = ids.first().cloned();
@@ -1200,7 +1244,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             next.known.push(k);
             Ok(Change { id: Some(id), ..Change::new(next, "Bilinen nokta ekle") })
         }
-        Op::Network { campaign, scale, class, rules, hold, epoch, layer, ellipses } => network(
+        Op::Network { campaign, scale, class, rules, hold, epoch, correlations, velocities, layer, ellipses } => network(
             doc,
             &now,
             next,
@@ -1211,6 +1255,8 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 rules: rules.clone(),
                 hold: hold.clone(),
                 epoch: *epoch,
+                correlations: *correlations,
+                velocities: *velocities,
             },
             layer.as_deref(),
             ellipses.as_ref(),
@@ -1417,6 +1463,37 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             next.uses.push(SurveyUse { id: id.clone(), operation: operation.clone(), uids: ids, points: revs });
             Ok(Change { id: Some(id), ..Change::new(next, "Dayanan kaydı") })
         }
+        Op::Tolerance { horizontal, vertical, source } => {
+            // docs/adr/4920: the known points' place limits kept in the project, with their source.
+            if horizontal.is_none() && vertical.is_none() && source.is_none() {
+                if now.tolerance.is_none() {
+                    return Err(nothing());
+                }
+                next.tolerance = None;
+                return Ok(Change::new(next, "Kabul farkı sınırını kaldır"));
+            }
+            for (v, what, path) in [(horizontal, "Yatay", "operation.horizontal"), (vertical, "Düşey", "operation.vertical")] {
+                if v.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
+                    return Err(value(path, format!("{what} sınır 0'dan büyük bir uzunluk olmalı (m).")));
+                }
+            }
+            if horizontal.is_none() && vertical.is_none() {
+                return Err(value("operation.horizontal", "Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).".into()));
+            }
+            let Some(source) = source.clone() else {
+                return Err(value(
+                    "operation.source",
+                    "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi.".into(),
+                ));
+            };
+            text(Some(source.as_str()), kentos_commands::MOST_REASON_TEXT, "operation.source", "Sınırın kaynağı")?;
+            let t = SurveyTolerance { horizontal: *horizontal, vertical: *vertical, source };
+            if now.tolerance.as_ref() == Some(&t) {
+                return Err(nothing());
+            }
+            next.tolerance = Some(t);
+            Ok(Change::new(next, "Kabul farkı sınırı"))
+        }
         Op::Remove { id } => {
             let removed: usize;
             let at = "operation.id";
@@ -1442,13 +1519,16 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                         at,
                     ));
                 }
-                let before = now.sessions.len() + now.solutions.len() + now.campaigns.len() + now.baselines.len();
+                let count = |m: &MapSurvey| {
+                    m.sessions.len() + m.solutions.len() + m.campaigns.len() + m.baselines.len() + m.baseline_sessions.len()
+                };
+                let before = count(&now);
                 next.solutions.retain(|s| !sessions.contains(&s.session.as_str()));
                 next.sessions.retain(|s| s.campaign != *id);
                 next.baselines.retain(|b| b.campaign != *id);
+                next.baseline_sessions.retain(|s| s.campaign != *id);
                 next.campaigns.retain(|c| c.id != *id);
-                removed =
-                    before - (next.sessions.len() + next.solutions.len() + next.campaigns.len() + next.baselines.len());
+                removed = before - count(&next);
             } else if now.session(id).is_some() {
                 if let Some((s, p)) = used_by(&now, &[id.as_str()]) {
                     return Err(fail(
@@ -1492,8 +1572,25 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                         at,
                     ));
                 }
+                if let Some(s) = now.session_of(id) {
+                    return Err(fail(
+                        codes::SURVEY_IN_USE,
+                        format!("“{id}” bazı “{}” baz oturumunda; önce oturumu çıkarın ya da bazı dışlayın.", s.id),
+                        at,
+                    ));
+                }
                 next.baselines.retain(|b| b.id != *id);
                 next.known.retain(|k| k.id != *id);
+                removed = 1;
+            } else if now.baseline_session(id).is_some() {
+                if let Some(a) = now.adjustments.iter().find(|a| a.sessions.contains(id)) {
+                    return Err(fail(
+                        codes::SURVEY_IN_USE,
+                        format!("“{id}” baz oturumu “{}” ağ dengelemesinde; önce dengelemeyi çıkarın.", a.id),
+                        at,
+                    ));
+                }
+                next.baseline_sessions.retain(|s| s.id != *id);
                 removed = 1;
             } else if now.adjustment(id).is_some() {
                 if let Some(p) = now.point_by(id) {

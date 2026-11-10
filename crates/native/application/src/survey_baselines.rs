@@ -101,6 +101,8 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
             BaselineDatum::Given => Datum::Given,
             BaselineDatum::Minimal => Datum::Minimal,
         },
+        sessions: Vec::new(),
+        correlated: false,
     };
     let r = gnss::adjust(&core).map_err(|e| fail(e.code, e.message, &e.path))?;
     let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);

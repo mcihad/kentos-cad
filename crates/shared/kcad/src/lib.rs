@@ -942,11 +942,15 @@ pub const SCHEMA_WITH_ROOFS: u32 = 237;
 pub const SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS: u32 = 238;
 /// Schema 239 (docs/adr/4880): a map work item's typed layers' profile (`profile`).
 pub const SCHEMA_WITH_WORK_PROFILES: u32 = 239;
+/// Schema 240 (docs/adr/4920): a GNSS archive's baseline sessions with their cross-correlations (`baselineSessions`),
+/// an adjustment's sessions, the known points' place limits kept with their source (`tolerance`) and a network point's
+/// velocity read from a grid (`velocity`).
+pub const SCHEMA_WITH_GNSS_SESSIONS: u32 = 240;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 237] = [
+pub const SCHEMAS: [u32; 238] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1184,6 +1188,7 @@ pub const SCHEMAS: [u32; 237] = [
     SCHEMA_WITH_ROOFS,
     SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
     SCHEMA_WITH_WORK_PROFILES,
+    SCHEMA_WITH_GNSS_SESSIONS,
 ];
 
 /// The file a drawing is saved as.

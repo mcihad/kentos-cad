@@ -2110,8 +2110,18 @@ codes! {
     KNOWN_DIFFER = "known_differ", Failed, false, "Bilinen noktalar aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin.";
     /// GNSS ağı: a class the rule package does not have.
     UNKNOWN_RULE_CLASS = "unknown_rule_class", Failed, false, "Kural paketinde bu sınıf yok (BÖHHBÜY 2018: C1, C2, C3).";
-    /// GNSS ağı: a GVX file's cross-correlations between vectors were not read.
-    GVX_CORRELATIONS_IGNORED = "gvx_correlations_ignored", Warning, false, "GVX oturumlarının vektörler arası çapraz korelasyonları okunmadı; vektörler birbirinden bağımsız dengelenir.";
+    /// GNSS ağı: a GVX session that names fewer than two of the file's vectors was not kept (docs/adr/4920).
+    GVX_CORRELATIONS_IGNORED = "gvx_correlations_ignored", Warning, false, "GVX oturumunun çapraz korelasyonları alınmadı: oturum dosyanın iki vektörünü bile anmıyor.";
+    /// GNSS ağı: a GVX session kept without all of its n(n − 1)/2 blocks (docs/adr/4920).
+    GVX_SESSION_INCOMPLETE = "gvx_session_incomplete", Warning, false, "GVX oturumunun korelasyon blokları eksik (n bazlı oturumda n(n − 1)/2 blok olur); oturum korelasyonlarıyla dengelenemez.";
+    /// GNSS ağı: a session the adjustment with session correlations needs lacks blocks (docs/adr/4920).
+    SESSION_BLOCKS_MISSING = "session_blocks_missing", Failed, false, "Baz oturumunun korelasyon blokları eksik; korelasyonsuz dengeleyin ya da dosyayı yeniden alın.";
+    /// GNSS ağı: a session's full covariance is not positive definite (docs/adr/4920).
+    SESSION_COVARIANCE_INVALID = "session_covariance_invalid", Failed, false, "Baz oturumunun tam kovaryansı pozitif tanımlı değil; dosyayı yeniden işleyin ya da korelasyonsuz dengeleyin.";
+    /// GNSS ağı: the baselines have sessions but the adjustment did not use their correlations (docs/adr/4920).
+    SESSION_CORRELATIONS_UNUSED = "session_correlations_unused", Warning, false, "Bazların oturum korelasyonları kullanılmadı; aynı oturumun bazları birbirinden bağımsız sayıldı.";
+    /// GNSS ağı: new points' velocities asked for without the campaign's velocity grid (docs/adr/4920).
+    NO_VELOCITY_GRID = "no_velocity_grid", Failed, false, "Yeni noktaların hızı arazi ölçümünün hız ızgarasından okunur; arazi ölçümüne hız ızgarasını verin.";
     /// GNSS ağı: a baseline text's K and N lines were not taken into the archive.
     BASELINE_TEXT_STATIONS = "baseline_text_stations", Warning, false, "Baz metninin K ve N satırları arşive alınmadı; bilinen noktaları çerçevesi ve epokuyla Bilinen nokta ekle ile girin.";
     /// GNSS ağı: the class's limits do not hold (a baseline's or a station's standard deviation).
