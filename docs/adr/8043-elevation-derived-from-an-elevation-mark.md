@@ -1,7 +1,7 @@
 # ADR 8043: Görünüş çıkar — görünüş işaretinden bina görünüşü, yönüne göre adı, ruhsat takımında görünüş paftası
 
 - **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ikinci teslimi (M43 1. bölüm:
-  §1–§6; 2. bölüm: §7–§9).
+  §1–§6; 2. bölüm: §7–§10).
 - **Bağlam belgesi:** ADR 0345 (görünüm işaretleri), ADR 8038 §6 (Türkiye'nin açılım çizgileri), ADR 8042 (Kesit çıkar:
   blok, çekirdek, eskime, ruhsat takımı; bu ADR onun üstüne kurulur).
 
@@ -142,6 +142,20 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
   eşiğin altında); hiç görünüş yokken dördü, kuzey çıkarılınca üçü istenir, Tümü'den sonra bulgu yok. Gerçek pencerede
   Denetim › Mevzuat 24 → 25 bulgu. Dört katlı yapının masaüstü denetiminde de dört cephe istenir.
 
+### 10. Cephe kaplaması yazılır (2. bölüm)
+
+- **Kural:** Mimarlar Odası: "Cephe kaplama malzemesi ve renkler yazılır". Görünüşün cephesi ±0,00'dan binanın tepesine
+  25 cm aralıkla taranır; her noktada en önde görünen prizma yüzü (çekirdek `seen_at`) ve onun kaplaması okunur,
+  açıklıkların içi (denizlikten lentoya) atlanır. 0,25 m²'den çok görünen her kaplama bir kez yazılır: kat
+  yüksekliklerinin sağında, en yükseği üstte; çizgisi o kaplamanın yazıya en yakın noktasından küçük bir halkayla başlar.
+  Ad, kaplamanın proje malzemesinin adıdır (yoksa malzeme adı). Kiriş, kolon ve döşeme kaplamasızdır, yazılmaz.
+- **İlk sürümde** çizgi kaplamanın ortasına en yakın noktadan başlıyordu: cephenin ortasından çapraz uzanıp bir
+  pencerenin üstünden geçti. Yazıya en yakın noktadan başlayınca kısa ve neredeyse yatay.
+- **Renk** modelde tutulmuyor (proje malzemesinin rengi yok); malzemenin adında yazılırsa ("Silikon boya, RAL 9010") o
+  da yazılır. Ayrı bir renk alanı sonraya kaldı.
+- **Ölçüm:** kuzey cephesinde tek yazı "Dış sıva" (duvarların dış katmanı), çizgisi sağ uçtaki sıvalı yüzden; 12 × 6 m
+  cephe 48 × 24 noktada taranır.
+
 ## Doğrulama
 
 - **Çekirdek:** bağımsız başvuruya (`scripts/fixtures/section_cases.py`) 18. durum: doğramanın çizgileri kendi
@@ -166,7 +180,7 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
 - **Görülen ve 2. bölümde düzeltilen:** kolon ve kiriş alınları, duvarın yüzüyle aynı düzlemde oldukları için görünüşte
   çizgi olarak çıkıyordu (§7); bütün cephe en ince kalemdeydi (§4).
 
-## Sonraya kalan (M43 2. bölüm)
+## Sonraya kalan
 
-- Cephe kaplama malzemesi ve renk yazısı (MO: "Cephe kaplama malzemesi ve renkler yazılır").
+- Proje malzemesine renk alanı (görünüşte malzemenin yanında rengi).
 - Tabii zemin "nokta nokta" (modelin tabii zemini olunca) ve çatı (ADV-20).

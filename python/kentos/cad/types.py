@@ -69159,10 +69159,12 @@ class PinnedObject(_Model):
 class PipeCheck(_Model):
     """A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
     direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
-    diameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,
-    and its findings' kinds.
+    diameter and wall thickness (metres; the wall when asked and read, from its own attribute or the outer diameter's),
+    the least cover and where, the greatest cover, the rule package's slope class it is in (rules asked), and its
+    findings' kinds.
     Attributes:
         length: Unit: length.
+        class_: The rule package's slope class its diameter is in (docs/adr/4780); none: no rules asked, or none holds it.
         diameter: Unit: length.
         downstream: Unit: elevation.
         max_cover: Unit: length.
@@ -69176,6 +69178,7 @@ class PipeCheck(_Model):
     layer: str
     length: float
     findings: list[str]
+    class_: str | None | Unset = UNSET
     diameter: float | None | Unset = UNSET
     downstream: float | None | Unset = UNSET
     max_cover: float | None | Unset = UNSET
@@ -69192,6 +69195,8 @@ class PipeCheck(_Model):
         out["layer"] = self.layer
         out["length"] = float(self.length)
         out["findings"] = list(self.findings)
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
         if self.diameter is not UNSET:
             out["diameter"] = None if self.diameter is None else float(self.diameter)
         if self.downstream is not UNSET:
@@ -69219,6 +69224,7 @@ class PipeCheck(_Model):
             layer=data["layer"],
             length=float(data["length"]),
             findings=list(data["findings"]),
+            class_=data.get("class", UNSET),
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else float(data["diameter"]),
             downstream=UNSET if "downstream" not in data else None if data["downstream"] is None else float(data["downstream"]),
             max_cover=UNSET if "maxCover" not in data else None if data["maxCover"] is None else float(data["maxCover"]),
@@ -69349,15 +69355,22 @@ class PipeCrossing(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipeDiameter(_Model):
     """The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
-    optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
-    then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
-    outside to outside.
+    optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
+    pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
     Attributes:
-        catalog: Unit: value.
+        field: The attribute holding each pipe's inner diameter.
+        unit: The unit it is written in.
+        catalog: The sizes a pipe may have, in that unit (none: any). Unit: value.
+        outer: The attribute holding each pipe's outer diameter, in the diameter's unit (docs/adr/4780): its wall is half the
+            outer less the inner. With `wall` too, the two must agree (outer = inner + 2 × wall, to a billionth of the
+            outer): a pipe whose do not, or whose outer is below its inner, is said (`wallMismatch`) and its wall is not
+            taken from either.
+        wall: The attribute holding each pipe's wall thickness, in the diameter's unit, 0 or more (docs/adr/3960).
     """
     field: str
     unit: PipeUnit | PipeUnitName
     catalog: list[float] | Unset = UNSET
+    outer: str | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -69366,6 +69379,8 @@ class PipeDiameter(_Model):
         out["unit"] = _enum_out(self.unit)
         if self.catalog is not UNSET:
             out["catalog"] = [float(e0) for e0 in self.catalog]
+        if self.outer is not UNSET:
+            out["outer"] = self.outer
         if self.wall is not UNSET:
             out["wall"] = self.wall
         return out
@@ -69376,6 +69391,7 @@ class PipeDiameter(_Model):
             field=data["field"],
             unit=_enum_in(PipeUnit, data["unit"]),
             catalog=[float(e0) for e0 in data["catalog"]] if "catalog" in data else UNSET,
+            outer=data.get("outer", UNSET),
             wall=data.get("wall", UNSET),
         )
 
@@ -69564,8 +69580,8 @@ class PipeProfileOther(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipeProfilePipe(_Model):
     """A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is
-    drawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown
-    (none asked: over the invert).
+    drawn against the flow, its inverts up and down the flow, its slope, diameter (m), wall and least cover over the
+    crown (none asked: over the invert; its wall known: over its top outside, as `cad.pipes.check` measures it).
     Attributes:
         from_: Unit: m.
         to: Unit: m.
@@ -69575,6 +69591,9 @@ class PipeProfilePipe(_Model):
         min_cover: Unit: m.
         slope: Unit: 1.
         upstream: Unit: elevation.
+        wall: Its wall thickness (m), when the diameter asks it (its own attribute or the outer diameter's) and the pipe's is
+            known (docs/adr/4780): above zero, its outer walls are drawn, the bottom outside under the invert and the top
+            outside over the crown. Unit: m.
     """
     uid: str
     from_: float
@@ -69587,6 +69606,7 @@ class PipeProfilePipe(_Model):
     reversed: bool | Unset = UNSET
     slope: float | None | Unset = UNSET
     upstream: float | None | Unset = UNSET
+    wall: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69608,6 +69628,8 @@ class PipeProfilePipe(_Model):
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.upstream is not UNSET:
             out["upstream"] = None if self.upstream is None else float(self.upstream)
+        if self.wall is not UNSET:
+            out["wall"] = None if self.wall is None else float(self.wall)
         return out
 
     @classmethod
@@ -69624,6 +69646,7 @@ class PipeProfilePipe(_Model):
             reversed=data.get("reversed", UNSET),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             upstream=UNSET if "upstream" not in data else None if data["upstream"] is None else float(data["upstream"]),
+            wall=UNSET if "wall" not in data else None if data["wall"] is None else float(data["wall"]),
         )
 
 
@@ -69678,11 +69701,222 @@ class PipeProfileStructure(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PipeRuleSystem(_Model):
+    """A system's rules. The first slope class holding a diameter is its; a diameter in none has no slope limit from the
+    package (`noRule`), and one in no spacing class no greatest span.
+    Attributes:
+        id: The system's id, asked by `rules.system` (`atiksu`, `yagmursuyu` in KentOS's package).
+        name: Its name in words.
+        source: The articles and tables its numbers come from.
+        effective: When its document holds (ISO date).
+        slopes: The slope classes, by diameter.
+        cover_note: The regulation's words about the least cover (when it may be less).
+        min_cover: The least cover (metres, over the pipe's top as `cad.pipes.check` measures it); none: the package gives none. Unit: m.
+        span_note: The regulation's words about the spacing (when it may be more).
+        spans: The structures' spacing, by diameter.
+    """
+    id: str
+    name: str
+    source: str
+    effective: str
+    slopes: list[PipeSlopeClass]
+    cover_note: str | None | Unset = UNSET
+    min_cover: float | None | Unset = UNSET
+    span_note: str | None | Unset = UNSET
+    spans: list[PipeSpanClass] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["slopes"] = [e0.to_json() for e0 in self.slopes]
+        if self.cover_note is not UNSET:
+            out["coverNote"] = self.cover_note
+        if self.min_cover is not UNSET:
+            out["minCover"] = None if self.min_cover is None else float(self.min_cover)
+        if self.span_note is not UNSET:
+            out["spanNote"] = self.span_note
+        if self.spans is not UNSET:
+            out["spans"] = [e0.to_json() for e0 in self.spans]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeRuleSystem:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            source=data["source"],
+            effective=data["effective"],
+            slopes=[PipeSlopeClass.from_json(e0) for e0 in data["slopes"]],
+            cover_note=data.get("coverNote", UNSET),
+            min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
+            span_note=data.get("spanNote", UNSET),
+            spans=[PipeSpanClass.from_json(e0) for e0 in data["spans"]] if "spans" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeRules(_Model):
+    """A gravity line rule package.
+    Attributes:
+        id: The package's id.
+        release: Its release. Unit: version.
+        jurisdiction: Whose rules they are.
+        source: The documents, and when they were read.
+        effective: When the oldest of them holds (ISO date).
+        systems: Its systems.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    systems: list[PipeRuleSystem]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["systems"] = [e0.to_json() for e0 in self.systems]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            systems=[PipeRuleSystem.from_json(e0) for e0 in data["systems"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeRulesAsk(_Model):
+    """The rules a check takes its limits from (docs/adr/4780). The limits the user gives (`minCover`, `minSlope`,
+    `maxSlope`) go before the package's.
+    Attributes:
+        system: The system's id in the package (`atiksu` or `yagmursuyu` in KentOS's).
+        package: The package; none: KentOS's (`catalog/v1/rules/kanal-csb-2017.json`).
+    """
+    system: str
+    package: PipeRules | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["system"] = self.system
+        if self.package is not UNSET:
+            out["package"] = None if self.package is None else self.package.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeRulesAsk:
+        return cls(
+            system=data["system"],
+            package=UNSET if "package" not in data else None if data["package"] is None else PipeRules.from_json(data["package"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeSlopeClass(_Model):
+    """A diameter class of a system's slopes and its slopes, written 1:A as the regulations write them.
+    Attributes:
+        name: The class's name as the table writes it (“Tali kanal”, “φ400”).
+        least: The least slope 1:A, by its A (300 is 1:300). Unit: 1.
+        greatest: The greatest slope 1:A, by its A (15 is 1:15). Unit: 1.
+        exceptional: The exceptional least slope 1:A, by its A: a slope between it and the least is allowed only by exception
+            (`exceptionalSlope`), one under it is too low. None: the table has no such column for the class. Unit: 1.
+        from_: The least diameter it holds, inclusive: millimetres as the table writes φ, compared with the pipe's diameter
+            attribute read in millimetres. At least one of `from`, `over` and `to` is given. Unit: value.
+        over: The diameter it holds those over, exclusive (millimetres; “> φ1000”). Unit: value.
+        to: The greatest diameter it holds, inclusive (millimetres). Unit: value.
+    """
+    name: str
+    least: float
+    greatest: float
+    exceptional: float | None | Unset = UNSET
+    from_: float | None | Unset = UNSET
+    over: float | None | Unset = UNSET
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["least"] = float(self.least)
+        out["greatest"] = float(self.greatest)
+        if self.exceptional is not UNSET:
+            out["exceptional"] = None if self.exceptional is None else float(self.exceptional)
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.over is not UNSET:
+            out["over"] = None if self.over is None else float(self.over)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeSlopeClass:
+        return cls(
+            name=data["name"],
+            least=float(data["least"]),
+            greatest=float(data["greatest"]),
+            exceptional=UNSET if "exceptional" not in data else None if data["exceptional"] is None else float(data["exceptional"]),
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            over=UNSET if "over" not in data else None if data["over"] is None else float(data["over"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeSpanClass(_Model):
+    """The structures' spacing for a range of diameters: one every `least` to `greatest` metres. Only the greatest is
+    checked: a pipe between two structures longer than it is said (`longSpan`).
+    Attributes:
+        greatest: The greatest spacing (metres). Unit: m.
+        below: The diameters below it, exclusive (millimetres; “< φ1200”). At least one of `below` and `over` is given. Unit: value.
+        least: The least spacing the regulation names (metres), shown, not checked. Unit: m.
+        over: The diameters over it, exclusive (millimetres; “> φ1200”). Unit: value.
+    """
+    greatest: float
+    below: float | None | Unset = UNSET
+    least: float | None | Unset = UNSET
+    over: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["greatest"] = float(self.greatest)
+        if self.below is not UNSET:
+            out["below"] = None if self.below is None else float(self.below)
+        if self.least is not UNSET:
+            out["least"] = None if self.least is None else float(self.least)
+        if self.over is not UNSET:
+            out["over"] = None if self.over is None else float(self.over)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeSpanClass:
+        return cls(
+            greatest=float(data["greatest"]),
+            below=UNSET if "below" not in data else None if data["below"] is None else float(data["below"]),
+            least=UNSET if "least" not in data else None if data["least"] is None else float(data["least"]),
+            over=UNSET if "over" not in data else None if data["over"] is None else float(data["over"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PipesCheck(_Model):
     """Input of `cad.pipes.check` v1.
 
-    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
-    greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
+    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's and the outer diameter's too, a
+    limit not above zero, a least above a greatest, a catalogue of more than 200 sizes or a size not above zero; rules
+    asked without a diameter, of a system the package does not have, or of a package not whole, at `rules`,
+    docs/adr/4780); `unknown_network` (no network of the id or
     name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
     surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
     `tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's
@@ -69696,6 +69930,8 @@ class PipesCheck(_Model):
         max_slope: Unit: grade.
         min_cover: The least and the greatest cover over the crown (metres). Unit: length.
         min_slope: The least and the greatest slope, metres a metre (0.003 is 3 ‰). Unit: grade.
+        rules: The rule package the limits not given are taken from (docs/adr/4780): each pipe's least, exceptional least and
+            greatest slope by its diameter's class, the least cover, the greatest span between two structures.
     """
     network: str
     inverts: PipeInverts
@@ -69706,6 +69942,7 @@ class PipesCheck(_Model):
     max_slope: float | None | Unset = UNSET
     min_cover: float | None | Unset = UNSET
     min_slope: float | None | Unset = UNSET
+    rules: PipeRulesAsk | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69725,6 +69962,8 @@ class PipesCheck(_Model):
             out["minCover"] = None if self.min_cover is None else float(self.min_cover)
         if self.min_slope is not UNSET:
             out["minSlope"] = None if self.min_slope is None else float(self.min_slope)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
         return out
 
     @classmethod
@@ -69739,6 +69978,7 @@ class PipesCheck(_Model):
             max_slope=UNSET if "maxSlope" not in data else None if data["maxSlope"] is None else float(data["maxSlope"]),
             min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
             min_slope=UNSET if "minSlope" not in data else None if data["minSlope"] is None else float(data["minSlope"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else PipeRulesAsk.from_json(data["rules"]),
         )
 
 
@@ -136778,8 +137018,13 @@ __all__ = [
     "PipeProfileOther",
     "PipeProfilePipe",
     "PipeProfileStructure",
+    "PipeRuleSystem",
+    "PipeRules",
+    "PipeRulesAsk",
     "PipeRunEnd",
     "PipeRunEndName",
+    "PipeSlopeClass",
+    "PipeSpanClass",
     "PipeUnit",
     "PipeUnitName",
     "PipesCheck",

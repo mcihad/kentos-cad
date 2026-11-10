@@ -157,6 +157,60 @@ fn the_north_facade_is_drawn_from_its_mark_with_its_windows_opening_lines() {
         .filter(|l| l.ends_with("-2") || l.ends_with("-3") || l.ends_with("-4"))
         .collect();
     assert!(deeper.is_empty(), "{deeper:?}");
+    // Its finish named once (docs/adr/8043 §10; Mimarlar Odası: "Cephe kaplama malzemesi ve renkler yazılır"): the
+    // walls' outer plaster, right of the heights, its leader from a point of the plastered face between the openings.
+    let named: Vec<&kentos_commands::TextEntity> = block
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) if t.text == "Dış sıva" => Some(t),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(named.len(), 1, "{texts:?}");
+    // The facade's right end in the block: its columns' outer edges.
+    let right = block
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Line(l) if l.base.layer_id.starts_with("mm-tasi-betonarme") => {
+                Some(l.a.x.max(l.b.x))
+            }
+            _ => None,
+        })
+        .fold(f64::NEG_INFINITY, f64::max);
+    assert!(
+        named[0].p.x > right + 1.0,
+        "right of the heights: {:?} {right}",
+        named[0].p
+    );
+    // Its leader from a point of the plastered face near the right end, nearly level: short, across no opening.
+    let leader = block
+        .entities
+        .iter()
+        .find_map(|e| match e {
+            Entity::Line(l)
+                if l.base.layer_id.starts_with("mm-xxxx-etiket")
+                    && (l.b.y - named[0].p.y).abs() < 1e-9
+                    && l.a.x < right =>
+            {
+                Some(l)
+            }
+            _ => None,
+        })
+        .expect("a leader to the facade");
+    assert!(
+        leader.a.x > right - 1.0
+            && leader.a.y > 0.0
+            && leader.a.y < 6.0
+            && (leader.a.y - leader.b.y).abs() < 0.5,
+        "{leader:?} {right}"
+    );
+    // Nothing else is named: the beams, columns and slabs take the plaster's finish.
+    assert!(
+        !texts.iter().any(|t| *t == "Betonarme" || *t == "İç sıva"),
+        "{texts:?}"
+    );
     // What is seen under the graded ground (the ground slab's edge) is dashed.
     assert!(block.entities.iter().any(|e| matches!(e, Entity::Line(l)
         if serde_json::to_value(l.base.look.line_type).unwrap() == serde_json::json!("dashed") && l.a.y < 0.0)));

@@ -1561,6 +1561,85 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         );
     }
     hi.x = hi.x.max(xd + 0.5);
+    // An elevation's finishes (docs/adr/8043 §10; Mimarlar Odası: "Cephe kaplama malzemesi ve renkler yazılır"): what
+    // the facade shows, looked at every 25 cm over the building from ±0.00 up, the openings left out, by the finish of
+    // the face seen there; each finish seen over a quarter of a square metre named once, right of the heights.
+    if elevation {
+        let names: BTreeMap<String, String> = doc
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| {
+                a.materials
+                    .iter()
+                    .map(|mat| (mat.id.clone(), mat.name.clone()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let gaps: Vec<(f64, f64, f64, f64)> = m
+            .gaps
+            .iter()
+            .filter(|g| !g.ring.is_empty())
+            .map(|g| {
+                let us = g.ring.iter().map(|q| frame.u(*q));
+                (
+                    us.clone().fold(f64::INFINITY, f64::min),
+                    us.fold(f64::NEG_INFINITY, f64::max),
+                    g.sill,
+                    g.head,
+                )
+            })
+            .collect();
+        let top = zs.last().copied().unwrap_or(hi.y);
+        let step = 0.25;
+        let mut seen_finish: BTreeMap<String, Vec<P>> = BTreeMap::new();
+        let mut u = bx0 + step / 2.0;
+        while u < bx1 {
+            let mut z = step / 2.0;
+            while z < top {
+                let opening = gaps
+                    .iter()
+                    .any(|(u0, u1, s0, s1)| u > *u0 && u < *u1 && z > *s0 && z < *s1);
+                if !opening
+                    && let Some((k, _)) = sec::seen_at(frame, &m.solids, P::new(u, z))
+                    && let Some(f) = m.solids[k].finish.as_deref()
+                {
+                    let name = names.get(f).cloned().unwrap_or_else(|| f.to_owned());
+                    seen_finish.entry(name).or_default().push(P::new(u, z));
+                }
+                z += step;
+            }
+            u += step;
+        }
+        // The highest finish first; each leader from its seen point nearest its words, so it stays short and runs
+        // across nothing but the facade's edge (from the middle, the first leader crossed a window).
+        let mut finishes: Vec<(String, Vec<P>)> = seen_finish
+            .into_iter()
+            .filter(|(_, at)| at.len() >= 4)
+            .collect();
+        let highest = |at: &[P]| at.iter().map(|q| q.y).fold(f64::NEG_INFINITY, f64::max);
+        finishes.sort_by(|a, b| highest(&b.1).total_cmp(&highest(&a.1)).then(a.0.cmp(&b.0)));
+        let lx = xd + 1.2;
+        for (k, (name, at)) in finishes.iter().enumerate() {
+            let ly = top - 0.4 - k as f64 * 3.0 * text;
+            let elbow = P::new(lx - 0.2, ly);
+            let Some(from) = at.iter().copied().min_by(|a, b| {
+                let da = (a.x - elbow.x).powi(2) + (a.y - elbow.y).powi(2);
+                let db = (b.x - elbow.x).powi(2) + (b.y - elbow.y).powi(2);
+                da.total_cmp(&db)
+            }) else {
+                continue;
+            };
+            out.line("MM-XXXX-ETIKET", from, elbow, FAINT);
+            out.line("MM-XXXX-ETIKET", elbow, P::new(lx - 0.05, ly), FAINT);
+            out.put(
+                "MM-XXXX-ETIKET",
+                json!({"kind": "circle", "c": {"x": from.x, "y": from.y}, "r": 0.3 * text, "lineWeight": FAINT}),
+            );
+            out.text("MM-XXXX-ETIKET", P::new(lx, ly), name, text, "middleLeft");
+            hi.x = hi.x.max(lx + 0.6 * text * name.chars().count() as f64);
+        }
+    }
     // The grids the line crosses (EK-4 Şekil 4.5): a dash-dot line up the section and its bubble under it, the
     // bubbles in one row (the lines' ends fixed before the first: lowering them per grid stepped the bubbles down).
     let mut grid_seen: BTreeSet<String> = BTreeSet::new();

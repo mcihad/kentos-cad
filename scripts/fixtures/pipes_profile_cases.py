@@ -27,7 +27,11 @@ profile and the usual hidden, locked and group layers. The rules, by hand:
   the place, the other's invert there and its diameter where known, along the run then by uid; each with an invert
   drawn (an ellipse, or a point without a diameter) and its words; its invert and crown among the elevations shown;
   with its wall asked and read (docs/adr/4360, `Et` in the diameter's unit), the outer wall's ellipse and the filled ring
-  (two more objects when the wall is above zero), its outer bottom and top among the elevations shown.
+  (two more objects when the wall is above zero), its outer bottom and top among the elevations shown;
+- the run's own walls (docs/adr/4780), read as pipes_check_cases.wall_read reads them (`Et`, or half `Dış çap` less
+  the inner; the two disagreeing: none): each pipe's wall where known, its least cover over its top outside; with the
+  wall above zero its bottom outside (invert − wall) and top outside (crown + wall) among the elevations shown and drawn
+  as two more lines, each a run of two or more places whose pipe's wall is known above zero.
 
     The objects' places are the command's; the cases hold the profile's values and the objects' count.
 """
@@ -80,9 +84,10 @@ def entity_count(s):
 
 
 # ── The network as the drawing has it ─────────────────────────────────────────────────────────────────────────────
-def network(name, extra=False):
-    """The pipes (check.Pipe with their uid) and the structures {place: (uid, attrs)} of a network."""
-    pipes, structures = check.drawing()[name]
+def network(name, extra=False, walls=False):
+    """The pipes (check.Pipe with their uid) and the structures {place: (uid, attrs)} of a network (with their walls
+    and outer diameters in those drawings)."""
+    pipes, structures = check.drawing(walls)[name]
     if name == "atiksu":
         st = {check.M[m]: (check.uid(231 + m), {"Ad": f"B{m}"}) for m in sorted(check.M)}
         if extra:
@@ -155,7 +160,7 @@ def crossing_pipes(pipe, other):
 
 def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None, datum=None, exaggeration=None,
             extra=False, crossing=None, walls=False):
-    pipes, structures = network(net, extra)
+    pipes, structures = network(net, extra, walls)
     if crossing is not None:
         import mpmath as mp
         mp.mp.dps = 50
@@ -208,6 +213,12 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
             v = check.number(p.attrs.get(diameter["field"]))
             dm = v * check.UNITS[diameter["unit"]] if v is not None and v > 0 else None
         crown = 0.0 if not diameter else dm
+        # docs/adr/4780: the run's own wall as the check reads it; the cover over the top outside, the outer walls
+        # drawn when it is above zero.
+        w_own = check.wall_of(p.attrs, diameter)
+        w_own = w_own if w_own not in (None, False) else None
+        top_outside = None if crown is None else crown + (w_own or 0.0)
+        drawn_wall = w_own if w_own is not None and w_own > 0 else None
 
         def along(st):
             return s0 + (L - st if rev else st)
@@ -230,9 +241,9 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
         else:
             pts = sorted((along(st), z) for st, z in ((0.0, i0), (L, i1)) if z is not None)
         if not pts:
-            inv_pts.append((s0, None, None))
+            inv_pts.append((s0, None, None, None))
         for s, z in pts:
-            inv_pts.append((s, z, None if crown is None else z + crown))
+            inv_pts.append((s, z, None if crown is None else z + crown, drawn_wall))
         if ground_ and ground_["from"] == "surface":
             samples = [(s, q, check.ground(*q)) for s, q in p.samples()]
         elif ground_:
@@ -243,11 +254,11 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
         else:
             samples = []
         mn = None
-        if crown is not None:
+        if top_outside is not None:
             for st, _, z in samples:
                 inv = p.invert(ends_, st)
                 if z is not None and inv is not None:
-                    c = z - (inv + crown)
+                    c = z - (inv + top_outside)
                     mn = c if mn is None else min(mn, c)
         if ground_ and ground_["from"] == "surface":
             for s, z in sorted((along(st), z) for st, _, z in samples):
@@ -256,7 +267,8 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
         row = {"uid": check.uid(p.n), "name": p.attrs["Ad"], "from": s0, "to": s0 + L, "length": L}
         if rev:
             row["reversed"] = True
-        for k_, v in (("upstream", up), ("downstream", down), ("slope", slope), ("diameter", dm), ("minCover", mn)):
+        for k_, v in (("upstream", up), ("downstream", down), ("slope", slope), ("diameter", dm), ("wall", w_own),
+                      ("minCover", mn)):
             if v is not None:
                 row[k_] = v
         rows.append(row)
@@ -286,7 +298,10 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
         ground = [{"station": n["station"], **({"z": n["ground"]} if "ground" in n else {})} for n in out_nodes]
     crossed.sort(key=lambda c: (c["station"], c["uid"]))
     zs = [g["z"] for g in ground if "z" in g]
-    zs += [v for _, z, c in inv_pts for v in (z, c) if v is not None]
+    zs += [v for _, z, c, _ in inv_pts for v in (z, c) if v is not None]
+    # docs/adr/4780: the run's outer walls, the bottom outside and the top outside.
+    zs += [z - w for _, z, _, w in inv_pts if z is not None and w is not None]
+    zs += [c + w for _, _, c, w in inv_pts if c is not None and w is not None]
     zs += [n["ground"] for n in out_nodes if "ground" in n]
     for c in crossed:
         if "invert" in c:
@@ -314,9 +329,12 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
     heights = grid_heights(datum_, top)
     count = 1 + sum(1 for v in heights if datum_ + 1e-9 < v < top - 1e-9) + 2 * len(heights)
     count += len(runs((g["station"], g.get("z")) for g in ground))
-    count += len(runs((s, z) for s, z, _ in inv_pts))
+    count += len(runs((s, z) for s, z, _, _ in inv_pts))
     if diameter:
-        count += len(runs((s, c) for s, _, c in inv_pts))
+        count += len(runs((s, c) for s, _, c, _ in inv_pts))
+        # docs/adr/4780: the outer walls, the bottom outside and the top outside, each a run of known places.
+        count += len(runs((s, z - w if z is not None and w is not None else None) for s, z, _, w in inv_pts))
+        count += len(runs((s, c + w if c is not None and w is not None else None) for s, _, c, w in inv_pts))
     count += sum(1 for n in out_nodes if "ground" in n and ("inlet" in n or "outlet" in n))
     count += (BANDS + 1) + 3 + len(out_nodes) + BANDS
     count += sum(1 + sum(1 for k_ in ("name", "ground", "inlet", "outlet", "depth") if k_ in n) for n in out_nodes)
@@ -435,6 +453,23 @@ def cases():
        net="yagmur")
     bare = ok("Et sorulmuş, borularda yok: dış duvar çizilmez", sewer(crossing=walls_ask), setup_=water)
     assert all("wall" not in c for c in bare["crossings"])
+    # docs/adr/4780: the run's own outer walls, from `Et` or from `Dış çap` (the outers' drawing).
+    outers = setup(water=True, walls="outers")
+    own = ok("Hattın kendi borularının dış duvarı: et kalınlığıyla", sewer(diameter={**SEWER_D, "wall": "Et"}),
+             setup_=walled, walls=True,
+             note="P1–P4, P8, P9 etleriyle: akarın altında ve tepenin üstünde ince dış duvar çizgileri; örtü dış tepeden")
+    assert [p.get("wall") for p in own["pipes"]] == [0.02, 0.02, 0.025, 0.03, 0.02, 0.02], own["pipes"]
+    by_outer = ok("Hattın dış duvarı dış çaptan: iç çapın altındaki P8 çizilmez",
+                  sewer(diameter={**SEWER_D, "outer": "Dış çap"}), setup_=outers, walls="outers",
+                  note="P4'ün eti dış çaptan 35 mm; P8'in dış çapı iç çapından küçük, eti yok, çizgisinde boşluk")
+    assert [p.get("wall") for p in by_outer["pipes"]] == [0.02, 0.02, 0.025, 0.035, None, 0.02], by_outer["pipes"]
+    ok("Hattın dış duvarı ve et birlikte: uyuşmayan P4 ve P8 çizilmez",
+       sewer(diameter={**SEWER_D, "wall": "Et", "outer": "Dış çap"}), setup_=outers, walls="outers")
+    ok("Hattın dış duvarı planda yazılmaz", sewer(diameter={**SEWER_D, "wall": "Et"}), op="plan", setup_=walled,
+       walls=True)
+    outer_ask = {**ask, "diameter": {**ask["diameter"], "outer": "Dış çap"}}
+    crossed = ok("Kesişen borunun dış duvarı dış çaptan", sewer(crossing=outer_ask), setup_=outers, walls="outers")
+    assert crossed["crossings"] == outer["crossings"], crossed["crossings"]
     # Refusals.
     bad = "invalid_pipe_check"
     no("Boş akar kotu özniteliği", sewer(inverts={"from": "fields", "start": " ", "end": "x"}),
@@ -475,6 +510,11 @@ def cases():
        failed(bad, "Kesişen borular başka bir ağdan okunur; “Atıksu” profili çizilen ağın kendisi.", "crossing.network"))
     no("Kesişen ağın boş akar özniteliği", sewer(crossing={**ask, "inverts": {"from": "fields", "start": " ", "end": "x"}}),
        failed(bad, "Baş akar kotunun özniteliği boş; özniteliğin adını yazın.", "crossing.inverts.start"))
+    no("Boş dış çap özniteliği", sewer(diameter={**SEWER_D, "outer": " "}),
+       failed(bad, "Dış çapın özniteliği boş; özniteliğin adını yazın.", "diameter.outer"))
+    no("Kesişen ağın boş dış çap özniteliği",
+       sewer(crossing={**ask, "diameter": {"field": "Çap", "unit": "mm", "outer": ""}}),
+       failed(bad, "Dış çapın özniteliği boş; özniteliğin adını yazın.", "crossing.diameter.outer"))
     no("Kesişen ağın kataloğunda sıfır çap",
        sewer(crossing={**ask, "diameter": {"field": "Çap", "unit": "mm", "catalog": [0.0]}}),
        failed(bad, "Katalogdaki çaplar 0'dan büyük olmalı.", "crossing.diameter.catalog[0]"))

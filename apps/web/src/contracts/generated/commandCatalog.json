@@ -61936,7 +61936,7 @@
       "id": "cad.pipes.check",
       "version": 1,
       "title": "Boru hattı denetimi",
-      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noWall (et kalınlığı sorulmuş ama yok), noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır; diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür; verilmezse et bilinmez. Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
+      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), longSpan (iki baca arası kural paketinin en çok aralığından uzun), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, exceptionalSlope (eğim istisnai en az ile en az arasında), steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noRule (çap kural paketinin hiçbir sınıfında yok), noWall (et kalınlığı da dış çap da yok), wallMismatch (dış çap iç çaptan küçük ya da iç çap + 2 × et değil), noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır; diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür; verilmezse et bilinmez. diameter.outer dış çapın özniteliğini verirse (ADR 4780) et dış çap eksi iç çapın yarısıdır; ikisi birlikte sorulursa uyuşmaları (dış = iç + 2 × et, dış çapın milyarda biri kadar) denetlenir, uyuşmayan borunun eti hiçbirinden alınmaz (wallMismatch). Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır; program kendiliğinden sınır koymaz, verilmeyen sınır denetlenmez. rules istenirse (ADR 4780) yazılmayan sınırlar bir kural paketinin sisteminden alınır: KentOS'unki (catalog/v1/rules/kanal-csb-2017.json) Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik EK-1'i (RG 06.01.2017/29940; atiksu: çap sınıfına göre 1:A eğimler, en az örtü 2,70 m, baca aralığı) ve Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik EK-1 Çizelge 1.4'üdür (RG 23.06.2017/30105; yagmursuyu: her çapın en az, istisnai en az ve en çok eğimi, en az örtü 1,2 m); rules.package başka bir paket verir. Her borunun sınıfı cevapta (class). Yönetmeliğin dili “olabilir”, “alınabilir”dir: bulgu uygunluk kararı değildir. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
       "aliases": [
         "borudenetimi",
         "kanaldenetimi",
@@ -61959,7 +61959,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a\ngreatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's\n(`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),\nits network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is\nthe network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).",
+        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's and the outer diameter's too, a\nlimit not above zero, a least above a greatest, a catalogue of more than 200 sizes or a size not above zero; rules\nasked without a diameter, of a system the package does not have, or of a package not whole, at `rules`,\ndocs/adr/4780); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's\n(`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),\nits network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is\nthe network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).",
         "properties": {
           "clearance": {
             "anyOf": [
@@ -62032,6 +62032,17 @@
           "network": {
             "description": "The network's id or name.",
             "type": "string"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeRulesAsk"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The rule package the limits not given are taken from (docs/adr/4780): each pipe's least, exceptional least and\ngreatest slope by its diameter's class, the least cover, the greatest span between two structures."
           }
         },
         "required": [
@@ -62204,6 +62215,29 @@
             },
             "network": "atiksu"
           }
+        },
+        {
+          "title": "Atıksu ağı, et dış çaptan, sınırlar atıksu yönetmeliğinin EK-1'inden",
+          "input": {
+            "diameter": {
+              "field": "Çap",
+              "outer": "Dış çap",
+              "unit": "mm"
+            },
+            "ground": {
+              "from": "surface",
+              "surface": "Zemin"
+            },
+            "inverts": {
+              "end": "Akar son",
+              "from": "fields",
+              "start": "Akar baş"
+            },
+            "network": "atiksu",
+            "rules": {
+              "system": "atiksu"
+            }
+          }
         }
       ]
     },
@@ -62211,7 +62245,7 @@
       "id": "cad.pipes.profile",
       "version": 1,
       "title": "Hat profili",
-      "summary": "Bir altyapı ağında cazibeli hattın boykesitini (kanal boykesiti) bir katmana (layerId) çizer. Hat başlangıç borusundan (start, uid) akış yönünde (ağın yön alanı) ilerler; tek borunun çıktığı her düğümden geçer, istenen bitiş borusunda (end), çıkışta (outlet) ya da çatalda (split) biter. Değerler cad.pipes.check'inkidir: akar kotları (iki öznitelik ya da köşe kotları), çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çizim road.profiles.draw'unki gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560; zemin yüzeyi ve kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict.",
+      "summary": "Bir altyapı ağında cazibeli hattın boykesitini (kanal boykesiti) bir katmana (layerId) çizer. Hat başlangıç borusundan (start, uid) akış yönünde (ağın yön alanı) ilerler; tek borunun çıktığı her düğümden geçer, istenen bitiş borusunda (end), çıkışta (outlet) ya da çatalda (split) biter. Değerler cad.pipes.check'inkidir: akar kotları (iki öznitelik ya da köşe kotları), çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çapta et (diameter.wall) ya da dış çap (diameter.outer) sorulursa (ADR 4780) eti bilinen her borunun eti cevapta (wall), örtüsü dış tepeden, eti 0'dan büyükse dış duvarları (akarın et kadar altı ve tepenin et kadar üstü) ince kırmızı çizgilerle çizilir; et ile dış çapı uyuşmayan borunun dış duvarı çizilmez. Çizim road.profiles.draw'unki gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560; zemin yüzeyi ve kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict.",
       "aliases": [
         "hatprofili",
         "kanalboykesiti",
@@ -176362,8 +176396,15 @@
       "type": "string"
     },
     "PipeCheck": {
-      "description": "A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's\ndirection field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its\ndiameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,\nand its findings' kinds.",
+      "description": "A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's\ndirection field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its\ndiameter and wall thickness (metres; the wall when asked and read, from its own attribute or the outer diameter's),\nthe least cover and where, the greatest cover, the rule package's slope class it is in (rules asked), and its\nfindings' kinds.",
       "properties": {
+        "class": {
+          "description": "The rule package's slope class its diameter is in (docs/adr/4780); none: no rules asked, or none holds it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "diameter": {
           "format": "double",
           "type": [
@@ -176597,9 +176638,10 @@
     },
     "PipeDiameter": {
       "additionalProperties": false,
-      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,\noptionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):\nthen the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances\noutside to outside.",
+      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,\noptionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the\npipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.",
       "properties": {
         "catalog": {
+          "description": "The sizes a pipe may have, in that unit (none: any).",
           "items": {
             "format": "double",
             "type": "number"
@@ -176608,12 +176650,22 @@
           "x-unit": "value"
         },
         "field": {
+          "description": "The attribute holding each pipe's inner diameter.",
           "type": "string"
         },
+        "outer": {
+          "description": "The attribute holding each pipe's outer diameter, in the diameter's unit (docs/adr/4780): its wall is half the\nouter less the inner. With `wall` too, the two must agree (outer = inner + 2 × wall, to a billionth of the\nouter): a pipe whose do not, or whose outer is below its inner, is said (`wallMismatch`) and its wall is not\ntaken from either.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "unit": {
-          "$ref": "#/$defs/PipeUnit"
+          "$ref": "#/$defs/PipeUnit",
+          "description": "The unit it is written in."
         },
         "wall": {
+          "description": "The attribute holding each pipe's wall thickness, in the diameter's unit, 0 or more (docs/adr/3960).",
           "type": [
             "string",
             "null"
@@ -176911,7 +176963,7 @@
       "type": "object"
     },
     "PipeProfilePipe": {
-      "description": "A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is\ndrawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown\n(none asked: over the invert).",
+      "description": "A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is\ndrawn against the flow, its inverts up and down the flow, its slope, diameter (m), wall and least cover over the\ncrown (none asked: over the invert; its wall known: over its top outside, as `cad.pipes.check` measures it).",
       "properties": {
         "diameter": {
           "format": "double",
@@ -176979,6 +177031,15 @@
             "null"
           ],
           "x-unit": "elevation"
+        },
+        "wall": {
+          "description": "Its wall thickness (m), when the diameter asks it (its own attribute or the outer diameter's) and the pipe's is\nknown (docs/adr/4780): above zero, its outer walls are drawn, the bottom outside under the invert and the top\noutside over the crown.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
         }
       },
       "required": [
@@ -177047,6 +177108,143 @@
       ],
       "type": "object"
     },
+    "PipeRuleSystem": {
+      "additionalProperties": false,
+      "description": "A system's rules. The first slope class holding a diameter is its; a diameter in none has no slope limit from the\npackage (`noRule`), and one in no spacing class no greatest span.",
+      "properties": {
+        "coverNote": {
+          "description": "The regulation's words about the least cover (when it may be less).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effective": {
+          "description": "When its document holds (ISO date).",
+          "type": "string"
+        },
+        "id": {
+          "description": "The system's id, asked by `rules.system` (`atiksu`, `yagmursuyu` in KentOS's package).",
+          "type": "string"
+        },
+        "minCover": {
+          "description": "The least cover (metres, over the pipe's top as `cad.pipes.check` measures it); none: the package gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "description": "Its name in words.",
+          "type": "string"
+        },
+        "slopes": {
+          "description": "The slope classes, by diameter.",
+          "items": {
+            "$ref": "#/$defs/PipeSlopeClass"
+          },
+          "type": "array"
+        },
+        "source": {
+          "description": "The articles and tables its numbers come from.",
+          "type": "string"
+        },
+        "spanNote": {
+          "description": "The regulation's words about the spacing (when it may be more).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "spans": {
+          "description": "The structures' spacing, by diameter.",
+          "items": {
+            "$ref": "#/$defs/PipeSpanClass"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "source",
+        "effective",
+        "slopes"
+      ],
+      "type": "object"
+    },
+    "PipeRules": {
+      "additionalProperties": false,
+      "description": "A gravity line rule package.",
+      "properties": {
+        "effective": {
+          "description": "When the oldest of them holds (ISO date).",
+          "type": "string"
+        },
+        "id": {
+          "description": "The package's id.",
+          "type": "string"
+        },
+        "jurisdiction": {
+          "description": "Whose rules they are.",
+          "type": "string"
+        },
+        "release": {
+          "description": "Its release.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "source": {
+          "description": "The documents, and when they were read.",
+          "type": "string"
+        },
+        "systems": {
+          "description": "Its systems.",
+          "items": {
+            "$ref": "#/$defs/PipeRuleSystem"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "release",
+        "jurisdiction",
+        "source",
+        "effective",
+        "systems"
+      ],
+      "type": "object"
+    },
+    "PipeRulesAsk": {
+      "additionalProperties": false,
+      "description": "The rules a check takes its limits from (docs/adr/4780). The limits the user gives (`minCover`, `minSlope`,\n`maxSlope`) go before the package's.",
+      "properties": {
+        "package": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PipeRules"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The package; none: KentOS's (`catalog/v1/rules/kanal-csb-2017.json`)."
+        },
+        "system": {
+          "description": "The system's id in the package (`atiksu` or `yagmursuyu` in KentOS's).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "system"
+      ],
+      "type": "object"
+    },
     "PipeRunEnd": {
       "description": "Why the run ends: at the pipe asked (`end`), where the flow leaves the network (`outlet`), or at a node more than one\npipe leaves (`split`).",
       "enum": [
@@ -177055,6 +177253,113 @@
         "split"
       ],
       "type": "string"
+    },
+    "PipeSlopeClass": {
+      "additionalProperties": false,
+      "description": "A diameter class of a system's slopes and its slopes, written 1:A as the regulations write them.",
+      "properties": {
+        "exceptional": {
+          "description": "The exceptional least slope 1:A, by its A: a slope between it and the least is allowed only by exception\n(`exceptionalSlope`), one under it is too low. None: the table has no such column for the class.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "from": {
+          "description": "The least diameter it holds, inclusive: millimetres as the table writes φ, compared with the pipe's diameter\nattribute read in millimetres. At least one of `from`, `over` and `to` is given.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "greatest": {
+          "description": "The greatest slope 1:A, by its A (15 is 1:15).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "least": {
+          "description": "The least slope 1:A, by its A (300 is 1:300).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "name": {
+          "description": "The class's name as the table writes it (“Tali kanal”, “φ400”).",
+          "type": "string"
+        },
+        "over": {
+          "description": "The diameter it holds those over, exclusive (millimetres; “> φ1000”).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "to": {
+          "description": "The greatest diameter it holds, inclusive (millimetres).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        }
+      },
+      "required": [
+        "name",
+        "least",
+        "greatest"
+      ],
+      "type": "object"
+    },
+    "PipeSpanClass": {
+      "additionalProperties": false,
+      "description": "The structures' spacing for a range of diameters: one every `least` to `greatest` metres. Only the greatest is\nchecked: a pipe between two structures longer than it is said (`longSpan`).",
+      "properties": {
+        "below": {
+          "description": "The diameters below it, exclusive (millimetres; “< φ1200”). At least one of `below` and `over` is given.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "greatest": {
+          "description": "The greatest spacing (metres).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "least": {
+          "description": "The least spacing the regulation names (metres), shown, not checked.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "over": {
+          "description": "The diameters over it, exclusive (millimetres; “> φ1200”).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        }
+      },
+      "required": [
+        "greatest"
+      ],
+      "type": "object"
     },
     "PipeUnit": {
       "description": "A length's unit as an attribute is written.",

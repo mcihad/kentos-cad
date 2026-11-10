@@ -72,7 +72,7 @@ malzeme ve dış çap özniteliği”, ADR 2760 ve 3160'ın “kesişen borunun 
 
 - Hat profilinde kesişen borunun dış duvarı ve taraması (ADR 2760 Sonra): profil komutu et kalınlığını okumalı.
   [ADR 4360](4360-crossing-pipe-outer-wall-and-live-check.md)'te.
-- Et yerine dış çap özniteliği (bazı kataloglar dış çapla yazar).
+- Et yerine dış çap özniteliği (bazı kataloglar dış çapla yazar). [ADR 4780](4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)'de.
 - “Yüzey kaplaması” (planın satırı): anlamı belirsiz, kaynak beklenir.
 - Boru hattı denetiminin açık pencerede ağ değişince yeniden okunması (ADR 3560 Sonra; ADR 4360'ta).
 - Web (TODOS §0.2).

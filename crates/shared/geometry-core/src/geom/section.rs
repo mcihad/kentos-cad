@@ -799,6 +799,48 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
     out
 }
 
+/// What the viewer sees at `at` (`u`, `z`) past the line (docs/adr/8043 §10): the solid whose prism face looking back
+/// at them is the nearest there, and that face's depth; none where no prism face is (a flight is not a facade). A face
+/// is closed over its solid's boxes, as the drawing takes it.
+pub fn seen_at(frame: &Frame, solids: &[Solid], at: Vec2) -> Option<(usize, f64)> {
+    let mut best: Option<(usize, f64)> = None;
+    for (i, solid) in solids.iter().enumerate() {
+        let Height::Prism { bottom, top } = &solid.height else {
+            continue;
+        };
+        if at.y < bottom - EPS || at.y > top + EPS {
+            continue;
+        }
+        let rings: Vec<Vec<Vec2>> = solid
+            .rings
+            .iter()
+            .map(|r| clean(r))
+            .filter(|r| r.len() >= 3)
+            .collect();
+        for (p, q, m) in outward(&rings) {
+            if !facing(frame, m) {
+                continue;
+            }
+            let Some((t0, t1)) = frame.clip(p, q) else {
+                continue;
+            };
+            let on = |t: f64| Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
+            let (a, b) = (on(t0), on(t1));
+            let (u0, u1) = (frame.u(a), frame.u(b));
+            if (u1 - u0).abs() <= EPS || at.x < js_min(u0, u1) - EPS || at.x > js_max(u0, u1) + EPS
+            {
+                continue;
+            }
+            let k = (at.x - u0) / (u1 - u0);
+            let d = frame.d(a) + (frame.d(b) - frame.d(a)) * k;
+            if d >= -EPS && best.is_none_or(|(_, n)| d < n) {
+                best = Some((i, d));
+            }
+        }
+    }
+    best
+}
+
 /// A ring as a cut gives it: counter-clockwise, from its lowest-leftmost point (the smallest `u`, then `z`), without
 /// repeated points and points it runs straight through.
 fn canonical(ring: Vec<Vec2>) -> Vec<Vec2> {
@@ -1382,5 +1424,21 @@ mod tests {
         assert_eq!(level(0.2), 0, "{:?}", s.seen);
         // The next riser, 0.3 past the line and facing it, is seen: its nosing at 0.6.
         assert_eq!(level(0.6), 1, "{:?}", s.seen);
+    }
+
+    #[test]
+    fn what_is_seen_at_a_point_is_the_nearest_face_looking_back() {
+        // A wall's face at y 4 from 0 to 3 m up; a column 0.3 m in front of it between x 4.85 and 5.15.
+        let wall = prism(rect(0.0, 4.0, 10.0, 4.25), 0.0, 3.0);
+        let column = prism(rect(4.85, 3.7, 5.15, 4.0), 0.0, 3.0);
+        let solids = [wall, column];
+        let at = |u: f64, z: f64| seen_at(&east(), &solids, Vec2::new(u, z));
+        let hit = |r: Option<(usize, f64)>, k: usize, d: f64| {
+            r.is_some_and(|(i, e)| i == k && (e - d).abs() < 1e-9)
+        };
+        assert!(hit(at(2.0, 1.5), 0, 4.0), "{:?}", at(2.0, 1.5));
+        assert!(hit(at(5.0, 1.5), 1, 3.7), "{:?}", at(5.0, 1.5));
+        assert_eq!(at(2.0, 3.5), None, "over the wall");
+        assert_eq!(at(11.0, 1.5), None, "past its end");
     }
 }
