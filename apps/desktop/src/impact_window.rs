@@ -58,12 +58,35 @@ impl std::fmt::Display for View {
     }
 }
 
+/// Which measure's values the form shows: one group at a time, so the window stays short on a small screen.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Group {
+    #[default]
+    Access,
+    Infra,
+    Slope,
+    Shares,
+}
+
+impl std::fmt::Display for Group {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Group::Access => "Erişim",
+            Group::Infra => "Altyapı",
+            Group::Slope => "Eğim",
+            Group::Shares => "Geçirimsizlik",
+        })
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct State {
     /// The scenarios: id and name.
     pub scenarios: Vec<(String, String)>,
     pub scenario: String,
     pub view: View,
+    /// The measure whose values the form shows.
+    pub group: Group,
     pub answer: Option<Result<ScenariosImpacted, String>>,
     /// docs/adr/2040, the user's values: the impervious shares (“konut 0,6; park 0,1”), the access's uses and distance.
     pub shares: String,
@@ -98,6 +121,7 @@ pub struct State {
 pub enum Event {
     Scenario(String),
     View(View),
+    Group(Group),
     Shares(String),
     From(String),
     To(String),
@@ -363,6 +387,7 @@ impl App {
                 self.impact_run();
             }
             Event::View(v) => self.impact.view = v,
+            Event::Group(g) => self.impact.group = g,
             Event::Shares(v) => {
                 self.impact.shares = v;
                 self.impact_run();
@@ -571,60 +596,49 @@ impl App {
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
             container(crate::style::fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)
         };
-        // docs/adr/2040: the measures that take the user's values; empty ones are not computed.
-        let form = Form::new()
-            .label_width(170.0)
-            .field("Senaryo", container(pick).width(300))
-            .section("Ölçüler (değerler sizin)")
-            .field("Geçirimsizlik payları", text(&s.shares, "konut 0,6; park 0,1; yesil 0,05", Event::Shares, 420.0))
-            .field(
-                "Erişim kimden / kime",
-                iced::widget::row![text(&s.from, "konut", Event::From, 205.0), text(&s.to, "park, yesil", Event::To, 205.0)]
-                    .spacing(10),
-            )
-            .field("Erişim uzaklığı (m)", text(&s.distance, "—", Event::Distance, 120.0))
-            // Docs/adr/5060: along a network of the project, the leg from a centroid to it.
-            .field(
-                "Erişim ağı / bağlanma (m)",
-                iced::widget::row![
-                    container(crate::style::fields::select_owned(s.networks.clone(), &s.network, |id| msg(Event::Network(id))))
-                        .width(290),
-                    text(&s.connect, "m", Event::Connect, 120.0)
-                ]
-                .spacing(10),
-            )
-            .field(
-                "Altyapı katmanı / uzaklığı",
-                iced::widget::row![
-                    container(crate::style::fields::select_owned(s.layers.clone(), &s.infra_layer, |id| msg(Event::InfraLayer(id))))
-                        .width(290),
-                    text(&s.infra_distance, "m", Event::InfraDistance, 120.0)
-                ]
-                .spacing(10),
-            )
-            .field("Altyapıda ölçülen kullanımlar", text(&s.infra_from, "boş: bütün alanlar", Event::InfraFrom, 420.0))
-            // docs/adr/4260: the slope on a terrain surface; only Harita and Yol projects have surfaces.
-            .field(
-                "Eğim yüzeyi / dik eşik (%)",
-                iced::widget::row![
-                    container(crate::style::fields::select_owned(s.surfaces.clone(), &s.slope_surface, |id| msg(Event::SlopeSurface(id))))
-                        .width(290),
-                    text(&s.slope_threshold, "%", Event::SlopeThreshold, 120.0)
-                ]
-                .spacing(10),
-            )
-            .field("Eğimde ölçülen kullanımlar", text(&s.slope_from, "boş: bütün alanlar", Event::SlopeFrom, 420.0))
-            // docs/adr/4660: the areas by slope class (the user's breaks) and by aspect.
-            .field(
-                "Eğim sınıfları (%) / bakı",
-                iced::widget::row![
-                    text(&s.slope_classes, "5; 15; 30", Event::SlopeClasses, 290.0),
-                    kentos_ui::widget::switch::Switch::new(s.slope_aspect, |on| msg(Event::SlopeAspect(on))).label("Bakıya göre alanlar")
-                ]
-                .spacing(10)
-                .align_y(iced::Center),
-            )
-            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık; ağ seçilince ağ boyunca, merkezlerin ağa bağlanma uzaklığı dahil. Altyapı: alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir. Eğim: alanın yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden.");
+        // docs/adr/2040: the measures that take the user's values; empty ones are not computed. One measure's values at a
+        // time, chosen above them, so the window stays short; the others keep theirs.
+        let pair = |a: Element<'static, Message>, b: Element<'static, Message>| -> Element<'static, Message> {
+            iced::widget::row![a, b].spacing(10).align_y(iced::Center).into()
+        };
+        let choice = |list: &[(String, String)], value: &str, on: fn(String) -> Event| -> Element<'static, Message> {
+            container(crate::style::fields::select_owned(list.to_vec(), value, move |id| msg(on(id)))).width(290).into()
+        };
+        let form = Form::new().label_width(170.0).field("Senaryo", container(pick).width(300));
+        let groups = [Group::Access, Group::Infra, Group::Slope, Group::Shares];
+        let tabs = Segmented::new(groups, s.group, |g| msg(Event::Group(g)));
+        let values = match s.group {
+            Group::Access => Form::new()
+                .label_width(170.0)
+                .field("Kimden / kime", pair(text(&s.from, "konut", Event::From, 205.0).into(), text(&s.to, "park, yesil", Event::To, 205.0).into()))
+                .field("Uzaklık (m)", text(&s.distance, "—", Event::Distance, 120.0))
+                // Docs/adr/5060: along a network of the project, the leg from a centroid to it.
+                .field("Ağ / bağlanma (m)", pair(choice(&s.networks, &s.network, Event::Network), text(&s.connect, "m", Event::Connect, 120.0).into()))
+                .help("Kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık; ağ seçilince ağ boyunca, merkezlerin ağa bağlanma uzaklığı dahil."),
+            Group::Infra => Form::new()
+                .label_width(170.0)
+                .field("Katman / uzaklık (m)", pair(choice(&s.layers, &s.infra_layer, Event::InfraLayer), text(&s.infra_distance, "m", Event::InfraDistance, 120.0).into()))
+                .field("Ölçülen kullanımlar", text(&s.infra_from, "boş: bütün alanlar", Event::InfraFrom, 420.0))
+                .help("Alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir."),
+            // docs/adr/4260, 4660: the slope on a terrain surface (only Harita and Yol projects have surfaces); the areas by
+            // slope class (the user's breaks) and by aspect.
+            Group::Slope => Form::new()
+                .label_width(170.0)
+                .field("Yüzey / dik eşik (%)", pair(choice(&s.surfaces, &s.slope_surface, Event::SlopeSurface), text(&s.slope_threshold, "%", Event::SlopeThreshold, 120.0).into()))
+                .field("Ölçülen kullanımlar", text(&s.slope_from, "boş: bütün alanlar", Event::SlopeFrom, 420.0))
+                .field(
+                    "Sınıflar (%) / bakı",
+                    pair(
+                        text(&s.slope_classes, "5; 15; 30", Event::SlopeClasses, 290.0).into(),
+                        kentos_ui::widget::switch::Switch::new(s.slope_aspect, |on| msg(Event::SlopeAspect(on))).label("Bakıya göre alanlar").into(),
+                    ),
+                )
+                .help("Alanın yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden."),
+            Group::Shares => Form::new()
+                .label_width(170.0)
+                .field("Geçirimsizlik payları", text(&s.shares, "konut 0,6; park 0,1; yesil 0,05", Event::Shares, 420.0))
+                .help("Kullanım başına geçirimsiz pay; alanla çarpılıp toplanır."),
+        };
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Karşılaştırma yok.");
         match &s.answer {
@@ -719,6 +733,9 @@ impl App {
             .width(iced::Fill)
             .push(kentos_ui::label::caption(LEAD))
             .push(form)
+            .push(kentos_ui::label::caption("Ölçülerin değerleri sizindir; boş bırakılan ölçü hesaplanmaz."))
+            .push(tabs)
+            .push(values)
             .push(words::summary(lines))
             .push(Segmented::new(views, s.view, |v| msg(Event::View(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
