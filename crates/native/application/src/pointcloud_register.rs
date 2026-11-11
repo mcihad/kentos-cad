@@ -472,11 +472,26 @@ pub(crate) fn registered(
     doc: &Document,
     input: &PointCloudsRegister,
 ) -> Result<(PointCloudsRegistered, Vec<CommandWarning>, NormalMatrix), Stop> {
+    registered_from(doc, input, [None, None])
+}
+
+/// [`registered`] with each scan first taken further by a map after its place (docs/adr/5100: the network's outer
+/// loop registers its links again where the last round put the scans), as `cad.pointclouds.place` would keep it.
+pub(crate) fn registered_from(
+    doc: &Document,
+    input: &PointCloudsRegister,
+    further: [Option<&kentos_pointcloud::ops::transform::Affine>; 2],
+) -> Result<(PointCloudsRegistered, Vec<CommandWarning>, NormalMatrix), Stop> {
     if input.uids.len() != 2 || input.uids[0] == input.uids[1] {
         return Err(fail(codes::INVALID_INPUT, "İki ayrı nokta bulutu verin: sabit tarama ve ona oturtulacak tarama.".into(), "uids"));
     }
     checks::uids(&input.uids, "")?;
-    let chosen = clouds(doc, &input.uids)?;
+    let owned: Vec<(String, kentos_commands::PointCloudEntity)> = clouds(doc, &input.uids)?
+        .into_iter()
+        .zip(further)
+        .map(|((u, c), m)| (u, m.map_or_else(|| c.clone(), |m| crate::pointcloud_place::moved_further(c, m))))
+        .collect();
+    let chosen: Vec<(String, &kentos_commands::PointCloudEntity)> = owned.iter().map(|(u, c)| (u.clone(), c)).collect();
     let positive = |v: Option<f64>, default: f64, path: &str, what: &str| -> Result<f64, Stop> {
         let v = v.unwrap_or(default);
         if v.is_finite() && v > 0.0 {

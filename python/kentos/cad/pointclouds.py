@@ -195,13 +195,17 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
     merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt
     sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri
     boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm
-    sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur:
-    taramalar yerinde durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud
-    (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok,
-    hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor,
-    taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında
-    altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay
-    öteleme gibi); kaydın kendi seçeneklerinin retleri; file_not_found,
+    sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10,
+    ADR 5100) dış döngüdür: ikinci turdan başlayarak her bağ taramaların bir önceki
+    turdaki yerinden yeniden kaydedilir, bir taramanın kutusunun köşesi tolerance kadar
+    kaymayınca durulur; cevabın rounds listesi her turun en büyük kaymasıdır, matrisler
+    turların toplamı, bağlar ve döngüler son turunkidir. Salt okunur: taramalar yerinde
+    durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]);
+    invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit,
+    sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda
+    değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az
+    eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi;
+    tur sayısı 1–10 dışında); kaydın kendi seçeneklerinin retleri; file_not_found,
     import_unreadable.
     """
     __slots__ = ()
@@ -227,6 +231,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
         reach: float | None | Unset = UNSET,
         reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
+        rounds: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         request_id: str | None = None,
@@ -246,13 +251,17 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
         Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü,
         ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması
         (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması
-        (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur: taramalar yerinde durur.
-        Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input
-        (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama
-        ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir
-        tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın
-        bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi); kaydın kendi
-        seçeneklerinin retleri; file_not_found, import_unreadable.
+        (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10, ADR 5100) dış döngüdür:
+        ikinci turdan başlayarak her bağ taramaların bir önceki turdaki yerinden yeniden
+        kaydedilir, bir taramanın kutusunun köşesi tolerance kadar kaymayınca durulur;
+        cevabın rounds listesi her turun en büyük kaymasıdır, matrisler turların toplamı,
+        bağlar ve döngüler son turunkidir. Salt okunur: taramalar yerinde durur. Retler:
+        invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az
+        tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil;
+        bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir
+        sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın
+        konumunu belirlememesi, düz zeminde yatay öteleme gibi; tur sayısı 1–10 dışında);
+        kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable.
 
         Args:
             doc: The drawing it works on.
@@ -266,6 +275,9 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
             reach: Unit: length.
             reject:
             robust:
+            rounds: docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
+                is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
+                as far as `tolerance` (the registration's own stop). Unit: count.
             spacing: Unit: length.
             tolerance: Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
@@ -290,6 +302,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
             reach=reach,
             reject=reject,
             robust=robust,
+            rounds=rounds,
             spacing=spacing,
             tolerance=tolerance,
         ), request_id=request_id, expected=expected)
@@ -308,6 +321,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
         reach: float | None | Unset = UNSET,
         reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
+        rounds: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> PointCloudsNetworked:
@@ -324,6 +338,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
             reach=reach,
             reject=reject,
             robust=robust,
+            rounds=rounds,
             spacing=spacing,
             tolerance=tolerance,
         ))
@@ -342,6 +357,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
         reach: float | None | Unset = UNSET,
         reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
+        rounds: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -358,6 +374,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
             reach=reach,
             reject=reject,
             robust=robust,
+            rounds=rounds,
             spacing=spacing,
             tolerance=tolerance,
         ))
@@ -376,6 +393,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
         reach: float | None | Unset = UNSET,
         reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
+        rounds: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         op: str = "execute",
@@ -397,6 +415,7 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
             reach=reach,
             reject=reject,
             robust=robust,
+            rounds=rounds,
             spacing=spacing,
             tolerance=tolerance,
         ), op=op, request_id=request_id, expected=expected)

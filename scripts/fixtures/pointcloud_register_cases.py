@@ -418,6 +418,9 @@ def step(m, v):
 
 # The last registration's final normal matrix and centre, for Tarama ağı dengelemesi's reference (docs/adr/4720).
 LAST = {}
+# docs/adr/5100: a scan placed further by the network's outer loop is read with its box in the drawing (its file's box's
+# corners moved), as the command reads a placed cloud's box; none: the points' own box.
+BOXES = {}
 
 
 def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, neighbours=8, cell=2.0, least=4,
@@ -425,7 +428,7 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
     rules = rules or RULES
     radius = radius if radius is not None else cell
     rows = [CLOUDS[n] for n in names]
-    b = [bounds(r) for r in rows]
+    b = [BOXES.get(n) or bounds(r) for n, r in zip(names, rows)]
     boxes = [[x[0], x[1], x[3], x[4]] for x in b]
     meet = [max(boxes[0][0], boxes[1][0]) - reach, max(boxes[0][1], boxes[1][1]) - reach,
             min(boxes[0][2], boxes[1][2]) + reach, min(boxes[0][3], boxes[1][3]) + reach]

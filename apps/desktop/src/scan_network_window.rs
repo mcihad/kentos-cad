@@ -92,6 +92,8 @@ pub struct State {
     pub spacing: f64,
     pub reach: f64,
     pub iterations: f64,
+    /// docs/adr/5100: the outer loop's rounds at most (1: one, as before).
+    pub rounds: f64,
     pub weights: Weights,
     pub edges: bool,
     /// The scan Dönüşüm uygula takes.
@@ -107,6 +109,7 @@ pub enum Event {
     Spacing(f64),
     Reach(f64),
     Iterations(f64),
+    Rounds(f64),
     Weights(Weights),
     Edges(bool),
     Chosen(String),
@@ -161,6 +164,7 @@ impl App {
                 .then(|| RegisterRobust { kind: "huber".into(), k: Some(pointcloud_register::HUBER_K), ratio: None }),
             reject: s.edges.then_some(RegisterReject { edges: true, angle: None }),
             drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.display().to_string()),
+            rounds: (s.rounds > 1.0).then(|| s.rounds.min(10.0) as u32),
             ..Default::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -192,6 +196,7 @@ impl App {
             spacing: 0.5,
             reach: 1.0,
             iterations: 30.0,
+            rounds: 1.0,
             weights: Weights::Huber,
             chosen,
             ..Default::default()
@@ -281,6 +286,7 @@ impl App {
             Event::Spacing(v) => s.spacing = v,
             Event::Reach(v) => s.reach = v,
             Event::Iterations(v) => s.iterations = v,
+            Event::Rounds(v) => s.rounds = v.clamp(1.0, 10.0),
             Event::Weights(v) => s.weights = v,
             Event::Edges(v) => s.edges = v,
             Event::Chosen(v) => {
@@ -398,7 +404,9 @@ impl App {
                     label::caption("Erişim (m)"),
                     NumberInput::new(s.reach, |v| msg(Event::Reach(v))).step(0.5).decimals(2).point().width(80),
                     label::caption("En çok adım"),
-                    NumberInput::new(s.iterations, |v| msg(Event::Iterations(v))).step(5.0).decimals(0).width(80)
+                    NumberInput::new(s.iterations, |v| msg(Event::Iterations(v))).step(5.0).decimals(0).width(80),
+                    label::caption("Dış döngü (tur)"),
+                    NumberInput::new(s.rounds, |v| msg(Event::Rounds(v))).step(1.0).decimals(0).width(70)
                 ]
                 .spacing(10)
                 .align_y(Center),

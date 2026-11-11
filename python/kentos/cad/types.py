@@ -72366,6 +72366,9 @@ class PointCloudsNetwork(_Model):
             boxes overlap.
         neighbours: Unit: count.
         reach: Unit: length.
+        rounds: docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
+            is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
+            as far as `tolerance` (the registration's own stop). Unit: count.
         spacing: Unit: length.
         tolerance: Unit: length.
     """
@@ -72378,6 +72381,7 @@ class PointCloudsNetwork(_Model):
     reach: float | None | Unset = UNSET
     reject: RegisterReject | None | Unset = UNSET
     robust: RegisterRobust | None | Unset = UNSET
+    rounds: int | None | Unset = UNSET
     spacing: float | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
@@ -72399,6 +72403,8 @@ class PointCloudsNetwork(_Model):
             out["reject"] = None if self.reject is None else self.reject.to_json()
         if self.robust is not UNSET:
             out["robust"] = None if self.robust is None else self.robust.to_json()
+        if self.rounds is not UNSET:
+            out["rounds"] = self.rounds
         if self.spacing is not UNSET:
             out["spacing"] = None if self.spacing is None else float(self.spacing)
         if self.tolerance is not UNSET:
@@ -72417,6 +72423,7 @@ class PointCloudsNetwork(_Model):
             reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
             reject=UNSET if "reject" not in data else None if data["reject"] is None else RegisterReject.from_json(data["reject"]),
             robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobust.from_json(data["robust"]),
+            rounds=data.get("rounds", UNSET),
             spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
@@ -72430,6 +72437,9 @@ class PointCloudsNetworked(_Model):
     Attributes:
         centre: Unit: system.
         shift: Unit: length.
+        rounds: docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the
+            scans' matrices are then the rounds' maps together, their rotation and translation those maps' about the
+            centre, and the links, residuals and loops the last round's. Unit: length.
     """
     centre: list[float]
     scans: list[NetworkScan]
@@ -72437,6 +72447,7 @@ class PointCloudsNetworked(_Model):
     loops: list[NetworkLoop]
     shift: float
     notes: list[str]
+    rounds: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -72446,6 +72457,8 @@ class PointCloudsNetworked(_Model):
         out["loops"] = [e0.to_json() for e0 in self.loops]
         out["shift"] = float(self.shift)
         out["notes"] = list(self.notes)
+        if self.rounds is not UNSET:
+            out["rounds"] = None if self.rounds is None else [float(e0) for e0 in self.rounds]
         return out
 
     @classmethod
@@ -72457,6 +72470,7 @@ class PointCloudsNetworked(_Model):
             loops=[NetworkLoop.from_json(e0) for e0 in data["loops"]],
             shift=float(data["shift"]),
             notes=list(data["notes"]),
+            rounds=UNSET if "rounds" not in data else None if data["rounds"] is None else [float(e0) for e0 in data["rounds"]],
         )
 
 

@@ -130,6 +130,23 @@ fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
     assert!(t < 0.005 && w < 1e-3, "what is left: {t} m, {w} rad");
 }
 
+/// docs/adr/5100: Dış döngü 5: the shared case's rounds (each round's largest move) and the scans' rotations and
+/// translations about the centre.
+#[test]
+fn five_rounds_are_the_shared_case() {
+    let mut app = three();
+    let _ = app.update(Message::ScanNetwork(N::Rounds(5.0)));
+    let got = answer(&app);
+    let want = case_output("dış döngü: üç tarama");
+    near(&got["rounds"], &want["rounds"], "rounds");
+    for k in 0..3 {
+        near(&got["scans"][k]["rotation"], &want["scans"][k]["rotation"], "rotation");
+        near(&got["scans"][k]["translation"], &want["scans"][k]["translation"], "translation");
+    }
+    let (lines, _) = app.scan_network_lines();
+    assert!(lines.len() >= 5, "the notes with the outer loop's");
+}
+
 #[test]
 fn two_scans_are_said_and_nothing_opens() {
     let mut app = opened();

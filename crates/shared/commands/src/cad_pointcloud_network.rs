@@ -69,6 +69,13 @@ pub struct PointCloudsNetwork {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
+    /// docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
+    /// is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
+    /// as far as `tolerance` (the registration's own stop).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rounds: Option<u32>,
 }
 
 /// A scan adjusted (docs/adr/4720): its id, whether it was held, its correction about the network's centre — the
@@ -156,4 +163,11 @@ pub struct PointCloudsNetworked {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub shift: f64,
     pub notes: Vec<String>,
+    /// docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the
+    /// scans' matrices are then the rounds' maps together, their rotation and translation those maps' about the
+    /// centre, and the links, residuals and loops the last round's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rounds: Option<Vec<f64>>,
 }

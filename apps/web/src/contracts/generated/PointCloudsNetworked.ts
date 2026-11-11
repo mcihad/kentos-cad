@@ -8,4 +8,10 @@ import type { NetworkScan } from "./NetworkScan";
  * mean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's
  * pairs, metres), and notes.
  */
-export type PointCloudsNetworked = { centre: [number, number, number], scans: Array<NetworkScan>, links: Array<NetworkLink>, loops: Array<NetworkLoop>, shift: number, notes: Array<string>, };
+export type PointCloudsNetworked = { centre: [number, number, number], scans: Array<NetworkScan>, links: Array<NetworkLink>, loops: Array<NetworkLoop>, shift: number, notes: Array<string>, 
+/**
+ * docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the
+ * scans' matrices are then the rounds' maps together, their rotation and translation those maps' about the
+ * centre, and the links, residuals and loops the last round's.
+ */
+rounds?: Array<number>, };

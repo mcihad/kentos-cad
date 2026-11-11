@@ -20,4 +20,10 @@ export type PointCloudsNetwork = { uids: Array<string>, fixed: Array<string>,
  * The links, each two scans' ids (the first the one the second is registered to); none: every pair whose plan
  * boxes overlap.
  */
-links?: Array<[string, string]>, spacing?: number, reach?: number, iterations?: number, tolerance?: number, neighbours?: number, robust?: RegisterRobust, reject?: RegisterReject, drawing?: string, };
+links?: Array<[string, string]>, spacing?: number, reach?: number, iterations?: number, tolerance?: number, neighbours?: number, robust?: RegisterRobust, reject?: RegisterReject, drawing?: string, 
+/**
+ * docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
+ * is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
+ * as far as `tolerance` (the registration's own stop).
+ */
+rounds?: number, };

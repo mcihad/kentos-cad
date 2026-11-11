@@ -181,4 +181,11 @@ fn screens() {
     let _ = app.update(Message::Run("pointcloud.network"));
     let _ = app.update(Message::ScanNetwork(crate::scan_network_window::Event::Keep));
     shoot(&mut app, wide, "5-tarama-agi-nesnede-tut-acik-genis.png");
+    // 6: Tarama ağı's outer loop: five rounds at most, the notes say each round's move; dark and narrow.
+    let mut app = crate::scan_network_window_tests::opened();
+    set(&mut app, "dark", narrow);
+    app.selection.set(vec![Slot(1), Slot(2), Slot(3)]);
+    let _ = app.update(Message::Run("pointcloud.network"));
+    let _ = app.update(Message::ScanNetwork(crate::scan_network_window::Event::Rounds(5.0)));
+    shoot(&mut app, narrow, "6-tarama-agi-dis-dongu-koyu-dar.png");
 }

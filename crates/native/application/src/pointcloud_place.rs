@@ -157,6 +157,19 @@ fn prepare(doc: &Document, input: &PointCloudsPlace) -> Result<Prepared, Stop> {
     Ok(Prepared { out, change })
 }
 
+/// The cloud with each file taken further by `m` after its place, its box in the drawing their placed boxes (the
+/// network's outer loop, docs/adr/5100: a scan where the last round put it, nothing written).
+pub(crate) fn moved_further(c: &kentos_commands::PointCloudEntity, m: &Affine) -> kentos_commands::PointCloudEntity {
+    let mut out = c.clone();
+    for s in &mut out.cloud.sources {
+        // A kept place is a valid map (the contract's rule); were it not, the map alone.
+        let moved = Affine::new(s.pose.unwrap_or(IDENTITY)).map_or(*m, |had| had.then(m));
+        s.pose = Some(moved.matrix());
+    }
+    out.cloud.bounds = out.cloud.placed_bounds();
+    out
+}
+
 /// The 4 × 4 identity, row by row.
 const IDENTITY: [f64; 16] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
 
