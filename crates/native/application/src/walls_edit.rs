@@ -45,8 +45,9 @@ struct Work {
     blocked: Option<String>,
     /// Kaydır, Mesafe and Boy: the edge moved (docs/adr/0770 §3).
     edge: Option<usize>,
-    /// Mesafe's `keep`: the bond to write in the same step (docs/adr/0770 §5).
-    keep: Option<kentos_commands::ConstraintRule>,
+    /// Mesafe's `keep`: the bond to write in the same step and the distance it keeps, the one given (docs/adr/0770
+    /// §5; the measured gap carries rounding far from the origin, 1.200000000011 for 1.2 on an arc).
+    keep: Option<(kentos_commands::ConstraintRule, f64)>,
 }
 
 /// The wall an opening goes into.
@@ -749,7 +750,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                 &mut work,
             )?;
             if *keep {
-                work.keep = Some(kept(doc, &walls_found, *edge, *side, *to)?);
+                work.keep = Some((kept(doc, &walls_found, *edge, *side, *to)?, *distance));
             }
         }
         WallsOperation::Length {
@@ -1147,9 +1148,15 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
     // Bu ölçüyü koru: the bond and its parameter in the same step (docs/adr/0770 §5).
     let mut bonds = Vec::new();
     if result.is_ok()
-        && let Some(rule) = &work.keep
+        && let Some((rule, distance)) = &work.keep
     {
-        match crate::constraints_edit::add_bond(doc, rule.clone(), STEP) {
+        match crate::constraints_edit::add_bond_given(
+            doc,
+            rule.clone(),
+            STEP,
+            Some(*distance),
+            "operation.keep",
+        ) {
             Ok(id) => bonds.push(id),
             Err(stop) => return stop.into(),
         }

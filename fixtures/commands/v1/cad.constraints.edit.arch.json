@@ -469,6 +469,50 @@
           "0192f5a1-7100-7000-8000-00000000000e"
         ],
         "place": "A-1"
+      },
+      {
+        "kind": "wall",
+        "id": 18,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 17.878679656440358,
+            "y": 7.878679656440358
+          },
+          {
+            "x": 22.121320343559642,
+            "y": 7.878679656440357
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "bulges": [
+          0.41421356237309503,
+          0.0
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 19,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 16.88873016277919,
+            "y": 6.888730162779191
+          },
+          {
+            "x": 23.11126983722081,
+            "y": 6.88873016277919
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "bulges": [
+          0.41421356237309503,
+          0.0
+        ]
       }
     ],
     "uids": [
@@ -488,7 +532,9 @@
       "0192f5a1-7100-7000-8000-00000000000e",
       "0192f5a1-7100-7000-8000-00000000000f",
       "0192f5a1-7100-7000-8000-000000000010",
-      "0192f5a1-7100-7000-8000-000000000011"
+      "0192f5a1-7100-7000-8000-000000000011",
+      "0192f5a1-7100-7000-8000-000000000012",
+      "0192f5a1-7100-7000-8000-000000000013"
     ]
   },
   "cases": [
@@ -558,7 +604,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -642,7 +690,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -690,7 +740,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -911,7 +963,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [],
@@ -1143,7 +1197,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1191,7 +1247,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1457,7 +1515,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1555,7 +1615,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -1619,7 +1681,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1684,7 +1748,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -1776,7 +1842,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same",
             "constraintKinds": []
@@ -1850,7 +1918,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1898,7 +1968,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "parameters": [
@@ -2001,7 +2073,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2111,7 +2185,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2153,7 +2229,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2412,7 +2490,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2493,7 +2573,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -2565,7 +2647,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2613,7 +2697,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2817,7 +2903,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2865,7 +2953,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3022,7 +3112,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3076,7 +3168,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3347,7 +3441,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3396,7 +3492,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [],
@@ -3628,7 +3726,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3710,7 +3810,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -3775,7 +3877,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3850,7 +3954,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3892,7 +3998,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4126,7 +4234,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4174,7 +4284,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4585,7 +4697,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4633,7 +4747,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4828,7 +4944,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4876,7 +4994,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5081,7 +5201,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5148,7 +5270,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5371,7 +5495,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5433,7 +5559,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -5504,7 +5632,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5586,7 +5716,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5635,7 +5767,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5901,7 +6035,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5949,7 +6085,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6187,7 +6325,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [],
@@ -6269,7 +6409,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6475,7 +6617,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6715,7 +6859,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6809,7 +6955,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6903,7 +7051,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -6973,7 +7123,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7015,7 +7167,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7214,7 +7368,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7269,7 +7425,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7555,7 +7713,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7603,7 +7763,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7848,7 +8010,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7897,7 +8061,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8114,7 +8280,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8175,7 +8343,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8392,7 +8562,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8454,7 +8626,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -8526,7 +8700,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8574,7 +8750,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8813,7 +8991,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -8862,7 +9042,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -9037,6 +9219,753 @@
       ]
     },
     {
+      "name": "Yay bağı: eğri koridor 1,20 m ölçülür, hiçbir şey kımıldamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000012",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000013",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay bağı: iç yay merkezine 0,3 m kayınca dış yay da 0,3 m izler, koridor 1,20 m kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000012",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000013",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:18"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": 0.3
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "18": {
+                "kind": "wall",
+                "id": 18,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 18.090811690796322,
+                    "y": 8.090811690796322
+                  },
+                  {
+                    "x": 21.909188309203678,
+                    "y": 8.090811690796322
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.41421356237309503,
+                  0.0
+                ]
+              },
+              "19": {
+                "kind": "wall",
+                "id": 19,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 17.100862197135157,
+                    "y": 7.100862197135157
+                  },
+                  {
+                    "x": 22.899137802864843,
+                    "y": 7.1008621971351555
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.414213562373095,
+                  0.0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay bağı: dış yay 0,5 m dışa kayınca iç yay izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000012",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000013",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:19"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "18": {
+                "kind": "wall",
+                "id": 18,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 17.525126265847085,
+                    "y": 7.525126265847083
+                  },
+                  {
+                    "x": 22.474873734152915,
+                    "y": 7.525126265847081
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.41421356237309476,
+                  0.0
+                ]
+              },
+              "19": {
+                "kind": "wall",
+                "id": 19,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.535176772185917,
+                    "y": 6.535176772185917
+                  },
+                  {
+                    "x": 23.464823227814083,
+                    "y": 6.535176772185917
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.41421356237309503,
+                  0.0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru yayda: eğri koridor 1,20 → 1,50 m, bağ aynı adımda; dış yay kayınca iç yay izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:18"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "right",
+              "distance": 1.5,
+              "keep": true
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.5"
+              }
+            ],
+            "entities": {
+              "18": {
+                "kind": "wall",
+                "id": 18,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 18.09081169079632,
+                    "y": 8.09081169079632
+                  },
+                  {
+                    "x": 21.90918830920368,
+                    "y": 8.090811690796318
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.41421356237309515,
+                  0.0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:19"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.4
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "18": {
+                "kind": "wall",
+                "id": 18,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 17.807968978321703,
+                    "y": 7.8079689783217034
+                  },
+                  {
+                    "x": 22.192031021678297,
+                    "y": 7.807968978321702
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.414213562373095,
+                  0.0
+                ]
+              },
+              "19": {
+                "kind": "wall",
+                "id": 19,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.60588745030457,
+                    "y": 6.6058874503045715
+                  },
+                  {
+                    "x": 23.39411254969543,
+                    "y": 6.605887450304571
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.41421356237309503,
+                  0.0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaylar eş merkezli (paralel) bağlı: dış yay kayar, iç yay yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "parallel",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000012",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000013",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "parallel"
+            ],
+            "parameters": [],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:19"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.3
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "parallel"
+            ],
+            "entities": {
+              "19": {
+                "kind": "wall",
+                "id": 19,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.676598128423226,
+                    "y": 6.676598128423226
+                  },
+                  {
+                    "x": 23.323401871576774,
+                    "y": 6.676598128423226
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "bulges": [
+                  0.41421356237309503,
+                  0.0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Bu ölçüyü koru, o yanda paralel duvar yok: reddedilir",
       "steps": [
         {
@@ -9079,7 +10008,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9087,7 +10018,7 @@
       ]
     },
     {
-      "name": "Yay kenara bağ kurulmaz",
+      "name": "Yay kenar düz çizgiye bağlanmaz",
       "steps": [
         {
           "op": "execute",
@@ -9124,7 +10055,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_constraint",
-              "message": "Bağ kurulamıyor: duvarın 1. kenarının eksen bulunamadı: kenar yay ya da yok, ya da açıklık duvarının dışında.",
+              "message": "Bağ kurulamıyor: bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz.",
               "path": "edit.constraints[0].rule",
               "uids": "$any"
             }
@@ -9147,7 +10078,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9215,7 +10148,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9283,7 +10218,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9350,7 +10287,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9416,7 +10355,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9483,7 +10424,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9549,7 +10492,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9615,7 +10560,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9681,7 +10628,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9748,7 +10697,9 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }
@@ -9815,7 +10766,149 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düz duvar çizgisi yaya bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000012",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eş merkezli olmayan yaylar bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000012",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000a",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
             ],
             "revision": "same"
           }

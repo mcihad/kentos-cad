@@ -134,3 +134,41 @@ fn an_arc_s_temporary_distance_to_its_concentric_arc_moves_it_about_its_centre()
     assert!((bulges[0] - (std::f64::consts::FRAC_PI_2 / 4.0).tan()).abs() < 1e-9);
     assert_eq!(b.doc.undo().as_deref(), Some("Duvarı düzenle"), "one step");
 }
+
+/// docs/adr/8049 §4: the corridor's padlock on the inner arc keeps its 1.20 m as a bond (no + for a permanent
+/// dimension on an arc); the outer arc shifted 0.5 m out, the inner follows to radius 3.5.
+#[test]
+fn the_corridor_s_padlock_bonds_the_two_arcs() {
+    let (mut b, inner) = corridor();
+    b.selection.set([inner]);
+    b.move_to(2.0, -0.2);
+    let locks = b.session.temporary_locks();
+    assert_eq!(
+        locks.len(),
+        1,
+        "one padlock, the side with an arc across: {locks:?}"
+    );
+    b.click(locks[0].x - E, locks[0].y - N);
+    let set = b.doc.constraints().clone();
+    assert_eq!(set.constraints.len(), 1, "one bond");
+    assert_eq!(set.parameters[0].expression, "1.2");
+    let outer = b
+        .doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Wall(_)))
+        .map(|e| Slot(e.base().id))
+        .find(|s| *s != inner)
+        .expect("the outer arc");
+    let uid = b.doc.uid(outer).unwrap().to_string();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut b.doc),
+        "cad.walls.edit",
+        CallOp::Execute,
+        json!({"uids": [uid], "operation": {"kind": "shift", "by": -0.5}}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let (pts, _) = wall(&b, inner);
+    let r = ((pts[0].0 - 2.0).powi(2) + (pts[0].1 - 3.0).powi(2)).sqrt();
+    assert!((r - 3.5).abs() < 1e-9, "{r}");
+}

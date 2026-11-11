@@ -29,7 +29,7 @@ use kentos_geometry_core::geom::opening;
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::WallIn;
 use kentos_geometry_core::ops::arch_bonds::{
-    self as core, Bond, Item, Jamb, Line, LineKind, Outcome, Why,
+    self as core, Bond, Item, Jamb, Line, LineKind, Outcome, Round, Why,
 };
 use kentos_geometry_core::ops::wall_shift;
 
@@ -106,6 +106,22 @@ impl CoreWall {
         let (a, b) = (self.pts[k], self.pts[(k + 1) % self.pts.len()]);
         ((b.x - a.x).hypot(b.y - a.y) > 0.0).then_some((a, b))
     }
+
+    /// Arc edge `k`'s circle (docs/adr/8049 §4).
+    fn arc(&self, k: usize) -> Option<kentos_geometry_core::geom::bulge::BulgeArc> {
+        let w = self.input();
+        if k >= wall_shift::edge_count(&w) {
+            return None;
+        }
+        let bulge = self
+            .bulges
+            .as_ref()
+            .and_then(|b| b.get(k))
+            .copied()
+            .unwrap_or(0.0);
+        let (a, b) = (self.pts[k], self.pts[(k + 1) % self.pts.len()]);
+        kentos_geometry_core::geom::bulge::bulge_arc(a, b, bulge)
+    }
 }
 
 fn unit(a: P, b: P) -> P {
@@ -161,6 +177,27 @@ impl<'a> View<'a> {
             Entity::Opening(o) => Some(o.clone()),
             _ => None,
         }
+    }
+
+    /// A wall's line on an arc edge (docs/adr/8049 §4): a point on it (its start's radius), its way there, and its
+    /// circle (the edge's, its radius moved by the line's offset to the arc's left).
+    fn round(&self, uid: EntityId, edge: u32, line: WallLine) -> Option<(P, P, Round)> {
+        let w = CoreWall::of(&self.wall(slot_of(self.doc, uid)?)?)?;
+        let arc = w.arc(edge as usize)?;
+        let turn = if arc.sweep > 0.0 { 1.0 } else { -1.0 };
+        let r = arc.r - turn * core::line_offset(&w.spec, kind(line));
+        if r <= 0.0 {
+            return None;
+        }
+        let a = w.pts[edge as usize];
+        let d = P::new(a.x - arc.c.x, a.y - arc.c.y);
+        let l = d.x.hypot(d.y);
+        let at = P::new(arc.c.x + d.x / l * r, arc.c.y + d.y / l * r);
+        Some((
+            at,
+            P::new(-d.y / l * turn, d.x / l * turn),
+            Round { c: arc.c, r, turn },
+        ))
     }
 
     /// A wall's line: its edge's two points moved to the line, and the edge's direction.
@@ -302,11 +339,18 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
     let slot = slot_of(view.doc, e.uid)?;
     match e.element {
         CadElement::Wall { edge, line } => {
-            let (at, dir) = view.line(e.uid, edge, line)?;
+            let (at, dir, round) = match view.line(e.uid, edge, line) {
+                Some((at, dir)) => (at, dir, None),
+                None => {
+                    let (at, dir, round) = view.round(e.uid, edge, line)?;
+                    (at, dir, Some(round))
+                }
+            };
             Some(Item::Line(Line {
                 var: var(vars, Var::Edge(slot, edge as usize)),
                 at,
                 dir,
+                round,
             }))
         }
         CadElement::Jamb { end } => {
@@ -326,6 +370,7 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
                 var: var(vars, Var::Grid(slot)),
                 at,
                 dir,
+                round: None,
             }))
         }
         CadElement::ColumnSide { side } => {
@@ -334,6 +379,7 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
                 var: var(vars, key),
                 at,
                 dir,
+                round: None,
             }))
         }
         CadElement::Boundary { part, ring, index } => {
@@ -343,6 +389,7 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
                 var: var(vars, Var::Boundary(slot, part, ring, index)),
                 at,
                 dir,
+                round: None,
             }))
         }
         // Only a map bond names a segment here (the contract's rule): its reference.
@@ -357,7 +404,12 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
                 Some(k) => k,
                 None => var(vars, Var::Segment(slot, part, ring, index)),
             };
-            Some(Item::Line(Line { var: k, at, dir }))
+            Some(Item::Line(Line {
+                var: k,
+                at,
+                dir,
+                round: None,
+            }))
         }
         _ => None,
     }
@@ -696,7 +748,13 @@ fn equations(
                         .any(|&v| matches!(read.vars[v], Var::Grid(_)))
                 })
             });
-            Err((bonds, why_words(why, map, grid).into()))
+            let round = bonds.iter().any(|&b| read.bonds.get(b).is_some_and(rounds));
+            let words = if round && why == Why::NotParallel {
+                "Bağlı yay çizgileri artık eş merkezli değil (bir yay ya da duvar taşındı)"
+            } else {
+                why_words(why, map, grid)
+            };
+            Err((bonds, words.into()))
         }
         Outcome::Solved { shifts, dof } => Ok((shifts, dof)),
     }
@@ -791,6 +849,15 @@ fn held(
                         let across = n.x * (a1.x - a0.x) + n.y * (a1.y - a0.y);
                         turned || across.abs() > core::TIE
                     }
+                    // An arc moved when its circle did (docs/adr/8049 §4): its centre or its radius.
+                    (None, None) => match (then.arc(*e), now.as_ref().and_then(|n| n.arc(*e))) {
+                        (Some(x), Some(y)) => {
+                            (x.c.x - y.c.x).hypot(x.c.y - y.c.y) > core::TIE
+                                || (x.r - y.r).abs() > core::TIE
+                                || x.sweep.signum() != y.sweep.signum()
+                        }
+                        _ => true,
+                    },
                     _ => true,
                 }
             }
@@ -1464,8 +1531,25 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
             _ if rule.elements().iter().any(|e| e.element.is_column_side()) => {
                 "bağlanan kolon yanı ve duvar çizgileri paralel olmalı".into()
             }
+            _ if rounds(&bond) => {
+                "bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz".into()
+            }
             _ => "bağlanan duvar çizgileri paralel olmalı".into(),
         }),
+    }
+}
+
+/// Whether a bond names an arc's line (docs/adr/8049 §4).
+fn rounds(bond: &Bond) -> bool {
+    let round = |i: &Item| matches!(i, Item::Line(l) if l.round.is_some());
+    match bond {
+        Bond::Distance { a, b, .. } => round(a) || round(b),
+        Bond::Parallel { a, b } => a.round.is_some() || b.round.is_some(),
+        Bond::Symmetric { a, b, axis } => {
+            a.round.is_some() || b.round.is_some() || axis.round.is_some()
+        }
+        Bond::Fix { a } => round(a),
+        Bond::Reference => false,
     }
 }
 

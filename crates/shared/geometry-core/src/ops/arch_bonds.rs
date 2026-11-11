@@ -9,6 +9,13 @@
 //! - **symmetric**: `ε_a·Δ_a + ε_b·Δ_b − 2·Δ_axis = −(s_a + s_b)`, `s` along the axis's normal from the axis;
 //! - **fix**: the shift is nothing; **parallel**: no equation, the lines must be parallel.
 //!
+//! A line of an arc edge (docs/adr/8049 §4) is its circle (`round`): its shift `Δ` to its left changes its radius by
+//! `−t·Δ` (`t` +1 for an arc that turns left, its left towards its centre). Two such lines are "parallel" when they are
+//! concentric (centres within [`CONCENTRIC`]); a line's offset `(r_a − R)·t_a` to `a`'s left takes the place of
+//! `n_a·(P − P_a)`, so the rules stay linear: **distance** `t_a·t_b·Δ_b − Δ_a = σd − g₀`, **symmetric**
+//! `t_x·t_a·Δ_a + t_x·t_b·Δ_b − 2·Δ_axis = −(s_a + s_b)`. A straight line is never parallel to an arc's; a jamb is not
+//! bonded to an arc's line.
+//!
 //! The shifts a caller holds (what an edit moved) are nothing. The rest is the least change (smallest `Σx²`) that
 //! meets every equation: rows eliminated in the bonds' order, columns in the shifts' order, the first row with a
 //! coefficient past [`COEF`] the pivot; a row left with no coefficient and a right side past [`TIE`] is a conflict
@@ -25,6 +32,8 @@ pub const COEF: f64 = 1e-9;
 pub const PARALLEL: f64 = 1.745_329_251_994_33e-5;
 /// A jamb's bond crosses its wall at 30° at least: the cosine between the line's normal and the wall.
 pub const CROSSING: f64 = 0.5;
+/// Two arcs' lines whose centres are this near are concentric (as Kaydır's gaps), metres.
+pub const CONCENTRIC: f64 = 1e-6;
 
 fn left(u: Vec2) -> Vec2 {
     Vec2::new(-u.y, u.x)
@@ -79,12 +88,51 @@ pub fn line_offset(spec: &Spec, kind: LineKind) -> f64 {
     }
 }
 
-/// A line of an edge: the edge's shift, a point on the line and the edge's direction (unit).
+/// A line of an edge: the edge's shift, a point on the line and the edge's direction (unit); an arc edge's its circle.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Line {
     pub var: usize,
     pub at: Vec2,
     pub dir: Vec2,
+    /// An arc edge's line (docs/adr/8049 §4): its circle and way round.
+    pub round: Option<Round>,
+}
+
+/// A circle a line of an arc edge runs on: its centre, its radius and the arc's way round (`turn` +1 when it turns
+/// left, its left towards the centre; −1 when it turns right).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Round {
+    pub c: Vec2,
+    pub r: f64,
+    pub turn: f64,
+}
+
+/// Whether two lines run together: straight and parallel, or round and concentric.
+fn together(a: &Line, b: &Line) -> bool {
+    match (a.round, b.round) {
+        (None, None) => cross(a.dir, b.dir).abs() <= PARALLEL,
+        (Some(x), Some(y)) => {
+            let d = sub(x.c, y.c);
+            crate::jsmath::js_hypot(d.x, d.y) <= CONCENTRIC
+        }
+        _ => false,
+    }
+}
+
+/// How far `b` is to `a`'s left (lines that run together): `n_a·(P_b − P_a)`, or round `(r_a − r_b)·t_a`.
+fn offset(a: &Line, b: &Line) -> f64 {
+    match (a.round, b.round) {
+        (Some(x), Some(y)) => (x.r - y.r) * x.turn,
+        _ => dot(left(a.dir), sub(b.at, a.at)),
+    }
+}
+
+/// What a unit shift of `b` (to its left) moves it to `a`'s left: `n_a·n_b`, or round `t_a·t_b`.
+fn along(a: &Line, b: &Line) -> f64 {
+    match (a.round, b.round) {
+        (Some(x), Some(y)) => x.turn * y.turn,
+        _ => dot(left(a.dir), left(b.dir)),
+    }
 }
 
 /// A jamb: the opening's shift along its edge, its point, its edge's direction (unit) and the edge's shift when the
@@ -142,9 +190,8 @@ pub enum Bond {
 pub fn measure(bond: &Bond) -> Option<f64> {
     match *bond {
         Bond::Distance { a, b, .. } => match (a, b) {
-            (Item::Line(a), Item::Line(b)) => {
-                (cross(a.dir, b.dir).abs() <= PARALLEL).then(|| dot(left(a.dir), sub(b.at, a.at)))
-            }
+            (Item::Line(a), Item::Line(b)) => together(&a, &b).then(|| offset(&a, &b)),
+            (Item::Jamb(_), Item::Line(l)) if l.round.is_some() => None,
             (Item::Jamb(j), Item::Line(l)) => {
                 let n = left(l.dir);
                 (dot(n, j.dir).abs() >= CROSSING).then(|| dot(n, sub(j.at, l.at)))
@@ -152,12 +199,9 @@ pub fn measure(bond: &Bond) -> Option<f64> {
             (Item::Jamb(a), Item::Jamb(b)) => Some(dot(a.dir, sub(b.at, a.at))),
             (Item::Line(_), Item::Jamb(_)) => None,
         },
-        Bond::Symmetric { a, b, axis } => {
-            let n = left(axis.dir);
-            (cross(a.dir, axis.dir).abs() <= PARALLEL && cross(b.dir, axis.dir).abs() <= PARALLEL)
-                .then(|| dot(n, sub(a.at, axis.at)) + dot(n, sub(b.at, axis.at)))
-        }
-        Bond::Parallel { a, b } => (cross(a.dir, b.dir).abs() <= PARALLEL).then_some(0.0),
+        Bond::Symmetric { a, b, axis } => (together(&a, &axis) && together(&b, &axis))
+            .then(|| offset(&axis, &a) + offset(&axis, &b)),
+        Bond::Parallel { a, b } => together(&a, &b).then_some(0.0),
         Bond::Fix { .. } | Bond::Reference => Some(0.0),
     }
 }
@@ -215,23 +259,20 @@ fn rows(vars: usize, bonds: &[Bond]) -> Result<Vec<Row>, (usize, Why)> {
         match *bond {
             Bond::Reference => continue,
             Bond::Parallel { a, b } => {
-                if cross(a.dir, b.dir).abs() > PARALLEL {
+                if !together(&a, &b) {
                     return Err((k, Why::NotParallel));
                 }
                 continue;
             }
             Bond::Fix { a } => row.coef[a.var()] += 1.0,
             Bond::Symmetric { a, b, axis } => {
-                if cross(a.dir, axis.dir).abs() > PARALLEL
-                    || cross(b.dir, axis.dir).abs() > PARALLEL
-                {
+                if !together(&a, &axis) || !together(&b, &axis) {
                     return Err((k, Why::NotParallel));
                 }
-                let n = left(axis.dir);
-                row.coef[a.var] += dot(n, left(a.dir));
-                row.coef[b.var] += dot(n, left(b.dir));
+                row.coef[a.var] += along(&axis, &a);
+                row.coef[b.var] += along(&axis, &b);
                 row.coef[axis.var] -= 2.0;
-                row.rhs = -(dot(n, sub(a.at, axis.at)) + dot(n, sub(b.at, axis.at)));
+                row.rhs = -(offset(&axis, &a) + offset(&axis, &b));
             }
             Bond::Distance {
                 a,
@@ -242,13 +283,15 @@ fn rows(vars: usize, bonds: &[Bond]) -> Result<Vec<Row>, (usize, Why)> {
                 let sigma = if on_left { 1.0 } else { -1.0 };
                 match (a, b) {
                     (Item::Line(a), Item::Line(b)) => {
-                        if cross(a.dir, b.dir).abs() > PARALLEL {
+                        if !together(&a, &b) {
                             return Err((k, Why::NotParallel));
                         }
-                        let n = left(a.dir);
-                        row.coef[b.var] += dot(n, left(b.dir));
+                        row.coef[b.var] += along(&a, &b);
                         row.coef[a.var] -= 1.0;
-                        row.rhs = sigma * value - dot(n, sub(b.at, a.at));
+                        row.rhs = sigma * value - offset(&a, &b);
+                    }
+                    (Item::Jamb(_), Item::Line(l)) if l.round.is_some() => {
+                        return Err((k, Why::Crossing));
                     }
                     (Item::Jamb(j), Item::Line(l)) => {
                         let n = left(l.dir);
@@ -411,6 +454,7 @@ mod tests {
 
     fn line(var: usize, x: f64, y: f64, dx: f64, dy: f64) -> Line {
         Line {
+            round: None,
             var,
             at: Vec2::new(x, y),
             dir: Vec2::new(dx, dy),
@@ -437,6 +481,46 @@ mod tests {
         // Their normal is west: b 1.5 west of a is a gap of −1.5; held at −1.2 it shifts 0.3 along its normal (west).
         assert!((shifts[1] - 0.3).abs() < 1e-12, "{shifts:?}");
         assert_eq!(dof, 0);
+    }
+
+    /// docs/adr/8049 §4: two concentric arcs' lines, radii 3.1 and 4.3 about (2, 3), both turning left; the inner held,
+    /// the bond 1.5 (the outer 1.5 outside the inner: to the inner's right) makes the outer's radius 4.6, a shift of −0.3
+    /// to its left; a straight line is not parallel to them.
+    #[test]
+    fn concentric_arcs_keep_their_radial_distance() {
+        let round = |var: usize, r: f64| Line {
+            var,
+            at: Vec2::new(2.0, 3.0 - r),
+            dir: Vec2::new(1.0, 0.0),
+            round: Some(Round {
+                c: Vec2::new(2.0, 3.0),
+                r,
+                turn: 1.0,
+            }),
+        };
+        let (a, b) = (round(0, 3.1), round(1, 4.3));
+        let bond = Bond::Distance {
+            a: Item::Line(a),
+            b: Item::Line(b),
+            value: 1.5,
+            left: false,
+        };
+        assert!((measure(&bond).unwrap() + 1.2).abs() < 1e-12);
+        let Outcome::Solved { shifts, dof } = solve(&[true, false], &[bond]) else {
+            panic!()
+        };
+        assert!((shifts[1] + 0.3).abs() < 1e-12, "{shifts:?}");
+        assert_eq!(dof, 0);
+        let straight = line(1, 0.0, -1.0, 1.0, 0.0);
+        let mixed = Bond::Parallel { a, b: straight };
+        assert_eq!(measure(&mixed), None);
+        assert_eq!(
+            solve(&[true, false], &[mixed]),
+            Outcome::Conflict {
+                bonds: vec![0],
+                why: Why::NotParallel
+            }
+        );
     }
 
     #[test]

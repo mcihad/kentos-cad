@@ -369,8 +369,16 @@ impl Overlay {
                         bond: bond.as_ref().map(|b| b.id),
                     },
                 ));
-                // Across from the padlock, the + that makes it a permanent dimension bound to both faces (docs/adr/8019).
-                if to == DistanceTo::Face {
+                // Across from the padlock, the + that makes it a permanent dimension bound to both faces (docs/adr/8019);
+                // a straight edge's only: the interior dimension runs along a straight cut.
+                let arc = cx
+                    .doc
+                    .slot_of(uid)
+                    .and_then(|s| cx.doc.get(s))
+                    .is_some_and(|e| {
+                        matches!(e, Entity::Wall(w) if w.wall.bulges.as_ref().and_then(|b| b.get(g.edge as usize)).is_some_and(|b| *b != 0.0))
+                    });
+                if to == DistanceTo::Face && !arc {
                     let keep =
                         Vec2::new(text_at.x - nx * height * 1.9, text_at.y - ny * height * 1.9);
                     self.preview.markers.push(Marker {
@@ -1032,6 +1040,9 @@ pub fn toggle_bond(switch: crate::temporary_refs::Switch, cx: &mut Context<'_>) 
             }
         }
         None => {
+            // To the nanometre: the parameter reads as the number shown (1.2, not 1.200000000011 on an arc far from
+            // the origin), and the wall, within the tie, does not move.
+            let value = (value * 1e9).round() / 1e9;
             let input = WallsEdit {
                 uids: vec![uid.to_string()],
                 expected_revision: None,

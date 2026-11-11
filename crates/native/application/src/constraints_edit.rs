@@ -1067,19 +1067,11 @@ fn all_locked(doc: &Document, set: &ConstraintSet, ids: &[ConstraintId]) -> bool
         })
 }
 
-/// A new architectural distance bond and its parameter, its value what the drawing measures now, written into the open
-/// step as `label` (docs/adr/0770 §5: Mesafe's `keep`). Its id.
-pub(crate) fn add_bond(
-    doc: &mut Document,
-    rule: ConstraintRule,
-    label: &str,
-) -> Result<String, Stop> {
-    add_bond_given(doc, rule, label, None, "operation")
-}
-
-/// [`add_bond`] for any bond, with the value the user gave (`value`, metres: Paralel kaydır's Bu uzaklığı koru,
-/// docs/adr/2580) as its parameter's expression instead of what the drawing measures after the move (the same to the
-/// float's last digits); none: what it measures. `at`: the input's path its refusals name.
+/// A new bond and its parameter written into the open step as `label` (Mesafe's `keep`, docs/adr/0770 §5; Paralel
+/// kaydır's Bu uzaklığı koru, docs/adr/2580; a partition's and a column's, docs/adr/8049): the value the user gave
+/// (`value`, metres) as its parameter's expression instead of what the drawing measures after the move (the same but
+/// for the float's last digits far from the origin); none: what it measures. `at`: the input's path its refusals
+/// name. Its id.
 pub(crate) fn add_bond_given(
     doc: &mut Document,
     rule: ConstraintRule,

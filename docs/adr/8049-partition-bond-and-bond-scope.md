@@ -1,9 +1,8 @@
 # ADR 8049: Ölçülü bölmede kalıcı bağ ve bağların kapsamı
 
-- **Durum:** 1.–4. bölüm yapıldı (11–12 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme
-  mesafesini "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2); kolon yanı bağı (§3); yay kenarın
-  Kaydır'ı (§4, yay kenar bağının temeli). Açık: yay kenarın geçici ölçüsü ve yay kenar bağı (§5); döşeme kenarı bağı
-  yazılmadı (§5).
+- **Durum:** yapıldı (11–12 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme mesafesini "Bu
+  ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2); kolon yanı bağı (§3); yay kenarın Kaydır'ı, geçici
+  ölçüsü, Mesafe'si ve bağı (§4); döşeme kenarı bağı bilerek yazılmadı (§5).
 - **Bağlam belgesi:** ADR 0770 (bağlantılı odalar ve kalıcı mimari bağlar), ADR 0657 ve 0734 (ölçülü bölme, yay kenar),
   ADR 0710 (duvarın mesafesi, Kaydır), ADR 0780 ve 0790 (yoldaki bağlar), ADR 0334–0338 (kısıtlar).
 
@@ -125,10 +124,20 @@ düz kenarı da.
 - Birleşim uyarıları: bağımsız birleşim çözücüsü (`wall_command_cases.join_warnings`) yalnız düz duvar aldığından yay
   içeren yazımların ortak durumları uyarıyı açık bırakır (`$any`); geometri birebir denetlenir.
 
+- **Yay kenar bağı:** duvarın yay kenarındaki çizgi (yüz, eksen, çekirdek yüzü) bağın parçasıdır; mevcut `wall`
+  parçası (`edge`, `line`) yay kenarı da anar, dosya biçimi değişmedi. Çözücüde düz çizgi gibi bir kayma
+  bilinmeyenidir, çizgisi çemberi: kayınca yarıçapı `−t·Δ` değişir. İki yay çizgisi eş merkezliyse (merkezleri 1 µm
+  içinde) "paralel" sayılır; uzaklık (ör. eğri koridorun net 1,20 m'si), paralel (eş merkezli kal), simetrik ve sabit
+  alır. Düz çizgi yaya, pervaz yay çizgisine bağlanmaz ("bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya
+  bağlanmaz"). Yay düzenlemede çemberi (merkez, yarıçap, dönüş) değişince tutulur; kenar düzden yaya ya da yaydan düze
+  dönerse bağı kalkar (domain).
+- **Bu ölçüyü koru verilen değeri yazar:** Mesafe'nin `keep`'i bağın parametresini ölçülen değerden değil verilen
+  mesafeden yazar (Mesafe duvarı tam o mesafeye getirir; ölçülen değer başlangıçtan uzakta 1.200000000011 gibi
+  çıkıyordu). Geçici ölçünün kilidi değeri nanometreye yuvarlar. Yay kenarda kalıcı ölçü "+" düğmesi gösterilmez (iç
+  ölçü düz kesit boyunca çalışır).
+
 ### 5. Bağların kalan kapsamı
 
-- **Yay kenar bağı (açık):** çözücüde çember öğesi; eş merkezli yaylar arasında uzaklık, eş merkezlilik, sabit;
-  geçici ölçünün yaydaki kilidi.
 - **Döşeme kenarı bağı yazılmadı:** "Kaynağa bağlı sınır"lı döşeme (ADR 0771 §4) sınırını duvarların dış ya da iç
   yüzlerinden payıyla her adımda yeniden buluyor; duvar kayınca döşeme kenarı zaten izliyor. Ayrı bir kenar bağı aynı
   ilişkiye ikinci bir yetke olurdu (ADR 0338 §2'nin tek yetke kuralı).
@@ -172,6 +181,13 @@ düz kenarı da.
   yay r 2,7; dış yay içe 1,00 m → r 4,2; eski "yay duvar reddedilir" ölçüsü artık iki yanı boş döner. 35 ölçü ve 55
   Kaydır durumu Rust ve Python'da. Etkileşim: iç yay seçilince 1,200 görünür, sayısına 1.5 yazılınca yarıçap 2,7,
   tek geri alma.
+- Yay bağı (§4): 59 bağ durumu (52'den; bağımsız model `arch_bond_cases.py`'nin çember çizgisi): eğri koridor
+  (merkez (20; 10), r 3 ve 4,4) 1,20 m ölçülür; iç yay 0,3 m içe → dış yay r 4,4 → 4,1; dış yay 0,5 m dışa → iç yay r 3
+  → 3,5; Mesafe 1,50 korunur, dış yay r 4,8'e → iç yay r 3,1; eş merkezli (paralel) bağda yalnız kayan kımıldar; düz
+  çizgi–yay ve eş merkezli olmayan yaylar reddedilir. 1146 duvar, kısıt, mimari, harita bağı ve parametre durumu Rust
+  ve Python'da. Uygulama: yay düzleşince ya da düz kenar bükülünce bağ kalkar. Etkileşim: koridorun iç yayında tek
+  kilit, d1 = 1.2 (yuvarlamadan önce 1.200000000011), dış yay 0,5 m dışa → iç yay r 3,5. Çekirdek: eş merkezli iki
+  yay çizgisinde 1,5 m bağ dış yayı r 4,3 → 4,6 yapar; düz–yay paralel çelişir.
 - Gerçek pencere (§3; `fixtures/interaction/real/kolon-bagi.txt`): eski sürümde seçili kolonun ölçülerinde kilit yok;
   yeni sürümde dört yanda kilit, güney kilidi "d1 = 0.8 m" yazıyor (kolon kımıldamıyor), duvarın güney kenarı A aksına
   1,40'tan 0,90'a alınınca kolon da 0,5 m güneye gidiyor, Ctrl+Z ("Geri alındı: Duvarı…") ikisini birlikte geri alıyor.

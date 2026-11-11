@@ -6,6 +6,10 @@ with cad.constraints.edit (a wall's line: `wall` edge and line; an opening's jam
 `grid`, docs/adr/8049 §2), then edits walls, a parameter, an opening or moves a grid; what the bonds make of it is
 written here:
 
+- an arc edge's line (ADR 8049 §4) is its circle: its shift to its left changes its radius by −t·Δ (t +1 for an arc
+  that turns left); two arcs' lines "run together" when concentric (centres within 1e-6 m), a line R to a's left is
+  (r_a − R)·t_a away and a unit shift of b moves it t_a·t_b; a straight line never runs with an arc's, a jamb is not
+  bonded to one;
 - every bonded edge and grid shifts square to itself (`Δ` along its left normal, a grid's from its first point to its
   second), every bonded opening along its edge (`δ`);
   the rules are linear (the ADR's table); a distance's side `left` is read from the drawing when it is made (two jambs
@@ -80,9 +84,16 @@ COLUMNS = {
     17: {"kind": "column", "id": 17, "layerId": "kolon", "attrs": {}, "at": ws.P(-1.0, -1.5), "width": 0.4, "depth": 0.4,
          "grids": [ws.uid(13), ws.uid(14)], "place": "A-1"},
 }
+# A curved corridor (ADR 8049 §4): quarter arcs of radius 3 and 4.4 about (20, 10), from 225° to 315°, both turning
+# left: 1.20 m clear between the inner's outer face and the outer's inner face.
+ARCS = {i: ws.wall(i, [(20 + r * math.cos(math.radians(225)), 10 + r * math.sin(math.radians(225))),
+                       (20 + r * math.cos(math.radians(315)), 10 + r * math.sin(math.radians(315)))],
+                   bulges=[math.tan(math.pi / 8), 0.0])
+        for i, r in ((18, 3.0), (19, 4.4))}
 ENTITIES = [WALLS[1], WALLS[2], WALLS[3], WALLS[4], WALLS[5], WALLS[6],
             door(7, 1, 2.0, 0.9, WALLS), door(8, 1, 6.0, 0.9, WALLS), door(9, 5, 3.0, 0.8, WALLS),
-            WALLS[10], WALLS[11], WALLS[12], GRIDS[13], GRIDS[14], GRIDS[15], COLUMNS[16], COLUMNS[17]]
+            WALLS[10], WALLS[11], WALLS[12], GRIDS[13], GRIDS[14], GRIDS[15], COLUMNS[16], COLUMNS[17],
+            ARCS[18], ARCS[19]]
 SETUP = copy.deepcopy(ws.SETUP)
 SETUP["layers"] = SETUP["layers"] + [wc.layer("kolon", "Kolon")]
 SETUP["name"] = "Mimari bağlar"
@@ -124,15 +135,48 @@ def line_offset(w, line):
 
 
 def wall_line(state, el):
-    """(point on the line, edge direction) of a wall's line; none for an arc edge or an edge it has not."""
+    """(point on the line, edge direction, its circle or none) of a wall's line: on an arc edge (ADR 8049 §4) the point
+    at its start's radius, its way there and (centre, radius moved by the line's offset to its left, way round)."""
     w = state[el_id(el)]
     e = el["element"]
     ed = ws.edge(w, e["edge"])
-    if ed is None:
-        return None
-    a, b = ed
-    d = unit(a, b)
-    return along(a, left(d), line_offset(w, e["line"])), d
+    if ed is not None:
+        a, b = ed
+        d = unit(a, b)
+        return along(a, left(d), line_offset(w, e["line"])), d, None
+    c, r, sweep = ws.arc_of(w, e["edge"])
+    turn = 1.0 if sweep > 0 else -1.0
+    rl = r - turn * line_offset(w, e["line"])
+    a = xy(w["pts"][e["edge"]])
+    u0 = unit(c, a)
+    return along(c, u0, rl), (-u0[1] * turn, u0[0] * turn), (c, rl, turn)
+
+
+CONCENTRIC = 1e-6
+
+
+def together(a, b):
+    """Two lines (parts) that run together: straight and parallel, or round and concentric."""
+    ra, rb = a[4], b[4]
+    if ra is None and rb is None:
+        return abs(cross(a[3], b[3])) <= PARALLEL
+    if ra is not None and rb is not None:
+        return math.hypot(ra[0][0] - rb[0][0], ra[0][1] - rb[0][1]) <= CONCENTRIC
+    return False
+
+
+def offset(a, b):
+    """How far line b is to line a's left."""
+    if a[4] is not None and b[4] is not None:
+        return (a[4][1] - b[4][1]) * a[4][2]
+    return dot(left(a[3]), sub(b[2], a[2]))
+
+
+def unit_shift(a, b):
+    """How far a unit shift of b (to its left) moves it to a's left."""
+    if a[4] is not None and b[4] is not None:
+        return a[4][2] * b[4][2]
+    return dot(left(a[3]), left(b[3]))
 
 
 def el_id(el):
@@ -237,14 +281,14 @@ def items(state, rules):
             if type(el) is not dict:
                 continue
             if el["element"]["kind"] == "wall":
-                at, d = wall_line(state, el)
-                got.append(("line", v(("edge", el_id(el), el["element"]["edge"])), at, d))
+                at, d, rd = wall_line(state, el)
+                got.append(("line", v(("edge", el_id(el), el["element"]["edge"])), at, d, rd))
             elif el["element"]["kind"] == "grid":
                 at, d = grid_line(state, el)
-                got.append(("line", v(("grid", el_id(el))), at, d))
+                got.append(("line", v(("grid", el_id(el))), at, d, None))
             elif el["element"]["kind"] == "columnSide":
                 at, d, key = column_line(state, el)
-                got.append(("line", v(key), at, d))
+                got.append(("line", v(key), at, d, None))
             else:
                 p, d, h = jamb(state, el)
                 host = ("edge", h, 0)
@@ -260,7 +304,7 @@ def rows(nvars, rules, parts, values):
         co = [0.0] * nvars
         kind = r["kind"]
         if kind == "parallel":
-            if abs(cross(ps[0][3], ps[1][3])) > PARALLEL:
+            if not together(ps[0], ps[1]):
                 return k, "parallel"
             continue
         if kind == "fix":
@@ -269,25 +313,25 @@ def rows(nvars, rules, parts, values):
             continue
         if kind == "symmetric":
             a, b, ax = ps
-            if abs(cross(a[3], ax[3])) > PARALLEL or abs(cross(b[3], ax[3])) > PARALLEL:
+            if not together(a, ax) or not together(b, ax):
                 return k, "parallel"
-            n = left(ax[3])
-            co[a[1]] += dot(n, left(a[3]))
-            co[b[1]] += dot(n, left(b[3]))
+            co[a[1]] += unit_shift(ax, a)
+            co[b[1]] += unit_shift(ax, b)
             co[ax[1]] -= 2.0
-            out.append((co, -(dot(n, sub(a[2], ax[2])) + dot(n, sub(b[2], ax[2]))), {k}))
+            out.append((co, -(offset(ax, a) + offset(ax, b)), {k}))
             continue
         a, b = ps
         value = values[r["parameter"]]
         sigma = 1.0 if r.get("left") else -1.0
         if a[0] == "line":
-            if abs(cross(a[3], b[3])) > PARALLEL:
+            if not together(a, b):
                 return k, "parallel"
-            n = left(a[3])
-            co[b[1]] += dot(n, left(b[3]))
+            co[b[1]] += unit_shift(a, b)
             co[a[1]] -= 1.0
-            out.append((co, sigma * value - dot(n, sub(b[2], a[2])), {k}))
+            out.append((co, sigma * value - offset(a, b), {k}))
         elif b[0] == "line":
+            if b[4] is not None:
+                return k, "crossing"
             n = left(b[3])
             if abs(dot(n, a[3])) < CROSSING:
                 return k, "crossing"
@@ -354,7 +398,7 @@ def measured(state, rule):
     var, parts = items(state, [rule])
     a, b = parts[0]
     if a[0] == "line":
-        g = dot(left(a[3]), sub(b[2], a[2]))
+        g = offset(a, b)
     elif b[0] == "line":
         g = dot(left(b[3]), sub(a[2], b[2]))
     else:
@@ -385,7 +429,12 @@ def equations(state, rules, values, edited=None):
             held[k] = True
         if edited and oid in edited:
             before = edited[oid]
-            if key[0] == "edge":
+            if key[0] == "edge" and ws.bulge(before, key[2]) != 0.0 and ws.bulge(state[oid], key[2]) != 0.0:
+                # An arc moved when its circle did: its centre, its radius or its way round (ADR 8049 §4).
+                (c0, r0, s0), (c1, r1, s1) = ws.arc_of(before, key[2]), ws.arc_of(state[oid], key[2])
+                held[k] = (held[k] or math.hypot(c1[0] - c0[0], c1[1] - c0[1]) > TIE or abs(r1 - r0) > TIE
+                           or (s0 > 0) != (s1 > 0))
+            elif key[0] == "edge":
                 b0 = ws.edge(before, key[2])
                 b1 = ws.edge(state[oid], key[2])
                 if b0 is None or b1 is None:
@@ -431,7 +480,9 @@ def equations(state, rules, values, edited=None):
     eqs = rows(len(var), rules, parts, values)
     if isinstance(eqs, tuple):
         gridded = any(p[0] == "line" and var[p[1]][0] == "grid" for p in parts[eqs[0]])
-        parallel = ("Bağlı aks ve duvar çizgileri artık paralel değil (bir aks ya da duvar döndü)" if gridded
+        rounded = any(p[0] == "line" and p[4] is not None for p in parts[eqs[0]])
+        parallel = ("Bağlı yay çizgileri artık eş merkezli değil (bir yay ya da duvar taşındı)" if rounded
+                    else "Bağlı aks ve duvar çizgileri artık paralel değil (bir aks ya da duvar döndü)" if gridded
                     else "Bağlı duvar çizgileri artık paralel değil (bir duvar döndü)")
         return None, ([eqs[0]], {"parallel": parallel,
                                   "crossing": "Pervazın bağlandığı çizgi açıklığın duvarını en az 30° ile kesmiyor"}[eqs[1]])
@@ -465,7 +516,8 @@ def follow(state, rules, values, held_ids=None, edited=None, late=None):
             if now[j]["layerId"] == "kilitli":
                 return None, ([i for i, ps in enumerate(parts) if any(p[1] == k for p in ps)],
                               "Bağ “Kilitli katman” katmanındaki bir duvarı kaydırmak istiyor ve o katman kilitli. Kilidi açın ya da bağı kaldırın.")
-            now[j] = dict(now[j], pts=[P(*p) for p in pts])
+            now[j] = dict(now[j], pts=[P(*p) for p in pts],
+                          **({"bulges": moved.bulges[j]} if j in getattr(moved, "bulges", {}) else {}))
             changed[j] = now[j]
             moved_walls[j] = pts
     for i, o in ws.carried(state, moved_walls).items():
@@ -531,9 +583,9 @@ def measured_or_none(state, rule):
         return None
     var, parts = items(state, [rule])
     a, b = parts[0]
-    if a[0] == "line" and b[0] == "line" and abs(cross(a[3], b[3])) > PARALLEL:
+    if a[0] == "line" and b[0] == "line" and not together(a, b):
         return None
-    if a[0] == "jamb" and b[0] == "line" and abs(dot(left(b[3]), a[3])) < CROSSING:
+    if a[0] == "jamb" and b[0] == "line" and (b[4] is not None or abs(dot(left(b[3]), a[3])) < CROSSING):
         return None
     return measured(state, rule)[0]
 
@@ -794,13 +846,14 @@ class Case:
             g = ws.gaps(written, i, edge)[0 if side == "left" else 1]
             rule = dist(W(g["wall"], "leftFace" if g["left"] else "rightFace", g["edge"]),
                         W(i, "leftFace" if side == "left" else "rightFace", edge))
-        gap, sense = measured(written, rule)
+        _, sense = measured(written, rule)
         if sense:
             rule["left"] = True
         name = f"d{1 + sum(1 for n, _ in self.params if n.startswith('d'))}"
         rule["parameter"] = name
         self.rules.append(rule)
-        self.params.append((name, wc_value(gap)))
+        # The distance given, not the gap measured (equal but for rounding far from the origin).
+        self.params.append((name, wc_value(distance)))
         self.state = written
         step["within"] = 1e-9
         step["result"] = "$any"
@@ -1050,6 +1103,20 @@ def cases():
     c = case("1 aksı taşınınca akslara bağlı kolon ve ona bağlı batı duvarı izler")
     c.add(dist(W(4, "rightFace"), C(17, 1)))
     c.move_grid(14, -0.3, 0.0)
+    c = case("Yay bağı: eğri koridor 1,20 m ölçülür, hiçbir şey kımıldamaz")
+    c.add(dist(W(18, "rightFace"), W(19, "leftFace")))
+    c = case("Yay bağı: iç yay merkezine 0,3 m kayınca dış yay da 0,3 m izler, koridor 1,20 m kalır")
+    c.add(dist(W(18, "rightFace"), W(19, "leftFace")))
+    c.shift(18, 0.3)
+    c = case("Yay bağı: dış yay 0,5 m dışa kayınca iç yay izler")
+    c.add(dist(W(18, "rightFace"), W(19, "leftFace")))
+    c.shift(19, -0.5)
+    c = case("Bu ölçüyü koru yayda: eğri koridor 1,20 → 1,50 m, bağ aynı adımda; dış yay kayınca iç yay izler")
+    c.keep(18, "right", 1.5)
+    c.shift(19, -0.4)
+    c = case("Yaylar eş merkezli (paralel) bağlı: dış yay kayar, iç yay yerinde")
+    c.add({"kind": "parallel", "a": W(18, "axis"), "b": W(19, "axis")})
+    c.shift(19, -0.3)
     c = case("Bu ölçüyü koru, o yanda paralel duvar yok: reddedilir")
     c.keep(12, "left", 1.0)
     return [x.done() for x in out]
@@ -1065,8 +1132,8 @@ def refusals():
                                                                                   "uids": "$any"}},
                                          "expect": {"ids": IDS, "revision": "same"}}]}
     return [
-        refused("Yay kenara bağ kurulmaz", dist(W(10, "axis"), W(12, "axis")),
-                "duvarın 1. kenarının eksen bulunamadı: kenar yay ya da yok, ya da açıklık duvarının dışında"),
+        refused("Yay kenar düz çizgiye bağlanmaz", dist(W(10, "axis"), W(12, "axis")),
+                "bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz"),
         refused("Olmayan kenara bağ kurulmaz", dist(W(1, "axis", edge=3), W(3, "axis")),
                 "duvarın 4. kenarının eksen bulunamadı: kenar yay ya da yok, ya da açıklık duvarının dışında"),
         refused("Paralel olmayan duvar çizgileri arasına uzaklık kurulmaz", dist(W(1, "axis"), W(2, "axis")),
@@ -1086,6 +1153,10 @@ def refusals():
                 "kolon yanı yalnız bir kolonda olur"),
         refused("Paralel olmayan kolon yanı ve duvar çizgisi arasına uzaklık kurulmaz", dist(W(1, "axis"), C(16, 1)),
                 "bağlanan kolon yanı ve duvar çizgileri paralel olmalı"),
+        refused("Düz duvar çizgisi yaya bağlanmaz", dist(W(1, "axis"), W(18, "axis")),
+                "bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz"),
+        refused("Eş merkezli olmayan yaylar bağlanmaz", dist(W(18, "axis"), W(10, "axis")),
+                "bağlanan yay çizgileri eş merkezli olmalı; düz çizgi yaya bağlanmaz"),
     ]
 
 

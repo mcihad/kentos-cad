@@ -259,7 +259,8 @@ impl Document {
                 return true;
             };
             // An architectural part (docs/adr/0770 §4): a wall line goes when its wall's layout (vertex count,
-            // closedness) changed or the edge is gone or an arc; a jamb when it is no longer an opening's.
+            // closedness) changed or the edge is gone, or the edge turned from straight to an arc or back (an arc
+            // edge's line is its circle, docs/adr/8049 §4); a jamb when it is no longer an opening's.
             match r.element {
                 CadElement::Wall { edge, .. } => {
                     let Entity::Wall(w) = entity.as_ref() else {
@@ -272,14 +273,15 @@ impl Document {
                     } else {
                         w.wall.pts.len().saturating_sub(1)
                     };
-                    let arc = w
-                        .wall
-                        .bulges
-                        .as_ref()
-                        .and_then(|b| b.get(edge as usize))
-                        .is_some_and(|b| *b != 0.0);
-                    let reshaped = matches!(before.get(&r.uid).map(|e| e.as_ref()), Some(Entity::Wall(was)) if layout(was) != layout(w));
-                    return reshaped || edge as usize >= edges || arc;
+                    let arc = |w: &kentos_contracts::WallEntity| {
+                        w.wall
+                            .bulges
+                            .as_ref()
+                            .and_then(|b| b.get(edge as usize))
+                            .is_some_and(|b| *b != 0.0)
+                    };
+                    let reshaped = matches!(before.get(&r.uid).map(|e| e.as_ref()), Some(Entity::Wall(was)) if layout(was) != layout(w) || arc(was) != arc(w));
+                    return reshaped || edge as usize >= edges;
                 }
                 CadElement::Jamb { .. } => return !matches!(entity.as_ref(), Entity::Opening(_)),
                 // A grid's line (docs/adr/8049 §2) goes when its object is no longer a straight grid; a column's side
