@@ -479,6 +479,8 @@
     dönüşüyle), dairesi yuvarlak kolon; dolgulu; içindeki tarama kolonla gider; L çevre kalır ve söylenir.
     Bloklar (ADR 8048 §6): seçimdeki blok çizim değişmeden açılır (iç içe 8 kata dek), parça kendi katmanının, 0
     katmanındaki parça yerleştirmenin rolüyle okunur; bütünüyle okunan blok silinir.
+    Duvarın üstüne çizilmiş açıklık: yüzler sürerken aralarında örtüşen iki pencere çizgisi pencere; duvar bandında
+    dönen, kanadı duvar boyunca kapanan kapı yayı kasalarına dek kapı (ADR 8048 §1).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

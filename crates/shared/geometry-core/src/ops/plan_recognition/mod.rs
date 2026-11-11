@@ -15,7 +15,9 @@
 //!   swing (an arc about a jamb as wide as the gap, or two about both as wide as half of it) or a window's lines
 //!   along it is that opening; a column, or another wall crossing or meeting it there, is a joint; a gap no wider
 //!   than `max_opening` with nothing in it is a bare opening, a narrower one than 0.3 m a slip of the pen (the wall
-//!   runs on); a wider one ends the wall. A joint's wall runs through.
+//!   runs on); a wider one ends the wall. A joint's wall runs through. Where the faces run on, a window's lines between
+//!   them (two at least, overlapping) or a door's swing about a point of the wall, its leaf closing along it, is an
+//!   opening drawn over the wall (a block masking it with a wipeout).
 //! - **Walls meet.** A wall's end within reach of another wall's line (their half widths, or the column it stops at)
 //!   runs to it: to the other's line in a tee, both to their crossing at a corner; ADR 0340 §2 then joins them.
 //! - **What is taken.** A wall's line within a wall, a door's or window's line and arc within its opening (a wall's
@@ -784,6 +786,124 @@ impl Plan<'_> {
         })
     }
 
+    /// The openings drawn over a wall whose faces run on (a door's or a window's block masking them with a wipeout),
+    /// each where the wall has none: window lines along it between its faces, two at least overlapping, as long as an
+    /// opening may be; a door's swing about a point of it, its leaf closing along it, from the hinge to the leaf's end,
+    /// widened to the door's frames there.
+    fn over(&mut self, d: &mut Draft) {
+        let o = *self.o;
+        let f = self.frames[d.class];
+        let free = |d: &Draft, t0: f64, t1: f64| {
+            d.openings
+                .iter()
+                .all(|x| overlap(x.t0, x.t1, t0, t1) <= o.tol)
+        };
+        let parallel = sin(o.angle * PI / 180.0);
+        let along = |s: &Segment| {
+            let dv = sub(s.b, s.a);
+            let l = length(dv);
+            let (ta, tb) = (f.t(s.a), f.t(s.b));
+            let rho = (f.rho(s.a) + f.rho(s.b)) / 2.0;
+            (l > o.tol && (dot(dv, f.n) / l).abs() <= parallel).then_some((
+                js_min(ta, tb),
+                js_max(ta, tb),
+                rho,
+            ))
+        };
+        let mut spans: Vec<(f64, f64)> = self
+            .lines
+            .segments
+            .iter()
+            .filter(|s| s.role == Role::Window)
+            .filter_map(along)
+            .filter(|&(a, b, rho)| {
+                rho >= d.lo - o.tol && rho <= d.hi + o.tol && a >= d.t0 - o.tol && b <= d.t1 + o.tol
+            })
+            .map(|(a, b, _)| (a, b))
+            .collect();
+        spans.sort_by(|x, y| x.0.total_cmp(&y.0).then(x.1.total_cmp(&y.1)));
+        let mut groups: Vec<(f64, f64, usize)> = Vec::new();
+        for (a, b) in spans {
+            match groups.last_mut() {
+                Some(g) if a < g.1 - o.tol => {
+                    g.1 = js_max(g.1, b);
+                    g.2 += 1;
+                }
+                _ => groups.push((a, b, 1)),
+            }
+        }
+        for (a, b, n) in groups {
+            if n >= 2 && b - a >= BARE_MIN && b - a <= o.max_opening + o.tol && free(d, a, b) {
+                d.openings.push(Found {
+                    t0: a,
+                    t1: b,
+                    form: Form::Window,
+                    leaves: 1,
+                    hand: End::Start,
+                    side: Side::Left,
+                    swing: None,
+                });
+            }
+        }
+        let mid = d.mid();
+        for (k, arc) in self.lines.arcs.iter().enumerate() {
+            if self.swings[k] || arc.role != Role::Door || arc.sweep < 20.0 * PI / 180.0 {
+                continue;
+            }
+            let (tc, rc) = (f.t(arc.c), f.rho(arc.c));
+            if rc < d.lo - HINGE || rc > d.hi + HINGE || tc <= d.t0 || tc >= d.t1 {
+                continue;
+            }
+            if arc.r < BARE_MIN || arc.r > o.max_opening + o.tol {
+                continue;
+            }
+            // The leaf's closed end: the arc's end along the wall.
+            let ends = [arc.a0, arc.a0 + arc.sweep]
+                .map(|th| Vec2::new(arc.c.x + arc.r * cos(th), arc.c.y + arc.r * sin(th)));
+            let Some(shut) = ends.iter().find(|e| (f.rho(**e) - rc).abs() <= HINGE) else {
+                continue;
+            };
+            let te = f.t(*shut);
+            let (mut t0, mut t1) = (js_min(tc, te), js_max(tc, te));
+            // Its frames across the wall at its ends.
+            for s in self.lines.segments.iter().filter(|s| s.role == Role::Door) {
+                let (ta, tb) = (f.t(s.a), f.t(s.b));
+                let (a, b) = (js_min(ta, tb), js_max(ta, tb));
+                let (ra, rb) = (f.rho(s.a), f.rho(s.b));
+                let inside = js_min(ra, rb) >= d.lo - o.tol && js_max(ra, rb) <= d.hi + o.tol;
+                if inside && b >= t0 - HINGE && a <= t1 + HINGE {
+                    t0 = js_min(t0, a);
+                    t1 = js_max(t1, b);
+                }
+            }
+            if !free(d, t0, t1) || t0 < d.t0 - o.tol || t1 > d.t1 + o.tol {
+                continue;
+            }
+            let m = arc.a0 + arc.sweep / 2.0;
+            let p = Vec2::new(arc.c.x + arc.r * cos(m), arc.c.y + arc.r * sin(m));
+            let sweep = arc.sweep * 180.0 / PI;
+            self.swings[k] = true;
+            d.openings.push(Found {
+                t0,
+                t1,
+                form: Form::Door,
+                leaves: 1,
+                hand: if (tc - t0).abs() <= (tc - t1).abs() {
+                    End::Start
+                } else {
+                    End::End
+                },
+                side: if f.rho(p) >= mid {
+                    Side::Left
+                } else {
+                    Side::Right
+                },
+                swing: ((sweep - 90.0).abs() > 1.0).then(|| js_round(sweep)),
+            });
+        }
+        d.openings.sort_by(|x, y| x.t0.total_cmp(&y.t0));
+    }
+
     /// A window's lines in the gap: along the wall, within its sills, over half of the gap.
     fn window(&self, f: &Frame, lo: f64, hi: f64, g0: f64, g1: f64) -> Option<Found> {
         let o = self.o;
@@ -884,6 +1004,9 @@ pub fn recognize(lines: &Lines, o: &Options) -> Recognized {
             draft.first = draft.first.min(p.first);
         }
         drafts.push(draft);
+    }
+    for d in &mut drafts {
+        plan.over(d);
     }
     meet(&mut drafts, &plan.frames, &lines.rings, o);
     drafts.sort_by(|a, b| a.first.cmp(&b.first).then(a.t0.total_cmp(&b.t0)));

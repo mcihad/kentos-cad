@@ -14,7 +14,9 @@ window's lines, a column's outline — and says what `cad.arch.recognize` makes 
 - a gap in it: a face running on is a joint; an arc about a jamb as wide as the gap a door (Kapı 80 under 0.85 m, else
   Kapı 90; two arcs about both jambs İki kanatlı kapı 140), hinged at that jamb, opening to the arc's side, its swing
   the arc's when not 90°; a window's lines along it a window (Pencere 120); nothing in it a bare opening (Boşluk 100)
-  when at least 0.3 m and at most `maxOpening`; each as wide as the gap, its middle the gap's;
+  when at least 0.3 m and at most `maxOpening`; each as wide as the gap, its middle the gap's; where the faces run on
+  (a block's wipeout masked them), two overlapping window lines between them are a window as long as they are, a door's
+  swing about a point of the wall a door from its frame to its frame;
 - a column layer's closed outline of four right angles is a rectangular column about its middle (its width the side
   nearer east–west, turned as that side), its circle a round one as wide as it, filled, on its layer; a hatch whose
   middle lies in one goes with it; another outline stays;
@@ -380,6 +382,21 @@ def cases():
     window = opening(first + 4, first + 1, NORTH, 2.0, 3.2, "kentos-pencere-120", layer_id="pencere")
     out.append(case("pencere: boşluk boyunca pencere çizgileri Pencere 120 olur; çizgileri ve denizliği silinir", p,
                     [done(p, walls + [window], all_of(p))]))
+
+    # Drawn over the wall: the faces run on under a window's and a door's blocks.
+    p = Plan()
+    p.room()
+    for y in (2.9, 2.98, 3.02, 3.1):
+        p.line((2.0, y), (3.2, y), "pencere")
+    p.arc((1.05, 0.1), 0.8, 0.0, 90.0)
+    for x0, x1 in ((1.0, 1.05), (1.85, 1.9)):
+        p.add("polyline", "kapi", pts=[P(x0, -0.1), P(x1, -0.1), P(x1, 0.1), P(x0, 0.1)], closed=True)
+    first = len(p.ents) + 1
+    walls = [wall(first + k, ends) for k, ends in enumerate(ROOM)]
+    door = opening(first + 4, first, SOUTH, 1.0, 1.9, "kentos-kapi-90")
+    window = opening(first + 5, first + 1, NORTH, 2.0, 3.2, "kentos-pencere-120", layer_id="pencere")
+    out.append(case("duvarın üstüne çizilmiş: yüzler sürerken iki pencere çizgisi pencere, kasalarıyla bir kapı yayı kapı "
+                    "olur", p, [done(p, walls + [door, window], all_of(p))]))
 
     # A bare opening; a slip of the pen; a wide gap.
     p = Plan()

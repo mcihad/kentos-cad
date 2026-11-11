@@ -427,3 +427,63 @@ fn lines_of_other_things_are_left() {
     assert!(!r.used.contains(&bed) && !r.used.contains(&leaf));
     assert_eq!(r.used.len(), d.sources - 2);
 }
+
+#[test]
+fn a_window_drawn_over_a_wall_s_running_faces_is_found_on_it() {
+    let mut d = Draw::new();
+    // The north wall's faces run on under the window: its block masked them.
+    room(&mut d, &[], &[], &[], &[]);
+    let glass: Vec<usize> = [2.9, 2.98, 3.02, 3.1]
+        .iter()
+        .map(|&y| d.line((2.0, y), (3.2, y), Role::Window))
+        .collect();
+    let r = recognize(&d.lines, &Options::default());
+    assert!(near(&walls(&r), &ROOM), "{:#?}", walls(&r));
+    let north = wall_at(&r, 3.0);
+    assert_eq!(r.openings.len(), 1, "{:#?}", r.openings);
+    let o = r.openings[0];
+    assert_eq!(
+        (o.wall, o.from, o.to, o.form),
+        (north, 2.0, 3.2, Form::Window)
+    );
+    assert!(glass.iter().all(|g| r.used.contains(g)));
+    // One window line alone is no window: a sill, a lintel's mark.
+    let mut d = Draw::new();
+    room(&mut d, &[], &[], &[], &[]);
+    let lone = d.line((2.0, 3.0), (3.2, 3.0), Role::Window);
+    let r = recognize(&d.lines, &Options::default());
+    assert!(r.openings.is_empty());
+    assert!(!r.used.contains(&lone));
+}
+
+#[test]
+fn a_door_s_swing_over_a_wall_s_running_faces_opens_it_from_its_frames() {
+    let mut d = Draw::new();
+    room(&mut d, &[], &[], &[], &[]);
+    // Hinged 0.05 m in from its jamb at x 1.0, its leaf 0.8 m, its frames across the wall.
+    let swing = d.arc((1.05, 0.1), 0.8, 0.0, 90.0, Role::Door);
+    for (x0, x1) in [(1.0, 1.05), (1.85, 1.9)] {
+        d.line((x0, -0.1), (x1, -0.1), Role::Door);
+        d.line((x1, -0.1), (x1, 0.1), Role::Door);
+        d.line((x1, 0.1), (x0, 0.1), Role::Door);
+        d.line((x0, 0.1), (x0, -0.1), Role::Door);
+    }
+    let r = recognize(&d.lines, &Options::default());
+    assert!(near(&walls(&r), &ROOM), "{:#?}", walls(&r));
+    let south = wall_at(&r, 0.0);
+    assert_eq!(
+        r.openings,
+        vec![Opening {
+            wall: south,
+            from: 1.0,
+            to: 1.9,
+            form: Form::Door,
+            leaves: 1,
+            hand: End::Start,
+            side: Side::Left,
+            swing: None,
+        }]
+    );
+    assert!(r.used.contains(&swing));
+    assert_eq!(r.used.len(), d.sources);
+}
