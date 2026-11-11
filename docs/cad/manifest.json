@@ -815,12 +815,13 @@
    "level": "query",
    "via": [
     "cad.asbuilt.check",
-    "cad.field.package"
+    "cad.field.package",
+    "cad.asbuilt.review"
    ],
    "operation": null,
-   "python": "kentos.cad.asbuilt.check, kentos.cad.field.package",
-   "mcp": "cad.asbuilt.check, cad.field.package",
-   "note": "Pencere cad.asbuilt.check'in cevabını gösterir (salt okunur): ölçülen noktaların tasarım noktalarına, yüzeyine ve çizgilerine göre farkları, durumları ve işaretleri; sınırlar kullanıcınındır; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1700). Saha paketi yaz… formun tasarımını, sınırlarını ve kalite notlarını cad.field.package ile tek .zip olarak yazar; çizim değişmez (ADR 1920).",
+   "python": "kentos.cad.asbuilt.check, kentos.cad.field.package, kentos.cad.asbuilt.review",
+   "mcp": "cad.asbuilt.check, cad.field.package, cad.asbuilt.review",
+   "note": "Pencere cad.asbuilt.check'in cevabını gösterir (salt okunur): ölçülen noktaların tasarım noktalarına, yüzeyine ve çizgilerine göre farkları, durumları ve işaretleri; sınırlar kullanıcınındır; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1700). Saha paketi yaz… formun tasarımını, sınırlarını ve kalite notlarını cad.field.package ile tek .zip olarak yazar; çizim değişmez (ADR 1920). İzleme işinde İncelemeyi sakla… işi, eşikleri kaynağıyla ve inceleyenin beyanını cad.asbuilt.review ile projede saklar; Grafik seçili noktanın hareketini zamana göre gösterir (ADR 5220).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

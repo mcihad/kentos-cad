@@ -4297,6 +4297,11 @@ impl Input for kentos_commands::ParcelsApprove {
         None
     }
 }
+impl Input for kentos_commands::AsbuiltReview {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::ParcelsWithdraw {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -6075,6 +6080,10 @@ fn run_op(
         kentos_commands::CAD_PARCELS_APPROVE => {
             use kentos_native_application::parcel_drafts as parcel_approve;
             run!(parcel_approve, kentos_commands::ParcelsApprove)
+        }
+        kentos_commands::CAD_ASBUILT_REVIEW => {
+            use kentos_native_application::asbuilt_review;
+            run!(asbuilt_review, kentos_commands::AsbuiltReview)
         }
         kentos_commands::CAD_PARCELS_WITHDRAW => {
             use kentos_native_application::parcel_drafts::withdraw as parcel_withdraw;

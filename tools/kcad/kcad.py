@@ -667,6 +667,8 @@ SCHEMA_WITH_ZONING_DRAFTS = 242
 SCHEMA_WITH_CLOUD_POSES = 243
 # Docs/adr/5200: the adjustments the project keeps (`surveyAdjustments`).
 SCHEMA_WITH_KEPT_ADJUSTMENTS = 244
+# Docs/adr/5220: the reviews the project keeps of its monitoring jobs (`monitoringReviews`).
+SCHEMA_WITH_MONITORING_REVIEWS = 245
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
@@ -977,7 +979,7 @@ MAX_DIMENSION_DECIMALS = 8
 MAX_AFFIX = 32
 MAX_STYLE_NAME = 64
 MAX_STYLE_MM = 1000.0
-# A multi-line text's line spacing's bounds (AutoCAD's own).
+# A multi-line text's line spacing's bounds (docs/adr/0205).
 MIN_LINE_SPACING = 0.25
 MAX_LINE_SPACING = 4.0
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
@@ -986,8 +988,8 @@ LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "p
 # A dimension's kinds; schema 9 added the last five.
 DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope",
                     "centerMark", "centerLine", "elevation")
-# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added AutoCAD's others
-# (docs/adr/0205 §7).
+# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added the common
+# others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
 LEADER_ARROWS_30 = LEADER_ARROWS + ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
 # A table's bounds (kentos_contracts::table): rows, columns, cells, a cell's letters, a size (m), a source's objects.
@@ -1041,7 +1043,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES, SCHEMA_WITH_ROOFS, SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS, SCHEMA_WITH_WORK_PROFILES, SCHEMA_WITH_GNSS_SESSIONS, SCHEMA_WITH_PARCEL_DRAFTS, SCHEMA_WITH_ZONING_DRAFTS, SCHEMA_WITH_CLOUD_POSES, SCHEMA_WITH_KEPT_ADJUSTMENTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES, SCHEMA_WITH_ROOFS, SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS, SCHEMA_WITH_WORK_PROFILES, SCHEMA_WITH_GNSS_SESSIONS, SCHEMA_WITH_PARCEL_DRAFTS, SCHEMA_WITH_ZONING_DRAFTS, SCHEMA_WITH_CLOUD_POSES, SCHEMA_WITH_KEPT_ADJUSTMENTS, SCHEMA_WITH_MONITORING_REVIEWS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3750,6 +3752,7 @@ class _Schema:
         self.zoning_drafts = version >= SCHEMA_WITH_ZONING_DRAFTS
         self.cloud_poses = version >= SCHEMA_WITH_CLOUD_POSES
         self.kept_adjustments = version >= SCHEMA_WITH_KEPT_ADJUSTMENTS
+        self.monitoring_reviews = version >= SCHEMA_WITH_MONITORING_REVIEWS
         self.building_parts = version >= SCHEMA_WITH_BUILDING_PARTS
         self.opening_types = version >= SCHEMA_WITH_OPENING_TYPES
         self.building_program = version >= SCHEMA_WITH_BUILDING_PROGRAM
@@ -4649,6 +4652,7 @@ class _Schema:
                 **({"parcelRegister": (self.parcel_register_, False)} if self.parcel_register else {}),
                 **({"zoningPlan": (self.zoning_plan_, False)} if self.zoning_drafts else {}),
                 **({"surveyAdjustments": (self.kept_adjustments_, False)} if self.kept_adjustments else {}),
+                **({"monitoringReviews": (self.monitoring_reviews_, False)} if self.monitoring_reviews else {}),
             }
         )(v)
         # A map's work structure is a map project's (docs/adr/1200 §2).
@@ -6498,6 +6502,89 @@ class _Schema:
             if a > b:
                 self.fail("bad_value", "profiller ve eşlemeler adlarının sırasıyla yazılır (aynı adda önce profil)")
         return lst
+
+    def monitoring_reviews_(self, v):
+        """Schema 245 (docs/adr/5220): the reviews the project keeps of its monitoring jobs, never empty, at most 1000:
+        each a name (a short label of at most 120 characters, unique); the job (its layers, the names' attribute and the
+        control marks short labels, its days Gregorian days YYYY-MM-DD, at most 1000 earlier epochs, the limits finite
+        and not below nought, the confidence between 0 and 1, the thresholds' limits above nought with a source of at
+        most 500 characters); the digest (64 lowercase hex); the marks (at most 100 000, names unique short labels, the
+        movement and the speed finite and not below nought, the height movement finite, the limits beyond only with a
+        state and of the four kinds); the reviewer (role, title and name short labels, a day, phrase, signature, a note
+        of at most 500 characters)."""
+        def label_ok(t):
+            return t != "" and t.strip() == t and len(t) <= 120 and not any(unicodedata.category(c) == "Cc" for c in t)
+
+        def text_ok(t):
+            return (t != "" and t.strip() == t and len(t) <= 500
+                    and not any(unicodedata.category(c) == "Cc" and c != "\n" for c in t))
+
+        def day_ok(t):
+            if len(t) != 10 or t[4] != "-" or t[7] != "-" or not (t[:4] + t[5:7] + t[8:]).isdigit() or not t.isascii():
+                return False
+            y, m, d = int(t[:4]), int(t[5:7]), int(t[8:])
+            leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0
+            days = {1: 31, 2: 29 if leap else 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+            return m in days and 1 <= d <= days[m]
+
+        limits = ("horizontal", "vertical", "horizontalRate", "verticalRate")
+        level = self.fields({k: (self.float, False) for k in limits})
+        thresholds = self.fields({"warning": (level, True), "alarm": (level, True), "source": (self.text, True)})
+        epoch = self.fields({"layer": (self.text, True), "date": (self.text, False)})
+        job = self.fields({"measured": (self.text, True), "design": (self.text, True), "epochs": (self.array(epoch), False),
+                           "date": (self.text, False), "field": (self.text, False),
+                           "control": (self.array(self.text), False), "horizontal": (self.float, False),
+                           "vertical": (self.float, False), "confidence": (self.float, False),
+                           "thresholds": (thresholds, False)})
+        states = ("normal", "warning", "alarm")
+        mark = self.fields({"name": (self.text, True), "horizontal": (self.float, True), "vertical": (self.float, False),
+                            "speed": (self.float, False), "state": (self.enum(states), False),
+                            "exceeded": (self.array(self.text), False)})
+        reviewer = self.fields({"role": (self.enum(("responsible", "control", "staff", "approver")), True),
+                                "title": (self.text, True), "name": (self.text, True), "date": (self.text, True),
+                                "phrase": (self.enum(("checked", "seen")), True),
+                                "signature": (self.enum(("wet", "electronic")), True), "note": (self.text, False)})
+        review = self.fields({"name": (self.text, True), "job": (job, True), "digest": (self.text, True),
+                              "marks": (self.array(mark), True), "reviewer": (reviewer, True)})
+        out = self.array(review)(v)
+        if not out:
+            self.fail("bad_value", "boş izleme incelemeleri yazılmaz")
+        if len(out) > 1000:
+            self.fail("bad_value", "en çok 1000 izleme incelemesi olur")
+        names = set()
+        for r in out:
+            if not label_ok(r["name"]) or r["name"] in names:
+                self.fail("bad_value", f"“{r['name']}” izleme incelemesinin adı geçersiz ya da iki kez")
+            names.add(r["name"])
+            j = r["job"]
+            not_below = all(math.isfinite(j[k]) and j[k] >= 0 for k in ("horizontal", "vertical") if k in j)
+            levels_ok = "thresholds" not in j or (
+                all(math.isfinite(lv[k]) and lv[k] > 0 for lv in (j["thresholds"]["warning"], j["thresholds"]["alarm"])
+                    for k in limits if k in lv) and text_ok(j["thresholds"]["source"]))
+            if (not label_ok(j["measured"]) or not label_ok(j["design"]) or len(j.get("epochs", [])) > 1000
+                    or not all(label_ok(e["layer"]) and ("date" not in e or day_ok(e["date"])) for e in j.get("epochs", []))
+                    or ("date" in j and not day_ok(j["date"])) or ("field" in j and not label_ok(j["field"]))
+                    or not all(label_ok(c) for c in j.get("control", [])) or not not_below
+                    or ("confidence" in j and not (math.isfinite(j["confidence"]) and 0 < j["confidence"] < 1))
+                    or not levels_ok):
+                self.fail("bad_value", f"“{r['name']}” izleme incelemesinin işi geçersiz")
+            if len(r["digest"]) != 64 or any(c not in "0123456789abcdef" for c in r["digest"]):
+                self.fail("bad_value", "izleme incelemesinin özeti 64 küçük onaltılık hane olmalı")
+            if len(r["marks"]) > 100_000:
+                self.fail("bad_value", "izleme incelemesi en çok 100 000 nokta tutar")
+            seen = set()
+            for m in r["marks"]:
+                fine = lambda x: math.isfinite(x) and x >= 0  # noqa: E731
+                if (not label_ok(m["name"]) or m["name"] in seen or not fine(m["horizontal"])
+                        or ("vertical" in m and not math.isfinite(m["vertical"])) or ("speed" in m and not fine(m["speed"]))
+                        or ("state" not in m and m.get("exceeded")) or any(k not in limits for k in m.get("exceeded", []))):
+                    self.fail("bad_value", f"izleme incelemesinin “{m['name']}” noktası geçersiz")
+                seen.add(m["name"])
+            w = r["reviewer"]
+            if (not label_ok(w["title"]) or not label_ok(w["name"]) or not day_ok(w["date"])
+                    or ("note" in w and not text_ok(w["note"]))):
+                self.fail("bad_value", "izleme incelemesinin inceleyeni geçersiz")
+        return out
 
     def kept_adjustments_(self, v):
         """Schema 244 (docs/adr/5200): the adjustments the project keeps, never empty: each a name (a short label of at most
@@ -13221,7 +13308,7 @@ ENTITY_KINDS = {
         "opening": (s.opening_fields, True),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
-    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
+    # Schema 30 (docs/adr/0205 §7): the common arrowheads, the arrowhead's size times the note's height.
     "leader": lambda s: {
         "pts": (s.leader_points, True),
         "text": (s.note, False),

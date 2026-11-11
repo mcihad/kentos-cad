@@ -64293,6 +64293,214 @@
       ]
     },
     {
+      "id": "cad.asbuilt.review",
+      "version": 1,
+      "title": "İzleme incelemesi",
+      "summary": "Bir izleme işinin denetimini (check: cad.asbuilt.check'in kind: monitoring girdisi) inceleyenin beyanıyla projede bir adla saklar: iş (ölçülen ve önceki dönemin katmanı, dönem dizisi ve günleri, bu dönemin günü, ad özniteliği, kontrol noktaları, sınırlar, doğrunun güveni), eşikler ve kaynakları (thresholdsSource: kim, hangi belge ya da kararla, ne zaman; eşik verildiyse gerekir), her noktanın son yatay ve düşey hareketi, yatay hızı (doğrununki, yoksa ortalama), durumu ve aştığı sınırlar; işin okuduğu noktaların özeti (digest: SHA-256). İnceleyen (reviewer): rolü (responsible: sorumlu mühendis, control: kontrol mühendisi, staff: kontrolü yapan teknik personel, approver: onaylayan), unvanı, adı, günü (YYYY-AA-GG), ibaresi (checked: “Kontrol edilmiştir”, seen: “Görülmüştür”), imza türü (wet: ıslak, electronic: güvenli elektronik imza) ve notu. KentOS inceleyenin yetkisini ya da imzasını doğrulamaz; beyanı yazar. Aynı ad yenisiyle değişir (replaced); remove adı verilen incelemeyi kaldırır. Cevap bütün incelemeleri listeler: inceleyen, gün, ibare, alarm ve uyarıdaki nokta sayısı ve current (işin okuduğu noktalar incelenenlerle aynı mı; değiştiyse inceleme eski sonuca aittir). Tek geri alma adımı “İzleme incelemesi”. Retler: invalid_revision, revision_conflict, invalid_input (ad; check ya da reviewer eksik; remove ile birlikte check, reviewer ya da kaynak; izleme işi olmayan check; eşiksiz kaynak ya da kaynaksız eşik; inceleyenin unvanı, adı, günü ya da notu), unknown_monitoring_review (kaldırılacak inceleme yok) ve check'in retleri (invalid_asbuilt_check, layer_not_found).",
+      "aliases": [
+        "izlemeincelemesi",
+        "kontroledilmistir",
+        "monitoringreview"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.asbuilt.review` v1. To keep: `check` (a monitoring job), `reviewer` and, with the check's thresholds,\n`thresholdsSource` (who set them, by which document, when; the program gives none). To remove: `remove` alone.",
+        "properties": {
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltCheck"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "remove": {
+            "type": "boolean"
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MonitoringReviewer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "thresholdsSource": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "AsbuiltReview",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.asbuilt.review` v1: the review kept (none when removed), whether one of its name was replaced or\nremoved, every kept review in the project's order and the revision after the write.",
+        "properties": {
+          "kept": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MonitoringReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "removed": {
+            "type": "boolean"
+          },
+          "replaced": {
+            "type": "boolean"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/$defs/AsbuiltReviewRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "reviews",
+          "revision"
+        ],
+        "title": "AsbuiltReviewed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.asbuilt.review` v1: the review kept (none when removed), whether one of its name was replaced or\nremoved, every kept review in the project's order and the revision after the write.",
+        "properties": {
+          "kept": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MonitoringReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "removed": {
+            "type": "boolean"
+          },
+          "replaced": {
+            "type": "boolean"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/$defs/AsbuiltReviewRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "reviews",
+          "revision"
+        ],
+        "title": "AsbuiltReviewed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "unknown_monitoring_review",
+          "invalid_asbuilt_check",
+          "layer_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dört dönemli izlemeyi eşikleri ve kaynağıyla incele",
+          "input": {
+            "check": {
+              "date": "2026-10-15",
+              "design": "Dönem 3",
+              "epochs": [
+                {
+                  "date": "2026-01-15",
+                  "layer": "Dönem 1"
+                }
+              ],
+              "kind": "monitoring",
+              "measured": "Dönem 4",
+              "thresholds": {
+                "alarm": {
+                  "horizontal": 0.02
+                },
+                "warning": {
+                  "horizontal": 0.01
+                }
+              }
+            },
+            "name": "Ekim 2026 incelemesi",
+            "reviewer": {
+              "date": "2026-10-20",
+              "name": "A. Yılmaz",
+              "phrase": "checked",
+              "role": "control",
+              "signature": "wet",
+              "title": "Harita Mühendisi"
+            },
+            "thresholdsSource": "İdarenin izleme şartnamesi, 2026"
+          }
+        },
+        {
+          "title": "İncelemeyi kaldır",
+          "input": {
+            "name": "Ekim 2026 incelemesi",
+            "remove": true
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.pipes.check",
       "version": 1,
       "title": "Boru hattı denetimi",
@@ -112569,6 +112777,12 @@
       "meaning": "Belgenin onayı yazılmış; onay bir kez yazılır, değişirse yeni bir belgeyle kaydedin."
     },
     {
+      "code": "unknown_monitoring_review",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu adla saklanan izleme incelemesi yok."
+    },
+    {
       "code": "nothing_to_compare",
       "kind": "failed",
       "retryable": false,
@@ -121436,6 +121650,163 @@
       ],
       "type": "object"
     },
+    "AsbuiltCheck": {
+      "additionalProperties": false,
+      "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that\nis no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a\nthreshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+      "properties": {
+        "control": {
+          "description": "A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond\nthe limits says the two epochs do not rest on one datum (or the mark moved).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "date": {
+          "description": "This epoch's day, `YYYY-MM-DD` (docs/adr/4420): with the day of a point's first epoch, its mean rate of movement.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "design": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "epochs": {
+          "description": "A monitoring job's earlier epochs, oldest first (docs/adr/4420; Trimble Business Center's reference epoch the\nfirst): each a layer of points and its day. With them the answer tracks each point measured now through every\nepoch, its movement from the first epoch it was measured in.",
+          "items": {
+            "$ref": "#/$defs/AsbuiltEpoch"
+          },
+          "type": "array"
+        },
+        "expectedDesign": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The job's kind (docs/adr/3620): `asBuilt` (none), `stakeout` or `monitoring`. A monitoring job sets the points\nmeasured against an earlier epoch's (`design`: its layer), by name alone: no surface, line, place or package."
+        },
+        "lines": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "measured": {
+          "type": "string"
+        },
+        "package": {
+          "description": "The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its\ndesign digest is the one expected, its acceptance limits apply where this input gives none (its quality limit\nonly with `qualityField`), its system, epoch and heights are set against the project's.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packageDesign": {
+          "description": "The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),\nread back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it\nchanged since. Its surface too when it carries one (`yuzey.xml`, docs/adr/3220), read back to its SHA-256, given\n`surface` or not: `surface`, given, is then the drawing's surface now, read only to say whether it changed since\n(another surface, or its sources' digest not the package's). Needs `package`.",
+          "type": "boolean"
+        },
+        "quality": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "qualityField": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "search": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "surface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "surfaceBy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltSurfaceBy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the\nnearest distance to the surface (`nearest`, Trimble Access's Measure to surface)."
+        },
+        "thresholds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltThresholds"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest\nlevel it goes beyond. Needs a series (`epochs`). No threshold is the program's."
+        },
+        "trend": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltTrendAsk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and\nwhich components move at the confidence asked. Needs a series (`epochs`)."
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "measured"
+      ],
+      "type": "object"
+    },
     "AsbuiltControl": {
       "description": "A monitoring job's control points as found (docs/adr/3620): those matched at both epochs, those of them beyond a\nlimit, and those not measured at both.",
       "properties": {
@@ -121844,6 +122215,48 @@
         "name",
         "status",
         "flags"
+      ],
+      "type": "object"
+    },
+    "AsbuiltReviewRow": {
+      "description": "A kept review in the list: its name, the reviewer's name, day and phrase, its marks in alarm and warning, and\nwhether the points its job reads are the ones reviewed.",
+      "properties": {
+        "alarm": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "date": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "phrase": {
+          "$ref": "#/$defs/ReviewPhrase"
+        },
+        "reviewer": {
+          "type": "string"
+        },
+        "warning": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "name",
+        "reviewer",
+        "date",
+        "phrase",
+        "alarm",
+        "warning",
+        "current"
       ],
       "type": "object"
     },
@@ -163535,6 +163948,77 @@
         }
       ]
     },
+    "MonitoringReview": {
+      "additionalProperties": false,
+      "description": "A review kept under its name (unique in the project): the job, the digest of the points it read (SHA-256, 64\nlowercase hex), its marks and the reviewer's statement.",
+      "properties": {
+        "digest": {
+          "type": "string"
+        },
+        "job": {
+          "$ref": "#/$defs/ReviewedJob"
+        },
+        "marks": {
+          "items": {
+            "$ref": "#/$defs/ReviewedMark"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/MonitoringReviewer"
+        }
+      },
+      "required": [
+        "name",
+        "job",
+        "digest",
+        "marks",
+        "reviewer"
+      ],
+      "type": "object"
+    },
+    "MonitoringReviewer": {
+      "additionalProperties": false,
+      "description": "The reviewer's statement: role, title (unvan), name, day (`YYYY-MM-DD`), phrase, signature and a note.",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "phrase": {
+          "$ref": "#/$defs/ReviewPhrase"
+        },
+        "role": {
+          "$ref": "#/$defs/ReviewerRole"
+        },
+        "signature": {
+          "$ref": "#/$defs/SignatureKind"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "title",
+        "name",
+        "date",
+        "phrase",
+        "signature"
+      ],
+      "type": "object"
+    },
     "MosaicOrder": {
       "description": "Which file lies on top where files overlap.",
       "oneOf": [
@@ -187258,6 +187742,13 @@
           ],
           "description": "A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were\nderived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188)."
         },
+        "monitoringReviews": {
+          "description": "The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none\n(`.kcad` schema 245).",
+          "items": {
+            "$ref": "#/$defs/MonitoringReview"
+          },
+          "type": "array"
+        },
         "namedUcs": {
           "description": "The project's named UCSs, in the order they were kept.",
           "items": {
@@ -187395,7 +187886,7 @@
           "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
         },
         "surveyAdjustments": {
-          "description": "The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).",
+          "description": "The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 244).",
           "items": {
             "$ref": "#/$defs/KeptAdjustment"
           },
@@ -193494,6 +193985,14 @@
       ],
       "type": "string"
     },
+    "ReviewPhrase": {
+      "description": "The phrase written over the signature (Genelge 2025/4 m. 12(20)): “Kontrol edilmiştir” or “Görülmüştür”.",
+      "enum": [
+        "checked",
+        "seen"
+      ],
+      "type": "string"
+    },
     "ReviewReply": {
       "additionalProperties": false,
       "description": "A reply to a note.",
@@ -193538,6 +194037,230 @@
           "type": "string"
         }
       ]
+    },
+    "ReviewedEpoch": {
+      "additionalProperties": false,
+      "description": "An earlier epoch of the job: its layer and day (`YYYY-MM-DD`).",
+      "properties": {
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer"
+      ],
+      "type": "object"
+    },
+    "ReviewedJob": {
+      "additionalProperties": false,
+      "description": "The job as it was checked: the layer measured now, the earlier epoch's (`design`), the earlier epochs and days, this\nepoch's day, the names' attribute, the control marks, the limits (m), the line's confidence and the thresholds.",
+      "properties": {
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "control": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "design": {
+          "type": "string"
+        },
+        "epochs": {
+          "items": {
+            "$ref": "#/$defs/ReviewedEpoch"
+          },
+          "type": "array"
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "measured": {
+          "type": "string"
+        },
+        "thresholds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewedThresholds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "measured",
+        "design"
+      ],
+      "type": "object"
+    },
+    "ReviewedLevel": {
+      "additionalProperties": false,
+      "description": "A threshold level's limits as kept: horizontal and vertical movement (m), horizontal and vertical speed (m a year).",
+      "properties": {
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "horizontalRate": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "verticalRate": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        }
+      },
+      "type": "object"
+    },
+    "ReviewedMark": {
+      "additionalProperties": false,
+      "description": "A mark as reviewed: its last horizontal and vertical movement from its reference (m), its horizontal speed (m a\nyear; the line's, else the mean), its state and the limits it went beyond.",
+      "properties": {
+        "exceeded": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "speed": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        },
+        "state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewedState"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "horizontal"
+      ],
+      "type": "object"
+    },
+    "ReviewedState": {
+      "description": "A mark's state against the thresholds, as kept.",
+      "enum": [
+        "normal",
+        "warning",
+        "alarm"
+      ],
+      "type": "string"
+    },
+    "ReviewedThresholds": {
+      "additionalProperties": false,
+      "description": "The two thresholds as kept, with their source: who set them, by which document or decision, when.",
+      "properties": {
+        "alarm": {
+          "$ref": "#/$defs/ReviewedLevel"
+        },
+        "source": {
+          "type": "string"
+        },
+        "warning": {
+          "$ref": "#/$defs/ReviewedLevel"
+        }
+      },
+      "required": [
+        "warning",
+        "alarm",
+        "source"
+      ],
+      "type": "object"
+    },
+    "ReviewerRole": {
+      "description": "Who reviewed, as the regulations name them (Genelge 2025/4 m. 3, m. 12(16)–(20); BÖHHBÜY m. 76): the engineer\nresponsible for the job, the control engineer, the technical staff with the control, the one who approves.",
+      "enum": [
+        "responsible",
+        "control",
+        "staff",
+        "approver"
+      ],
+      "type": "string"
     },
     "RinexFacts": {
       "additionalProperties": false,
@@ -199741,6 +200464,14 @@
         "hidden",
         "reach",
         "end"
+      ],
+      "type": "string"
+    },
+    "SignatureKind": {
+      "description": "How the reviewer signed, as stated: by hand on the paper, or with a secure electronic signature (5070 m. 5).",
+      "enum": [
+        "wet",
+        "electronic"
       ],
       "type": "string"
     },

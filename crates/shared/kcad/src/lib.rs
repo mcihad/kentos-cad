@@ -955,11 +955,13 @@ pub const SCHEMA_WITH_ZONING_DRAFTS: u32 = 242;
 pub const SCHEMA_WITH_CLOUD_POSES: u32 = 243;
 /// Schema 244 (docs/adr/5200): the adjustments the project keeps (`surveyAdjustments`).
 pub const SCHEMA_WITH_KEPT_ADJUSTMENTS: u32 = 244;
+/// Schema 245 (docs/adr/5220): the reviews the project keeps of its monitoring jobs (`monitoringReviews`).
+pub const SCHEMA_WITH_MONITORING_REVIEWS: u32 = 245;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 242] = [
+pub const SCHEMAS: [u32; 243] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1202,6 +1204,7 @@ pub const SCHEMAS: [u32; 242] = [
     SCHEMA_WITH_ZONING_DRAFTS,
     SCHEMA_WITH_CLOUD_POSES,
     SCHEMA_WITH_KEPT_ADJUSTMENTS,
+    SCHEMA_WITH_MONITORING_REVIEWS,
 ];
 
 /// The file a drawing is saved as.

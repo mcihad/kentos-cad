@@ -377,6 +377,8 @@ def settings(s):
                 "zoningPlan": (opaque, False),
                 # Schema 244 (docs/adr/5200): the adjustments the project keeps, as their JSON.
                 "surveyAdjustments": (opaque, False),
+                # Schema 245 (docs/adr/5220): the monitoring reviews the project keeps, as their JSON.
+                "monitoringReviews": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2816,6 +2818,9 @@ def document(d):
     if d["settings"].get("surveyAdjustments"):
         # The adjustments the project keeps (docs/adr/5200).
         schema = max(schema, 244)
+    if d["settings"].get("monitoringReviews"):
+        # The monitoring reviews the project keeps (docs/adr/5220).
+        schema = max(schema, 245)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3672,7 +3677,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-245.kcad"] = container(root(cmap(parts), version=uint(245)))
+    files["schema-version-246.kcad"] = container(root(cmap(parts), version=uint(246)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6327,6 +6332,42 @@ def build():
         broken_kept = copy.deepcopy(kept)
         change(broken_kept["settings"]["surveyAdjustments"])
         out[f"broken/kept-adjustments-{name}.kcad"] = container(document(broken_kept))
+    # Schema 245 (docs/adr/5220): two monitoring reviews kept in the project; schema 244 refuses them, a digest not
+    # 64 lowercase hex, a day not on the calendar, a threshold without a source and two of one name are refused.
+    reviewed = copy.deepcopy(minimal)
+    reviewed["name"] = "İzleme incelemeleri"
+    reviewed["settings"]["monitoringReviews"] = [
+        {"name": "Temmuz incelemesi",
+         "job": {"measured": "donem3", "design": "donem2",
+                 "epochs": [{"layer": "donem1", "date": "2026-01-15"}, {"layer": "donem2", "date": "2026-04-15"}],
+                 "date": "2026-07-15", "control": ["K1", "K2"], "horizontal": 0.008, "vertical": 0.01, "confidence": 0.95,
+                 "thresholds": {"warning": {"horizontal": 0.0075, "vertical": 0.012},
+                                "alarm": {"horizontal": 0.03, "vertical": 0.04},
+                                "source": "İdarenin izleme şartnamesi (2026/14), madde 7"}},
+         "digest": "6afa7635116f1df0a50c02eba7406a42989499ea796d3614d038eb1fb3ac6d78",
+         "marks": [{"name": "M1", "horizontal": 0.01, "vertical": -0.005, "speed": 0.0258, "state": "warning",
+                    "exceeded": ["horizontal"]},
+                   {"name": "K1", "horizontal": 0.0, "vertical": 0.0, "speed": 0.0, "state": "normal"}],
+         "reviewer": {"role": "control", "title": "Harita Mühendisi", "name": "A. Yılmaz", "date": "2026-10-20",
+                      "phrase": "checked", "signature": "wet"}},
+        {"name": "Nisan incelemesi", "job": {"measured": "donem2", "design": "donem1"},
+         "digest": "0" * 64, "marks": [{"name": "M1", "horizontal": 0.005, "vertical": -0.002}],
+         "reviewer": {"role": "approver", "title": "Müdür", "name": "B. Kaya", "date": "2026-04-20", "phrase": "seen",
+                      "signature": "electronic", "note": "Ek ölçü istendi.\nİkinci satır."}}]
+    out["monitoring-reviews.json"] = json_text(reviewed).encode("utf-8")
+    reviewed_data = document(reviewed)
+    assert reviewed_data.count(b"\x67version\x18\xf5") == 1, "monitoring reviews are schema 245"
+    out["monitoring-reviews.kcad"] = container(reviewed_data)
+    out["broken/monitoring-reviews-in-schema-244.kcad"] = container(
+        reviewed_data.replace(b"\x67version\x18\xf5", b"\x67version\x18\xf4"))
+    for name, change in (
+            ("digest-upper", lambda r: r[0].update({"digest": "A" * 64})),
+            ("day-not-on-calendar", lambda r: r[1]["reviewer"].update({"date": "2026-02-30"})),
+            ("threshold-without-source", lambda r: r[0]["job"]["thresholds"].update({"source": ""})),
+            ("name-twice", lambda r: r[1].update({"name": "Temmuz incelemesi"}))):
+        broken_reviewed = copy.deepcopy(reviewed)
+        change(broken_reviewed["settings"]["monitoringReviews"])
+        out[f"broken/monitoring-reviews-{name}.kcad"] = container(document(broken_reviewed))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

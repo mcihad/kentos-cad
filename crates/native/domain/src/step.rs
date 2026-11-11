@@ -738,6 +738,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::MapSurvey { .. }
             | Op::ParcelRegister { .. }
             | Op::SurveyAdjustments { .. }
+            | Op::MonitoringReviews { .. }
             | Op::ZoningPlan { .. }
             | Op::PatternTables { .. }
             | Op::ApprovedSheetTemplates { .. }

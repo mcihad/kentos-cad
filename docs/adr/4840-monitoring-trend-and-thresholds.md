@@ -129,9 +129,6 @@ yetkili inceleme kaydı, projenin kaydına yeni bir bölüm (`.kcad` şeması) v
 
 ## Sonra
 
-- Yetkili inceleme kaydı (MAP-19'un öbür maddesi): yeni `.kcad` bölümü; inceleyenin rolü, unvanı, adı, günü, ibaresi
-  (“Kontrol edilmiştir”, “Görülmüştür”), imza türü; kaynak değişince kayıt eski sonuca aittir.
-- Eşiklerin kaynağıyla projede saklanması.
-- Hareketin zaman grafiği (ölçüler, doğru, eşik çizgileri).
+- Yetkili inceleme kaydı, eşiklerin kaynağıyla saklanması ve hareketin zaman grafiği: [ADR 5220](5220-monitoring-review-record-and-time-chart.md).
 - Dönem σ'larıyla ağırlıklı doğru, kayan pencere, doğu ile kuzeyin birlikte sınanması.
 - Web (TODOS §0.2).

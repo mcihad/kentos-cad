@@ -850,6 +850,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut parcel_register = None;
     let mut zoning_plan = None;
     let mut survey_adjustments = Vec::new();
+    let mut monitoring_reviews = Vec::new();
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1128,6 +1129,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 zoning_plan = Some(v);
             }
             // Schema 244 (docs/adr/5200): the adjustments the project keeps, read whole and checked.
+            // Schema 245 (docs/adr/5220): the reviews the project keeps of its monitoring jobs, read whole and checked.
+            "monitoringReviews" if has.monitoring_reviews => {
+                let (v, at): (Vec<kentos_contracts::MonitoringReview>, usize) = objects::json_part(r, "izleme incelemeleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş izleme incelemeleri yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::monitoring_reviews_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                monitoring_reviews = v;
+            }
             "surveyAdjustments" if has.kept_adjustments => {
                 let (v, at): (Vec<kentos_contracts::KeptAdjustment>, usize) = objects::json_part(r, "dengeleme kayıtları")?;
                 if v.is_empty() {
@@ -2122,6 +2134,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         parcel_register,
         zoning_plan,
         survey_adjustments,
+        monitoring_reviews,
         source_bases,
         heights,
         coordinate_epoch,

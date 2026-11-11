@@ -2723,6 +2723,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
+    Entry {
+        id: "cad.asbuilt.review",
+        refusals: &[REVISION, &["invalid_input", "unknown_monitoring_review", "invalid_asbuilt_check", "layer_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
     // Boru hattı denetimi (plan/map-cad.md MAP-16, docs/adr/1640).
     Entry {
         id: "cad.pipes.check",

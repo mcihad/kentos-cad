@@ -24,6 +24,7 @@ import type { LineTypeDef } from "./LineTypeDef";
 import type { LineageRecord } from "./LineageRecord";
 import type { MapSurvey } from "./MapSurvey";
 import type { MapWork } from "./MapWork";
+import type { MonitoringReview } from "./MonitoringReview";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -300,9 +301,14 @@ mapSurvey?: MapSurvey,
  */
 parcelRegister?: ParcelRegister, 
 /**
- * The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).
+ * The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 244).
  */
 surveyAdjustments?: Array<KeptAdjustment>, 
+/**
+ * The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
+ * (`.kcad` schema 245).
+ */
+monitoringReviews?: Array<MonitoringReview>, 
 /**
  * A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
  * (`.kcad` schema 242).

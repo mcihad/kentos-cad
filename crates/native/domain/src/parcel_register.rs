@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::{KeptAdjustment, ParcelRegister};
+use kentos_contracts::{KeptAdjustment, MonitoringReview, ParcelRegister};
 
 use crate::{Document, history::Op};
 
@@ -39,5 +39,20 @@ impl Document {
         let before = Arc::new(std::mem::replace(&mut self.settings.survey_adjustments, next));
         let after = Arc::new(self.settings.survey_adjustments.clone());
         self.record(vec![Op::SurveyAdjustments { before, after }], label);
+    }
+
+    /// The reviews the project keeps of its monitoring jobs (docs/adr/5220).
+    pub fn monitoring_reviews(&self) -> &[MonitoringReview] {
+        &self.settings.monitoring_reviews
+    }
+
+    /// Replaces the kept monitoring reviews as one undo step named `label`. Nothing happens when they are the same.
+    pub fn set_monitoring_reviews(&mut self, next: Vec<MonitoringReview>, label: &str) {
+        if self.settings.monitoring_reviews == next {
+            return;
+        }
+        let before = Arc::new(std::mem::replace(&mut self.settings.monitoring_reviews, next));
+        let after = Arc::new(self.settings.monitoring_reviews.clone());
+        self.record(vec![Op::MonitoringReviews { before, after }], label);
     }
 }

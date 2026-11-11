@@ -10278,6 +10278,49 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
+        CommandDescriptor {
+            id: crate::CAD_ASBUILT_REVIEW.into(),
+            version: crate::CAD_ASBUILT_REVIEW_VERSION,
+            title: "İzleme incelemesi".into(),
+            summary: "Bir izleme işinin denetimini (check: cad.asbuilt.check'in kind: monitoring girdisi) inceleyenin beyanıyla projede bir adla saklar: iş (ölçülen ve önceki dönemin katmanı, dönem dizisi ve günleri, bu dönemin günü, ad özniteliği, kontrol noktaları, sınırlar, doğrunun güveni), eşikler ve kaynakları (thresholdsSource: kim, hangi belge ya da kararla, ne zaman; eşik verildiyse gerekir), her noktanın son yatay ve düşey hareketi, yatay hızı (doğrununki, yoksa ortalama), durumu ve aştığı sınırlar; işin okuduğu noktaların özeti (digest: SHA-256). \
+                      İnceleyen (reviewer): rolü (responsible: sorumlu mühendis, control: kontrol mühendisi, staff: kontrolü yapan teknik personel, approver: onaylayan), unvanı, adı, günü (YYYY-AA-GG), ibaresi (checked: “Kontrol edilmiştir”, seen: “Görülmüştür”), imza türü (wet: ıslak, electronic: güvenli elektronik imza) ve notu. KentOS inceleyenin yetkisini ya da imzasını doğrulamaz; beyanı yazar. \
+                      Aynı ad yenisiyle değişir (replaced); remove adı verilen incelemeyi kaldırır. Cevap bütün incelemeleri listeler: inceleyen, gün, ibare, alarm ve uyarıdaki nokta sayısı ve current (işin okuduğu noktalar incelenenlerle aynı mı; değiştiyse inceleme eski sonuca aittir). Tek geri alma adımı “İzleme incelemesi”. \
+                      Retler: invalid_revision, revision_conflict, invalid_input (ad; check ya da reviewer eksik; remove ile birlikte check, reviewer ya da kaynak; izleme işi olmayan check; eşiksiz kaynak ya da kaynaksız eşik; inceleyenin unvanı, adı, günü ya da notu), unknown_monitoring_review (kaldırılacak inceleme yok) ve check'in retleri (invalid_asbuilt_check, layer_not_found)."
+                .into(),
+            aliases: vec!["izlemeincelemesi".into(), "kontroledilmistir".into(), "monitoringreview".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AsbuiltReview>(),
+            output: schema::<crate::AsbuiltReviewed>(),
+            plan: Some(schema::<crate::AsbuiltReviewed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Dört dönemli izlemeyi eşikleri ve kaynağıyla incele".into(),
+                    input: json!({
+                        "name": "Ekim 2026 incelemesi",
+                        "check": { "measured": "Dönem 4", "design": "Dönem 3", "kind": "monitoring",
+                                   "epochs": [{ "layer": "Dönem 1", "date": "2026-01-15" }], "date": "2026-10-15",
+                                   "thresholds": { "warning": { "horizontal": 0.01 }, "alarm": { "horizontal": 0.02 } } },
+                        "thresholdsSource": "İdarenin izleme şartnamesi, 2026",
+                        "reviewer": { "role": "control", "title": "Harita Mühendisi", "name": "A. Yılmaz", "date": "2026-10-20",
+                                      "phrase": "checked", "signature": "wet" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İncelemeyi kaldır".into(),
+                    input: json!({ "name": "Ekim 2026 incelemesi", "remove": true }),
+                    output: None,
+                },
+            ],
+        },
         // Boru hattı denetimi (plan/map-cad.md MAP-16, docs/adr/1640).
         CommandDescriptor {
             id: crate::CAD_PIPES_CHECK.into(),
@@ -17292,6 +17335,7 @@ mod tests {
                     crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecord>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecords>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_APPROVE => serde_json::from_value::<crate::ParcelsApprove>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ASBUILT_REVIEW => serde_json::from_value::<crate::AsbuiltReview>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_WITHDRAW => serde_json::from_value::<crate::ParcelsWithdraw>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfile>(e.input.clone()).map(|_| ()),
@@ -18284,6 +18328,7 @@ mod tests {
                         crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecorded>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecordsListed>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_APPROVE => serde_json::from_value::<crate::ParcelsApproved>(output.clone()).map(|_| ()),
+                        crate::CAD_ASBUILT_REVIEW => serde_json::from_value::<crate::AsbuiltReviewed>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_WITHDRAW => serde_json::from_value::<crate::ParcelsWithdrawn>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),

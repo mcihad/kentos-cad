@@ -520,10 +520,15 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parcel_register: Option<crate::ParcelRegister>,
-    /// The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).
+    /// The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 244).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::KeptAdjustment>>"))]
     pub survey_adjustments: Vec<crate::KeptAdjustment>,
+    /// The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
+    /// (`.kcad` schema 245).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::MonitoringReview>>"))]
+    pub monitoring_reviews: Vec<crate::MonitoringReview>,
     /// A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
     /// (`.kcad` schema 242).
     #[serde(default, skip_serializing_if = "Option::is_none")]

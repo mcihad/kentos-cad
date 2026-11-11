@@ -101,6 +101,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         parcel_register: None,
         zoning_plan: None,
         survey_adjustments: Vec::new(),
+        monitoring_reviews: Vec::new(),
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         forms: Vec::new(),

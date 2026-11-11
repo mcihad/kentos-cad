@@ -6591,6 +6591,16 @@ ReviewOriginName = Literal["user", "pdf", "ai"]
 """The names of :class:`ReviewOrigin`, for a plain string."""
 
 
+class ReviewPhrase(_StrEnum):
+    """The phrase written over the signature (Genelge 2025/4 m. 12(20)): “Kontrol edilmiştir” or “Görülmüştür”."""
+    CHECKED = "checked"
+    SEEN = "seen"
+
+
+ReviewPhraseName = Literal["checked", "seen"]
+"""The names of :class:`ReviewPhrase`, for a plain string."""
+
+
 class ReviewStatus(_StrEnum):
     """Where a note stands.
 
@@ -6605,6 +6615,31 @@ class ReviewStatus(_StrEnum):
 
 ReviewStatusName = Literal["open", "answered", "resolved"]
 """The names of :class:`ReviewStatus`, for a plain string."""
+
+
+class ReviewedState(_StrEnum):
+    """A mark's state against the thresholds, as kept."""
+    NORMAL = "normal"
+    WARNING = "warning"
+    ALARM = "alarm"
+
+
+ReviewedStateName = Literal["normal", "warning", "alarm"]
+"""The names of :class:`ReviewedState`, for a plain string."""
+
+
+class ReviewerRole(_StrEnum):
+    """Who reviewed, as the regulations name them (Genelge 2025/4 m. 3, m. 12(16)–(20); BÖHHBÜY m. 76): the engineer
+    responsible for the job, the control engineer, the technical staff with the control, the one who approves.
+    """
+    RESPONSIBLE = "responsible"
+    CONTROL = "control"
+    STAFF = "staff"
+    APPROVER = "approver"
+
+
+ReviewerRoleName = Literal["responsible", "control", "staff", "approver"]
+"""The names of :class:`ReviewerRole`, for a plain string."""
 
 
 class RoadEdgeKind(_StrEnum):
@@ -7284,6 +7319,16 @@ class SightUntil(_StrEnum):
 
 SightUntilName = Literal["hidden", "reach", "end"]
 """The names of :class:`SightUntil`, for a plain string."""
+
+
+class SignatureKind(_StrEnum):
+    """How the reviewer signed, as stated: by hand on the paper, or with a secure electronic signature (5070 m. 5)."""
+    WET = "wet"
+    ELECTRONIC = "electronic"
+
+
+SignatureKindName = Literal["wet", "electronic"]
+"""The names of :class:`SignatureKind`, for a plain string."""
 
 
 class SinkDimension(_StrEnum):
@@ -18032,6 +18077,122 @@ class AsbuiltPoint(_Model):
             normal=UNSET if "normal" not in data else None if data["normal"] is None else float(data["normal"]),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
             surface=UNSET if "surface" not in data else None if data["surface"] is None else float(data["surface"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltReview(_Model):
+    """Input of `cad.asbuilt.review` v1. To keep: `check` (a monitoring job), `reviewer` and, with the check's thresholds,
+    `thresholdsSource` (who set them, by which document, when; the program gives none). To remove: `remove` alone.
+    """
+    name: str
+    check: AsbuiltCheck | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    remove: bool | Unset = UNSET
+    reviewer: MonitoringReviewer | None | Unset = UNSET
+    thresholds_source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.check is not UNSET:
+            out["check"] = None if self.check is None else self.check.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.remove is not UNSET:
+            out["remove"] = self.remove
+        if self.reviewer is not UNSET:
+            out["reviewer"] = None if self.reviewer is None else self.reviewer.to_json()
+        if self.thresholds_source is not UNSET:
+            out["thresholdsSource"] = self.thresholds_source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltReview:
+        return cls(
+            name=data["name"],
+            check=UNSET if "check" not in data else None if data["check"] is None else AsbuiltCheck.from_json(data["check"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            remove=data.get("remove", UNSET),
+            reviewer=UNSET if "reviewer" not in data else None if data["reviewer"] is None else MonitoringReviewer.from_json(data["reviewer"]),
+            thresholds_source=data.get("thresholdsSource", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltReviewRow(_Model):
+    """A kept review in the list: its name, the reviewer's name, day and phrase, its marks in alarm and warning, and
+    whether the points its job reads are the ones reviewed.
+    Attributes:
+        alarm: Unit: count.
+        warning: Unit: count.
+    """
+    name: str
+    reviewer: str
+    date: str
+    phrase: ReviewPhrase | ReviewPhraseName
+    alarm: int
+    warning: int
+    current: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["reviewer"] = self.reviewer
+        out["date"] = self.date
+        out["phrase"] = _enum_out(self.phrase)
+        out["alarm"] = self.alarm
+        out["warning"] = self.warning
+        out["current"] = self.current
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltReviewRow:
+        return cls(
+            name=data["name"],
+            reviewer=data["reviewer"],
+            date=data["date"],
+            phrase=_enum_in(ReviewPhrase, data["phrase"]),
+            alarm=data["alarm"],
+            warning=data["warning"],
+            current=data["current"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltReviewed(_Model):
+    """Output of `cad.asbuilt.review` v1: the review kept (none when removed), whether one of its name was replaced or
+    removed, every kept review in the project's order and the revision after the write.
+    """
+    name: str
+    reviews: list[AsbuiltReviewRow]
+    revision: str
+    kept: MonitoringReview | None | Unset = UNSET
+    removed: bool | Unset = UNSET
+    replaced: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["reviews"] = [e0.to_json() for e0 in self.reviews]
+        out["revision"] = self.revision
+        if self.kept is not UNSET:
+            out["kept"] = None if self.kept is None else self.kept.to_json()
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
+        if self.replaced is not UNSET:
+            out["replaced"] = self.replaced
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltReviewed:
+        return cls(
+            name=data["name"],
+            reviews=[AsbuiltReviewRow.from_json(e0) for e0 in data["reviews"]],
+            revision=data["revision"],
+            kept=UNSET if "kept" not in data else None if data["kept"] is None else MonitoringReview.from_json(data["kept"]),
+            removed=data.get("removed", UNSET),
+            replaced=data.get("replaced", UNSET),
         )
 
 
@@ -59614,6 +59775,73 @@ class ModulesQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MonitoringReview(_Model):
+    """A review kept under its name (unique in the project): the job, the digest of the points it read (SHA-256, 64
+    lowercase hex), its marks and the reviewer's statement.
+    """
+    name: str
+    job: ReviewedJob
+    digest: str
+    marks: list[ReviewedMark]
+    reviewer: MonitoringReviewer
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["job"] = self.job.to_json()
+        out["digest"] = self.digest
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        out["reviewer"] = self.reviewer.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MonitoringReview:
+        return cls(
+            name=data["name"],
+            job=ReviewedJob.from_json(data["job"]),
+            digest=data["digest"],
+            marks=[ReviewedMark.from_json(e0) for e0 in data["marks"]],
+            reviewer=MonitoringReviewer.from_json(data["reviewer"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MonitoringReviewer(_Model):
+    """The reviewer's statement: role, title (unvan), name, day (`YYYY-MM-DD`), phrase, signature and a note."""
+    role: ReviewerRole | ReviewerRoleName
+    title: str
+    name: str
+    date: str
+    phrase: ReviewPhrase | ReviewPhraseName
+    signature: SignatureKind | SignatureKindName
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["role"] = _enum_out(self.role)
+        out["title"] = self.title
+        out["name"] = self.name
+        out["date"] = self.date
+        out["phrase"] = _enum_out(self.phrase)
+        out["signature"] = _enum_out(self.signature)
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MonitoringReviewer:
+        return cls(
+            role=_enum_in(ReviewerRole, data["role"]),
+            title=data["title"],
+            name=data["name"],
+            date=data["date"],
+            phrase=_enum_in(ReviewPhrase, data["phrase"]),
+            signature=_enum_in(SignatureKind, data["signature"]),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MosaicSource(_Model):
     """A file of the mosaic.
     Attributes:
@@ -79643,6 +79871,8 @@ class ProjectSettings(_Model):
             schema 194).
         map_work: A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
             derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
+        monitoring_reviews: The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
+            (`.kcad` schema 245).
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -79672,7 +79902,7 @@ class ProjectSettings(_Model):
             the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
-        survey_adjustments: The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).
+        survey_adjustments: The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 244).
         table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
@@ -79723,6 +79953,7 @@ class ProjectSettings(_Model):
     map_srid: int | None | Unset = UNSET
     map_survey: MapSurvey | None | Unset = UNSET
     map_work: MapWork | None | Unset = UNSET
+    monitoring_reviews: list[MonitoringReview] | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -79814,6 +80045,8 @@ class ProjectSettings(_Model):
             out["mapSurvey"] = None if self.map_survey is None else self.map_survey.to_json()
         if self.map_work is not UNSET:
             out["mapWork"] = None if self.map_work is None else self.map_work.to_json()
+        if self.monitoring_reviews is not UNSET:
+            out["monitoringReviews"] = [e0.to_json() for e0 in self.monitoring_reviews]
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -79905,6 +80138,7 @@ class ProjectSettings(_Model):
             map_srid=data.get("mapSrid", UNSET),
             map_survey=UNSET if "mapSurvey" not in data else None if data["mapSurvey"] is None else MapSurvey.from_json(data["mapSurvey"]),
             map_work=UNSET if "mapWork" not in data else None if data["mapWork"] is None else MapWork.from_json(data["mapWork"]),
+            monitoring_reviews=[MonitoringReview.from_json(e0) for e0 in data["monitoringReviews"]] if "monitoringReviews" in data else UNSET,
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -86270,6 +86504,186 @@ class ReviewReply(_Model):
             text=data["text"],
             author=data.get("author", UNSET),
             created_at=data.get("createdAt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedEpoch(_Model):
+    """An earlier epoch of the job: its layer and day (`YYYY-MM-DD`)."""
+    layer: str
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedEpoch:
+        return cls(
+            layer=data["layer"],
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedJob(_Model):
+    """The job as it was checked: the layer measured now, the earlier epoch's (`design`), the earlier epochs and days, this
+    epoch's day, the names' attribute, the control marks, the limits (m), the line's confidence and the thresholds.
+    Attributes:
+        confidence: Unit: 1.
+        horizontal: Unit: m.
+        vertical: Unit: m.
+    """
+    measured: str
+    design: str
+    confidence: float | None | Unset = UNSET
+    control: list[str] | Unset = UNSET
+    date: str | None | Unset = UNSET
+    epochs: list[ReviewedEpoch] | Unset = UNSET
+    field: str | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    thresholds: ReviewedThresholds | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["measured"] = self.measured
+        out["design"] = self.design
+        if self.confidence is not UNSET:
+            out["confidence"] = None if self.confidence is None else float(self.confidence)
+        if self.control is not UNSET:
+            out["control"] = list(self.control)
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.epochs is not UNSET:
+            out["epochs"] = [e0.to_json() for e0 in self.epochs]
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.thresholds is not UNSET:
+            out["thresholds"] = None if self.thresholds is None else self.thresholds.to_json()
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedJob:
+        return cls(
+            measured=data["measured"],
+            design=data["design"],
+            confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+            control=list(data["control"]) if "control" in data else UNSET,
+            date=data.get("date", UNSET),
+            epochs=[ReviewedEpoch.from_json(e0) for e0 in data["epochs"]] if "epochs" in data else UNSET,
+            field=data.get("field", UNSET),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            thresholds=UNSET if "thresholds" not in data else None if data["thresholds"] is None else ReviewedThresholds.from_json(data["thresholds"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedLevel(_Model):
+    """A threshold level's limits as kept: horizontal and vertical movement (m), horizontal and vertical speed (m a year).
+    Attributes:
+        horizontal: Unit: m.
+        horizontal_rate: Unit: m/yr.
+        vertical: Unit: m.
+        vertical_rate: Unit: m/yr.
+    """
+    horizontal: float | None | Unset = UNSET
+    horizontal_rate: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+    vertical_rate: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.horizontal_rate is not UNSET:
+            out["horizontalRate"] = None if self.horizontal_rate is None else float(self.horizontal_rate)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        if self.vertical_rate is not UNSET:
+            out["verticalRate"] = None if self.vertical_rate is None else float(self.vertical_rate)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedLevel:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            horizontal_rate=UNSET if "horizontalRate" not in data else None if data["horizontalRate"] is None else float(data["horizontalRate"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+            vertical_rate=UNSET if "verticalRate" not in data else None if data["verticalRate"] is None else float(data["verticalRate"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedMark(_Model):
+    """A mark as reviewed: its last horizontal and vertical movement from its reference (m), its horizontal speed (m a
+    year; the line's, else the mean), its state and the limits it went beyond.
+    Attributes:
+        horizontal: Unit: m.
+        speed: Unit: m/yr.
+        vertical: Unit: m.
+    """
+    name: str
+    horizontal: float
+    exceeded: list[str] | Unset = UNSET
+    speed: float | None | Unset = UNSET
+    state: ReviewedState | ReviewedStateName | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["horizontal"] = float(self.horizontal)
+        if self.exceeded is not UNSET:
+            out["exceeded"] = list(self.exceeded)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.state is not UNSET:
+            out["state"] = None if self.state is None else _enum_out(self.state)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedMark:
+        return cls(
+            name=data["name"],
+            horizontal=float(data["horizontal"]),
+            exceeded=list(data["exceeded"]) if "exceeded" in data else UNSET,
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            state=UNSET if "state" not in data else None if data["state"] is None else _enum_in(ReviewedState, data["state"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedThresholds(_Model):
+    """The two thresholds as kept, with their source: who set them, by which document or decision, when."""
+    warning: ReviewedLevel
+    alarm: ReviewedLevel
+    source: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["warning"] = self.warning.to_json()
+        out["alarm"] = self.alarm.to_json()
+        out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedThresholds:
+        return cls(
+            warning=ReviewedLevel.from_json(data["warning"]),
+            alarm=ReviewedLevel.from_json(data["alarm"]),
+            source=data["source"],
         )
 
 
@@ -138915,6 +139329,9 @@ __all__ = [
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",
+    "AsbuiltReview",
+    "AsbuiltReviewRow",
+    "AsbuiltReviewed",
     "AsbuiltState",
     "AsbuiltStateName",
     "AsbuiltStep",
@@ -140698,6 +141115,8 @@ __all__ = [
     "ModulesOperation",
     "ModulesQueried",
     "ModulesQuery",
+    "MonitoringReview",
+    "MonitoringReviewer",
     "MosaicOrder",
     "MosaicOrderName",
     "MosaicResolution",
@@ -141830,9 +142249,20 @@ __all__ = [
     "ReviewNotesListed",
     "ReviewOrigin",
     "ReviewOriginName",
+    "ReviewPhrase",
+    "ReviewPhraseName",
     "ReviewReply",
     "ReviewStatus",
     "ReviewStatusName",
+    "ReviewedEpoch",
+    "ReviewedJob",
+    "ReviewedLevel",
+    "ReviewedMark",
+    "ReviewedState",
+    "ReviewedStateName",
+    "ReviewedThresholds",
+    "ReviewerRole",
+    "ReviewerRoleName",
     "RevisionMarked",
     "RevisionPlan",
     "RevisionsMark",
@@ -142119,6 +142549,8 @@ __all__ = [
     "SightSideName",
     "SightUntil",
     "SightUntilName",
+    "SignatureKind",
+    "SignatureKindName",
     "SimilarCriteria",
     "SimilarSelectRegion",
     "SimilarityCrsPlane",

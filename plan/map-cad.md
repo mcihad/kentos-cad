@@ -50,7 +50,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780, 5160 | yol kaplamasının (yüzey kaplaması) profilde gösterimi; uç çizgisi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800, 5180 | kodların ve katman adlarının kurum biçimi (TUCBS GKM §9.5.2.5, VTS katman adı) | DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu); Ek-1 ve havuz.xml'in hazır eşlemesi (resmî dosya bekler) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820, 5200 | paftada kalite tablosu (dengeleme kaydından); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840, 5220 | kayıttaki eşiklerin forma alınması; incelemenin raporu ve paftaya yazılması; grafikte Δ3D ve birden çok nokta | canlı cihaz; cihaz biçimleri; onay evreleri ve e-imzanın doğrulanması (kurum altyapısı) |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440, 4860 | katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi; adıyla bulunan katmana tarifin eksik alanlarını ekleme seçeneği | bütçe (gerçek veriyle ölçüm) |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -2651,6 +2651,16 @@ hareketi, yatay ve kot hızı) her noktaya `state` ve aşılan sınırlar; beş 
 (34; eski 22 bayt bayt aynı), Python (numpy.polyfit), MCP; masaüstünde Dönem dizisi bölümü (Doğru uydurma, Uyarı ve
 Alarm eşiği), özette durum sayıları, Hareketler | Doğru ve eşikler tablosu. Açık: yetkili inceleme kaydı (`.kcad`
 bölümü), eşiklerin kaynağıyla saklanması, hareketin zaman grafiği, ağırlıklı doğru.
+
+**11 Kasım 2026, onuncu tur — izleme incelemesinin kaydı, eşiklerin kaynağı, zaman grafiği ([ADR 5220](../docs/adr/5220-monitoring-review-record-and-time-chart.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Genelge 2025/4 m. 12(20) (unvan, ad soyad, tarih; “Kontrol edilmiştir”,
+“Görülmüştür”), BÖHHBÜY m. 76, 82, 98, 5070 m. 5; TBC Monitoring Point Chart (zaman ekseni, bileşen seçimi, sarı ve
+kırmızı bantlar). Kanıtlanan: yeni `cad.asbuilt.review` izleme işini eşikleri ve kaynağıyla, noktaların durumu, okunan
+noktaların SHA-256 özeti ve inceleyenin beyanıyla `settings.monitoringReviews`'a yazar (tek adım; aynı ad değişir,
+`remove`); her inceleme özetle güncel ya da eski sonuca ait; `.kcad` şema 245 ve bağımsız okuyucunun kuralları; 30
+bağımsız durum, Python, MCP; masaüstünde Eşiklerin kaynağı, İnceleme bölümü, incelemeler tablosu ve Grafik (nokta,
+Yatay | Doğu | Kuzey | Kot, doğru, eşik bantları). KentOS yetkiyi ve imzayı doğrulamaz. Açık: kayıttaki eşiklerin
+forma alınması, raporu, Δ3D. Madde `[ ]` kalır.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

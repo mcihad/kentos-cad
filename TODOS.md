@@ -289,6 +289,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çekirdek `volume_sections::along_axis` WASM'den) ve `road.terrains.cutfill`'de `sections`, `materials` (compare.sections'ın
   15, cutfill'in 14 yeni durumu); web Yüzey analizi › Fark › Kesit'te Eksen, genişlikler, Eksen noktalarında da,
   Başlangıç km.
+- MAP-19 / ADR 5220: web'in `cad.asbuilt.review` işleyicisi (30 durum); web `.kcad` okuyucusunda şema 245
+  (`monitoringReviews`); web Uygulama kontrolü › İzleme'de Eşiklerin kaynağı, İnceleme ve Grafik.
 - MAP-18 / ADR 5200: web'in `cad.survey.adjust` işleyicisinde `keep`; web `.kcad` okuyucusunda şema 244
   (`surveyAdjustments`); web ağ pencerelerinde Projede sakla.
 - MAP-16 / ADR 5160: web'in `cad.pipes.profile` işleyicisinde `crossing.hatch`; web Boru denetimi'nde Kesişen borunun

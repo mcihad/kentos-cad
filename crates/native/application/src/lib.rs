@@ -332,6 +332,7 @@ mod pipes_clearance;
 pub mod pipes_profile;
 mod pipes_rules;
 pub mod asbuilt_check;
+pub mod asbuilt_review;
 pub(crate) mod asbuilt_series;
 mod asbuilt_package;
 pub mod field_package;
@@ -1566,6 +1567,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_PIPES_CHECK, kentos_commands::CAD_PIPES_CHECK_VERSION),
     (kentos_commands::CAD_PIPES_PROFILE, kentos_commands::CAD_PIPES_PROFILE_VERSION),
     (kentos_commands::CAD_ASBUILT_CHECK, kentos_commands::CAD_ASBUILT_CHECK_VERSION),
+    // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
+    (kentos_commands::CAD_ASBUILT_REVIEW, kentos_commands::CAD_ASBUILT_REVIEW_VERSION),
     (kentos_commands::CAD_FIELD_PACKAGE, kentos_commands::CAD_FIELD_PACKAGE_VERSION),
     (kentos_commands::CAD_ZONING_CHECK, kentos_commands::CAD_ZONING_CHECK_VERSION),
     (kentos_commands::CAD_ZONING_SYMBOLIZE, kentos_commands::CAD_ZONING_SYMBOLIZE_VERSION),

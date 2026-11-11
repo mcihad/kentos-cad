@@ -88,6 +88,8 @@ mod pipes_check_rules;
 mod exchange_check_window;
 mod asbuilt_window;
 mod asbuilt_trend;
+mod asbuilt_chart;
+mod asbuilt_review_form;
 mod project_graph_window;
 mod survey_network_window;
 mod features_reconcile_window;
@@ -431,6 +433,8 @@ mod asbuilt_window_tests;
 mod asbuilt_series_tests;
 #[cfg(test)]
 mod asbuilt_trend_tests;
+#[cfg(test)]
+mod asbuilt_review_tests;
 #[cfg(test)]
 mod project_graph_window_tests;
 #[cfg(test)]

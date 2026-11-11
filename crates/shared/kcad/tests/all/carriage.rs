@@ -158,6 +158,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         parcel_register: _,
         zoning_plan: _,
         survey_adjustments: _,
+        monitoring_reviews: _,
     } = s;
     vec![
         "srid",
@@ -215,6 +216,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         "mapSurvey",
         "parcelRegister",
         "surveyAdjustments",
+        "monitoringReviews",
     ]
 }
 

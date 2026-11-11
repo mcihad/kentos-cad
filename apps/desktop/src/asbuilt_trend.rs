@@ -2,8 +2,9 @@
 //! Doğru uydurma, a line fitted through each mark's dated epochs at the confidence typed; Uyarı eşiği and Alarm eşiği,
 //! each the horizontal and vertical movement (m, as the window's movement limit) and the horizontal and vertical speed
 //! (m a year) beyond which a mark is at that level. Every value is the user's: an empty box is not checked, and no
-//! regulation gives one for monitoring. Under the series a choice shows its movements (docs/adr/4420) or each mark's
-//! line and state, one table at a time.
+//! regulation gives one for monitoring; their source is typed beside them and kept with a review (docs/adr/5220). Under
+//! the series a choice shows its movements (docs/adr/4420), each mark's line and state, or one mark's chart, one at a
+//! time.
 
 use iced::widget::{container, row};
 use iced::{Center, Element};
@@ -25,8 +26,13 @@ pub struct TrendForm {
     /// Uyarı and Alarm: horizontal and vertical movement (m), horizontal and vertical speed (m a year).
     pub warning: [String; 4],
     pub alarm: [String; 4],
+    /// Who set the thresholds, by which document or decision, when (docs/adr/5220): kept with a review.
+    pub source: String,
     /// The series' table shown.
     pub view: View,
+    /// Grafik's mark (empty: the first in alarm, else the first) and part (docs/adr/5220).
+    pub mark: String,
+    pub part: crate::asbuilt_chart::Part,
 }
 
 /// A change of the form.
@@ -36,16 +42,21 @@ pub enum Change {
     Confidence(String),
     Warning(usize, String),
     Alarm(usize, String),
-    /// The table under the series: shown only, nothing checked again.
+    Source(String),
+    /// The table under the series, Grafik's mark and part: shown only, nothing checked again.
     View(View),
+    Mark(String),
+    Part(crate::asbuilt_chart::Part),
 }
 
-/// The series' two tables, one at a time: the movement at each epoch (docs/adr/4420) or each mark's line and state.
+/// The series' views, one at a time: the movement at each epoch (docs/adr/4420), each mark's line and state, or one
+/// mark's movement against time (docs/adr/5220).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum View {
     Series,
     #[default]
     Line,
+    Chart,
 }
 
 impl std::fmt::Display for View {
@@ -53,6 +64,7 @@ impl std::fmt::Display for View {
         f.write_str(match self {
             View::Series => "Hareketler",
             View::Line => "Doğru ve eşikler",
+            View::Chart => "Grafik",
         })
     }
 }
@@ -69,7 +81,10 @@ impl TrendForm {
             Change::Confidence(v) => self.confidence = v,
             Change::Warning(k, v) => self.warning[k] = v,
             Change::Alarm(k, v) => self.alarm[k] = v,
+            Change::Source(v) => self.source = v,
             Change::View(v) => self.view = v,
+            Change::Mark(v) => self.mark = v,
+            Change::Part(v) => self.part = v,
         }
     }
 }
@@ -129,6 +144,15 @@ pub fn rows<'a>(f: &'a TrendForm, on: fn(Change) -> Message) -> Vec<(&'static st
         ("Doğru uydurma", line.into()),
         ("Uyarı eşiği yatay / düşey (m)", level(&f.warning, Change::Warning)),
         ("Alarm eşiği yatay / düşey (m)", level(&f.alarm, Change::Alarm)),
+        (
+            "Eşiklerin kaynağı",
+            container(
+                fields::input(None, "Kim, hangi belge ya da kararla, ne zaman", &f.source, false, false)
+                    .on_input(move |v| on(Change::Source(v))),
+            )
+            .width(520)
+            .into(),
+        ),
     ]
 }
 

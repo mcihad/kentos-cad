@@ -1,6 +1,6 @@
 //! `cad.asbuilt.check` v1 (plan/map-cad.md MAP-19, docs/adr/1700): Uygulama kontrolü, read only. The measured points
-//! of a layer set against the design's points, surface and lines, as Trimble Business Center's Point and String
-//! Conformance reports set them: by name, else (a radius given) by the one design point within it, a proposal; two
+//! of a layer set against the design's points, surface and lines, as point and line conformance reports set
+//! them: by name, else (a radius given) by the one design point within it, a proposal; two
 //! within it ambiguous. Every limit is the user's; a point's own σ beyond its limit is a flag apart from its
 //! differences. The design's digest says whether the design changed since the field record was made. Nothing is
 //! written. The shared cases are `fixtures/commands/v1/cad.asbuilt.check.json`.
@@ -233,7 +233,7 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     crate::asbuilt_series::asked(input)
 }
 
-fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
+pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     asked(input)?;
     // The field package the record was made with (docs/adr/2420): its digest expected, its limits where the input
     // gives none (the quality limit only with the σ's attribute).

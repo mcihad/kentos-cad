@@ -2089,6 +2089,8 @@ codes! {
     UNKNOWN_PARCEL_DOCUMENT = "unknown_parcel_document", Failed, false, "Parsel kayıtlarında bu numarada belge yok.";
     /// Belgenin onayı (docs/adr/5020): the document's approval is written already.
     DOCUMENT_APPROVED = "document_approved", Failed, false, "Belgenin onayı yazılmış; onay bir kez yazılır, değişirse yeni bir belgeyle kaydedin.";
+    /// İzleme incelemesi (docs/adr/5220): no review of the name kept in the project.
+    UNKNOWN_MONITORING_REVIEW = "unknown_monitoring_review", Failed, false, "Projede bu adla saklanan izleme incelemesi yok.";
     /// Senaryo ölçüleri (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
     /// Düzenleme dağıtım taslağı (docs/adr/1460): rounded values that do not add up while the remainder rule is `reject`.

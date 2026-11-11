@@ -46,7 +46,7 @@ pub(crate) fn section_labels(sections: &[CutFillSection]) -> Vec<CutFillSectionL
     out
 }
 
-/// The section volume table's cells (kübaj cetveli, as Netcad's Enkesitlerden Hacim Hesabı writes it): the heading,
+/// The section volume table's cells (kübaj cetveli, as the section volume reports write it): the heading,
 /// then each section: its kilometre, the distance from the section before, its cut and fill areas, the cut and fill
 /// volumes from the section before and their running sums and the Brückner value (docs/adr/5140; none of the five for
 /// the first); numbers to two decimals.
@@ -311,6 +311,7 @@ mod tests {
             fill_area: 2.0,
             cut_volume: None,
             fill_volume: None,
+            mass: None,
         };
         let east = section_labels(&[s([0.0, 5.0], [0.0, -5.0])]);
         assert_eq!((east[0].rotation, east[0].align), (90.0, TextAlign::MiddleLeft));

@@ -520,6 +520,7 @@ impl<'d> Encoder<'d> {
             + usize::from(s.parcel_register.is_some())
             + usize::from(s.zoning_plan.is_some())
             + usize::from(!s.survey_adjustments.is_empty())
+            + usize::from(!s.monitoring_reviews.is_empty())
             + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.table_styles.is_empty())
             + usize::from(!s.standard_exceptions.is_empty())
@@ -1044,6 +1045,19 @@ impl<'d> Encoder<'d> {
                     ));
                 }
                 e.crs_definition(d)
+            })?;
+        }
+        // Schema 245 (docs/adr/5220): the monitoring reviews the project keeps, as their JSON (17 letters: before
+        // surveyAdjustments, bytewise).
+        if !s.monitoring_reviews.is_empty() {
+            self.key("monitoringReviews");
+            self.at(Seg::Name("monitoringReviews"), |e| {
+                if let Some(problem) = kentos_contracts::monitoring_reviews_problem(&s.monitoring_reviews) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value =
+                    serde_json::to_value(&s.monitoring_reviews).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         // Schema 244 (docs/adr/5200): the adjustments the project keeps, as their JSON.
@@ -2319,6 +2333,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 245 (docs/adr/5220): the monitoring reviews the project keeps.
+    if !doc.settings.monitoring_reviews.is_empty() {
+        return crate::SCHEMA_WITH_MONITORING_REVIEWS;
+    }
     // Schema 244 (docs/adr/5200): the adjustments the project keeps.
     if !doc.settings.survey_adjustments.is_empty() {
         return crate::SCHEMA_WITH_KEPT_ADJUSTMENTS;

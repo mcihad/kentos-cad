@@ -302,6 +302,11 @@ pub(crate) enum Op {
         before: std::sync::Arc<Vec<kentos_contracts::KeptAdjustment>>,
         after: std::sync::Arc<Vec<kentos_contracts::KeptAdjustment>>,
     },
+    /// The reviews the project keeps of its monitoring jobs (docs/adr/5220), before and after.
+    MonitoringReviews {
+        before: std::sync::Arc<Vec<kentos_contracts::MonitoringReview>>,
+        after: std::sync::Arc<Vec<kentos_contracts::MonitoringReview>>,
+    },
     /// A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040), before and after.
     ZoningPlan {
         before: std::sync::Arc<Option<kentos_contracts::ZoningPlanData>>,
@@ -754,6 +759,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::SurveyAdjustments { before, after } => Op::SurveyAdjustments {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::MonitoringReviews { before, after } => Op::MonitoringReviews {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1532,6 +1541,7 @@ impl Document {
                 | Op::MapSurvey { .. }
                 | Op::ParcelRegister { .. }
                 | Op::SurveyAdjustments { .. }
+                | Op::MonitoringReviews { .. }
                 | Op::ZoningPlan { .. }
                 | Op::PatternTables { .. }
                 | Op::ApprovedSheetTemplates { .. }
@@ -1840,6 +1850,10 @@ impl Document {
             }
             Op::SurveyAdjustments { after, .. } => {
                 self.settings.survey_adjustments = after.as_ref().clone();
+                return;
+            }
+            Op::MonitoringReviews { after, .. } => {
+                self.settings.monitoring_reviews = after.as_ref().clone();
                 return;
             }
             Op::ZoningPlan { after, .. } => {

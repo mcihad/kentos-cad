@@ -417,6 +417,8 @@ pub(super) struct Features {
     pub(super) cloud_poses: bool,
     /// Schema 244: the adjustments the project keeps (docs/adr/5200).
     pub(super) kept_adjustments: bool,
+    /// Schema 245: the reviews the project keeps of its monitoring jobs (docs/adr/5220).
+    pub(super) monitoring_reviews: bool,
     /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
     pub(super) drawing_provenance: bool,
     /// Schema 210: a map work approval's objects' digests (docs/adr/2880).
@@ -768,6 +770,7 @@ impl Features {
             parcel_drafts: schema >= crate::SCHEMA_WITH_PARCEL_DRAFTS,
             cloud_poses: schema >= crate::SCHEMA_WITH_CLOUD_POSES,
             kept_adjustments: schema >= crate::SCHEMA_WITH_KEPT_ADJUSTMENTS,
+            monitoring_reviews: schema >= crate::SCHEMA_WITH_MONITORING_REVIEWS,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
