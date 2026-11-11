@@ -96,7 +96,8 @@ Tarih: 2026-11-09. Durum: kabul (M34, ADV-23; plan S23).
     yalnız üç kata kadar aramaz. Programsız projede bölüm sayısı bilinmez: onarım, tek bölümlü konutsa bölümün
     tanımlanmasını söyler.
   - Kuyunun net ölçüsü kabininkinden (1,20 m, 1,80 m²) küçükse kabin sığmaz: `paiy_elevator_small`. Aynı katta birden
-    çok kuyuda yarısının (aşağı yuvarlanır) sığması yeter.
+    çok kuyuda yarısının (aşağı yuvarlanır) sığması yeter. Kitaplığın Asansör bloğu da asansördür; kuyudaki bloğun
+    kabini ve kapısı ayrıca ölçülür, 10 katta sedye asansörü aranır (ADR 8045 §5).
   - Asansör kuyusuna açılan kapının öbür yanındaki mahal sahanlıktır: net eni sürme ya da cebe giren kapıda 1,20 m,
     öbür kapıda 1,50 m (`paiy_elevator_landing_narrow`).
 - **Düzeltmeler:** ortak merdivenin kolu ve sahanlığı ("Genişliği 1.30 m yap", "Sahanlığı 1.30 m yap") ve korkuluk

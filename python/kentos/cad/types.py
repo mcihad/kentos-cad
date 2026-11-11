@@ -16154,7 +16154,8 @@ class ArchAuditFinding(_Model):
             `paiy_ridge_high`, `paiy_eaves_wide`, `paiy_roof_vent_high`, `bykhy_chimney_low`, `local_roof_slope_steep`,
             `local_snow_guard_missing`, `local_roof_window_large`, `local_roof_window_close` (docs/adr/8044 §9); the railings'
             `paiy_railing_low`, `paiy_railing_gap` and `paiy_railing_missing` for a slab's void's or a balcony's or terrace's
-            free sides (docs/adr/8045 §4).
+            free sides (docs/adr/8045 §4); an elevator block's cabin or door `paiy_elevator_small` and ten storeys' missing
+            stretcher elevator `paiy_elevator_stretcher` (docs/adr/8045 §5).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.

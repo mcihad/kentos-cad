@@ -1,0 +1,60 @@
+# M45 3. bölüm (docs/adr/8045 §5), on fixtures/arch/v1/facade-building.kcad (--modul mimari): 1. kat; Komut ara
+# "asansor" finds the library's Asansör; Enter takes it in and starts Blok ekle (its layer MM-ASAN-GENEL, its Kabin eni,
+# Kabin derinliği, Kapı genişliği); 5.825,6.7 typed: the hall's north, its door toward the stair's landing. Denetim ›
+# Mevzuat: the riser of a building with no elevator is no longer said. Its Tip TSE Tip 2 110 × 140 in Öznitelikler:
+# PAİY 34/2's narrow side and area said; Düzelt gives the cabin 1.20 × 1.50 m (and shows it close).
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+click 1162 111
+wait 2500
+click 195 712
+wait 1200
+type mevzuat
+wait 1200
+click 188 779
+wait 1200
+key alt+q
+wait 600
+type asansor
+wait 1500
+shot e1-arama
+key Return
+wait 2500
+move 1300 500
+wait 1000
+shot e2-blok-ekle
+type 5.825,6.7
+key Return
+wait 2000
+key Escape
+wait 800
+click 65 712
+wait 3000
+move 1400 120
+wait 800
+shot e3-sonra
+click 794 246
+wait 1500
+wheel 1720 900 -15
+wait 1200
+click 1800 947
+wait 1200
+click 1789 1038
+wait 1500
+click 65 712
+wait 3000
+move 1400 120
+wait 800
+shot e4-bulgu
+click 500 972
+wait 1200
+click 1480 712
+wait 3000
+move 1400 120
+wait 800
+shot e5-duzeltildi

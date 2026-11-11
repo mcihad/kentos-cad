@@ -413,6 +413,15 @@
     0,10 m'den geniş aralık `paiy_railing_gap` (düzeltmeleri `cad.arch.edit`), boşluğun ve kenarsız balkonun, terasın
     tutulmayan kenarı `paiy_railing_missing` (boşluk `railing_voids` ile aracın hesabı; balkonun düzeltmesi
     `cad.slabs.edit` kenar korkuluk — `Fix.command`).
+  - **Asansör (M45 3. bölüm, ADR 8045 §5; PAİY 34/2, 34/5):** yeni nesne türü değil, kitaplığın değiştirilebilir
+    bloğu (`Asansör`, kategori Asansör/Yolcu; kitaplık 38 → 39): kabin çift çizgi ve çapraz, karşı ağırlık, iki sürme
+    kanat ve açılma oku; taban noktası kuyunun kapı duvarındaki sol iç köşesi. Parametreler Kabin eni, Kabin derinliği
+    (iç ölçü), Kapı genişliği (net); Tip: Konut 120 × 150, Sedye 120 × 210, TSE Tip 2 110 × 140; Görünüş Kabin / Kuyu
+    ile. Kapı kabinin sol iç kenarına bağlı: tutamak başka parametrenin kaydırdığıyla kaymaz. Katman MM-ASAN-GENEL
+    (`Kind::Elevator`). `elevator_cabins` bloğu okur (kategori, parametre ya da varsayılanı × ölçek); Mevzuat'ta blok
+    asansördür (34/1, rıht 0,18), kuyu net ölçüsüyle ve içindeki blok kabini ve kapısıyla ölçülür
+    (`paiy_elevator_small`, düzeltme `cad.blocks.parameters` — arch_audit girdisini `values` ile kurar); ±0,00'dan
+    10 ve daha fazla katta sedye asansörü yoksa `paiy_elevator_stretcher` (34/5).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

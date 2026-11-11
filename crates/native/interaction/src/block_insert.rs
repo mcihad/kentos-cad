@@ -228,8 +228,9 @@ fn chosen_of(
 }
 
 /// The layer a library fixture goes on (docs/adr/8024; docs/adr/8008 had left blocks on the active layer): by its
-/// card's category, Mobilya MM-TEFR-MOBILYA, Islak hacim MM-TEFR-VITRIFIYE, Mutfak MM-TEFR-MUTFAK (Mutfak dizisi's).
-/// None for another block (a symbol, a title block, the drawing's own): it stays on the active layer.
+/// card's category, Mobilya MM-TEFR-MOBILYA, Islak hacim MM-TEFR-VITRIFIYE, Mutfak MM-TEFR-MUTFAK (Mutfak dizisi's),
+/// Asansör MM-ASAN-GENEL (docs/adr/8045 §5). None for another block (a symbol, a title block, the drawing's own): it
+/// stays on the active layer.
 pub fn fixture_kind(def: &kentos_commands::BlockDefinition) -> Option<crate::arch_layer::Kind> {
     use crate::arch_layer::Kind;
     let category = def.card.as_ref()?.category.as_deref()?;
@@ -237,6 +238,7 @@ pub fn fixture_kind(def: &kentos_commands::BlockDefinition) -> Option<crate::arc
         "Mobilya" => Some(Kind::Furniture(Some("Mobilya".into()))),
         "Islak hacim" => Some(Kind::Furniture(Some("Vitrifiye".into()))),
         "Mutfak" => Some(Kind::Casework),
+        "Asansör" => Some(Kind::Elevator),
         _ => None,
     }
 }

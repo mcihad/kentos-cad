@@ -4,7 +4,8 @@
   (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c denetimi (§1),
   kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). 2. bölümde bağımsız korkuluk — model, `.kcad` 242, komut,
   plan, Korkuluk aracı (Boşluktan ile galeri boşluğu), Öznitelikler, kesit ve görünüş (§3) ve Denetim › Mevzuat'ta
-  PAİY 38 (§4). Sırada asansör ve otopark yeri.
+  PAİY 38 (§4). 3. bölümde asansör: kitaplığın değiştirilebilir Asansör bloğu ve Denetim › Mevzuat'ta PAİY 34/2, 34/5
+  (§5). Sırada otopark yeri.
 - **Bağlam belgesi:** ADR 0343 (merdivenin yürüme çizgisi, sahanlıklar, basamak çizgileri), ADR 0704 (yükseklikten
   merdiven), ADR 0709 (döner merdiven), ADR 0724 (kata bağlı merdiven, üst kat planı), ADR 8034 (PAİY 31 denetimi).
 
@@ -32,6 +33,17 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
   dağılmayan malzeme, insan çarpması dahil tasarım yükleri. (4) "Boşluklarda, yük altındaki deformasyonlar da dâhil,
   en fazla 0.10 metre çapında geçişe izin verilir." Md. 40/6: kullanılan teras çatıda 1.10 m parapet ya da korkuluk.
   Sivas İmar Yönetmeliği 38/1 PAİY ile aynıdır (ADR 8034).
+- **PAİY Md. 34** (resmî metin; 34/1 RG 1.7.2026/33297 değişikliğiyle): (1) bodrumlar dahil 3 katta asansör yeri,
+  4 ve daha fazlada asansör (ADR 8034). (2) "Tek asansörlü binalarda; asansör kabininin dar kenarı 1.20 metre ve alanı
+  1.80 m²'den, kapı net geçiş genişliği ise 0.90 metreden az olamaz. Asansör kapısının açıldığı sahanlıkların
+  genişliği, asansör kapısı sürgülü ise en az 1.20 metre, asansör kapısı dışa açılan kapı ise en az 1.50 metre olmak
+  zorundadır. Birden fazla asansör bulunan binalarda, asansör sayısının yarısı kadar asansörün bu fıkrada belirtilen
+  ölçülerde yapılması şarttır. Tek sayıda asansör bulunması durumunda sayı bir alta yuvarlanır." Taban alanında
+  yapılaşma hakkı 120 m²'nin altındaki parselde ve tek bağımsız bölümlü müstakil konutta TSE ölçülerine uyulmasına
+  idare yetkilidir. (4) umumi binalarda, plana göre 10 ve daha fazla katlı ya da zemin üstünde 20'den çok konutlu
+  binada en az iki asansör. (5) "10 kat ve üzeri binalarda asansörlerden en az bir tanesi yük, eşya ve sedye taşıma
+  amacına uygun olarak dar kenarı 1.20 metre ve alanı 2.52 m2'den, kapı genişliği ise net 1.10 metreden az olmayacak
+  şekilde yapılır." TS EN 81-70'in Tip 2 kabini 1,10 × 1,40 m (kapı 0,90 m), PAİY'nin dar kenarından küçüktür.
 
 ### Başka programlar (yalnız görünüş ve kurgu için)
 
@@ -49,6 +61,10 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
 - **Revit, Railings:** yol çizilerek kurulur, yükseklik ve çubuk yerleşimi korkuluk türünde
   (`revit-railing-sketch-path.png`). KentOS planı balkon korkuluğunun çift çizgisini (ADR 0722 §4) sürdürür; dikme ve
   çubuk ayrıntısı planda yok, kesit ve görünüşte gelecek.
+- **Archicad, Elevator** (Archicad Library; Model View Options › Elevator: Show Entire Door, Show Opening Only, Hide
+  on Floor Plan): planda kabin çift çizgi, arkasında karşı ağırlık, önünde teleskopik kapı kanatları ve açılma oku;
+  kuyu duvarları ayrı çizilir (`.run/gui-evidence/mimari-m45/referans/archicad-elevator-*.png`). Revit'te de asansör
+  bir aile, yani kitaplık nesnesidir.
 
 ## Karar
 
@@ -168,6 +184,37 @@ için çizilebilen bir korkuluk yoktu.
 - Döşemenin kendi kenarı (korkuluk ya da parapet) bütün serbest kenarlarını, boşluklarınınkileri de tutar: o döşemede
   bulgu aranmaz.
 
+### 5. Asansör (3. bölüm)
+
+Asansör yeni bir nesne türü değil, KentOS kitaplığının değiştirilebilir bloğudur (`scripts/blocks/library.py`, 39.
+blok; Archicad'de ve Revit'te de kitaplık nesnesi). Kuyu duvarlarla ve “Asansör” adlı boşluk mahalle çizilir (ADR
+8034); blok kuyunun içini çizer:
+
+- **Çizim:** kabin çift çizgi (3 cm kabin duvarı) ve içinde çapraz; arkada karşı ağırlık; önde iki sürme kanat (kat
+  ve kabin kapısı) ve açılma oku. Taban noktası kuyunun kapı duvarındaki sol iç köşesi, kuyu +y yönünde. Görünüş
+  Kabin (varsayılan) ya da Kuyu ile: duvarsız çizimde kuyunun iç yüzü de çizilir.
+- **Parametreler PAİY'nin ölçtükleri:** Kabin eni (0,80–2,60 m) ve derinliği (1,00–3,00 m) iç ölçü, Kapı genişliği net
+  geçiş (0,70–1,40 m), 5 cm adımla. Varsayılan 1,20 × 1,50 m ve 0,90 m: 34/2'nin en azı. Tip tablosu: Konut 120 × 150,
+  Sedye 120 × 210 (34/5: 2,52 m², kapı 1,10 m), TSE Tip 2 110 × 140 (34/2'nin TSE istisnası, idarenin yetkisinde).
+- **Kapı kabinin sol iç kenarına bağlı:** dinamik bloğun tutamağı kendi tanım noktasında durur, başka bir parametrenin
+  kaydırdığı nesneyle kaymaz (ADR 0319); kapı kabin eniyle kaysaydı tutamağı kapının ucundan ayrılırdı. Karşı ağırlık
+  kabinle genişler, ortada kalır.
+- **Katman:** EK-2 Tablo 2.3'ün Asansör'ü (ASAN): MM-ASAN-GENEL. Donatı araması (ADR 8024) “asansör” ve “lift” ile
+  bulur.
+- **Denetim › Mevzuat:** blok asansördür (34/1'in asansörü var, 31/2-a'nın rıhtı 0,18 m). Kuyu net ölçüsüyle, içindeki
+  blok kabini ve kapısıyla ölçülür; kabini taşıyamayan kuyuda bloğun yazdığı ölçü bir şey değiştirmez. Kuyusuz blok
+  kendi başına bir asansördür. Tek asansör ya da yarısı (34/2) tutmazsa “Asansör kabininin dar kenarı 1.10 m < 1.20 m
+  — PAİY 34/2”, “Asansör kabininin alanı 1.54 m² < 1.80 m²”, “Asansör kapısının net geçiş genişliği 0.80 m < 0.90 m”
+  (`paiy_elevator_small`). Düzeltme bloğun parametreleridir (`cad.blocks.parameters`; `Fix.operation` değerleri
+  taşır): “Kabini 1,20 × 1,50 m yap” dar kenarı 1,20'ye, öbürünü alanın istediğine kuralın 5 cm adımıyla yukarı
+  çıkarır; “Kapıyı 0,90 m yap”.
+- **Sedye asansörü (34/5, `paiy_elevator_stretcher`):** 10 ve daha fazla katlı binada hiçbir asansör dar kenar
+  1,20 m, 2,52 m² ve kapı 1,10 m değilse “Sedye asansörü yok (10 kat): …”; en büyük kabinde söylenir, düzeltmesi
+  “Kabini 1,20 × 2,10 m, kapıyı 1,10 m yap”. Katlar ±0,00'dan sayılır, planın kat adedi gibi: 34/1 bodrumu açıkça
+  sayar, 34/5 saymaz.
+- Kalanlar: 34/4'ün iki asansörü (umumi bina, 10 kat, 20 konut), bloğun kesit ve görünüşte kabini, kapı açıklığının
+  duvarı kendiliğinden kesmesi.
+
 ## Doğrulama
 
 - Bağımsız başvuru (`scripts/fixtures/arch_cases.py`, kesirlerle tam): 6 balansman durumu (sola dönen 1,00 m L, sağa
@@ -221,3 +268,20 @@ için çizilebilen bir korkuluk yoktu.
   `cad.slabs.edit` ile düştü. Mevzuat ortak durumları değişmedi. Gerçek pencere (`korkuluk-denetim.txt`): görünüş
   binasının 1. katında Mevzuat 10 bulgu, 8.'si boşluk; Boşluktan'dan sonra Denetle 9 bulgu, boşluğunki yok. Önceki
   ikilide aynı çizimde bu bulgu yoktu.
+- Asansör (§5): kitaplık 38 → 39 blok (`library.py --check`); bloğun esneme kuralları ayrıca çizildi
+  (`.run/gui-evidence/mimari-m45/asansor/varyantlar.png`: sedyede karşı ağırlık kabinle geri kayar, 2,00 m'lik kabinde
+  genişleyip ortada kalır). `elevator_audit` testi (bölüm binası, 1. kat): varsayılan blokta bulgu yok; Tip TSE Tip 2
+  110 × 140 ve 0,80 m kapı “dar kenarı 1.10 m < 1.20 m”, “alanı 1.54 m² < 1.80 m²”, “kapısının net geçiş genişliği
+  0.80 m < 0.90 m”; “Kabini 1,20 × 1,50 m yap” girdisi `{"Kabin eni": 1.2, "Kabin derinliği": 1.5}`, iki düzeltmeyle
+  bulgu kalmaz; 1,60 × 1,10 m'lik geniş kabinde derinlik 1,20'ye çıkar; aynı katta ikinci küçük asansör yarı kuralıyla
+  söylenmez. 1,60 × 2,10 m kuyu bulgusuz, içindeki 1,10 × 1,40 m blok iki bulguyla (kuyu bulgusu yok). 10 katta
+  “Sedye asansörü yok (10 kat)”, düzeltmesi “Kabini 1,20 × 2,10 m, kapıyı 1,10 m yap”, Tip Sedye 120 × 210 da yeter.
+  EK-4 adı MM-ASAN-GENEL; donatı araması “asansör” ve “lift”.
+- Gerçek pencere (`fixtures/interaction/real/asansor-denetim.txt`, görünüş binası, 1. kat): önceki ikilide menü
+  araması “asansor menülerde yok”, Mevzuat 26 bulgu ve 6.'sı “Merdivenin rıhtı 0.167 m > 0.16 m (asansörsüz bina)”.
+  Yeni ikilide arama “Asansör — Donatı › Asansör › Yolcu”, Enter ile Blok ekle: katman MM-ASAN-GENEL, Kabin eni 1.200,
+  Kabin derinliği 1.500, Kapı genişliği 0.900; 5.825,6.7 yazılınca holün kuzeyinde (nesne 81 → 82). Denetle: rıht
+  bulgusu yok; sayı yine 26, çünkü kapılar grubu yeni bir doğru bulgu verdi: “K12 kapısının kanadı açılırken bir
+  donatıya çarpıyor” (mutfak kapısı asansörün köşesini süpürüyor; başsız denetimle aynı). Öznitelikler › Katalog ›
+  Tip: TSE Tip 2 110 × 140 → 28 bulgu, 8. ve 9. “Asansör kabininin dar kenarı 1.10 m < 1.20 m — PAİY 34/2”, “…alanı
+  1.54 m² < 1.80 m² — PAİY 34/2”; Düzelt “Düzeltildi: Kabini 1,20 × 1,50 m yap”, 26 bulgu, Tip yine Konut 120 × 150.

@@ -420,6 +420,45 @@ delta.path([(-0.3, -0.173), (0.3, -0.173), (0, 0.346)], closed=True)
 delta.attribute("REV", (0, 0), 0.18, value="1", prompt="Revizyon", align="middleCenter")
 blocks.append(delta)
 
+# ── An elevator (docs/adr/8045 §5): its cabin, counterweight and landing door, the shaft's walls drawn apart (a space
+# named Asansör between them). The insertion point is the shaft's inner corner left of its door, the door's wall along
+# x, the shaft +y. Its parameters are what PAİY 34/2 and 34/5 measure: the cabin's inner width and depth and the door's
+# net clear width, read by Denetim › Mevzuat. The door keeps to the cabin's left inner side (its panels slide right):
+# a grip stays where it is when another parameter moves the objects, so nothing a grip stands on moves but by its own
+# parameter. The counterweight widens with the cabin and stays at its middle. ──
+lift = Block(39, "Asansör", "Asansör/Yolcu", ["asansör", "kabin", "kuyu", "lift"],
+             "Yolcu asansörü: kabin, arkasında karşı ağırlık, önünde teleskopik sürme kapı; taban noktası kuyunun kapı "
+             "duvarında sol iç köşesi, kuyu +y yönünde. Kabin eni ve derinliği iç ölçü, kapı net geçiş genişliği; "
+             "PAİY 34/2: dar kenar en az 1,20 m, alan 1,80 m², kapı 0,90 m.")
+shaft = lift.rect(0, 0, 1.6, 2.1)
+cabin = lift.rect(0.2, 0.13, 1.4, 1.63)
+cabin_wall = lift.rect(0.17, 0.1, 1.43, 1.66)
+cross = [lift.line((0.2, 0.13), (1.4, 1.63)), lift.line((0.2, 1.63), (1.4, 0.13))]
+weight = lift.rect(0.5, 1.76, 1.1, 1.96)
+landing_door = lift.rect(0.17, 0.015, 1.13, 0.045)
+cabin_door = lift.rect(0.17, 0.055, 1.13, 0.085)
+lift.path([(0.45, 0.3), (0.85, 0.3)])
+lift.path([(0.77, 0.34), (0.85, 0.3), (0.77, 0.26)])
+lift.dynamic(
+    [{"kind": "linear", "name": "Kabin eni", "from": P(0.2, 0.13), "to": P(1.4, 0.13),
+      "rule": {"min": 0.8, "max": 2.6, "step": 0.05}},
+     {"kind": "linear", "name": "Kabin derinliği", "from": P(0.2, 0.13), "to": P(0.2, 1.63),
+      "rule": {"min": 1.0, "max": 3.0, "step": 0.05}},
+     {"kind": "linear", "name": "Kapı genişliği", "from": P(0.2, 0.03), "to": P(1.1, 0.03),
+      "rule": {"min": 0.7, "max": 1.4, "step": 0.05}},
+     {"kind": "lookup", "name": "Tip", "rows": [
+         {"label": "Konut 120 × 150", "values": {"Kabin eni": 1.2, "Kabin derinliği": 1.5, "Kapı genişliği": 0.9}},
+         {"label": "Sedye 120 × 210", "values": {"Kabin eni": 1.2, "Kabin derinliği": 2.1, "Kapı genişliği": 1.1}},
+         {"label": "TSE Tip 2 110 × 140", "values": {"Kabin eni": 1.1, "Kabin derinliği": 1.4, "Kapı genişliği": 0.9}}]},
+     {"kind": "visibility", "name": "Görünüş", "states": [{"name": "Kabin", "hidden": [shaft]}, {"name": "Kuyu ile"}]}],
+    [{"kind": "stretch", "parameter": "Kabin eni", "pieces": [shaft, cabin, cabin_wall, weight] + cross,
+      "min": P(0.8, -0.2), "max": P(4.0, 2.5)},
+     {"kind": "stretch", "parameter": "Kabin derinliği", "pieces": [shaft, cabin, cabin_wall, weight] + cross,
+      "min": P(-0.2, 0.88), "max": P(4.5, 2.5)},
+     {"kind": "stretch", "parameter": "Kapı genişliği", "pieces": [landing_door, cabin_door],
+      "min": P(1.05, -0.1), "max": P(1.2, 0.1)}])
+blocks.append(lift)
+
 LIBRARY = {"format": "kentos.blocks", "version": 1, "blocks": [b.data for b in blocks]}
 TEXT = json.dumps(LIBRARY, ensure_ascii=False, indent=1) + "\n"
 

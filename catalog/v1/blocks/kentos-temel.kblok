@@ -3913,6 +3913,400 @@
      "align": "middleCenter"
     }
    ]
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000027",
+   "name": "Asansör",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.6,
+       "y": 0.0
+      },
+      {
+       "x": 1.6,
+       "y": 2.1
+      },
+      {
+       "x": 0.0,
+       "y": 2.1
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.2,
+       "y": 0.13
+      },
+      {
+       "x": 1.4,
+       "y": 0.13
+      },
+      {
+       "x": 1.4,
+       "y": 1.63
+      },
+      {
+       "x": 0.2,
+       "y": 1.63
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.17,
+       "y": 0.1
+      },
+      {
+       "x": 1.43,
+       "y": 0.1
+      },
+      {
+       "x": 1.43,
+       "y": 1.66
+      },
+      {
+       "x": 0.17,
+       "y": 1.66
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.2,
+      "y": 0.13
+     },
+     "b": {
+      "x": 1.4,
+      "y": 1.63
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.2,
+      "y": 1.63
+     },
+     "b": {
+      "x": 1.4,
+      "y": 0.13
+     }
+    },
+    {
+     "kind": "polyline",
+     "id": 6,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.5,
+       "y": 1.76
+      },
+      {
+       "x": 1.1,
+       "y": 1.76
+      },
+      {
+       "x": 1.1,
+       "y": 1.96
+      },
+      {
+       "x": 0.5,
+       "y": 1.96
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 7,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.17,
+       "y": 0.015
+      },
+      {
+       "x": 1.13,
+       "y": 0.015
+      },
+      {
+       "x": 1.13,
+       "y": 0.045
+      },
+      {
+       "x": 0.17,
+       "y": 0.045
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 8,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.17,
+       "y": 0.055
+      },
+      {
+       "x": 1.13,
+       "y": 0.055
+      },
+      {
+       "x": 1.13,
+       "y": 0.085
+      },
+      {
+       "x": 0.17,
+       "y": 0.085
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "polyline",
+     "id": 9,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.45,
+       "y": 0.3
+      },
+      {
+       "x": 0.85,
+       "y": 0.3
+      }
+     ]
+    },
+    {
+     "kind": "polyline",
+     "id": 10,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.77,
+       "y": 0.34
+      },
+      {
+       "x": 0.85,
+       "y": 0.3
+      },
+      {
+       "x": 0.77,
+       "y": 0.26
+      }
+     ]
+    }
+   ],
+   "description": "Yolcu asansörü: kabin, arkasında karşı ağırlık, önünde teleskopik sürme kapı; taban noktası kuyunun kapı duvarında sol iç köşesi, kuyu +y yönünde. Kabin eni ve derinliği iç ölçü, kapı net geçiş genişliği; PAİY 34/2: dar kenar en az 1,20 m, alan 1,80 m², kapı 0,90 m.",
+   "units": "m",
+   "card": {
+    "category": "Asansör/Yolcu",
+    "tags": [
+     "asansör",
+     "kabin",
+     "kuyu",
+     "lift"
+    ],
+    "version": 1
+   },
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "Kabin eni",
+      "from": {
+       "x": 0.2,
+       "y": 0.13
+      },
+      "to": {
+       "x": 1.4,
+       "y": 0.13
+      },
+      "rule": {
+       "min": 0.8,
+       "max": 2.6,
+       "step": 0.05
+      }
+     },
+     {
+      "kind": "linear",
+      "name": "Kabin derinliği",
+      "from": {
+       "x": 0.2,
+       "y": 0.13
+      },
+      "to": {
+       "x": 0.2,
+       "y": 1.63
+      },
+      "rule": {
+       "min": 1.0,
+       "max": 3.0,
+       "step": 0.05
+      }
+     },
+     {
+      "kind": "linear",
+      "name": "Kapı genişliği",
+      "from": {
+       "x": 0.2,
+       "y": 0.03
+      },
+      "to": {
+       "x": 1.1,
+       "y": 0.03
+      },
+      "rule": {
+       "min": 0.7,
+       "max": 1.4,
+       "step": 0.05
+      }
+     },
+     {
+      "kind": "lookup",
+      "name": "Tip",
+      "rows": [
+       {
+        "label": "Konut 120 × 150",
+        "values": {
+         "Kabin eni": 1.2,
+         "Kabin derinliği": 1.5,
+         "Kapı genişliği": 0.9
+        }
+       },
+       {
+        "label": "Sedye 120 × 210",
+        "values": {
+         "Kabin eni": 1.2,
+         "Kabin derinliği": 2.1,
+         "Kapı genişliği": 1.1
+        }
+       },
+       {
+        "label": "TSE Tip 2 110 × 140",
+        "values": {
+         "Kabin eni": 1.1,
+         "Kabin derinliği": 1.4,
+         "Kapı genişliği": 0.9
+        }
+       }
+      ]
+     },
+     {
+      "kind": "visibility",
+      "name": "Görünüş",
+      "states": [
+       {
+        "name": "Kabin",
+        "hidden": [
+         1
+        ]
+       },
+       {
+        "name": "Kuyu ile"
+       }
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "Kabin eni",
+      "pieces": [
+       1,
+       2,
+       3,
+       6,
+       4,
+       5
+      ],
+      "min": {
+       "x": 0.8,
+       "y": -0.2
+      },
+      "max": {
+       "x": 4.0,
+       "y": 2.5
+      }
+     },
+     {
+      "kind": "stretch",
+      "parameter": "Kabin derinliği",
+      "pieces": [
+       1,
+       2,
+       3,
+       6,
+       4,
+       5
+      ],
+      "min": {
+       "x": -0.2,
+       "y": 0.88
+      },
+      "max": {
+       "x": 4.5,
+       "y": 2.5
+      }
+     },
+     {
+      "kind": "stretch",
+      "parameter": "Kapı genişliği",
+      "pieces": [
+       7,
+       8
+      ],
+      "min": {
+       "x": 1.05,
+       "y": -0.1
+      },
+      "max": {
+       "x": 1.2,
+       "y": 0.1
+      }
+     }
+    ]
+   }
   }
  ]
 }

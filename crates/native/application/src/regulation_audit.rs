@@ -34,8 +34,10 @@
 //!   of one to six storeys, 2.00 m and 9.00 m² in a taller one; a void named Hava bacası 0.60 × 0.60 m.
 //! - **Asansör (34, as amended 1.7.2026):** a building of three storeys (its basements holding a unit, a common area or
 //!   an annex counted) leaves an elevator's place, one of four or more has one; a single dwelling unit's is not asked.
-//!   An elevator is a space named Asansör; its net size at least the cabin's (narrow side 1.20 m, 1.80 m²), the landing
-//!   its door opens to at least 1.20 m before a sliding door, 1.50 m before a hinged one.
+//!   An elevator is a space named Asansör or KentOS's Asansör block (docs/adr/8045 §5): a shaft's net size at least the
+//!   cabin's (narrow side 1.20 m, 1.80 m²), a block's cabin too and its door 0.90 m, a block in a shaft read with it;
+//!   the landing its door opens to at least 1.20 m before a sliding door, 1.50 m before a hinged one. In ten storeys or
+//!   more one of them a stretcher's: 1.20 m, 2.52 m², a 1.10 m door (34/5).
 //!
 //! - **Çatılar (40, 42; docs/adr/8044 §9):** the ridge over the saçak seviyesi 5.00 m (40/4), the eaves 1.00 m (42/1),
 //!   a vent 0.60 m over the roof (40/5), a chimney 0.80 m over the ridge (BYKHY 58/2); see [`crate::roof_audit`].
@@ -192,6 +194,7 @@ pub const TALL_LIGHTWELL_ARTICLE: Article = Article::paiy("32/2-b", ORIGINAL);
 pub const AIR_SHAFT_ARTICLE: Article = Article::paiy("32/3", ORIGINAL);
 pub const ELEVATOR_ARTICLE: Article = Article::paiy("34/1", "1.7.2026/33297 değişikliğiyle");
 pub const CABIN_ARTICLE: Article = Article::paiy("34/2", ORIGINAL);
+pub const STRETCHER_ARTICLE: Article = Article::paiy("34/5", ORIGINAL);
 pub const RAILING_ARTICLE: Article = Article::paiy("38/1", ORIGINAL);
 pub const SECTIONS_ARTICLE: Article = Article::paiy("57/2-a-6", ORIGINAL);
 pub const SIVAS_STOREY_ARTICLE: Article = Article::sivas("28/1-c");
@@ -203,7 +206,7 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/8035).
-pub const CODES: [&str; 44] = [
+pub const CODES: [&str; 45] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -225,6 +228,7 @@ pub const CODES: [&str; 44] = [
     codes::PAIY_AIR_SHAFT_SMALL,
     codes::PAIY_ELEVATOR_MISSING,
     codes::PAIY_ELEVATOR_SMALL,
+    codes::PAIY_ELEVATOR_STRETCHER,
     codes::PAIY_ELEVATOR_LANDING_NARROW,
     codes::PAIY_SECTIONS_MISSING,
     codes::PAIY_SECTION_STAIR_MISSING,
@@ -255,9 +259,10 @@ pub const CODES: [&str; 44] = [
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fix {
     pub label: String,
+    /// The command's operation; `cad.blocks.parameters`' values set (docs/adr/8045 §5).
     pub operation: serde_json::Value,
     /// The command that applies it on the finding's first object; none: `cad.arch.edit` (a slab's edge is
-    /// `cad.slabs.edit`'s, docs/adr/8045 §4).
+    /// `cad.slabs.edit`'s, docs/adr/8045 §4; an elevator block's cabin `cad.blocks.parameters`', §5).
     pub command: Option<&'static str>,
 }
 
@@ -936,7 +941,10 @@ pub fn findings(
     }
     // The building as 31, 32 and 34 read it.
     let (storeys, basements) = storeys(&levels, &places);
-    let has_elevator = places.iter().any(|p| p.shaft == Some(ShaftKind::Elevator));
+    // An elevator is a shaft (a space named Asansör) or an Asansör block (docs/adr/8045 §5).
+    let cabins = crate::elevator_cabins::cabins(doc);
+    let has_elevator =
+        !cabins.is_empty() || places.iter().any(|p| p.shaft == Some(ShaftKind::Elevator));
     let units: Vec<&ProgramUnit> = program
         .units
         .iter()
@@ -1555,8 +1563,8 @@ pub fn findings(
         let at = first_stair
             .or_else(|| rooms.first().map(|r| r.at))
             .unwrap_or(V::new(0.0, 0.0));
-        let repair = "Asansör kuyusunu çizin (boşluk mahal, adı “Asansör”). Tek bağımsız bölümlü konutsa Bina programında \
-                      tek bölümü tanımlayın: o zaman aranmaz.";
+        let repair = "Asansör kuyusunu çizin (boşluk mahal, adı “Asansör”) ya da kitaplığın Asansör bloğunu yerleştirin. \
+                      Tek bağımsız bölümlü konutsa Bina programında tek bölümü tanımlayın: o zaman aranmaz.";
         let missing =
             if local_needs {
                 let paiy = match national {
@@ -1595,64 +1603,204 @@ pub fn findings(
             push(s, Vec::new(), at, None);
         }
     }
-    // Each level's shafts: one keeps the cabin's size; of several, half (rounded down) do.
-    let mut shafts: BTreeMap<Option<String>, Vec<&Place>> = BTreeMap::new();
+    // Each level's elevators (34/2): a shaft by its net size and an Asansör block standing in it by its cabin and door
+    // (docs/adr/8045 §5): a cabin of the size in a shaft that cannot hold one is no elevator of the size. A block in no
+    // shaft is an elevator of its own. One keeps the cabin's size; of several, half (rounded down) do.
+    use crate::elevator_cabins::Cabin;
+    enum Lift<'a> {
+        /// A shaft and the blocks standing in it.
+        Shaft(&'a Place, Vec<&'a Cabin>),
+        Cabin(&'a Cabin),
+    }
+    let mut lifts: BTreeMap<Option<String>, Vec<Lift<'_>>> = BTreeMap::new();
+    let mut housed: std::collections::HashSet<Slot> = std::collections::HashSet::new();
     for p in places
         .iter()
         .filter(|p| p.shaft == Some(ShaftKind::Elevator))
     {
-        shafts.entry(p.level.clone()).or_default().push(p);
+        let inside: Vec<&Cabin> = cabins.iter().filter(|c| p.holds(&c.level, c.at)).collect();
+        housed.extend(inside.iter().map(|c| c.slot));
+        lifts
+            .entry(p.level.clone())
+            .or_default()
+            .push(Lift::Shaft(p, inside));
     }
-    for list in shafts.values() {
-        let fits = |p: &Place| {
-            p.measure
-                .is_some_and(|(w, a, _)| w + 1e-6 >= 1.20 && a.is_none_or(|a| a + 1e-6 >= 1.80))
-        };
+    for c in cabins.iter().filter(|c| !housed.contains(&c.slot)) {
+        lifts
+            .entry(c.level.clone())
+            .or_default()
+            .push(Lift::Cabin(c));
+    }
+    // A shaft's net size at least `narrow` on its narrow side and `area` m²; a cabin's too, its door `door` wide.
+    let shaft_holds = |p: &Place, narrow: f64, area: f64| {
+        p.measure
+            .is_some_and(|(w, a, _)| w + 1e-6 >= narrow && a.is_none_or(|a| a + 1e-6 >= area))
+    };
+    let cabin_holds = |c: &Cabin, narrow: f64, area: f64, door: f64| {
+        c.narrow() + 1e-6 >= narrow
+            && c.area() + 1e-6 >= area
+            && c.door.is_none_or(|d| d + 1e-6 >= door)
+    };
+    let fits = |l: &Lift<'_>| match l {
+        Lift::Shaft(p, inside) => {
+            shaft_holds(p, 1.20, 1.80) && inside.iter().all(|c| cabin_holds(c, 1.20, 1.80, 0.90))
+        }
+        Lift::Cabin(c) => cabin_holds(c, 1.20, 1.80, 0.90),
+    };
+    // A measure said against its least: its subject, its value (none: not known), the least, its unit and what it adds.
+    type Row<'a, T> = (&'a str, Option<f64>, f64, fn(f64) -> String, T);
+    for list in lifts.values() {
         let asked = if list.len() == 1 { 1 } else { list.len() / 2 };
-        if list.iter().filter(|p| fits(p)).count() >= asked {
+        if list.iter().filter(|l| fits(l)).count() >= asked {
             continue;
         }
-        for p in list.iter().filter(|p| !fits(p)) {
-            let Some((width, area, at)) = p.measure else {
-                continue;
+        for l in list.iter().filter(|l| !fits(l)) {
+            let (shaft, inside) = match l {
+                Lift::Shaft(p, inside) => (Some(*p), inside.as_slice()),
+                Lift::Cabin(c) => (None, std::slice::from_ref(c)),
             };
-            let cabin = Limit {
-                value: 1.20,
-                article: CABIN_ARTICLE,
-            };
-            let repair = "Asansör kuyusunu büyütün: kabin en az 1,20 m dar kenarlı ve 1,80 m² olmalı (birden çok \
-                          asansörde yarısı).";
-            if let Some(s) = said(
-                codes::PAIY_ELEVATOR_SMALL,
-                "Asansör kuyusunun net dar kenarı",
-                width,
-                Bound::AtLeast,
-                cabin,
-                None,
-                metres,
-                " (kabinin en az dar kenarı)",
-                repair,
-            ) {
-                push(s, vec![p.slot], at, None);
-            }
-            if let Some(a) = area
-                && let Some(s) = said(
-                    codes::PAIY_ELEVATOR_SMALL,
-                    "Asansör kuyusunun net alanı",
-                    a,
-                    Bound::AtLeast,
-                    Limit {
-                        value: 1.80,
-                        article: CABIN_ARTICLE,
-                    },
-                    None,
-                    square,
-                    " (kabinin en az alanı)",
-                    repair,
-                )
+            if let Some(p) = shaft
+                && let Some((width, area, at)) = p.measure
             {
-                push(s, vec![p.slot], at, None);
+                let repair = "Asansör kuyusunu büyütün: kabin en az 1,20 m dar kenarlı ve 1,80 m² olmalı (birden çok \
+                              asansörde yarısı).";
+                let shaft_units: [Row<'_, &str>; 2] = [
+                    (
+                        "Asansör kuyusunun net dar kenarı",
+                        Some(width),
+                        1.20,
+                        metres,
+                        " (kabinin en az dar kenarı)",
+                    ),
+                    (
+                        "Asansör kuyusunun net alanı",
+                        area,
+                        1.80,
+                        square,
+                        " (kabinin en az alanı)",
+                    ),
+                ];
+                for (subject, v, least, unit, qual) in shaft_units {
+                    let limit = Limit {
+                        value: least,
+                        article: CABIN_ARTICLE,
+                    };
+                    if let Some(v) = v
+                        && let Some(s) = said(
+                            codes::PAIY_ELEVATOR_SMALL,
+                            subject,
+                            v,
+                            Bound::AtLeast,
+                            limit,
+                            None,
+                            unit,
+                            qual,
+                            repair,
+                        )
+                    {
+                        push(s, vec![p.slot], at, None);
+                    }
+                }
             }
+            for c in inside.iter().filter(|c| !cabin_holds(c, 1.20, 1.80, 0.90)) {
+                let repair = "Kabini büyütün: tek asansörde dar kenarı en az 1,20 m, alanı 1,80 m², kapısı 0,90 m \
+                              olmalı (birden çok asansörde yarısı).";
+                let size = crate::elevator_cabins::fix(doc, c, 1.20, 1.80, None);
+                let door = crate::elevator_cabins::fix(doc, c, 0.0, 0.0, Some(0.90));
+                let cabin_units: [Row<'_, &Option<Fix>>; 3] = [
+                    (
+                        "Asansör kabininin dar kenarı",
+                        Some(c.narrow()),
+                        1.20,
+                        metres,
+                        &size,
+                    ),
+                    (
+                        "Asansör kabininin alanı",
+                        Some(c.area()),
+                        1.80,
+                        square,
+                        &size,
+                    ),
+                    (
+                        "Asansör kapısının net geçiş genişliği",
+                        c.door,
+                        0.90,
+                        metres,
+                        &door,
+                    ),
+                ];
+                for (subject, v, least, unit, fix) in cabin_units {
+                    let limit = Limit {
+                        value: least,
+                        article: CABIN_ARTICLE,
+                    };
+                    if let Some(v) = v
+                        && let Some(s) = said(
+                            codes::PAIY_ELEVATOR_SMALL,
+                            subject,
+                            v,
+                            Bound::AtLeast,
+                            limit,
+                            None,
+                            unit,
+                            "",
+                            repair,
+                        )
+                    {
+                        push(s, vec![c.slot], c.at, fix.clone());
+                    }
+                }
+            }
+        }
+    }
+    // A building of ten storeys or more (34/5), counted from ±0.00 as a plan counts them: one of its elevators a
+    // stretcher's — narrow side 1.20 m, 2.52 m², its door 1.10 m (a shaft with no block by its net size). Said on the
+    // largest cabin, its fix a stretcher's, else on the largest shaft; a building with no elevator is 34/1's.
+    let above = levels.iter().filter(|l| l.elevation >= -1e-6).count();
+    let stretcher = |l: &Lift<'_>| match l {
+        Lift::Shaft(p, inside) => {
+            shaft_holds(p, 1.20, 2.52)
+                && (inside.is_empty() || inside.iter().any(|c| cabin_holds(c, 1.20, 2.52, 1.10)))
+        }
+        Lift::Cabin(c) => cabin_holds(c, 1.20, 2.52, 1.10),
+    };
+    if above >= 10 && !lifts.values().flatten().any(stretcher) {
+        let place = match cabins.iter().max_by(|a, b| a.area().total_cmp(&b.area())) {
+            Some(c) => Some((
+                c.slot,
+                c.at,
+                crate::elevator_cabins::fix(doc, c, 1.20, 2.52, Some(1.10)),
+            )),
+            None => lifts
+                .values()
+                .flatten()
+                .filter_map(|l| match l {
+                    Lift::Shaft(p, _) => p.measure.map(|(_, a, at)| (p.slot, at, a.unwrap_or(0.0))),
+                    Lift::Cabin(_) => None,
+                })
+                .max_by(|a, b| a.2.total_cmp(&b.2))
+                .map(|(slot, at, _)| (slot, at, None)),
+        };
+        if let Some((slot, at, fix)) = place {
+            push(
+                Said {
+                    code: codes::PAIY_ELEVATOR_STRETCHER,
+                    message: format!(
+                        "Sedye asansörü yok ({above} kat): en az bir asansörün kabini 1.20 m dar kenarlı ve 2.52 m², \
+                         kapısı 1.10 m olmalı — {}",
+                        STRETCHER_ARTICLE.short()
+                    ),
+                    repair: "Asansörlerden birini sedye asansörü yapın: kabin en az 1,20 × 2,10 m, kapı 1,10 m \
+                             (Asansör bloğunda Tip › Sedye 120 × 210)."
+                        .into(),
+                    rule: STRETCHER_ARTICLE.named(),
+                    binding: None,
+                },
+                vec![slot],
+                at,
+                fix,
+            );
         }
     }
     // Kesitler (57/2-a-6, docs/adr/8042 §7): "bir tanesi ortak merdivenden geçmek üzere en az iki adet kesit", read

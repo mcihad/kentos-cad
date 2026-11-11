@@ -1925,12 +1925,18 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             ArchAuditCheck::Regulation => crate::regulation_audit::findings(doc, |code, message, repair, slots, at, rule, offer| {
                 let uids = slots.iter().map(|s| audit.uid(*s)).collect();
                 // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer; a slab's edge
-                // cad.slabs.edit (docs/adr/8045 §4).
+                // cad.slabs.edit (docs/adr/8045 §4); an elevator block's cabin its parameters (§5).
                 let fix = offer.zip(slots.first()).and_then(|(o, s)| {
                     let e = doc.get(*s)?;
                     (!audit.locked(e)).then(|| {
                         let command = o.command.unwrap_or("cad.arch.edit");
-                        fix(o.label, command, json!({"uids": [audit.uid(*s)], "operation": o.operation}))
+                        let uid = audit.uid(*s);
+                        let input = if command == crate::elevator_cabins::PARAMETERS {
+                            json!({"operation": "set", "uids": [uid], "values": o.operation})
+                        } else {
+                            json!({"uids": [uid], "operation": o.operation})
+                        };
+                        fix(o.label, command, input)
                     })
                 });
                 let mut f = finding(ArchAuditCheck::Regulation, code, message, repair, uids, at, fix);

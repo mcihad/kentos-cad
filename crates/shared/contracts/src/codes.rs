@@ -2802,7 +2802,8 @@ codes! {
     PAIY_LIGHTWELL_SMALL = "paiy_lightwell_small", Warning, false, "Işıklığın dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/2'nin en azından küçük.";
     PAIY_AIR_SHAFT_SMALL = "paiy_air_shaft_small", Warning, false, "Hava bacasının dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/3'ün (ya da yerel yönetmeliğin) en azından küçük.";
     PAIY_ELEVATOR_MISSING = "paiy_elevator_missing", Warning, false, "Kat adedine göre Planlı Alanlar İmar Yönetmeliği 34/1'in (ya da yerel yönetmeliğin) istediği asansör ya da asansör yeri yok.";
-    PAIY_ELEVATOR_SMALL = "paiy_elevator_small", Warning, false, "Asansör kuyusu Planlı Alanlar İmar Yönetmeliği 34/2'nin kabininden (dar kenar 1,20 metre, alan 1,80 m²) küçük.";
+    PAIY_ELEVATOR_SMALL = "paiy_elevator_small", Warning, false, "Asansör kuyusu ya da kabini Planlı Alanlar İmar Yönetmeliği 34/2'nin kabininden (dar kenar 1,20 metre, alan 1,80 m²) küçük, ya da kapısı 0,90 metreden dar.";
+    PAIY_ELEVATOR_STRETCHER = "paiy_elevator_stretcher", Warning, false, "10 ve daha fazla katlı binada Planlı Alanlar İmar Yönetmeliği 34/5'in sedye asansörü (dar kenar 1,20 metre, alan 2,52 m², kapı 1,10 metre) yok.";
     PAIY_ELEVATOR_LANDING_NARROW = "paiy_elevator_landing_narrow", Warning, false, "Asansör kapısının açıldığı sahanlık Planlı Alanlar İmar Yönetmeliği 34/2'nin en azından dar (sürme kapıda 1,20, dışa açılanda 1,50 metre).";
     PAIY_SECTIONS_MISSING = "paiy_sections_missing", Warning, false, "Mimari projede Planlı Alanlar İmar Yönetmeliği 57/2-a-6'nın istediği en az iki kesit çıkarılmamış.";
     PAIY_SECTION_STAIR_MISSING = "paiy_section_stair_missing", Warning, false, "Çıkarılmış kesitlerin hiçbiri ortak merdivenden geçmiyor (Planlı Alanlar İmar Yönetmeliği 57/2-a-6).";

@@ -101,37 +101,43 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); bodrumları (teknik
     hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve daha fazlada
     asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü konut hariç),
-    Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük
-    paiy_elevator_small, asansör kapısının açıldığı sahanlık sürme kapıda 1,20,
-    kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow (34/2); duvarı olan çizimde
-    Kesit çıkar'ın çıkardığı kesit ikiden azsa paiy_sections_missing, çıkarılmış
-    kesitlerin hiçbirinin çizgisi ortak merdivenin kollarını ya da sahanlığını
-    kesmiyorsa paiy_section_stair_missing (57/2-a-6, docs/adr/8042 §7); binanın dış
-    çizgisinin (katıların birleşimi) kuzey okuna göre sekiz yönden en uzunun beşte
-    birinden ve 2 m'den uzun her cephesine bakan, Görünüş çıkar'ın çıkardığı bir görünüş
-    yoksa paiy_elevations_missing (57/2-a-6: yeteri sayıda görünüş; Mimarlar Odası:
-    bütün görünüşler çizilir; docs/adr/8043 §9). Çatılar (docs/adr/8044 §9): mahya saçak
-    seviyesinden (son kat tavan döşemesinin üstü, çatının kot farkı dahil) 5,00 m'yi
-    aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00 m), binadan çizilen çatının saçağı
-    1,00 m'den genişse paiy_eaves_wide (42/1), hava bacası çatı örtüsünü 0,60 m'den çok
-    aşarsa paiy_roof_vent_high (40/5; düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m
-    üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik
-    Sivas ise eğim %40'ı aşarsa local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları
-    %40'a indirir), eğimli çatıda kar siperliği yoksa local_snow_guard_missing (42/5;
-    düzeltmesi saçaktan 30 cm), çatı penceresi 1,20 × 1,50 m'den büyükse
-    local_roof_window_large, bina cephe hattına 1 m'den ya da başka bir pencereye
-    çatının üstünde 2 m'den yakınsa local_roof_window_close (40/5-e). Korkuluklar
-    (docs/adr/8045 §4): döşemesinden 1,10 m'den alçak korkuluk paiy_railing_low (38/1;
-    düzeltmesi 1,10 m), dikey çubuklarının arası 0,10 m'den geniş korkuluk
-    paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme boşluğunun (galeri boşluğu)
-    duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki kenarlarının ya da kenarı
-    olmayan balkonun, terasın serbest kenarlarının 0,10 m ve daha uzunu katının
-    korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda ve terasta
-    düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk aracının
-    Boşluktan'ı). Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas)
-    varsa değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide
-    öbürü de yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör,
-    konutta kat yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
+    Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da kitaplığın
+    Asansör bloğunun (docs/adr/8045 §5) kabini bundan, kapısı 0,90 m'den küçük
+    paiy_elevator_small (kuyu net ölçüsüyle, içindeki blok kabin ve kapısıyla ölçülür;
+    bloğun düzeltmesi parametreleri, cad.blocks.parameters), asansör kapısının açıldığı
+    sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow
+    (34/2); duvarı olan çizimde Kesit çıkar'ın çıkardığı kesit ikiden azsa
+    paiy_sections_missing, çıkarılmış kesitlerin hiçbirinin çizgisi ortak merdivenin
+    kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6,
+    docs/adr/8042 §7); binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre
+    sekiz yönden en uzunun beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş
+    çıkar'ın çıkardığı bir görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri
+    sayıda görünüş; Mimarlar Odası: bütün görünüşler çizilir; docs/adr/8043 §9). Çatılar
+    (docs/adr/8044 §9): mahya saçak seviyesinden (son kat tavan döşemesinin üstü,
+    çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00
+    m), binadan çizilen çatının saçağı 1,00 m'den genişse paiy_eaves_wide (42/1), hava
+    bacası çatı örtüsünü 0,60 m'den çok aşarsa paiy_roof_vent_high (40/5; düzeltmesi
+    0,60 m), duman bacası mahyanın 0,80 m üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2;
+    düzeltmesi 0,80 m); yerel yönetmelik Sivas ise eğim %40'ı aşarsa
+    local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a indirir), eğimli
+    çatıda kar siperliği yoksa local_snow_guard_missing (42/5; düzeltmesi saçaktan 30
+    cm), çatı penceresi 1,20 × 1,50 m'den büyükse local_roof_window_large, bina cephe
+    hattına 1 m'den ya da başka bir pencereye çatının üstünde 2 m'den yakınsa
+    local_roof_window_close (40/5-e). Korkuluklar (docs/adr/8045 §4): döşemesinden 1,10
+    m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m), dikey çubuklarının
+    arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme
+    boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki
+    kenarlarının ya da kenarı olmayan balkonun, terasın serbest kenarlarının 0,10 m ve
+    daha uzunu katının korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda
+    ve terasta düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk
+    aracının Boşluktan'ı). Asansör (docs/adr/8045 §5): kitaplığın Asansör bloğu
+    asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı binada en
+    az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m değilse
+    paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne getirir).
+    Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa değerleri
+    PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır
+    (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat
+    yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
     regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
     0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
     cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların
@@ -259,37 +265,43 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); bodrumları (teknik
         hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve daha fazlada
         asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü konut hariç),
-        Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük
-        paiy_elevator_small, asansör kapısının açıldığı sahanlık sürme kapıda 1,20,
-        kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow (34/2); duvarı olan çizimde
-        Kesit çıkar'ın çıkardığı kesit ikiden azsa paiy_sections_missing, çıkarılmış
-        kesitlerin hiçbirinin çizgisi ortak merdivenin kollarını ya da sahanlığını
-        kesmiyorsa paiy_section_stair_missing (57/2-a-6, docs/adr/8042 §7); binanın dış
-        çizgisinin (katıların birleşimi) kuzey okuna göre sekiz yönden en uzunun beşte
-        birinden ve 2 m'den uzun her cephesine bakan, Görünüş çıkar'ın çıkardığı bir görünüş
-        yoksa paiy_elevations_missing (57/2-a-6: yeteri sayıda görünüş; Mimarlar Odası:
-        bütün görünüşler çizilir; docs/adr/8043 §9). Çatılar (docs/adr/8044 §9): mahya saçak
-        seviyesinden (son kat tavan döşemesinin üstü, çatının kot farkı dahil) 5,00 m'yi
-        aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00 m), binadan çizilen çatının saçağı
-        1,00 m'den genişse paiy_eaves_wide (42/1), hava bacası çatı örtüsünü 0,60 m'den çok
-        aşarsa paiy_roof_vent_high (40/5; düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m
-        üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik
-        Sivas ise eğim %40'ı aşarsa local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları
-        %40'a indirir), eğimli çatıda kar siperliği yoksa local_snow_guard_missing (42/5;
-        düzeltmesi saçaktan 30 cm), çatı penceresi 1,20 × 1,50 m'den büyükse
-        local_roof_window_large, bina cephe hattına 1 m'den ya da başka bir pencereye
-        çatının üstünde 2 m'den yakınsa local_roof_window_close (40/5-e). Korkuluklar
-        (docs/adr/8045 §4): döşemesinden 1,10 m'den alçak korkuluk paiy_railing_low (38/1;
-        düzeltmesi 1,10 m), dikey çubuklarının arası 0,10 m'den geniş korkuluk
-        paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme boşluğunun (galeri boşluğu)
-        duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki kenarlarının ya da kenarı
-        olmayan balkonun, terasın serbest kenarlarının 0,10 m ve daha uzunu katının
-        korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda ve terasta
-        düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk aracının
-        Boşluktan'ı). Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas)
-        varsa değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide
-        öbürü de yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör,
-        konutta kat yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
+        Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da kitaplığın
+        Asansör bloğunun (docs/adr/8045 §5) kabini bundan, kapısı 0,90 m'den küçük
+        paiy_elevator_small (kuyu net ölçüsüyle, içindeki blok kabin ve kapısıyla ölçülür;
+        bloğun düzeltmesi parametreleri, cad.blocks.parameters), asansör kapısının açıldığı
+        sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow
+        (34/2); duvarı olan çizimde Kesit çıkar'ın çıkardığı kesit ikiden azsa
+        paiy_sections_missing, çıkarılmış kesitlerin hiçbirinin çizgisi ortak merdivenin
+        kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6,
+        docs/adr/8042 §7); binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre
+        sekiz yönden en uzunun beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş
+        çıkar'ın çıkardığı bir görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri
+        sayıda görünüş; Mimarlar Odası: bütün görünüşler çizilir; docs/adr/8043 §9). Çatılar
+        (docs/adr/8044 §9): mahya saçak seviyesinden (son kat tavan döşemesinin üstü,
+        çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00
+        m), binadan çizilen çatının saçağı 1,00 m'den genişse paiy_eaves_wide (42/1), hava
+        bacası çatı örtüsünü 0,60 m'den çok aşarsa paiy_roof_vent_high (40/5; düzeltmesi
+        0,60 m), duman bacası mahyanın 0,80 m üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2;
+        düzeltmesi 0,80 m); yerel yönetmelik Sivas ise eğim %40'ı aşarsa
+        local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a indirir), eğimli
+        çatıda kar siperliği yoksa local_snow_guard_missing (42/5; düzeltmesi saçaktan 30
+        cm), çatı penceresi 1,20 × 1,50 m'den büyükse local_roof_window_large, bina cephe
+        hattına 1 m'den ya da başka bir pencereye çatının üstünde 2 m'den yakınsa
+        local_roof_window_close (40/5-e). Korkuluklar (docs/adr/8045 §4): döşemesinden 1,10
+        m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m), dikey çubuklarının
+        arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme
+        boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki
+        kenarlarının ya da kenarı olmayan balkonun, terasın serbest kenarlarının 0,10 m ve
+        daha uzunu katının korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda
+        ve terasta düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk
+        aracının Boşluktan'ı). Asansör (docs/adr/8045 §5): kitaplığın Asansör bloğu
+        asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı binada en
+        az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m değilse
+        paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne getirir).
+        Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa değerleri
+        PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır
+        (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat
+        yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
         regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
         0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
         cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların

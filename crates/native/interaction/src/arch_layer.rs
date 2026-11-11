@@ -41,6 +41,8 @@ pub enum Kind {
     Roof(Option<String>),
     /// A free-standing railing (docs/adr/8045 §3), by its infill: EK-2 Tablo 2.3's Korkuluk (KORK), MM-KORK-CUBUK.
     Railing(kentos_commands::RailingInfill),
+    /// An elevator's block (docs/adr/8045 §5): EK-2 Tablo 2.3's Asansör (ASAN), MM-ASAN-GENEL.
+    Elevator,
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -77,6 +79,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "HATL",
             Kind::Roof(_) => "CATI",
             Kind::Railing(_) => "KORK",
+            Kind::Elevator => "ASAN",
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -114,6 +117,7 @@ impl Kind {
             | Kind::Column
             | Kind::Stair
             | Kind::Ramp
+            | Kind::Elevator
             | Kind::Grid => String::new(),
         }
     }
@@ -157,6 +161,7 @@ impl Kind {
             Kind::Beam(role) => role.label(),
             Kind::Roof(_) => "Çatı",
             Kind::Railing(_) => "Korkuluk",
+            Kind::Elevator => "Asansör",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -187,6 +192,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "hatıl",
             Kind::Roof(_) => "çatı",
             Kind::Railing(_) => "korkuluk",
+            Kind::Elevator => "asansör",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -217,6 +223,7 @@ impl Kind {
             | Kind::Stair
             | Kind::Ramp
             | Kind::Railing(_)
+            | Kind::Elevator
             | Kind::Beam(_) => look("ink", 0.25),
             Kind::Grid => LayerStyle {
                 line_type: LineType::Dashdot,
@@ -417,6 +424,7 @@ mod tests {
             Kind::Railing(kentos_commands::RailingInfill::Balusters),
             Kind::Railing(kentos_commands::RailingInfill::Glass),
             Kind::Railing(kentos_commands::RailingInfill::Solid),
+            Kind::Elevator,
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -443,10 +451,10 @@ mod tests {
             (names[23].as_str(), names[24].as_str()),
             ("MM-CATI-KIREMIT", "MM-CATI-GENEL")
         );
-        // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill.
+        // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill; an elevator's block (§5) its Asansör.
         assert_eq!(
             &names[25..],
-            ["MM-KORK-CUBUK", "MM-KORK-CAM", "MM-KORK-DOLU"]
+            ["MM-KORK-CUBUK", "MM-KORK-CAM", "MM-KORK-DOLU", "MM-ASAN-GENEL"]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }

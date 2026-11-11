@@ -38,7 +38,10 @@ key: string, check: ArchAuditCheck,
  * `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,
  * `paiy_section_stair_missing` (docs/adr/8042 §7); `paiy_elevations_missing` (docs/adr/8043 §9); the roofs'
  * `paiy_ridge_high`, `paiy_eaves_wide`, `paiy_roof_vent_high`, `bykhy_chimney_low`, `local_roof_slope_steep`,
- * `local_snow_guard_missing`, `local_roof_window_large`, `local_roof_window_close` (docs/adr/8044 §9).
+ * `local_snow_guard_missing`, `local_roof_window_large`, `local_roof_window_close` (docs/adr/8044 §9); the railings'
+ * `paiy_railing_low`, `paiy_railing_gap` and `paiy_railing_missing` for a slab's void's or a balcony's or terrace's
+ * free sides (docs/adr/8045 §4); an elevator block's cabin or door `paiy_elevator_small` and ten storeys' missing
+ * stretcher elevator `paiy_elevator_stretcher` (docs/adr/8045 §5).
  */
 code: string, 
 /**

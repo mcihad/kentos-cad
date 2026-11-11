@@ -568,6 +568,7 @@ pub mod joinery_audit;
 pub mod roof_audit;
 pub mod railing_audit;
 pub mod railing_voids;
+pub mod elevator_cabins;
 pub mod program_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
