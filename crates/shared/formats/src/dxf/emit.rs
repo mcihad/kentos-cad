@@ -2408,6 +2408,20 @@ impl<'l> Emitter<'l> {
         }
     }
 
+    /// The capital share of the face the STYLE record `style` names (docs/adr/8046 §3); a text naming none is
+    /// Standard's. None for an SHX font or a file without the record.
+    fn capitals(&self, style: &str) -> Option<f64> {
+        let key = if style.trim().is_empty() {
+            "STANDARD".to_owned()
+        } else {
+            style.to_uppercase()
+        };
+        self.lib
+            .text_records
+            .get(&key)
+            .and_then(super::styles::StyleRecord::capitals)
+    }
+
     /// Where a text stands (docs/adr/0145 §7; `words` its decoded text): a
     /// justified one (72 and 73, an attribute's 72 and 74) on its alignment
     /// point, 11 (10 when the file has none), with that alignment; an aligned
@@ -2422,7 +2436,7 @@ impl<'l> Emitter<'l> {
         words: &str,
         e: &Parsed,
     ) -> Result<Frame, &'static str> {
-        let mut height = if t.height > 0.0 {
+        let raw = if t.height > 0.0 {
             t.height
         } else {
             self.lib
@@ -2431,9 +2445,14 @@ impl<'l> Emitter<'l> {
                 .copied()
                 .unwrap_or(0.0)
         };
-        if !(height > 0.0) {
+        if !(raw > 0.0) {
             return Err("yazı yüksekliği yok");
         }
+        // The file's height is its capitals' in its STYLE's face: KentOS's em over the face's share (docs/adr/8046 §3);
+        // KentOS's own exactly while the file still has what it wrote.
+        let share = self.capitals(t.style);
+        let kept = e.meta.as_ref().and_then(|m| m.height);
+        let mut height = super::capitals::back(raw, share, kept);
         let Some(m) = ocs(ctx, t.ext, t.p[2]) else {
             return Err(BAD_EXTRUSION);
         };

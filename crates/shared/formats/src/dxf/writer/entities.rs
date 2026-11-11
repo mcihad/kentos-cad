@@ -1002,8 +1002,10 @@ impl Writer<'_> {
                     rotation: t.rotation,
                     align: t.align,
                     width_factor: t.width_factor,
-                    // An attribute names no style: Standard, KentOS's own face (docs/adr/8046 §2).
+                    // An attribute names no style: Standard, KentOS's own face (docs/adr/8046 §2), Arial's
+                    // capitals (§3).
                     fit: super::arial_fit(&value, false),
+                    share: Some(super::super::capitals::ARIAL),
                 },
             );
             self.out.str(100, "AcDbAttribute");
@@ -1022,6 +1024,7 @@ impl Writer<'_> {
             self.out.str(100, "AcDbEntity");
             self.out.str(8, &layer);
             self.out.str(100, "AcDbText");
+            // 2.5 mm is ISO 3098's lettering height, its capitals' already (docs/adr/8046 §3).
             let justified = Justified {
                 p: i.p,
                 height,
@@ -1029,6 +1032,7 @@ impl Writer<'_> {
                 align: None,
                 width_factor: None,
                 fit: None,
+                share: None,
             };
             self.out.text(value, value, &justified);
             self.out.str(100, "AcDbAttribute");
@@ -1518,6 +1522,8 @@ impl Writer<'_> {
         let fit = (style == "Standard")
             .then(|| super::arial_fit(&value, t.face.bold))
             .flatten();
+        // Its 40 its capitals' height in its STYLE's face (docs/adr/8046 §3).
+        let share = self.styles.share(&style);
         self.begin("TEXT", base);
         self.out.str(100, "AcDbText");
         let vertical = self.out.text(
@@ -1530,6 +1536,7 @@ impl Writer<'_> {
                 align: t.align,
                 width_factor: t.width_factor,
                 fit,
+                share,
             },
         );
         if style != "Standard" {
@@ -1545,8 +1552,10 @@ impl Writer<'_> {
         self.grow(t.p);
         let mut meta = meta;
         meta.face = face_json(&t.face);
-        // Its 41 widened for Arial: KentOS reads its own width factor back (docs/adr/8046 §2).
+        // Its 41 widened for Arial: KentOS reads its own width factor back (docs/adr/8046 §2); its own height when the
+        // capitals' does not give it back exactly (§3).
         meta.fit = fit;
+        meta.height = super::super::capitals::kept(t.height, share);
         // Its fields in its KENTOS data (docs/adr/0325 §1); TEXT holds their letters.
         if !t.paragraph.fields.is_empty() {
             meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
@@ -1626,6 +1635,7 @@ impl Writer<'_> {
                         align: None,
                         width_factor: None,
                         fit,
+                        share: self.styles.share(&style),
                     },
                     &style,
                 );
@@ -1683,6 +1693,7 @@ impl Writer<'_> {
                         align: justify,
                         width_factor: None,
                         fit,
+                        share: self.styles.share(&style),
                     },
                     &style,
                 );

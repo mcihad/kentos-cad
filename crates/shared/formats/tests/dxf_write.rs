@@ -1236,7 +1236,8 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// The length and fingerprint are those the writer gave for `objects()` before
 /// the elevations existed (without the NURBS curves, which came later, docs/adr/0259), with two changes since: a
 /// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups; a
-/// text in KentOS's own face carries its Arial fit in its 41 and its KENTOS data (docs/adr/8046 §2), 134 bytes more.
+/// text in KentOS's own face carries its Arial fit in its 41 and its KENTOS data (docs/adr/8046 §2), 134 bytes more; a
+/// TrueType text's 40 is its capitals' height (§3), 11 bytes more.
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let old: Vec<Entity> = objects()
@@ -1244,7 +1245,7 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
         .filter(|e| !matches!(e, Entity::Nurbs(_)))
         .collect();
     let (bytes, report) = dxf::write(&input(old));
-    assert_eq!((bytes.len(), fnv64(&bytes)), (38160, 0xa784_f065_1f32_32d4));
+    assert_eq!((bytes.len(), fnv64(&bytes)), (38171, 0x1e8b_46c5_a85f_cec9));
     // And it says nothing of elevations.
     assert!(
         report

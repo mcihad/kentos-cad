@@ -152,7 +152,8 @@ impl Out {
         // justify draws it from here to its alignment point, as wide as KentOS's line (docs/adr/8046 §2).
         let start = justify::start(t.p, shown, t.height, t.rotation, t.align, factor);
         self.xyz(10, start);
-        self.real(40, t.height);
+        // Its capitals' height, as other programs read 40 (docs/adr/8046 §3).
+        self.real(40, super::capitals::written(t.height, t.share));
         self.str(1, value);
         if t.rotation != 0.0 {
             self.real(50, t.rotation);
@@ -182,6 +183,9 @@ pub(crate) struct Justified {
     /// A text in KentOS's own face written in Standard, whose typeface other programs take for Arial (docs/adr/8046
     /// §2): what its width factor is multiplied by so that Arial's line is as wide as KentOS's ([`arial_fit`]).
     pub fit: Option<f64>,
+    /// The capital share of the face its STYLE names (docs/adr/8046 §3): its 40 is its height (an em) times it; none
+    /// for an SHX font or a height that is the capitals' already.
+    pub share: Option<f64>,
 }
 
 /// The width factor that makes Arial's line as wide as KentOS's default face (Barlow) draws it (docs/adr/8046 §2):

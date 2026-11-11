@@ -42,6 +42,13 @@ pub fn font_file(font: DrawingFont, bold: bool, italic: bool) -> String {
     }
 }
 
+/// A project style's record's file (3): its own, else its family's.
+fn record_file(s: &TextStyleDef) -> String {
+    s.font_file
+        .clone()
+        .unwrap_or_else(|| font_file(s.font, s.bold, s.italic))
+}
+
 /// A family as ACAD's data names it (what AutoCAD shows and maps to an installed face).
 fn family(font: DrawingFont) -> &'static str {
     match font {
@@ -75,6 +82,8 @@ pub struct StyleNames {
     dims: HashMap<String, String>,
     /// The project's table styles' TABLESTYLE objects' handles, by the style's id (docs/adr/1128 §3).
     pub tables: HashMap<String, u64>,
+    /// Each record's capital share by its upper-case name (docs/adr/8046 §3): its file's face's; none an SHX font's.
+    shares: HashMap<String, Option<f64>>,
 }
 
 impl StyleNames {
@@ -112,7 +121,12 @@ impl StyleNames {
         };
         let mut names = StyleNames::default();
         for s in text_styles {
-            names.text.insert(s.id.clone(), unique(&s.name));
+            let name = unique(&s.name);
+            names.shares.insert(
+                name.to_uppercase(),
+                super::super::capitals::share(&record_file(s), None, s.bold, s.italic),
+            );
+            names.text.insert(s.id.clone(), name);
         }
         for s in dimension_styles {
             names.dims.insert(s.id.clone(), unique(&s.name));
@@ -142,6 +156,7 @@ impl StyleNames {
                 bold,
                 italic,
             );
+            let shares = &mut names.shares;
             names.synthetic.entry(key).or_insert_with(|| {
                 let mut n = format!("KENTOS_{}", font.id().replace('-', "_").to_uppercase());
                 if bold {
@@ -150,10 +165,29 @@ impl StyleNames {
                 if italic {
                     n.push_str("_I");
                 }
-                unique(&n)
+                let n = unique(&n);
+                shares.insert(
+                    n.to_uppercase(),
+                    super::super::capitals::share(
+                        &font_file(font, bold, italic),
+                        None,
+                        bold,
+                        italic,
+                    ),
+                );
+                n
             });
         }
         names
+    }
+
+    /// The capital share of the face the STYLE record `name` names (docs/adr/8046 §3): Standard's is Arial's; none
+    /// for an SHX font.
+    pub fn share(&self, name: &str) -> Option<f64> {
+        if name.eq_ignore_ascii_case("Standard") {
+            return Some(super::super::capitals::ARIAL);
+        }
+        self.shares.get(&name.to_uppercase()).copied().flatten()
     }
 
     /// The STYLE a dimension's value names in its block (7): its typeface's record, or Standard.
@@ -276,15 +310,16 @@ pub fn style_table(
             super::template::STYLE_TABLE,
             "AcDbTextStyleTableRecord",
         );
+        // A fixed height is its capitals' in the file, as a text's (docs/adr/8046 §3).
+        let share = names.share(name);
         style_groups(
             out,
             name,
-            s.height.map_or(0.0, length),
+            s.height
+                .map_or(0.0, |h| super::super::capitals::written(length(h), share)),
             s.width_factor.unwrap_or(1.0),
             s.oblique.unwrap_or(0.0),
-            &s.font_file
-                .clone()
-                .unwrap_or_else(|| font_file(s.font, s.bold, s.italic)),
+            &record_file(s),
             s.big_font_file.as_deref().unwrap_or(""),
         );
         let json = serde_json::to_string(s).unwrap_or_default();

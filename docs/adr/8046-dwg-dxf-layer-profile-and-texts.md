@@ -2,8 +2,9 @@
 
 - **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M46. 1. bölüm yapıldı: mahalin yazısı ve
   boşluğun çaprazı DXF'te ekrandaki gibi (§1). 2. bölüm yapıldı: KentOS'un yazı tipiyle yazılan yazının genişlik
-  çarpanı, Arial'da KentOS'taki genişliği verecek biçimde (§2). Sırada: yazı yüksekliği — başka programlar DXF'in
-  yüksekliğini büyük harf yüksekliği okuyor, KentOS em yazıyor (§3).
+  çarpanı, Arial'da KentOS'taki genişliği verecek biçimde (§2). 3. bölümün ilk adımı yapıldı: TrueType yazının
+  yüksekliği DXF'te büyük harf yüksekliği — TEXT, öznitelik, tablo hücresi, eğri yazı ve stilin sabit yüksekliği (§3a).
+  Sırada: MTEXT (satır aralığı ve girintiler dahil, §3b); ölçü yazısı, kılavuz notu, tablo stili (§3c).
 - **Bağlam belgesi:** ADR 8008 (EK-4 katman anahtarı), ADR 0342 (mahal), ADR 0708 (boşluk mahal), ADR 0344 (etiket ve
   27 Ekim eki: etiketli mahalin yazısı etiketidir), ADR 8039 §4 (tadilat durumunun katmanları), ADR 0586 (DWG kodeği).
 
@@ -98,14 +99,52 @@ KentOS'un kendi yazı tipiyle (stil yok, yazı tipi seçilmemiş) yazılan yazı
 - Uyum çarpanı em'i korur: §3'te yükseklik büyük harf yüksekliğine çevrildiğinde (başka programın em'i KentOS'unkine
   eşitlenince) aynen geçerlidir.
 
-### 3. Yazı yüksekliği (sırada)
+### 3. Yazı yüksekliği: DXF'te büyük harf yüksekliği
 
-Başka programlar 40'ı büyük harf yüksekliği okuyor (yukarıdaki kaynaklar). Yazıcı TrueType yazının yüksekliğini o
-programın yazı tipinin büyük harf oranıyla yazmalı (`40 = yükseklik × büyük harf oranı`, Standard için Arial'ın 0,7158'i),
-okuyucu tersini yapmalı; SHX zaten büyük harf yüksekliğidir (ADR 1125). TEXT, MTEXT, ATTRIB/ATTDEF, ölçü yazısı, tablo,
-kılavuz notu ve stil yükseklikleri birlikte; KentOS kendi dosyasını aynen geri okumalı.
+Başka programlar TrueType yazının 40'ını büyük harf yüksekliği okuyor (yukarıdaki kaynaklar). KentOS'un modeli em'de
+kalır (ADR 0914); dönüşüm yalnız DXF/DWG sınırında (`formats::dxf::capitals`):
+
+- **Oran yazı tipinin kendisinden:** STYLE kaydının dosyasının (3; yoksa ACAD verisindeki aile ve kalın/eğik bayrakları)
+  yüz tipinin büyük harf payı. Arial (Standard, `arial*.ttf`, Helvetica): **1466/2048** (dört dosyada aynı, ölçüldü);
+  Courier New: 1170 (`cour`), 1171 (`couri`), 1213/2048 (`courbd`, `courbi`); KentOS'un kendi yüzleri ve Liberation Sans
+  dosyalarının OS/2 büyük harf yüksekliği (Barlow 700/1000, Arimo 1409/2048, Courier Prime 1187/2048, Overpass ve
+  Quicksand 0,7, IBM Plex Mono 0,698); KentOS'ta olmayan TrueType yüz (Times, Calibri …) KentOS'ta Barlow'la çizildiği için
+  Barlow'unki — iki programda büyük harfleri aynı boyda. SHX dosyası ya da uzantısız ad (`txt`, `romans`) ve hiçbir şey
+  söylemeyen stil: dönüşüm yok (SHX'te yükseklik iki tarafta da büyük harftir, ADR 1125). STYLE tablosu olmayan dosya
+  AutoCAD'in Standard'ı, txt.shx: dönüşüm yok.
+- **Yazıcı:** `40 = em × oran`; okuyucu `em = 40 / oran`. Bölme yüksekliği tam vermiyorsa TEXT'in ve ATTDEF'in KentOS
+  verisinde `height` öğesi (`1002 { 1000 height 1040 <em> }`) kendi yüksekliğini tutar; başka program 40'ı değiştirdiyse
+  dosya kazanır (öğe yalnız 40 hâlâ KentOS'un yazdığıyken okunur).
+- **3a (yapıldı):** TEXT, ATTRIB, ATTDEF, tablo hücresi, eğri yazının harfleri ve proje stilinin sabit yüksekliği (STYLE 40;
+  okurken stilin yüksekliği de bölünür). Hizalı (72 = 3) ve sığdırılmış (72 = 5) yazının yüksekliği iki noktasının
+  arasından ve Arial genişliğinden çıkar: değişmedi (em zaten oradan). Tanımı olmayan özniteliğin görünmez ATTRIB'i
+  (ISO 3098'in 2,5 mm'si) büyük harf yüksekliğidir: dönüşümsüz.
+- **3b (sırada):** MTEXT. Satır aralığı ve girinti/sekme durakları da yüksekliğe bağlı: AutoCAD satır aralığı 5/3 × 40 ×
+  44, ezdxf "girintiler ve sekme durakları varsayılan yazı yüksekliğinin katlarıdır"; KentOS'unkiler em'in katı
+  (`paragraph::PITCH`). 44 ve `\px` değerleri oranla bölünmeli.
+- **3c (sırada):** ölçü yazısı (DIMTXT ve bloğundaki MTEXT), kılavuz notu (LEADER 40 ve MTEXT), tablo stili (TABLESTYLE).
+- **Bilinen sınır:** yazının yeri KentOS'un hiza kuralıyla yazılır (11). Orta ve üst hizalı yazıda başka program taban
+  çizgisini 40'ın payıyla bulduğu için yazı, yüksekliğin (1 − oran) × payı kadar kayar (Arial'da orta %14, üst %28);
+  taban hizalı yazı (tablo hücreleri dahil) aynı yerde. Ölçülüp ayrı adımda ele alınacak.
+- **Bilinen sınır:** KentOS'ta olmayan TrueType yüz için Barlow'un oranı alınır; projenin yazı tipi başka (ör. Courier
+  Prime) olduğunda o projenin yabancı yazısı biraz farklı boyda okunur.
 
 ## Doğrulama
+
+### 3. bölüm, ilk adım (TEXT ailesi)
+
+- 2+1 dairenin DXF'i (`layer_keys`): 521 nesne aynı; **133 TEXT'in 40'ı 0,71582 katı** (Arial'ın büyük harf oranı),
+  MTEXT ve ölçüler değişmedi (3b, 3c).
+- `a_truetype_text_s_height_is_its_capitals_height`: aynı 40 = 2.5 ile `arial.ttf` → em 2.5 / (1466/2048), `romans.shx` ve
+  `txt` → 2.5, `times.ttf` → 2.5 / 0.7, `courbd.ttf` → 2.5 / (1213/2048); STYLE tablosu olmayan dosya 2.5.
+- `capitals` birim testleri: her yüzün oranı; 2.5, 0.25, 1/3, 0.18, 3.5e-3, 1234.5678 gidip aynen geliyor; başka
+  programın değiştirdiği 40 KentOS'un sakladığı yüksekliği yener.
+- Bağımsız başvuru (`dxf_write_reference.py`, yüz dosyalarının OS/2 tablosunu standart kütüphaneyle okur): TEXT, ATTRIB,
+  ATTDEF, tablo hücresi, eğri yazı harfi ve stil sabit yüksekliğinde `40 = em × oran`ı, TEXT ve ATTDEF'in `height`
+  öğesinin tam gerektiğinde bulunduğunu denetler; eski fikstürleri 6 dosyada reddetti, yenileri 11 dosyada tutarlı.
+- Testler: DXF yazma 59 (taban dosyası 38160 → 38171 bayt), biçimlerin DXF birim 48 ve bütünleşme 42 (karmaşık çizgi tipinin
+  "Utility Text" stili Barlow'da: 4 → 4 / 0,7 mm) ve ölçü/CAD G/Ç 21, headless DXF ve DWG 19, uygulama DXF 7, masaüstü
+  `layer_keys`; tablo stili dışa aktarma fikstürü yeniden yazıldı, ezdxf denetimi "güncel".
 
 ### 2. bölüm (yazı genişliği)
 

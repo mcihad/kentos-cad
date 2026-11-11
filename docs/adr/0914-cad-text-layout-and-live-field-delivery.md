@@ -170,6 +170,12 @@ ve ithal dosyalar için tek bir cap-height dönüşümü çıkarılmaz. Mevcut K
 model/em davranışı korunur; DWG/DXF yüksekliği ve gerçek kâğıt ölçüsü,
 font metrikleri ve karşılaştırılabilir gerçek çıktı ile ayrıca doğrulanacak.
 
+> **11 Kasım 2026 eki — DXF yüksekliği doğrulandı ([ADR 8046 §3](8046-dwg-dxf-layer-profile-and-texts.md)).**
+> Trimble Tekla'nın DWG aktarımı em'i büyük harf yüksekliğine çevirir ve yüksekliğin AutoCAD'de aynı göründüğünü
+> söyler; BricsCAD, QCAD ve ezdxf de 40'ı büyük harf yüksekliği okur. Tek bir sabit değil, **her yazı tipinin kendi
+> büyük harf oranı** (Arial 1466/2048, Barlow 0,700 …) kullanılır: TrueType yazının 40'ı `em × oran` yazılır, okunurken
+> bölünür; SHX'te dönüşüm yoktur. KentOS'un model/em davranışı değişmedi; dönüşüm yalnız DXF/DWG sınırındadır.
+
 ## Açık profil entegrasyonu — 4 Kasım 2026, devam ediyor
 
 Önceki hazırlık kayıtlarının ardından `layout.engine: "unicode-v1"` açık

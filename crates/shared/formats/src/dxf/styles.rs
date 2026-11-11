@@ -63,6 +63,18 @@ impl StyleRecord {
     pub fn is_style(&self) -> bool {
         !self.kentos_styleless && !is_standard(&self.name)
     }
+
+    /// The share of a text's em its capitals take in the face it names (docs/adr/8046 §3): a height in the file over
+    /// it is KentOS's em; none for an SHX font or a record naming no face.
+    pub fn capitals(&self) -> Option<f64> {
+        let (bold, italic) = file_says(&self.file);
+        super::capitals::share(
+            &self.file,
+            self.family.as_deref(),
+            self.acad_flags & ACAD_BOLD != 0 || bold,
+            self.acad_flags & ACAD_ITALIC != 0 || italic,
+        )
+    }
 }
 
 /// Whether a record's name is Standard's (Standart; case aside).
@@ -191,8 +203,9 @@ pub fn text_style(
         italic: r.acad_flags & ACAD_ITALIC != 0 || file_italic,
         oblique: (r.oblique != 0.0 && kentos_contracts::oblique_holds(r.oblique))
             .then_some(r.oblique),
+        // Its fixed height is its capitals' in the file: KentOS's em over its face's share (docs/adr/8046 §3).
         height: (r.height > 0.0)
-            .then(|| mm(r.height, metres, scale))
+            .then(|| mm(super::capitals::read(r.height, r.capitals()), metres, scale))
             .filter(|h| *h > 0.0 && *h <= kentos_contracts::MAX_STYLE_MM),
         width_factor: (r.width != 1.0 && kentos_contracts::width_factor_ok(r.width))
             .then_some(r.width),

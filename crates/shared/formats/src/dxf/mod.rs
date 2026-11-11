@@ -16,8 +16,9 @@
 
 pub mod aci;
 mod block_units;
-mod dimension;
+pub(crate) mod capitals;
 mod diagnostics;
+mod dimension;
 mod emit;
 mod entity;
 mod hatch;

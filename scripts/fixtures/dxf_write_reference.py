@@ -367,6 +367,78 @@ def standard(e: dict, names: tuple) -> bool:
     return e.get("textStyle") not in text and not e.get("font")
 
 
+# ── Capital heights (docs/adr/8046 §3) ────────────────────────────────
+# Other programs read a TrueType text's height (40) as its capitals' height (Tekla's DWG export "em to CAP", BricsCAD's
+# Height "the height of the uppercase text", QCAD and ezdxf draw the 'A' as tall); KentOS draws it as the em. A text's
+# 40 is its height times the capital share of the face its STYLE's file names: Arial's H, 1466 of 2048 (arial*.ttf,
+# Standard's); Courier New's 1170, 1171 (couri), 1213 (courbd, courbi); KentOS's own faces their files' OS/2 capital
+# height (Barlow 700/1000, Arimo 1409/2048 …); a face KentOS has not got Barlow's; an SHX file, or a name without a
+# TrueType extension, none. A TEXT's or an ATTDEF's KENTOS data holds its own height ("height") exactly when the
+# capitals' height divided back does not give it.
+OWN_FILES = {"barlow": "Barlow-400.ttf", "arimo": "Arimo-400.ttf", "overpass": "Overpass-400.ttf",
+             "quicksand": "Quicksand-400.ttf", "architectsdaughter": "ArchitectsDaughter-400.ttf",
+             "courierprime": "CourierPrime-400.ttf", "ibmplexmono": "IBMPlexMono-400.ttf",
+             "plexmono": "IBMPlexMono-400.ttf"}
+STYLE_WORDS = ("", "regular", "normal", "roman", "medium", "semibold", "bold", "italic", "oblique", "bolditalic",
+               "boldoblique", "400", "500", "600", "700", "400italic", "bd", "bi", "i", "b", "z")
+
+
+def os2_cap(path: Path) -> float:
+    """A TrueType face's OS/2 capital height over its units per em, read with the standard library."""
+    data = path.read_bytes()
+    tables = {}
+    for i in range(struct.unpack(">H", data[4:6])[0]):
+        tag, _, off, _ = struct.unpack(">4sIII", data[12 + 16 * i : 28 + 16 * i])
+        tables[tag.decode("latin-1")] = off
+    upm = struct.unpack(">H", data[tables["head"] + 18 : tables["head"] + 20])[0]
+    o = tables["OS/2"]
+    return struct.unpack(">h", data[o + 88 : o + 90])[0] / upm
+
+
+def cap_share(file: str) -> float | None:
+    """The capital share of the face a STYLE's file names, by the rule above."""
+    leaf = file.strip().lower().replace("\\", "/").rsplit("/", 1)[-1]
+    if not leaf.endswith((".ttf", ".otf", ".ttc")):
+        return None
+    stem = leaf.rsplit(".", 1)[0]
+    compact = "".join(c for c in stem if c.isascii() and c.isalnum())
+    styled = lambda fam: compact.startswith(fam) and compact[len(fam):] in STYLE_WORDS
+    for fam, face in OWN_FILES.items():
+        if styled(fam):
+            return os2_cap(FACES / face)
+    if styled("liberationsans"):
+        return os2_cap(FACES / OWN_FILES["arimo"])
+    if styled("arial") or styled("helvetica"):
+        return 1466 / 2048
+    if styled("couriernew") or styled("courier") or styled("cour"):
+        if stem in ("courbd", "courbi") or "bold" in compact:
+            return 1213 / 2048
+        return 1171 / 2048 if (stem == "couri" or "italic" in compact) else 1170 / 2048
+    return os2_cap(FACES / OWN_FILES["barlow"])
+
+
+def text_share(e: dict, names: tuple, spec: dict) -> float | None:
+    """The capital share of the record a text (or a table's cells, a curved text's letters) names: its style's, its
+    typeface's, else Standard's (arial.ttf)."""
+    text, _, _ = names
+    if e.get("textStyle") in text:
+        s = next(x for x in spec.get("textStyles", []) if x["id"] == e["textStyle"])
+        return cap_share(s.get("fontFile") or font_file(s["font"], bool(s.get("bold")), bool(s.get("italic"))))
+    if e.get("font"):
+        return cap_share(font_file(e["font"], bool(e.get("bold")), bool(e.get("italic"))))
+    return cap_share("arial.ttf")
+
+
+def capitals(h: float, share: float | None) -> float:
+    """A height (an em) as the file's 40: times the capital share."""
+    return h if share is None else h * share
+
+
+def kept_height(h: float, share: float | None) -> float | None:
+    """The height KentOS's data keeps: when the file's divided back does not give it exactly."""
+    return None if share is None or (h * share) / share == h else h
+
+
 def kentos(e: list[tuple[int, str]]) -> dict[str, list[str]]:
     """KentOS's items on an entity: tag -> the values after it (flat)."""
     items: dict[str, list[str]] = {}
@@ -671,7 +743,8 @@ def curve_data(e: dict) -> str:
     return json.dumps(t, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def check_curved(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, styled: tuple, where: str, n: int) -> None:
+def check_curved(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, styled: tuple, where: str, n: int,
+                 spec: dict) -> None:
     """A text along a curve (docs/adr/0196 §5): an INSERT of the anonymous block *Un at its point, turned as its frame,
     KentOS's data its own fields; the block in the text's frame (its point the origin, unturned): a TEXT a letter that
     is not a space, in order, where the layout of text_along_cases.py puts it (measured in the text's typeface, else
@@ -702,14 +775,14 @@ def check_curved(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict,
         ensure(close(float(group(x, 10)), l["at"][0]) and close(float(group(x, 20)), l["at"][1]), f"{w}: where the layout puts it")
         turn = float(group(x, 50) or 0.0)
         ensure(abs((turn - l["turn"] + 180.0) % 360.0 - 180.0) <= 1e-9, f"{w}: turned as the curve ({l['turn']})")
-        ensure(float(group(x, 40)) == float(e["height"]), f"{w}: its height")
+        ensure(float(group(x, 40)) == capitals(float(e["height"]), text_share(e, styled, spec)), f"{w}: its capitals' height")
         wf = fitted(e.get("widthFactor"), table_text(c), bool(e.get("bold"))) if standard(e, styled) else e.get("widthFactor")
         ensure((group(x, 41) is None) if wf is None else float(group(x, 41)) == float(wf), f"{w}: its width factor {wf}")
         check_face(x, e, styled, False, w, letter=True)
 
 
 def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, where: str, n: int,
-                styled: tuple) -> None:
+                styled: tuple, spec: dict) -> None:
     """A table (docs/adr/0184 §7): an INSERT of the anonymous block *Un at its corner, turned as it is, KentOS's data
     its own fields; the block in its own axes (the corner at the origin, y down the page as −y): a LINE for every run of
     drawn edges (the outline's only without a frame band; none without lines), the band as four SOLIDs, a TEXT for every
@@ -799,8 +872,9 @@ def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, 
                          and holds({"rows": 1, "cols": 1, **c}, i, j)), bool(e.get("header") and i == 0) or bool(e.get("bold")))
             want.append((table_text(words), align, (x, -((y0 + y1) / 2.0 + 0.35 * h)), bold))
     ensure(len(texts) == len(want), f"{where}: {len(want)} TEXTs")
+    share = text_share(e, styled, spec)
     for t, (words, align, at, bold) in zip(texts, want):
-        ensure(group(t, 1) == words and float(group(t, 40)) == h, f"{where}: “{words}” at its height")
+        ensure(group(t, 1) == words and float(group(t, 40)) == capitals(h, share), f"{where}: “{words}” at its capitals' height")
         wf = fitted(None, words, bold) if standard(e, styled) else None
         ensure((group(t, 41) is None) if wf is None else float(group(t, 41)) == wf, f"{where}: “{words}” width factor {wf}")
         if align == "left":
@@ -1132,13 +1206,14 @@ def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: st
         value = (e.get("attrs") or {}).get(a["tag"]) or a.get("value") or ""
         ensure(group(r, 1) == value, f"{w}: shows {value!r}, not {group(r, 1)!r}")
         x, y = placed(e, b["base"], a["p"])
-        ensure(close(float(group(r, 40)), a["height"] * float(e["scale"])), f"{w}: its height times the scale")
+        # Its height times the scale, as its capitals' in Standard's Arial (docs/adr/8046 §3).
+        ensure(close(float(group(r, 40)), a["height"] * float(e["scale"]) * (1466 / 2048)), f"{w}: its height times the scale, Arial's capitals")
         turn, align = placed_frame(e, a["rotation"], a.get("align"))
         got = float(group(r, 50) or 0.0)
         ensure(close(got, turn) or (turn == 0.0 and group(r, 50) is None), f"{w}: turned {turn}°, not {got}°")
         # An attribute names no style: Standard, fitted to Arial (docs/adr/8046 §2).
         wf = fitted(a.get("widthFactor"), value, False)
-        shown_at = {**a, "height": float(group(r, 40)), "rotation": got, "align": align, "widthFactor": wf}
+        shown_at = {**a, "height": a["height"] * float(e["scale"]), "rotation": got, "align": align, "widthFactor": wf}
         if align is None:
             ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
             ensure(group(r, 11) is None, f"{w}: not justified")
@@ -1400,8 +1475,9 @@ def check_style_tables(spec: dict, p: list[tuple[int, str]], names: tuple, paper
 
     for s, r in zip(given, styles[1:]):
         w = f"yazı stili {s['name']}"
-        height = length(s["height"]) if s.get("height") else 0.0
-        ensure(close(float(group(r, 40)), height, 1e-12), f"{w}: its fixed height {height} in drawing units (40)")
+        file = s.get("fontFile", font_file(s["font"], bool(s.get("bold")), bool(s.get("italic"))))
+        height = capitals(length(s["height"]), cap_share(file)) if s.get("height") else 0.0
+        ensure(close(float(group(r, 40)), height, 1e-12), f"{w}: its fixed height {height}, its capitals' in drawing units (40)")
         ensure(float(group(r, 41)) == s.get("widthFactor", 1.0) and float(group(r, 50)) == s.get("oblique", 0.0), f"{w}: its width and slant")
         ensure(group(r, 3) == s.get("fontFile", font_file(s["font"], bool(s.get("bold")), bool(s.get("italic")))), f"{w}: its typeface's file")
         ensure(acad(r) == [(1000, family(s["font"])), (1071, flags(bool(s.get("bold")), bool(s.get("italic"))))], f"{w}: ACAD's family and flags")
@@ -1776,7 +1852,11 @@ def check(name: str) -> list[str]:
         for a, tag, d in zip(attributes, dxf_tags(b), defs):
             w = f"{b['name']} › {a['tag']}"
             ensure(d[0] == (0, "ATTDEF") and group(d, 330) == rec and group(d, 8) == "0", f"{w}: an ATTDEF of its record on 0")
-            ensure(float(group(d, 40)) == a["height"], f"{w}: its height")
+            arial = 1466 / 2048
+            ensure(float(group(d, 40)) == capitals(a["height"], arial), f"{w}: its capitals' height in Arial")
+            keep = kept_height(a["height"], arial)
+            got = kentos(d).get("height")
+            ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{w}: its own height {keep} in KentOS's data")
             check_place(d, (a["p"]["x"], a["p"]["y"]), True, a, "AcDbAttributeDefinition", 74, tag, widths, w)
             ensure(group(d, 1) == (a.get("value") or ""), f"{w}: its default")
             ensure(group(d, 3) == (a.get("prompt") or ""), f"{w}: its prompt")
@@ -1853,7 +1933,7 @@ def check(name: str) -> list[str]:
     ensure(len(written) == len(tables), f"{len(tables)} tables")
     by_name = {group(b, 2): k for k, b in enumerate(blocks) if b[0] == (0, "BLOCK")}
     for n, ((i, e), o) in enumerate(zip(tables, written)):
-        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", anonymous[i], styled)
+        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", anonymous[i], styled, spec)
     tables = [e for _, e in tables]
     if tables:
         said.append(f"{len(tables)} tablo ({sum(1 for e in tables if e.get('frame') and e.get('grid') != 'none')} kalın çerçeveli)")
@@ -1863,7 +1943,7 @@ def check(name: str) -> list[str]:
     written = [e for e in drawn if e[0] == (0, "INSERT") and (group(e, 2) or "").startswith("*U") and "along" in kentos(e)]
     ensure(len(written) == len(curved), f"{len(curved)} curved texts")
     for n, ((i, e), o) in enumerate(zip(curved, written)):
-        check_curved(o, e, blocks, by_name, layers, styled, f"eğri boyunca yazı {n + 1}", anonymous[i])
+        check_curved(o, e, blocks, by_name, layers, styled, f"eğri boyunca yazı {n + 1}", anonymous[i], spec)
     if curved:
         said.append(f"{len(curved)} eğri boyunca yazı ({sum(1 for _, e in curved if 'bulges' in e['path'])} yaylı)")
 
@@ -1874,7 +1954,11 @@ def check(name: str) -> list[str]:
     for n, (e, o) in enumerate(zip(texts, written)):
         where = f"yazı {n + 1} ({e['text']})"
         ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its layer")
-        ensure(group(o, 1) == e["text"] and float(group(o, 40)) == e["height"], f"{where}: its words and height")
+        share = text_share(e, styled, spec)
+        ensure(group(o, 1) == e["text"] and float(group(o, 40)) == capitals(e["height"], share), f"{where}: its words and capitals' height")
+        keep = kept_height(e["height"], share)
+        got = kentos(o).get("height")
+        ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{where}: its own height {keep} in KentOS's data")
         ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == e["rotation"], f"{where}: its turn")
         fit = arial_fit(e["text"], bool(e.get("bold"))) if standard(e, styled) else None
         shown = {**e, "widthFactor": fitted(e.get("widthFactor"), e["text"], bool(e.get("bold")))} if fit else e

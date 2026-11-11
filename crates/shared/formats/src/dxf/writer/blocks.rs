@@ -262,6 +262,8 @@ pub(super) fn block(
                 align: a.align,
                 width_factor: a.width_factor,
                 fit: None,
+                // Standard's face, Arial: its 40 its capitals' height (docs/adr/8046 §3).
+                share: Some(super::super::capitals::ARIAL),
             },
         );
         out.str(100, "AcDbAttributeDefinition");
@@ -271,6 +273,14 @@ pub(super) fn block(
         out.int(70, attribute_flags(&a.options));
         if vertical != 0 {
             out.int(74, vertical);
+        }
+        // Its own height in KentOS's data when the capitals' does not give it back exactly.
+        if let Some(h) = super::super::capitals::kept(a.height, Some(super::super::capitals::ARIAL))
+        {
+            out.xdata(&super::super::xdata::groups(&super::super::xdata::Meta {
+                height: Some(h),
+                ..Default::default()
+            }));
         }
     }
     let h = handles.take();

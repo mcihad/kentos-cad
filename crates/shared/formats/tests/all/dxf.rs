@@ -72,7 +72,13 @@ fn complex_linetypes_retain_style_only_resources_shape_files_and_physical_parame
         .iter()
         .find(|s| s.name == "Utility Text")
         .expect("style used only by linetype");
-    assert_eq!(fixed.height, Some(4.)); // 200 mm / 50 => 4 paper mm
+    // 200 mm / 50 => 4 paper mm of capitals; in Barlow (its file) they are 0.7 of the em, KentOS's height
+    // (docs/adr/8046 §3).
+    assert!(
+        fixed.height.is_some_and(|h| (h - 4.0 / 0.7).abs() < 1e-12),
+        "{:?}",
+        fixed.height
+    );
     assert_eq!(fixed.font_file.as_deref(), Some("Barlow-Regular.ttf"));
     assert_eq!(fixed.width_factor, Some(0.8));
     assert_eq!(fixed.oblique, Some(12.));
@@ -2694,7 +2700,112 @@ fn long_ltype_patterns_are_kept_whole_or_cut_with_a_note() {
     assert_eq!(elements("UZUN16"), Some(16));
     assert_eq!(elements("UZUN300"), Some(kentos_contracts::MAX_STORED_PATTERN_ELEMENTS));
     assert_eq!(kentos_contracts::line_types_problem(&r.line_types), None);
-    let note = r.report.notes.iter().find(|n| n.what == "Çizgi tipi deseni").expect("the cut is said");
-    assert!(note.reason.contains("UZUN300") && note.reason.contains("300") && note.reason.contains("256"), "{}", note.reason);
-    assert!(!r.report.notes.iter().any(|n| n.reason.contains("UZUN16")), "a kept pattern is not a loss");
+    let note = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "Çizgi tipi deseni")
+        .expect("the cut is said");
+    assert!(
+        note.reason.contains("UZUN300")
+            && note.reason.contains("300")
+            && note.reason.contains("256"),
+        "{}",
+        note.reason
+    );
+    assert!(
+        !r.report.notes.iter().any(|n| n.reason.contains("UZUN16")),
+        "a kept pattern is not a loss"
+    );
+}
+
+/// A TrueType text's height is its capitals' height in other programs (docs/adr/8046 §3: Tekla's DWG export, BricsCAD,
+/// QCAD, ezdxf), KentOS's is its face's em: a 40 of 2.5 in Arial is an em of 2.5 / (1466 / 2048) — Arial's capital H
+/// is 1466 of its 2048 units. A shape file's (romans.shx, txt) is its capitals' in both; a TrueType face KentOS has not
+/// got is drawn in Barlow, its capitals 0.7 of the em; a file without a STYLE table is AutoCAD's txt.
+#[test]
+fn a_truetype_text_s_height_is_its_capitals_height() {
+    let style = |name: &'static str, file: &'static str| {
+        vec![
+            (0, "STYLE"),
+            (2, name),
+            (70, "0"),
+            (40, "0"),
+            (41, "1"),
+            (50, "0"),
+            (71, "0"),
+            (42, "2.5"),
+            (3, file),
+            (4, ""),
+        ]
+    };
+    let mut tables = vec![(0, "TABLE"), (2, "STYLE")];
+    for (name, file) in [
+        ("ARIAL", "arial.ttf"),
+        ("SHX", "romans.shx"),
+        ("TXT", "txt"),
+        ("TIMES", "times.ttf"),
+        ("COUR", "courbd.ttf"),
+    ] {
+        tables.extend(style(name, file));
+    }
+    tables.push((0, "ENDTAB"));
+    let mut entities = Vec::new();
+    for (s, y) in [
+        ("ARIAL", "0"),
+        ("SHX", "10"),
+        ("TXT", "20"),
+        ("TIMES", "30"),
+        ("COUR", "40"),
+    ] {
+        entities.extend([
+            (0, "TEXT"),
+            (8, "0"),
+            (10, "0"),
+            (20, y),
+            (40, "2.5"),
+            (1, s),
+            (7, s),
+        ]);
+    }
+    let r = dxf::read(
+        &dxf_of(&[("TABLES", groups(&tables)), ("ENTITIES", groups(&entities))]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
+    let heights: Vec<(String, f64)> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some((t.text.clone(), t.height)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        heights,
+        vec![
+            ("ARIAL".to_owned(), 2.5 / (1466.0 / 2048.0)),
+            ("SHX".to_owned(), 2.5),
+            ("TXT".to_owned(), 2.5),
+            ("TIMES".to_owned(), 2.5 / 0.7),
+            ("COUR".to_owned(), 2.5 / (1213.0 / 2048.0)),
+        ]
+    );
+    // Without a STYLE table: AutoCAD's Standard, txt.shx.
+    let bare = dxf::read(
+        &dxf_of(&[(
+            "ENTITIES",
+            groups(&[
+                (0, "TEXT"),
+                (8, "0"),
+                (10, "0"),
+                (20, "0"),
+                (40, "2.5"),
+                (1, "Ada"),
+            ]),
+        )]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
+    assert!(matches!(&bare.entities[..], [Entity::Text(t)] if t.height == 2.5));
 }

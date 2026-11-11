@@ -437,8 +437,13 @@
   - **DXF'te yazı genişliği (M46 2. bölüm, ADR 8046 §2):** KentOS'un yazı tipiyle yazılan yazı (Standard = `arial.ttf`)
     TEXT, ATTRIB, tablo hücresi ve eğri yazı harfinde `41 = çarpan × Barlow genişliği / düz Arial genişliği` (satır satır,
     üç basamak; `formats::dxf::writer::arial_fit`, Arial'ın ilerlemeleri ölçü ikizi Arimo'dan); TEXT'in KentOS verisinde
-    `fit`, okuyucu böler. 2+1'in 133 yazısında fark −%3,6…+%29'dan ±%0,06'ya. Açık (§3): başka programlar DXF
-    yüksekliğini büyük harf yüksekliği okuyor (Tekla, BricsCAD, QCAD, ezdxf), KentOS em yazıyor — yazılar %40 büyük.
+    `fit`, okuyucu böler. 2+1'in 133 yazısında fark −%3,6…+%29'dan ±%0,06'ya.
+  - **DXF'te yazı yüksekliği (M46 3. bölüm, ADR 8046 §3):** başka programlar TrueType yazının 40'ını büyük harf
+    yüksekliği okur (Tekla, BricsCAD, QCAD, ezdxf); KentOS em. `formats::dxf::capitals`: `40 = em × oran`, okurken bölünür;
+    oran STYLE dosyasının yüzünden (Arial 1466/2048, KentOS yüzlerinin OS/2'si, olmayan yüz Barlow'unki), SHX'te yok.
+    Kesin dönüş için TEXT/ATTDEF'te `height` öğesi. 3a yapıldı (TEXT, öznitelik, tablo hücresi, eğri yazı, stil
+    yüksekliği); sırada MTEXT (44 ve girintiler de oranla), ölçü, kılavuz, tablo stili. Yabancı dosyanın Arial yazısı artık
+    AutoCAD'deki boyunda (eskisinin 1,397 katı) açılır.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

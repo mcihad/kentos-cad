@@ -119,6 +119,7 @@ impl Writer<'_> {
                     align: None,
                     width_factor: t.width_factor,
                     fit,
+                    share: self.styles.share(&style),
                 },
                 &style,
             );
