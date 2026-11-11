@@ -1,10 +1,11 @@
 # ADR 8047: Binanın IFC 4.3'ü — ayrı IFC paketi, EK-5 sınıfları ve adları, EK-6 özellikleri
 
-- **Durum:** 1. ve 2. bölüm, 3. bölümün ilk adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
+- **Durum:** 1. ve 2. bölüm, 3. bölümün ilk üç adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
   çekirdekte ve uygulamada hazır, bağımsız okuyucu sınıyor (§1–§5); komutu `cad.arch.ifc` ve Dosya › Dışa aktar › Bina
   modeli › "IFC dışa aktar (bina)…", gerçek pencerede kabul edildi (§6); EK-7'nin proje, mimar ve büro bilgileri,
   EK-6'nın adres, ada/parsel ve bina kimliği künyeden, dosyanın adı EK-2'den (§7); projenin koordinat sistemi ve
-  harita dönüşümü (§8). Sırada: EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de; başlığın görünüm tanımı (§6).
+  harita dönüşümü (§8); EK-9'un 21 sorusu modelden cevaplanıyor, çizimin bozduğu sorular Mimari denetim › Mevzuat'ta (§9).
+  Sırada: EK-9 formunun kendisi (PDF, EK-2 `FR_MKF`); başlığın görünüm tanımı (§6).
 - **Bağlam belgesi:** ADR 0908 (yolun IFC 4.3 hizalaması), ADR 8042 (kesit modeli), ADR 8040 (düşey model), ADR 8041
   (kiriş, lento, kolon–duvar birleşimi), ADR 0342 (mahal ve net alan), ADR 8030 (İmar durumu), ADR 8032 (Vaziyet planı).
 
@@ -176,6 +177,27 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   deniz seviyesine göre (ortometrik) olduğundan EK-7'nin ITRF96 notu yerine projenin söylediği yazıldı.
 - Yerel koordinatlı çizimde sistem yazılmaz (Denetim eksik sayacak).
 
+### 9. EK-9 model kalite kontrol formu ve Mimari denetim (3. bölüm, üçüncü adım)
+
+- **EK-9 Tablo 9.1 (Mimari; sayfa görüntülerinden):** 21 Evet/Hayır sorusu, beş grupta: genel kontrol (dosya boyutu,
+  proje bilgileri), isimlendirme (Md. 6, 10, 11), model yapılanması (koordinat sistemi, gelişim seviyesi, zorunlu
+  sınıflar ve özellikleri, emsal tablosu, proje/saha/bina/kat), disiplin kontrolleri (mahaller, örtüşme, kapalılık,
+  kat, yinelenen varlık), teslim ve format (IFC sınıfları, sürüm, ön tanımlı tip, P_set'ler, PDF ile IFC uyumu).
+- **Karar:** `kentos_ifc::quality::ek9` 21 soruyu modelden cevaplar: modelin yapılışıyla evet olanlar (5, 8, 11, 14,
+  17–20), çizimin bozabileceği evet/hayır (2 proje bilgileri, 3 proje kodu, 4 mahal no ve adı, 6 koordinat sistemi, 12
+  mahal, 21 PDF–IFC uyumu: modele girmeyen nesne), KentOS'un yargılamadığı "elle bakılır" (1 dosya boyutu: Bakanlık
+  sınırı yok; 7 gelişim seviyesi; 10 emsal tablosu; 13, 15, 16 Mimari denetimin öbür grupları). Soru 9 dürüstçe hayır:
+  yangın dayanım sınıfı, acil çıkış ve beton sınıfı çizimde yok.
+- **Mimari denetim › Mevzuat:** "Dijital Proje Yön." kaynağı (RG 5.8.2026/33331) ve altı bulgu kodu:
+  `digital_project_info_missing` (Md. 13), `digital_project_code_missing` (Md. 6), `digital_space_unnamed` (Md. 10,
+  mahalleri seçer), `digital_system_wrong` (EK-7 Tablo 7.6–7.7: yerel koordinat, TUREF dışı sistem, ±0.00 kotu yok),
+  `digital_no_spaces`, `digital_model_loss` (Md. 9, modele girmeyen nesneleri seçer). Her biri EK-9'un soru numarasını
+  ve maddeyi yazar, "Ne yapılır"ı düzeltmenin yerini (Ruhsat takımı künyesi, Proje ayarları, Parsel ve bahçe mesafeleri,
+  Mahal numarala). Değerlendirme `kentos-ifc`'te, Denetim yalnız çağırır (`application::digital_audit`). Duvarsız
+  çizimde hiçbiri. Soru 9 bulgu değil: çizim o bilgileri henüz tutamıyor.
+- **Plan dışı:** proje kodu yalnız soru 3'te sayılır (soru 2'nin listesinde ikinci kez söylenmez); mahal no ve adının
+  EK-3 biçimi henüz denetlenmiyor, yalnız varlığı.
+
 ## Doğrulama
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`): IfcOpenShell, KentOS kodu olmadan, bölüm binasının kendi
@@ -205,6 +227,13 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   33, METRE), IfcMapConversion (Model bağlamından, 0, 0, 1285,4), RefElevation 1285,4. `kentos-ifc` 9 test (TUREF
   dilimleri, yazım). Yolun IFC'si: `road_ifc_cases.py --written` temiz (şema, EXPRESS, 9 yatay parça, 286 yer ve 346 kot
   1e-6 m içinde); `yol.ifc`'nin CRS satırı TUREF ile doldu (dosyanın son hanelerdeki eskimişliği de güncellendi).
+- **3. bölüm, üçüncü adım:** `kentos-ifc` 12 test (künyenin eksikleri, sistem, 21 cevap); `digital_audit` 4 test:
+  künyesiz ve yerel bölüm binasında üç bulgu (proje bilgileri, kod, sistem), künyeli ve TM33'lü binada hiç, rampa ve
+  adsız mahalle `digital_model_loss` (rampayı seçer) ve `digital_space_unnamed` (mahali seçer), duvarsız çizimde hiç.
+  Mevzuat'ı okuyan testler geçiyor (uygulama: kesitler 19, görünüşler 7, çatı kesitleri 8, asansör 3, korkuluk 1,
+  otopark 2; masaüstü: Mevzuat 4 — yardımcıları dijital proje bulgularını kendi testlerine bırakır —, yangın 3,
+  otopark/sığınak 2; ortak durumlar `cad.arch.audit*`). Gerçek pencere: Denetim › Mevzuat 10 bulgudan 13'e, son üçü
+  EK-9'dan.
 - **2. bölüm:** 22 ortak durum (`scripts/fixtures/arch_ifc_cases.py`, KentOS kodu olmadan bölüm binasının tanımından:
   sayılar, plan, doğrulama, üzerine yazma, rampa uyarısı, boş/göreli/uzantısı yanlış/klasörü olmayan yol, var olan
   dosya, okunmayan saat, binasız çizim, büyük harfli uzantı, kırpılan yol, saatsiz yazım, 1. katı boş bina) masaüstü

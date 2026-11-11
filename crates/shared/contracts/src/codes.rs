@@ -2837,6 +2837,15 @@ codes! {
     PARKING_AREA_SHORT = "parking_area_short", Warning, false, "Otopark mahalinin net alanı içindeki yerlere yetmiyor: Otopark Yönetmeliği 4/1-ç binek başına manevra dahil 20 m² ister.";
     PARKING_DISABLED_SHORT = "parking_disabled_short", Warning, false, "Umumi binanın otoparkında Otopark Yönetmeliği 4/1-ı'nın engelli yeri (her 20 yerde 1, en az 1) eksik.";
     PARKING_CHARGING_SHORT = "parking_charging_short", Warning, false, "Zorunlu otoparkı 20 ve üstü olan yapıda Otopark Yönetmeliği 5/1-j'nin elektrikli araç şarj yeri (en az %5, en az 1) eksik.";
+    /// Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik (RG 5.8.2026/33331): the
+    /// model quality control form's (EK-9 Tablo 9.1) questions the drawing fails, read from the IFC model KentOS
+    /// writes (docs/adr/8047 §9).
+    DIGITAL_PROJECT_INFO_MISSING = "digital_project_info_missing", Warning, false, "Dijital Proje Yönetmeliği Md. 13 ve EK-7'nin istediği proje bilgileri (mimar, sicil no, büro, vergi no, adres, ada/parsel) künyede eksik.";
+    DIGITAL_PROJECT_CODE_MISSING = "digital_project_code_missing", Warning, false, "Projenin idareden alınan kodu (EK-1) künyede yok: model ve dosya adları Dijital Proje Yönetmeliği Md. 6'ya göre adlanamaz.";
+    DIGITAL_SPACE_UNNAMED = "digital_space_unnamed", Warning, false, "Mahalin numarası ya da adı yok: Dijital Proje Yönetmeliği Md. 10 mahalleri numaralı ve adlı ister.";
+    DIGITAL_SYSTEM_WRONG = "digital_system_wrong", Warning, false, "Model Dijital Proje Yönetmeliği EK-7'nin istediği koordinat sisteminde değil: TUREF 3° dilimi (EPSG:5253–5259) ve ±0.00'ın mutlak kotu.";
+    DIGITAL_NO_SPACES = "digital_no_spaces", Warning, false, "Mimari modelde mahal yok: Dijital Proje Yönetmeliği EK-9 mahalleri (IfcSpace) ister.";
+    DIGITAL_MODEL_LOSS = "digital_model_loss", Warning, false, "Çizimin bazı nesneleri IFC modeline girmiyor: Dijital Proje Yönetmeliği Md. 9 paftalarla modelin uyumunu ister.";
     SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
     SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";
     SHELTER_HEIGHT_LOW = "shelter_height_low", Warning, false, "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az.";

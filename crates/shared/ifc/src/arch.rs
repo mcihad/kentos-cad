@@ -213,6 +213,8 @@ pub struct Written {
     pub railings: usize,
     pub stairs: usize,
     pub left: Vec<Left>,
+    /// The rooms without a number or a name (Md. 10, EK-3), by their persistent ids.
+    pub unnamed: Vec<String>,
 }
 
 fn pt(p: P) -> [f64; 2] {
@@ -707,6 +709,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         }
         let bottom = f.floor_offset.unwrap_or(0.0);
         let top = bottom + f.height.or(levels[storey].3).unwrap_or(2.8);
+        let blank = |v: &Option<String>| v.as_deref().is_none_or(|t| t.trim().is_empty());
+        if blank(&f.number) || blank(&f.name) {
+            written.unnamed.push(uid.clone());
+        }
         let words = [f.number.as_deref(), f.name.as_deref()]
             .into_iter()
             .flatten()

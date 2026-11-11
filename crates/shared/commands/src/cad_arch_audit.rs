@@ -332,7 +332,9 @@ pub struct ArchAuditFinding {
     /// `paiy_railing_low`, `paiy_railing_gap` and `paiy_railing_missing` for a slab's void's or a balcony's or terrace's
     /// free sides (docs/adr/8045 §4); an elevator block's cabin or door `paiy_elevator_small` and ten storeys' missing
     /// stretcher elevator `paiy_elevator_stretcher` (docs/adr/8045 §5); the parking places' `parking_space_small`,
-    /// `parking_area_short`, `parking_disabled_short`, `parking_charging_short` (docs/adr/8045 §6).
+    /// `parking_area_short`, `parking_disabled_short`, `parking_charging_short` (docs/adr/8045 §6); the digital project
+    /// regulation's model quality form (EK-9): `digital_project_info_missing`, `digital_project_code_missing`,
+    /// `digital_space_unnamed`, `digital_system_wrong`, `digital_no_spaces`, `digital_model_loss` (docs/adr/8047 §9).
     pub code: String,
     /// What is wrong.
     pub message: String,

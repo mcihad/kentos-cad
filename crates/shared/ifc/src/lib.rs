@@ -8,6 +8,7 @@
 //! - [`building`]: a building as IFC 4.3: its spatial structure, elements, openings, spaces, properties.
 //! - [`naming`]: the regulation's names (EK-5 §5.5) and its classes' category codes (EK-5 Tablo 5.1).
 //! - [`arch`]: KentOS Mimari's model as a [`building::Building`]: classes, names and the properties EK-6 asks.
+//! - [`quality`]: EK-9's model quality control form, answered from the model (Md. 15).
 
 pub mod alignment;
 pub mod arch;
@@ -15,4 +16,5 @@ pub mod building;
 pub mod crs;
 mod math;
 pub mod naming;
+pub mod quality;
 pub mod step;

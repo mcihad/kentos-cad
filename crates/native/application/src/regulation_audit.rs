@@ -93,6 +93,8 @@ pub enum Source {
     Siginak,
     /// TS 825:2024 Binalarda ısı yalıtım kuralları, binding by Tebliğ MHGM-2025/1 (docs/adr/8038).
     Ts825,
+    /// Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik (docs/adr/8047 §9).
+    Dijital,
 }
 
 impl Source {
@@ -105,6 +107,7 @@ impl Source {
             Source::Otopark => "Otopark Yön.",
             Source::Siginak => "Sığınak Yön.",
             Source::Ts825 => "TS 825",
+            Source::Dijital => "Dijital Proje Yön.",
         }
     }
 
@@ -117,6 +120,7 @@ impl Source {
             Source::Otopark => "Otopark Yön.",
             Source::Siginak => "Sığınak Yön.",
             Source::Ts825 => "TS 825:2024",
+            Source::Dijital => "Dijital Proje Yön.",
         }
     }
 }
@@ -1939,6 +1943,8 @@ pub fn findings(
     crate::railing_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
     // Otopark yerleri (docs/adr/8045 §6): Otopark Yönetmeliği 4/1-ç, ı, 5/1-h, j.
     crate::parking_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
+    // Dijital proje (docs/adr/8047 §9): EK-9's model quality control form, from the IFC model KentOS writes.
+    crate::digital_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     out
 }
 

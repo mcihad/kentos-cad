@@ -169,6 +169,13 @@ pub fn file_name(doc: &Document) -> String {
     format!("{}.ifc", particulars(doc).file_stem(doc.name()))
 }
 
+/// The model as `cad.arch.ifc` writes it, what it left out, and the künye it read: for Mimari denetim's Dijital proje
+/// findings (`digital_audit`, EK-9).
+pub fn model(doc: &Document) -> (Building, Written, Particulars) {
+    let (b, written, _) = made(doc, "", "KentOS Mimari");
+    (b, written, particulars(doc))
+}
+
 /// The building to write: `stamp` its time (`YYYY-MM-DDThh:mm:ss`), `application` KentOS's name.
 pub fn building(doc: &Document, stamp: &str, application: &str) -> (Building, Written) {
     let (b, written, _) = made(doc, stamp, application);

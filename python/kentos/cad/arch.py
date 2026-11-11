@@ -144,42 +144,51 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     parking_area_short (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her
     20 yerde 1 ve en az 1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu
     otopark 20 ve üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short
-    (5/1-j; düzeltmesi bir binek yerini Şarjlı yapar). Projenin yerel imar yönetmeliği
-    (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur (PAİY
-    69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve ara
-    sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
-    yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
-    0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa
-    bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk).
-    docs/adr/8035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu
-    mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak
-    nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı
-    Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında
-    dışarı açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b).
-    Konut olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün
-    yol Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75
-    …), koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m
-    (yağmurlamada 30, 48/2) ve daire kapısından kat çıkışına Ek-5/B apartman (48/4) —
-    bodrum dahil 4 kata kadar konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal
-    bykhy_escape_no_route; kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen
-    alanıyla) ile katın toplam çıkış eni kişi ÷ birim genişlik kişisi × 0,50 m ve
-    50/501/2001 kişide her kaçış yolu 1,00/1,50/2,00 m bykhy_exit_width_below (33/1;
-    yüksek binada merdiven 1,20 m, 33/2), 50 kişiyi aşan mahalde 2, katta 500'ü aşanda
-    3, 1000'i aşanda 4 çıkış bykhy_exit_count_below (39/2), kaçış yolu olan koridor 1,10
-    m (yüksek binada 1,20) bykhy_corridor_narrow, konutta yapı yüksekliği
-    21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni bykhy_stair_count_below
-    (48/5). settings.arch.sprinklers yağmurlamalı sınırları okutur. Korunumluluk, yangın
-    dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark
-    ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına
-    göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm
-    başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı
-    mahallerin net alanı ÷ 20 m² (otopark yeri blokları çizildiyse onların sayısı) az
-    ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4
-    kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı
-    mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi
-    aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m
-    shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince
-    çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+    (5/1-j; düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
+    5.8.2026/33331) EK-9 model kalite kontrol formunun çizimin bozduğu soruları,
+    cad.arch.ifc'nin yazdığı modelden: künyede EK-7'nin proje bilgileri eksikse
+    digital_project_info_missing (Md. 13), proje kodu yoksa ya da 000000 ise
+    digital_project_code_missing (Md. 6, EK-1), numarası ya da adı olmayan mahaller
+    digital_space_unnamed (Md. 10), çizim yerel koordinatta, sistemi TUREF 3° dilimi
+    (EPSG:5253–5259) değil ya da ±0.00'ın kotu yoksa digital_system_wrong (EK-7 Tablo
+    7.6–7.7), modelde mahal yoksa digital_no_spaces, IFC'ye girmeyen nesneler (rampa,
+    gövdesiz nesne) digital_model_loss (Md. 9; nesneleri bulgunun); duvarsız çizimde
+    hiçbiri. Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa
+    değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de
+    yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat
+    yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
+    regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
+    0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
+    cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların
+    Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve
+    boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta duvardan 0,40 m içeride
+    (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven adlı mahal, açık
+    merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı açılan kapı; bir
+    bölümün yolu başka bölümün mahallerinden geçmez (33/6-b). Konut olmayan mahalde tek
+    çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün yol Ek-5/B'yi aşarsa
+    bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75 …), koridorun çıkmaz
+    kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m (yağmurlamada 30, 48/2) ve
+    daire kapısından kat çıkışına Ek-5/B apartman (48/4) — bodrum dahil 4 kata kadar
+    konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal bykhy_escape_no_route;
+    kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen alanıyla) ile katın toplam
+    çıkış eni kişi ÷ birim genişlik kişisi × 0,50 m ve 50/501/2001 kişide her kaçış yolu
+    1,00/1,50/2,00 m bykhy_exit_width_below (33/1; yüksek binada merdiven 1,20 m, 33/2),
+    50 kişiyi aşan mahalde 2, katta 500'ü aşanda 3, 1000'i aşanda 4 çıkış
+    bykhy_exit_count_below (39/2), kaçış yolu olan koridor 1,10 m (yüksek binada 1,20)
+    bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
+    kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
+    yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
+    çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark ve Sığınak Yönetmelikleri
+    — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m²
+    üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50
+    m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m²
+    (otopark yeri blokları çizildiyse onların sayısı) az ise parking_short; konutta oda
+    sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷
+    20'den kişi başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short
+    (7/a–c muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count
+    (8/c), iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures
+    gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+    değildir.
     """
     __slots__ = ()
     id = "cad.arch.audit"
@@ -317,42 +326,51 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         parking_area_short (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her
         20 yerde 1 ve en az 1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu
         otopark 20 ve üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short
-        (5/1-j; düzeltmesi bir binek yerini Şarjlı yapar). Projenin yerel imar yönetmeliği
-        (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur (PAİY
-        69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve ara
-        sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
-        yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
-        0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa
-        bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk).
-        docs/adr/8035 (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu
-        mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak
-        nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı
-        Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında
-        dışarı açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b).
-        Konut olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün
-        yol Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75
-        …), koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m
-        (yağmurlamada 30, 48/2) ve daire kapısından kat çıkışına Ek-5/B apartman (48/4) —
-        bodrum dahil 4 kata kadar konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal
-        bykhy_escape_no_route; kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen
-        alanıyla) ile katın toplam çıkış eni kişi ÷ birim genişlik kişisi × 0,50 m ve
-        50/501/2001 kişide her kaçış yolu 1,00/1,50/2,00 m bykhy_exit_width_below (33/1;
-        yüksek binada merdiven 1,20 m, 33/2), 50 kişiyi aşan mahalde 2, katta 500'ü aşanda
-        3, 1000'i aşanda 4 çıkış bykhy_exit_count_below (39/2), kaçış yolu olan koridor 1,10
-        m (yüksek binada 1,20) bykhy_corridor_narrow, konutta yapı yüksekliği
-        21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni bykhy_stair_count_below
-        (48/5). settings.arch.sprinklers yağmurlamalı sınırları okutur. Korunumluluk, yangın
-        dayanımı ve güvenlik holü çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark
-        ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına
-        göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm
-        başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı
-        mahallerin net alanı ÷ 20 m² (otopark yeri blokları çizildiyse onların sayısı) az
-        ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4
-        kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı
-        mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi
-        aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m
-        shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince
-        çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+        (5/1-j; düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
+        5.8.2026/33331) EK-9 model kalite kontrol formunun çizimin bozduğu soruları,
+        cad.arch.ifc'nin yazdığı modelden: künyede EK-7'nin proje bilgileri eksikse
+        digital_project_info_missing (Md. 13), proje kodu yoksa ya da 000000 ise
+        digital_project_code_missing (Md. 6, EK-1), numarası ya da adı olmayan mahaller
+        digital_space_unnamed (Md. 10), çizim yerel koordinatta, sistemi TUREF 3° dilimi
+        (EPSG:5253–5259) değil ya da ±0.00'ın kotu yoksa digital_system_wrong (EK-7 Tablo
+        7.6–7.7), modelde mahal yoksa digital_no_spaces, IFC'ye girmeyen nesneler (rampa,
+        gövdesiz nesne) digital_model_loss (Md. 9; nesneleri bulgunun); duvarsız çizimde
+        hiçbiri. Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa
+        değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de
+        yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat
+        yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
+        regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
+        0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
+        cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların
+        Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve
+        boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta duvardan 0,40 m içeride
+        (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven adlı mahal, açık
+        merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı açılan kapı; bir
+        bölümün yolu başka bölümün mahallerinden geçmez (33/6-b). Konut olmayan mahalde tek
+        çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün yol Ek-5/B'yi aşarsa
+        bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75 …), koridorun çıkmaz
+        kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m (yağmurlamada 30, 48/2) ve
+        daire kapısından kat çıkışına Ek-5/B apartman (48/4) — bodrum dahil 4 kata kadar
+        konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal bykhy_escape_no_route;
+        kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen alanıyla) ile katın toplam
+        çıkış eni kişi ÷ birim genişlik kişisi × 0,50 m ve 50/501/2001 kişide her kaçış yolu
+        1,00/1,50/2,00 m bykhy_exit_width_below (33/1; yüksek binada merdiven 1,20 m, 33/2),
+        50 kişiyi aşan mahalde 2, katta 500'ü aşanda 3, 1000'i aşanda 4 çıkış
+        bykhy_exit_count_below (39/2), kaçış yolu olan koridor 1,10 m (yüksek binada 1,20)
+        bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
+        kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
+        yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
+        çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark ve Sığınak Yönetmelikleri
+        — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m²
+        üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50
+        m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m²
+        (otopark yeri blokları çizildiyse onların sayısı) az ise parking_short; konutta oda
+        sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷
+        20'den kişi başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short
+        (7/a–c muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count
+        (8/c), iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures
+        gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+        değildir.
 
         Args:
             doc: The drawing it works on.

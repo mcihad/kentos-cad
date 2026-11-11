@@ -30,7 +30,8 @@ fn regulation(app: &mut App, checks: Value) -> Vec<(String, String, String)> {
         .cloned()
         .unwrap_or_default()
         .iter()
-        .filter(|f| f["check"] == "regulation")
+        // The digital project's (EK-9) findings have their own tests (`digital_audit`, docs/adr/8047 §9).
+        .filter(|f| f["check"] == "regulation" && !f["code"].as_str().is_some_and(|c| c.starts_with("digital_")))
         .map(|f| {
             (
                 f["code"].as_str().unwrap_or_default().to_owned(),
@@ -276,13 +277,17 @@ fn set_arch(app: &mut App, edit: impl FnOnce(&mut kentos_commands::ArchSettings)
     );
 }
 
-/// The regulation group's findings whole.
+/// The regulation group's findings whole, but for the digital project's (EK-9, docs/adr/8047 §9): a drawing here has no
+/// künye or coordinate system, and those findings have their own tests (the application's `digital_audit`).
 fn regulation_findings(app: &mut App) -> Vec<Value> {
     let answer = run(app, "cad.arch.audit", json!({ "checks": ["regulation"] }));
     answer["output"]["findings"]
         .as_array()
         .cloned()
         .unwrap_or_default()
+        .into_iter()
+        .filter(|f| !f["code"].as_str().is_some_and(|c| c.starts_with("digital_")))
+        .collect()
 }
 
 /// A four-storey building of two flats (M34, docs/adr/8034): its common stair (1.25 m, 0.1667 m risers, a railing on

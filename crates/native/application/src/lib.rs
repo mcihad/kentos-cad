@@ -481,6 +481,8 @@ pub mod sections_query;
 pub mod wall_distances;
 // Binanın IFC 4.3'ü: kentos-ifc'in bağdaştırıcısı (docs/adr/8047).
 pub mod arch_ifc;
+// Dijital proje denetimi: EK-9'un modelin cevapladığı soruları (docs/adr/8047 §9).
+pub mod digital_audit;
 // Kolonun geçici ölçüleri (docs/adr/0712).
 pub mod column_distances;
 pub use column_distances::distances as columns_distances;
