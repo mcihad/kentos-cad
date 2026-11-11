@@ -12,8 +12,9 @@ import type { PlanLayerRole } from "./PlanLayerRole";
  * first layer of the door's or window's role, a bare opening its wall's. A door's type is Kapı 80 or 90 (by its
  * width), İki kanatlı kapı 140 with two leaves; a window's Pencere 120; a bare opening's Boşluk 100; each as wide as
  * read. A column layer's rectangle is a rectangular column (its centre, its sides, its turn: the side nearer east–west
- * its width), its circle a round one, each filled and on its layer; a hatch inside one goes with it. The sources read
- * whole are taken away unless kept; the others stay and are said.
+ * its width), its circle a round one, each filled and on its layer; a hatch inside one goes with it. A block is read
+ * where it stands, the drawing unchanged: its pieces by their layers' roles, one of layer 0 by its insert's. The
+ * sources read whole are taken away unless kept; the others stay and are said.
  *
  * Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked` (every source locked),
  * `layer_not_found` (a role's layer), `not_finite`, `recognize_option` (a width not above zero, the thinnest not

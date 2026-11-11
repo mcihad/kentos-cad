@@ -999,10 +999,13 @@ class _ArchRecognize(LocalCommand[ArchRecognize, ArchRecognized, ArchRecognizePl
     80 ya da 90, iki kanatlıysa İki kanatlı kapı 140; pencere Pencere 120; boşluk Boşluk
     100; her biri okunduğu genişlikte. Duvarlar wallLayerId'ye, yoksa ilk çizgisinin
     katmanına; kapı ve pencereler openingLayerId'ye, yoksa rolündeki ilk katmana, boşluk
-    duvarının katmanına yazılır. Bütünüyle okunan kaynaklar keepSources verilmezse
-    silinir; okunmayanlar (rolü olmayan katman, blok, kolon, duvara ait olmayan çizgi)
-    çizimde kalır ve plan_unrecognized ile söylenir. Hiç duvar okunmazsa ret. Plan
-    yazmadan duvarları, açıklıkları, silinecek ve kalacak kaynakları gösterir.
+    duvarının katmanına yazılır. Kolon katmanının dört dik köşeli çevresi dikdörtgen,
+    dairesi yuvarlak kolon olur (dolgulu; içindeki tarama onunla gider). Bloklar çizim
+    değişmeden yerinde açılır: parça kendi katmanının, 0 katmanındaki parça
+    yerleştirmenin rolüyle okunur. Bütünüyle okunan kaynaklar keepSources verilmezse
+    silinir; okunmayanlar (yok sayılan katman, L kolon, açılamayan blok, duvara ait
+    olmayan çizgi) çizimde kalır ve plan_unrecognized ile söylenir. Hiç duvar okunmazsa
+    ret. Plan yazmadan duvarları, açıklıkları, silinecek ve kalacak kaynakları gösterir.
     """
     __slots__ = ()
     id = "cad.arch.recognize"
@@ -1055,10 +1058,13 @@ class _ArchRecognize(LocalCommand[ArchRecognize, ArchRecognized, ArchRecognizePl
         kanatlıysa İki kanatlı kapı 140; pencere Pencere 120; boşluk Boşluk 100; her biri
         okunduğu genişlikte. Duvarlar wallLayerId'ye, yoksa ilk çizgisinin katmanına; kapı
         ve pencereler openingLayerId'ye, yoksa rolündeki ilk katmana, boşluk duvarının
-        katmanına yazılır. Bütünüyle okunan kaynaklar keepSources verilmezse silinir;
-        okunmayanlar (rolü olmayan katman, blok, kolon, duvara ait olmayan çizgi) çizimde
-        kalır ve plan_unrecognized ile söylenir. Hiç duvar okunmazsa ret. Plan yazmadan
-        duvarları, açıklıkları, silinecek ve kalacak kaynakları gösterir.
+        katmanına yazılır. Kolon katmanının dört dik köşeli çevresi dikdörtgen, dairesi
+        yuvarlak kolon olur (dolgulu; içindeki tarama onunla gider). Bloklar çizim
+        değişmeden yerinde açılır: parça kendi katmanının, 0 katmanındaki parça
+        yerleştirmenin rolüyle okunur. Bütünüyle okunan kaynaklar keepSources verilmezse
+        silinir; okunmayanlar (yok sayılan katman, L kolon, açılamayan blok, duvara ait
+        olmayan çizgi) çizimde kalır ve plan_unrecognized ile söylenir. Hiç duvar okunmazsa
+        ret. Plan yazmadan duvarları, açıklıkları, silinecek ve kalacak kaynakları gösterir.
 
         Args:
             doc: The drawing it works on.

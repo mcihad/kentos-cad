@@ -1,10 +1,10 @@
 # ADR 8048: Planı tanı — patlatılmış DWG/DXF planından duvar ve açıklık
 
-- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
+- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon ve blok adımları yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
   (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2), masaüstü aracı Mimari ›
   Duvar ▾ › Planı tanı (§4); bölüm binasının ofis planı tanımla birebir okunuyor, gerçek pencerede kabul edildi
-  (Doğrulama); kolon katmanının dikdörtgeni ve dairesi kolon olur (§5). Açık: L ve düzensiz kolon, duvar stilinin
-  genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri
+  (Doğrulama); kolon katmanının dikdörtgeni ve dairesi kolon olur (§5); bloklar yerinde okunur (§6). Açık: L ve
+  düzensiz kolon, duvar stilinin genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri
   duvar, duvar ucundaki kapı, bloklar (BLOCKIFY benzeri) ve gerçek bir ofis DWG'siyle tadilat örneği (§3).
 - **Bağlam belgesi:** ADR 0339 §5 (Çizgiden duvar, `cad.walls.convert`), ADR 0340 §2 (duvar birleşimleri), ADR 0341
   (açıklıklar), ADR 0772 (açıklık türleri), ADR 8039 (tadilat durumu), ADR 8046 (DWG/DXF katman profili), ADR 8047
@@ -110,6 +110,16 @@ L ya da düzensiz çevre kolon olmaz, kalır ve söylenir ("1 kolon nesnesi kolo
 değil)"). Kolon, duvarın tanınmasında yine köprüdür (§1). Çıktıda `columns`, planda kolon nesneleri; araç önizlemede
 çevrelerini çizer ve sözüne "8 kolon" ekler. Sayılar nanometreye yuvarlanır (30° dönüş 0,523598776).
 
+### 6. Bloklar yerinde okunur
+
+Ofisler kapıyı, pencereyi ve kolonu çoğunlukla blok olarak tutar (KAPI-90-15, PENCERE-120-25, KOLON-30); planı
+patlatmadan getirdiklerinde bu nesneler INSERT'tür. Seçimdeki her blok **çizimi değiştirmeden**, Patlat'ın açtığı gibi
+açılır (`Blocks::explode`, iç içe blok sekiz kata dek): parça kendi katmanında, katmanı olmayan (bloğun "0" katmanı)
+parça yerleştirmenin katmanında okunur, her biri o katmanın rolüyle. Döndürülmüş ve aynalanmış yerleştirme parçalarını
+yerlerinde verir. Kapı bloğunun yayı ve kanadı kapı, pencere bloğunun çizgileri pencere, kolon bloğunun çevresi kolon
+olur; bütün parçaları okunan blok silinir. Parçaları yok sayılan katmanlarda kalan blok (bir mobilya) yok sayılan
+katmanda sayılır; açılamayan blok "N blok açılamadı" diye söylenir.
+
 ## Doğrulama
 
 - Çekirdek: 15 test (oda, kapı, dışa açılan kapı, iki kanat, pencere, boşluk ve pervazları, kalem kayması, geniş
@@ -130,6 +140,12 @@ değil)"). Kolon, duvarın tanınmasında yine köprüdür (§1). Çıktıda `co
 - 42 ortak durum (kolon adımıyla: yuvarlak, 30° dönük 0,50×0,30 ve taramalı kolon, kalan L çevre)
   `scripts/fixtures/arch_recognize_cases.py` (KentOS kodu olmadan) masaüstü işleyicisinde ve Python
   SDK'da geçiyor.
+- **Bloklu ofis planı** (aynı üretici, `kesit-binasi-zemin-bloklu.dxf`: her kapı, pencere ve kolon kendi bloğu,
+  duvarın doğrultusunda döndürülmüş, dış tarafa göre aynalanmış pencere, parçalar 0 katmanında; DXF içe aktar blokları
+  blok olarak getirir): tanım yine mikrometresine kadar aynı (8 duvar, 7 açıklık, menteşe ve yanlar, 8 kolon); 56 duvar
+  çizgisi ve 15 blok silinir, 23 nesne kalır. 43 ortak durumun biri bloklar (yarım dönüp aynalanmış pencere bloğu).
+- Üretici iki dosyayı her koşuda aynı yazar: ezdxf'in CLASSES sırası koşunun karma tohumuyla değişiyordu (adlarına
+  göre sıralanır), sabit üst veri seçeneği de ilk belgeden önce açılır.
 - Araç: 2 etkileşim testi (önizlemenin sözü, katman satırları ve rolleri, Enter'ın tek adımı ve geri alınması; Duvar
   rolü Yok say'a çekilince ret ve hiçbir şey yazılmaması).
 - **Gerçek pencere** (1920×1080, Xvfb, gerçek fare ve klavye, release ikilisi; `.run/gui-evidence/mimari-m48/`): ofis
@@ -148,5 +164,5 @@ değil)"). Kolon, duvarın tanınmasında yine köprüdür (§1). Çıktıda `co
 - L ve düzensiz kolon (ADR 0725 §3'ün L kolonu), duvar stilinin ölçülen kalınlıktan seçilmesi (Chief Architect'in
   25 mm'si) ve bileşen çizgilerinden katmanlar.
 - Yüzleri kesilmeden çizilmiş pencere (pervaz çizgileri arasındaki cam çizgileri), eğri duvar (eş merkezli yaylar),
-  duvar ucunda dikey duvara dayanan kapı, bloklar (patlatılmadan tanıma, BLOCKIFY), merdiven ve donatı.
+  duvar ucunda dikey duvara dayanan kapı, blok niteliğindeki kapı numarasının açıklığa geçmesi, merdiven ve donatı.
 - Gerçek bir ofis DWG'siyle tadilat örneği (ADV-25'in ilk kabulü).

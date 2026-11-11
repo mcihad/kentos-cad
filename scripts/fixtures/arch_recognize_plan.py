@@ -11,9 +11,13 @@
 - AKS: the grids, dash-dotted; MERDIVEN: the first flight's treads (lines 28 cm apart); YAZI: the rooms' names;
   MOBILYA: a bed.
 
-Planı tanı reads it back; the answer is the definition (8 walls, 3 doors, 4 windows).
+Planı tanı reads it back; the answer is the definition (8 walls, 3 doors, 4 windows, 8 columns).
 
-Writes fixtures/arch/v1/recognize/kesit-binasi-zemin.dxf; `--check` compares.
+The second file is the same plan as an office keeps it before EXPLODE: each door, window and column a block drawn
+once in its own axes (along its wall from its start jamb, across to the wall's left; its pieces on layer 0) and
+inserted turned along its wall on KAPI, PENCERE or KOLON, a window mirrored where its sill is on the wall's left.
+
+Writes fixtures/arch/v1/recognize/kesit-binasi-zemin.dxf and kesit-binasi-zemin-bloklu.dxf; `--check` compares.
 
     uv run --no-project --python 3.11 --with ezdxf --with shapely python -I scripts/fixtures/arch_recognize_plan.py
 """
@@ -31,7 +35,10 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import section_building as sb  # noqa: E402
 
+# Fixed metadata (no creation time) from the first document made: the files are the same every run.
+ezdxf.options.write_fixed_meta_data_for_testing = True
 OUT = ROOT / "fixtures/arch/v1/recognize/kesit-binasi-zemin.dxf"
+BLOCKS = ROOT / "fixtures/arch/v1/recognize/kesit-binasi-zemin-bloklu.dxf"
 CM = 100.0
 LEVEL = "zemin"
 CENTRE = (6.0, 4.5)
@@ -59,7 +66,16 @@ def cm(p):
     return (round(p[0] * CM, 6), round(p[1] * CM, 6))
 
 
-def plan():
+def block(doc, name, draw):
+    """A block of `name` drawn once (its pieces on layer 0, in centimetres), unless there is one."""
+    if name not in doc.blocks:
+        b = doc.blocks.new(name)
+        b.block_record.dxf.units = 5
+        draw(b)
+    return name
+
+
+def plan(blocks=False):
     ents, uids = sb.d["entities"], sb.d["uids"]
     by_uid = dict(zip(uids, ents))
     walls = [e for e in ents if e["kind"] == "wall" and e["arch"]["level"] == LEVEL]
@@ -107,7 +123,17 @@ def plan():
     for a, b in edges:
         msp.add_line(cm(a), cm(b), dxfattribs={"layer": "DUVAR"})
 
-    for sq in squares:
+    for c, sq in zip(columns, squares):
+        if blocks:
+            h = c["width"] / 2
+
+            def column(b, h=h):
+                pts = [cm(q) for q in ((-h, -h), (h, -h), (h, h), (-h, h))]
+                b.add_lwpolyline(pts, close=True, dxfattribs={"layer": "0"})
+                b.add_hatch(color=1, dxfattribs={"layer": "0"}).paths.add_polyline_path(pts, is_closed=True)
+            name = block(doc, f"KOLON-{round(c['width'] * CM)}", column)
+            msp.add_blockref(name, cm((c["at"]["x"], c["at"]["y"])), dxfattribs={"layer": "KOLON"})
+            continue
         pts = [cm(p) for p in list(sq.exterior.coords)[:-1]]
         msp.add_lwpolyline(pts, close=True, dxfattribs={"layer": "KOLON"})
         hatch = msp.add_hatch(color=1, dxfattribs={"layer": "KOLON"})
@@ -117,6 +143,37 @@ def plan():
         w = by_uid[o["host"]]
         h = w["width"] / 2
         s0, s1 = o["at"], o["at"] + o["width"]
+        if blocks:
+            # In the block's own axes: x along the wall from the start jamb, y across to its left.
+            width, (ax, ay), (u, n) = o["width"], frame(w)[0], frame(w)[1:3]
+            turn = math.degrees(math.atan2(u[1], u[0]))
+            mirror = False
+            if o["form"] == "door":
+                f = o["frame"]
+
+                def door(b, width=width, f=f, h=h):
+                    r = width - 2 * f
+                    b.add_line(cm((f, h)), cm((f, h + r)), dxfattribs={"layer": "0"})
+                    b.add_arc(cm((f, h)), r * CM, 0.0, 90.0, dxfattribs={"layer": "0"})
+                    for t0, t1 in ((0.0, f), (width - f, width)):
+                        b.add_lwpolyline([cm((t0, -h)), cm((t1, -h)), cm((t1, h)), cm((t0, h))], close=True,
+                                         dxfattribs={"layer": "0"})
+                name = block(doc, f"KAPI-{round(width * CM)}-{round(2 * h * CM)}", door)
+                layer = "KAPI"
+            else:
+                def window(b, width=width, h=h):
+                    for r in (-h, -0.01, 0.01, h):
+                        b.add_line(cm((0.0, r)), cm((width, r)), dxfattribs={"layer": "0"})
+                    b.add_line(cm((-0.05, -(h + 0.03))), cm((width + 0.05, -(h + 0.03))), dxfattribs={"layer": "0"})
+                name = block(doc, f"PENCERE-{round(width * CM)}-{round(2 * h * CM)}", window)
+                layer = "PENCERE"
+                # The sill outside: mirrored where the outside is the wall's left.
+                mirror = (CENTRE[0] - ax) * n[0] + (CENTRE[1] - ay) * n[1] <= 0
+            attribs = {"layer": layer, "rotation": turn}
+            if mirror:
+                attribs["yscale"] = -1.0
+            msp.add_blockref(name, cm(at(w, s0, 0.0)), dxfattribs=attribs)
+            continue
         if o["form"] == "door":
             f = o["frame"]
             hinge = at(w, s0 + f, h)
@@ -154,26 +211,40 @@ def plan():
     msp.add_lwpolyline([cm(p) for p in ((1.0, 1.0), (2.6, 1.0), (2.6, 3.0), (1.0, 3.0))], close=True,
                        dxfattribs={"layer": "MOBILYA"})
 
-    ezdxf.options.write_fixed_meta_data_for_testing = True
     out = io.StringIO()
     doc.write(out)
-    return out.getvalue(), len(walls), sum(o["form"] == "door" for o in openings), \
+    return stable(out.getvalue()), len(walls), sum(o["form"] == "door" for o in openings), \
         sum(o["form"] == "window" for o in openings), len(edges)
+
+
+def stable(text):
+    """The file with its CLASSES in their names' order: ezdxf writes them in a set's order, which changes with the
+    run's hash seed."""
+    head = "  0\nSECTION\n  2\nCLASSES\n"
+    start = text.find(head)
+    if start < 0:
+        return text
+    body_start = start + len(head)
+    end = text.index("  0\nENDSEC\n", body_start)
+    chunks = [c for c in text[body_start:end].split("  0\nCLASS\n") if c]
+    chunks.sort(key=lambda c: c.split("\n")[1])
+    return text[:body_start] + "".join("  0\nCLASS\n" + c for c in chunks) + text[end:]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    text, walls, doors, windows, lines = plan()
-    if args.check:
-        if not OUT.exists() or OUT.read_text() != text:
-            sys.exit(f"{OUT} differs: run without --check")
-        print(f"{OUT.relative_to(ROOT)}: up to date")
-        return
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(text)
-    print(f"{OUT.relative_to(ROOT)}: {walls} walls, {doors} doors, {windows} windows, {lines} wall lines")
+    for path, blocks in ((OUT, False), (BLOCKS, True)):
+        text, walls, doors, windows, lines = plan(blocks)
+        if args.check:
+            if not path.exists() or path.read_text() != text:
+                sys.exit(f"{path} differs: run without --check")
+            print(f"{path.relative_to(ROOT)}: up to date")
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        print(f"{path.relative_to(ROOT)}: {walls} walls, {doors} doors, {windows} windows, {lines} wall lines")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,8 @@
 //! exploded and drawn in centimetres (scripts/fixtures/arch_recognize_plan.py: walls' outlines on DUVAR, columns on
 //! KOLON, doors on KAPI, windows on PENCERE, and grids, stair treads, texts and a bed), taken in by DXF içe aktar and
 //! read back as the definition's walls, doors and windows; its IFC model holds as many as the definition (Dijital Proje
-//! Yön. Md. 9).
+//! Yön. Md. 9). The same plan with its doors, windows and columns as blocks (turned, mirrored, their pieces on layer 0)
+//! reads alike, the blocks going with what they are.
 
 use kentos_commands::{CallOp, DocumentSnapshotV2, Entity, OpeningForm, OpeningHand, OpeningSide};
 use kentos_domain::Document;
@@ -18,12 +19,17 @@ fn snapshot() -> DocumentSnapshotV2 {
 
 /// The section building's storeys and layers with nothing drawn, the office's plan taken in: its objects' ids.
 fn imported() -> (Document, Vec<String>) {
+    imported_from("kesit-binasi-zemin.dxf")
+}
+
+/// [`imported`] of a plan of `fixtures/arch/v1/recognize`, its blocks kept as blocks.
+fn imported_from(file: &str) -> (Document, Vec<String>) {
     let mut snap = snapshot();
     snap.entities.clear();
     snap.uids.clear();
     let mut doc = Document::from_snapshot_v2(snap).unwrap();
     let path = format!(
-        "{}/../../../fixtures/arch/v1/recognize/kesit-binasi-zemin.dxf",
+        "{}/../../../fixtures/arch/v1/recognize/{file}",
         env!("CARGO_MANIFEST_DIR")
     );
     let answer = run(
@@ -236,6 +242,36 @@ fn the_office_s_ground_floor_reads_back_as_the_definition() {
     assert_eq!(doc.undo().as_deref(), Some("Planı tanı"));
     assert!(walls_of(&doc).is_empty());
     assert_eq!(doc.entities().count(), 23 + 104);
+}
+
+#[test]
+fn the_plan_kept_with_its_blocks_reads_alike_and_the_blocks_go() {
+    let (mut doc, uids) = imported_from("kesit-binasi-zemin-bloklu.dxf");
+    let inserts = doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Insert(_)))
+        .count();
+    // 3 doors, 4 windows, 8 columns.
+    assert_eq!(inserts, 15);
+    let answer = run(
+        &mut doc,
+        "cad.arch.recognize",
+        CallOp::Execute,
+        json!({ "uids": uids, "arch": { "level": "zemin" } }),
+    );
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let (walls, openings) = definition();
+    assert_eq!(walls_of(&doc), walls);
+    assert_eq!(holes(&doc), openings);
+    assert_eq!(
+        columns_of(&doc),
+        columns_of(&Document::from_snapshot_v2(snapshot()).unwrap())
+    );
+    // The 56 wall lines and the 15 blocks go; the grids, treads, names and the bed stay.
+    let out = &answer["output"];
+    assert_eq!(out["removed"].as_array().unwrap().len(), 56 + 15, "{out}");
+    assert!(!doc.entities().any(|e| matches!(e, Entity::Insert(_))));
+    assert_eq!(out["left"].as_array().unwrap().len(), 23, "{out}");
 }
 
 #[test]

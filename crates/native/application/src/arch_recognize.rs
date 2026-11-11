@@ -7,6 +7,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use kentos_commands::LayerNodeType;
 use kentos_commands::{
     ArchInfo, ArchRecognize, ArchRecognizePlan, ArchRecognized, ColumnEntity, ColumnFields,
     ColumnShape, CommandResult, CommandWarning, Entity, EntityBase, NewOpening, NewWall,
@@ -15,15 +16,20 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot, Uuid, opening_follow};
 use kentos_geometry_core::Vec2 as V;
+use kentos_geometry_core::api::json::Json;
+use kentos_geometry_core::block::Blocks;
+use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::bulge::bulge_arc;
 use kentos_geometry_core::jsmath::{PI, atan2, cos, js_hypot, js_round, sin};
+use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::plan_recognition::{self as read, Role};
 
 use crate::ExecutionContext;
 use crate::arch_elements;
 use crate::checks::{self, Stop, error};
 use crate::codes;
+use crate::geometry::shape;
 use crate::openings;
 use crate::walls;
 
@@ -102,18 +108,14 @@ pub fn guess_role(name: &str) -> Option<PlanRole> {
     }
 }
 
-fn v(p: Vec2) -> V {
-    V::new(p.x, p.y)
-}
-
 /// Why an object of the plan was not read.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum Unread {
     /// Its layer has no role.
     Ignored,
-    /// A block not exploded.
+    /// A block that does not open.
     Block,
-    /// A column: not made yet.
+    /// A column layer's object no column is made of (an L, a hatch outside a column).
     Column,
     /// No wall's, door's or window's.
     Other,
@@ -164,11 +166,13 @@ pub fn layer_roles<'a>(
     out
 }
 
-/// [`layer_roles`] of the objects' layers; `layer_not_found` for a role given to a layer not in the drawing.
-fn roles(
+/// [`layer_roles`] of the objects' layers and their blocks' pieces' (`more`); `layer_not_found` for a role given to a
+/// layer not in the drawing.
+fn roles<'a>(
     doc: &Document,
     input: &ArchRecognize,
-    found: &[checks::Named<'_>],
+    found: &'a [checks::Named<'_>],
+    more: impl IntoIterator<Item = &'a str>,
 ) -> Result<BTreeMap<String, PlanRole>, Stop> {
     for (i, r) in input.roles.iter().enumerate() {
         if doc.layers().get(&r.layer_id).is_none() {
@@ -184,7 +188,10 @@ fn roles(
     }
     let mut out = layer_roles(
         doc,
-        found.iter().map(|(_, _, e, _)| e.base().layer_id.as_str()),
+        found
+            .iter()
+            .map(|(_, _, e, _)| e.base().layer_id.as_str())
+            .chain(more),
         &input.roles,
     );
     // A role given to a layer none of the objects is on still counts (it says nothing of them).
@@ -196,7 +203,7 @@ fn roles(
 
 /// A path's edges: its straight ones as lines, its bulged ones as arcs (counter-clockwise).
 fn edges(
-    pts: &[Vec2],
+    pts: &[V],
     bulges: Option<&[f64]>,
     closed: bool,
     role: Role,
@@ -206,7 +213,7 @@ fn edges(
     let n = pts.len();
     let count = if closed { n } else { n.saturating_sub(1) };
     for i in 0..count {
-        let (a, b) = (v(pts[i]), v(pts[(i + 1) % n]));
+        let (a, b) = (pts[i], pts[(i + 1) % n]);
         let bulge = bulges.and_then(|b| b.get(i).copied()).unwrap_or(0.0);
         match bulge_arc(a, b, bulge) {
             Some(arc) => {
@@ -229,47 +236,58 @@ fn edges(
     }
 }
 
-/// An object's lines, arcs and outlines for the reading, under `role`; false when it gives none (a text, a block, a
-/// circle not a column's).
-fn lines_of(e: &Entity, role: Role, source: usize, lines: &mut read::Lines) -> bool {
+/// A shape's lines, arcs and outlines for the reading, under `role`: an object's, or a block's piece; false when it
+/// gives none (a text, a hatch, a circle not a column's).
+fn read_shape(s: &Shape, role: Role, source: usize, lines: &mut read::Lines) -> bool {
     let ring = |pts: Vec<V>, lines: &mut read::Lines| {
         lines.rings.push(read::Ring { pts, role, source });
     };
-    match e {
-        Entity::Line(l) => lines.segments.push(read::Segment {
-            a: v(l.a),
-            b: v(l.b),
+    match s {
+        Shape::Line { a, b } => lines.segments.push(read::Segment {
+            a: *a,
+            b: *b,
             role,
             source,
         }),
-        Entity::Polyline(p) if p.parts.is_none() && p.pts.len() >= 2 => {
-            if role == Role::Column && p.closed && p.pts.len() >= 3 {
-                ring(p.pts.iter().map(|q| v(*q)).collect(), lines);
+        Shape::Polyline {
+            pts,
+            bulges,
+            parts: None,
+            closed,
+            ..
+        } if pts.len() >= 2 => {
+            if role == Role::Column && *closed && pts.len() >= 3 {
+                ring(pts.clone(), lines);
             } else {
-                edges(&p.pts, p.bulges.as_deref(), p.closed, role, source, lines);
+                edges(pts, bulges.as_deref(), *closed, role, source, lines);
             }
         }
-        Entity::Polygon(p) if p.parts.is_none() && p.pts.len() >= 3 => {
+        Shape::Polygon {
+            pts,
+            bulges,
+            parts: None,
+            ..
+        } if pts.len() >= 3 => {
             if role == Role::Column {
-                ring(p.pts.iter().map(|q| v(*q)).collect(), lines);
+                ring(pts.clone(), lines);
             } else {
-                edges(&p.pts, p.bulges.as_deref(), true, role, source, lines);
+                edges(pts, bulges.as_deref(), true, role, source, lines);
             }
         }
-        Entity::Arc(a) => lines.arcs.push(read::Arc {
-            c: v(a.c),
-            r: a.r,
-            a0: a.a0,
-            sweep: sweep(a.a0, a.a1),
+        Shape::Arc { c, r, a0, a1 } => lines.arcs.push(read::Arc {
+            c: *c,
+            r: *r,
+            a0: *a0,
+            sweep: sweep(*a0, *a1),
             role,
             source,
         }),
         // A round column: its outline as sixteen sides.
-        Entity::Circle(c) if role == Role::Column => {
+        Shape::Circle { c, r } if role == Role::Column => {
             let pts = (0..16)
                 .map(|k| {
                     let t = f64::from(k) * PI / 8.0;
-                    V::new(c.c.x + c.r * cos(t), c.c.y + c.r * sin(t))
+                    V::new(c.x + r * cos(t), c.y + r * sin(t))
                 })
                 .collect();
             ring(pts, lines);
@@ -279,16 +297,76 @@ fn lines_of(e: &Entity, role: Role, source: usize, lines: &mut read::Lines) -> b
     true
 }
 
+/// A block's pieces as the reading takes them (docs/adr/8048 §6): the insert's definition opened, a nested insert's
+/// too (at most eight deep); each piece with its layer: its own when the drawing has it, else the insert's (a piece of
+/// the block's layer, "0", draws with the insert's). `None` when the block does not open.
+fn block_pieces(
+    doc: &Document,
+    blocks: &Blocks,
+    insert: &CoreEntity,
+    layer: &str,
+    depth: usize,
+    out: &mut Vec<(String, Shape)>,
+) -> Option<()> {
+    if depth > 8 {
+        return Some(());
+    }
+    let Cut::Pieces(pieces) = blocks.explode(insert) else {
+        return None;
+    };
+    for piece in pieces {
+        let own = piece.rest.iter().find_map(|(k, v)| match v {
+            Json::Str(s) if k == "layerId" && !s.is_empty() => Some(s.clone()),
+            _ => None,
+        });
+        let layer = own
+            .filter(|id| {
+                doc.layers()
+                    .get(id)
+                    .is_some_and(|n| n.kind == LayerNodeType::Layer)
+            })
+            .unwrap_or_else(|| layer.to_owned());
+        if matches!(piece.shape, Shape::Insert { .. }) {
+            block_pieces(doc, blocks, &piece, &layer, depth + 1, out)?;
+        } else {
+            out.push((layer, piece.shape));
+        }
+    }
+    Some(())
+}
+
 /// A number to the nanometre, as the plan's reading gives its walls'.
 fn clean(x: f64) -> f64 {
     let r = js_round(x * 1e9) / 1e9;
     if r == 0.0 { 0.0 } else { r }
 }
 
-/// The column a column layer's object is (docs/adr/8048 §2): a circle a round one as wide as it; a closed outline of
+/// A column layer's outline as a column reads it: a circle, or a closed straight outline's vertices.
+fn outline_of(s: &Shape) -> Option<Result<(V, f64), Vec<V>>> {
+    let straight = |b: &Option<Vec<f64>>| b.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
+    match s {
+        Shape::Circle { c, r } => Some(Ok((*c, *r))),
+        Shape::Polyline {
+            pts,
+            bulges,
+            parts: None,
+            closed: true,
+            ..
+        }
+        | Shape::Polygon {
+            pts,
+            bulges,
+            parts: None,
+            ..
+        } if straight(bulges) => Some(Err(pts.clone())),
+        _ => None,
+    }
+}
+
+/// The column a column layer's outline is (docs/adr/8048 §5): a circle a round one as wide as it; a closed outline of
 /// four right angles a rectangular one about its middle, its width the side nearer east–west, turned as that side.
 /// Another outline is none.
-fn column_of(e: &Entity, arch: &ArchInfo) -> Option<ColumnFields> {
+fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<ColumnFields> {
     let made =
         |at: V, shape: ColumnShape, width: f64, depth: Option<f64>, rotation: f64| ColumnFields {
             at: Vec2 {
@@ -310,37 +388,26 @@ fn column_of(e: &Entity, arch: &ArchInfo) -> Option<ColumnFields> {
             broken: None,
             arch: arch.clone(),
         };
-    let pts: Vec<V> = match e {
-        Entity::Circle(c) => {
-            return Some(made(v(c.c), ColumnShape::Round, 2.0 * c.r, None, 0.0));
-        }
-        Entity::Polyline(p)
-            if p.parts.is_none()
-                && p.closed
-                && p.bulges
-                    .as_ref()
-                    .is_none_or(|b| b.iter().all(|x| *x == 0.0)) =>
-        {
-            p.pts.iter().map(|q| v(*q)).collect()
-        }
-        Entity::Polygon(p)
-            if p.parts.is_none()
-                && p.bulges
-                    .as_ref()
-                    .is_none_or(|b| b.iter().all(|x| *x == 0.0)) =>
-        {
-            p.pts.iter().map(|q| v(*q)).collect()
-        }
-        _ => return None,
+    let mut pts = match outline {
+        Ok((c, r)) => return Some(made(c, ColumnShape::Round, 2.0 * r, None, 0.0)),
+        Err(pts) => pts,
     };
-    // Its corners: a point where the outline turns, a repeated or a straight one left out.
+    // A vertex drawn twice is one; a closing vertex on the first is the first.
+    pts.dedup_by(|p, q| js_hypot(p.x - q.x, p.y - q.y) <= 1e-9);
+    if pts.len() > 1
+        && let (Some(first), Some(last)) = (pts.first(), pts.last())
+        && js_hypot(first.x - last.x, first.y - last.y) <= 1e-9
+    {
+        pts.pop();
+    }
+    // Its corners: a point where the outline turns, a straight one left out.
     let n = pts.len();
     let corners: Vec<V> = (0..n)
         .filter(|&i| {
             let (a, b, c) = (pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n]);
             let (u, w) = ((b.x - a.x, b.y - a.y), (c.x - b.x, c.y - b.y));
             let turn = u.0 * w.1 - u.1 * w.0;
-            js_hypot(w.0, w.1) > 1e-9 && turn.abs() > 1e-9 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
+            turn.abs() > 1e-9 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
         })
         .map(|i| pts[i])
         .collect();
@@ -429,7 +496,38 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
         checks::skip_locked(doc, found)?
     };
     let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
-    let roles = roles(doc, input, &found)?;
+    // The blocks' pieces, each with its layer; `None` for a block that does not open.
+    let mut pieces: BTreeMap<usize, Option<Vec<(String, Shape)>>> = BTreeMap::new();
+    if found
+        .iter()
+        .any(|(_, _, e, _)| matches!(e, Entity::Insert(_)))
+    {
+        let blocks = crate::blocks::drawing_blocks(doc);
+        for (k, (_, _, e, _)) in found.iter().enumerate() {
+            if matches!(e, Entity::Insert(_)) {
+                let mut out = Vec::new();
+                let opened = block_pieces(
+                    doc,
+                    &blocks,
+                    &crate::blocks::core_entity(e),
+                    &e.base().layer_id,
+                    0,
+                    &mut out,
+                );
+                pieces.insert(k, opened.map(|()| out));
+            }
+        }
+    }
+    let roles = roles(
+        doc,
+        input,
+        &found,
+        pieces
+            .values()
+            .flatten()
+            .flatten()
+            .map(|(layer, _)| layer.as_str()),
+    )?;
     for (value, what, name) in [
         (input.min_width, "minWidth", "En ince duvar"),
         (input.max_width, "maxWidth", "En kalın duvar"),
@@ -489,24 +587,48 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
     // The columns made of the column layers' objects, and those layers' hatches by their middle.
     let mut made_columns: Vec<(usize, ColumnFields)> = Vec::new();
     let mut fills: Vec<(usize, V)> = Vec::new();
+    let arch = input.arch.clone().unwrap_or_default();
+    let role_of = |layer: &str| match roles.get(layer).copied().unwrap_or(PlanRole::Ignore) {
+        PlanRole::Wall => Some(Role::Wall),
+        PlanRole::Door => Some(Role::Door),
+        PlanRole::Window => Some(Role::Window),
+        PlanRole::Column => Some(Role::Column),
+        PlanRole::Ignore => None,
+    };
     for (k, (_, _, e, _)) in found.iter().enumerate() {
-        let role = match roles
-            .get(&e.base().layer_id)
-            .copied()
-            .unwrap_or(PlanRole::Ignore)
-        {
-            PlanRole::Wall => Role::Wall,
-            PlanRole::Door => Role::Door,
-            PlanRole::Window => Role::Window,
-            PlanRole::Column => Role::Column,
-            PlanRole::Ignore => {
-                unread.insert(k, Unread::Ignored);
+        // A block: its pieces, each by its layer's role; it goes when all of them are read.
+        if let Some(opened) = pieces.get(&k) {
+            let Some(parts) = opened else {
+                unread.insert(k, Unread::Block);
                 continue;
+            };
+            let mut roled = false;
+            let mut given = false;
+            for (layer, shape) in parts {
+                let Some(role) = role_of(layer) else { continue };
+                roled = true;
+                if role == Role::Column
+                    && let Some(c) = outline_of(shape).and_then(|o| column_of(o, &arch))
+                {
+                    made_columns.push((k, c));
+                }
+                given |= read_shape(shape, role, k, &mut lines);
             }
+            if !roled {
+                unread.insert(k, Unread::Ignored);
+            } else if !given {
+                unread.insert(k, Unread::Other);
+            }
+            continue;
+        }
+        let Some(role) = role_of(&e.base().layer_id) else {
+            unread.insert(k, Unread::Ignored);
+            continue;
         };
-        let given = lines_of(e, role, k, &mut lines);
+        let s = shape(e);
+        let given = read_shape(&s, role, k, &mut lines);
         if role == Role::Column {
-            match (e, column_of(e, &input.arch.clone().unwrap_or_default())) {
+            match (e, outline_of(&s).and_then(|o| column_of(o, &arch))) {
                 (_, Some(c)) => made_columns.push((k, c)),
                 // A column's hatch goes with the column it fills.
                 (Entity::Hatch(h), None) if !h.ring.is_empty() => {
@@ -521,12 +643,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
                 }
             }
         } else if !given {
-            let why = if matches!(e, Entity::Insert(_)) {
-                Unread::Block
-            } else {
-                Unread::Other
-            };
-            unread.insert(k, why);
+            unread.insert(k, Unread::Other);
         }
     }
     let read = read::recognize(&lines, &o);
@@ -705,7 +822,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
                     "{n} nesne yok sayılan katmanlarda ({})",
                     ignored_names.join(", ")
                 ),
-                Unread::Block => format!("{n} blok (önce patlatın)"),
+                Unread::Block => format!("{n} blok açılamadı"),
                 Unread::Column => {
                     format!("{n} kolon nesnesi kolona çevrilemedi (dikdörtgen ya da daire değil)")
                 }

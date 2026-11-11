@@ -18,6 +18,8 @@ window's lines, a column's outline — and says what `cad.arch.recognize` makes 
 - a column layer's closed outline of four right angles is a rectangular column about its middle (its width the side
   nearer east–west, turned as that side), its circle a round one as wide as it, filled, on its layer; a hatch whose
   middle lies in one goes with it; another outline stays;
+- a block is read where it stands, its pieces by their layers (a piece of layer 0 takes the insert's): a door's, a
+  window's or a column's block is that door, window or column, and goes when all of it is read;
 - the walls in the order of their first line, the openings by wall and along it, the columns in their sources' order;
   walls, then openings, then columns take the new ids;
 - a source taken whole goes (unless `keepSources`), the others stay, said by why (ignored layers by name, columns,
@@ -50,8 +52,8 @@ LAYERS = {"duvar": "DUVAR", "kapi": "KAPI", "pencere": "PENCERE", "kolon": "KOLO
           "kilitli": "Kilitli katman", "gizli": "Gizli katman"}
 
 
-def setup(entities):
-    return {
+def setup(entities, blocks=None):
+    doc = {
         "format": "kentos.document", "version": 1, "name": "Ofis planı",
         "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                      "plotScale": 50, "workspace": "cad",
@@ -65,6 +67,9 @@ def setup(entities):
         "styles": {"items": [], "categories": []},
         "entities": entities,
     }
+    if blocks:
+        doc["blocks"] = blocks
+    return doc
 
 
 class Plan:
@@ -97,6 +102,9 @@ class Plan:
     def solid(self, pts, layer_id="kolon"):
         return self.add("hatch", layer_id, ring=[P(*q) for q in pts], pattern={"type": "solid", "angle": 0.0,
                                                                              "spacing": 1.0})
+
+    def jamb(self, x, y0, y1, layer_id="duvar"):
+        return self.line((x, y0), (x, y1), layer_id)
 
     def text(self, p, words, layer_id="cizim"):
         return self.add("text", layer_id, p=P(*p), text=words, height=0.2, rotation=0.0)
@@ -254,12 +262,36 @@ def uids_of(plan, ids=None):
     return [f"$uidOf:{i}" for i in (ids or [e["id"] for e in plan.ents])]
 
 
-def case(name, plan, steps, input_=None):
+def case(name, plan, steps, input_=None, blocks=None):
     inp = {"uids": uids_of(plan)} if input_ is None else input_
     for s in steps:
         if s["op"] in ("execute", "plan", "validate"):
             s.setdefault("input", inp)
-    return {"name": name, "setup": setup(plan.ents), "steps": captures(plan) + steps}
+    return {"name": name, "setup": setup(plan.ents, blocks), "steps": captures(plan) + steps}
+
+
+def piece(id, kind, **fields):
+    """A block's piece on the block's layer (layer 0)."""
+    return {"kind": kind, "id": id, "layerId": "", "attrs": {}, **fields}
+
+
+DOOR, WINDOW, POST = ("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e01", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e02",
+                      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e03")
+# An office's blocks, in their own axes: along the wall from the start jamb, across to the wall's left.
+BLOCKS = [
+    {"id": DOOR, "name": "KAPI-90-20", "base": P(0, 0), "entities": [
+        piece(1, "line", a=P(0.05, 0.1), b=P(0.05, 0.9)),
+        piece(2, "arc", c=P(0.05, 0.1), r=0.8, a0=0.0, a1=math.pi / 2),
+        piece(3, "polyline", pts=[P(0, -0.1), P(0.05, -0.1), P(0.05, 0.1), P(0, 0.1)], closed=True),
+        piece(4, "polyline", pts=[P(0.85, -0.1), P(0.9, -0.1), P(0.9, 0.1), P(0.85, 0.1)], closed=True)]},
+    {"id": WINDOW, "name": "PENCERE-120-20", "base": P(0, 0), "entities": [
+        *[piece(k + 1, "line", a=P(0, y), b=P(1.2, y)) for k, y in enumerate((-0.1, -0.02, 0.02, 0.1))],
+        piece(5, "line", a=P(-0.05, -0.13), b=P(1.25, -0.13))]},
+    {"id": POST, "name": "KOLON-30", "base": P(0, 0), "entities": [
+        piece(1, "polyline", pts=[P(-0.15, -0.15), P(0.15, -0.15), P(0.15, 0.15), P(-0.15, 0.15)], closed=True),
+        piece(2, "hatch", ring=[P(-0.15, -0.15), P(0.15, -0.15), P(0.15, 0.15), P(-0.15, 0.15)],
+              pattern={"type": "solid", "angle": 0.0, "spacing": 1.0})]},
+]
 
 
 def cases():
@@ -317,6 +349,23 @@ def cases():
     walls = [wall(first + k, ends) for k, ends in enumerate(ROOM)]
     door = opening(first + 4, first, SOUTH, 1.0, 1.8, "kentos-kapi-80")
     out.append(case("dar kapı: 0,80 m'lik kapı Kapı 80 olur", p, [done(p, walls + [door], all_of(p))]))
+
+    # Blocks: a door's as drawn, a window's turned a half turn and mirrored (its sill outside the north wall), a column's.
+    p = Plan()
+    p.room(south=[(1.0, 1.9)], inner_south=[(1.0, 1.9)], north=[(2.0, 3.2)], inner_north=[(2.0, 3.2)])
+    for x, y0, y1 in ((1.0, -0.1, 0.1), (1.9, -0.1, 0.1), (2.0, 2.9, 3.1), (3.2, 2.9, 3.1)):
+        p.jamb(x, y0, y1)
+    p.add("insert", "kapi", block=DOOR, p=P(1.0, 0.0), scale=1.0, rotation=0.0)
+    p.add("insert", "pencere", block=WINDOW, p=P(3.2, 3.0), scale=1.0, rotation=math.pi, mirror=True)
+    p.add("insert", "kolon", block=POST, p=P(2.0, 1.5), scale=1.0, rotation=0.0)
+    first = len(p.ents) + 1
+    walls = [wall(first + k, ends) for k, ends in enumerate(ROOM)]
+    door = opening(first + 4, first, SOUTH, 1.0, 1.9, "kentos-kapi-90")
+    window = opening(first + 5, first + 1, NORTH, 2.0, 3.2, "kentos-pencere-120", layer_id="pencere")
+    post = column(first + 6, (2.0, 1.5), 0.3)
+    out.append(case("bloklar yerinde okunur: kapı bloğu kapı, yarım dönüp aynalanmış pencere bloğu pencere, kolon bloğu "
+                    "kolon olur; 0 katmanındaki parçalar bloğun katmanını alır, bloklar silinir", p,
+                    [done(p, walls + [door, window, post], all_of(p))], blocks=BLOCKS))
 
     # A window.
     p = Plan()
