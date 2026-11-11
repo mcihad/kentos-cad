@@ -762,6 +762,8 @@ __all__ = [
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
     "CrossfallZero",
+    "CrossingHatch",
+    "CrossingHatchName",
     "CrossingMargin",
     "CrossingSelectRegion",
     "CrossingSide",

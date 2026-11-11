@@ -47,7 +47,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760, 5140 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi); Brükner diyagramı | — |
-| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780, 5160 | yol kaplamasının (yüzey kaplaması) profilde gösterimi; uç çizgisi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
@@ -2247,6 +2247,12 @@ Pipe Walls”'u. Kanıtlanan: `diameter.outer` (et = (dış − iç) / 2; etle b
 Python, MCP; masaüstünde Dış çap kutusu, Kural satırı, tabloda Sınıf ve Eğim sınırı. “Yüzey kaplaması”nın anlamı
 bulundu: hendeğin üstündeki yol kaplaması (m. 16, EK-2). Açık: taramanın türü, yol kaplamasının profilde gösterimi,
 hız/doluluk (hidrolik), EPANET/SWMM.
+
+**11 Kasım 2026, onuncu tur — kesişen borunun taraması seçilir ([ADR 5160](../docs/adr/5160-crossing-pipe-fill-choice.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Civil 3D'nin borunun taraması (iç alan, bütün boru, yalnız duvar); yönetmelikler
+profilde taramayı düzenlemez. Kanıtlanan: `cad.pipes.profile`'ın `crossing.hatch`'i (`wall` öntanım, `inside`, `whole`,
+`none`); 65 bağımsız durum (6 yeni), masaüstünde Kesişen borunun taraması ve resimler. Açık: yol kaplamasının profilde
+gösterimi, uç çizgisi, hidrolik.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 

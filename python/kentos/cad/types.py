@@ -1755,6 +1755,21 @@ CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendic
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
+class CrossingHatch(_StrEnum):
+    """How a crossing pipe is filled in the profile (docs/adr/5160): `wall` the ring between its outer and inner walls (its
+    wall known above nought; else nothing), `inside` the inside of its inner wall, `whole` the whole pipe (inside its
+    outer wall, or its inner one without a wall), `none` nothing; the walls' lines are drawn either way.
+    """
+    WALL = "wall"
+    INSIDE = "inside"
+    WHOLE = "whole"
+    NONE = "none"
+
+
+CrossingHatchName = Literal["wall", "inside", "whole", "none"]
+"""The names of :class:`CrossingHatch`, for a plain string."""
+
+
 class CrossingSide(_StrEnum):
     """Where a crossed structure is against the road (docs/adr/0946).
 
@@ -71288,11 +71303,12 @@ class PipeProfileGround(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipeProfileOther(_Model):
     """The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,
-    as the run's.
+    as the run's; docs/adr/5160: how a crossing pipe is filled (none: `wall`).
     """
     network: str
     inverts: PipeInverts
     diameter: PipeDiameter | None | Unset = UNSET
+    hatch: CrossingHatch | CrossingHatchName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -71300,6 +71316,8 @@ class PipeProfileOther(_Model):
         out["inverts"] = self.inverts.to_json()
         if self.diameter is not UNSET:
             out["diameter"] = None if self.diameter is None else self.diameter.to_json()
+        if self.hatch is not UNSET:
+            out["hatch"] = None if self.hatch is None else _enum_out(self.hatch)
         return out
 
     @classmethod
@@ -71308,6 +71326,7 @@ class PipeProfileOther(_Model):
             network=data["network"],
             inverts=PipeInverts.from_json(data["inverts"]),
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
+            hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else _enum_in(CrossingHatch, data["hatch"]),
         )
 
 
@@ -138727,6 +138746,8 @@ __all__ = [
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
     "CrossfallZero",
+    "CrossingHatch",
+    "CrossingHatchName",
     "CrossingMargin",
     "CrossingSelectRegion",
     "CrossingSide",

@@ -19,6 +19,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+use kentos_commands::CrossingHatch;
 use kentos_commands::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, PIPE_PROFILE_BANDS,
     PIPE_LIMIT, PIPE_PROFILE_LIMIT, PipeClearanceAsk, PipeGround, PipeInverts, PipeProfileCrossing, PipeProfileGround,
@@ -458,7 +459,7 @@ pub(crate) fn grid_heights(datum: f64, top: f64) -> Vec<f64> {
     out
 }
 
-fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewObject> {
+fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool, hatch: CrossingHatch) -> Vec<NewObject> {
     let o = &c.out;
     let inverts = &c.inverts;
     let mm = doc.settings().plot_scale / 1000.0;
@@ -516,16 +517,24 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
                 let centre = Vec2 { x: xs, y: y(inv) + d / 2.0 * o.exaggeration };
                 let (major, ratio) = axes(d / 2.0, o.exaggeration);
                 out.push(drawn(EntityGeometry::Ellipse { c: centre, major, ratio, t0: 0.0, t1: std::f64::consts::TAU }));
-                match c.wall.filter(|w| *w > 0.0) {
-                    // Docs/adr/4360: the outer wall about the same centre and the ring between the two filled.
-                    Some(w) => {
-                        let (outer, outer_ratio) = axes(d / 2.0 + w, o.exaggeration);
-                        out.push(drawn(EntityGeometry::Ellipse { c: centre, major: outer, ratio: outer_ratio, t0: 0.0, t1: std::f64::consts::TAU }));
-                        out.push(drawn(wall_ring(centre, (outer, outer_ratio), (major, ratio))));
-                        centre.y + (d / 2.0 + w) * o.exaggeration
-                    }
-                    None => centre.y + d / 2.0 * o.exaggeration,
+                let wall = c.wall.filter(|w| *w > 0.0);
+                // Docs/adr/4360: the outer wall about the same centre.
+                let outer = wall.map(|w| {
+                    let (outer, outer_ratio) = axes(d / 2.0 + w, o.exaggeration);
+                    out.push(drawn(EntityGeometry::Ellipse { c: centre, major: outer, ratio: outer_ratio, t0: 0.0, t1: std::f64::consts::TAU }));
+                    (outer, outer_ratio)
+                });
+                // Docs/adr/5160: the fill the user chose; the ring between the two walls when none was (docs/adr/4360).
+                let fill = match (hatch, outer) {
+                    (CrossingHatch::Wall, Some(o)) => Some(filled(centre, &[o, (major, ratio)])),
+                    (CrossingHatch::Inside, _) | (CrossingHatch::Whole, None) => Some(filled(centre, &[(major, ratio)])),
+                    (CrossingHatch::Whole, Some(o)) => Some(filled(centre, &[o])),
+                    (CrossingHatch::Wall, None) | (CrossingHatch::None, _) => None,
+                };
+                if let Some(f) = fill {
+                    out.push(drawn(f));
                 }
+                centre.y + (d / 2.0 + wall.unwrap_or(0.0)) * o.exaggeration
             }
             None => {
                 out.push(drawn(EntityGeometry::Point { p: Vec2 { x: xs, y: y(inv) }, z: None, parts: None }));
@@ -611,7 +620,13 @@ pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &PipesProfile) -> Comma
     };
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
-        objects: objects(cx.doc, &c, input.at, input.diameter.is_some()),
+        objects: objects(
+            cx.doc,
+            &c,
+            input.at,
+            input.diameter.is_some(),
+            input.crossing.as_ref().and_then(|x| x.hatch).unwrap_or_default(),
+        ),
         operation: Some(CreateOperation::PipeProfile),
         expected_revision: None,
     };
@@ -650,10 +665,10 @@ fn axes(r: f64, exaggeration: f64) -> (Vec2, f64) {
     if ry >= rx { (Vec2 { x: 0.0, y: ry }, rx / ry) } else { (Vec2 { x: rx, y: 0.0 }, ry / rx) }
 }
 
-/// The ring between a crossing pipe's outer and inner walls, filled (docs/adr/4360): its boundary exact, the outer
-/// ellipse then the inner one as a hole, each a loop of one point that is one closed curve.
-fn wall_ring(c: Vec2, outer: (Vec2, f64), inner: (Vec2, f64)) -> EntityGeometry {
-    let whole = |(major, ratio): (Vec2, f64)| kentos_commands::HatchLoop {
+/// A crossing pipe's fill (docs/adr/4360, 5160): its boundary exact, the given ellipses about `c` (the first the outline,
+/// a second its hole: the ring between the walls), each a loop of one point that is one closed curve.
+fn filled(c: Vec2, ellipses: &[(Vec2, f64)]) -> EntityGeometry {
+    let whole = |&(major, ratio): &(Vec2, f64)| kentos_commands::HatchLoop {
         pts: vec![Vec2 { x: c.x + major.x, y: c.y + major.y }],
         bulges: None,
         curves: Some(vec![Some(kentos_commands::HatchCurve::Ellipse { c, major, ratio, t0: 0.0, t1: std::f64::consts::TAU })]),
@@ -663,7 +678,7 @@ fn wall_ring(c: Vec2, outer: (Vec2, f64), inner: (Vec2, f64)) -> EntityGeometry 
         holes: None,
         pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
         assoc: None,
-        boundary: Some(vec![whole(outer), whole(inner)]),
+        boundary: Some(ellipses.iter().map(whole).collect()),
         annotative: None,
     }
 }

@@ -341,8 +341,15 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
     count += sum(1 + sum(1 for k_ in ("slope", "diameter") if k_ in r) for r in rows)
     # docs/adr/2760: each crossing pipe with an invert, an ellipse (a point without a diameter) and its words.
     count += 2 * sum(1 for c in crossed if "invert" in c)
-    # docs/adr/4360: with a wall above zero, the outer wall's ellipse and the filled ring between the two.
-    count += 2 * sum(1 for c in crossed if "invert" in c and "diameter" in c and c.get("wall", 0) > 0)
+    # docs/adr/4360: with a wall above zero, the outer wall's ellipse; ADR 5160: the fill chosen (`hatch`; none: the
+    # ring between the walls, drawn only with a wall): `inside` and `whole` always one, `none` never.
+    mode = (crossing or {}).get("hatch", "wall")
+    for c in crossed:
+        if "invert" not in c or "diameter" not in c:
+            continue
+        walled_ = c.get("wall", 0) > 0
+        count += 1 if walled_ else 0
+        count += 1 if mode in ("inside", "whole") or (mode == "wall" and walled_) else 0
     return out, count
 
 
@@ -451,6 +458,11 @@ def cases():
     ok("Dış duvar planda yazılmaz", sewer(crossing=walls_ask), op="plan", setup_=walled, walls=True)
     ok("Yağmursuyunun yaylı Q3 borusunda W4'ün dış duvarı", storm(crossing=walls_ask), setup_=walled, walls=True,
        net="yagmur")
+    # ADR 5160: the fill chosen for a crossing pipe.
+    for mode, words in (("inside", "iç alan"), ("whole", "bütün boru"), ("none", "tarama yok"), ("wall", "yalnız duvar")):
+        ok(f"Kesişen borunun taraması: {words}", sewer(crossing={**walls_ask, "hatch": mode}), setup_=walled, walls=True)
+    ok("Etsiz kesişen boru, bütün boru taranır: iç elips", sewer(crossing={**ask, "hatch": "whole"}), setup_=water)
+    ok("Etsiz kesişen boru, yalnız duvar: tarama yok", sewer(crossing={**ask, "hatch": "wall"}), setup_=water)
     bare = ok("Et sorulmuş, borularda yok: dış duvar çizilmez", sewer(crossing=walls_ask), setup_=water)
     assert all("wall" not in c for c in bare["crossings"])
     # docs/adr/4780: the run's own outer walls, from `Et` or from `Dış çap` (the outers' drawing).

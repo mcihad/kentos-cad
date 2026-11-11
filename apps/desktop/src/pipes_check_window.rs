@@ -45,6 +45,8 @@ const SHOW: &str = "Kesişimleri göster";
 const DRAW_PROFILE: &str = "Hat profilini çiz";
 /// Diğer ağ's pipes crossing the run drawn in the profile too (docs/adr/2760).
 const PROFILE_CROSSINGS: &str = "kesişen borular";
+/// Docs/adr/5160: the crossing pipe's fill.
+pub const PROFILE_HATCH: &str = "Kesişen borunun taraması";
 
 /// Where the inverts are read.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -157,6 +159,8 @@ pub struct State {
     pub profile_layer: String,
     /// Diğer ağ's pipes crossing the run drawn in the profile (docs/adr/2760); on when the window opens.
     pub profile_crossings: bool,
+    /// How a crossing pipe is filled in the profile (docs/adr/5160).
+    pub profile_hatch: kentos_commands::CrossingHatch,
     pub layers: Vec<(String, String)>,
     /// Diğer ağ (docs/adr/2360): the other network's id (empty: no clearance), where its inverts and diameters are,
     /// the least vertical and horizontal clearances (metres) and the side that must be above.
@@ -197,6 +201,7 @@ pub enum Event {
     ProfileEnd(String),
     ProfileLayer(String),
     ProfileCrossings(bool),
+    ProfileHatch(kentos_commands::CrossingHatch),
     DrawProfile,
     Other(String),
     OtherFrom(From),
@@ -506,6 +511,7 @@ impl App {
                 network: c.network,
                 inverts: c.inverts,
                 diameter: c.diameter.map(|d| PipeDiameter { catalog: Vec::new(), ..d }),
+                hatch: (s.profile_hatch != kentos_commands::CrossingHatch::Wall).then_some(s.profile_hatch),
             }),
             expected_revision: None,
         };
@@ -630,6 +636,10 @@ impl App {
             }
             Event::ProfileCrossings(v) => {
                 s.profile_crossings = v;
+                return Task::none();
+            }
+            Event::ProfileHatch(v) => {
+                s.profile_hatch = v;
                 return Task::none();
             }
             Event::DrawProfile => {
@@ -1007,7 +1017,19 @@ impl App {
             ));
         }
         let line = line.push(words::secondary(DRAW_PROFILE, (ready && !s.profile_start.is_empty()).then(|| msg(Event::DrawProfile))));
-        let profile = Form::new().label_width(110.0).field("Hat profili", line);
+        let mut profile = Form::new().label_width(110.0).field("Hat profili", line);
+        // Docs/adr/5160: how a crossing pipe is filled.
+        if !s.other.is_empty() && s.profile_crossings {
+            use kentos_commands::CrossingHatch as H;
+            let choices = [H::Wall, H::Inside, H::Whole, H::None];
+            let names = ["Yalnız duvar", "İç alan", "Bütün boru", "Taramasız"];
+            let pick = kentos_ui::widget::Select::new(
+                names.into_iter().map(kentos_ui::widget::Choice::new),
+                choices.iter().position(|h| *h == s.profile_hatch),
+                move |i| msg(Event::ProfileHatch(choices[i])),
+            );
+            profile = profile.field(PROFILE_HATCH, container(pick).width(180));
+        }
         let body = body.push(profile);
         Frame::new(TITLE)
             .scroll(body)

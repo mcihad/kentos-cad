@@ -131610,6 +131610,16 @@
       ],
       "type": "object"
     },
+    "CrossingHatch": {
+      "description": "How a crossing pipe is filled in the profile (docs/adr/5160): `wall` the ring between its outer and inner walls (its\nwall known above nought; else nothing), `inside` the inside of its inner wall, `whole` the whole pipe (inside its\nouter wall, or its inner one without a wall), `none` nothing; the walls' lines are drawn either way.",
+      "enum": [
+        "wall",
+        "inside",
+        "whole",
+        "none"
+      ],
+      "type": "string"
+    },
     "CrossingMargin": {
       "description": "A crossing against a grade line (docs/adr/0946): its name, station and side, the line's limit there (under a\nstructure its underside less the clearance, over one its top plus the cover), the line's elevation there (none off\nthe profile), the margin (positive clear, negative short) and, in a proposal, whether it holds the line.",
       "properties": {
@@ -181361,12 +181371,22 @@
     },
     "PipeProfileOther": {
       "additionalProperties": false,
-      "description": "The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,\nas the run's.",
+      "description": "The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,\nas the run's; docs/adr/5160: how a crossing pipe is filled (none: `wall`).",
       "properties": {
         "diameter": {
           "anyOf": [
             {
               "$ref": "#/$defs/PipeDiameter"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hatch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CrossingHatch"
             },
             {
               "type": "null"

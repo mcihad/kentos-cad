@@ -723,6 +723,9 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Hat profilinde kesişen borunun taraması (11 Kasım 2026; MAP-16, [ADR 5160](../../docs/adr/5160-crossing-pipe-fill-choice.md)).**
+  `cad.pipes.profile`'ın `crossing.hatch`'i: `wall` (öntanım, halka), `inside`, `whole`, `none`; masaüstünde Kesişen
+  borunun taraması. Harita + Yol + CBS.
 - **Kesik koni formülü ve Brükner değeri (11 Kasım 2026; MAP-15, [ADR 5140](../../docs/adr/5140-frustum-formula-and-bruckner-value.md)).**
   `formula: frustum` iki kesit arasında L/3·(A₀ + A₁ + √(A₀·A₁)) (karşılaştırma ve kazı-dolgu kesitleri); kazı-dolgu
   kesitlerinde `mass`: birikimli kazı × `cutFactor` − birikimli dolgu × `fillFactor`, cetvelde Brükner sütunu. Harita + Yol.

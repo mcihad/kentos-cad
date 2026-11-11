@@ -98,7 +98,7 @@ pub struct PipesProfile {
 }
 
 /// The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,
-/// as the run's.
+/// as the run's; docs/adr/5160: how a crossing pipe is filled (none: `wall`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -110,6 +110,25 @@ pub struct PipeProfileOther {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub diameter: Option<PipeDiameter>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub hatch: Option<CrossingHatch>,
+}
+
+/// How a crossing pipe is filled in the profile (docs/adr/5160): `wall` the ring between its outer and inner walls (its
+/// wall known above nought; else nothing), `inside` the inside of its inner wall, `whole` the whole pipe (inside its
+/// outer wall, or its inner one without a wall), `none` nothing; the walls' lines are drawn either way.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CrossingHatch {
+    #[default]
+    Wall,
+    Inside,
+    Whole,
+    None,
 }
 
 /// A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
