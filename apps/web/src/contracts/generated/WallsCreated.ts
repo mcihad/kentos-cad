@@ -19,4 +19,8 @@ stylesAdded?: Array<string>,
 /**
  * `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.
  */
-adopted?: Array<string>, revision: string, };
+adopted?: Array<string>, 
+/**
+ * `cad.walls.partition`'s Bu ölçüyü koru (docs/adr/8049 §1): the bond written, by its id.
+ */
+bonds?: Array<string>, revision: string, };

@@ -904,6 +904,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
         distance: float,
         wall: WallsCreate,
         extent: PartitionExtent | Unset = UNSET,
+        keep: bool | Unset = UNSET,
         measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR,
         side: PartitionSide | PartitionSideName = PartitionSide.LEFT,
         request_id: str | None = None,
@@ -930,6 +931,10 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
             distance: Unit: length.
             wall: Same layer/style/appearance/attributes/revision rules as `cad.walls.create`.
             extent:
+            keep: Bu ölçüyü koru (docs/adr/8049 §1, plan/architecture-advanced.md M49): the distance kept in the same step as a
+                permanent bond (docs/adr/0770 §4): from the source's face on `side` (`clear`) or its axis (`axis`) to the
+                partition's face towards it or its axis, its value a parameter of `distance`. A straight source only: an arc
+                source is refused (`invalid_constraint`).
             measure:
             side:
             request_id: Names this write: sent again with the same call it is answered as
@@ -949,6 +954,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
             distance=distance,
             wall=wall,
             extent=(lambda: PartitionExtent.from_json({'kind': 'source'}))() if extent is UNSET else _opt(extent, lambda x: x),
+            keep=keep,
             measure=measure,
             side=side,
         ), request_id=request_id, expected=expected)
@@ -962,6 +968,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
         distance: float,
         wall: WallsCreate,
         extent: PartitionExtent | Unset = UNSET,
+        keep: bool | Unset = UNSET,
         measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR,
         side: PartitionSide | PartitionSideName = PartitionSide.LEFT,
     ) -> WallPartitionPlan:
@@ -973,6 +980,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
             distance=distance,
             wall=wall,
             extent=(lambda: PartitionExtent.from_json({'kind': 'source'}))() if extent is UNSET else _opt(extent, lambda x: x),
+            keep=keep,
             measure=measure,
             side=side,
         ))
@@ -986,6 +994,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
         distance: float,
         wall: WallsCreate,
         extent: PartitionExtent | Unset = UNSET,
+        keep: bool | Unset = UNSET,
         measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR,
         side: PartitionSide | PartitionSideName = PartitionSide.LEFT,
     ) -> list[CommandNote]:
@@ -997,6 +1006,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
             distance=distance,
             wall=wall,
             extent=(lambda: PartitionExtent.from_json({'kind': 'source'}))() if extent is UNSET else _opt(extent, lambda x: x),
+            keep=keep,
             measure=measure,
             side=side,
         ))
@@ -1010,6 +1020,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
         distance: float,
         wall: WallsCreate,
         extent: PartitionExtent | Unset = UNSET,
+        keep: bool | Unset = UNSET,
         measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR,
         side: PartitionSide | PartitionSideName = PartitionSide.LEFT,
         op: str = "execute",
@@ -1026,6 +1037,7 @@ class _WallsPartition(LocalCommand[WallsPartition, WallsCreated, WallPartitionPl
             distance=distance,
             wall=wall,
             extent=(lambda: PartitionExtent.from_json({'kind': 'source'}))() if extent is UNSET else _opt(extent, lambda x: x),
+            keep=keep,
             measure=measure,
             side=side,
         ), op=op, request_id=request_id, expected=expected)

@@ -112095,12 +112095,14 @@ class WallsCreated(_Model):
         uids: The walls' persistent ids, in the input's order.
         ids: Their slots in the open document. Unit: id.
         adopted: `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.
+        bonds: `cad.walls.partition`'s Bu ölçüyü koru (docs/adr/8049 §1): the bond written, by its id.
         styles_added: The ids of KentOS's wall styles taken into the project.
     """
     uids: list[str]
     ids: list[int]
     revision: str
     adopted: list[str] | Unset = UNSET
+    bonds: list[str] | Unset = UNSET
     styles_added: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -112110,6 +112112,8 @@ class WallsCreated(_Model):
         out["revision"] = self.revision
         if self.adopted is not UNSET:
             out["adopted"] = list(self.adopted)
+        if self.bonds is not UNSET:
+            out["bonds"] = list(self.bonds)
         if self.styles_added is not UNSET:
             out["stylesAdded"] = list(self.styles_added)
         return out
@@ -112121,6 +112125,7 @@ class WallsCreated(_Model):
             ids=list(data["ids"]),
             revision=data["revision"],
             adopted=list(data["adopted"]) if "adopted" in data else UNSET,
+            bonds=list(data["bonds"]) if "bonds" in data else UNSET,
             styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
         )
 
@@ -112482,11 +112487,16 @@ class WallsPartition(_Model):
     Attributes:
         distance: Unit: length.
         wall: Same layer/style/appearance/attributes/revision rules as `cad.walls.create`.
+        keep: Bu ölçüyü koru (docs/adr/8049 §1, plan/architecture-advanced.md M49): the distance kept in the same step as a
+            permanent bond (docs/adr/0770 §4): from the source's face on `side` (`clear`) or its axis (`axis`) to the
+            partition's face towards it or its axis, its value a parameter of `distance`. A straight source only: an arc
+            source is refused (`invalid_constraint`).
     """
     source: WallEdgeRef
     distance: float
     wall: WallsCreate
     extent: PartitionExtent = field(default_factory=(lambda: PartitionExtent.from_json({'kind': 'source'})))
+    keep: bool | Unset = UNSET
     measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR
     side: PartitionSide | PartitionSideName = PartitionSide.LEFT
 
@@ -112496,6 +112506,8 @@ class WallsPartition(_Model):
         out["distance"] = float(self.distance)
         out["wall"] = self.wall.to_json()
         out["extent"] = self.extent.to_json()
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         out["measure"] = _enum_out(self.measure)
         out["side"] = _enum_out(self.side)
         return out
@@ -112507,6 +112519,7 @@ class WallsPartition(_Model):
             distance=float(data["distance"]),
             wall=WallsCreate.from_json(data["wall"]),
             extent=PartitionExtent.from_json(data["extent"]) if "extent" in data else (lambda: PartitionExtent.from_json({'kind': 'source'}))(),
+            keep=data.get("keep", UNSET),
             measure=_enum_in(PartitionMeasure, data["measure"]) if "measure" in data else PartitionMeasure.CLEAR,
             side=_enum_in(PartitionSide, data["side"]) if "side" in data else PartitionSide.LEFT,
         )

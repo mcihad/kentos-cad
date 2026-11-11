@@ -9364,6 +9364,13 @@
             },
             "type": "array"
           },
+          "bonds": {
+            "description": "`cad.walls.partition`'s Bu ölçüyü koru (docs/adr/8049 §1): the bond written, by its id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "ids": {
             "description": "Their slots in the open document.",
             "items": {
@@ -9683,6 +9690,13 @@
             },
             "type": "array"
           },
+          "bonds": {
+            "description": "`cad.walls.partition`'s Bu ölçüyü koru (docs/adr/8049 §1): the bond written, by its id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "ids": {
             "description": "Their slots in the open document.",
             "items": {
@@ -9842,6 +9856,10 @@
               "kind": "source"
             }
           },
+          "keep": {
+            "description": "Bu ölçüyü koru (docs/adr/8049 §1, plan/architecture-advanced.md M49): the distance kept in the same step as a\npermanent bond (docs/adr/0770 §4): from the source's face on `side` (`clear`) or its axis (`axis`) to the\npartition's face towards it or its axis, its value a parameter of `distance`. A straight source only: an arc\nsource is refused (`invalid_constraint`).",
+            "type": "boolean"
+          },
           "measure": {
             "$ref": "#/$defs/PartitionMeasure",
             "default": "clear"
@@ -9872,6 +9890,13 @@
         "properties": {
           "adopted": {
             "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "bonds": {
+            "description": "`cad.walls.partition`'s Bu ölçüyü koru (docs/adr/8049 §1): the bond written, by its id.",
             "items": {
               "type": "string"
             },

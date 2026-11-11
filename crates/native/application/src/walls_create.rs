@@ -95,6 +95,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsCreate) -> CommandRe
             ids: slots.iter().map(|s| s.0).collect(),
             styles_added: added.into_iter().map(|s| s.id).collect(),
             adopted: Vec::new(),
+            bonds: Vec::new(),
             revision: doc.revision().to_string(),
         },
         warnings,

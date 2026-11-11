@@ -83,6 +83,13 @@ pub struct WallsPartition {
     pub extent: PartitionExtent,
     /// Same layer/style/appearance/attributes/revision rules as `cad.walls.create`.
     pub wall: WallsCreate,
+    /// Bu ölçüyü koru (docs/adr/8049 §1, plan/architecture-advanced.md M49): the distance kept in the same step as a
+    /// permanent bond (docs/adr/0770 §4): from the source's face on `side` (`clear`) or its axis (`axis`) to the
+    /// partition's face towards it or its axis, its value a parameter of `distance`. A straight source only: an arc
+    /// source is refused (`invalid_constraint`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub keep: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

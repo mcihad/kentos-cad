@@ -484,6 +484,10 @@
     dönen, kanadı duvar boyunca kapanan kapı yayı kasalarına dek kapı (ADR 8048 §1).
     Duvar ucundaki kapı: hiçbir duvara ulaşmayan uç, karşı duvara 0,30 m–en geniş açıklık arası boşlukta kapı yayı ya
     da pencere çizgisi varsa o duvarın eksenine uzar, açıklık uzadığı yerde.
+  - **Ölçülü bölmede kalıcı bağ (M49 1. bölüm, ADR 8049):** `cad.walls.partition`'ın `keep`'i (araçta Bu ölçüyü koru,
+    K): bölmeyle aynı adımda kaynağın yüzünden (net) ya da ekseninden bölmenin bakan yüzüne ya da eksenine mesafe bağı
+    ve verilen değerle parametresi (ADR 0770 §4); kaynak kayınca bölme izler; yay kaynakta `invalid_constraint`;
+    `WallsCreated.bonds`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -227,9 +227,97 @@ pub fn execute(
     )
 }
 fn write(cx: &mut ExecutionContext<'_>, input: WallsPartition) -> CommandResult<WallsCreated> {
-    let (request, _) = match request(cx.doc, &input) {
+    let (request, placement) = match request(cx.doc, &input) {
         Ok(v) => v,
         Err(e) => return e.into(),
     };
-    wall_paths(walls_create::execute(cx, request))
+    if input.keep && placement.bulge != 0.0 {
+        return Stop::failed(error(
+            codes::INVALID_CONSTRAINT,
+            "Yay kenardan bölmede bu ölçü henüz korunamaz: bağ düz duvar kenarları arasında kurulur. Bölmeyi \
+             korumasız yerleştirin ya da düz bir kenar seçin."
+                .into(),
+            Some("keep".into()),
+        ))
+        .into();
+    }
+    let mut result = wall_paths(walls_create::execute(cx, request));
+    // Bu ölçüyü koru (docs/adr/8049 §1): the bond and its parameter in the same step.
+    if input.keep
+        && let CommandResult::Completed { output, .. } = &mut result
+        && let Some(made) = output.uids.first()
+    {
+        let rule = match kept(&input, made, &placement) {
+            Ok(rule) => rule,
+            Err(stop) => return stop.into(),
+        };
+        match crate::constraints_edit::add_bond_given(
+            cx.doc,
+            rule,
+            "Duvar",
+            Some(input.distance),
+            "keep",
+        ) {
+            Ok(id) => output.bonds.push(id),
+            Err(stop) => return stop.into(),
+        }
+    }
+    result
+}
+
+/// Bu ölçüyü koru's bond (docs/adr/8049 §1): from the source's face on the partition's side (net) or its axis to the
+/// partition's face towards the source (the one on the source's side of its path) or its axis.
+fn kept(
+    input: &WallsPartition,
+    made: &str,
+    placement: &wall_partition::Placement,
+) -> Result<kentos_commands::ConstraintRule, Stop> {
+    use kentos_commands::{
+        CadElement, ConstraintRule, DistanceAxis, ElementRef, EntityId, WallLine,
+    };
+    let id = |uid: &str| {
+        kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .map(|u| EntityId(u.into_bytes()))
+            .ok_or_else(|| fail("Duvarın kimliği yok.", "source.wall"))
+    };
+    let axis = input.measure == PartitionMeasure::Axis;
+    let source_line = if axis {
+        WallLine::Axis
+    } else if input.side == PartitionSide::Left {
+        WallLine::LeftFace
+    } else {
+        WallLine::RightFace
+    };
+    // The source's face is on the partition's left when the face's middle is left of its path.
+    let [p, q] = placement.path;
+    let [f0, f1] = placement.face;
+    let face = kentos_geometry_core::Vec2::new((f0.x + f1.x) / 2.0, (f0.y + f1.y) / 2.0);
+    let left = (q.x - p.x) * (face.y - p.y) - (q.y - p.y) * (face.x - p.x) > 0.0;
+    let made_line = if axis {
+        WallLine::Axis
+    } else if left {
+        WallLine::LeftFace
+    } else {
+        WallLine::RightFace
+    };
+    Ok(ConstraintRule::Distance {
+        a: ElementRef {
+            uid: id(&input.source.wall)?,
+            element: CadElement::Wall {
+                edge: input.source.edge as u32,
+                line: source_line,
+            },
+        },
+        b: ElementRef {
+            uid: id(made)?,
+            element: CadElement::Wall {
+                edge: 0,
+                line: made_line,
+            },
+        },
+        axis: DistanceAxis::Aligned,
+        left: false,
+        parameter: String::new(),
+    })
 }

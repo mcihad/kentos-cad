@@ -103,6 +103,22 @@ def build():
             {'op':'captureUid','id':1,'as':'source'}, {'op':'execute','input':bad,**extra,
              'result':{'status':status,'error':{'code':code,'message':'$any','path':'$any', **({'revision':'$current'} if status=='conflict' else {})}},
              'expect':{'ids':[1],'canUndo':False,'revision':'same'}}]})
+    # Bu ölçüyü koru (docs/adr/8049 §1): the partition and a distance bond whose parameter is the distance given, one
+    # step; an arc source's bond is refused, nothing written.
+    kept=copy.deepcopy(cases[0]);kept['name']='Bu ölçüyü koru: the partition and its distance bond, d1 = 3, in one step'
+    run=next(s for s in kept['steps'] if s['op']=='execute');run['input']['keep']=True
+    run['result']['output']['bonds']=['$any']
+    run['expect']['constraintKinds']=['distance'];run['expect']['parameters']=[{'name':'d1','kind':'length','expression':'3'}]
+    kept['steps']=[kept['steps'][0],run];cases.append(kept)
+    arc=copy.deepcopy(cases[0]);arc['name']='Bu ölçüyü koru from an arc source is refused; nothing is written'
+    arc['setup']['entities']=[{'kind':'wall','id':1,'layerId':'base','attrs':{},'pts':[point(0,0),point(8,0)],
+                               'bulges':[0.25,0.0],'width':0.2,'justify':'center'}]
+    run=copy.deepcopy(next(s for s in arc['steps'] if s['op']=='execute'));run['input']['keep']=True
+    run['result']={'status':'failed','error':{'code':'invalid_constraint','message':'Yay kenardan bölmede bu ölçü henüz '
+                   'korunamaz: bağ düz duvar kenarları arasında kurulur. Bölmeyi korumasız yerleştirin ya da düz bir kenar '
+                   'seçin.','path':'keep'}}
+    run['expect']={'ids':[1],'canUndo':False,'revision':'same'};run.pop('within',None)
+    arc['steps']=[arc['steps'][0],run];cases.append(arc)
     return {'format':'kentos.command-cases','version':1,'command':'cad.walls.partition','commandVersion':1,
             'title':'Independent rational measured partitions','setup':cases[0]['setup'],'cases':cases}
 def main():

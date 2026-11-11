@@ -25861,6 +25861,522 @@
           }
         }
       ]
+    },
+    {
+      "name": "Bu ölçüyü koru: the partition and its distance bond, d1 = 3, in one step",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Dikdörtgen mimari duvar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "drawingUnit": "m",
+          "plotScale": 100,
+          "workspace": "cad",
+          "wallStyles": [
+            {
+              "id": "perde-20",
+              "name": "Perde 20",
+              "components": [
+                {
+                  "name": "Beton",
+                  "material": "Beton",
+                  "thickness": 0.2,
+                  "detail": "standard"
+                }
+              ]
+            },
+            {
+              "id": "bolme-15",
+              "name": "Bölme 15",
+              "width": 0.15,
+              "components": [
+                {
+                  "name": "Sıva",
+                  "material": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "material": "Tuğla",
+                  "detail": "standard"
+                },
+                {
+                  "name": "Sıva",
+                  "material": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                }
+              ]
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "base",
+            "name": "Mevcut çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli katman",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli katman",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt katman",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "base",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000.0,
+                "y": 4400000.0
+              },
+              {
+                "x": 500008.0,
+                "y": 4400000.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "left"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "source"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "source": {
+              "wall": "$uid:source",
+              "edge": 0
+            },
+            "side": "left",
+            "measure": "clear",
+            "distance": 3,
+            "wall": {
+              "layerId": "duvar",
+              "walls": [
+                {
+                  "pts": [],
+                  "closed": false,
+                  "width": 0.25
+                }
+              ]
+            },
+            "keep": true
+          },
+          "within": 1e-08,
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                2
+              ],
+              "revision": "$current",
+              "bonds": [
+                "$any"
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "base",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000.0,
+                    "y": 4400000.0
+                  },
+                  {
+                    "x": 500008.0,
+                    "y": 4400000.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "left"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500000.0,
+                    "y": 4400003.125
+                  },
+                  {
+                    "x": 500008.0,
+                    "y": 4400003.125
+                  }
+                ],
+                "width": 0.25,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "3"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru from an arc source is refused; nothing is written",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Dikdörtgen mimari duvar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "drawingUnit": "m",
+          "plotScale": 100,
+          "workspace": "cad",
+          "wallStyles": [
+            {
+              "id": "perde-20",
+              "name": "Perde 20",
+              "components": [
+                {
+                  "name": "Beton",
+                  "material": "Beton",
+                  "thickness": 0.2,
+                  "detail": "standard"
+                }
+              ]
+            },
+            {
+              "id": "bolme-15",
+              "name": "Bölme 15",
+              "width": 0.15,
+              "components": [
+                {
+                  "name": "Sıva",
+                  "material": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "material": "Tuğla",
+                  "detail": "standard"
+                },
+                {
+                  "name": "Sıva",
+                  "material": "Sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                }
+              ]
+            }
+          ],
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "base",
+            "name": "Mevcut çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli katman",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli katman",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt katman",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "base",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 8.0,
+                "y": 0.0
+              }
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ],
+            "width": 0.2,
+            "justify": "center"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "source"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "source": {
+              "wall": "$uid:source",
+              "edge": 0
+            },
+            "side": "left",
+            "measure": "clear",
+            "distance": 3,
+            "wall": {
+              "layerId": "duvar",
+              "walls": [
+                {
+                  "pts": [],
+                  "closed": false,
+                  "width": 0.25
+                }
+              ]
+            },
+            "keep": true
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Yay kenardan bölmede bu ölçü henüz korunamaz: bağ düz duvar kenarları arasında kurulur. Bölmeyi korumasız yerleştirin ya da düz bir kenar seçin.",
+              "path": "keep"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
     }
   ]
 }

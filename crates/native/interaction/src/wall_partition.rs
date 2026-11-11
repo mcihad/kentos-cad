@@ -23,6 +23,8 @@ pub struct Partition {
     anchor: f64,
     length: f64,
     direction: PartitionDirection,
+    /// Bu ölçüyü koru (docs/adr/8049 §1): the distance written as a permanent bond.
+    keep: bool,
     ask: Option<String>,
     drawn: Preview,
     memory: Memory,
@@ -83,6 +85,7 @@ impl Partition {
                 line_type: cx.draft.line_type,
                 expected_revision: None,
             },
+            keep: self.keep,
         })
     }
     fn see(&mut self, cx: &Context<'_>) {
@@ -318,7 +321,12 @@ impl Tool for Partition {
             .option("Stil", "S")
             .option("Uzaklık türü", "M")
             .option("Kaynağın yanı", "Y")
-            .option("Uçlar", "B");
+            .option("Uçlar", "B")
+            .option_with(
+                "Bu ölçüyü koru",
+                "K",
+                if self.keep { "açık" } else { "kapalı" },
+            );
         let prompt = if self.candidates.len() > 1 {
             prompt.option("Kaynak", "C")
         } else {
@@ -375,6 +383,12 @@ impl Tool for Partition {
             return self.configure(&key, text, cx);
         }
         let key = upper_tr(text.trim());
+        // K turns Bu ölçüyü koru on and off at once: it has no value to ask.
+        if key == "K" {
+            self.keep = !self.keep;
+            self.see(cx);
+            return true;
+        }
         if self.settings(&cx.format()).iter().any(|s| s.key == key) {
             self.ask = Some(key);
             true
@@ -490,6 +504,8 @@ impl Tool for Partition {
                 ),
             ),
         ]);
+        // Bu ölçüyü koru (docs/adr/8049 §1): the distance a permanent bond, the partition following its source.
+        rows.push(Setting::toggle("K", "Bu ölçüyü koru", self.keep));
         if self.mode == 2 {
             rows.extend([
                 Setting::text("A", "Başlangıç", f.length(self.anchor)),
@@ -583,6 +599,10 @@ impl Tool for Partition {
                     _ => 0,
                 };
                 self.limits.clear();
+                true
+            }
+            ("K", "yes" | "no") => {
+                self.keep = value == "yes";
                 true
             }
             ("D", "forward" | "backward" | "both") => {

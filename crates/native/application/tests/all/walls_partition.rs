@@ -174,3 +174,46 @@ fn source_height_and_architecture_survive_on_straight_and_curved_sources() {
         assert_eq!(doc.to_snapshot_v2(), before, "a plan writes nothing");
     }
 }
+
+/// Bu ölçüyü koru (docs/adr/8049 §1): the 3 m clear partition kept as a bond in the same step; the source's face moved
+/// 0.5 m out, the partition follows and the room on its side stays 3 m.
+#[test]
+fn a_kept_partition_follows_its_source_and_keeps_its_three_metres() {
+    use kentos_native_application::walls_edit;
+    let (mut doc, uid) = room();
+    let mut input = request(&uid);
+    input.keep = true;
+    let made = completed(walls_partition::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ));
+    assert_eq!(made["bonds"].as_array().map(Vec::len), Some(1), "{made}");
+    let set = doc.constraints();
+    assert_eq!(set.constraints.len(), 1);
+    assert_eq!(set.parameters.len(), 1);
+    assert_eq!(set.parameters[0].expression, "3");
+    let partition = made["uids"][0].as_str().unwrap().to_owned();
+    let axis_y = |doc: &Document| {
+        let slot = doc
+            .slot_of(kentos_domain::Uuid::parse_str(&partition).unwrap())
+            .unwrap();
+        match doc.get(slot) {
+            Some(Entity::Wall(w)) => w.wall.pts[0].y,
+            other => panic!("{other:?}"),
+        }
+    };
+    assert!((axis_y(&doc) - 3.075).abs() < 1e-9, "{}", axis_y(&doc));
+    // One undo step takes the partition and its bond.
+    assert_eq!(doc.undo().as_deref(), Some("Duvar"));
+    assert!(doc.constraints().constraints.is_empty());
+    assert!(doc.redo().is_some());
+    // The south face 0.5 m out: the partition goes with it.
+    completed(walls_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        serde_json::from_value(json!({
+            "uids": [uid], "operation": {"kind": "shift", "edge": 0, "by": -0.5}
+        }))
+        .unwrap(),
+    ));
+    assert!((axis_y(&doc) - 2.575).abs() < 1e-9, "{}", axis_y(&doc));
+}

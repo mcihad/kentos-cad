@@ -2012,7 +2012,7 @@
       "via": [
         "cad.walls.partition"
       ],
-      "note": "Kaynak duvar kenarı, net/eksen aralığı, yan ve açık sınırlar komuta gider; geometri planından önizlenir (ARCH-DRAW-02)."
+      "note": "Kaynak duvar kenarı, net/eksen aralığı, yan ve açık sınırlar komuta gider; geometri planından önizlenir (ARCH-DRAW-02). Bu ölçüyü koru (K) keep olarak gider: bağ ve parametresi aynı adımda (ADR 8049 §1)."
     },
     "tool.wallFromLines": {
       "level": "semantic",

@@ -253,3 +253,29 @@ fn displayed_single_lengths_and_explicit_units_apply_without_writing_or_losing_t
         assert_eq!(rel(wall.wall.pts[0]), [0., 0.]);
     }
 }
+
+/// Bu ölçüyü koru (docs/adr/8049 §1): K turns it on at once; the partition goes in with its distance bond, one undo.
+#[test]
+fn a_kept_partition_writes_its_bond_with_the_wall() {
+    let mut b = local("wall");
+    b.click(0.0, 0.0);
+    b.click(8.0, 0.0);
+    b.confirm();
+    b.start("wallPartition");
+    assert!(set(&mut b, "U", "3m"));
+    let rows = b.session.settings(&Default::default());
+    assert!(rows.iter().any(|r| r.key == "K" && r.value == "Kapalı"));
+    assert!(b.type_text("K"));
+    let rows = b.session.settings(&Default::default());
+    assert!(rows.iter().any(|r| r.key == "K" && r.value == "Açık"));
+    assert!(b.session.prompt().text().contains("Bu ölçüyü koru"));
+    b.click(4.0, 0.0);
+    b.move_to(4.0, 3.0);
+    b.confirm();
+    assert_eq!(b.doc.len(), 2);
+    let set = b.doc.constraints();
+    assert_eq!(set.constraints.len(), 1);
+    assert_eq!(set.parameters[0].expression, "3");
+    assert_eq!(b.doc.undo().as_deref(), Some("Duvar"));
+    assert!(b.doc.constraints().constraints.is_empty());
+}
