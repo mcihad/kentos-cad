@@ -1,0 +1,42 @@
+# M49 4. bölüm (docs/adr/8049 §4), on fixtures/arch/v1/section-building.kcad emptied and a curved corridor drawn
+# (the Python SDK's cad.walls.create: quarter arc walls of radius 3 and 4.4 about (4, 5), 20 cm, 1.20 m clear).
+# The inner arc selected: its 1.200 along the radius and a padlock (the old binary shows nothing, and Duvarı kaydır
+# says there is no edge on the arc); the padlock clicked: the bond (d1 = 1.2); the outer arc moved 0.5 m out with
+# Duvarı kaydır: the inner follows; Ctrl+Z takes both back.
+fit Kesit binası — KentOS CAD
+wait 3000
+click 800 600 middle
+click 800 600 middle
+wait 2500
+click 803 500
+wait 1200
+move 803 600
+wait 1500
+click 823 666   # the padlock
+wait 1500
+move 803 600
+wait 1500
+shot m49-yay-sonra-kilit
+key Escape
+wait 800
+click 803 832   # the outer arc
+wait 1200
+click 396 75    # Kaydır (Duvar)
+wait 1500
+click 803 832
+wait 1200
+move 803 900
+wait 1000
+type -0.5
+key Return
+wait 2500
+key Escape
+wait 600
+move 1500 950
+wait 1000
+shot m49-yay-sonra-kaydir
+key ctrl+z
+wait 1500
+move 1500 960
+wait 1000
+shot m49-yay-sonra-geri-al

@@ -188,6 +188,10 @@ düz kenarı da.
   ve Python'da. Uygulama: yay düzleşince ya da düz kenar bükülünce bağ kalkar. Etkileşim: koridorun iç yayında tek
   kilit, d1 = 1.2 (yuvarlamadan önce 1.200000000011), dış yay 0,5 m dışa → iç yay r 3,5. Çekirdek: eş merkezli iki
   yay çizgisinde 1,5 m bağ dış yayı r 4,3 → 4,6 yapar; düz–yay paralel çelişir.
+- Gerçek pencere (§4; `fixtures/interaction/real/yay-bagi.txt`): eski sürümde seçili yayın ölçüsü yok, Duvarı kaydır
+  yaya tıklanınca "kaydırılacak duvar kenarı yok" diyor; yeni sürümde iç yayın 1,200 m'si yarıçap boyunca ve kilidi
+  ("+" yok), kilit bağı yazıyor, dış yay 0,5 m dışa kayınca iç yay izliyor (koridor 1,200), Ctrl+Z ikisini birlikte
+  geri alıyor.
 - Gerçek pencere (§3; `fixtures/interaction/real/kolon-bagi.txt`): eski sürümde seçili kolonun ölçülerinde kilit yok;
   yeni sürümde dört yanda kilit, güney kilidi "d1 = 0.8 m" yazıyor (kolon kımıldamıyor), duvarın güney kenarı A aksına
   1,40'tan 0,90'a alınınca kolon da 0,5 m güneye gidiyor, Ctrl+Z ("Geri alındı: Duvarı…") ikisini birlikte geri alıyor.
