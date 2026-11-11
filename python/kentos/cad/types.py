@@ -5618,6 +5618,26 @@ PlanBoxName = Literal["index", "geometry", "local"]
 """The names of :class:`PlanBox`, for a plain string."""
 
 
+class PlanRole(_StrEnum):
+    """What a layer's line work is read as.
+
+    - ``wall``: Duvar: its lines are walls' faces, jambs and components' lines.
+    - ``door``: Kapı: its arcs are doors' swings, its lines their leaves and frames.
+    - ``window``: Pencere: its lines along a wall's gap make it a window.
+    - ``column``: Kolon: its closed outlines are columns a wall runs through.
+    - ``ignore``: Yok sayılır: not read (axes, dimensions, texts, furniture).
+    """
+    WALL = "wall"
+    DOOR = "door"
+    WINDOW = "window"
+    COLUMN = "column"
+    IGNORE = "ignore"
+
+
+PlanRoleName = Literal["wall", "door", "window", "column", "ignore"]
+"""The names of :class:`PlanRole`, for a plain string."""
+
+
 class PlatformSide(_StrEnum):
     """Which way a slope line goes.
 
@@ -16581,6 +16601,170 @@ class ArchModule(_Model):
             instances=[ModuleInstance.from_json(e0) for e0 in data["instances"]] if "instances" in data else UNSET,
             members=[ModuleMember.from_json(e0) for e0 in data["members"]] if "members" in data else UNSET,
             removed=data.get("removed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchRecognize(_Model):
+    """Input of `cad.arch.recognize` v1: the plan's objects (a window selection over it); each layer's role (absent: from
+    its name — duvar, perde, bölme, wall a wall's; kapı, door a door's; pencere, window, glaz a window's; kolon, column a
+    column's; tarama, ölçü, yazı, aks, mobilya and the others none; when no layer is a wall's, every layer not named is);
+    the walls' architectural information (their storey, Mevcut for a tadilat's existing building).
+
+    The walls go on `wallLayerId`, else their first line's layer; the doors and windows on `openingLayerId`, else the
+    first layer of the door's or window's role, a bare opening its wall's. A door's type is Kapı 80 or 90 (by its
+    width), İki kanatlı kapı 140 with two leaves; a window's Pencere 120; a bare opening's Boşluk 100; each as wide as
+    read. The sources read whole are taken away unless kept; the others stay and are said.
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked` (every source locked),
+    `layer_not_found` (a role's layer), `not_finite`, `recognize_option` (a width not above zero, the thinnest not
+    below the thickest, an opening not above zero, an angle outside 0–45°), `level_not_found` (`arch.level`),
+    `plan_unrecognized` (no wall read), `invalid_wall`, `opening_off_wall`, the layers written to's `layer_not_found`,
+    `not_a_layer`, `layer_locked`, then `invalid_revision`, `revision_conflict`. Warnings: `layer_locked` (sources
+    skipped), `layer_hidden` (a layer written to), `plan_unrecognized` (objects not read, by why).
+    Attributes:
+        uids: The plan's objects' persistent ids, at least one.
+        angle: Degrees two lines may be apart and be parallel. Absent: 1°. Unit: deg.
+        arch: Every new wall's architectural information: its storey, its tadilat durumu.
+        keep_sources: Kaynağı koru: the sources stay. Absent: those read whole go.
+        max_opening: The widest opening, metres; a wider gap ends the wall. Absent: 3 m. Unit: length.
+        max_width: The thickest wall, metres. Absent: 0.6 m. Unit: length.
+        min_width: The thinnest wall, metres. Absent: 0.05 m. Unit: length.
+        roles: Layers' roles over those their names give.
+    """
+    uids: list[str]
+    angle: float | None | Unset = UNSET
+    arch: ArchInfo | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    keep_sources: bool | Unset = UNSET
+    max_opening: float | None | Unset = UNSET
+    max_width: float | None | Unset = UNSET
+    min_width: float | None | Unset = UNSET
+    opening_layer_id: str | None | Unset = UNSET
+    roles: list[PlanLayerRole] | Unset = UNSET
+    wall_layer_id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.keep_sources is not UNSET:
+            out["keepSources"] = self.keep_sources
+        if self.max_opening is not UNSET:
+            out["maxOpening"] = None if self.max_opening is None else float(self.max_opening)
+        if self.max_width is not UNSET:
+            out["maxWidth"] = None if self.max_width is None else float(self.max_width)
+        if self.min_width is not UNSET:
+            out["minWidth"] = None if self.min_width is None else float(self.min_width)
+        if self.opening_layer_id is not UNSET:
+            out["openingLayerId"] = self.opening_layer_id
+        if self.roles is not UNSET:
+            out["roles"] = [e0.to_json() for e0 in self.roles]
+        if self.wall_layer_id is not UNSET:
+            out["wallLayerId"] = self.wall_layer_id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchRecognize:
+        return cls(
+            uids=list(data["uids"]),
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            keep_sources=data.get("keepSources", UNSET),
+            max_opening=UNSET if "maxOpening" not in data else None if data["maxOpening"] is None else float(data["maxOpening"]),
+            max_width=UNSET if "maxWidth" not in data else None if data["maxWidth"] is None else float(data["maxWidth"]),
+            min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
+            opening_layer_id=data.get("openingLayerId", UNSET),
+            roles=[PlanLayerRole.from_json(e0) for e0 in data["roles"]] if "roles" in data else UNSET,
+            wall_layer_id=data.get("wallLayerId", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchRecognizePlan(_Model):
+    """What `cad.arch.recognize` would write (plan mode): the walls and openings as they would be stored (their `id` 0,
+    an opening's host its wall's provisional id), the sources that would go and those left.
+    """
+    walls: list[Entity]
+    revision: str
+    left: list[str] | Unset = UNSET
+    openings: list[Entity] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = list(self.left)
+        if self.openings is not UNSET:
+            out["openings"] = [e0.to_json() for e0 in self.openings]
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchRecognizePlan:
+        return cls(
+            walls=[Entity.from_json(e0) for e0 in data["walls"]],
+            revision=data["revision"],
+            left=list(data["left"]) if "left" in data else UNSET,
+            openings=[Entity.from_json(e0) for e0 in data["openings"]] if "openings" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchRecognized(_Model):
+    """Output of `cad.arch.recognize` v1: the walls and openings written (in the order the plan reads them: walls by
+    their first line, openings by wall and along it), how many doors, windows and bare openings, the sources taken
+    away and those left.
+    Attributes:
+        doors: Unit: count.
+        windows: Unit: count.
+        bare: Unit: count.
+    """
+    walls: list[str]
+    doors: int
+    windows: int
+    bare: int
+    revision: str
+    left: list[str] | Unset = UNSET
+    openings: list[str] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = list(self.walls)
+        out["doors"] = self.doors
+        out["windows"] = self.windows
+        out["bare"] = self.bare
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = list(self.left)
+        if self.openings is not UNSET:
+            out["openings"] = list(self.openings)
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchRecognized:
+        return cls(
+            walls=list(data["walls"]),
+            doors=data["doors"],
+            windows=data["windows"],
+            bare=data["bare"],
+            revision=data["revision"],
+            left=list(data["left"]) if "left" in data else UNSET,
+            openings=list(data["openings"]) if "openings" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
 
@@ -70012,6 +70196,26 @@ class PlaceOn(_Model):
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
             path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanLayerRole(_Model):
+    """A layer and what its line work is read as."""
+    layer_id: str
+    role: PlanRole | PlanRoleName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["role"] = _enum_out(self.role)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanLayerRole:
+        return cls(
+            layer_id=data["layerId"],
+            role=_enum_in(PlanRole, data["role"]),
         )
 
 
@@ -135051,6 +135255,9 @@ __all__ = [
     "ArchOperation",
     "ArchPhase",
     "ArchPhaseName",
+    "ArchRecognize",
+    "ArchRecognizePlan",
+    "ArchRecognized",
     "ArchSettings",
     "ArchStatus",
     "ArchStatusName",
@@ -137401,8 +137608,11 @@ __all__ = [
     "PlacementArrayEdit",
     "PlanBox",
     "PlanBoxName",
+    "PlanLayerRole",
     "PlanNorthDirection",
     "PlanRoadWork",
+    "PlanRole",
+    "PlanRoleName",
     "PlatformBalanceAsk",
     "PlatformBalanced",
     "PlatformDef",

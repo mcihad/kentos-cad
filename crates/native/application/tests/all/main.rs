@@ -10,6 +10,7 @@ mod dxf_rooms;
 mod roof_sections;
 mod sections;
 mod arch_ifc;
+mod arch_recognize;
 mod digital_audit;
 mod facades;
 mod blocks_find;

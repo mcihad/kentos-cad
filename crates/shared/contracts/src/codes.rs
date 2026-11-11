@@ -2388,6 +2388,10 @@ codes! {
     WALL_SHARED_BOUNDARY = "wall_shared_boundary", Warning, false, "Ortak oda sınırı Eksen referansında bir kez üretildi; eşleme toleransı ve ortak parçanın ilk kaynak görünüm/öznitelik sahipliği uyarıda belirtilir.";
     /// A wall among a block definition's objects.
     WALL_IN_BLOCK = "wall_in_block", Failed, false, "Blok tanımının nesneleri arasında duvar olamaz: blok duvarın kaynağını değil çizimini taşır.";
+    /// Planı tanı's option against its rule (docs/adr/8048).
+    RECOGNIZE_OPTION = "recognize_option", Failed, false, "Tanıma ayarı kuralına uymuyor: en ince duvar sıfırdan kalın ve en kalından ince, en geniş açıklık sıfırdan geniş, açı 0 ile 45° arasında olmalı.";
+    /// Planı tanı: objects of the plan not read as a wall, door or window (docs/adr/8048).
+    PLAN_UNRECOGNIZED = "plan_unrecognized", FailedOrWarning, false, "Planın bazı nesneleri duvar, kapı ya da pencere olarak tanınmadı ve çizimde kaldı; hiçbir duvar tanınmazsa ret.";
 
     // ── Wall joins and edits (docs/adr/0340) ────────────────────────────
     /// A point not on the wall to split.

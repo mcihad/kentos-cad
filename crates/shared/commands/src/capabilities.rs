@@ -2967,6 +2967,25 @@ const ENTRIES: &[Entry] = &[
         warnings: &["export_losses"],
         targets: none,
     },
+    // Planı tanı: an exploded plan read as walls and openings (plan/architecture-advanced.md M48, docs/adr/8048).
+    Entry {
+        id: "cad.arch.recognize",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_finite",
+                "recognize_option",
+                "plan_unrecognized",
+                "level_not_found",
+                "invalid_wall",
+                "opening_off_wall",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_locked", "plan_unrecognized", "layer_hidden"],
+        targets: none,
+    },
     // KentOS Yol's 3D scene (plan/road.md Y12.3, docs/adr/0910 §3).
     Entry {
         id: "file.export.gltf",

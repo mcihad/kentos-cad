@@ -45,6 +45,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::spaces_discover;
 use kentos_native_application::{arch_exceptions, dimension_sets_create, dimension_sets_edit, dimension_sets_query};
+use kentos_native_application::arch_recognize;
 use kentos_native_application::dimensions_interior;
 use kentos_native_application::spaces_separators;
 use kentos_native_application::spaces_number;
@@ -1014,6 +1015,19 @@ impl Input for kentos_commands::WallsFromLines {
         match path {
             "width" => self.width.as_mut(),
             "maxWidth" => self.max_width.as_mut(),
+            "angle" => self.angle.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_commands::ArchRecognize {
+    /// `minWidth`, `maxWidth`, `maxOpening`, `angle`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "minWidth" => self.min_width.as_mut(),
+            "maxWidth" => self.max_width.as_mut(),
+            "maxOpening" => self.max_opening.as_mut(),
             "angle" => self.angle.as_mut(),
             _ => None,
         }
@@ -5536,6 +5550,9 @@ fn run_op(
         }
         kentos_commands::CAD_WALLS_FROM_LINES => {
             run!(walls_from_lines, kentos_commands::WallsFromLines)
+        }
+        kentos_commands::CAD_ARCH_RECOGNIZE => {
+            run!(arch_recognize, kentos_commands::ArchRecognize)
         }
         kentos_commands::CAD_WALLS_EDIT => {
             run!(walls_edit, kentos_commands::WallsEdit)

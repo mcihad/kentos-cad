@@ -465,6 +465,14 @@
     cevaplar; Mimari denetim › Mevzuat "Dijital Proje Yön." bulguları (`digital_*`, `application::digital_audit`).
     Form (ADR 8047 §10): Mimari › Proje ▾ › Model kalite kontrol formu (`arch.qualityForm`) tabloyu yerleştirir;
     başlığından tanınır (`quality::is_form`), Ruhsat takımı künyeden sonra yeniden yazar ve FR/MKF paftasına koyar. M47 bitti.
+  - **Planı tanı (M48 1. bölüm, ADR 8048; Dijital Proje Yön. Md. 4, 9, Geçici Md. 2):** patlatılmış DWG/DXF planı KentOS
+    duvarına ve açıklığına döner: `kentos_geometry_core::ops::plan_recognition` (bir doğrudaki çizgiler tek koşu; duvar
+    0,05–0,60 m'lik paralel bant, 0,10 m'den dar aralık bileşen çizgisi; kesintide sırayla yüz sürerse birleşim, yay kapı,
+    pencere çizgisi pencere, kolon ya da kesen duvar birleşim, boş aralık Boşluk, 3 m'den genişi duvarın sonu; uçlar T'de
+    eksene, köşede kesişime) ve komut `cad.arch.recognize` v1 (roller katmandan ya da adından; Kapı 80/90, İki kanatlı
+    kapı 140, Pencere 120, Boşluk 100; `arch` ile kat ve tadilat durumu; okunan kaynak silinir, kalan `plan_unrecognized`
+    ile nedenleriyle söylenir; tek adım "Planı tanı"). Bölüm binasının bağımsız ofis DXF'i (`arch_recognize_plan.py`)
+    tanımla birebir okunur; 41 ortak durum (`arch_recognize_cases.py`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

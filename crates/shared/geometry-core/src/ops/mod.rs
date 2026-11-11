@@ -60,6 +60,7 @@ pub mod overkill;
 pub mod parts;
 pub mod path;
 pub mod pin_match;
+pub mod plan_recognition;
 pub mod point_editor;
 pub mod polygonize;
 pub mod proximity;

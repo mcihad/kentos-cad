@@ -10255,6 +10255,270 @@
       ]
     },
     {
+      "id": "cad.arch.recognize",
+      "version": 1,
+      "title": "Planı tanı",
+      "summary": "Patlatılmış bir planı (ofisin DWG/DXF'i: duvar, kapı ve pencere düz çizgi ve yay olarak gelmiş) KentOS duvarlarına, kapılarına, pencerelerine ve boşluklarına çevirir; tek geri alma adımı “Planı tanı”. Her katmanın rolü roles ile verilir (wall, door, window, column, ignore); verilmeyen katmanın rolü adından çıkar (duvar, perde, bölme, wall → duvar; kapı, door → kapı; pencere, window, glaz → pencere; kolon, column → kolon; tarama, ölçü, yazı, aks, mobilya ve diğerleri yok sayılır); hiçbir katman duvar değilse adı geçmeyen her katman duvar sayılır. Bir doğru üzerindeki çizgiler (angle derece içinde, 5 mm içinde) parça parça ya da üst üste çizilmiş olsa da tek çizgidir. Paralel çizgiler en çok maxWidth (verilmezse 0,6 m), en az minWidth (verilmezse 0,05 m) aralıklı bir bant olur; 0,1 m'den dar aralıklar bileşen çizgisidir (yalıtım, sıva), duvarın çekirdeği tek geniş aralıktır. Bandın iki parçası arasındaki boşluk sırayla: bir yüz sürüyorsa birleşim; bir pervazın çevresinde boşluk kadar (iki kanatta yarısı kadar) yay kapı (menteşe tarafı ve açıldığı yan yaydan); boşluk boyunca pencere çizgileri pencere; kolon ya da kesen/saplanan başka duvar birleşim; içi boş ve maxOpening'den (verilmezse 3 m) dar boşluk Boşluk (0,3 m'den darı çizim hatası, duvar sürer); daha genişi duvarı bitirir. Duvar ucu başka duvarın eksenine yarı kalınlıkları (ya da durduğu kolon) kadar yakınsa ona uzar: T'de eksene, köşede ikisi de kesişime; birleşimleri duvarlar çözer. Duvar düz, ortası eksende, ölçülen kalınlıkta; arch verilirse (kat, tadilat durumu) her duvar onu alır. Kapı türü genişliğine göre Kapı 80 ya da 90, iki kanatlıysa İki kanatlı kapı 140; pencere Pencere 120; boşluk Boşluk 100; her biri okunduğu genişlikte. Duvarlar wallLayerId'ye, yoksa ilk çizgisinin katmanına; kapı ve pencereler openingLayerId'ye, yoksa rolündeki ilk katmana, boşluk duvarının katmanına yazılır. Bütünüyle okunan kaynaklar keepSources verilmezse silinir; okunmayanlar (rolü olmayan katman, blok, kolon, duvara ait olmayan çizgi) çizimde kalır ve plan_unrecognized ile söylenir. Hiç duvar okunmazsa ret. Plan yazmadan duvarları, açıklıkları, silinecek ve kalacak kaynakları gösterir.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.arch.recognize` v1: the plan's objects (a window selection over it); each layer's role (absent: from\nits name — duvar, perde, bölme, wall a wall's; kapı, door a door's; pencere, window, glaz a window's; kolon, column a\ncolumn's; tarama, ölçü, yazı, aks, mobilya and the others none; when no layer is a wall's, every layer not named is);\nthe walls' architectural information (their storey, Mevcut for a tadilat's existing building).\n\nThe walls go on `wallLayerId`, else their first line's layer; the doors and windows on `openingLayerId`, else the\nfirst layer of the door's or window's role, a bare opening its wall's. A door's type is Kapı 80 or 90 (by its\nwidth), İki kanatlı kapı 140 with two leaves; a window's Pencere 120; a bare opening's Boşluk 100; each as wide as\nread. The sources read whole are taken away unless kept; the others stay and are said.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked` (every source locked),\n`layer_not_found` (a role's layer), `not_finite`, `recognize_option` (a width not above zero, the thinnest not\nbelow the thickest, an opening not above zero, an angle outside 0–45°), `level_not_found` (`arch.level`),\n`plan_unrecognized` (no wall read), `invalid_wall`, `opening_off_wall`, the layers written to's `layer_not_found`,\n`not_a_layer`, `layer_locked`, then `invalid_revision`, `revision_conflict`. Warnings: `layer_locked` (sources\nskipped), `layer_hidden` (a layer written to), `plan_unrecognized` (objects not read, by why).",
+        "properties": {
+          "angle": {
+            "description": "Degrees two lines may be apart and be parallel. Absent: 1°.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "arch": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Every new wall's architectural information: its storey, its tadilat durumu."
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keepSources": {
+            "description": "Kaynağı koru: the sources stay. Absent: those read whole go.",
+            "type": "boolean"
+          },
+          "maxOpening": {
+            "description": "The widest opening, metres; a wider gap ends the wall. Absent: 3 m.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "maxWidth": {
+            "description": "The thickest wall, metres. Absent: 0.6 m.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "minWidth": {
+            "description": "The thinnest wall, metres. Absent: 0.05 m.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "openingLayerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "roles": {
+            "description": "Layers' roles over those their names give.",
+            "items": {
+              "$ref": "#/$defs/PlanLayerRole"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "description": "The plan's objects' persistent ids, at least one.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "wallLayerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "ArchRecognize",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.recognize` v1: the walls and openings written (in the order the plan reads them: walls by\ntheir first line, openings by wall and along it), how many doors, windows and bare openings, the sources taken\naway and those left.",
+        "properties": {
+          "bare": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "openings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "walls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "windows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "walls",
+          "doors",
+          "windows",
+          "bare",
+          "revision"
+        ],
+        "title": "ArchRecognized",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.arch.recognize` would write (plan mode): the walls and openings as they would be stored (their `id` 0,\nan opening's host its wall's provisional id), the sources that would go and those left.",
+        "properties": {
+          "left": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "openings": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "walls": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "walls",
+          "revision"
+        ],
+        "title": "ArchRecognizePlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "layer_locked",
+          "not_finite",
+          "recognize_option",
+          "plan_unrecognized",
+          "level_not_found",
+          "invalid_wall",
+          "opening_off_wall",
+          "layer_not_found",
+          "not_a_layer",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked",
+          "plan_unrecognized",
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ofisin DXF'inden gelen zemin kat planı, mevcut duvarlar olarak",
+          "input": {
+            "arch": {
+              "level": "zemin",
+              "phase": "existing"
+            },
+            "roles": [
+              {
+                "layerId": "import-duvar",
+                "role": "wall"
+              },
+              {
+                "layerId": "import-aks",
+                "role": "ignore"
+              }
+            ],
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.walls.edit",
       "version": 1,
       "title": "Duvarı düzenle",
@@ -110893,6 +111157,18 @@
       "meaning": "Blok tanımının nesneleri arasında duvar olamaz: blok duvarın kaynağını değil çizimini taşır."
     },
     {
+      "code": "recognize_option",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tanıma ayarı kuralına uymuyor: en ince duvar sıfırdan kalın ve en kalından ince, en geniş açıklık sıfırdan geniş, açı 0 ile 45° arasında olmalı."
+    },
+    {
+      "code": "plan_unrecognized",
+      "kind": "failedOrWarning",
+      "retryable": false,
+      "meaning": "Planın bazı nesneleri duvar, kapı ya da pencere olarak tanınmadı ve çizimde kaldı; hiçbir duvar tanınmazsa ret."
+    },
+    {
       "code": "point_off_wall",
       "kind": "failed",
       "retryable": false,
@@ -177826,6 +178102,53 @@
         {
           "const": "local",
           "description": "Here, over the drawing's objects.",
+          "type": "string"
+        }
+      ]
+    },
+    "PlanLayerRole": {
+      "additionalProperties": false,
+      "description": "A layer and what its line work is read as.",
+      "properties": {
+        "layerId": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/PlanRole"
+        }
+      },
+      "required": [
+        "layerId",
+        "role"
+      ],
+      "type": "object"
+    },
+    "PlanRole": {
+      "description": "What a layer's line work is read as.",
+      "oneOf": [
+        {
+          "const": "wall",
+          "description": "Duvar: its lines are walls' faces, jambs and components' lines.",
+          "type": "string"
+        },
+        {
+          "const": "door",
+          "description": "Kapı: its arcs are doors' swings, its lines their leaves and frames.",
+          "type": "string"
+        },
+        {
+          "const": "window",
+          "description": "Pencere: its lines along a wall's gap make it a window.",
+          "type": "string"
+        },
+        {
+          "const": "column",
+          "description": "Kolon: its closed outlines are columns a wall runs through.",
+          "type": "string"
+        },
+        {
+          "const": "ignore",
+          "description": "Yok sayılır: not read (axes, dimensions, texts, furniture).",
           "type": "string"
         }
       ]

@@ -2225,6 +2225,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Planı tanı (plan/architecture-advanced.md M48, docs/adr/8048), held together by
+        // fixtures/commands/v1/cad.arch.recognize.json.
+        CommandDescriptor {
+            id: crate::CAD_ARCH_RECOGNIZE.into(),
+            version: crate::CAD_ARCH_RECOGNIZE_VERSION,
+            title: "Planı tanı".into(),
+            summary: "Patlatılmış bir planı (ofisin DWG/DXF'i: duvar, kapı ve pencere düz çizgi ve yay olarak gelmiş) KentOS duvarlarına, kapılarına, pencerelerine ve boşluklarına çevirir; tek geri alma adımı “Planı tanı”. \
+                      Her katmanın rolü roles ile verilir (wall, door, window, column, ignore); verilmeyen katmanın rolü adından çıkar (duvar, perde, bölme, wall → duvar; kapı, door → kapı; pencere, window, glaz → pencere; kolon, column → kolon; tarama, ölçü, yazı, aks, mobilya ve diğerleri yok sayılır); hiçbir katman duvar değilse adı geçmeyen her katman duvar sayılır. \
+                      Bir doğru üzerindeki çizgiler (angle derece içinde, 5 mm içinde) parça parça ya da üst üste çizilmiş olsa da tek çizgidir. Paralel çizgiler en çok maxWidth (verilmezse 0,6 m), en az minWidth (verilmezse 0,05 m) aralıklı bir bant olur; 0,1 m'den dar aralıklar bileşen çizgisidir (yalıtım, sıva), duvarın çekirdeği tek geniş aralıktır. \
+                      Bandın iki parçası arasındaki boşluk sırayla: bir yüz sürüyorsa birleşim; bir pervazın çevresinde boşluk kadar (iki kanatta yarısı kadar) yay kapı (menteşe tarafı ve açıldığı yan yaydan); boşluk boyunca pencere çizgileri pencere; kolon ya da kesen/saplanan başka duvar birleşim; içi boş ve maxOpening'den (verilmezse 3 m) dar boşluk Boşluk (0,3 m'den darı çizim hatası, duvar sürer); daha genişi duvarı bitirir. \
+                      Duvar ucu başka duvarın eksenine yarı kalınlıkları (ya da durduğu kolon) kadar yakınsa ona uzar: T'de eksene, köşede ikisi de kesişime; birleşimleri duvarlar çözer. Duvar düz, ortası eksende, ölçülen kalınlıkta; arch verilirse (kat, tadilat durumu) her duvar onu alır. Kapı türü genişliğine göre Kapı 80 ya da 90, iki kanatlıysa İki kanatlı kapı 140; pencere Pencere 120; boşluk Boşluk 100; her biri okunduğu genişlikte. \
+                      Duvarlar wallLayerId'ye, yoksa ilk çizgisinin katmanına; kapı ve pencereler openingLayerId'ye, yoksa rolündeki ilk katmana, boşluk duvarının katmanına yazılır. Bütünüyle okunan kaynaklar keepSources verilmezse silinir; okunmayanlar (rolü olmayan katman, blok, kolon, duvara ait olmayan çizgi) çizimde kalır ve plan_unrecognized ile söylenir. Hiç duvar okunmazsa ret. Plan yazmadan duvarları, açıklıkları, silinecek ve kalacak kaynakları gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ArchRecognize>(),
+            output: schema::<crate::ArchRecognized>(),
+            plan: Some(schema::<crate::ArchRecognizePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ofisin DXF'inden gelen zemin kat planı, mevcut duvarlar olarak".into(),
+                input: json!({
+                    "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                    "roles": [{ "layerId": "import-duvar", "role": "wall" }, { "layerId": "import-aks", "role": "ignore" }],
+                    "arch": { "level": "zemin", "phase": "existing" }
+                }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_WALLS_EDIT.into(),
             version: crate::CAD_WALLS_EDIT_VERSION,
@@ -16315,6 +16350,9 @@ mod tests {
                     crate::CAD_WALLS_FROM_LINES => {
                         serde_json::from_value::<crate::WallsFromLines>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ARCH_RECOGNIZE => {
+                        serde_json::from_value::<crate::ArchRecognize>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_WALLS_EDIT => {
                         serde_json::from_value::<crate::WallsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -18293,6 +18331,10 @@ mod tests {
                         }
                         crate::CAD_WALLS_FROM_LINES => {
                             serde_json::from_value::<crate::WallsFromLinesDone>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ARCH_RECOGNIZE => {
+                            serde_json::from_value::<crate::ArchRecognized>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_WALLS_EDIT => {

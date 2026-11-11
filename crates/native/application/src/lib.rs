@@ -481,6 +481,7 @@ pub mod sections_query;
 pub mod wall_distances;
 // Binanın IFC 4.3'ü: kentos-ifc'in bağdaştırıcısı (docs/adr/8047).
 pub mod arch_ifc;
+pub mod arch_recognize;
 // Dijital proje denetimi: EK-9'un modelin cevapladığı soruları (docs/adr/8047 §9).
 pub mod digital_audit;
 // Kolonun geçici ölçüleri (docs/adr/0712).
@@ -1231,6 +1232,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_WALLS_FROM_LINES,
         kentos_commands::CAD_WALLS_FROM_LINES_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ARCH_RECOGNIZE,
+        kentos_commands::CAD_ARCH_RECOGNIZE_VERSION,
     ),
     (
         kentos_commands::CAD_WALLS_EDIT,
