@@ -472,7 +472,9 @@
     eksene, köşede kesişime) ve komut `cad.arch.recognize` v1 (roller katmandan ya da adından; Kapı 80/90, İki kanatlı
     kapı 140, Pencere 120, Boşluk 100; `arch` ile kat ve tadilat durumu; okunan kaynak silinir, kalan `plan_unrecognized`
     ile nedenleriyle söylenir; tek adım "Planı tanı"). Bölüm binasının bağımsız ofis DXF'i (`arch_recognize_plan.py`)
-    tanımla birebir okunur; 41 ortak durum (`arch_recognize_cases.py`).
+    tanımla birebir okunur; 41 ortak durum (`arch_recognize_cases.py`). 2. bölüm (ADR 8048 §4): Mimari › Duvar ▾ ›
+    Planı tanı (`tool.planRecognize`): seçim önce; Araç ayarlarında seçimin her katmanı rolüyle bir satır
+    (`arch_recognize::layer_roles`, komutla aynı); önizleme komutun planı; Kat (L), Kaynak çizgiler (K).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

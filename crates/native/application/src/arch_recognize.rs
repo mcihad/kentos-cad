@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use kentos_commands::{
     ArchRecognize, ArchRecognizePlan, ArchRecognized, CommandResult, CommandWarning, Entity,
     EntityBase, NewOpening, NewWall, OpeningForm, OpeningHand, OpeningSide, OpeningTypeDef,
-    PlanRole, Vec2, WallEntity, WallJustify, WallStyleDef, opening_type,
+    PlanLayerRole, PlanRole, Vec2, WallEntity, WallJustify, WallStyleDef, opening_type,
 };
 use kentos_domain::{Document, Slot, Uuid, opening_follow};
 use kentos_geometry_core::Vec2 as V;
@@ -129,17 +129,46 @@ struct Work {
     warnings: Vec<CommandWarning>,
 }
 
-/// The role each layer of the objects plays: given, else from its name; when none is a wall's, every layer whose name
-/// says nothing is (a plan drawn on "0").
+/// The role each of `layers` plays (docs/adr/8048 §2): the one `given`, else its name's; when none is a wall's, every
+/// layer whose name says nothing is (a plan drawn on "0"). What Planı tanı's tool shows and its command reads.
+pub fn layer_roles<'a>(
+    doc: &Document,
+    layers: impl IntoIterator<Item = &'a str>,
+    given: &[PlanLayerRole],
+) -> BTreeMap<String, PlanRole> {
+    let tree = doc.layers();
+    let mut out: BTreeMap<String, PlanRole> = BTreeMap::new();
+    let mut guessed: BTreeMap<String, Option<PlanRole>> = BTreeMap::new();
+    for id in layers {
+        if let Some(r) = given.iter().find(|r| r.layer_id == id) {
+            out.insert(id.to_owned(), r.role);
+        } else if !guessed.contains_key(id) {
+            let name = tree.get(id).map_or(id, |n| n.name.as_str());
+            guessed.insert(id.to_owned(), guess_role(name));
+        }
+    }
+    let any_wall = given.iter().any(|r| r.role == PlanRole::Wall)
+        || guessed.values().flatten().any(|r| *r == PlanRole::Wall);
+    for (id, role) in guessed {
+        let role = match role {
+            Some(r) => r,
+            // A plan drawn on one layer ("0"): its lines are walls', its arcs doors'.
+            None if !any_wall => PlanRole::Wall,
+            None => PlanRole::Ignore,
+        };
+        out.insert(id, role);
+    }
+    out
+}
+
+/// [`layer_roles`] of the objects' layers; `layer_not_found` for a role given to a layer not in the drawing.
 fn roles(
     doc: &Document,
     input: &ArchRecognize,
     found: &[checks::Named<'_>],
 ) -> Result<BTreeMap<String, PlanRole>, Stop> {
-    let layers = doc.layers();
-    let mut out = BTreeMap::new();
     for (i, r) in input.roles.iter().enumerate() {
-        if layers.get(&r.layer_id).is_none() {
+        if doc.layers().get(&r.layer_id).is_none() {
             return Err(Stop::failed(error(
                 codes::LAYER_NOT_FOUND,
                 format!(
@@ -149,29 +178,15 @@ fn roles(
                 Some(format!("roles[{i}].layerId")),
             )));
         }
-        out.insert(r.layer_id.clone(), r.role);
     }
-    let mut guessed: BTreeMap<String, Option<PlanRole>> = BTreeMap::new();
-    for (_, _, e, _) in found {
-        let id = &e.base().layer_id;
-        if out.contains_key(id) || guessed.contains_key(id) {
-            continue;
-        }
-        let name = layers.get(id).map_or(id.as_str(), |n| n.name.as_str());
-        guessed.insert(id.clone(), guess_role(name));
-    }
-    let any_wall = out
-        .values()
-        .chain(guessed.values().flatten())
-        .any(|r| *r == PlanRole::Wall);
-    for (id, role) in guessed {
-        let role = match role {
-            Some(r) => r,
-            // A plan drawn on one layer ("0"): its lines are walls', its arcs doors'.
-            None if !any_wall => PlanRole::Wall,
-            None => PlanRole::Ignore,
-        };
-        out.insert(id, role);
+    let mut out = layer_roles(
+        doc,
+        found.iter().map(|(_, _, e, _)| e.base().layer_id.as_str()),
+        &input.roles,
+    );
+    // A role given to a layer none of the objects is on still counts (it says nothing of them).
+    for r in &input.roles {
+        out.entry(r.layer_id.clone()).or_insert(r.role);
     }
     Ok(out)
 }

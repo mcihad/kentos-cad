@@ -2021,6 +2021,13 @@
       ],
       "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0666/0667). Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668)."
     },
+    "tool.planRecognize": {
+      "level": "semantic",
+      "via": [
+        "cad.arch.recognize"
+      ],
+      "note": "Seçimin kimlikleri, katmanların Araç ayarları'nda değiştirilen rolleri, Kat (L) ve tadilat durumu, Kaynak çizgiler (K) komuta gider; duvarlar ve açıklıklar komutun planından önizlenir, tanınmayanlar sayılır (ADR 8048)."
+    },
     "arch.wallStyles": {
       "level": "semantic",
       "via": [

@@ -2317,6 +2317,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.planRecognize",
+      "title": "Planı tanı",
+      "icon": "planRecognize",
+      "description": "Seçilen patlatılmış planı (ofisin DWG/DXF'i: duvar çift çizgi, kapı kanat ve yay, pencere paralel çizgiler, kolon çevre) duvara, kapıya, pencereye ve boşluğa çevirir. Her katmanın rolü adından gelir (DUVAR, KAPI, PENCERE, KOLON; aks, merdiven, yazı, mobilya yok sayılır), Araç ayarları'nda katman katman değiştirilir. Kat (L) ve Kaynak çizgiler (K) seçilir; tanınmayanlar çizimde kalır ve söylenir. Tek adımda (ADR 8048).",
+      "aliases": [
+        "PLANITANI",
+        "PLANTANI",
+        "BIMIFY"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.wallStyles",
       "title": "Duvar stilleri",
       "icon": "wallStyles",
@@ -3185,7 +3199,7 @@
       "id": "arch.qualityForm",
       "title": "Model kalite kontrol formu (EK-9)",
       "short": "Kontrol formu",
-      "icon": "archAudit",
+      "icon": "qualityForm",
       "description": "Dijital Proje Yönetmeliği EK-9 Tablo 9.1'in model kalite kontrol formunu (Mimari) imleçten yerleştirir: 21 soru, KentOS'un IFC modelinden cevapladıkları Evet ya da Hayır ve notuyla, mimarın cevaplayacakları boş (dosya boyutu, gelişim seviyesi, emsal tablosu …). Ruhsat takımı formu her yapılışta yeniden cevaplar ve ayrı bir paftaya (EK-2 FR/MKF) koyar.",
       "aliases": [
         "EK9",
@@ -5448,6 +5462,7 @@
     "openingArray": "<path d=\"M1.5 6.5h2.5M6.5 6.5h2.25M11.25 6.5h2.25M16 6.5h2.5M1.5 10.5h2.5M6.5 10.5h2.25M11.25 10.5h2.25M16 10.5h2.5\"/><path d=\"M4 8.5h2.5M8.75 8.5h2.5M13.5 8.5h2.5\" stroke-width=\"1\"/><path d=\"M5.25 15h9.5M5.25 13.6v2.8M10 13.6v2.8M14.75 13.6v2.8\" stroke-width=\"1\"/>",
     "wallShift": "<path d=\"M2 3.5h16M2 7h16\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1\"/><path d=\"M2 12.5h16M2 16h16\"/><path d=\"M10 8.4v2.8m-1.6-1.6 1.6 1.6 1.6-1.6\" stroke-width=\"1.1\"/>",
     "wallFromLines": "<path d=\"M3.5 4v12\"/><path d=\"M6.5 10h4.5m-2-2 2 2-2 2\"/><path d=\"M13.5 4v12M17 4v12M13.5 4H17M13.5 16H17\"/>",
+    "planRecognize": "<path d=\"M3.5 3.5h13v13h-13z\"/><path d=\"M3.5 9.5h5\"/><path d=\"M8.5 9.5a4 4 0 0 1-4 4\"/><path d=\"M12 7.5h2.5M12 11h2.5\" stroke-dasharray=\"1.5 1.5\"/>",
     "wallStyles": "<rect x=\"3\" y=\"4\" width=\"14\" height=\"12\" rx=\"1\"/><path d=\"M6.5 4v12M13.5 4v12\"/><path d=\"m7.4 8.2 2.6-2.6m-2.6 6.6 5.2-5.2m-2.6 7.2 2.6-2.6\" stroke-width=\"1\"/>",
     "wallLeft": "<rect x=\"7\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M7 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
     "wallCenter": "<rect x=\"6\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M10 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
@@ -5605,6 +5620,7 @@
     "qaMask": "<rect x=\"2.5\" y=\"8.5\" width=\"10\" height=\"9\" rx=\"1\"/><path d=\"M5.8 8.5v9M9.2 8.5v9M2.5 11.5h10M2.5 14.5h10\" stroke-width=\".9\" opacity=\".6\"/><path d=\"M10.8 10.5H17.6a2.4 2.4 0 0 0 .3-4.8 3.9 3.9 0 0 0-7.3-1.4 2.9 2.9 0 0 0 .2 6.2z\" fill=\"currentColor\" fill-opacity=\".25\"/>",
     "sensorReading": "<path d=\"M4 17V9\" stroke-width=\"1.2\"/><circle cx=\"4\" cy=\"7\" r=\"1.7\" stroke-width=\"1.2\"/><path d=\"M7 4.6a3.4 3.4 0 0 1 0 4.8M9.3 2.8a6 6 0 0 1 0 8.4\" stroke-width=\"1.1\"/><path d=\"M8 17l2.5-3 2.5 2 3.5-4.5\" stroke-width=\"1.2\"/>",
     "archAudit": "<path d=\"M9 16H2.5V3.5H15v5\"/><path d=\"M2.5 9.5h4M9 9.5V3.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\"/><path d=\"M15.8 15.8 18.2 18.2\"/>",
+    "qualityForm": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"0.8\"/><path d=\"M6 6.4l1 1 1.8-2\" stroke-width=\"1\"/><path d=\"M10.5 6.5h4\" stroke-width=\"0.9\"/><path d=\"M6 10.4l1 1 1.8-2\" stroke-width=\"1\"/><path d=\"M10.5 10.5h4\" stroke-width=\"0.9\"/><path d=\"M6 14.5h2.5M10.5 14.5h4\" stroke-width=\"0.9\"/>",
     "casework": "<path d=\"M1.5 3h17\"/><path d=\"M2 5v10.5h16V5z\"/><path d=\"M7.5 5v10.5M12.5 5v10.5\"/><rect x=\"8.6\" y=\"7.2\" width=\"2.8\" height=\"6\" rx=\"1\"/><circle cx=\"15.2\" cy=\"8.3\" r=\"1.25\"/><circle cx=\"15.2\" cy=\"12.3\" r=\"1.25\"/>",
     "gridSystem": "<circle cx=\"7\" cy=\"3\" r=\"2\"/><circle cx=\"14.5\" cy=\"3\" r=\"2\"/><circle cx=\"3\" cy=\"8.5\" r=\"2\"/><circle cx=\"3\" cy=\"15.5\" r=\"2\"/><path d=\"M7 5v13.5M14.5 5v13.5M5 8.5h13.5M5 15.5h13.5\" stroke-dasharray=\"1.8 1.1\" stroke-width=\"1\"/><rect x=\"6\" y=\"7.5\" width=\"2\" height=\"2\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13.5\" y=\"14.5\" width=\"2\" height=\"2\" fill=\"currentColor\" stroke=\"none\"/>",
     "levelsAll": "<path d=\"M3 6h14\"/><path d=\"M3 10.5h14\"/><path d=\"M3 15h14\"/><path d=\"M5 6v9M15 6v9\" stroke-width=\"1\"/>",
@@ -6674,6 +6690,10 @@
         },
         {
           "command": "tool.wallFromLines",
+          "size": "small"
+        },
+        {
+          "command": "tool.planRecognize",
           "size": "small"
         },
         {

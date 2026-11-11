@@ -108,6 +108,8 @@ mod opening_placement;
 
 mod opening_array;
 
+mod plan_recognize;
+
 mod wall_contours;
 mod space_levels;
 mod space_sources;

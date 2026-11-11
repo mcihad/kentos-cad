@@ -393,6 +393,8 @@ CAD = [
                 {"command": "tool.wallRectangle", "title": "Duvar", "label": "Dikdörtgen duvar"},
                 {"command": "tool.wallPartition", "title": "Duvar", "label": "Ölçülü bölme"},
                 {"command": "tool.wallFromLines", "title": "Duvar", "label": "Çizgiden duvar"},
+                # Planı tanı (docs/adr/8048): an office's exploded plan read as walls and openings.
+                {"command": "tool.planRecognize", "title": "Duvar", "label": "Planı tanı"},
             ]}, L("tool.room")]),
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,

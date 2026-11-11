@@ -313,6 +313,9 @@ pub mod interior_dims;
 pub mod column_distance;
 pub mod tool_settings;
 
+// Planı tanı: an office's exploded plan read as walls and openings (docs/adr/8048 §4).
+pub mod plan_recognize;
+
 pub use clipboard::Clipboard;
 pub use format::{Axes, Format, fixed};
 pub use kentos_geometry_core::Vec2;

@@ -13400,6 +13400,22 @@
    "tests": 0
   },
   {
+   "id": "tool.planRecognize",
+   "kind": "command",
+   "title": "Planı tanı",
+   "level": "semantic",
+   "via": [
+    "cad.arch.recognize"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.recognize",
+   "mcp": "cad.arch.recognize",
+   "note": "Seçimin kimlikleri, katmanların Araç ayarları'nda değiştirilen rolleri, Kat (L) ve tadilat durumu, Kaynak çizgiler (K) komuta gider; duvarlar ve açıklıklar komutun planından önizlenir, tanınmayanlar sayılır (ADR 8048).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.planRoad",
    "kind": "tool",
    "title": "Plan yolu",

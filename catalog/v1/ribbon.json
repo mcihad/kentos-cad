@@ -1981,6 +1981,11 @@
           "command": "tool.wallFromLines",
           "title": "Duvar",
           "label": "Çizgiden duvar"
+         },
+         {
+          "command": "tool.planRecognize",
+          "title": "Duvar",
+          "label": "Planı tanı"
          }
         ]
        },

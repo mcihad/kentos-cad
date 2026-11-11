@@ -1,10 +1,10 @@
 # ADR 8048: Planı tanı — patlatılmış DWG/DXF planından duvar ve açıklık
 
-- **Durum:** 1. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
-  (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2); bölüm binasının ofis
-  planı tanımla birebir okunuyor (Doğrulama). Açık: masaüstü aracı ve gerçek pencerede kabul (2. bölüm), kolonun
-  kendisi, duvar stilinin genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri duvar, duvar ucundaki kapı,
-  bloklar (BLOCKIFY benzeri) ve gerçek bir ofis DWG'siyle tadilat örneği (§3).
+- **Durum:** 1. ve 2. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
+  (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2), masaüstü aracı Mimari ›
+  Duvar ▾ › Planı tanı (§4); bölüm binasının ofis planı tanımla birebir okunuyor, gerçek pencerede kabul edildi
+  (Doğrulama). Açık: kolonun kendisi, duvar stilinin genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri
+  duvar, duvar ucundaki kapı, bloklar (BLOCKIFY benzeri) ve gerçek bir ofis DWG'siyle tadilat örneği (§3).
 - **Bağlam belgesi:** ADR 0339 §5 (Çizgiden duvar, `cad.walls.convert`), ADR 0340 §2 (duvar birleşimleri), ADR 0341
   (açıklıklar), ADR 0772 (açıklık türleri), ADR 8039 (tadilat durumu), ADR 8046 (DWG/DXF katman profili), ADR 8047
   (binanın IFC'si).
@@ -87,6 +87,18 @@ sayılar nanometreye yuvarlanır (çizim milimetreye çizilir, toplamları daha 
   yazılan katmanların `layer_not_found`, `not_a_layer`, `layer_locked`, sonra sürüm. Plan yazmadan duvarları,
   açıklıkları (konağı geçici kimlikle), silinecek ve kalacak kaynakları gösterir.
 
+### 4. Masaüstü aracı: Mimari › Duvar ▾ › Planı tanı (`tool.planRecognize`)
+
+Seçim önce, değiştirme araçları gibi: plan pencereyle seçilir (seçim yoksa araç seçtirir). Araç ayarlarında Kat (L),
+Kaynak çizgiler (K: Koru/Sil) ve **seçimin her katmanı bir satır**: adı ve rolü (Duvar, Kapı, Pencere, Kolon, Yok
+say), adından gelen değeriyle; değiştirilen rol komuta `roles` olarak gider, adı bir şey söylemeyen katmanın rolü
+gösterilir (duvar katmanı yoksa Duvar). Komutun ve aracın rolü aynı işlevden okunur
+(`arch_recognize::layer_roles`). Önizleme komutun planıdır: duvarlar Duvar aracının önizlemesi gibi, açıklıklar
+pervazlarından çizilen dörtgenle; imlecin yanında "8 duvar, 3 kapı, 4 pencere, 0 boşluk; 88 nesne silinir; 39 nesne
+kalır". Enter, Uygula ya da hızlı sağ tık yazar; yazılmayan rol (duvar katmanı Yok say) sebebini söyler, hiçbir şey
+yazmaz. Kat ve tadilat durumu Çizgiden duvar'daki gibi (`cx.phased`): mevcut binayı tanırken etkin durum Mevcut ise
+duvarlar Mevcut gelir. 24'ten çok katmanda kalanlar adlarının rolüyle okunur ve söylenir.
+
 ## Doğrulama
 
 - Çekirdek: 15 test (oda, kapı, dışa açılan kapı, iki kanat, pencere, boşluk ve pervazları, kalem kayması, geniş
@@ -104,10 +116,21 @@ sayılar nanometreye yuvarlanır (çizim milimetreye çizilir, toplamları daha 
   şey söylemeyen katman duvar sayılır.
 - 41 ortak durum `scripts/fixtures/arch_recognize_cases.py` (KentOS kodu olmadan) masaüstü işleyicisinde ve Python
   SDK'da geçiyor.
+- Araç: 2 etkileşim testi (önizlemenin sözü, katman satırları ve rolleri, Enter'ın tek adımı ve geri alınması; Duvar
+  rolü Yok say'a çekilince ret ve hiçbir şey yazılmaması).
+- **Gerçek pencere** (1920×1080, Xvfb, gerçek fare ve klavye, release ikilisi; `.run/gui-evidence/mimari-m48/`): ofis
+  planı açıldı (127 nesne), Ctrl+A, Mimari › Duvar ▾ › Planı tanı: önizleme 8 duvarı ve 7 açıklığı çizdi, imlecin yanında
+  "8 duvar, 3 kapı, 4 pencere, 0 boşluk; 88 nesne silinir; 39 nesne kalır"; Araç ayarlarında Aks, Merdiven, MOBILYA,
+  YAZI Yok say, DUVAR Duvar, KAPI Kapı, PENCERE Pencere, Kolon Kolon. Enter: DUVAR katmanı 56 çizgiden 8 duvara, KAPI 12
+  parçadan 3 kapıya indi; seçilen güney duvarı 0,250 m, 12,000 m, Zemin kat. Aynı çizimde Mahal ▾ › Toplu mahal bul
+  tanınan duvarlardan **5 mahal** buldu (5 yeni, 0 çakışan): köşe ve T birleşimleri odaları kapatıyor. Çizim 127
+  nesneden 59'a indi (8 duvar, 7 açıklık, 5 mahal, 39 kalan).
+- Masaüstünün simge testi M47'nin bir kaçağını buldu: Model kalite kontrol formu (EK-9) Mimari denetim'in simgesini
+  taşıyordu (Mimari'de iki komut bir simgeyi paylaşamaz); forma kendi simgesi verildi (satırlarında onay işaretli bir
+  form).
 
 ## 3. Açık kalanlar
 
-- Masaüstü aracı (rolleri katman katman gösteren pencere, önizleme) ve gerçek pencerede kabul — 2. bölüm.
 - Kolonun kendisi (kapalı çevre → Kolon; dikdörtgen ve daire), duvar stilinin ölçülen kalınlıktan seçilmesi (Chief
   Architect'in 25 mm'si) ve bileşen çizgilerinden katmanlar.
 - Yüzleri kesilmeden çizilmiş pencere (pervaz çizgileri arasındaki cam çizgileri), eğri duvar (eş merkezli yaylar),

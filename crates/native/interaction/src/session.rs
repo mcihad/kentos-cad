@@ -79,6 +79,7 @@ pub const TOOLS: &[&str] = &[
     // Duvar and Çizgiden duvar (docs/adr/0339 §6).
     wall::ID,
     wall_from_lines::ID,
+    crate::plan_recognize::ID,
     wall_rectangle::ID,
     // Oda (docs/adr/8021).
     wall_rectangle::ROOM_ID,
@@ -531,6 +532,8 @@ impl Session {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }
             wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
+            // docs/adr/8048 §4: Planı tanı.
+            crate::plan_recognize::ID => Box::new(crate::plan_recognize::PlanRecognize::tool()),
             wall_edit_tools::SPLIT_ID => Box::new(wall_edit_tools::WallEditTool::split()),
             wall_edit_tools::JOIN_ID => Box::new(wall_edit_tools::WallEditTool::join()),
             wall_edit_tools::EXTEND_ID => Box::new(wall_edit_tools::WallEditTool::extend()),
