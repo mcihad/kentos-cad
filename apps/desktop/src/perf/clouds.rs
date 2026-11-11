@@ -239,6 +239,7 @@ fn source(path: &Path, format: CloudFormat, count: u64, bounds: [f64; 6]) -> Clo
         format,
         count,
         bounds,
+        pose: None,
     }
 }
 

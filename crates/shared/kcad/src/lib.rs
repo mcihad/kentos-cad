@@ -946,11 +946,14 @@ pub const SCHEMA_WITH_WORK_PROFILES: u32 = 239;
 /// an adjustment's sessions, the known points' place limits kept with their source (`tolerance`) and a network point's
 /// velocity read from a grid (`velocity`).
 pub const SCHEMA_WITH_GNSS_SESSIONS: u32 = 240;
+/// Schema 243 (docs/adr/5100): a point cloud file's place in the drawing, kept without writing the file (`pose`).
+/// (241 and 242 are other work's, numbered when merged.)
+pub const SCHEMA_WITH_CLOUD_POSES: u32 = 243;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 238] = [
+pub const SCHEMAS: [u32; 239] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1189,6 +1192,7 @@ pub const SCHEMAS: [u32; 238] = [
     SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
     SCHEMA_WITH_WORK_PROFILES,
     SCHEMA_WITH_GNSS_SESSIONS,
+    SCHEMA_WITH_CLOUD_POSES,
 ];
 
 /// The file a drawing is saved as.

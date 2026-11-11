@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `240`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-241.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `243`; 241 ve 242 başka işlerin, birleştirmede numaralanır); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-244.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1002,6 +1002,13 @@ SHA-256'sının ilk 16 hanesidir. `road.rebuildWhole` (mantıksal; yalnız `true
 kendiliğinden de her çizimi bütün çizer; yazılmamışsa yalnız değişeni yazar (ADR 4320). Yazıcı 238'i böyle bir çizim,
 `layer` kaynağı ya da `rebuildWhole` varken seçer; 237 ve öncesi üçünü de `bad_value` sayar
 (`broken/sheet-contour-drawing-in-schema-237.kcad`). Örnek `map-sheet-contours.json/.kcad`.
+
+**Şema 243** (ADR 5100; MAP-13): nokta bulutu dosyasının çizimdeki konumu (`sources[].pose`): dosyayı yeniden yazmadan
+dosyanın noktalarını çizime götüren katı dönüşüm, satır satır 16 sayı (sol üst 3 × 3 dönme, dördüncü sütun öteleme, son
+satır 0 0 0 1; RᵀR = I 10⁻⁹ içinde, determinant artı); bulutun `bounds`'u dosyaların konumdaki kutularının birleşimidir.
+Yazıcı 243'ü bir dosyanın konumu varken seçer; 240 ve öncesi alanı `unknown_field` sayar
+(`broken/pointcloud-pose-in-schema-240.kcad`); ölçekli konum ve 15 sayı `bad_value`. Örnek `pointcloud-poses.json/.kcad`.
+241 ve 242 başka işlerin; birleştirmede numaralanır.
 
 **Şema 240** (ADR 4920; MAP-03): GNSS arşivinin baz oturumları (`mapSurvey.baselineSessions`: `bo-N`, arazi ölçümü,
 dosyadaki adı `name`, isteğe bağlı `start`/`end`, 2–100 bazı `baselines` (bir baz en çok bir oturumda), korelasyon

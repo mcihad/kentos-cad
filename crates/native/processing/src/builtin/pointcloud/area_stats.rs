@@ -88,6 +88,10 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         Err(e) => return *e,
     };
     let list = clouds(r, "input");
+    // A cloud placed without writing its files (docs/adr/5100) is not read here.
+    if list.iter().any(|c| c.cloud.placed()) {
+        return RunResult::refused(super::PLACED.to_owned());
+    }
     if list.is_empty() {
         return RunResult::refused("Sayılacak nokta bulutu yok: bir bulut seçin.".to_owned());
     }

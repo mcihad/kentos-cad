@@ -12,13 +12,18 @@
 //! docs/adr/4300: Eksen ve açı gives the map instead of the matrix: a rotation of an angle (degrees) about an axis
 //! (right-handed) about a centre (empty: the middle of the cloud's box), then a move; the core makes the matrix
 //! (`Affine::axis_angle`), which the history keeps as any other.
+//!
+//! docs/adr/5100: Euler açıları gives it as three turns in degrees about Z, Y′ and X″ in that order (R = Rz·Ry·Rx;
+//! `Affine::euler`). A cloud placed in the drawing without writing its files (each file the same place) is written
+//! where the drawing shows it: its place first, then the map; the history keeps both. Son dönüşümü geri al refuses a
+//! placed cloud.
 
 use kentos_pointcloud::ops::transform::Affine;
 use serde_json::json;
 
 use super::{
     CATEGORY, Out, add_param, broke, cloud_object, clouds_param, count_words, files_of,
-    format_param, grid_notes, inputs, one_cloud, output_param, pass, place, result_layer_param,
+    format_param, grid_notes, inputs, any_cloud, output_param, pass, place, result_layer_param,
     settle, targets, written,
 };
 use crate::types::{
@@ -40,7 +45,9 @@ pub fn tool() -> Tool {
         help: Some([
             "Matris satır satır 16 sayıdır: ilk üç sütunun üst üç satırı dönüklük (ya da başka doğrusal kısım), dördüncü sütunun üst üç satırı öteleme, son satır 0 0 0 1. Sayılar boşluk, satır sonu, virgül ya da noktalı virgülle ayrılır; ondalık için nokta.",
             "Tarama kaydı'nın Buluta uygula düğmesi oturtulan taramanın matrisini buraya getirir: hareketli taramanın noktaları sabit taramanın üstüne taşınır.",
-            "Eksen ve açı: bulut bir eksen (X Y Z, uzunluğu önemsiz) çevresinde açı kadar (derece; sağ el kuralı: eksenin ucundan bakınca saatin tersine) bir merkez (boş: bulutun kutusunun ortası) çevresinde döner, sonra ötelenir. KentOS bunu Tarama kaydı'nın tarifiyle tek matrise çevirir; geçmişe o matris yazılır. Euler açıları yok: sıraları kaynakta yazılı değil.",
+            "Eksen ve açı: bulut bir eksen (X Y Z, uzunluğu önemsiz) çevresinde açı kadar (derece; sağ el kuralı: eksenin ucundan bakınca saatin tersine) bir merkez (boş: bulutun kutusunun ortası) çevresinde döner, sonra ötelenir. KentOS bunu Tarama kaydı'nın tarifiyle tek matrise çevirir; geçmişe o matris yazılır.",
+            "Euler açıları: X doğu, Y kuzey, Z yukarı eksenlerinde bulut önce Z çevresinde Sapma, sonra dönmüş Y çevresinde Yunuslama, en son iki kez dönmüş X çevresinde Yatış kadar döner (derece, her biri sağ el kuralıyla); bu, sabit eksenlerde önce X, sonra Y, sonra Z çevresinde aynı açılarla dönmekle aynıdır: R = Rz(sapma)·Ry(yunuslama)·Rx(yatış). Merkez ve öteleme eksen ve açıdakiler gibidir.",
+            "Konumu nesnede tutulan bulut (Bulutu konumla) çizimde gösterildiği yerden taşınır: önce konumu, sonra matris dosyaya yazılır; geçmişe ikisi de yazılır.",
             "Her nokta taşındıktan sonra kaynağın ızgarasına (ölçeği ve ötelemesi) yarım sıfırdan uzağa yuvarlanır: bir koordinat en çok ölçeğin yarısı kadar değişir. Noktanın öbür alanları (sınıf, renk, dönüş, GPS zamanı, tarama açısı, ek baytlar) olduğu gibi kalır; ek baytlardaki normaller döndürülmez.",
             "Koordinat sistemi değişmez: matris noktaları aynı sistemde taşır, sistemler arası dönüşüm değildir.",
         ]
@@ -60,6 +67,7 @@ pub fn tool() -> Tool {
                     options: vec![
                         EnumOption::new("matrix", "Matris").hint("Satır satır 16 sayı"),
                         EnumOption::new("axisAngle", "Eksen ve açı").hint("Bir eksen çevresinde dönme ve öteleme"),
+                        EnumOption::new("euler", "Euler açıları").hint("Z, Y′, X″ çevresinde sırayla üç dönme ve öteleme"),
                     ],
                 },
             )
@@ -92,6 +100,31 @@ pub fn tool() -> Tool {
             .default_value(json!(0.0))
             .describe("Dönme açısı, derece.")
             .shown_when(by_axis),
+            // docs/adr/5100: the turns about Z, then the turned Y, then the twice turned X.
+            ParamDef::new(
+                "yaw",
+                "Sapma (Z)",
+                ParamKind::Number { min: None, max: None, integer: false, unit: "°".into(), placeholder: None },
+            )
+            .default_value(json!(0.0))
+            .describe("Önce Z (yukarı) ekseni çevresinde dönme, derece; sağ el kuralı: yukarıdan bakınca saatin tersine.")
+            .shown_when(by_euler),
+            ParamDef::new(
+                "pitch",
+                "Yunuslama (Y)",
+                ParamKind::Number { min: None, max: None, integer: false, unit: "°".into(), placeholder: None },
+            )
+            .default_value(json!(0.0))
+            .describe("Sonra dönmüş Y ekseni çevresinde dönme, derece; sağ el kuralıyla.")
+            .shown_when(by_euler),
+            ParamDef::new(
+                "roll",
+                "Yatış (X)",
+                ParamKind::Number { min: None, max: None, integer: false, unit: "°".into(), placeholder: None },
+            )
+            .default_value(json!(0.0))
+            .describe("En son iki kez dönmüş X ekseni çevresinde dönme, derece; sağ el kuralıyla.")
+            .shown_when(by_euler),
             ParamDef::new(
                 "center",
                 "Merkez",
@@ -99,7 +132,7 @@ pub fn tool() -> Tool {
             )
             .optional()
             .describe("Dönmenin merkezi, X Y Z (projenin koordinatları); boş: bulutun kutusunun ortası.")
-            .shown_when(by_axis),
+            .shown_when(by_turn),
             ParamDef::new(
                 "translation",
                 "Öteleme",
@@ -107,7 +140,7 @@ pub fn tool() -> Tool {
             )
             .optional()
             .describe("Dönmeden sonra öteleme, X Y Z metre; boş: 0 0 0.")
-            .shown_when(by_axis),
+            .shown_when(by_turn),
             ParamDef::new("invert", "Tersini uygula", ParamKind::Boolean)
                 .default_value(json!(false))
                 .describe("Matrisin tersi uygulanır: kaydın taşıdığı bulut eski yerine döner.")
@@ -144,17 +177,44 @@ fn axis_form(v: &crate::types::Values) -> bool {
 }
 
 fn by_matrix(v: &crate::types::Values) -> bool {
-    not_undoing(v) && !axis_form(v)
+    not_undoing(v) && !axis_form(v) && !euler_form(v)
 }
 
 fn by_axis(v: &crate::types::Values) -> bool {
     not_undoing(v) && axis_form(v)
 }
 
+/// Whether the map is given as Euler angles (docs/adr/5100).
+fn euler_form(v: &crate::types::Values) -> bool {
+    v.get("form").and_then(serde_json::Value::as_str) == Some("euler")
+}
+
+fn by_euler(v: &crate::types::Values) -> bool {
+    not_undoing(v) && euler_form(v)
+}
+
+/// The centre and the move: asked for an axis and an angle, and for Euler angles.
+fn by_turn(v: &crate::types::Values) -> bool {
+    not_undoing(v) && (axis_form(v) || euler_form(v))
+}
+
 /// Eksen ve açı's map (docs/adr/4300): the axis, the angle, the centre (empty: the middle of the cloud's box) and the
 /// move (empty: none).
 fn axis_map(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Result<Affine, String> {
     let axis = Affine::triple(r.text("axis"), "Eksen").map_err(|e| e.0)?;
+    let (center, translation) = centre_and_move(r, cloud)?;
+    Affine::axis_angle(axis, r.number("angle").unwrap_or(0.0), center, translation).map_err(|e| e.0)
+}
+
+/// Euler açıları's map (docs/adr/5100): yaw about Z, pitch about Y′, roll about X″, about the centre, then the move.
+fn euler_map(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Result<Affine, String> {
+    let (center, translation) = centre_and_move(r, cloud)?;
+    let angle = |k: &str| r.number(k).unwrap_or(0.0);
+    Affine::euler(angle("yaw"), angle("pitch"), angle("roll"), center, translation).map_err(|e| e.0)
+}
+
+/// The centre (empty: the middle of the cloud's box in the drawing) and the move (empty: none) of a turn.
+fn centre_and_move(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Result<([f64; 3], [f64; 3]), String> {
     let center = match r.text("center").trim() {
         "" => {
             let b = cloud.cloud.bounds;
@@ -166,7 +226,17 @@ fn axis_map(r: &Resolved<'_>, cloud: &kentos_commands::PointCloudEntity) -> Resu
         "" => [0.0; 3],
         text => Affine::triple(text, "Öteleme").map_err(|e| e.0)?,
     };
-    Affine::axis_angle(axis, r.number("angle").unwrap_or(0.0), center, translation).map_err(|e| e.0)
+    Ok((center, translation))
+}
+
+/// The place the cloud's files share in the drawing (docs/adr/5100): none when they have none; refused when they
+/// differ, one matrix moving every file.
+fn shared_place(cloud: &kentos_commands::PointCloudEntity) -> Result<Option<Affine>, String> {
+    let first = cloud.cloud.sources.first().and_then(|s| s.pose);
+    if cloud.cloud.sources.iter().any(|s| s.pose != first) {
+        return Err("Bulutun dosyalarının nesnedeki konumları farklı; Dönüşüm uygula bütün dosyaları tek matrisle taşır. Dosyaları ayrı bulutlar olarak taşıyın ya da Bulutu konumla'da konumu kaldırın.".to_owned());
+    }
+    first.map(|m| Affine::new(m).map_err(|e| e.0)).transpose()
 }
 
 /// Son dönüşümü geri al (docs/adr/3900): the inverse of the last matrix of the cloud's history, and the history without
@@ -182,24 +252,35 @@ fn undone(cloud: &kentos_commands::PointCloudEntity) -> Result<(Affine, String),
 }
 
 fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
-    let (files, cloud) = match (files_of(feedback), one_cloud(r)) {
+    let (files, cloud) = match (files_of(feedback), any_cloud(r)) {
         (Ok(f), Ok(c)) => (f, c),
         (Err(e), _) | (_, Err(e)) => return *e,
     };
+    let pose = match shared_place(cloud) {
+        Ok(p) => p,
+        Err(why) => return RunResult::refused(why),
+    };
     let (affine, history) = if r.flag("undoLast") {
+        if pose.is_some() {
+            return RunResult::refused("Bulutun konumu nesnede tutuluyor; Son dönüşümü geri al dosyanın geçmişini geri alır. Önce Bulutu konumla'da konumu kaldırın.".to_owned());
+        }
         match undone(cloud) {
             Ok((a, h)) => (a, Some(h)),
             Err(why) => return RunResult::refused(why),
         }
     } else {
-        let given = if r.text("form") == "axisAngle" { axis_map(r, cloud) } else { Affine::parse(r.text("matrix")).map_err(|e| e.0) };
+        let given = match r.text("form") {
+            "axisAngle" => axis_map(r, cloud),
+            "euler" => euler_map(r, cloud),
+            _ => Affine::parse(r.text("matrix")).map_err(|e| e.0),
+        };
         match given {
             Ok(a) if r.flag("invert") => (a.inverse(), None),
             Ok(a) => (a, None),
             Err(why) => return RunResult::refused(why),
         }
     };
-    match go(&*files, r, cloud, &affine, history, feedback) {
+    match go(&*files, r, cloud, &affine, pose.as_ref(), history, feedback) {
         Ok(result) => result,
         Err(why) => broke(why),
     }
@@ -225,10 +306,14 @@ fn go(
     files: &dyn crate::files::Files,
     r: &Resolved<'_>,
     cloud: &kentos_commands::PointCloudEntity,
-    affine: &Affine,
+    given: &Affine,
+    pose: Option<&Affine>,
     undone: Option<String>,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
+    // docs/adr/5100: a placed cloud's files go first where the drawing shows them, then by the map.
+    let both = pose.map(|p| p.then(given));
+    let affine = both.as_ref().unwrap_or(given);
     let sources = &cloud.cloud.sources;
     let ins = inputs(files, sources)?;
     let plan =
@@ -296,11 +381,20 @@ fn go(
     // Son dönüşümü geri al (docs/adr/3900): the history without its last step; none left, no Dönüşümler.
     let history = match undone {
         Some(before) => before,
-        None => match had(HISTORY) {
-            Some(h) if !h.trim().is_empty() => format!("{h} | {}", affine.text()),
-            _ => affine.text(),
-        },
+        None => {
+            let steps = match pose {
+                Some(p) => format!("{} | {}", p.text(), given.text()),
+                None => given.text(),
+            };
+            match had(HISTORY) {
+                Some(h) if !h.trim().is_empty() => format!("{h} | {steps}"),
+                _ => steps,
+            }
+        }
     };
+    if pose.is_some() {
+        feedback.info("Bulutun nesnedeki konumu da dosyaya yazıldı; yazılan bulutun konumu yok.".to_owned());
+    }
     let attrs = &mut object.base_mut().attrs;
     attrs.insert(ORIGIN.to_owned(), origin);
     if !history.is_empty() {

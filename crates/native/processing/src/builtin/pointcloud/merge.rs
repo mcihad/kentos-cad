@@ -55,6 +55,10 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         Err(e) => return *e,
     };
     let list = clouds(r, "input");
+    // A cloud placed without writing its files (docs/adr/5100) is not read here.
+    if list.iter().any(|c| c.cloud.placed()) {
+        return RunResult::refused(super::PLACED.to_owned());
+    }
     let sources: Vec<_> = list
         .iter()
         .flat_map(|c| c.cloud.sources.iter().cloned())

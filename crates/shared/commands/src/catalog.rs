@@ -9771,6 +9771,42 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Bulutu konumla (plan/map-cad.md MAP-13, docs/adr/5100).
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_PLACE.into(),
+            version: crate::CAD_POINTCLOUDS_PLACE_VERSION,
+            title: "Bulutu konumla".into(),
+            summary: "Nokta bulutunun dosyalarına, dosyaları yeniden yazmadan çizimde bir konum verir (taramanın konumu gibi): katı bir dönüşüm (dönme ve öteleme), dosyaların bugünkü konumundan sonra uygulanır; Tarama kaydı'nın ya da Tarama ağı'nın matrisi taramayı çizimde gösterildiği yerden taşır. Bulutun noktaları bundan sonra çizimde, sorguda ve ölçüde bu konumdadır; dosyaya yalnız Dönüşüm uygula yazar. \
+                      Dönüşüm: matrix (satır satır 16 sayı), axisAngle (eksen, açı derece, sağ el kuralı), euler (yaw Z, pitch dönmüş Y, roll iki kez dönmüş X çevresinde, bu sırayla, derece, her biri sağ el kuralıyla; X doğu, Y kuzey, Z yukarı; R = Rz(yaw)·Ry(pitch)·Rx(roll)); center verilmezse bulutun çizimdeki kutusunun ortası, translation verilmezse öteleme yok; remove konumu kaldırır. Ölçek, kayma ya da yansıma içeren matris reddedilir (uzunlukları değiştirir: Dönüşüm uygula ile dosyaya yazılır). \
+                      Cevap: alınan matris, her dosyanın sonraki konumu, bulutun çizimdeki kutusu, kutunun ortasının kayması ve dönme açısı. Konumu olmayan bulutta remove hiçbir şey yazmaz. Tek geri alma adımı, Bulutu konumla. \
+                      Retler: invalid_uid, entity_not_found, not_a_pointcloud, layer_locked (uid); not_finite, invalid_input (place); invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["bulutukonumla".into(), "taramakonumu".into(), "pose".into(), "scanpose".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PointCloudsPlace>(),
+            output: schema::<crate::PointCloudsPlaced>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Taramayı Euler açılarıyla döndür ve ötele".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+                        "place": { "kind": "euler", "yaw": 0.5, "pitch": 0.0, "roll": 0.0, "translation": [0.2, -0.1, 0.05] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Konumu kaldır".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "place": { "kind": "remove" } }),
+                    output: None,
+                },
+            ],
+        },
         // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
         CommandDescriptor {
             id: crate::CAD_POINTCLOUDS_REGISTER.into(),
@@ -17057,6 +17093,7 @@ mod tests {
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegister>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetwork>(e.input.clone()).map(|_| ()),
+                    crate::CAD_POINTCLOUDS_PLACE => serde_json::from_value::<crate::PointCloudsPlace>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlines>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
@@ -18040,6 +18077,7 @@ mod tests {
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetworked>(output.clone()).map(|_| ()),
+                        crate::CAD_POINTCLOUDS_PLACE => serde_json::from_value::<crate::PointCloudsPlaced>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlinesBuilt>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),

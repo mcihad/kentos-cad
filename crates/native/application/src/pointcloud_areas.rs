@@ -157,12 +157,10 @@ pub(crate) struct Seen<'r> {
     pub(crate) record: &'r [u8],
 }
 
-/// Whether a COPC node's cube meets any of `boxes` (each `[x₁, y₁, x₂, y₂]`).
-fn node_meets(key: Key, info: &Info, boxes: &[[f64; 4]]) -> bool {
-    let (low, side) = key.cube(info);
-    boxes
-        .iter()
-        .any(|b| !(b[2] < low[0] || b[0] > low[0] + side || b[3] < low[1] || b[1] > low[1] + side))
+/// Whether a COPC node's cube, taken through its file's place (docs/adr/5100), meets one of the boxes in plan.
+fn node_meets(key: Key, info: &Info, pose: Option<&[f64; 16]>, boxes: &[[f64; 4]]) -> bool {
+    let c = crate::pointclouds::cube_box(key, info, pose);
+    boxes.iter().any(|b| !(b[2] < c[0] || b[0] > c[3] || b[3] < c[1] || b[1] > c[4]))
 }
 
 fn box_meets(a: [f64; 4], b: [f64; 4]) -> bool {
@@ -222,10 +220,8 @@ fn scan(
         .iter()
         .flat_map(|(_, c)| c.cloud.sources.iter())
         .filter(|s| {
-            s.format != CloudFormat::Copc
-                && boxes
-                    .iter()
-                    .any(|b| box_meets(*b, [s.bounds[0], s.bounds[1], s.bounds[3], s.bounds[4]]))
+            let p = s.placed_bounds();
+            s.format != CloudFormat::Copc && boxes.iter().any(|b| box_meets(*b, [p[0], p[1], p[3], p[4]]))
         })
         .map(|s| s.count)
         .sum();
@@ -236,7 +232,10 @@ fn scan(
     let mut recs = Vec::new();
     for (k, (_, c)) in chosen.iter().enumerate() {
         for (si, s) in c.cloud.sources.iter().enumerate() {
-            let b = [s.bounds[0], s.bounds[1], s.bounds[3], s.bounds[4]];
+            // A file with a place of its own (docs/adr/5100) is read where the drawing shows it.
+            let pose = s.pose.as_ref();
+            let p = s.placed_bounds();
+            let b = [p[0], p[1], p[3], p[4]];
             if !boxes.iter().any(|x| box_meets(*x, b)) {
                 continue;
             }
@@ -280,11 +279,7 @@ fn scan(
                     }
                     read[k] += n;
                     for (i, r) in recs.chunks_exact(layout.len).enumerate() {
-                        let xyz = [
-                            f64::from(layout.x(r)) * scale[0] + offset[0],
-                            f64::from(layout.y(r)) * scale[1] + offset[1],
-                            f64::from(layout.z(r)) * scale[2] + offset[2],
-                        ];
+                        let xyz = crate::pointclouds::placed(pose, crate::pointclouds::xyz_of(&layout, r, scale, offset));
                         see(&Seen {
                             cloud: k,
                             source: si as u32,
@@ -311,7 +306,7 @@ fn scan(
             let (layout, scale, offset) = (cloud.layout, cloud.head.scale, cloud.head.offset);
             for run in cloud.runs() {
                 if let (Some(key), Some(info)) = (run.node, cloud.info.as_ref())
-                    && !node_meets(key, info, boxes)
+                    && !node_meets(key, info, pose, boxes)
                 {
                     continue;
                 }
@@ -329,11 +324,7 @@ fn scan(
                 }
                 read[k] += n;
                 for (i, r) in recs.chunks_exact(layout.len).enumerate() {
-                    let xyz = [
-                        f64::from(layout.x(r)) * scale[0] + offset[0],
-                        f64::from(layout.y(r)) * scale[1] + offset[1],
-                        f64::from(layout.z(r)) * scale[2] + offset[2],
-                    ];
+                    let xyz = crate::pointclouds::placed(pose, crate::pointclouds::xyz_of(&layout, r, scale, offset));
                     see(&Seen {
                         cloud: k,
                         source: si as u32,

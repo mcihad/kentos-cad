@@ -411,6 +411,8 @@ pub(super) struct Features {
     pub(super) known_velocities: bool,
     /// Schema 240: a GNSS archive's baseline sessions, kept limits, a network point's velocity (docs/adr/4920).
     pub(super) gnss_sessions: bool,
+    /// Schema 243: a point cloud file's place in the drawing (docs/adr/5100).
+    pub(super) cloud_poses: bool,
     /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
     pub(super) drawing_provenance: bool,
     /// Schema 210: a map work approval's objects' digests (docs/adr/2880).
@@ -757,6 +759,7 @@ impl Features {
             work_stamps: schema >= crate::SCHEMA_WITH_WORK_STAMPS,
             known_velocities: schema >= crate::SCHEMA_WITH_KNOWN_VELOCITIES,
             gnss_sessions: schema >= crate::SCHEMA_WITH_GNSS_SESSIONS,
+            cloud_poses: schema >= crate::SCHEMA_WITH_CLOUD_POSES,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
@@ -1582,7 +1585,7 @@ pub(super) fn object(
             "georef" => f.raster.georef = Some(Box::new(raster_georef(r, has.georef_crs)?)),
             "tiles" => f.raster.tiles = Some(raster_tiles(r)?),
             "style" if kind == Kind::PointCloud => f.cloud.style = Some(cloud_style(r)?),
-            "sources" => f.cloud.sources = Some(cloud_sources(r)?),
+            "sources" => f.cloud.sources = Some(cloud_sources(r, has)?),
             "bounds" => f.cloud.bounds = Some(bounds6(r)?),
             "count" => f.cloud.count = Some(r.uint(u64::MAX)?),
             "url" => f.url = Some(text(r)?),
@@ -3346,11 +3349,21 @@ fn bounds6(r: &mut Reader<'_>) -> Result<[f64; 6], KcadError> {
     })
 }
 
-/// A point cloud's files (§6.6, docs/adr/0207 §3): each its one source, format, points and bounds.
-fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
+/// Sixteen numbers: a cloud file's place, row by row (schema 243, docs/adr/5100).
+fn pose16(r: &mut Reader<'_>) -> Result<[f64; 16], KcadError> {
+    let at = r.position();
+    let v = floats(r)?;
+    v.as_slice().try_into().map_err(|_| {
+        r.fail_at(Code::BadValue, at, &format!("konum 16 sayı olmalı, {} var", v.len()))
+    })
+}
+
+/// A point cloud's files (§6.6, docs/adr/0207 §3): each its one source, format, points and bounds; from schema 243
+/// its place (docs/adr/5100).
+fn cloud_sources(r: &mut Reader<'_>, has: Features) -> Result<Vec<CloudSource>, KcadError> {
     list(r, |r, _| {
         let (mut asset, mut file, mut url) = (None, None, None);
-        let (mut format, mut count, mut bounds) = (None, None, None);
+        let (mut format, mut count, mut bounds, mut pose) = (None, None, None, None);
         map(r, |r, key| {
             match key {
                 "asset" => asset = Some(text(r)?),
@@ -3363,6 +3376,8 @@ fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
                 }
                 "count" => count = Some(r.uint(u64::MAX)?),
                 "bounds" => bounds = Some(bounds6(r)?),
+                // Schema 243 (docs/adr/5100): the file's place in the drawing, 16 numbers row by row.
+                "pose" if has.cloud_poses => pose = Some(pose16(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -3374,6 +3389,7 @@ fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
             format: required(r, format, "format")?,
             count: required(r, count, "count")?,
             bounds: required(r, bounds, "bounds")?,
+            pose,
         })
     })
 }

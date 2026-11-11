@@ -2517,6 +2517,16 @@ const ENTRIES: &[Entry] = &[
         warnings: &["cloud_source_unreadable"],
         targets: none,
     },
+    // Bulutu konumla (plan/map-cad.md MAP-13, docs/adr/5100).
+    Entry {
+        id: "cad.pointclouds.place",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "not_a_pointcloud", "layer_locked", "not_finite", "invalid_input"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+    },
     // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
     // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720); the registration's own refusals and warnings.
     Entry {

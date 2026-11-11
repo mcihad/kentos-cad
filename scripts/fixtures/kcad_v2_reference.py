@@ -448,6 +448,8 @@ def cloud_source(f):
         "format": (enum(CLOUD_FORMATS), True),
         "count": (uint, True),
         "bounds": (floats, True),
+        # Schema 243 (docs/adr/5100): the file's place in the drawing, 16 numbers row by row.
+        "pose": (floats, False),
     }
     return cmap(fields(f, table, "nokta bulutunun dosyası"))
 
@@ -2749,6 +2751,9 @@ def document(d):
     if any("profile" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
         # A map work item's typed layers' profile (docs/adr/4880).
         schema = max(schema, 239)
+    if any(e["kind"] == "pointcloud" and any("pose" in s for s in e["sources"]) for e in d["entities"]):
+        # A point cloud file's place in the drawing (docs/adr/5100); 241 and 242 are other work's.
+        schema = max(schema, 243)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3653,7 +3658,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-241.kcad"] = container(root(cmap(parts), version=uint(241)))
+    files["schema-version-244.kcad"] = container(root(cmap(parts), version=uint(244)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6190,6 +6195,33 @@ def build():
     network_point = next(x for x in ms_["points"] if x["result"].get("method") == "network")
     network_point["result"]["velocity"] = {"enu": [0.0213, 0.0105, -0.0012],
                                           "grid": {"name": "tr-hiz-ornek.tif", "sha256": "1" * 64}}
+    # Schema 243 (docs/adr/5100): a virtual cloud's two files placed in the drawing without writing them — a quarter
+    # turn about the first file's middle and a lift, a small move; the cloud's box their placed boxes; schema 240
+    # refuses the field; a place that scales, and one of 15 numbers, are refused.
+    posed = load("pointclouds.json")
+    ada = next(e for e in posed["entities"] if e["id"] == 2)
+    ada["sources"][0]["pose"] = [0.0, -1.0, 0.0, 4908150.0, 1.0, 0.0, 0.0, 3932550.0, 0.0, 0.0, 1.0, 0.5,
+                                 0.0, 0.0, 0.0, 1.0]
+    ada["sources"][1]["pose"] = [1.0, 0.0, 0.0, 0.25, 0.0, 1.0, 0.0, -0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    def placed_box(m, b):
+        pts = [[sum(m[4 * i + k] * p[k] for k in range(3)) + m[4 * i + 3] for i in range(3)]
+               for p in ([b[0] if j & 1 == 0 else b[3], b[1] if j & 2 == 0 else b[4], b[2] if j & 4 == 0 else b[5]]
+                         for j in range(8))]
+        return [min(p[a] for p in pts) for a in range(3)] + [max(p[a] for p in pts) for a in range(3)]
+
+    boxes = [placed_box(s["pose"], s["bounds"]) for s in ada["sources"]]
+    ada["bounds"] = [min(b[a] for b in boxes) for a in range(3)] + [max(b[a + 3] for b in boxes) for a in range(3)]
+    out["pointcloud-poses.json"] = json_text(posed).encode("utf-8")
+    posed_data = document(posed)
+    assert posed_data.count(b"\x67version\x18\xf3") == 1, "a cloud file's place is schema 243"
+    out["pointcloud-poses.kcad"] = container(posed_data)
+    out["broken/pointcloud-pose-in-schema-240.kcad"] = container(
+        posed_data.replace(b"\x67version\x18\xf3", b"\x67version\x18\xf0"))
+    for name, change in (("pose-scaled", lambda s: s.__setitem__(0, 2.0)), ("pose-fifteen", lambda s: s.pop())):
+        broken_posed = copy.deepcopy(posed)
+        change(next(e for e in broken_posed["entities"] if e["id"] == 2)["sources"][1]["pose"])
+        out[f"broken/pointcloud-{name}.kcad"] = container(document(broken_posed))
     out["map-survey-sessions.json"] = json_text(sessioned).encode("utf-8")
     sessioned_data = document(sessioned)
     assert sessioned_data.count(b"\x67version\x18\xf0") == 1, "a baseline session is schema 240"

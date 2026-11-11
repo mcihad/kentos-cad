@@ -2291,6 +2291,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 243 (docs/adr/5100): a point cloud file's place in the drawing.
+    if objs.iter().any(|e| matches!(e, Entity::PointCloud(c) if c.cloud.placed())) {
+        return crate::SCHEMA_WITH_CLOUD_POSES;
+    }
     // Schema 240 (docs/adr/4920): a GNSS archive's baseline sessions, kept limits, a network point's velocity.
     if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_sessions) {
         return crate::SCHEMA_WITH_GNSS_SESSIONS;

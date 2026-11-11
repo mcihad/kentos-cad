@@ -214,6 +214,7 @@ fn go(
             format,
             count: *c,
             bounds: *b,
+            pose: None,
         })
         .collect();
     let object = (!sources.is_empty()).then(|| {
