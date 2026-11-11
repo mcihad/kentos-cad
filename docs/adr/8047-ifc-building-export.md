@@ -66,7 +66,9 @@ taşınacak, doğrudan oradaki fonksiyonlar, metotlar ve sınıflar kullanılaca
 - Duvar → `IfcWall` STANDARD; döşeme → `IfcSlab` FLOOR; kolon → `IfcColumn` COLUMN; kiriş → `IfcBeam` BEAM, lento LINTEL;
   çatı → `IfcRoof`; korkuluk → `IfcRailing` BALUSTRADE; merdiven → `IfcStair`; mahal → `IfcSpace` INTERNAL.
 - Açıklık → duvarını oyan `IfcOpeningElement` (niş RECESS) ve onu dolduran `IfcDoor`/`IfcWindow`: etiketi çizimdeki
-  numarası ("K01", "P01"), toplam yüksekliği ve genişliği.
+  numarası ("K01", "P01"), toplam yüksekliği ve genişliği. Kapı ve pencerenin gövdesi, yapısı kasa derinliğini
+  veriyorsa kasanın duvar içindeki bandıdır (`HoleFrame`, planın kasayı çizdiği kural: ortada ya da açıldığı yüzden
+  "Kasanın yüzden uzaklığı" kadar); vermiyorsa duvarın bütün kalınlığı — plan da öyle çizer.
 - Gövdeler kesit modelinden (ADR 8042): duvar katman katman, kolonun yüzünde ve kirişin altında biter — plan, kesit ve
   model aynı birleşimi gösterir. Prizmalar `IfcExtrudedAreaSolid`, kollar ve eğik yüzler `IfcPolygonalFaceSet`.
 - **GlobalId nesnenin KentOS kimliğidir** (UUID'in 128 biti, IFC'nin 22 karakteri): aynı çizim yeniden aktarıldığında
@@ -118,7 +120,8 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   Uygulama testi (`arch_ifc`) de artık bunu bekliyor: eski kuralla "MM-DVR-İç_duvar_15: doğru ≠ yanlış" diye düşüyor
   (denendi).
 - Yolun IFC'si taşınmadan önceki çıktısıyla **bayt bayt aynı** (`yol.ifc`).
-- Testler: `kentos-ifc` 5, uygulama `arch_ifc` ve IFC dosyaları, plan ölçüleri (birim ve masaüstü
+- Testler: `kentos-ifc` 6 (kasanın bandı: ortada 0,09–0,16; yüzden 2 cm, sol ve sağ; duvar kadar derin kasa duvarı
+  doldurur), uygulama `arch_ifc` ve IFC dosyaları, plan ölçüleri (birim ve masaüstü
   `plan_dimensions_writes_four_sides…`).
 
 ## Sonuçlar

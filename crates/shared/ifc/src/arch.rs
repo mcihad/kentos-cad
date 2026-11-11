@@ -8,9 +8,11 @@
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    ArchSettings, BeamRole, Entity, OpeningForm, SlabRole, SpaceFields, WallComponent,
+    ArchSettings, BeamRole, Entity, OpeningBuild, OpeningForm, OpeningSide, SlabRole, SpaceFields,
+    Vec2, WallComponent,
 };
 use kentos_geometry_core::Vec2 as P;
+use kentos_geometry_core::geom::opening::HoleFrame;
 use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
@@ -199,6 +201,40 @@ fn core_material(components: &[WallComponent]) -> Option<String> {
         .iter()
         .min_by_key(|c| (c.priority.unwrap_or(3), c.thickness.is_some()))
         .and_then(|c| c.material.clone())
+}
+
+/// A door's or a window's body across its wall: the band its frame stands in when its construction gives the frame's
+/// depth (`HoleFrame`, the rule the plan draws the frame by: centred, or `frameOffset` from the face it opens to), else
+/// the opening through the whole wall, as the plan draws one without. `through` is the opening's outline through the
+/// wall; the band is cut from its jambs (`place`: the start jamb on the wall's left and right face, then the end's);
+/// `right`: it opens to the wall's right face.
+fn filler_ring(
+    place: &[Vec2],
+    build: Option<&OpeningBuild>,
+    right: bool,
+    through: &[[f64; 2]],
+) -> Vec<[f64; 2]> {
+    let band = || -> Option<Vec<[f64; 2]>> {
+        let [sl, sr, el, er] = place else {
+            return None;
+        };
+        let t = libm::hypot(sr.x - sl.x, sr.y - sl.y);
+        let frame = HoleFrame {
+            depth: build?.frame_depth?,
+            offset: build?.frame_offset,
+            right,
+        };
+        let (near, far) = frame.across(t)?;
+        let at =
+            |a: &Vec2, c: &Vec2, d: f64| [a.x + (c.x - a.x) * d / t, a.y + (c.y - a.y) * d / t];
+        Some(vec![
+            at(sl, sr, near),
+            at(el, er, near),
+            at(el, er, far),
+            at(sl, sr, far),
+        ])
+    };
+    band().unwrap_or_else(|| through.to_vec())
 }
 
 /// A material's name as EK-6 asks for it ("Malzeme İsmi_Dayanım"): the drawing's, which knows no strength class.
@@ -442,7 +478,12 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     predefined: if door { "DOOR" } else { "WINDOW" },
                     storey,
                     shapes: vec![Shape::Prism {
-                        rings: vec![ring.clone()],
+                        rings: vec![filler_ring(
+                            &o.opening.place,
+                            o.opening.build.as_ref(),
+                            o.opening.side == OpeningSide::Right,
+                            &ring,
+                        )],
                         bottom,
                         top,
                     }],
@@ -650,4 +691,67 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         crs: None,
     };
     (building, written)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn v(x: f64, y: f64) -> Vec2 {
+        Vec2 { x, y }
+    }
+
+    /// A 1.2 m opening in a 0.25 m wall along x, its left face at y 0.125: the start jamb at x 0, the end at 1.2.
+    fn place() -> Vec<Vec2> {
+        vec![v(0.0, 0.125), v(0.0, -0.125), v(1.2, 0.125), v(1.2, -0.125)]
+    }
+
+    fn close(a: &[[f64; 2]], b: &[[f64; 2]]) -> bool {
+        a.len() == b.len()
+            && a.iter()
+                .zip(b)
+                .all(|(p, q)| (p[0] - q[0]).abs() < 1e-12 && (p[1] - q[1]).abs() < 1e-12)
+    }
+
+    #[test]
+    fn a_door_s_or_a_window_s_body_is_its_frame_s_band_across_the_wall() {
+        let through = vec![[0.0, 0.125], [1.2, 0.125], [1.2, -0.125], [0.0, -0.125]];
+        // No construction, or one without the frame's depth: the opening through the whole wall.
+        assert_eq!(filler_ring(&place(), None, false, &through), through);
+        let plain = OpeningBuild::default();
+        assert_eq!(
+            filler_ring(&place(), Some(&plain), false, &through),
+            through
+        );
+        // A 7 cm frame centred: 0.09 to 0.16 from the left face.
+        let framed = OpeningBuild {
+            frame_depth: Some(0.07),
+            ..OpeningBuild::default()
+        };
+        let centred = filler_ring(&place(), Some(&framed), false, &through);
+        assert!(close(
+            &centred,
+            &[[0.0, 0.035], [1.2, 0.035], [1.2, -0.035], [0.0, -0.035]]
+        ));
+        // 2 cm from the face it opens to: the left's, then the right's.
+        let set = OpeningBuild {
+            frame_depth: Some(0.07),
+            frame_offset: Some(0.02),
+            ..OpeningBuild::default()
+        };
+        assert!(close(
+            &filler_ring(&place(), Some(&set), false, &through),
+            &[[0.0, 0.105], [1.2, 0.105], [1.2, 0.035], [0.0, 0.035]]
+        ));
+        assert!(close(
+            &filler_ring(&place(), Some(&set), true, &through),
+            &[[0.0, -0.035], [1.2, -0.035], [1.2, -0.105], [0.0, -0.105]]
+        ));
+        // A frame as deep as the wall fills it.
+        let deep = OpeningBuild {
+            frame_depth: Some(0.3),
+            ..OpeningBuild::default()
+        };
+        assert_eq!(filler_ring(&place(), Some(&deep), false, &through), through);
+    }
 }
