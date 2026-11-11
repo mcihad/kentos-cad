@@ -183,6 +183,12 @@ ENTITIES = [
     wall(63, [(4, 250), (4, 254)]),
     wall(64, [(0, 260), (5, 260), (5, 264), (0, 264)], bulges=[0.25, 0.0, 0.0, 0.0], closed=True),
     wall(65, [(0, 270), (3, 270), (4, 271), (4, 274)], bulges=[0.0, math.tan(math.pi / 8), 0.0, 0.0]),
+    # A curved corridor (ADR 8049 §4): two concentric quarter arcs about (2, 290), radii 3 and 4.4 (1.20 m clear between
+    # their faces), and one of radius 1.5 inside over half of their sweep.
+    *[wall(i, [(2 + r * math.cos(math.radians(a0)), 290 + r * math.sin(math.radians(a0))),
+               (2 + r * math.cos(math.radians(a1)), 290 + r * math.sin(math.radians(a1)))],
+           bulges=[math.tan(math.radians(a1 - a0) / 4), 0.0])
+      for i, r, a0, a1 in ((66, 3.0, 225, 315), (67, 4.4, 225, 315), (68, 1.5, 270, 360))],
 ]
 SETUP = {
     "format": "kentos.document", "version": 2, "name": "Duvar kaydırma", "settings": SETTINGS, "origin": P(0, 0),
@@ -346,9 +352,79 @@ def walls_of(state, first):
     return [first] + others
 
 
-def gaps(state, first, k):
+CONCENTRIC = 1e-6
+
+
+def turned(c, a, p, turn):
+    """The angle from a to p about c, the way `turn` turns, in [0, 2π)."""
+    u, v = sub(a, c), sub(p, c)
+    t = math.atan2(cross(u, v), dot(u, v)) * turn
+    return t + 2 * math.pi if t < 0 else t
+
+
+def arc_gaps(state, first, k):
+    """An arc edge's gaps (ADR 8049 §4): the nearest facing face of a concentric arc (centres within 1e-6 m) on the same
+    level whose sweep overlaps it, along the radius at the overlap's middle."""
     order = walls_of(state, first)
     me = state[first]
+    pts = [xy(p) for p in me["pts"]]
+    a = pts[k]
+    c, r, sweep = arc_of(me, k)
+    turn = 1.0 if sweep > 0 else -1.0
+    span = abs(sweep)
+    lf = left_face(me)
+    rf = lf - me["width"]
+    best = [None, None]
+
+    def take(side, g):
+        if best[side] is None or g["distance"] < best[side]["distance"] - TIE:
+            best[side] = g
+
+    def at(angle, radius):
+        d = sub(a, c)
+        s, k0 = math.sin(angle * turn), math.cos(angle * turn)
+        return (c[0] + (d[0] * k0 - d[1] * s) / r * radius, c[1] + (d[0] * s + d[1] * k0) / r * radius)
+    for j in order:
+        other = state[j]
+        if level(other) != level(me):
+            continue
+        on = len(other["pts"])
+        for e in range(edges(other)):
+            if (j == first and e == k) or bulge(other, e) == 0.0:
+                continue
+            c0, c1 = xy(other["pts"][e]), xy(other["pts"][(e + 1) % on])
+            oc, orr, osw = arc_of(other, e)
+            if dist(oc, c) > CONCENTRIC:
+                continue
+            ot = 1.0 if osw > 0 else -1.0
+            s0 = turned(c, a, c0 if ot == turn else c1, turn)
+            ln = abs(osw)
+            first_part = min(span, s0 + ln) - s0
+            wrapped = s0 + ln - 2 * math.pi
+            lo, hi = (0.0, min(span, wrapped)) if wrapped > 0 and min(span, wrapped) > first_part else (s0, min(span, s0 + ln))
+            lo = max(0.0, lo)
+            if (hi - lo) * r <= TIE:
+                continue
+            mid = (lo + hi) / 2
+            olf = left_face(other)
+            fl = (r - (orr - ot * olf)) * turn
+            fr = (r - (orr - ot * (olf - other["width"]))) * turn
+            near, near_left = (fl, True) if fl <= fr else (fr, False)
+            far, far_left = (fl, True) if fl >= fr else (fr, False)
+            if near >= lf - TIE:
+                take(0, {"wall": j, "edge": e, "left": near_left, "distance": near - lf,
+                         "from": at(mid, r - turn * lf), "to": at(mid, r - turn * near)})
+            if far <= rf + TIE:
+                take(1, {"wall": j, "edge": e, "left": far_left, "distance": rf - far,
+                         "from": at(mid, r - turn * rf), "to": at(mid, r - turn * far)})
+    return best
+
+
+def gaps(state, first, k):
+    me = state[first]
+    if k < edges(me) and bulge(me, k) != 0.0:
+        return arc_gaps(state, first, k)
+    order = walls_of(state, first)
     a, u, n, l = frame(me, k)
     lf = left_face(me)
     rf = lf - me["width"]
@@ -1123,6 +1199,8 @@ def edit_cases():
         ("kapalı duvarın yay kenarı 25 cm dışa: köşeler yan kenarlar boyunca", shift_in(64, -0.25, edge=0)),
         ("kapalı duvarın doğu kenarı 30 cm dışa: yay köşesi yayın çemberi boyunca, yay uzar", shift_in(64, -0.3, edge=1)),
         ("kapalı duvarın batı kenarı 20 cm içe: yay köşesi çember boyunca, yay kısalır", shift_in(64, 0.2, edge=3)),
+        ("Mesafe yayda: eğri koridor 1,20'den 1,50 m'ye, iç yay merkezine doğru küçülür", distance_in(66, "right", 1.5)),
+        ("Mesafe yayda: dış yay iç yaya 1,00 m, merkezine doğru küçülür", distance_in(67, "left", 1.0)),
     ]:
         s, _ = step("execute", inp)
         add(name, [s])
@@ -1225,12 +1303,15 @@ def distances_answer(state, ids, edge=None):
                 item[key] = {"distance": x["distance"], "uid": u(x["wall"]), "edge": x["edge"],
                              "face": "left" if x["left"] else "right", "from": P(*x["from"]), "to": P(*x["to"])}
         w = state[i]
-        at, dirn = axis_middle(w, k)
-        for x, key in zip(beside(state, level(w), at, dirn), ("leftGrid", "rightGrid")):
-            if x is not None:
-                item[key] = {"distance": x["distance"], "uid": u(x["grid"]), "from": P(*x["from"]), "to": P(*x["to"])}
+        # An arc (ADR 8049 §4): no grid runs along it, Boy is a straight edge's.
+        arc = bulge(w, k) != 0.0
+        if not arc:
+            at, dirn = axis_middle(w, k)
+            for x, key in zip(beside(state, level(w), at, dirn), ("leftGrid", "rightGrid")):
+                if x is not None:
+                    item[key] = {"distance": x["distance"], "uid": u(x["grid"]), "from": P(*x["from"]), "to": P(*x["to"])}
         free = free_ends(state, i, k)
-        if free[0] or free[1]:
+        if not arc and (free[0] or free[1]):
             pts = [xy(p) for p in w["pts"]]
             a, b = pts[k], pts[(k + 1) % len(pts)]
             item["length"] = {"length": dist(a, b), "from": P(*a), "to": P(*b), "startFree": free[0], "endFree": free[1]}
@@ -1253,8 +1334,10 @@ def distances_cases():
                 if state[i]["kind"] != "wall":
                     result = refusal("not_a_wall", "Nesne duvar değil; duvarın mesafeleri yalnız duvarlarda ölçülür.", f"uids[{at}]")
                     break
+                k = 0 if edge is None else edge
                 try:
-                    frame(state[i], 0 if edge is None else edge)
+                    if not (k < edges(state[i]) and bulge(state[i], k) != 0.0):
+                        frame(state[i], k)
                 except Refused as r:
                     result = refusal(r.code, r.message, "edge")
                     break
@@ -1290,7 +1373,10 @@ def distances_cases():
     ask("boy: birleşimi yok (none) olan uç kayabilir", {"uids": [u(28)]})
     ask("plan aynı cevabı verir", {"uids": [u(2)]}, op="plan")
     ask("doğrula cevap vermez, yazmaz", {"uids": [u(2)]}, op="validate")
-    ask("yay duvar reddedilir", {"uids": [u(20)]})
+    ask("yay duvar: eş merkezli yayı yok, iki yanı boş (eskiden reddedilirdi)", {"uids": [u(20)]})
+    ask("eğri koridorun iç yayı: dışta dış yayın iç yüzüne 1,20 m, içte küçük yaya 1,30 m (örtüştükleri yayın ortasında)",
+        {"uids": [u(66)]})
+    ask("eğri koridorun dış yayı: içte iç yayın dış yüzüne 1,20 m", {"uids": [u(67)]})
     ask("olmayan kenar reddedilir", {"uids": [u(2)], "edge": 2})
     ask("duvar olmayan nesne reddedilir", {"uids": [u(40)]})
     ask("kimliksiz istek reddedilir", {"uids": []})

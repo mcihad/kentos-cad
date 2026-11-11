@@ -149,8 +149,16 @@ fn take(slot: &mut Option<Gap>, g: Gap) {
     }
 }
 
-/// The gaps of wall `w`'s edge `k`, on its left and on its right; why there are none (no such edge, an arc).
+/// The gaps of wall `w`'s edge `k`, on its left and on its right (an arc's to the concentric arcs); why there are
+/// none (no such edge).
 pub fn gaps(walls: &[WallIn<'_>], w: usize, k: usize) -> Result<[Option<Gap>; 2], String> {
+    // An arc edge: to the concentric arcs (docs/adr/8049 §4).
+    if let Some(me) = walls.get(w)
+        && k < edge_count(me)
+        && bulge(me, k) != 0.0
+    {
+        return super::wall_shift_arcs::arc_gaps(walls, w, k);
+    }
     let (a, u, n, l) = frame(walls, w, k)?;
     let me = &walls[w];
     let lf = left_face(me.spec);

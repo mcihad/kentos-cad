@@ -9,6 +9,10 @@
 //! And a straight edge moved next to an arc (`arc_corner`): the corner goes where the moved line meets the arc's
 //! circle, the arc keeping its circle and its far end, its bulge the new sweep's.
 //!
+//! The gaps of an arc edge (`arc_gaps`): on each side, the nearest face of an arc concentric with it (its centre within
+//! [`CONCENTRIC`]) on the same level whose sweep overlaps its own: the clear distance between the facing faces along
+//! the radius at the middle of the overlap. A straight edge is never parallel to an arc.
+//!
 //! Refused, nothing moving: a neighbour of the moved arc that is an arc too, a straight neighbour tangent to the arc (a
 //! rounded corner: its centre would have to move), another wall's end at a corner, the circle shrinking to nothing, a
 //! curve the new circle does not meet, an end meeting it in one line, an arc turning round.
@@ -16,10 +20,10 @@
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, atan2, js_hypot, js_sign};
+use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, js_sign, sin};
 use crate::ops::edge_shift_arcs::{Curve, meet, sweep_to};
 use crate::ops::wall_shift::{
-    Moved, TIE, bulge, edge, edge_count, ends_at, host_at, inline, level,
+    Gap, Moved, TIE, bulge, edge, edge_count, ends_at, host_at, inline, level,
 };
 use crate::vec2::Vec2;
 
@@ -79,6 +83,131 @@ fn set(moved: &mut Vec<Moved>, walls: &[WallIn<'_>], wall: usize, vertex: usize,
 
 fn missed() -> String {
     "Yayın ucu kaydığı doğruyla yeni çemberde buluşmuyor; daha küçük bir değer yazın.".to_owned()
+}
+
+/// Two arcs whose centres are this near are concentric, metres.
+pub const CONCENTRIC: f64 = 1e-6;
+
+/// The angle from `a` to `p` about `c`, the way `turn` turns, in [0, 2π).
+fn turned(c: Vec2, a: Vec2, p: Vec2, turn: f64) -> f64 {
+    let (u, v) = (sub(a, c), sub(p, c));
+    let mut t = atan2(cross(u, v), dot(u, v)) * turn;
+    if t < 0.0 {
+        t += 2.0 * PI;
+    }
+    t
+}
+
+fn take(slot: &mut Option<Gap>, g: Gap) {
+    match slot {
+        Some(b) if b.distance <= g.distance + TIE => {}
+        _ => *slot = Some(g),
+    }
+}
+
+/// The gaps of wall `w`'s arc edge `k`, on its left and on its right (docs/adr/8049 §4).
+pub(crate) fn arc_gaps(
+    walls: &[WallIn<'_>],
+    w: usize,
+    k: usize,
+) -> Result<[Option<Gap>; 2], String> {
+    let me = &walls[w];
+    let np = me.pts.len();
+    let (a, b) = (me.pts[k], me.pts[(k + 1) % np]);
+    let arc = bulge_arc(a, b, bulge(me, k))
+        .ok_or_else(|| "Duvarın yay kenarının boyu yok.".to_owned())?;
+    let turn = js_sign(arc.sweep);
+    let span = arc.sweep.abs();
+    let lf = left_face(me.spec);
+    let rf = lf - me.spec.width;
+    let lvl = level(me);
+    // The point at `angle` from the start (the way the arc turns) and `radius` from its centre.
+    let at = |angle: f64, radius: f64| {
+        let d = sub(a, arc.c);
+        let (s, k0) = (sin(angle * turn), cos(angle * turn));
+        Vec2::new(
+            arc.c.x + (d.x * k0 - d.y * s) / arc.r * radius,
+            arc.c.y + (d.x * s + d.y * k0) / arc.r * radius,
+        )
+    };
+    let r_of = |offset: f64| arc.r - turn * offset;
+    let mut best: [Option<Gap>; 2] = [None, None];
+    for (j, other) in walls.iter().enumerate() {
+        if level(other) != lvl {
+            continue;
+        }
+        let on = other.pts.len();
+        for e in 0..edge_count(other) {
+            if j == w && e == k {
+                continue;
+            }
+            let (c0, c1) = (other.pts[e], other.pts[(e + 1) % on]);
+            let Some(o) = bulge_arc(c0, c1, bulge(other, e)) else {
+                continue;
+            };
+            if dist(o.c, arc.c) > CONCENTRIC {
+                continue;
+            }
+            // Its sweep as angles from this arc's start, the way this arc turns: from its end when it turns the other
+            // way; the part past a full turn when that overlaps more.
+            let ot = js_sign(o.sweep);
+            let s0 = turned(arc.c, a, if ot == turn { c0 } else { c1 }, turn);
+            let len = o.sweep.abs();
+            let first = js_min(span, s0 + len) - s0;
+            let wrapped = s0 + len - 2.0 * PI;
+            let (lo, hi) = if wrapped > 0.0 && js_min(span, wrapped) > first {
+                (0.0, js_min(span, wrapped))
+            } else {
+                (s0, js_min(span, s0 + len))
+            };
+            let lo = js_max(0.0, lo);
+            if (hi - lo) * arc.r <= TIE {
+                continue;
+            }
+            let mid = (lo + hi) / 2.0;
+            // Its faces as offsets to this arc's left: a radius `R` is `(r − R)·turn` to its left.
+            let olf = left_face(other.spec);
+            let f_left = (arc.r - (o.r - ot * olf)) * turn;
+            let f_right = (arc.r - (o.r - ot * (olf - other.spec.width))) * turn;
+            let (near, near_left) = if f_left <= f_right {
+                (f_left, true)
+            } else {
+                (f_right, false)
+            };
+            let (far, far_left) = if f_left >= f_right {
+                (f_left, true)
+            } else {
+                (f_right, false)
+            };
+            if near >= lf - TIE {
+                take(
+                    &mut best[0],
+                    Gap {
+                        wall: j,
+                        edge: e,
+                        left_face: near_left,
+                        distance: near - lf,
+                        from: at(mid, r_of(lf)),
+                        to: at(mid, r_of(near)),
+                    },
+                );
+            }
+            if far <= rf + TIE {
+                take(
+                    &mut best[1],
+                    Gap {
+                        wall: j,
+                        edge: e,
+                        left_face: far_left,
+                        distance: rf - far,
+                        from: at(mid, r_of(rf)),
+                        to: at(mid, r_of(far)),
+                    },
+                );
+            }
+        }
+    }
+    Ok(best)
 }
 
 /// Wall `w`'s arc edge `k` moved `by` to its left, the walls joined to it following; each wall that changed once, `w`

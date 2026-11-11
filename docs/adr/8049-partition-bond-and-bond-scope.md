@@ -117,15 +117,18 @@ düz kenarı da.
   ters dönen yay (yeni açıklık eskisinden yarım turdan çok uzak).
 - **Araç:** Duvarı kaydır yay kenarı çemberinden seçer (açıklığı içinde, değilse yakın ucundan); imlecin çembere
   uzaklığı kaydırmadır; seçilen yay kısa kirişlerle işaretlenir.
-- Mesafe, Boy ve geçici ölçü yay kenarda henüz yoktur; ileti "Duvarın bu kenarı yay; geçici ölçü, Mesafe ve Boy düz
-  kenarda çalışır." oldu (Kaydır'ı artık söylemiyor).
+- **Geçici ölçü ve Mesafe yayda:** yay kenarın iki yanında, merkezi 1 µm içinde aynı (eş merkezli), aynı kattaki ve
+  açıca örtüşen en yakın yayın bakan yüzüne açık mesafe; yarıçap boyunca, örtüşmenin ortasında ölçülür (eğri koridorun
+  net genişliği). Mesafe aynı formülle yayı merkezinde kaydırır. Düz kenar yaya hiç paralel sayılmaz; yayda aks ve Boy
+  satırı yoktur. Boy ve aksa Mesafe düz kenarda kalır; ileti "Duvarın bu kenarı yay; geçici ölçü, Mesafe ve Boy düz
+  kenarda çalışır." (yalnız Boy ve aks için çıkar).
 - Birleşim uyarıları: bağımsız birleşim çözücüsü (`wall_command_cases.join_warnings`) yalnız düz duvar aldığından yay
   içeren yazımların ortak durumları uyarıyı açık bırakır (`$any`); geometri birebir denetlenir.
 
 ### 5. Bağların kalan kapsamı
 
-- **Yay kenar (açık):** yay kenarın geçici ölçüsü ve Mesafe'si (eş merkezli en yakın yaya radyal mesafe) ve bağı
-  (çözücüde çember öğesi; eş merkezli yaylar arasında uzaklık, eş merkezlilik, sabit).
+- **Yay kenar bağı (açık):** çözücüde çember öğesi; eş merkezli yaylar arasında uzaklık, eş merkezlilik, sabit;
+  geçici ölçünün yaydaki kilidi.
 - **Döşeme kenarı bağı yazılmadı:** "Kaynağa bağlı sınır"lı döşeme (ADR 0771 §4) sınırını duvarların dış ya da iç
   yüzlerinden payıyla her adımda yeniden buluyor; duvar kayınca döşeme kenarı zaten izliyor. Ayrı bir kenar bağı aynı
   ilişkiye ikinci bir yetke olurdu (ADR 0338 §2'nin tek yetke kuralı).
@@ -163,6 +166,11 @@ düz kenarı da.
   kenarı 0,3 m dışa → yay köşesi çember boyunca (5,3; 260,173), büküm 0,25 → 0,267; teğet komşu, yuvarlatılmış köşe ve
   merkeze çöken yay reddedilir; eski "yay duvar reddedilir" durumu artık yayı küçültür. Rust ve Python'da aynı; 748
   duvar ve bağ durumu geçer. Etkileşim: yay çemberinden seçilir, −0,3 yazılınca uçlar 3,2/2,9 oranında, büküm aynı,
+  tek geri alma.
+- Yay geçici ölçüsü (§4): eğri koridor (r 3 ve 4,4, (2; 290) merkezli çeyrek yaylar, aralarında net 1,20 m; içeride r
+  1,5 yarım örtüşen yay): iç yay dışta 1,20 m (270°'de), içte 1,30 m (örtüşmenin ortası 292,5°'de); Mesafe 1,50 m → iç
+  yay r 2,7; dış yay içe 1,00 m → r 4,2; eski "yay duvar reddedilir" ölçüsü artık iki yanı boş döner. 35 ölçü ve 55
+  Kaydır durumu Rust ve Python'da. Etkileşim: iç yay seçilince 1,200 görünür, sayısına 1.5 yazılınca yarıçap 2,7,
   tek geri alma.
 - Gerçek pencere (§3; `fixtures/interaction/real/kolon-bagi.txt`): eski sürümde seçili kolonun ölçülerinde kilit yok;
   yeni sürümde dört yanda kilit, güney kilidi "d1 = 0.8 m" yazıyor (kolon kımıldamıyor), duvarın güney kenarı A aksına

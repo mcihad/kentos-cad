@@ -89,11 +89,19 @@ pub fn gaps_of(doc: &Document, slot: Slot, edge: Option<u32>) -> Result<WallGaps
     let k = edge.unwrap_or(0) as usize;
     let [left, right] = wall_shift::gaps(&ins, 0, k)?;
     let grids = crate::grid_refs::Grids::of(doc);
-    let (at, u) = wall_shift::axis_middle(&ins, 0, k)?;
-    let [left_grid, right_grid] =
-        kentos_geometry_core::ops::grid_ref::beside(&grids.ins(), wall_shift::level(&ins[0]), at, u);
+    // An arc edge (docs/adr/8049 §4): no grid runs along it and Boy is a straight edge's.
+    let arc = ins[0]
+        .bulges
+        .and_then(|b| b.get(k))
+        .is_some_and(|b| *b != 0.0);
+    let [left_grid, right_grid] = if arc {
+        [None, None]
+    } else {
+        let (at, u) = wall_shift::axis_middle(&ins, 0, k)?;
+        kentos_geometry_core::ops::grid_ref::beside(&grids.ins(), wall_shift::level(&ins[0]), at, u)
+    };
     let free = wall_shift::free_ends(&ins, 0, k);
-    let length = (free[0] || free[1]).then(|| {
+    let length = (!arc && (free[0] || free[1])).then(|| {
         let (a, b) = (ins[0].pts[k], ins[0].pts[(k + 1) % ins[0].pts.len()]);
         WallLength {
             length: wall_shift::edge_length(&ins, 0, k).unwrap_or_default(),
