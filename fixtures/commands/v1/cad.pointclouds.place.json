@@ -7,7 +7,7 @@
  "note": "Written by scripts/fixtures/pointcloud_place_cases.py from docs/adr/5100 (OGC GeoPose 1.0 Basic-YPR; Euler as Rz·Ry·Rx, axis and angle by quaternion, inverse by Rᵀ); do not edit by hand.",
  "setup": {
   "format": "kentos.document",
-  "version": 1,
+  "version": 2,
   "name": "Bulutu konumla",
   "settings": {
    "srid": 5254,
@@ -15,8 +15,9 @@
    "areaDecimals": 2,
    "areaUnit": "m2",
    "angleUnit": "deg",
-   "plotScale": 500,
-   "workspace": "gis"
+   "plotScale": 500.0,
+   "workspace": "cad",
+   "cadWork": "map"
   },
   "origin": {
    "x": 0.0,
@@ -251,6 +252,13 @@
      "y": 0.0
     }
    }
+  ],
+  "uids": [
+   "0192f5c0-5100-7000-8000-000000000001",
+   "0192f5c0-5100-7000-8000-000000000002",
+   "0192f5c0-5100-7000-8000-000000000003",
+   "0192f5c0-5100-7000-8000-000000000004",
+   "0192f5c0-5100-7000-8000-000000000005"
   ]
  },
  "cases": [

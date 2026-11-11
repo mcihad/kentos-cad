@@ -29,11 +29,32 @@ pub const MOST_CELLS: usize = 64;
 const DRAW_BYTES: u64 = 48;
 
 /// A cloud's octrees, one per file (none while a file is opened or indexed),
-/// and its heights' range, which the depth spans.
+/// each file's place in the drawing (docs/adr/5100: 16 numbers row by row, a
+/// rigid map; none: where the file says; the host's nodes come already
+/// placed), and its heights' range, which the depth spans.
 #[derive(Clone, Debug, Default)]
 pub struct CloudTrees {
     pub members: Vec<Option<Octree>>,
+    pub poses: Vec<Option<[f64; 16]>>,
     pub z: [f64; 2],
+}
+
+/// The view's box taken back into a placed file's own coordinates (docs/adr/5100), so that its octree picks the
+/// nodes the view meets: the box of the view's corners at both heights, each taken back by the rigid map's inverse
+/// (Rᵀ(p − t)).
+fn view_in_file(m: &[f64; 16], view: [f64; 4], z: [f64; 2]) -> [f64; 4] {
+    let (mut lo, mut hi) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
+    for (x, y) in [(view[0], view[1]), (view[2], view[1]), (view[2], view[3]), (view[0], view[3])] {
+        for h in z {
+            let d = [x - m[3], y - m[7], h - m[11]];
+            for (a, slot) in [(0, 0usize), (1, 1)] {
+                let v = m[a] * d[0] + m[4 + a] * d[1] + m[8 + a] * d[2];
+                lo[slot] = lo[slot].min(v);
+                hi[slot] = hi[slot].max(v);
+            }
+        }
+    }
+    [lo[0], lo[1], hi[0], hi[1]]
 }
 
 /// A node's points ready to draw: positions from its centre, colours (RGBA, alpha 0 hidden).
@@ -378,9 +399,14 @@ impl PointsGpu {
                 let Some(tree) = tree else {
                     continue;
                 };
+                // A placed file's octree is in its own coordinates (docs/adr/5100).
+                let seen = match trees.poses.get(m).copied().flatten() {
+                    Some(pose) => view_in_file(&pose, view_box, trees.z),
+                    None => view_box,
+                };
                 visible(
                     tree,
-                    view_box,
+                    seen,
                     px_per_unit,
                     point_px,
                     budget,

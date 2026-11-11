@@ -156,6 +156,13 @@
       ],
       "note": "Pencere üç ve daha çok taramayı cad.pointclouds.network ile birlikte kaydeder (salt okunur): bağlar Tarama kaydı gibi kaydedilir ve normal matrisleriyle ağırlıklanır, sabit olmayan taramaların düzeltmeleri birlikte dengelenir (ADR 4720). Dönüşüm uygula seçilen taramayı matrisiyle taşır."
     },
+    "pointcloud.place": {
+      "level": "semantic",
+      "via": [
+        "cad.pointclouds.place"
+      ],
+      "note": "Pencere bulutun dosyalarına cad.pointclouds.place ile, dosyaları yazmadan çizimde konum verir (matris, eksen ve açı, Euler açıları; ADR 5100); tek geri alma adımı. Tarama ağı'nın Nesnede tut düğmesi de bu komutu çağırır."
+    },
     "pointcloud.register": {
       "level": "query",
       "via": [

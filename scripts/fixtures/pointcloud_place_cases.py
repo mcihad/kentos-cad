@@ -147,9 +147,9 @@ def layer(lid, name, locked=False):
 
 
 SETUP = {
-    "format": "kentos.document", "version": 1, "name": "Bulutu konumla",
+    "format": "kentos.document", "version": 2, "name": "Bulutu konumla",
     "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
-                 "plotScale": 500, "workspace": "gis"},
+                 "plotScale": 500.0, "workspace": "cad", "cadWork": "map"},
     "origin": {"x": 0.0, "y": 0.0},
     "layers": [layer("bulut", "Bulut"), layer("kilitli", "Kilitli", locked=True)],
     "activeLayer": "bulut", "styles": {"items": [], "categories": []},
@@ -160,6 +160,7 @@ SETUP = {
         cloud(4, "kilitli", [source("bulut.xyz")]),
         {"kind": "line", "id": 5, "layerId": "bulut", "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 1.0, "y": 0.0}},
     ],
+    "uids": [uid(i) for i in range(1, 6)],
 }
 IDS = [1, 2, 3, 4, 5]
 UNCHANGED = {"ids": IDS, "dirty": False, "revision": "same"}

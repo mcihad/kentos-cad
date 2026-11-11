@@ -5616,6 +5616,22 @@
    "tests": 0
   },
   {
+   "id": "pointcloud.place",
+   "kind": "command",
+   "title": "Bulutu konumla…",
+   "level": "semantic",
+   "via": [
+    "cad.pointclouds.place"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.place",
+   "mcp": "cad.pointclouds.place",
+   "note": "Pencere bulutun dosyalarına cad.pointclouds.place ile, dosyaları yazmadan çizimde konum verir (matris, eksen ve açı, Euler açıları; ADR 5100); tek geri alma adımı. Tarama ağı'nın Nesnede tut düğmesi de bu komutu çağırır.",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "pointcloud.profile",
    "kind": "command",
    "title": "Nokta bulutu profili…",

@@ -42,6 +42,8 @@ pub const TITLE: &str = "Tarama ağı dengelemesi";
 const CLOSE: &str = "Kapat";
 pub const TAKE: &str = "Seçili bulutları al";
 pub const APPLY: &str = "Dönüşüm uygula…";
+/// docs/adr/5100: the chosen scan's matrix kept on its object, its file not written.
+pub const KEEP: &str = "Nesnede tut";
 const EDGES: &str = "Kenardaki eşleşmeleri ayıkla";
 /// The layer Dönüşüm uygula writes the moved scan on.
 const MOVED_LAYER: &str = "Ağda dengelenen taramalar";
@@ -110,6 +112,7 @@ pub enum Event {
     Chosen(String),
     Show(Show),
     Apply,
+    Keep,
     Close,
 }
 
@@ -224,6 +227,38 @@ impl App {
         self.open_processing("pointcloud.transform", values);
     }
 
+    /// Nesnede tut (docs/adr/5100): the chosen scan's matrix taken after its place by `cad.pointclouds.place`, one
+    /// undo step; its file is not written. The network is adjusted again from there: the scan's correction is then
+    /// what is left.
+    fn scan_network_keep(&mut self) {
+        let Some(Ok(r)) = &self.scan_network.answer else { return };
+        let Some(scan) = r.scans.iter().find(|s| s.uid == self.scan_network.chosen) else { return };
+        if scan.fixed {
+            self.warn(format!("{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."));
+            return;
+        }
+        let name = self.scan_network.scans.iter().find(|(u, _)| *u == scan.uid).map(|(_, n)| n.clone()).unwrap_or_default();
+        let input = kentos_commands::PointCloudsPlace {
+            uid: scan.uid.clone(),
+            place: kentos_commands::CloudPlaceBy::Matrix { matrix: scan.matrix.to_vec() },
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        match kentos_native_application::pointcloud_place::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { .. } => {
+                self.say(
+                    kentos_interaction::Level::Success,
+                    format!("{TITLE}: “{name}” taramasının konumu nesnede tutuldu; dosyası değişmedi. Tek adımda geri alınır."),
+                );
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                self.warn(format!("{TITLE}: {}", error.message));
+            }
+            _ => {}
+        }
+        self.scan_network_run();
+    }
+
     pub(crate) fn scan_network_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.scan_network;
         match event {
@@ -258,6 +293,10 @@ impl App {
             }
             Event::Apply => {
                 self.scan_network_apply();
+                return Task::none();
+            }
+            Event::Keep => {
+                self.scan_network_keep();
                 return Task::none();
             }
             Event::Close => {
@@ -399,6 +438,7 @@ impl App {
             label::caption("Uygulanacak tarama"),
             container(fields::select_owned(free, &s.chosen, |v| msg(Event::Chosen(v)))).width(240),
             space::horizontal().width(Fill),
+            words::secondary(KEEP, ready.then(|| msg(Event::Keep))),
             words::primary(APPLY, ready.then(|| msg(Event::Apply))),
         ]
         .spacing(10)
@@ -418,6 +458,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(TAKE) => Some(msg(Event::Take)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
+            Control::Press(KEEP) => Some(msg(Event::Keep)),
             Control::Check(EDGES, on) => Some(msg(Event::Edges(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

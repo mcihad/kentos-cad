@@ -2213,6 +2213,7 @@ impl App {
             Asking::Overlap => self.overlap_view(),
             Asking::Register => self.register_view(),
             Asking::ScanNetwork => self.scan_network_view(),
+            Asking::CloudPlace => self.cloud_place_view(),
             Asking::CatalogReport => self.catalog_report_view(),
             Asking::SheetContours => self.sheet_contours_view(),
             Asking::Stockpile => self.stockpile_view(),

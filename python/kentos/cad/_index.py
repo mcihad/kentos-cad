@@ -201,6 +201,7 @@ COMMANDS: dict[str, Any] = {
     "cad.pointclouds.describe": pointclouds.describe,
     "cad.pointclouds.network": pointclouds.network,
     "cad.pointclouds.overlap": pointclouds.overlap,
+    "cad.pointclouds.place": pointclouds.place,
     "cad.pointclouds.profile": pointclouds.profile,
     "cad.pointclouds.query": pointclouds.query,
     "cad.pointclouds.region": pointclouds.region,

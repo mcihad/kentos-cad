@@ -226,3 +226,13 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: PointCloudsPlace) -> Comm
         other => crate::trim::relay(other),
     }
 }
+
+/// What the command would answer for `input`, nothing written (the window's preview); why not, in its words.
+pub fn answer_in(doc: &Document, input: &PointCloudsPlace) -> Result<PointCloudsPlaced, String> {
+    prepare(doc, input).map(|p| p.out).map_err(|stop| match CommandResult::<()>::from(stop) {
+        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            error.message
+        }
+        _ => "Bulut konumlanamadı.".to_owned(),
+    })
+}
