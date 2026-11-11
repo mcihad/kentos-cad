@@ -142,6 +142,7 @@ impl Out {
     /// where it stands. Its vertical justification is returned: it follows the
     /// next subclass marker (a TEXT's 73, an attribute's 74; none at 0).
     pub fn text(&mut self, value: &str, shown: &str, t: &Justified) -> i64 {
+        // Where it starts as KentOS lays it out: its own face's width (a fitted face's is the same, docs/adr/8046 §2).
         let start = justify::start(t.p, shown, t.height, t.rotation, t.align, t.width_factor);
         self.xyz(10, start);
         self.real(40, t.height);
@@ -149,8 +150,11 @@ impl Out {
         if t.rotation != 0.0 {
             self.real(50, t.rotation);
         }
-        if let Some(f) = t.width_factor {
-            self.real(41, f);
+        match (t.width_factor, t.fit) {
+            // Six places: what a reader divides back by the fit (its KENTOS data) to its own width factor.
+            (f, Some(fit)) => self.real(41, (f.unwrap_or(1.0) * fit * 1e6).round() / 1e6),
+            (Some(f), None) => self.real(41, f),
+            (None, None) => {}
         }
         let Some(a) = t.align else {
             return 0;
@@ -171,6 +175,20 @@ pub(crate) struct Justified {
     pub rotation: f64,
     pub align: Option<TextAlign>,
     pub width_factor: Option<f64>,
+    /// A text in KentOS's own face written in Standard, whose typeface other programs take for Arial (docs/adr/8046
+    /// §2): what its width factor is multiplied by so that Arial's line is as wide as KentOS's ([`arial_fit`]).
+    pub fit: Option<f64>,
+}
+
+/// The width factor that makes Arial's line as wide as KentOS's default face (Barlow) draws it (docs/adr/8046 §2):
+/// Barlow's advances as KentOS lays the line out (bold when KentOS draws it bold) over Arial's own (its metric twin
+/// Arimo's), to three places. Arial's regular: Standard's file is arial.ttf, so a bold line goes out regular and only its
+/// width is kept. None when a letter has no glyph or the line measures nothing.
+pub(crate) fn arial_fit(line: &str, bold: bool) -> Option<f64> {
+    use kentos_geometry_core::text::{Font, shaping::advance_em, width_em_in};
+    let ours = width_em_in(line, Font::DEFAULT, bold);
+    let arial = advance_em("arimo", 400, line)?;
+    (ours > 0.0 && arial > 0.0).then(|| (ours / arial * 1000.0).round() / 1000.0)
 }
 
 /// Handles for the drawing's own records and entities, after the template's.

@@ -1002,6 +1002,8 @@ impl Writer<'_> {
                     rotation: t.rotation,
                     align: t.align,
                     width_factor: t.width_factor,
+                    // An attribute names no style: Standard, KentOS's own face (docs/adr/8046 §2).
+                    fit: super::arial_fit(&value, false),
                 },
             );
             self.out.str(100, "AcDbAttribute");
@@ -1020,7 +1022,14 @@ impl Writer<'_> {
             self.out.str(100, "AcDbEntity");
             self.out.str(8, &layer);
             self.out.str(100, "AcDbText");
-            let justified = Justified { p: i.p, height, rotation: 0.0, align: None, width_factor: None };
+            let justified = Justified {
+                p: i.p,
+                height,
+                rotation: 0.0,
+                align: None,
+                width_factor: None,
+                fit: None,
+            };
             self.out.text(value, value, &justified);
             self.out.str(100, "AcDbAttribute");
             self.out.str(2, tag);
@@ -1503,6 +1512,12 @@ impl Writer<'_> {
         if t.mask {
             self.report.note("Yazı zemini", MASK, 0);
         }
+        // Its style and slant (docs/adr/0183 §7); Standard is DXF's own default, left unsaid as before styles. Standard
+        // is KentOS's own face, which other programs draw as Arial: as wide as KentOS draws it (docs/adr/8046 §2).
+        let style = self.styles.text(&t.face).to_owned();
+        let fit = (style == "Standard")
+            .then(|| super::arial_fit(&value, t.face.bold))
+            .flatten();
         self.begin("TEXT", base);
         self.out.str(100, "AcDbText");
         let vertical = self.out.text(
@@ -1514,12 +1529,11 @@ impl Writer<'_> {
                 rotation: t.rotation,
                 align: t.align,
                 width_factor: t.width_factor,
+                fit,
             },
         );
-        // Its style and slant (docs/adr/0183 §7); Standard is DXF's own default, left unsaid as before styles.
-        let style = self.styles.text(&t.face);
         if style != "Standard" {
-            self.out.str(7, style);
+            self.out.str(7, &style);
         }
         if let Some(o) = t.face.oblique.filter(|_| t.face.font.is_some()) {
             self.out.real(51, o);
@@ -1531,6 +1545,8 @@ impl Writer<'_> {
         self.grow(t.p);
         let mut meta = meta;
         meta.face = face_json(&t.face);
+        // Its 41 widened for Arial: KentOS reads its own width factor back (docs/adr/8046 §2).
+        meta.fit = fit;
         // Its fields in its KENTOS data (docs/adr/0325 §1); TEXT holds their letters.
         if !t.paragraph.fields.is_empty() {
             meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
@@ -1596,10 +1612,21 @@ impl Writer<'_> {
                 }
                 let (value, lost) = text_value(line);
                 changed |= lost;
+                // Bold as KentOS lays it out: a heading row's, the face's or its cell style's.
+                let fit = (style == "Standard")
+                    .then(|| super::arial_fit(&value, c.bold))
+                    .flatten();
                 self.block_text(
                     record,
                     &value,
-                    &Justified { p: app(c.at), height: h, rotation: 0.0, align: None, width_factor: None },
+                    &Justified {
+                        p: app(c.at),
+                        height: h,
+                        rotation: 0.0,
+                        align: None,
+                        width_factor: None,
+                        fit,
+                    },
                     &style,
                 );
             }
@@ -1637,6 +1664,15 @@ impl Writer<'_> {
                 let at = g.point(x, (y0 + y1) / 2.0 + DROP * h);
                 let (value, lost) = text_value(words);
                 changed |= lost;
+                // A cell in KentOS's own face: as wide as KentOS lays it out (docs/adr/8046 §2), bold as it does (its
+                // style's, else a heading row's or the face's; geom::table's layout).
+                let bold = g
+                    .style_at(i, j)
+                    .bold
+                    .unwrap_or((t.header && i == 0) || t.face.bold);
+                let fit = (style == "Standard")
+                    .then(|| super::arial_fit(&value, bold))
+                    .flatten();
                 self.block_text(
                     record,
                     &value,
@@ -1646,6 +1682,7 @@ impl Writer<'_> {
                         rotation: 0.0,
                         align: justify,
                         width_factor: None,
+                        fit,
                     },
                     &style,
                 );

@@ -105,6 +105,10 @@ impl Writer<'_> {
             }
             let (value, lost) = text_value(&ch.to_string());
             changed |= lost;
+            // A letter in KentOS's own face: as wide as KentOS sets it (docs/adr/8046 §2).
+            let fit = (style == "Standard")
+                .then(|| super::super::arial_fit(&value, t.face.bold))
+                .flatten();
             self.block_text(
                 record,
                 &value,
@@ -114,6 +118,7 @@ impl Writer<'_> {
                     rotation: l.turn,
                     align: None,
                     width_factor: t.width_factor,
+                    fit,
                 },
                 &style,
             );

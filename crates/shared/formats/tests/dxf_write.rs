@@ -1234,8 +1234,9 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// A drawing without elevations is the file it was before elevations were
 /// (docs/adr/0142): the same bytes, so nothing an old reader was given changes.
 /// The length and fingerprint are those the writer gave for `objects()` before
-/// the elevations existed (without the NURBS curves, which came later, docs/adr/0259), with one change since: a
-/// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups.
+/// the elevations existed (without the NURBS curves, which came later, docs/adr/0259), with two changes since: a
+/// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups; a
+/// text in KentOS's own face carries its Arial fit in its 41 and its KENTOS data (docs/adr/8046 §2), 134 bytes more.
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let old: Vec<Entity> = objects()
@@ -1243,7 +1244,7 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
         .filter(|e| !matches!(e, Entity::Nurbs(_)))
         .collect();
     let (bytes, report) = dxf::write(&input(old));
-    assert_eq!((bytes.len(), fnv64(&bytes)), (38026, 0xd2ba_382a_1ed2_50d0));
+    assert_eq!((bytes.len(), fnv64(&bytes)), (38160, 0xa784_f065_1f32_32d4));
     // And it says nothing of elevations.
     assert!(
         report
@@ -4157,5 +4158,91 @@ fn an_ek4_walls_hatches_go_on_its_t_layer() {
             .iter()
             .filter(|e| matches!(e, Entity::Hatch(_)))
             .all(|e| e.base().layer_id == yapi)
+    );
+}
+
+/// A text in KentOS's own face goes out in Standard, which other programs draw as Arial (arial.ttf): its 41 is the
+/// factor that makes Arial's line as wide as KentOS draws it (docs/adr/8046 §2). The factors here are measured on the
+/// faces' files by the independent reference (scripts/fixtures/dxf_write_reference.py: Barlow's advances over Arimo's,
+/// Arial's metric twin): a bold line against Arial's regular, Standard's only file (bold is not kept, its width is); a
+/// table's heading row is bold as KentOS draws it; a text with a typeface of its own is not fitted; KentOS reads its
+/// own width factors back.
+#[test]
+fn a_text_in_kentos_s_own_face_is_as_wide_in_arial_as_kentos_draws_it() {
+    let text = |words: &str,
+                bold: bool,
+                width_factor: Option<f64>,
+                font: Option<kentos_contracts::DrawingFont>| {
+        Entity::Text(TextEntity {
+            annotative: None,
+            base: base("yazi"),
+            p: tm(5.0, 5.0),
+            text: words.into(),
+            height: 2.5,
+            rotation: 0.0,
+            align: None,
+            width_factor,
+            mask: false,
+            label_of: None,
+            label_scale: None,
+            paragraph: Default::default(),
+            face: kentos_contracts::TextFace {
+                bold,
+                font,
+                ..Default::default()
+            },
+            path: None,
+        })
+    };
+    let table: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "table", "id": 9, "layerId": "yazi", "attrs": {}, "p": {"x": Y0, "y": X0}, "rotation": 0,
+        "height": 2.5, "rows": [5, 5], "columns": [30, 30], "header": true,
+        "cells": [["Genişlik (m)", "Yükseklik (m)"], ["1.20", "2.10"]]
+    }))
+    .expect("a table");
+    let entities = vec![
+        text("yatak odası 1", false, None, None),
+        text("yatak odası 1", true, None, None),
+        text("yatak odası 1", false, Some(1.2), None),
+        text(
+            "yatak odası 1",
+            false,
+            None,
+            Some(kentos_contracts::DrawingFont::Arimo),
+        ),
+        table,
+    ];
+    let (out, _) = write(&input(entities));
+    let p = pairs(&out);
+    let factor = |words: &str| {
+        entities_of(&p, "TEXT")
+            .iter()
+            .filter(|e| group(e, 1) == Some(words))
+            .map(|e| group(e, 41))
+            .collect::<Vec<_>>()
+    };
+    // Arial is 8.6 % wider than Barlow on this line: 0.921; bold Barlow over regular Arial 0.931; 1.2 × 0.921.
+    assert_eq!(
+        factor("yatak odası 1"),
+        [Some("0.921"), Some("0.931"), Some("1.1052"), None]
+    );
+    assert_eq!(
+        factor("Genişlik (m)"),
+        [Some("0.961")],
+        "a heading cell, bold"
+    );
+    assert_eq!(factor("1.20"), [Some("0.892")], "a body cell");
+    let back: Vec<Option<f64>> = read(&out)
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some(t.width_factor),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        back,
+        [None, None, Some(1.2), None],
+        "KentOS's own width factors back"
     );
 }

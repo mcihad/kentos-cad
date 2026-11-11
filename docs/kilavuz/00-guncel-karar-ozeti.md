@@ -433,8 +433,12 @@
   - **DXF'te mahal (M46 1. bölüm, ADR 8046 §1):** `formats::spaces::space_pieces_in` ekranın
     `geom::space::pieces_with_view`'ını yazar: halkalar, boşluğun çaprazı, etiketsiz mahalin yazısı (numara, ad, alan;
     MTEXT) mahalin katmanında; etiketli mahalin (bir etiketin `of`'u) yazısı etiketidir. KentOS verisi saklansa da
-    saklanmasa da aynı parçalar; DWG aynı DXF'ten. Açık: yazı genişliği — DXF Standard `arial.ttf`, KentOS Barlow
-    (Arial %7,1 geniş).
+    saklanmasa da aynı parçalar; DWG aynı DXF'ten.
+  - **DXF'te yazı genişliği (M46 2. bölüm, ADR 8046 §2):** KentOS'un yazı tipiyle yazılan yazı (Standard = `arial.ttf`)
+    TEXT, ATTRIB, tablo hücresi ve eğri yazı harfinde `41 = çarpan × Barlow genişliği / düz Arial genişliği` (satır satır,
+    üç basamak; `formats::dxf::writer::arial_fit`, Arial'ın ilerlemeleri ölçü ikizi Arimo'dan); TEXT'in KentOS verisinde
+    `fit`, okuyucu böler. 2+1'in 133 yazısında fark −%3,6…+%29'dan ±%0,06'ya. Açık (§3): başka programlar DXF
+    yüksekliğini büyük harf yüksekliği okuyor (Tekla, BricsCAD, QCAD, ezdxf), KentOS em yazıyor — yazılar %40 büyük.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

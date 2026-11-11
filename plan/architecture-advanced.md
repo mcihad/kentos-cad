@@ -1204,7 +1204,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M46 | DWG/DXF katman profili | ADV-25 | Dış programda aynı katmanlar ve yazılar **(1. bölüm yapıldı, ADR 8046 §1: mahal DXF'te ekrandaki gibi — sınırı, boşluğun çaprazı ve etiketsiz mahalin yazısı (numara, ad, alan) MM-XXXX-MAHAL'de, etiketli mahalin yazısı etiketinden; DWG aynı DXF'ten. Dış okuyucu ezdxf: önce 5 çizgi 0 yazı, sonra 8 yazı ve çapraz. Sırada: yazıların dış programda KentOS'taki genişliği — varsayılan Barlow, DXF Arial der, Arial ortalama %7,1 geniş, çizelge hücreleri taşıyor)** |
+| M46 | DWG/DXF katman profili | ADV-25 | Dış programda aynı katmanlar ve yazılar **(1. bölüm yapıldı, ADR 8046 §1: mahal DXF'te ekrandaki gibi — sınırı, boşluğun çaprazı ve etiketsiz mahalin yazısı (numara, ad, alan) MM-XXXX-MAHAL'de, etiketli mahalin yazısı etiketinden; DWG aynı DXF'ten. Dış okuyucu ezdxf: önce 5 çizgi 0 yazı, sonra 8 yazı ve çapraz. 2. bölüm yapıldı, ADR 8046 §2: Standard (Arial) yazının genişlik çarpanı satır satır Barlow/Arial — 2+1'de fark −%3,6…+%29'dan ±%0,06'ya. Sırada (§3): yazı yüksekliği — başka programlar DXF yüksekliğini büyük harf yüksekliği okuyor, KentOS em yazıyor, yazılar %40 büyük)** |
 | M47 | IFC4 mimari dışa aktarma | ADV-25 | Bağımsız okuyucuda sayılar eşit |
 | M48 | Eski DWG planından tanıma | ADV-25 | Patlatılmış plandan duvar ve açıklık |
 | M49 | Ölçülü bölmede kalıcı bağ; bağ kapsamı | ADV-01 | Yay kenar, kolon, aks bağı |

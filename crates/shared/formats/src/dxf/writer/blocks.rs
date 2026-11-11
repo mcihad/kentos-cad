@@ -261,6 +261,7 @@ pub(super) fn block(
                 rotation: a.rotation,
                 align: a.align,
                 width_factor: a.width_factor,
+                fit: None,
             },
         );
         out.str(100, "AcDbAttributeDefinition");

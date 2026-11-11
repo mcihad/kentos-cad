@@ -4758,8 +4758,20 @@ AcDbText
 2.0
   1
 Standart yazı
+ 41
+0.966
 100
 AcDbText
+1001
+KENTOS
+1002
+{
+1000
+fit
+1040
+0.966
+1002
+}
   0
 MTEXT
   5

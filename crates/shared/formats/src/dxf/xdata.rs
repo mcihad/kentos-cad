@@ -23,6 +23,7 @@
 //! 1002 {  1000 z                                 1002 }   the object's elevations are data, even when all 0 (a point's, a line's, a path's)
 //! 1002 {  1000 noz      <hex string>             1002 }   the vertices with no elevation, while the others have one: a bit each (docs/adr/0142)
 //! 1002 {  1000 mask                              1002 }   the text is drawn over a mask of the drawing's background (docs/adr/0145; DXF's TEXT has none)
+//! 1002 {  1000 fit      1040 <factor>            1002 }   the TEXT is in KentOS's own face: its 41 is its width factor times this, Arial's fit (docs/adr/8046 §2)
 //! 1002 {  1000 arrow    <string>                 1002 }   a LEADER's arrowhead DXF cannot name (its AutoCAD block's name taken; docs/adr/0146 §8, 0205 §7)
 //! 1002 {  1000 arrowsize 1040 <times>            1002 }   a LEADER's arrowhead's length over its height, exactly (DIMASZ over 40 rounds it; docs/adr/0205 §7)
 //! 1002 {  1000 note     <string>                 1002 }   a LEADER's note, exactly (when its MTEXT's notation cannot say it)
@@ -94,6 +95,9 @@ pub struct Meta {
     pub dimension: Option<DimMeta>,
     /// The TEXT is drawn over a mask (docs/adr/0145 §7).
     pub mask: bool,
+    /// The TEXT is in KentOS's own face, written in Standard (Arial elsewhere): its 41 holds its width factor times
+    /// this factor, Barlow's width over Arial's (docs/adr/8046 §2).
+    pub fit: Option<f64>,
     /// A LEADER's arrowhead by the app's name, when DXF cannot say it
     /// (docs/adr/0146 §8), its note and the note's turn (degrees), exactly.
     pub arrow: Option<String>,
@@ -319,6 +323,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if meta.mask {
         item("mask", &mut out, |_| {});
+    }
+    if let Some(f) = meta.fit {
+        item("fit", &mut out, |o| o.push((1040, dxf_real(f))));
     }
     if let Some(a) = &meta.arrow {
         item("arrow", &mut out, |o| string(a, o));
@@ -576,6 +583,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "object" => m.object = text(a).or(m.object),
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "mask" => m.mask = true,
+            "fit" => m.fit = real(a).or(m.fit),
             "arrow" => m.arrow = text(a).or(m.arrow),
             "note" => m.note = text(a).or(m.note),
             "face" => m.face = text(a).or(m.face),
@@ -674,6 +682,7 @@ mod tests {
             note: Some("Ø150 \\ {PVC}".into()),
             note_turn: Some(29.999_999_999_999_996),
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
+            fit: Some(0.921),
             look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
             table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
             table_style: Some(r#"{"name":"Metraj ^","title":{"height":3.5}}"#.into()),

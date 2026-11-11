@@ -35,8 +35,13 @@ library and no KentOS code:
   placed as the insert places the definition (height times the scale; the
   turn and alignment as a text's under the insert's similarity, a mirrored
   one readable by docs/adr/0292's rule, `affine_reference.text_frame`:
-  its up or its baseline turned back, its alignment so, within 1e-9),
-  then a SEQEND of its own;
+  its up or its baseline turned back, its alignment so, within 1e-9; its
+  41 fitted to Arial, below), then its other attributes with a value of
+  one line (docs/adr/3980), by name, as invisible ATTRIBs (70 1) at its
+  point, 2.5 mm high, tagged as a definition is (a tag taken before, but
+  for case, "_2" …; a tag that is not its name named in KentOS's data,
+  docs/adr/4380), then a SEQEND of its own; an insert with such attributes
+  alone says they follow too; KentOS's data holds the rest;
 - a text (a TEXT, an ATTRIB, an ATTDEF; docs/adr/0145 §7) without an
   alignment starts at its point (10) and has no 11, 72 or 73; an aligned one
   stands on its alignment point (11) exactly (an ATTRIB's where its insert
@@ -48,6 +53,12 @@ library and no KentOS code:
   and width factor implies being one (within 1e-8 m) and an average letter
   of 0.3 to 0.9 of its height; its width factor is 41 (none for 1); a
   masked TEXT has KentOS's "mask" item, no other has;
+- a TEXT, an ATTRIB, a table's cell and a curved text's letter in KentOS's
+  own face (Standard, which other programs draw as Arial) have their 41
+  fitted (docs/adr/8046 §2): the width factor times Barlow's width as
+  KentOS lays the line out (bold as it draws it) over Arial's regular
+  (Arimo's), to three places, the product to six; a TEXT's KentOS data says
+  the fit ("fit"); an invisible ATTRIB is not fitted;
 - a leader (docs/adr/0146 §8) is a LEADER of the dimension style Standard:
   its arrowhead drawn (71 1) unless it has none, straight (72 0); with a
   note made with an MTEXT (73 0) and a hookline (75 1): its vertices, then
@@ -174,6 +185,7 @@ from __future__ import annotations
 
 import json
 import math
+import struct
 import sys
 import unicodedata
 from pathlib import Path
@@ -270,6 +282,89 @@ def scaled(o, k: float):
     return out
 
 
+# ── Arial's fit (docs/adr/8046 §2) ────────────────────────────────────
+# A text in KentOS's own face (Barlow; no style, no typeface: Standard) is drawn as Arial by other programs: its 41 is
+# its width factor times Barlow's width as KentOS lays the line out (the measured advances, text_along_cases.py; bold
+# when KentOS draws it bold) over Arial's own (its metric twin Arimo's regular, read from the face's file here: Standard
+# is arial.ttf, a bold line goes out regular), to three places, the product to six; a TEXT's KENTOS data says the
+# factor. A letter Arimo has no glyph of leaves it as it was.
+FACES = Path(__file__).resolve().parents[2] / "apps/desktop/assets/fonts/drawing"
+
+
+def ttf_advances(path: Path) -> tuple[dict[int, int], int]:
+    """A TrueType face's advances by code point (its Unicode cmap's format 4 subtable) in its units, and its units per
+    em, read with the standard library."""
+    data = path.read_bytes()
+    tables = {}
+    for i in range(struct.unpack(">H", data[4:6])[0]):
+        tag, _, off, _ = struct.unpack(">4sIII", data[12 + 16 * i : 28 + 16 * i])
+        tables[tag.decode("latin-1")] = off
+    upm = struct.unpack(">H", data[tables["head"] + 18 : tables["head"] + 20])[0]
+    metrics = struct.unpack(">H", data[tables["hhea"] + 34 : tables["hhea"] + 36])[0]
+    hmtx = tables["hmtx"]
+    advances = [struct.unpack(">H", data[hmtx + 4 * g : hmtx + 4 * g + 2])[0] for g in range(metrics)]
+    cmap = tables["cmap"]
+    sub = None
+    for i in range(struct.unpack(">H", data[cmap + 2 : cmap + 4])[0]):
+        platform, encoding, off = struct.unpack(">HHI", data[cmap + 4 + 8 * i : cmap + 12 + 8 * i])
+        if (platform, encoding) in ((3, 1), (0, 3)) and struct.unpack(">H", data[cmap + off : cmap + off + 2])[0] == 4:
+            sub = cmap + off
+            break
+    twice = struct.unpack(">H", data[sub + 6 : sub + 8])[0]
+    n = twice // 2
+    ends = struct.unpack(f">{n}H", data[sub + 14 : sub + 14 + twice])
+    starts = struct.unpack(f">{n}H", data[sub + 16 + twice : sub + 16 + 2 * twice])
+    deltas = struct.unpack(f">{n}h", data[sub + 16 + 2 * twice : sub + 16 + 3 * twice])
+    ranges = sub + 16 + 3 * twice
+    offsets = struct.unpack(f">{n}H", data[ranges : ranges + twice])
+    out: dict[int, int] = {}
+    for k in range(n):
+        for cp in range(starts[k], ends[k] + 1):
+            if cp == 0xFFFF:
+                continue
+            if offsets[k] == 0:
+                g = (cp + deltas[k]) & 0xFFFF
+            else:
+                at = ranges + 2 * k + offsets[k] + 2 * (cp - starts[k])
+                g = struct.unpack(">H", data[at : at + 2])[0]
+                g = (g + deltas[k]) & 0xFFFF if g else 0
+            if g:
+                out[cp] = advances[min(g, metrics - 1)]
+    return out, upm
+
+
+ARIAL = ttf_advances(FACES / "Arimo-400.ttf")
+
+
+def arial_fit(line: str, bold: bool) -> float | None:
+    """Barlow's width (bold or not) over Arial's regular for `line`, to three places; None when Arimo has no glyph of
+    a letter."""
+    import text_along_cases as along
+
+    glyphs, upm = ARIAL
+    if any(ord(c) not in glyphs for c in line):
+        return None
+    ours = sum(along.advance("barlow", c, bold) for c in line) / 1000.0
+    arial = sum(glyphs[ord(c)] for c in line) / upm
+    if not (ours > 0.0 and arial > 0.0):
+        return None
+    return math.floor(ours / arial * 1000.0 + 0.5) / 1000.0
+
+
+def fitted(wf: float | None, line: str, bold: bool) -> float | None:
+    """A Standard text's 41: its width factor times Arial's fit, to six places (its own when there is no fit)."""
+    f = arial_fit(line, bold)
+    if f is None:
+        return wf
+    return math.floor((1.0 if wf is None else float(wf)) * f * 1e6 + 0.5) / 1e6
+
+
+def standard(e: dict, names: tuple) -> bool:
+    """A text in no style of the project and no typeface of its own: Standard, KentOS's own face."""
+    text, _, _ = names
+    return e.get("textStyle") not in text and not e.get("font")
+
+
 def kentos(e: list[tuple[int, str]]) -> dict[str, list[str]]:
     """KentOS's items on an entity: tag -> the values after it (flat)."""
     items: dict[str, list[str]] = {}
@@ -292,26 +387,31 @@ def kentos(e: list[tuple[int, str]]) -> dict[str, list[str]]:
     return items
 
 
-def kentos_attrs(e: list[tuple[int, str]]) -> dict[str, str]:
-    """KentOS's attributes on an entity (its "attr" items): key -> value."""
+def kentos_pairs(e: list[tuple[int, str]], name: str) -> dict[str, str]:
+    """KentOS's items of two values on an entity (its "attr" or "tagname" items): first -> second."""
     out: dict[str, str] = {}
     at = next((i for i, g in enumerate(e) if g == (1001, "KENTOS")), None)
     if at is None:
         return out
     i = at + 1
     while i < len(e):
-        if e[i] == (1002, "{") and i + 1 < len(e) and e[i + 1] == (1000, "attr"):
+        if e[i] == (1002, "{") and i + 1 < len(e) and e[i + 1] == (1000, name):
             k = i + 2
             values = []
             while k < len(e) and e[k] != (1002, "}"):
                 values.append(e[k][1])
                 k += 1
-            ensure(len(values) == 2, f"an attribute is a key and a value: {values}")
+            ensure(len(values) == 2, f"a {name} item is two values: {values}")
             out[values[0]] = values[1]
             i = k + 1
         else:
             i += 1
     return out
+
+
+def kentos_attrs(e: list[tuple[int, str]]) -> dict[str, str]:
+    """KentOS's attributes on an entity (its "attr" items): key -> value."""
+    return kentos_pairs(e, "attr")
 
 
 def valid(name: str) -> str:
@@ -601,16 +701,19 @@ def check_curved(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict,
         turn = float(group(x, 50) or 0.0)
         ensure(abs((turn - l["turn"] + 180.0) % 360.0 - 180.0) <= 1e-9, f"{w}: turned as the curve ({l['turn']})")
         ensure(float(group(x, 40)) == float(e["height"]), f"{w}: its height")
-        ensure((group(x, 41) is None) if "widthFactor" not in e else float(group(x, 41)) == float(e["widthFactor"]), f"{w}: its width factor")
+        wf = fitted(e.get("widthFactor"), table_text(c), bool(e.get("bold"))) if standard(e, styled) else e.get("widthFactor")
+        ensure((group(x, 41) is None) if wf is None else float(group(x, 41)) == float(wf), f"{w}: its width factor {wf}")
         check_face(x, e, styled, False, w, letter=True)
 
 
-def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, where: str, n: int) -> None:
+def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, layers: dict, where: str, n: int,
+                styled: tuple) -> None:
     """A table (docs/adr/0184 §7): an INSERT of the anonymous block *Un at its corner, turned as it is, KentOS's data
     its own fields; the block in its own axes (the corner at the origin, y down the page as −y): a LINE for every run of
     drawn edges (the outline's only without a frame band; none without lines), the band as four SOLIDs, a TEXT for every
     cell with words (a merged range's in its whole box), left, centred or right at half a height in, its baseline 0.35
-    of a height under the middle, on 0 in BYBLOCK."""
+    of a height under the middle, on 0 in BYBLOCK; in KentOS's own face its 41 fitted to Arial, bold as KentOS draws
+    the cell (its style's, else a heading row's or the face's; docs/adr/8046 §2)."""
     name = f"*U{n}"
     ensure(group(o, 2) == name and group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: {name}'s INSERT in model space, on its layer")
     ensure((float(group(o, 10)), float(group(o, 20))) == (float(e["p"]["x"]), float(e["p"]["y"])), f"{where}: at its corner")
@@ -689,10 +792,15 @@ def check_table(o: list[tuple[int, str]], e: dict, blocks: list, by_name: dict, 
             x0, x1, y0, y1 = xs[j], xs[j + cc], ys[i], ys[i + rr]
             align = "center" if e.get("header") and i == 0 else (e.get("aligns") or ["left"] * nc)[j]
             x = {"left": x0 + 0.5 * h, "center": (x0 + x1) / 2.0, "right": x1 - 0.5 * h}[align]
-            want.append((table_text(words), align, (x, -((y0 + y1) / 2.0 + 0.35 * h))))
+            bold = next((bool(c["bold"]) for c in reversed(e.get("styles") or [])
+                         if c.get("bold") is not None
+                         and holds({"rows": 1, "cols": 1, **c}, i, j)), bool(e.get("header") and i == 0) or bool(e.get("bold")))
+            want.append((table_text(words), align, (x, -((y0 + y1) / 2.0 + 0.35 * h)), bold))
     ensure(len(texts) == len(want), f"{where}: {len(want)} TEXTs")
-    for t, (words, align, at) in zip(texts, want):
+    for t, (words, align, at, bold) in zip(texts, want):
         ensure(group(t, 1) == words and float(group(t, 40)) == h, f"{where}: “{words}” at its height")
+        wf = fitted(None, words, bold) if standard(e, styled) else None
+        ensure((group(t, 41) is None) if wf is None else float(group(t, 41)) == wf, f"{where}: “{words}” width factor {wf}")
         if align == "left":
             ensure(group(t, 72) is None and (float(group(t, 10)), float(group(t, 20))) == at, f"{where}: “{words}” from its start")
         else:
@@ -974,19 +1082,44 @@ def placed_frame(e: dict, degrees: float, align: str | None) -> tuple[float, str
     return turn, align
 
 
-def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str, widths: dict) -> None:
-    """An insert's ATTRIBs and SEQEND (`o`: the entities after it; `own`: its handle)."""
+def extra_attributes(e: dict, b: dict) -> list[tuple[str, str, str]]:
+    """An insert's attributes no definition of its block holds that go out as invisible ATTRIBs (docs/adr/3980), by
+    name in code point order as KentOS keeps them: each named, its value one line (no control character); its tag its
+    name, white space and control characters "_", a tag taken before (a definition's or an earlier one's, but for case)
+    "_2", "_3" … (docs/adr/4380). Each one's name, tag and value."""
+    own = {a["tag"] for a in b.get("attributes") or []}
+    taken = {t.upper() for t in dxf_tags(b)}
+    out = []
+    for name, value in sorted((e.get("attrs") or {}).items()):
+        if name in own or not name or any(control(c) for c in value):
+            continue
+        base = "".join("_" if (c.isspace() or control(c)) else c for c in name)
+        tag, k = base, 2
+        while tag.upper() in taken:
+            tag = f"{base}_{k}"
+            k += 1
+        taken.add(tag.upper())
+        out.append((name, tag, value))
+    return out
+
+
+def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str, widths: dict,
+                     per_metre: float) -> None:
+    """An insert's ATTRIBs and SEQEND (`o`: the entities after it; `own`: its handle): its definitions', then its other
+    attributes' (invisible), then SEQEND."""
     attributes = b.get("attributes") or []
     tags = dxf_tags(b)
-    ensure(len(o) > len(attributes) and o[len(attributes)][0] == (0, "SEQEND"), f"{where}: {len(attributes)} ATTRIB, then SEQEND")
-    ensure(group(o[len(attributes)], 330) == own, f"{where}: its SEQEND is its own")
+    extra = extra_attributes(e, b)
+    n = len(attributes) + len(extra)
+    ensure(len(o) > n and o[n][0] == (0, "SEQEND"), f"{where}: {len(attributes)} ATTRIB and {len(extra)} invisible, then SEQEND")
+    ensure(group(o[n], 330) == own, f"{where}: its SEQEND is its own")
     for k, (a, tag) in enumerate(zip(attributes, tags)):
         r = o[k]
         w = f"{where} › {a['tag']}"
         ensure(r[0] == (0, "ATTRIB"), f"{w}: an ATTRIB")
         ensure(group(r, 330) == own, f"{w}: owned by its insert")
         ensure(group(r, 8) == layer, f"{w}: on the insert's layer")
-        ensure(group(r, 2) == tag, f"{w}: tag {tag!r}")
+        ensure(group(r, 2) == tag and group(r, 70) == "0", f"{w}: tag {tag!r}, shown (70 0)")
         value = (e.get("attrs") or {}).get(a["tag"]) or a.get("value") or ""
         ensure(group(r, 1) == value, f"{w}: shows {value!r}, not {group(r, 1)!r}")
         x, y = placed(e, b["base"], a["p"])
@@ -994,12 +1127,25 @@ def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: st
         turn, align = placed_frame(e, a["rotation"], a.get("align"))
         got = float(group(r, 50) or 0.0)
         ensure(close(got, turn) or (turn == 0.0 and group(r, 50) is None), f"{w}: turned {turn}°, not {got}°")
-        shown_at = {**a, "height": float(group(r, 40)), "rotation": got, "align": align}
+        # An attribute names no style: Standard, fitted to Arial (docs/adr/8046 §2).
+        wf = fitted(a.get("widthFactor"), value, False)
+        shown_at = {**a, "height": float(group(r, 40)), "rotation": got, "align": align, "widthFactor": wf}
         if align is None:
             ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
             ensure(group(r, 11) is None, f"{w}: not justified")
+            ensure((group(r, 41) is None) if wf is None else float(group(r, 41)) == wf, f"{w}: width factor {wf}")
         else:
             check_place(r, (x, y), False, shown_at, "AcDbAttribute", 74, value, widths, w)
+    for k, (name, tag, value) in enumerate(extra):
+        r = o[len(attributes) + k]
+        w = f"{where} › {name}"
+        ensure(r[0] == (0, "ATTRIB"), f"{w}: an ATTRIB")
+        ensure(group(r, 330) == own and group(r, 8) == layer, f"{w}: owned by its insert, on its layer")
+        ensure(group(r, 2) == tag and group(r, 1) == value, f"{w}: tag {tag!r} showing {value!r}")
+        ensure(group(r, 70) == "1", f"{w}: invisible (70 1)")
+        ensure(close(float(group(r, 10)), e["p"]["x"]) and close(float(group(r, 20)), e["p"]["y"]), f"{w}: at the insert's point")
+        ensure(close(float(group(r, 40)), 0.0025 * per_metre), f"{w}: 2.5 mm high")
+        ensure(all(c not in (11, 41, 50, 72, 74) for c, _ in r), f"{w}: neither justified, turned nor widened")
 
 
 def check_insert(o: list[tuple[int, str]], e: dict, name: str, where: str) -> None:
@@ -1674,16 +1820,21 @@ def check(name: str) -> list[str]:
         ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its layer")
         check_insert(o, e, names[e["block"]], where)
         b = by_id[e["block"]]
-        if b.get("attributes"):
+        extra = extra_attributes(e, b)
+        if b.get("attributes") or extra:
             ensure(group(o, 66) == "1", f"{where}: attributes follow (66 1)")
-            check_attributes(drawn[k + 1 :], e, b, layers[e["layerId"]], group(o, 5), where, widths)
+            check_attributes(drawn[k + 1 :], e, b, layers[e["layerId"]], group(o, 5), where, widths, per_metre)
             attributed += 1
         else:
             ensure(group(o, 66) is None, f"{where}: no attributes follow")
-        # The values of its block's attributes go out once, as its ATTRIBs; KentOS's data holds the others.
+        # The values of its block's attributes go out once, as its ATTRIBs, its other one-line ones as invisible ATTRIBs
+        # (docs/adr/3980); KentOS's data holds the rest, and the names their tags do not hold (docs/adr/4380).
         defined = {a["tag"] for a in b.get("attributes") or []}
-        others = {k: v for k, v in e["attrs"].items() if k not in defined}
+        sent = {name for name, _, _ in extra}
+        others = {k: v for k, v in e["attrs"].items() if k not in defined and k not in sent}
         ensure(kentos_attrs(o) == others, f"{where}: KentOS's data holds its other attributes {others}")
+        renamed = {tag: name for name, tag, _ in extra if tag != name}
+        ensure(kentos_pairs(o, "tagname") == renamed, f"{where}: KentOS's data names the tags {renamed}")
     if attributed:
         said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
 
@@ -1693,7 +1844,7 @@ def check(name: str) -> list[str]:
     ensure(len(written) == len(tables), f"{len(tables)} tables")
     by_name = {group(b, 2): k for k, b in enumerate(blocks) if b[0] == (0, "BLOCK")}
     for n, ((i, e), o) in enumerate(zip(tables, written)):
-        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", anonymous[i])
+        check_table(o, e, blocks, by_name, layers, f"tablo {n + 1}", anonymous[i], styled)
     tables = [e for _, e in tables]
     if tables:
         said.append(f"{len(tables)} tablo ({sum(1 for e in tables if e.get('frame') and e.get('grid') != 'none')} kalın çerçeveli)")
@@ -1716,8 +1867,12 @@ def check(name: str) -> list[str]:
         ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its layer")
         ensure(group(o, 1) == e["text"] and float(group(o, 40)) == e["height"], f"{where}: its words and height")
         ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == e["rotation"], f"{where}: its turn")
-        check_place(o, (e["p"]["x"], e["p"]["y"]), True, e, "AcDbText", 73, e["text"], widths, where)
+        fit = arial_fit(e["text"], bool(e.get("bold"))) if standard(e, styled) else None
+        shown = {**e, "widthFactor": fitted(e.get("widthFactor"), e["text"], bool(e.get("bold")))} if fit else e
+        check_place(o, (e["p"]["x"], e["p"]["y"]), True, shown, "AcDbText", 73, e["text"], widths, where)
         ensure(("mask" in kentos(o)) == bool(e.get("mask")), f"{where}: KentOS's mask item exactly when masked")
+        got = kentos(o).get("fit")
+        ensure((got is None) if fit is None else (got is not None and float(got[0]) == fit), f"{where}: Arial's fit {fit} in KentOS's data")
         check_face(o, e, styled, False, where)
     check_widths(widths)
     if texts:

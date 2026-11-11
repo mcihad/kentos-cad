@@ -205,6 +205,18 @@ fn parsed(id: FontId) -> Result<&'static rustybuzz::Face<'static>, Error> {
         .ok_or(Error::BadFont(id))
 }
 
+/// `text`'s advance in ems in the bundled `family` at `weight`, upright, letter by letter from the face's own advances
+/// and with no kerning: what a CAD program that draws the face's glyphs one after another makes of it (docs/adr/8046
+/// §2). None for a face KentOS does not bundle or a letter the face has no glyph of.
+pub fn advance_em(family: &str, weight: u16, text: &str) -> Option<f64> {
+    let face = parsed(select_font(family, weight, false)?).ok()?;
+    let mut units = 0u32;
+    for c in text.chars() {
+        units += u32::from(face.glyph_hor_advance(face.glyph_index(c)?)?);
+    }
+    Some(f64::from(units) / f64::from(face.units_per_em()))
+}
+
 /// CSS-style slope then weight selection, within one exact family.
 pub fn select_font(family: &str, weight: u16, italic: bool) -> Option<FontId> {
     let candidates: Vec<_> = (0..font_count())

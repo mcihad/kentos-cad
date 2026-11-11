@@ -33,7 +33,7 @@ DXF yazıcısının (`crates/shared/formats/src/dxf/writer`) çıktısını Kent
 - Hizasız yazı noktasından başlar (10); 11, 72 ve 73 yoktur.
 - Hizalı yazı hiza noktasında (11) tam durur; 72 ve 73 (öznitelikte 74) hizayı söyler, 0 olan yazılmaz. 72 ve 11 ikinci AcDbText'ten (öznitelikte AcDbAttribute ya da AcDbAttributeDefinition'dan) önce, dikey hiza sonradır.
 - 10, hizayı bilmeyen programlar için başlangıç noktasıdır: 11'in, hizanın yükseklik payı kadar taban çizgisine dik altında ve genişlik payı kadar gerisinde; genişlik yazının Arimo'daki ölçüsüdür (aynı sözlerin, yüksekliğin ve çarpanın hepsinde aynı).
-- Genişlik çarpanı 41'dir (1'se yazılmaz).
+- Genişlik çarpanı 41'dir (1'se yazılmaz). KentOS'un yazı tipiyle (Standard: başka programda Arial) yazılan TEXT, ATTRIB, tablo hücresi ve eğri yazı harfinde 41 çarpanın satırın Arial uyumuyla çarpımıdır: Barlow genişliği / düz Arial (Arimo) genişliği, üç basamak, çarpım altı basamak ([ADR 8046](../../../../docs/adr/8046-dwg-dxf-layer-profile-and-texts.md) §2); TEXT'in KENTOS verisinde `fit` öğesi uyumu söyler, okuyucu böler. Görünmez ATTRIB çarpansızdır.
 - TEXT'in zemini yoktur: zeminli yazının KentOS verisinde `mask` ögesi vardır, öbürlerinde yoktur; rapor bunu söyler.
 - ATTRIB yerleştirmenin benzerliğiyle yerleşir: 11'i tanımın noktasının yerleşmiş hâlidir, yüksekliği ölçekle çarpılır, çarpanı ve hizası tanımınkidir.
 - Okuyucu dosyayı geri okuyunca her yazı yerinde, hizası, çarpanı ve zeminiyle gelir (`texts_read_back_with_their_alignment_width_factor_and_mask`).

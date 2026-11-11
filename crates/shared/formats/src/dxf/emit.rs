@@ -394,6 +394,14 @@ fn apply_meta(meta: &Meta, e: &mut Entity) {
     {
         t.mask = true;
     }
+    // A text in KentOS's own face its 41 widened for Arial (docs/adr/8046 §2): its own width factor back.
+    if let (Some(f), Entity::Text(t)) = (meta.fit, &mut *e)
+        && f > 0.0
+        && f.is_finite()
+    {
+        let w = (t.width_factor.unwrap_or(1.0) / f * 1e9).round() / 1e9;
+        t.width_factor = ((w - 1.0).abs() > 1e-9 && width_factor_ok(w)).then_some(w);
+    }
     // A multi-line text's exact turn, while its MTEXT's direction still gives it (docs/adr/0182 §5).
     if let (Some(turn), Entity::Text(t)) = (meta.note_turn, e) {
         let d = (turn - t.rotation).rem_euclid(360.0);
