@@ -49,7 +49,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760, 5140 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi); Brükner diyagramı | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780, 5160 | yol kaplamasının (yüzey kaplaması) profilde gösterimi; uç çizgisi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820, 5200 | paftada kalite tablosu (dengeleme kaydından); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440, 4860 | katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi; adıyla bulunan katmana tarifin eksik alanlarını ekleme seçeneği | bütçe (gerçek veriyle ölçüm) |
 
@@ -2504,6 +2504,12 @@ haritaların yolları ve yazıları, tablolar, koordinat listeleri, lejantlar, k
 ve yazı tipi alt kümesi değil; kayıtta da, güncellemenin yapmadığı sayfa öncekini taşır; değişen sayfanın
 `changes[].look`'u same ya da changed; 3 bağımsız durum (47; eskiler bayt bayt aynı), Python, MCP; masaüstünde yazıldı
 iletisi. Açık: total station ve nivelman kalitesi, önizlemede görünüş.
+
+**11 Kasım 2026, onuncu tur — dengelemenin sonucu projede saklanır ([ADR 5200](../docs/adr/5200-kept-survey-adjustments.md)).**
+Kapsam: dengeleme pencereleri olan her çalışma alanı. Dayanak: BÖHHBÜY m. 98(1) (dengeleme sonuçları teslim edilir;
+kalitenin paftaya yazılması istenmez). Kanıtlanan: `cad.survey.adjust`'ın `keep`'i (noktalar, σ, f, m0, test aynı adımda
+`settings.surveyAdjustments`'a), `.kcad` şema 244 ve bağımsız okuyucu, 30 ortak durum, Python, masaüstünde Projede sakla
+ve resim. Açık: paftada kalite tablosu, önizlemede görünüş.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

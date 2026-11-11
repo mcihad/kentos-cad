@@ -849,6 +849,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut map_survey = None;
     let mut parcel_register = None;
     let mut zoning_plan = None;
+    let mut survey_adjustments = Vec::new();
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1125,6 +1126,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 zoning_plan = Some(v);
+            }
+            // Schema 244 (docs/adr/5200): the adjustments the project keeps, read whole and checked.
+            "surveyAdjustments" if has.kept_adjustments => {
+                let (v, at): (Vec<kentos_contracts::KeptAdjustment>, usize) = objects::json_part(r, "dengeleme kayıtları")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş dengeleme kayıtları yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::kept_adjustments_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                survey_adjustments = v;
             }
             "mapSurvey" if has.map_survey => {
                 let (v, at): (kentos_contracts::MapSurvey, usize) = objects::json_part(r, "GNSS arşivi")?;
@@ -2109,6 +2121,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         map_survey,
         parcel_register,
         zoning_plan,
+        survey_adjustments,
         source_bases,
         heights,
         coordinate_epoch,

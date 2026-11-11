@@ -107,10 +107,12 @@ fn titled<'a>(title: &'a str, note: &'a str, table: Element<'a, Message>) -> Ele
     .into()
 }
 
-/// The footer: Raporu kopyala, the layer (Yatay ağ), Çizime yaz, Kapat.
+/// The footer: Raporu kopyala, the layer (Yatay ağ), Projede sakla (docs/adr/5200: the kept adjustment's name), Çizime
+/// yaz, Kapat.
 fn footer<'a>(
     dialog: Dialog<'a, Message>,
     layer: Option<Element<'a, Message>>,
+    keep: &str,
     done: bool,
 ) -> Dialog<'a, Message> {
     let mut dialog = dialog.action(footer_button(
@@ -125,7 +127,13 @@ fn footer<'a>(
                 .align_y(Center),
         );
     }
+    let keep_box = iced::widget::container(
+        crate::style::fields::input(None, "boş: saklanmaz", keep, false, false)
+            .on_input(|v| event(Calc::Keep(v))),
+    )
+    .width(170);
     dialog
+        .action(row![label::caption(KEEP), keep_box].spacing(8).align_y(Center))
         .action(footer_button(
             "Çizime yaz",
             done.then(|| event(Calc::AddPoints)),
@@ -134,6 +142,9 @@ fn footer<'a>(
         .action(footer_button("Kapat", Some(event(Calc::Close)), false))
         .max_height(MAX_HEIGHT)
 }
+
+/// Docs/adr/5200: the footer's label of the kept adjustment's name.
+pub(crate) const KEEP: &str = "Projede sakla";
 
 /// An observation's kind as the table names it.
 fn kind_word(kind: &str) -> &'static str {
@@ -262,6 +273,7 @@ impl NetworkForm {
                 .on_close(crate::calc::event(crate::calc::Event::Close))
                 .scroll(body),
             Some(layer_select(model, self.layer.as_deref())),
+            &self.keep,
             done,
         )
         .width(1040.0)
@@ -483,6 +495,7 @@ impl LevelForm {
                 .on_close(crate::calc::event(crate::calc::Event::Close))
                 .scroll(body),
             None,
+            &self.keep,
             done,
         )
         .width(1040.0)

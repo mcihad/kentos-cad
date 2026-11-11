@@ -62,6 +62,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
         request_id: str | None = None,
@@ -82,6 +83,8 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
             doc: The drawing it works on.
             work:
             expected_revision:
+            keep: Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+                name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
             layer_id: Yatay ağ: the layer of the new points the drawing has not.
             unit: The directions' unit; the project's when none.
             request_id: Names this write: sent again with the same call it is answered as
@@ -99,6 +102,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.execute_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ), request_id=request_id, expected=expected)
@@ -110,6 +114,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
     ) -> EntitiesEditPlan:
@@ -119,6 +124,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.plan_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ))
@@ -130,6 +136,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -139,6 +146,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.validate_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ))
@@ -150,6 +158,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
         op: str = "execute",
@@ -164,6 +173,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.answer_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ), op=op, request_id=request_id, expected=expected)

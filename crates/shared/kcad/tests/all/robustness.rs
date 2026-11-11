@@ -520,6 +520,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             map_survey: None,
             parcel_register: None,
             zoning_plan: None,
+            survey_adjustments: Vec::new(),
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

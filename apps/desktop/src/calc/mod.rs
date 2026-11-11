@@ -138,6 +138,8 @@ pub enum Event {
     InstrumentHeight(String),
     /// Where new points go: a layer's index in the leaves.
     Layer(usize),
+    /// Docs/adr/5200: Yatay ağ's or Kot ağı's Projede sakla, the kept adjustment's name.
+    Keep(String),
     AddPoints,
     CopyReport,
     /// Aplikasyon's Cihaza gönder: its table's points as an instrument's file (docs/adr/0169 §4).
@@ -358,6 +360,14 @@ impl App {
             Event::RasterFit(e) => self.raster_fit_event(e),
             Event::CopyReport => self.calc_copy_report(window),
             Event::SendToDevice => self.calc_send_stakeout(),
+            Event::Keep(name) => {
+                match window {
+                    Window::Network => self.calc.network.keep = name,
+                    Window::Level => self.calc.level.keep = name,
+                    _ => {}
+                }
+                Task::none()
+            }
             Event::AddPoints => {
                 match window {
                     Window::Network => self.network_write(),

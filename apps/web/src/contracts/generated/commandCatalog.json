@@ -94394,6 +94394,13 @@
               "null"
             ]
           },
+          "keep": {
+            "description": "Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that\nname is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "Yatay ağ: the layer of the new points the drawing has not.",
             "type": [
@@ -94455,6 +94462,13 @@
             },
             "type": "array",
             "x-unit": "id"
+          },
+          "kept": {
+            "description": "Docs/adr/5200: the name the adjustment was kept under.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "m0": {
             "format": "double",
@@ -154262,6 +154276,101 @@
       ],
       "type": "object"
     },
+    "KeptAdjustedPoint": {
+      "additionalProperties": false,
+      "description": "A new point as adjusted: its name, its place (horizontal) or its height (height), its standard deviation (m).",
+      "properties": {
+        "at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vec2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-unit": "length"
+        },
+        "h": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sigma": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "sigma"
+      ],
+      "type": "object"
+    },
+    "KeptAdjustment": {
+      "additionalProperties": false,
+      "description": "An adjustment kept under its name (unique in the project): its kind, the drawing's revision it was made on, its new\npoints, the degrees of freedom, m0 and the model test (none without redundancy).",
+      "properties": {
+        "f": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kind": {
+          "$ref": "#/$defs/KeptAdjustmentKind"
+        },
+        "m0": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "name": {
+          "type": "string"
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/KeptAdjustedPoint"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "revision",
+        "points",
+        "f"
+      ],
+      "type": "object"
+    },
+    "KeptAdjustmentKind": {
+      "description": "Which network an adjustment was.",
+      "enum": [
+        "horizontal",
+        "height"
+      ],
+      "type": "string"
+    },
     "KmAsk": {
       "description": "A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).",
       "properties": {
@@ -186825,6 +186934,13 @@
             }
           ],
           "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+        },
+        "surveyAdjustments": {
+          "description": "The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).",
+          "items": {
+            "$ref": "#/$defs/KeptAdjustment"
+          },
+          "type": "array"
         },
         "tableStyles": {
           "description": "The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.",

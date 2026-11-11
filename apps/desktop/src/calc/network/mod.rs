@@ -209,6 +209,8 @@ pub struct NetworkForm {
     pub known: Cells,
     pub rows: Cells,
     pub layer: Option<String>,
+    /// Docs/adr/5200: the name the adjustment is kept under in the project; empty: not kept.
+    pub keep: String,
     pub solved: Solved<NetworkResult>,
 }
 
@@ -218,6 +220,7 @@ impl Default for NetworkForm {
             known: Cells::new(KNOWN_COLS),
             rows: Cells::new(ROW_COLS),
             layer: None,
+            keep: String::new(),
             solved: Solved::default(),
         }
     }
@@ -229,6 +232,8 @@ pub struct LevelForm {
     pub kind: LevelKind,
     pub known: Cells,
     pub rows: Cells,
+    /// Docs/adr/5200: the name the adjustment is kept under in the project; empty: not kept.
+    pub keep: String,
     pub solved: Solved<LevelResult>,
 }
 
@@ -238,6 +243,7 @@ impl Default for LevelForm {
             kind: LevelKind::default(),
             known: Cells::new(HEIGHT_COLS),
             rows: Cells::new(LEVEL_COLS),
+            keep: String::new(),
             solved: Solved::default(),
         }
     }

@@ -154,6 +154,11 @@ pub struct SurveyAdjust {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<crate::AngleUnit>,
+    /// Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+    /// name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub keep: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -209,6 +214,10 @@ pub struct SurveyAdjusted {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub passed: Option<bool>,
+    /// Docs/adr/5200: the name the adjustment was kept under.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kept: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

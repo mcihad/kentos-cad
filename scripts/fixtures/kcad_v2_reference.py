@@ -375,6 +375,8 @@ def settings(s):
                 "parcelRegister": (opaque, False),
                 # Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, as their JSON.
                 "zoningPlan": (opaque, False),
+                # Schema 244 (docs/adr/5200): the adjustments the project keeps, as their JSON.
+                "surveyAdjustments": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2811,6 +2813,9 @@ def document(d):
     if "zoningPlan" in d["settings"]:
         # A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040).
         schema = max(schema, 242)
+    if d["settings"].get("surveyAdjustments"):
+        # The adjustments the project keeps (docs/adr/5200).
+        schema = max(schema, 244)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3667,7 +3672,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-244.kcad"] = container(root(cmap(parts), version=uint(244)))
+    files["schema-version-245.kcad"] = container(root(cmap(parts), version=uint(245)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6298,6 +6303,30 @@ def build():
         broken_zoned = copy.deepcopy(zoned)
         change(broken_zoned["settings"]["zoningPlan"])
         out[f"broken/zoning-plan-{name}.kcad"] = container(document(broken_zoned))
+    # Schema 244 (docs/adr/5200): a horizontal and a height adjustment kept in the project; schema 243 refuses them, a
+    # height point with a place, a negative σ and two of one name are refused.
+    kept = copy.deepcopy(minimal)
+    kept["name"] = "Dengeleme kayıtları"
+    kept["settings"]["surveyAdjustments"] = [
+        {"name": "Poligon 2026/1", "kind": "horizontal", "revision": "7",
+         "points": [{"name": "Y1", "at": {"x": 487029.9984, "y": 4420350.0007}, "sigma": 0.00197},
+                    {"name": "Y2", "at": {"x": 487419.9988, "y": 4420380.0005}, "sigma": 0.00241}],
+         "f": 10, "m0": 0.4868, "passed": True},
+        {"name": "Nivelman A", "kind": "height", "revision": "9",
+         "points": [{"name": "N1", "h": 1012.3456, "sigma": 0.0012}], "f": 2, "m0": 1.1, "passed": True}]
+    out["kept-adjustments.json"] = json_text(kept).encode("utf-8")
+    kept_data = document(kept)
+    assert kept_data.count(b"\x67version\x18\xf4") == 1, "kept adjustments are schema 244"
+    out["kept-adjustments.kcad"] = container(kept_data)
+    out["broken/kept-adjustments-in-schema-243.kcad"] = container(
+        kept_data.replace(b"\x67version\x18\xf4", b"\x67version\x18\xf3"))
+    for name, change in (
+            ("height-with-place", lambda k: k[1]["points"][0].update({"at": {"x": 1.0, "y": 2.0}})),
+            ("negative-sigma", lambda k: k[0]["points"][0].update({"sigma": -0.001})),
+            ("name-twice", lambda k: k[1].update({"name": "Poligon 2026/1"}))):
+        broken_kept = copy.deepcopy(kept)
+        change(broken_kept["settings"]["surveyAdjustments"])
+        out[f"broken/kept-adjustments-{name}.kcad"] = container(document(broken_kept))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

@@ -3466,6 +3466,16 @@ JunctionRoleName = Literal["junction", "source", "valve"]
 """The names of :class:`JunctionRole`, for a plain string."""
 
 
+class KeptAdjustmentKind(_StrEnum):
+    """Which network an adjustment was."""
+    HORIZONTAL = "horizontal"
+    HEIGHT = "height"
+
+
+KeptAdjustmentKindName = Literal["horizontal", "height"]
+"""The names of :class:`KeptAdjustmentKind`, for a plain string."""
+
+
 class KnownMovedBy(_StrEnum):
     """What carried a known point to the measurement epoch (docs/adr/2520): its own velocity, or the campaign's
     velocity grid.
@@ -51061,6 +51071,81 @@ class KcadRecovered(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class KeptAdjustedPoint(_Model):
+    """A new point as adjusted: its name, its place (horizontal) or its height (height), its standard deviation (m).
+    Attributes:
+        sigma: Unit: m.
+        at: Unit: length.
+        h: Unit: m.
+    """
+    name: str
+    sigma: float
+    at: Vec2 | None | Unset = UNSET
+    h: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sigma"] = float(self.sigma)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.h is not UNSET:
+            out["h"] = None if self.h is None else float(self.h)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KeptAdjustedPoint:
+        return cls(
+            name=data["name"],
+            sigma=float(data["sigma"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            h=UNSET if "h" not in data else None if data["h"] is None else float(data["h"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class KeptAdjustment(_Model):
+    """An adjustment kept under its name (unique in the project): its kind, the drawing's revision it was made on, its new
+    points, the degrees of freedom, m0 and the model test (none without redundancy).
+    Attributes:
+        f: Unit: count.
+        m0: Unit: 1.
+    """
+    name: str
+    kind: KeptAdjustmentKind | KeptAdjustmentKindName
+    revision: str
+    points: list[KeptAdjustedPoint]
+    f: int
+    m0: float | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["revision"] = self.revision
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["f"] = self.f
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KeptAdjustment:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(KeptAdjustmentKind, data["kind"]),
+            revision=data["revision"],
+            points=[KeptAdjustedPoint.from_json(e0) for e0 in data["points"]],
+            f=data["f"],
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            passed=data.get("passed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class KmAsk(_Model):
     """A km asked for: its value and, where the km falls on more than one place, its region (0 before the first equation).
     Attributes:
@@ -79365,6 +79450,7 @@ class ProjectSettings(_Model):
             the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
+        survey_adjustments: The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).
         table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
@@ -79430,6 +79516,7 @@ class ProjectSettings(_Model):
     standard_docs: list[ProjectStandardDocument] | Unset = UNSET
     standard_exceptions: list[StandardException] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
+    survey_adjustments: list[KeptAdjustment] | Unset = UNSET
     table_styles: list[TableStyleDef] | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
@@ -79535,6 +79622,8 @@ class ProjectSettings(_Model):
             out["standardExceptions"] = [e0.to_json() for e0 in self.standard_exceptions]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
+        if self.survey_adjustments is not UNSET:
+            out["surveyAdjustments"] = [e0.to_json() for e0 in self.survey_adjustments]
         if self.table_styles is not UNSET:
             out["tableStyles"] = [e0.to_json() for e0 in self.table_styles]
         if self.text_styles is not UNSET:
@@ -79609,6 +79698,7 @@ class ProjectSettings(_Model):
             standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
             standard_exceptions=[StandardException.from_json(e0) for e0 in data["standardExceptions"]] if "standardExceptions" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
+            survey_adjustments=[KeptAdjustment.from_json(e0) for e0 in data["surveyAdjustments"]] if "surveyAdjustments" in data else UNSET,
             table_styles=[TableStyleDef.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
@@ -101201,11 +101291,14 @@ class SurveyAdjust(_Model):
     writes': `layer_locked` (a point to move or a vertex on it on a locked layer), `no_layer` (new points and no layer),
     then `cad.entities.create`'s for the layer (`layer_not_found`, `not_a_layer`, `layer_locked` …).
     Attributes:
+        keep: Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+            name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
         layer_id: Yatay ağ: the layer of the new points the drawing has not.
         unit: The directions' unit; the project's when none.
     """
     work: AdjustWork
     expected_revision: str | None | Unset = UNSET
+    keep: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     unit: AngleUnit | AngleUnitName | None | Unset = UNSET
 
@@ -101214,6 +101307,8 @@ class SurveyAdjust(_Model):
         out["work"] = self.work.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
         if self.unit is not UNSET:
@@ -101225,6 +101320,7 @@ class SurveyAdjust(_Model):
         return cls(
             work=AdjustWork.from_json(data["work"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            keep=data.get("keep", UNSET),
             layer_id=data.get("layerId", UNSET),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(AngleUnit, data["unit"]),
         )
@@ -101241,6 +101337,7 @@ class SurveyAdjusted(_Model):
         absent: Kot ağı: the new points the drawing has not; their heights are not written.
         f: The degrees of freedom, the a posteriori standard deviation of unit weight and the model test (none without
             redundancy). Unit: count.
+        kept: Docs/adr/5200: the name the adjustment was kept under.
         m0: Unit: 1.
     """
     points: list[SurveyAdjustedPoint]
@@ -101250,6 +101347,7 @@ class SurveyAdjusted(_Model):
     absent: list[str]
     f: int
     revision: str
+    kept: str | None | Unset = UNSET
     m0: float | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
 
@@ -101262,6 +101360,8 @@ class SurveyAdjusted(_Model):
         out["absent"] = list(self.absent)
         out["f"] = self.f
         out["revision"] = self.revision
+        if self.kept is not UNSET:
+            out["kept"] = self.kept
         if self.m0 is not UNSET:
             out["m0"] = None if self.m0 is None else float(self.m0)
         if self.passed is not UNSET:
@@ -101278,6 +101378,7 @@ class SurveyAdjusted(_Model):
             absent=list(data["absent"]),
             f=data["f"],
             revision=data["revision"],
+            kept=data.get("kept", UNSET),
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             passed=data.get("passed", UNSET),
         )
@@ -139939,6 +140040,10 @@ __all__ = [
     "JunctionsTied",
     "JunctionsWritten",
     "KcadRecovered",
+    "KeptAdjustedPoint",
+    "KeptAdjustment",
+    "KeptAdjustmentKind",
+    "KeptAdjustmentKindName",
     "KeySourcesEditOp",
     "KindExtractValue",
     "KmAsk",

@@ -158,6 +158,16 @@ struct Adjusted {
 fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
     numbers(&input.work)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
+    // Docs/adr/5200: the name the adjustment is kept under.
+    if let Some(name) = &input.keep
+        && !kentos_commands::review_label_ok(name.trim(), kentos_commands::MAX_KEPT_ADJUSTMENT_NAME)
+    {
+        return Err(Stop::failed(checks::error(
+            codes::INVALID_INPUT,
+            "Dengeleme kaydının adı boş olmaz; en çok 120 karakterdir, denetim karakteri taşımaz.".into(),
+            Some("keep".into()),
+        )));
+    }
     match &input.work {
         AdjustWork::Horizontal { known, rows } => {
             let mut given = Vec::with_capacity(known.len());
@@ -607,9 +617,9 @@ fn write_execute(
         .filter_map(|c| cx.doc.uid(c.slot))
         .map(|u| u.to_string())
         .collect();
-    let group = cx
-        .doc
-        .begin_group(if a.level { LEVEL_STEP } else { NETWORK_STEP });
+    let made_on = cx.doc.revision().to_string();
+    let step = if a.level { LEVEL_STEP } else { NETWORK_STEP };
+    let group = cx.doc.begin_group(step);
     let mut warnings: Vec<CommandWarning> = Vec::new();
     if let Some(edit) = w.edit {
         match edit::execute(cx, edit) {
@@ -649,6 +659,34 @@ fn write_execute(
             }
         }
     }
+    // Docs/adr/5200: the result kept under its name, one of that name replaced, in the same step.
+    let kept = input.keep.as_ref().map(|n| n.trim().to_owned());
+    if let Some(name) = &kept {
+        let record = kentos_commands::KeptAdjustment {
+            name: name.clone(),
+            kind: if a.level { kentos_commands::KeptAdjustmentKind::Height } else { kentos_commands::KeptAdjustmentKind::Horizontal },
+            revision: made_on,
+            points: a
+                .points
+                .iter()
+                .map(|p| kentos_commands::KeptAdjustedPoint { name: p.name.clone(), at: p.at, h: p.h, sigma: p.sigma })
+                .collect(),
+            f: a.f,
+            m0: a.m0,
+            passed: a.passed,
+        };
+        let mut list = cx.doc.survey_adjustments().to_vec();
+        match list.iter_mut().find(|r| r.name == *name) {
+            Some(r) => *r = record,
+            None => list.push(record),
+        }
+        if let Some(problem) = kentos_commands::kept_adjustments_problem(&list) {
+            cx.doc.cancel_group(group);
+            return Stop::failed(checks::error(codes::INVALID_INPUT, format!("Dengeleme kaydı yazılamıyor: {problem}."), Some("keep".into())))
+                .into();
+        }
+        cx.doc.set_survey_adjustments(list, step);
+    }
     cx.doc.end_group(group);
     warnings.extend(not_drawn(&a.absent));
     CommandResult::Completed {
@@ -661,6 +699,7 @@ fn write_execute(
             f: a.f,
             m0: a.m0,
             passed: a.passed,
+            kept,
             revision: cx.doc.revision().to_string(),
         },
         warnings,

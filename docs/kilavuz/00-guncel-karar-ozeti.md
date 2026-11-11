@@ -723,6 +723,9 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Dengelemenin sonucu projede saklanır (11 Kasım 2026; MAP-18, [ADR 5200](../../docs/adr/5200-kept-survey-adjustments.md)).**
+  `cad.survey.adjust`'ın `keep`'i sonucu (noktalar, σ, f, m0, test) `settings.surveyAdjustments`'a aynı adımda yazar;
+  `.kcad` şema 244; ağ pencerelerinde Projede sakla.
 - **Hat profilinde kesişen borunun taraması (11 Kasım 2026; MAP-16, [ADR 5160](../../docs/adr/5160-crossing-pipe-fill-choice.md)).**
   `cad.pipes.profile`'ın `crossing.hatch`'i: `wall` (öntanım, halka), `inside`, `whole`, `none`; masaüstünde Kesişen
   borunun taraması. Harita + Yol + CBS.

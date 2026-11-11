@@ -155,6 +155,41 @@ def follow(entity, frm, to, z=None, set_z=False):
     return hit, pts, zs
 
 
+def kept_record(name, kind, points, expect):
+    """ADR 5200: the adjustment as the project keeps it: its name, kind, the revision it was made on (captured before
+    the write), its new points as the answer gives them, f, m0 and the test."""
+    # The numbers are the answer's (compared within 1e-9 there); here their places are held and the values any, the
+    # settings being compared exactly.
+    kept_points = [{k: ("$any" if k in ("at", "h", "sigma") else v) for k, v in p_.items()} for p_ in points]
+    r = {"name": name, "kind": kind, "revision": "$before", "points": kept_points, "f": expect["f"]}
+    if expect.get("m0") is not None:
+        r["m0"] = "$any"
+    if expect.get("passed") is not None:
+        r["passed"] = expect["passed"]
+    return r
+
+
+def keeping(c, keep, kind, before_kept=None):
+    """`c` with its write keeping the adjustment under `keep` (ADR 5200): the input's `keep`, the answer's `kept`, the
+    project's kept adjustments after (`before_kept` first, one of the name replaced) and before the undo."""
+    step = c["steps"][0]
+    step["input"]["keep"] = keep
+    out = step["result"]["output"]
+    out["kept"] = keep.strip()
+    record = kept_record(keep.strip(), kind, out["points"], out)
+    at = next((i for i, r in enumerate(before_kept or []) if r["name"] == keep.strip()), None)
+    after = list(before_kept or [])
+    if at is None:
+        after.append(record)
+    else:
+        after[at] = record
+    step["expect"]["settings"] = {"surveyAdjustments": after}
+    c["steps"].insert(0, {"op": "captureRevision", "as": "before"})
+    if len(c["steps"]) > 2:
+        c["steps"][2]["expect"]["settings"] = {"surveyAdjustments": before_kept}
+    return c
+
+
 def horizontal_case(name, case, by_name=False, names=None, layer_id="poligon", warnings=(), note=None):
     known_keys = {key(k["name"]) for k in case["known"]}
     expect = case["expect"]
@@ -282,6 +317,14 @@ def build_cases():
     lock = [{"op": "execute", "command": "cad.layers.set", "input": {"operation": "locked", "layer": "nokta",
                                                                       "value": True},
              "result": {"status": "completed", "output": "$any", "warnings": []}}]
+    # ADR 5200: the adjustment kept in the project under a name, in the same undo step.
+    kept_cases = [
+        keeping(horizontal_case("Yatay ağ sonucu projede saklanır: noktaların yeri ve σ'sı, f, m0, test", quad,
+                                by_name=True), "Poligon 2026/1", "horizontal"),
+        keeping(level_case("Kot ağı sonucu projede saklanır: noktaların kotu ve σ'sı", loops, by_name=True),
+                "  Nivelman A ", "height"),
+        keeping(horizontal_case("Ağırlıklı bilinenlerle saklanır", weighted, layer_id=None), "Kontrol", "horizontal"),
+    ]
     cases = [
         horizontal_case("Yatay ağ: bilinenler çizimden adıyla; Y1 taşınır, çizgisinin köşesi onunla; Y2 eklenir", quad,
                         by_name=True,
@@ -365,7 +408,12 @@ def build_cases():
                 refused("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir "
                         "katmanı etkinleştirin.", "layerId")),
     ]
-    return cases
+    # ADR 5200: a kept adjustment's name empty is refused before anything.
+    cases.append(refusal("Saklanacak kaydın adı boş", {"work": horizontal_work(quad, True), "layerId": "poligon",
+                                                       "keep": "  "},
+                         refused("invalid_input", "Dengeleme kaydının adı boş olmaz; en çok 120 karakterdir, denetim "
+                                 "karakteri taşımaz.", "keep")))
+    return cases + kept_cases
 
 
 def compact(v):

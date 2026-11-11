@@ -297,6 +297,11 @@ pub(crate) enum Op {
         before: std::sync::Arc<Option<kentos_contracts::ParcelRegister>>,
         after: std::sync::Arc<Option<kentos_contracts::ParcelRegister>>,
     },
+    /// The adjustments the project keeps (docs/adr/5200), before and after.
+    SurveyAdjustments {
+        before: std::sync::Arc<Vec<kentos_contracts::KeptAdjustment>>,
+        after: std::sync::Arc<Vec<kentos_contracts::KeptAdjustment>>,
+    },
     /// A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040), before and after.
     ZoningPlan {
         before: std::sync::Arc<Option<kentos_contracts::ZoningPlanData>>,
@@ -745,6 +750,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::ParcelRegister { before, after } => Op::ParcelRegister {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::SurveyAdjustments { before, after } => Op::SurveyAdjustments {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1522,6 +1531,7 @@ impl Document {
                 | Op::MapWork { .. }
                 | Op::MapSurvey { .. }
                 | Op::ParcelRegister { .. }
+                | Op::SurveyAdjustments { .. }
                 | Op::ZoningPlan { .. }
                 | Op::PatternTables { .. }
                 | Op::ApprovedSheetTemplates { .. }
@@ -1826,6 +1836,10 @@ impl Document {
             }
             Op::ParcelRegister { after, .. } => {
                 self.settings.parcel_register = after.as_ref().clone();
+                return;
+            }
+            Op::SurveyAdjustments { after, .. } => {
+                self.settings.survey_adjustments = after.as_ref().clone();
                 return;
             }
             Op::ZoningPlan { after, .. } => {

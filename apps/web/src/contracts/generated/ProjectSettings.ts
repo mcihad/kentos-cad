@@ -16,6 +16,7 @@ import type { FieldDomain } from "./FieldDomain";
 import type { HatchPatternDef } from "./HatchPatternDef";
 import type { HeightReference } from "./HeightReference";
 import type { JoinView } from "./JoinView";
+import type { KeptAdjustment } from "./KeptAdjustment";
 import type { LayerState } from "./LayerState";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
@@ -298,6 +299,10 @@ mapSurvey?: MapSurvey,
  * absent: none (`.kcad` schema 216).
  */
 parcelRegister?: ParcelRegister, 
+/**
+ * The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 246).
+ */
+surveyAdjustments?: Array<KeptAdjustment>, 
 /**
  * A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
  * (`.kcad` schema 242).

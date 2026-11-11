@@ -25,4 +25,8 @@ absent: Array<string>,
  * The degrees of freedom, the a posteriori standard deviation of unit weight and the model test (none without
  * redundancy).
  */
-f: number, m0?: number, passed?: boolean, revision: string, };
+f: number, m0?: number, passed?: boolean, 
+/**
+ * Docs/adr/5200: the name the adjustment was kept under.
+ */
+kept?: string, revision: string, };

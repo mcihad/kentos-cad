@@ -18,4 +18,9 @@ layerId?: string,
 /**
  * The directions' unit; the project's when none.
  */
-unit?: AngleUnit, expectedRevision?: string, };
+unit?: AngleUnit, 
+/**
+ * Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+ * name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
+ */
+keep?: string, expectedRevision?: string, };
