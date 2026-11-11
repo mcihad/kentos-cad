@@ -8,7 +8,9 @@
 //! centroid, the core's `shape_centroid`, lies within the distance of a `to` area by the core's exact distance,
 //! arcs included) with its share, and which areas it reached on each side (docs/adr/2260); the area near an
 //! infrastructure layer (an area whose centroid lies within the distance of an object of the layer, the side's own
-//! layer when the scenario stands in for it) with its share (docs/adr/2660). The shared cases are
+//! layer when the scenario stands in for it) with its share (docs/adr/2660). Docs/adr/5060: the access along a network of
+//! the project (`scenarios_impact_network`), the slope map (each measured area's parts on the surface's triangles), the
+//! scenario layers' stamp and the comparisons written in the drawing (`scenarios_record`). The shared cases are
 //! `fixtures/commands/v1/cad.scenarios.impact.json`.
 
 use std::collections::BTreeMap;
@@ -57,7 +59,7 @@ fn vertices(e: &Entity) -> Vec<(f64, f64)> {
 }
 
 /// The base's stamp: every object of the base layers, layer by layer in the pairs' order, in the drawing's order.
-fn stamp(doc: &Document, layers: &[String]) -> String {
+pub(crate) fn stamp(doc: &Document, layers: &[String]) -> String {
     let mut h = Sha256::new();
     for layer in layers {
         for e in doc.entities().filter(|e| e.base().layer_id == *layer) {
@@ -274,13 +276,15 @@ struct Slopes {
     /// north-east … north-west.
     classes: Vec<f64>,
     aspects: [f64; 9],
+    /// Docs/adr/5060: the parts as the slope map shows them, when asked.
+    pieces: Vec<kentos_commands::ImpactSlopePiece>,
 }
 
 /// A surface triangle as the slope measures read it: its area, its box, its slope (percent) and its aspect (0: flat;
 /// 1–8: north, north-east … north-west).
 type SlopeTriangle = (Area, [f64; 4], f64, usize);
 
-/// The aspect's words and bounds (docs/adr/4660, ArcGIS's Surface Aspect): flat, then the eight directions.
+/// The aspect's words and bounds (docs/adr/4660): flat, then the eight directions.
 const ASPECTS: [(&str, &str, &str); 9] = [
     ("aspectFlat", "Düz", ""),
     ("aspectN", "Kuzey", "337,5°–22,5°"),
@@ -294,7 +298,7 @@ const ASPECTS: [(&str, &str, &str); 9] = [
 ];
 
 /// A triangle of the surface as an area, its box, its slope, percent: the rise over the run of its plane, from its
-/// normal (the cross product of two edges), as ArcGIS's Surface Slope; and its aspect (docs/adr/4660): the upward
+/// normal (the cross product of two edges); and its aspect (docs/adr/4660): the upward
 /// normal's horizontal part points down the slope, its direction clockwise from north, 0 for a level triangle (the
 /// normal straight up), else 1 + ⌊(direction + 22.5°) / 45°⌋ mod 8. None for a vertical or degenerate triangle.
 fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
@@ -334,30 +338,52 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
 fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[SlopeTriangle]) -> Slopes {
     let mut r = Slopes { classes: vec![0.0; wanted.classes.len() + 1], ..Slopes::default() };
     let every = wanted.from.iter().all(|f| f.trim().is_empty());
-    for (sh, _, area, _) in s.areas.iter().filter(|(_, u, _, _)| every || wanted.from.iter().any(|f| f.trim() == u)) {
+    for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| every || wanted.from.iter().any(|f| f.trim() == u)) {
         r.whole += area;
         let parts = areas_of_entity(sh);
         let points = parts.iter().flat_map(|a| a.outer.pts.iter());
         let [x0, y0, x1, y1] = points.fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
             [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
         });
+        let mine = r.pieces.len();
         for (triangle, b, slope, aspect) in triangles {
             if b[0] > x1 || b[2] < x0 || b[1] > y1 || b[3] < y0 {
                 continue;
             }
-            let got: f64 = intersect_area_sets(&[parts.clone(), vec![triangle.clone()]]).iter().map(net_area).sum();
+            let cut = intersect_area_sets(&[parts.clone(), vec![triangle.clone()]]);
+            let got: f64 = cut.iter().map(net_area).sum();
             if got > 0.0 {
+                let class = wanted.classes.iter().filter(|b| *slope >= **b).count();
+                // Docs/adr/5060: each part as the map shows it, the commands' rings.
+                if wanted.map {
+                    for piece in cut.into_iter().filter(|p| net_area(p) > 0.0) {
+                        let size = net_area(&piece);
+                        let piece = crate::region::canonical(piece);
+                        let ring = |r: &Ring| r.pts.iter().map(|p| [p.x, p.y]).collect::<Vec<_>>();
+                        r.pieces.push(kentos_commands::ImpactSlopePiece {
+                            area: uid.clone(),
+                            class: class as u32,
+                            aspect: *aspect as u32,
+                            slope: *slope,
+                            size,
+                            ring: ring(&piece.outer),
+                            holes: piece.holes.iter().map(ring).collect(),
+                        });
+                    }
+                }
                 r.on += got;
                 r.weighted += got * slope;
                 if *slope >= wanted.threshold {
                     r.steep += got;
                 }
                 // Docs/adr/4660: the class whose lower break the slope reaches, and the aspect.
-                let class = wanted.classes.iter().filter(|b| *slope >= **b).count();
                 r.classes[class] += got;
                 r.aspects[*aspect] += got;
             }
         }
+        // An area's parts by their first vertex, south first, then west: the same map whatever the surface's order.
+        let first = |p: &kentos_commands::ImpactSlopePiece| p.ring.first().copied().unwrap_or([0.0; 2]);
+        r.pieces[mine..].sort_by(|a, b| first(a)[1].total_cmp(&first(b)[1]).then(first(a)[0].total_cmp(&first(b)[0])));
     }
     r
 }
@@ -413,6 +439,31 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
                 return Err(fail(codes::INVALID_INPUT, format!("{words} kullanım verilmemiş; en az bir kullanım kodu yazın."), path));
             }
         }
+        // Docs/adr/5060: along a network, the user's leg to it.
+        match (a.network.as_deref().map(str::trim).filter(|n| !n.is_empty()), a.connect) {
+            (Some(_), None) => {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Ağ üzerinden erişimde ağa bağlanma uzaklığı verilmemiş; alanın ağırlık merkezinin ağa en çok kaç metre uzak olabileceğini yazın.".into(),
+                    "access.connect",
+                ));
+            }
+            (Some(_), Some(c)) if !(c.is_finite() && c > 0.0) => {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!("Ağa bağlanma uzaklığı 0'dan büyük olmalı (yazılan {c})."),
+                    "access.connect",
+                ));
+            }
+            (None, Some(_)) => {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Ağa bağlanma uzaklığı yalnız ağ üzerinden erişimde kullanılır; bir ağ seçin ya da uzaklığı boş bırakın.".into(),
+                    "access.network",
+                ));
+            }
+            _ => {}
+        }
     }
     if let Some(i) = &input.infrastructure
         && !(i.distance.is_finite() && i.distance > 0.0)
@@ -426,7 +477,7 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
     Ok(())
 }
 
-fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Stop> {
+pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Stop> {
     asked(input)?;
     let id = input.scenario.trim();
     let Some(group) = doc.layers().get(id).filter(|n| n.kind == LayerNodeType::Group && n.scenario.is_some()) else {
@@ -494,28 +545,69 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
     }
     let mut reach = None;
     if let Some(access) = &input.access {
-        let (x, y) = (reached(&b, access), reached(&a, access));
-        let (xg, xw, xt, yg, yw, yt) = (x.got, x.whole, !x.targets.is_empty(), y.got, y.whole, !y.targets.is_empty());
-        reach = Some(ImpactReach {
-            base_reached: x.reached,
-            base_unreached: x.unreached,
-            base_targets: x.targets,
-            alternative_reached: y.reached,
-            alternative_unreached: y.unreached,
-            alternative_targets: y.targets,
-        });
         let (from, to) = (access.from.join(", "), access.to.join(", "));
-        measures.push(measure(
-            "access",
-            &format!("Erişen alan ({from} → {to}, {} m)", access.distance),
-            "m2",
-            xg,
-            yg,
-            &format!(
-                "Kullanımı {from} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alana düz uzaklık en çok {} m ise alanı sayılır; merkez alanın içindeyse uzaklık 0.",
-                access.distance
-            ),
-        ));
+        let network = access.network.as_deref().map(str::trim).filter(|n| !n.is_empty());
+        let (xg, xw, xt, yg, yw, yt, label, method);
+        match (network, access.connect) {
+            // Docs/adr/5060: along the project's network.
+            (Some(name), Some(connect)) => {
+                let (net, gb, ga) = crate::scenarios_impact_network::graphs(doc, &pairs, name)?;
+                let (x, y) = (
+                    crate::scenarios_impact_network::along(&gb, &b.areas, access, connect),
+                    crate::scenarios_impact_network::along(&ga, &a.areas, access, connect),
+                );
+                (xg, xw, xt, yg, yw, yt) = (x.got, x.whole, !x.targets.is_empty(), y.got, y.whole, !y.targets.is_empty());
+                label = format!("Erişen alan ({from} → {to}, {} m, {net} ağı boyunca)", access.distance);
+                method = format!(
+                    "Kullanımı {from} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alanın ağırlık merkezine {net} ağı boyunca uzaklık en çok {} m ise alanı sayılır: merkezden ağın en yakın yerine bağlanma, ağda tanımının izin verdiği en kısa yol ve ağdan hedefin merkezine bağlanma; merkezi ağa {connect} m'den uzak alan ağa bağlanamaz.",
+                    access.distance
+                );
+                if !x.off.is_empty() || !y.off.is_empty() {
+                    asked_gaps.push(format!(
+                        "Ağa bağlanamayan ({net} ağına {connect} m'den uzak) {from} alanı: mevcut durumda {}, senaryoda {}; erişmez sayıldı.",
+                        x.off.len(),
+                        y.off.len()
+                    ));
+                }
+                if x.off_targets + y.off_targets > 0 {
+                    asked_gaps.push(format!(
+                        "Ağa bağlanamayan ({net} ağına {connect} m'den uzak) {to} alanı: mevcut durumda {}, senaryoda {}; ona erişilmez sayıldı.",
+                        x.off_targets, y.off_targets
+                    ));
+                }
+                reach = Some(ImpactReach {
+                    base_reached: x.reached,
+                    base_unreached: x.unreached,
+                    base_targets: x.targets,
+                    alternative_reached: y.reached,
+                    alternative_unreached: y.unreached,
+                    alternative_targets: y.targets,
+                    base_routes: x.routes,
+                    alternative_routes: y.routes,
+                    base_off: x.off,
+                    alternative_off: y.off,
+                });
+            }
+            _ => {
+                let (x, y) = (reached(&b, access), reached(&a, access));
+                (xg, xw, xt, yg, yw, yt) = (x.got, x.whole, !x.targets.is_empty(), y.got, y.whole, !y.targets.is_empty());
+                label = format!("Erişen alan ({from} → {to}, {} m)", access.distance);
+                method = format!(
+                    "Kullanımı {from} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alana düz uzaklık en çok {} m ise alanı sayılır; merkez alanın içindeyse uzaklık 0.",
+                    access.distance
+                );
+                reach = Some(ImpactReach {
+                    base_reached: x.reached,
+                    base_unreached: x.unreached,
+                    base_targets: x.targets,
+                    alternative_reached: y.reached,
+                    alternative_unreached: y.unreached,
+                    alternative_targets: y.targets,
+                    ..ImpactReach::default()
+                });
+            }
+        }
+        measures.push(measure("access", &label, "m2", xg, yg, &method));
         let share = |got: f64, whole: f64| if whole > 0.0 { got / whole * 100.0 } else { 0.0 };
         measures.push(measure(
             "accessShare",
@@ -591,13 +683,17 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         }
     }
     // Arazi eğimi (docs/adr/4260): the same surface on both sides.
+    let mut slope_map = None;
     if let Some(wanted) = &input.slope {
         crate::road_terrains::terrain_project(doc)?;
         let id = crate::road_profiles::surface_id(doc, wanted.surface.trim(), "slope.surface")?;
         let def = crate::road_terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
         let made = crate::road_terrains::make(doc, &def);
         let triangles = slope_triangles(made.built()?);
-        let (x, y) = (slopes(&b, wanted, &triangles), slopes(&a, wanted, &triangles));
+        let (mut x, mut y) = (slopes(&b, wanted, &triangles), slopes(&a, wanted, &triangles));
+        if wanted.map {
+            slope_map = Some(kentos_commands::ImpactSlopeMap { base: std::mem::take(&mut x.pieces), alternative: std::mem::take(&mut y.pieces) });
+        }
         let name = &def.name;
         let uses: Vec<&str> = wanted.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();
         let whose = if uses.is_empty() { name.clone() } else { format!("{}, {name}", uses.join(", ")) };
@@ -766,6 +862,8 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer.".to_owned(),
     ];
     let now = stamp(doc, &bases);
+    // Docs/adr/5060: the scenario layers' stamp, made as the base's.
+    let scenario_now = stamp(doc, &alts);
     let names = |l: &str| doc.layers().get(l).map_or_else(|| l.to_owned(), |n| n.name.clone());
     Ok(ScenariosImpacted {
         scenario: id.to_owned(),
@@ -781,6 +879,9 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         stale: input.since.as_deref().map(|s| s.trim() != now),
         reach,
         near: near_out,
+        slope_map,
+        records: crate::scenarios_record::records(doc, id, &now, &scenario_now),
+        scenario_stamp: scenario_now,
         stamp: now,
         revision: doc.revision().to_string(),
     })

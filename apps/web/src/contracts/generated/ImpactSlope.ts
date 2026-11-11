@@ -8,14 +8,19 @@
  */
 export type ImpactSlope = { surface: string, threshold: number, from?: Array<string>, 
 /**
- * Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20), as ArcGIS's Surface
- * Slope's class breaks: the classes run from 0 to the first break, between two breaks and from the last one up,
+ * Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20):
+ * the classes run from 0 to the first break, between two breaks and from the last one up,
  * each holding its lower break.
  */
 classes?: Array<number>, 
 /**
- * Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in ArcGIS's
- * Surface Aspect's eight directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
+ * Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in eight
+ * directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
  * flat (a level triangle, no aspect).
  */
-aspect?: boolean, };
+aspect?: boolean, 
+/**
+ * Docs/adr/5060: the slope map: each measured area's parts on the surface's triangles with their slope class and
+ * aspect (`slopeMap`), so a host can colour them; their sizes are the class and aspect measures' own parts.
+ */
+map?: boolean, };

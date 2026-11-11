@@ -656,6 +656,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -818,6 +819,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -1003,6 +1005,7 @@
        ],
        "stamp": "9825692c3bf05e6e",
        "stale": false,
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -1177,6 +1180,7 @@
        ],
        "stamp": "0d073cdb8090db30",
        "stale": true,
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -1849,6 +1853,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "0d073cdb8090db30",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -2513,6 +2518,7 @@
        ],
        "stamp": "9825692c3bf05e6e",
        "stale": true,
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -2636,6 +2642,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -2800,6 +2807,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -2918,6 +2926,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "6f8f8bddf3a6bfcb",
        "revision": "$current"
       },
       "warnings": []
@@ -3529,6 +3538,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "e3b0c44298fc1c14",
        "revision": "$current"
       },
       "warnings": []
@@ -3976,6 +3986,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "e3b0c44298fc1c14",
+       "scenarioStamp": "8002c4887f29a565",
        "revision": "$current"
       },
       "warnings": []
@@ -4477,6 +4488,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "d2c7659aac1ce2b0",
        "revision": "$current"
       },
       "warnings": []
@@ -5138,6 +5150,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "e40935283a0ad4ef",
        "revision": "$current"
       },
       "warnings": []
@@ -5743,6 +5756,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "630f735bb84f41f5",
+       "scenarioStamp": "ce53234b6425907d",
        "revision": "$current"
       },
       "warnings": []
@@ -6047,6 +6061,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "630f735bb84f41f5",
+       "scenarioStamp": "32f7e6a4292e4cbd",
        "revision": "$current"
       },
       "warnings": []
@@ -6402,6 +6417,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "5ed040e12bb9b06a",
        "revision": "$current"
       },
       "warnings": []
@@ -7051,6 +7067,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "25b815c3caaa4f29",
+       "scenarioStamp": "e3b0c44298fc1c14",
        "revision": "$current"
       },
       "warnings": []
@@ -7477,6 +7494,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -7655,6 +7673,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -7865,6 +7884,7 @@
          "0192f5c0-1440-7000-8000-00000000000b"
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -8074,6 +8094,7 @@
          "0192f5c0-1440-7000-8000-00000000000b"
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -8279,6 +8300,7 @@
         ],
         "alternativeTargets": []
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -8506,6 +8528,7 @@
          "0192f5c0-1440-7000-8000-00000000000b"
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -8864,6 +8887,7 @@
          }
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -9657,6 +9681,7 @@
          }
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -10546,6 +10571,7 @@
          }
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -10753,6 +10779,7 @@
         ],
         "alternativeLines": []
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -12701,6 +12728,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -13490,6 +13518,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -14276,6 +14305,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -15258,6 +15288,7 @@
          }
         ]
        },
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -16808,6 +16839,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -17618,6 +17650,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -18507,6 +18540,7 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
        "revision": "$current"
       },
       "warnings": []
@@ -22102,6 +22136,8477 @@
      }
     }
    ]
+  },
+  {
+   "name": "eğim haritası: alanların üçgenlere düşen parçaları sınıf ve bakıyla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "slope": {
+       "surface": "t-1",
+       "threshold": 10.0,
+       "classes": [
+        5.0,
+        15.0,
+        30.0
+       ],
+       "aspect": true,
+       "map": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "slopeMean",
+         "label": "Ortalama eğim (Zemin)",
+         "unit": "%",
+         "base": 18.837410259057165,
+         "alternative": 18.127814288457706,
+         "difference": -0.7095959705994588,
+         "method": "Ölçülen alanların Zemin yüzeyinin üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden (normali, iki kenarının vektörel çarpımı), düşeyin yataya oranı, yüzde. Yüzeyin dışındaki kısım sayılmaz."
+        },
+        {
+         "id": "slopeSteep",
+         "label": "Dik alan (en az 10 %, Zemin)",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5050.0,
+         "difference": -950.0,
+         "method": "Eğimi en az 10 % olan üçgenlere düşen alan."
+        },
+        {
+         "id": "slopeSteepShare",
+         "label": "Dik alanın payı",
+         "unit": "%",
+         "base": 100.0,
+         "alternative": 100.0,
+         "difference": 0.0,
+         "method": "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0."
+        },
+        {
+         "id": "slopeOff",
+         "label": "Yüzeyin dışındaki alan",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 50.0,
+         "difference": 50.0,
+         "method": "Ölçülen alanların Zemin yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."
+        },
+        {
+         "id": "slopeClass1",
+         "label": "Eğimi 5 %'den az (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Eğimi 5 %'den az olan üçgenlere düşen alan."
+        },
+        {
+         "id": "slopeClass2",
+         "label": "Eğimi 5–15 % (Zemin)",
+         "unit": "m2",
+         "base": 2453.125,
+         "alternative": 2453.125,
+         "difference": 0.0,
+         "method": "Eğimi en az 5 %, 15 %'den az olan üçgenlere düşen alan."
+        },
+        {
+         "id": "slopeClass3",
+         "label": "Eğimi 15–30 % (Zemin)",
+         "unit": "m2",
+         "base": 3546.875,
+         "alternative": 2596.875,
+         "difference": -950.0,
+         "method": "Eğimi en az 15 %, 30 %'den az olan üçgenlere düşen alan."
+        },
+        {
+         "id": "slopeClass4",
+         "label": "Eğimi en az 30 % (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Eğimi en az 30 % olan üçgenlere düşen alan."
+        },
+        {
+         "id": "aspectFlat",
+         "label": "Bakı: Düz (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Eğimi 0 olan (yatay) üçgenlere düşen alan; bakısı yok."
+        },
+        {
+         "id": "aspectN",
+         "label": "Bakı: Kuzey (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 337,5°–22,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectNE",
+         "label": "Bakı: Kuzeydoğu (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 22,5°–67,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectE",
+         "label": "Bakı: Doğu (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 67,5°–112,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectSE",
+         "label": "Bakı: Güneydoğu (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 112,5°–157,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectS",
+         "label": "Bakı: Güney (Zemin)",
+         "unit": "m2",
+         "base": 3546.875,
+         "alternative": 2596.875,
+         "difference": -950.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 157,5°–202,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectSW",
+         "label": "Bakı: Güneybatı (Zemin)",
+         "unit": "m2",
+         "base": 2453.125,
+         "alternative": 2453.125,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 202,5°–247,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectW",
+         "label": "Bakı: Batı (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 247,5°–292,5° olan üçgenlere düşen alan; alt sınır dahil."
+        },
+        {
+         "id": "aspectNW",
+         "label": "Bakı: Kuzeybatı (Zemin)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Bakısı (eğimin indiği yön, kuzeyden saat yönünde) 292,5°–337,5° olan üçgenlere düşen alan; alt sınır dahil."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez.",
+        "Ölçülen alanların bir kısmı senaryoda Zemin yüzeyinin dışında; eğim yalnız yüzeyin üstündeki kısımdan."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "slopeMap": {
+        "base": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000001",
+          "class": 1,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 1674.8842592592594,
+          "ring": [
+           [
+            487000.0,
+            4420000.0
+           ],
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487040.0,
+            4420050.0
+           ],
+           [
+            487000.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000001",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 325.11574074074076,
+          "ring": [
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000002",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 855.5555555555555,
+          "ring": [
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487070.0,
+            4420000.0
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000002",
+          "class": 1,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 644.4444444444445,
+          "ring": [
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487070.0,
+            4420050.0
+           ],
+           [
+            487040.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000003",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 900.0,
+          "ring": [
+           [
+            487070.0,
+            4420000.0
+           ],
+           [
+            487100.0,
+            4420000.0
+           ],
+           [
+            487100.0,
+            4420030.0
+           ],
+           [
+            487070.0,
+            4420030.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000004",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 466.2037037037037,
+          "ring": [
+           [
+            487070.0,
+            4420030.0
+           ],
+           [
+            487100.0,
+            4420030.0
+           ],
+           [
+            487100.0,
+            4420050.0
+           ],
+           [
+            487091.25,
+            4420050.0
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000004",
+          "class": 1,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 133.7962962962963,
+          "ring": [
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487091.25,
+            4420050.0
+           ],
+           [
+            487070.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000005",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 1000.0,
+          "ring": [
+           [
+            487100.0,
+            4420000.0
+           ],
+           [
+            487120.0,
+            4420000.0
+           ],
+           [
+            487120.0,
+            4420050.0
+           ],
+           [
+            487100.0,
+            4420050.0
+           ]
+          ]
+         }
+        ],
+        "alternative": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000007",
+          "class": 1,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 1674.8842592592594,
+          "ring": [
+           [
+            487000.0,
+            4420000.0
+           ],
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487040.0,
+            4420050.0
+           ],
+           [
+            487000.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000007",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 325.11574074074076,
+          "ring": [
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000008",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 855.5555555555555,
+          "ring": [
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487070.0,
+            4420000.0
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000008",
+          "class": 1,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 644.4444444444445,
+          "ring": [
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487070.0,
+            4420050.0
+           ],
+           [
+            487040.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000009",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 600.0,
+          "ring": [
+           [
+            487070.0,
+            4420000.0
+           ],
+           [
+            487100.0,
+            4420000.0
+           ],
+           [
+            487100.0,
+            4420020.0
+           ],
+           [
+            487070.0,
+            4420020.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000a",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 466.2037037037037,
+          "ring": [
+           [
+            487070.0,
+            4420030.0
+           ],
+           [
+            487100.0,
+            4420030.0
+           ],
+           [
+            487100.0,
+            4420050.0
+           ],
+           [
+            487091.25,
+            4420050.0
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000a",
+          "class": 1,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 133.7962962962963,
+          "ring": [
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487091.25,
+            4420050.0
+           ],
+           [
+            487070.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000b",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 300.0,
+          "ring": [
+           [
+            487070.0,
+            4420020.0
+           ],
+           [
+            487100.0,
+            4420020.0
+           ],
+           [
+            487100.0,
+            4420030.0
+           ],
+           [
+            487070.0,
+            4420030.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000c",
+          "class": 2,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 50.0,
+          "ring": [
+           [
+            487120.0,
+            4420000.0
+           ],
+           [
+            487125.0,
+            4420000.0
+           ],
+           [
+            487125.0,
+            4420010.0
+           ],
+           [
+            487120.0,
+            4420010.0
+           ]
+          ]
+         }
+        ]
+       },
+       "scenarioStamp": "afae116f32a1824c",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Zemin",
+        "points": {
+         "layers": [
+          "zemin"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "A"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419990.0
+      },
+      "z": 100.0,
+      "id": 15
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "B"
+      },
+      "p": {
+       "x": 487125.0,
+       "y": 4419990.0
+      },
+      "z": 103.0,
+      "id": 16
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "C"
+      },
+      "p": {
+       "x": 487125.0,
+       "y": 4420070.0
+      },
+      "z": 121.0,
+      "id": 17
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "D"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4420080.0
+      },
+      "z": 106.0,
+      "id": 18
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e",
+     "0192f5c0-1440-7000-8000-00000000000f",
+     "0192f5c0-1440-7000-8000-000000000010",
+     "0192f5c0-1440-7000-8000-000000000011",
+     "0192f5c0-1440-7000-8000-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "eğim haritası konutta, sınıfsız: hepsi ilk sınıfta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "slope": {
+       "surface": "t-1",
+       "threshold": 10.0,
+       "from": [
+        "konut"
+       ],
+       "map": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "slopeMean",
+         "label": "Ortalama eğim (konut, Zemin)",
+         "unit": "%",
+         "base": 14.883284706226556,
+         "alternative": 16.581872896994852,
+         "difference": 1.6985881907682963,
+         "method": "Ölçülen alanların Zemin yüzeyinin üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden (normali, iki kenarının vektörel çarpımı), düşeyin yataya oranı, yüzde. Yüzeyin dışındaki kısım sayılmaz."
+        },
+        {
+         "id": "slopeSteep",
+         "label": "Dik alan (en az 10 %, konut, Zemin)",
+         "unit": "m2",
+         "base": 2000.0,
+         "alternative": 3550.0,
+         "difference": 1550.0,
+         "method": "Eğimi en az 10 % olan üçgenlere düşen alan."
+        },
+        {
+         "id": "slopeSteepShare",
+         "label": "Dik alanın payı",
+         "unit": "%",
+         "base": 100.0,
+         "alternative": 100.0,
+         "difference": 0.0,
+         "method": "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0."
+        },
+        {
+         "id": "slopeOff",
+         "label": "Yüzeyin dışındaki alan",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 50.0,
+         "difference": 50.0,
+         "method": "Ölçülen alanların Zemin yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez.",
+        "Ölçülen alanların bir kısmı senaryoda Zemin yüzeyinin dışında; eğim yalnız yüzeyin üstündeki kısımdan."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "slopeMap": {
+        "base": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000001",
+          "class": 0,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 1674.8842592592594,
+          "ring": [
+           [
+            487000.0,
+            4420000.0
+           ],
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487040.0,
+            4420050.0
+           ],
+           [
+            487000.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000001",
+          "class": 0,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 325.11574074074076,
+          "ring": [
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         }
+        ],
+        "alternative": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000007",
+          "class": 0,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 1674.8842592592594,
+          "ring": [
+           [
+            487000.0,
+            4420000.0
+           ],
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487040.0,
+            4420050.0
+           ],
+           [
+            487000.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000007",
+          "class": 0,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 325.11574074074076,
+          "ring": [
+           [
+            487006.875,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000008",
+          "class": 0,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 855.5555555555555,
+          "ring": [
+           [
+            487040.0,
+            4420000.0
+           ],
+           [
+            487070.0,
+            4420000.0
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487040.0,
+            4420019.62962963
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000008",
+          "class": 0,
+          "aspect": 6,
+          "slope": 13.38353603246188,
+          "size": 644.4444444444445,
+          "ring": [
+           [
+            487040.0,
+            4420019.62962963
+           ],
+           [
+            487070.0,
+            4420037.407407408
+           ],
+           [
+            487070.0,
+            4420050.0
+           ],
+           [
+            487040.0,
+            4420050.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000c",
+          "class": 0,
+          "aspect": 5,
+          "slope": 22.609473050138483,
+          "size": 50.0,
+          "ring": [
+           [
+            487120.0,
+            4420000.0
+           ],
+           [
+            487125.0,
+            4420000.0
+           ],
+           [
+            487125.0,
+            4420010.0
+           ],
+           [
+            487120.0,
+            4420010.0
+           ]
+          ]
+         }
+        ]
+       },
+       "scenarioStamp": "afae116f32a1824c",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Zemin",
+        "points": {
+         "layers": [
+          "zemin"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "A"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419990.0
+      },
+      "z": 100.0,
+      "id": 15
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "B"
+      },
+      "p": {
+       "x": 487125.0,
+       "y": 4419990.0
+      },
+      "z": 103.0,
+      "id": 16
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "C"
+      },
+      "p": {
+       "x": 487125.0,
+       "y": 4420070.0
+      },
+      "z": 121.0,
+      "id": 17
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "D"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4420080.0
+      },
+      "z": 106.0,
+      "id": 18
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e",
+     "0192f5c0-1440-7000-8000-00000000000f",
+     "0192f5c0-1440-7000-8000-000000000010",
+     "0192f5c0-1440-7000-8000-000000000011",
+     "0192f5c0-1440-7000-8000-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağ üzerinden erişim: konuttan parka ve yeşil alana Yollar ağı boyunca 100 m",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 100.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "network": "yollar",
+       "connect": 40.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 170.0,
+         "difference": 70.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 100 m, Yollar ağı boyunca)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 1600.0,
+         "difference": 1600.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alanın ağırlık merkezine Yollar ağı boyunca uzaklık en çok 100 m ise alanı sayılır: merkezden ağın en yakın yerine bağlanma, ağda tanımının izin verdiği en kısa yol ve ağdan hedefin merkezine bağlanma; merkezi ağa 40 m'den uzak alan ağa bağlanamaz."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 0.0,
+         "alternative": 44.44444444444444,
+         "difference": 44.44444444444444,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [],
+        "baseUnreached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeUnreached": [
+         "0192f5c0-1440-7000-8000-000000000007"
+        ],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ],
+        "baseRoutes": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000001",
+          "target": "0192f5c0-1440-7000-8000-000000000003",
+          "distance": 115.0,
+          "legs": [
+           30.0,
+           20.0
+          ],
+          "path": [
+           [
+            487020.0,
+            4420025.0
+           ],
+           [
+            487020.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4420015.0
+           ]
+          ]
+         }
+        ],
+        "alternativeRoutes": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000007",
+          "target": "0192f5c0-1440-7000-8000-000000000009",
+          "distance": 110.0,
+          "legs": [
+           30.0,
+           15.0
+          ],
+          "path": [
+           [
+            487020.0,
+            4420025.0
+           ],
+           [
+            487020.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4420010.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000008",
+          "target": "0192f5c0-1440-7000-8000-000000000009",
+          "distance": 75.0,
+          "legs": [
+           30.0,
+           15.0
+          ],
+          "path": [
+           [
+            487055.0,
+            4420025.0
+           ],
+           [
+            487055.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4420010.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000c",
+          "target": "0192f5c0-1440-7000-8000-00000000000b",
+          "distance": 60.0,
+          "legs": [
+           20.0,
+           20.0
+          ],
+          "path": [
+           [
+            487125.0,
+            4420005.0
+           ],
+           [
+            487105.0,
+            4420005.0
+           ],
+           [
+            487105.0,
+            4420025.0
+           ],
+           [
+            487085.0,
+            4420025.0
+           ]
+          ]
+         }
+        ]
+       },
+       "scenarioStamp": "ddee797620a7d1fe",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağ üzerinden erişim adıyla, 120 m: mevcut durumdaki konut da erişir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 120.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "network": "Yollar",
+       "connect": 40.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 170.0,
+         "difference": 70.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 120 m, Yollar ağı boyunca)",
+         "unit": "m2",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alanın ağırlık merkezine Yollar ağı boyunca uzaklık en çok 120 m ise alanı sayılır: merkezden ağın en yakın yerine bağlanma, ağda tanımının izin verdiği en kısa yol ve ağdan hedefin merkezine bağlanma; merkezi ağa 40 m'den uzak alan ağa bağlanamaz."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 100.0,
+         "alternative": 100.0,
+         "difference": 0.0,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseUnreached": [],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeUnreached": [],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ],
+        "baseRoutes": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000001",
+          "target": "0192f5c0-1440-7000-8000-000000000003",
+          "distance": 115.0,
+          "legs": [
+           30.0,
+           20.0
+          ],
+          "path": [
+           [
+            487020.0,
+            4420025.0
+           ],
+           [
+            487020.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4420015.0
+           ]
+          ]
+         }
+        ],
+        "alternativeRoutes": [
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000007",
+          "target": "0192f5c0-1440-7000-8000-000000000009",
+          "distance": 110.0,
+          "legs": [
+           30.0,
+           15.0
+          ],
+          "path": [
+           [
+            487020.0,
+            4420025.0
+           ],
+           [
+            487020.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4420010.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-000000000008",
+          "target": "0192f5c0-1440-7000-8000-000000000009",
+          "distance": 75.0,
+          "legs": [
+           30.0,
+           15.0
+          ],
+          "path": [
+           [
+            487055.0,
+            4420025.0
+           ],
+           [
+            487055.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4419995.0
+           ],
+           [
+            487085.0,
+            4420010.0
+           ]
+          ]
+         },
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000c",
+          "target": "0192f5c0-1440-7000-8000-00000000000b",
+          "distance": 60.0,
+          "legs": [
+           20.0,
+           20.0
+          ],
+          "path": [
+           [
+            487125.0,
+            4420005.0
+           ],
+           [
+            487105.0,
+            4420005.0
+           ],
+           [
+            487105.0,
+            4420025.0
+           ],
+           [
+            487085.0,
+            4420025.0
+           ]
+          ]
+         }
+        ]
+       },
+       "scenarioStamp": "ddee797620a7d1fe",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağa 25 m'den uzak konut ağa bağlanamaz: erişmez, eksik",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 100.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "network": "yollar",
+       "connect": 25.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 170.0,
+         "difference": 70.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 100 m, Yollar ağı boyunca)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 100.0,
+         "difference": 100.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alanın ağırlık merkezine Yollar ağı boyunca uzaklık en çok 100 m ise alanı sayılır: merkezden ağın en yakın yerine bağlanma, ağda tanımının izin verdiği en kısa yol ve ağdan hedefin merkezine bağlanma; merkezi ağa 25 m'den uzak alan ağa bağlanamaz."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 0.0,
+         "alternative": 2.7777777777777777,
+         "difference": 2.7777777777777777,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez.",
+        "Ağa bağlanamayan (Yollar ağına 25 m'den uzak) konut alanı: mevcut durumda 1, senaryoda 2; erişmez sayıldı."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [],
+        "baseUnreached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeUnreached": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008"
+        ],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ],
+        "alternativeRoutes": [
+         {
+          "area": "0192f5c0-1440-7000-8000-00000000000c",
+          "target": "0192f5c0-1440-7000-8000-00000000000b",
+          "distance": 60.0,
+          "legs": [
+           20.0,
+           20.0
+          ],
+          "path": [
+           [
+            487125.0,
+            4420005.0
+           ],
+           [
+            487105.0,
+            4420005.0
+           ],
+           [
+            487105.0,
+            4420025.0
+           ],
+           [
+            487085.0,
+            4420025.0
+           ]
+          ]
+         }
+        ],
+        "baseOff": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "alternativeOff": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008"
+        ]
+       },
+       "scenarioStamp": "ddee797620a7d1fe",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağa 18 m'den uzak hedef de bağlanamaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 100.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "network": "yollar",
+       "connect": 18.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 170.0,
+         "difference": 70.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 100 m, Yollar ağı boyunca)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alanın ağırlık merkezine Yollar ağı boyunca uzaklık en çok 100 m ise alanı sayılır: merkezden ağın en yakın yerine bağlanma, ağda tanımının izin verdiği en kısa yol ve ağdan hedefin merkezine bağlanma; merkezi ağa 18 m'den uzak alan ağa bağlanamaz."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez.",
+        "Ağa bağlanamayan (Yollar ağına 18 m'den uzak) konut alanı: mevcut durumda 1, senaryoda 3; erişmez sayıldı.",
+        "Ağa bağlanamayan (Yollar ağına 18 m'den uzak) park, yesil alanı: mevcut durumda 1, senaryoda 1; ona erişilmez sayıldı."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [],
+        "baseUnreached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [],
+        "alternativeUnreached": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ],
+        "baseOff": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "alternativeOff": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ]
+       },
+       "scenarioStamp": "ddee797620a7d1fe",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağ üzerinden erişimde bağlanma uzaklığı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 100.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park"
+       ],
+       "network": "yollar"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Ağ üzerinden erişimde ağa bağlanma uzaklığı verilmemiş; alanın ağırlık merkezinin ağa en çok kaç metre uzak olabileceğini yazın.",
+       "path": "access.connect"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağa bağlanma uzaklığı 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 100.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "network": "yollar",
+       "connect": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Ağa bağlanma uzaklığı 0'dan büyük olmalı (yazılan 0).",
+       "path": "access.connect"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "bağlanma uzaklığı ağsız",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 40.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "connect": 20.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Ağa bağlanma uzaklığı yalnız ağ üzerinden erişimde kullanılır; bir ağ seçin ya da uzaklığı boş bırakın.",
+       "path": "access.network"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ağ projede yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 100.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ],
+       "network": "patika",
+       "connect": 40.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_network",
+       "message": "“patika” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.",
+       "path": "access.network"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "networks": [
+      {
+       "id": "yollar",
+       "name": "Yollar",
+       "kind": "road",
+       "edges": [
+        {
+         "layer": "yol"
+        }
+       ],
+       "connect": "ends",
+       "tolerance": 0.01,
+       "direction": {
+        "kind": "both"
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487105.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487105.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "çizimdeki ölçü tabloları: biri güncel, birinin senaryosu değişmiş",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "scenarioStamp": "afae116f32a1824c",
+       "records": [
+        {
+         "table": "0192f5c0-1440-7000-8000-00000000000f",
+         "stamp": "9825692c3bf05e6e",
+         "scenarioStamp": "afae116f32a1824c",
+         "baseChanged": false,
+         "scenarioChanged": false
+        },
+        {
+         "table": "0192f5c0-1440-7000-8000-000000000010",
+         "stamp": "9825692c3bf05e6e",
+         "scenarioStamp": "0000000000000000",
+         "baseChanged": false,
+         "scenarioChanged": true
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Senaryo ölçüleri",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "alt-a",
+      "name": "Alternatif A",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "scenario": {
+       "note": "Okul yanına yeşil alan, ticaret konuta"
+      },
+      "children": [
+       {
+        "id": "alt-a-karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "karar",
+        "children": []
+       },
+       {
+        "id": "alt-a-yol",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "replaces": "yol",
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "ticaret-konut",
+       "KAKS": "1.75"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Kullanim": "sanayi",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "line",
+      "layerId": "yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "KAKS": "1.20"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "konut",
+       "KAKS": "1.50"
+      },
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Kullanim": "egitim",
+       "KAKS": "1.00"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420050.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Kullanim": "yesil"
+      },
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alt-a-karar",
+      "attrs": {
+       "Kullanim": "konut"
+      },
+      "pts": [
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y1"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "id": 13
+     },
+     {
+      "kind": "line",
+      "layerId": "alt-a-yol",
+      "attrs": {
+       "YolKimlik": "Y2"
+      },
+      "a": {
+       "x": 487100.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487100.0,
+       "y": 4420060.0
+      },
+      "id": 14
+     },
+     {
+      "kind": "table",
+      "layerId": "0",
+      "attrs": {
+       "SenaryoKimlik": "alt-a",
+       "TabanDamgasi": "9825692c3bf05e6e",
+       "SenaryoDamgasi": "afae116f32a1824c"
+      },
+      "p": {
+       "x": 487140.0,
+       "y": 4420050.0
+      },
+      "rotation": 0.0,
+      "height": 2.5,
+      "rows": [
+       5.0
+      ],
+      "columns": [
+       20.0
+      ],
+      "cells": [
+       [
+        "Ölçü"
+       ]
+      ],
+      "id": 15
+     },
+     {
+      "kind": "table",
+      "layerId": "0",
+      "attrs": {
+       "SenaryoKimlik": "alt-a",
+       "TabanDamgasi": "9825692c3bf05e6e",
+       "SenaryoDamgasi": "0000000000000000"
+      },
+      "p": {
+       "x": 487140.0,
+       "y": 4420050.0
+      },
+      "rotation": 0.0,
+      "height": 2.5,
+      "rows": [
+       5.0
+      ],
+      "columns": [
+       20.0
+      ],
+      "cells": [
+       [
+        "Ölçü"
+       ]
+      ],
+      "id": 16
+     },
+     {
+      "kind": "table",
+      "layerId": "0",
+      "attrs": {
+       "SenaryoKimlik": "alt-b",
+       "TabanDamgasi": "9825692c3bf05e6e",
+       "SenaryoDamgasi": "afae116f32a1824c"
+      },
+      "p": {
+       "x": 487140.0,
+       "y": 4420050.0
+      },
+      "rotation": 0.0,
+      "height": 2.5,
+      "rows": [
+       5.0
+      ],
+      "columns": [
+       20.0
+      ],
+      "cells": [
+       [
+        "Ölçü"
+       ]
+      ],
+      "id": 17
+     }
+    ],
+    "uids": [
+     "0192f5c0-1440-7000-8000-000000000001",
+     "0192f5c0-1440-7000-8000-000000000002",
+     "0192f5c0-1440-7000-8000-000000000003",
+     "0192f5c0-1440-7000-8000-000000000004",
+     "0192f5c0-1440-7000-8000-000000000005",
+     "0192f5c0-1440-7000-8000-000000000006",
+     "0192f5c0-1440-7000-8000-000000000007",
+     "0192f5c0-1440-7000-8000-000000000008",
+     "0192f5c0-1440-7000-8000-000000000009",
+     "0192f5c0-1440-7000-8000-00000000000a",
+     "0192f5c0-1440-7000-8000-00000000000b",
+     "0192f5c0-1440-7000-8000-00000000000c",
+     "0192f5c0-1440-7000-8000-00000000000d",
+     "0192f5c0-1440-7000-8000-00000000000e",
+     "0192f5c0-1440-7000-8000-00000000000f",
+     "0192f5c0-1440-7000-8000-000000000010",
+     "0192f5c0-1440-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
   },
   {
    "name": "senaryo değil",

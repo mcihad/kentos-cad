@@ -224,6 +224,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `cad.pipes.profile`'da hattın kendi dış duvarları (7 yeni durum); web Boru hattı denetiminde Dış çap ve Kural.
 - MAP-11 / ADR 4680: web'in `cad.readjustment.sheets` işleyicisinde sığmayan numaranın kılavuzla dışarıda yazılması
   (`numberLeader`, etiketin `leader`'ı; cad.readjustment.sheets.json'un 3 yeni durumu) ve web Ayırma çapında anahtar.
+- MAP-10 / ADR 5060: web'in `cad.scenarios.impact` işleyicisinde ağ üzerinden erişim (`access.network`/`connect`,
+  `reach` yolları), eğim haritası (`slope.map`), `scenarioStamp` ve `records` (cad.scenarios.impact.json'un 11 yeni
+  durumu); yeni `cad.scenarios.record` işleyicisi (22 durum); web Senaryo ölçüleri'nde Erişim ağı / bağlanma, Eğimi
+  çizimde göster ve Ölçüleri çizime yaz.
 - MAP-10 / ADR 4660: web'in `cad.scenarios.impact` işleyicisinde eğim sınıfları ve bakı (`slope.classes`,
   `slope.aspect`; cad.scenarios.impact.json'un 5 yeni durumu) ve web Senaryo ölçüleri'nde sınıf ve bakı satırı.
 - MAP-09 / ADR 4640: web'in `cad.zoning.check` işleyicisinde `symbolMismatch` (cad.zoning.check.json'un 4 yeni durumu)

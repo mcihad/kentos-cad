@@ -243,6 +243,7 @@ COMMANDS: dict[str, Any] = {
     "cad.roofs.create": roofs.create,
     "cad.scenarios.edit": scenarios.edit,
     "cad.scenarios.impact": scenarios.impact,
+    "cad.scenarios.record": scenarios.record,
     "cad.schedules.create": schedules.create,
     "cad.schedules.edit": schedules.edit,
     "cad.schedules.query": schedules.query,

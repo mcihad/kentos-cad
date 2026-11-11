@@ -2593,6 +2593,31 @@ const ENTRIES: &[Entry] = &[
             "not_a_road_project",
             "unknown_terrain",
             "terrain_unbuildable",
+            // Docs/adr/5060: the access along a network.
+            "unknown_network",
+            "invalid_network",
+            "tools_unavailable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    // Ölçüleri çizime yaz (plan/map-cad.md MAP-10, docs/adr/5060).
+    Entry {
+        id: "cad.scenarios.record",
+        // The comparison's own, then the table's layer and corner, the revision and the write's.
+        refusals: &[&[
+            "invalid_input",
+            "scenario_not_found",
+            "nothing_to_compare",
+            "not_a_road_project",
+            "unknown_terrain",
+            "terrain_unbuildable",
+            "unknown_network",
+            "invalid_network",
+            "tools_unavailable",
+            "invalid_revision",
+            "revision_conflict",
+            "layer_locked",
         ]],
         warnings: &[],
         targets: none,

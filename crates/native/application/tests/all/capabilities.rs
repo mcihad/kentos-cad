@@ -1013,7 +1013,7 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     (
         "cad.sources.sync",
         "source_others",
-        "satır düzeyinde yazma yalnız veritabanında; aynı tabloyu ikinci düzenleyici (QGIS) değiştirir, kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
+        "satır düzeyinde yazma yalnız veritabanında; aynı tabloyu ikinci düzenleyici (başka bir CBS istemcisi) değiştirir, kentos-postgis'in postgis_cases.py ile koşan testlerinde (ADR 0582)",
     ),
     (
         "cad.sources.sync",
@@ -1094,6 +1094,31 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.pipes.check",
         "tools_unavailable",
         "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; ağı kuran araçların reddi cad.processing.run'ınkiyle aynıdır (ADR 1640)",
+    ),
+    (
+        "cad.scenarios.impact",
+        "tools_unavailable",
+        "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; ağ üzerinden erişimin ağı cad.pipes.check'inki gibi araçların ağ kurucusuyla kurulur (ADR 5060)",
+    ),
+    (
+        "cad.scenarios.impact",
+        "invalid_network",
+        "ağ önce adıyla ya da kimliğiyle bulunur (unknown_network); tanım Ağlar'da kaydedilirken denetlenir, kurulamayan ağın reddi yalnız aradaki bir değişime karşıdır (ADR 5060)",
+    ),
+    (
+        "cad.scenarios.record",
+        "tools_unavailable",
+        "karşılaştırmayı cad.scenarios.impact'in yoluyla yapar; ret onunkiyle aynıdır (ADR 5060)",
+    ),
+    (
+        "cad.scenarios.record",
+        "invalid_network",
+        "karşılaştırmayı cad.scenarios.impact'in yoluyla yapar; ret onunkiyle aynıdır (ADR 5060)",
+    ),
+    (
+        "cad.scenarios.record",
+        "terrain_unbuildable",
+        "karşılaştırmayı cad.scenarios.impact'in yoluyla yapar; tek noktalı yüzeyin reddi onun durumlarında (ADR 5060)",
     ),
     (
         "cad.pipes.check",

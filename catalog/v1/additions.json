@@ -119,7 +119,7 @@
       "title": "Senaryo ölçüleri…",
       "short": "Senaryo ölçüleri",
       "icon": "scenarioImpact",
-      "description": "Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır (cad.scenarios.impact): nesne sayısı, alanların toplamı, çizgi uzunluğu, inşaat alanı (alan × KAKS) birimi ve yöntemiyle; kullanıma göre alanlar; anahtarıyla izlenen değişen kararlar; istenirse geçirimsiz alan ve erişim (değerler kullanıcının); veri eksikleri ve varsayımlar. Tek puanla en iyi senaryo seçilmez. Raporu kaydet CSV yazar ve taban damgasını saklar: taban sonradan değişince senaryonun eskidiği söylenir. Harita ve CBS'de. Eski adı Alternatif etkisi.",
+      "description": "Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır (cad.scenarios.impact): nesne sayısı, alanların toplamı, çizgi uzunluğu, inşaat alanı (alan × KAKS) birimi ve yöntemiyle; kullanıma göre alanlar; anahtarıyla izlenen değişen kararlar; istenirse geçirimsiz alan ve erişim (değerler kullanıcının; erişim düz uzaklıkla ya da projenin bir ağı boyunca); veri eksikleri ve varsayımlar. Tek puanla en iyi senaryo seçilmez. Raporu kaydet CSV yazar ve taban damgasını saklar: taban sonradan değişince senaryonun eskidiği söylenir. Ölçüleri çizime yaz karşılaştırmayı damgalarıyla tablo olarak çizime yazar (cad.scenarios.record); sonraki karşılaştırma tablonun güncel mi eskimiş mi olduğunu söyler. Eğimi çizimde göster ölçülen alanları eğim sınıfına göre boyar. Harita ve CBS'de. Eski adı Alternatif etkisi.",
       "aliases": [
         "SENARYOOLCULERI",
         "ALTERNATIFETKISI",

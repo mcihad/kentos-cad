@@ -632,6 +632,11 @@
   `cad.readjustment.sheets`'in `numberLeader`'ı: numara tam boyda sığmazsa küçültülmeden, yatay, kılavuzla dışarıda
   (uç parçanın etiket yeri, iniş doğu sınırdan bir boy öte); cevapta `leader`. Düzenleme › Ayırma çapı › Sığmayan
   numara. Harita ve CBS.
+- **Senaryo ölçülerinde ağ üzerinden erişim, eğim haritası, ölçüler çizimde (11 Kasım 2026; MAP-10, [ADR 5060](../../docs/adr/5060-scenario-network-access-slope-map-and-record.md)).**
+  `cad.scenarios.impact`'in `access.network`/`connect`'i (projenin Ağlar'daki ağı boyunca; merkez ağa bağlanır,
+  kullanıcının sınırından uzaksa ağa bağlanamaz, eksik; yollar `reach`'te) ve `slope.map`'i (parçalar sınıfıyla); yeni
+  `cad.scenarios.record` (Ölçüleri çizime yaz: tablo, damgalar öznitelikte, `.kcad` şeması aynı); `records` tablonun
+  güncel ya da eskimiş olduğunu söyler. Senaryo ölçüleri › Erişim ağı / bağlanma, Eğimi çizimde göster. Harita + CBS.
 - **Senaryo ölçülerinde eğim sınıfları ve bakı (10 Kasım 2026; MAP-10, [ADR 4660](../../docs/adr/4660-scenario-slope-classes-and-aspect.md)).**
   `cad.scenarios.impact`'in `slope.classes`'ı (kullanıcının sınırları, %) ve `slope.aspect`'i (sekiz yön ve Düz, ArcGIS'in
   Surface Aspect'i) ölçü satırları olarak. Senaryo ölçüleri › Eğim sınıfları (%) / bakı. Harita + CBS.

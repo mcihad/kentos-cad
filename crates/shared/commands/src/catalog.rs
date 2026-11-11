@@ -9980,7 +9980,9 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SCENARIOS_IMPACT_VERSION,
             title: "Senaryo ölçüleri".into(),
             summary: "Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo seçilmez. \
-                      stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların toplamı, near'da yakın ve uzak alanlar ve katmanın nesneleri, baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface, threshold %, from): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, slope.threshold 0'dan büyük değil), scenario_not_found, nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable (slope)."
+                      stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların toplamı, near'da yakın ve uzak alanlar ve katmanın nesneleri, baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface, threshold %, from): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan (slopeOff, veri eksiği); slope.classes (artan % sınırları) ile sınıflara, slope.aspect ile bakıya göre alanlar; slope.map ile slopeMap: her ölçülen alanın üçgenlere düşen parçaları sınıfı, bakısı, eğimi, alanı ve halkasıyla (haritada boyamak için; sınıf ölçülerinin parçalarıdır). \
+                      access.network (projenin Ağlar'daki ağı, kimlik ya da ad) ve access.connect (m, kullanıcının) ile erişim ağ boyunca: ağırlık merkezi ağın en yakın yerine bağlanır (connect'ten uzaksa ağa bağlanamaz, erişmez sayılır, veri eksiği), uzaklık = bağlanma + ağın tanımına göre en kısa yol + hedefin merkezine bağlanma; reach'te her alanın yolu (baseRoutes/alternativeRoutes: hedef, uzaklık, iki bağlanma, noktalar) ve ağa bağlanamayanlar; senaryonun yerine geçtiği ağ katmanı her tarafın kendisinindir. \
+                      scenarioStamp senaryo katmanlarının özetidir; records cad.scenarios.record ile çizime yazılmış bu senaryonun tablolarıdır, her biri tabanın ya da senaryonun o zamandan beri değişip değişmediğiyle (eskiyen tablo kendiliğinden güncellenmez). Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, access.connect ağla verilmemiş ya da 0'dan büyük değil, slope.threshold 0'dan büyük değil, slope.classes), scenario_not_found, nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable (slope), unknown_network, invalid_network, tools_unavailable (access.network)."
                 .into(),
             aliases: vec!["senaryoolculeri".into(), "alternatifetkisi".into(), "senaryoetkisi".into()],
             effect: CommandEffect::Query,
@@ -9995,6 +9997,32 @@ pub fn catalog() -> CommandCatalog {
             plan: Some(schema::<crate::ScenariosImpacted>()),
             capabilities: None,
             examples: vec![CommandExample { title: "Bir senaryoyu mevcut durumla".into(), input: json!({ "scenario": "alternatif-a" }), output: None }],
+        },
+        // Ölçüleri çizime yaz (plan/map-cad.md MAP-10, docs/adr/5060).
+        CommandDescriptor {
+            id: crate::CAD_SCENARIOS_RECORD.into(),
+            version: crate::CAD_SCENARIOS_RECORD_VERSION,
+            title: "Ölçüleri çizime yaz".into(),
+            summary: "cad.scenarios.impact'in karşılaştırmasını (impact, onun girdisi) çizime tablo olarak yazar: başlık (ölçü ve senaryonun adı, birim, mevcut durum, senaryo, fark), her ölçü bir satır (alanlar projenin alan basamağıyla, uzunluklar uzunluk basamağıyla, paylar bir basamak, sayılar tam; fark işaretli), son satırda taban ve senaryo damgaları. Senaryonun kimliği ve iki damga tablonun öznitelikleridir (SenaryoKimlik, TabanDamgasi, SenaryoDamgasi): senaryo yeniden karşılaştırılınca records tablonun eskiyip eskimediğini söyler; tablo kendiliğinden güncellenmez. \
+                      layerId karşılaştırılan katmanlardan biri olamaz (tablo ölçüleri değiştirir); at tablonun sol üst köşesi (yoksa karşılaştırılan nesnelerin sağında, tablo yüksekliğinin iki katı, üstleri hizasında). Tek geri alma adımı “Ölçüleri çizime yaz”. Retler: karşılaştırmanınkiler (yolları impact. altında), invalid_input (layerId: katman yok, grup ya da karşılaştırılan katman; at sonlu değil), invalid_revision, revision_conflict, layer_locked."
+                .into(),
+            aliases: vec!["olculeriyaz".into(), "senaryotablosu".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ScenariosRecord>(),
+            output: schema::<crate::ScenariosRecorded>(),
+            plan: Some(schema::<crate::ScenariosRecorded>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Senaryonun ölçüleri Senaryo ölçüleri katmanına".into(),
+                input: json!({ "impact": { "scenario": "alternatif-a" }, "layerId": "senaryo-olculeri" }),
+                output: None,
+            }],
         },
         // İmar planı denetimi (plan/map-cad.md MAP-09, docs/adr/1420).
         CommandDescriptor {
@@ -17051,6 +17079,7 @@ mod tests {
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolize>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
+                    crate::CAD_SCENARIOS_RECORD => serde_json::from_value::<crate::ScenariosRecord>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScope>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheets>(e.input.clone()).map(|_| ()),
@@ -18034,6 +18063,7 @@ mod tests {
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolized>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
+                        crate::CAD_SCENARIOS_RECORD => serde_json::from_value::<crate::ScenariosRecorded>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScoped>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheetsMade>(output.clone()).map(|_| ()),

@@ -153,6 +153,8 @@ pub enum CreateOperation {
     LowConfidence,
     /// `road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.
     Sparse,
+    /// `cad.scenarios.record` (docs/adr/5060): a comparison written as a table, “Ölçüleri çizime yaz”.
+    ScenarioRecord,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

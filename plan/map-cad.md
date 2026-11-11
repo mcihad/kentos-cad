@@ -41,7 +41,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600, 5000 | tutamaçla birden çok nesne; gidiş okunun anahtarı ve ilk/son köşe rengi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660, 5060 | süreyle (hız, yürüme profili) erişim; bakının haritası, derece birimi, özel bakı sınıfları; eskiyen tabloyu yerinde yeniden yazma | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
@@ -1454,6 +1454,17 @@ sınırları) ve Surface Aspect'i (sekiz yön, eğimsiz yüz “No Slope”). Ka
 indiği yön, sekiz yön ve Düz) ölçü satırları olarak; yeni `slope.classes` reddi. 50 bağımsız durum (5 yeni), Python
 (ızgara integrali), MCP, masaüstü (Eğim sınıfları (%) / bakı) ve resimler. Açık: haritada gösterim, ağ üzerinden
 erişim, damganın çizimde saklanması.
+
+**11 Kasım 2026, onuncu tur — ağ üzerinden erişim, eğim haritası, ölçüler çizimde ([ADR 5060](../docs/adr/5060-scenario-network-access-slope-map-and-record.md)).**
+Kapsam: **Harita + CBS**. Araştırma: QGIS 3.44'ün Service area'sı (“Maximum point distance from network”: uzaktaki nokta
+yönlendirilemez), ArcGIS Pro'nun servis alanı, Civil 3D'nin eğim analizi ve gösterge tablosu (Dynamic/Static).
+Kanıtlanan: `cad.scenarios.impact`'in `access.network`/`connect`'i (projenin Ağlar'daki ağı, senaryonun yerine geçtiği
+ağ katmanı kendi tarafında; merkez ağa bağlanır, kullanıcının sınırından uzaksa ağa bağlanamaz ve eksik; uzaklık iki
+bağlanma ve ağdaki en kısa yol; `reach`'te yollar), `slope.map`'i (parçalar sınıf ve bakıyla, toplamları sınıf
+ölçüsü), `scenarioStamp` ve `records`; yeni `cad.scenarios.record` (Ölçüleri çizime yaz: tablo, damgalar öznitelikte,
+şema aynı, tek adım). 11 yeni bağımsız durum (61) ve 22 kayıt durumu, bozma denemesi, Python (elle yürünen ağ), MCP,
+masaüstü (Erişim ağı / bağlanma, Eğimi çizimde göster ve anahtarı, Ölçüleri çizime yaz; tablo eskiyince özet söyler)
+ve resimler. Açık: süreyle erişim, bakının haritası ve derece, eskiyen tabloyu yerinde yeniden yazma.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

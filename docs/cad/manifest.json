@@ -8706,14 +8706,15 @@
    "id": "scenario.impact",
    "kind": "command",
    "title": "Senaryo ölçüleri…",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.scenarios.impact"
+    "cad.scenarios.impact",
+    "cad.scenarios.record"
    ],
    "operation": null,
-   "python": "kentos.cad.scenarios.impact",
-   "mcp": "cad.scenarios.impact",
-   "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440).",
+   "python": "kentos.cad.scenarios.impact, kentos.cad.scenarios.record",
+   "mcp": "cad.scenarios.impact, cad.scenarios.record",
+   "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440). Ölçüleri çizime yaz karşılaştırmayı cad.scenarios.record ile “Senaryo ölçüleri” katmanına tablo olarak yazar (katman yoksa aynı adımda kurulur); tablonun damgalarını sonraki karşılaştırma records'ta okur (ADR 5060).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
