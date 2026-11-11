@@ -620,3 +620,91 @@ fn a_balanced_stair_s_winders_stand_one_by_one() {
         }
     }
 }
+
+/// Korkuluk kesitte ve görünüşte (docs/adr/8045 §3): a balustered railing on 1. kat is its top rail, a solid 5 cm deep
+/// from +4.05 to +4.10, and its balusters, lines of a solid without a footprint from its floor (+3.00) up to its top rail
+/// every gap and 2 cm (0.12 m): 2.40 m along, 20; they hide nothing behind them. A glass one: its top rail and its glass's
+/// foot and ends. A solid panel stands whole. Crossing A-A they are cut there, on MM-KORK-CUBUK and -CAM, light.
+#[test]
+fn a_railing_stands_on_its_floor_its_balusters_seen_and_its_cut_light() {
+    use kentos_geometry_core::geom::section::{Height, Solid};
+    let mut doc = building();
+    let answer = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.railings.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "railings": [
+            {"pts": [{"x": 3.0, "y": 1.2}, {"x": 3.0, "y": 3.6}], "arch": {"level": "k1"}},
+            {"pts": [{"x": 8.0, "y": 1.2}, {"x": 8.0, "y": 3.6}], "infill": "glass", "arch": {"level": "k1"}},
+            {"pts": [{"x": 9.0, "y": 1.2}, {"x": 9.0, "y": 3.6}], "infill": "solid", "arch": {"level": "k1"}}
+        ]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uids: Vec<String> = answer["output"]["uids"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|u| u.as_str().unwrap().to_owned())
+        .collect();
+    let m = sections::model(&doc);
+    let of = |uid: &str| -> Vec<(Solid, String, bool)> {
+        m.solids
+            .iter()
+            .zip(&m.owners)
+            .zip(&m.looks)
+            .filter(|((_, o), _)| o.as_deref() == Some(uid))
+            .map(|((s, _), l)| (s.clone(), l.layer.clone(), l.heavy || l.fill.is_some()))
+            .collect()
+    };
+    let prism = |s: &Solid, b: f64, t: f64| matches!(s.height, Height::Prism { bottom, top } if (bottom - b).abs() < 1e-9 && (top - t).abs() < 1e-9);
+    let bars = of(&uids[0]);
+    assert_eq!(bars.len(), 2, "its top rail and its balusters");
+    assert!(
+        prism(&bars[0].0, 4.05, 4.1) && bars[0].0.rings.len() == 1 && bars[0].0.marks.is_empty()
+    );
+    assert!(bars[1].0.rings.is_empty(), "the balusters hide nothing");
+    assert_eq!(bars[1].0.marks.len(), 20);
+    assert!(
+        bars[1]
+            .0
+            .marks
+            .iter()
+            .all(|[a, b]| (a.1 - 3.0).abs() < 1e-9 && (b.1 - 4.05).abs() < 1e-9)
+    );
+    assert!(
+        bars.iter()
+            .all(|(_, layer, heavy)| layer == "MM-KORK-CUBUK" && !heavy)
+    );
+    let glass = of(&uids[1]);
+    assert_eq!(
+        (glass.len(), glass[1].0.marks.len()),
+        (2, 3),
+        "its foot and its two ends"
+    );
+    assert_eq!(glass[0].1, "MM-KORK-CAM");
+    let panel = of(&uids[2]);
+    assert_eq!(panel.len(), 1);
+    assert!(prism(&panel[0].0, 3.0, 4.1) && panel[0].0.marks.len() == 2);
+    assert_eq!(panel[0].1, "MM-KORK-DOLU");
+    // A-A (y 2.40) cuts them: its block draws them on their layers.
+    let a = mark(&doc, "A");
+    derive(&mut doc, a);
+    let block = doc.block(sections::block_id(a)).expect("A-A's block");
+    let on = |layer: &str| {
+        block
+            .entities
+            .iter()
+            .filter(|e| e.base().layer_id.eq_ignore_ascii_case(layer))
+            .count()
+    };
+    assert!(
+        on("MM-KORK-CUBUK") > 0 && on("MM-KORK-CAM") > 0 && on("MM-KORK-DOLU") > 0,
+        "{:?}",
+        block
+            .entities
+            .iter()
+            .map(|e| e.base().layer_id.clone())
+            .collect::<std::collections::BTreeSet<_>>()
+    );
+}

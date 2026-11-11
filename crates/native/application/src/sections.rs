@@ -328,6 +328,7 @@ pub fn model(doc: &Document) -> Model {
             Entity::Column(c) => column(&c.column, &slabs, owner, &mut m),
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
+            Entity::Railing(r) => railing(&r.railing, owner, &mut m),
             Entity::Stair(s) => stair(&s.stair, &slabs, owner, &mut m),
             Entity::Ramp(_) => {
                 m.left.insert((Left::Ramp, owner));
@@ -738,6 +739,127 @@ fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, 
         finish: None,
     };
     push(m, solid, material_look(element, None, None), owner);
+}
+
+/// A railing's look in a section (docs/adr/8045 §3): on its infill's layer (EK-2 Korkuluk: MM-KORK-CUBUK), outlined
+/// light and unhatched: a balustered or glass railing is no mass to hatch, and its cut is a top rail's width.
+fn railing_look(r: &kentos_commands::RailingFields) -> Look {
+    Look {
+        key: format!("KORK:{}", r.infill.name()),
+        layer: kentos_commands::ek4_layer("KORK", r.infill.layer_word()),
+        heavy: false,
+        fill: None,
+    }
+}
+
+/// How deep a railing's top rail is drawn in a section's or an elevation's view, metres.
+pub const TOP_RAIL_DEPTH: f64 = 0.05;
+/// How wide a railing's baluster is taken, metres: a 20 mm bar; its balusters stand its gap and this apart.
+pub const BALUSTER_WIDTH: f64 = 0.02;
+
+/// A railing (docs/adr/8045 §3), from its floor (its storey's, moved by its offset) to its height. A solid panel is a
+/// wall-like band, its top rail's underside marked on both faces. A balustered or glass railing hides nothing behind it:
+/// its top rail alone is a solid (5 cm deep, cut where the line crosses it), its balusters (a bar every gap and 2 cm along
+/// its line) or its glass's ends are lines of a solid without a footprint, seen where nothing nearer hides them, as a
+/// door's lines on its wall (docs/adr/8043).
+fn railing(r: &kentos_commands::RailingFields, owner: Option<String>, m: &mut Model) {
+    use kentos_commands::RailingInfill;
+    use kentos_geometry_core::entity::Shape;
+    let (floor, _) = floor_of(&m.levels, r.arch.level.as_deref());
+    let (bottom, top) = (floor + r.offset, floor + r.offset + r.height);
+    let Shape::Railing { pts, railing: spec } = kentos_formats::arch_elements::core_railing(r)
+    else {
+        return;
+    };
+    let Some((left, right)) = kentos_geometry_core::geom::railing::faces(&pts, &spec) else {
+        return;
+    };
+    let rings = if spec.closed {
+        vec![left.clone(), right.clone()]
+    } else {
+        let mut band = left.clone();
+        band.extend(right.iter().rev().copied());
+        vec![band]
+    };
+    let rail = (top - TOP_RAIL_DEPTH).max(bottom);
+    let closed_line = |line: &[P]| {
+        let mut out = line.to_vec();
+        if spec.closed
+            && let Some(&first) = line.first()
+        {
+            out.push(first);
+        }
+        out
+    };
+    let look = railing_look(r);
+    if r.infill == RailingInfill::Solid {
+        let mut marks: Vec<[(P, f64); 2]> = Vec::new();
+        for face in [&left, &right] {
+            for w in closed_line(face).windows(2) {
+                marks.push([(w[0], rail), (w[1], rail)]);
+            }
+        }
+        let solid = Solid {
+            rings,
+            height: Height::Prism { bottom, top },
+            voids: Vec::new(),
+            marks,
+            finish: None,
+        };
+        push(m, solid, look, owner);
+        return;
+    }
+    let top_rail = Solid {
+        rings,
+        height: Height::Prism { bottom: rail, top },
+        voids: Vec::new(),
+        marks: Vec::new(),
+        finish: None,
+    };
+    push(m, top_rail, look.clone(), owner.clone());
+    let line = closed_line(&pts);
+    let mut marks: Vec<[(P, f64); 2]> = Vec::new();
+    match r.baluster_gap() {
+        // A baluster every step along its line, the first half a step in.
+        Some(gap) => {
+            let step = gap + BALUSTER_WIDTH;
+            let mut at = step / 2.0;
+            let mut walked = 0.0;
+            for w in line.windows(2) {
+                let l = (w[1].x - w[0].x).hypot(w[1].y - w[0].y);
+                while at <= walked + l && l > 0.0 {
+                    let t = (at - walked) / l;
+                    let q = P::new(
+                        w[0].x + (w[1].x - w[0].x) * t,
+                        w[0].y + (w[1].y - w[0].y) * t,
+                    );
+                    marks.push([(q, bottom), (q, rail)]);
+                    at += step;
+                }
+                walked += l;
+            }
+        }
+        // A glass panel: its foot along its line and, open, its ends.
+        None => {
+            for w in line.windows(2) {
+                marks.push([(w[0], bottom), (w[1], bottom)]);
+            }
+            if !spec.closed
+                && let (Some(&a), Some(&b)) = (line.first(), line.last())
+            {
+                marks.push([(a, bottom), (a, rail)]);
+                marks.push([(b, bottom), (b, rail)]);
+            }
+        }
+    }
+    let lines = Solid {
+        rings: Vec::new(),
+        height: Height::Prism { bottom, top: rail },
+        voids: Vec::new(),
+        marks,
+        finish: None,
+    };
+    push(m, lines, look, owner);
 }
 
 /// A roof's look in a section (docs/adr/8044 §5): its cut hatched as wood (TS 5319 SN23, a pitched roof's structure

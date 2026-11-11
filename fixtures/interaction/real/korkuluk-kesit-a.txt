@@ -1,0 +1,50 @@
+# M45 2. bölüm (docs/adr/8045 §3), on fixtures/arch/v1/facade-building.kcad (--modul mimari): 1. kat; Korkuluk
+# Boşluktan in the stair's void; Kesit çıkar on A-A (along y 3.48, looking at the void's north railing), placed right
+# of the plan; the whole view; a close view of the stair hall: the railing's top rail and a baluster every 0.12 m, the
+# window behind it seen whole.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Korkuluk
+wait 1500
+key Return
+wait 1500
+move 1300 650
+wait 800
+type S
+wait 800
+click 766 622
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Kesit çıkar
+wait 1500
+key Return
+wait 1500
+click 445 660
+wait 1500
+move 1150 900
+wait 1500
+click 1150 900
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot a0-genel
+wheel 1124 690 5
+wait 1500
+move 1400 120
+wait 800
+shot a1-yakin

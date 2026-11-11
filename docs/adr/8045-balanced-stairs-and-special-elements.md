@@ -2,9 +2,9 @@
 
 - **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölüm yapıldı: balansmanlı
   (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c denetimi (§1),
-  kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). 2. bölümün ilk adımı yapıldı: bağımsız korkuluk — model,
-  `.kcad` 242, komut, plan, Korkuluk aracı (Boşluktan ile galeri boşluğu) ve Öznitelikler (§3). Sırada korkuluğun kesit
-  ve görünüşü, PAİY 38 denetimi, sonra asansör ve otopark yeri.
+  kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). 2. bölümde bağımsız korkuluk — model, `.kcad` 242, komut,
+  plan, Korkuluk aracı (Boşluktan ile galeri boşluğu), Öznitelikler, kesit ve görünüş (§3). Sırada PAİY 38 denetimi,
+  sonra asansör ve otopark yeri.
 - **Bağlam belgesi:** ADR 0343 (merdivenin yürüme çizgisi, sahanlıklar, basamak çizgileri), ADR 0704 (yükseklikten
   merdiven), ADR 0709 (döner merdiven), ADR 0724 (kata bağlı merdiven, üst kat planı), ADR 8034 (PAİY 31 denetimi).
 
@@ -137,9 +137,16 @@ için çizilebilen bir korkuluk yoktu.
 - **Öznitelikler:** Yükseklik, Dolgu, Çubuk aralığı (dikey çubukta), Küpeşte eni, Kot farkı (düzenlenebilir), Çizgisi
   (Açık/Kapalı), Uzunluk, Kat, Tadilat durumu ve Denetim: Uyuyor ya da “1,10 m'den alçak” (PAİY 38/1), “Aralık 0,10
   m'den geniş” (PAİY 38/4).
-- **Sonraya:** kesit ve görünüşte korkuluk (dikme, çubuk, cam), Denetim › Mevzuat'ta PAİY 38 (korkuluksuz galeri
-  boşluğu ve balkon kenarı, alçak korkuluk, geniş aralık; düzeltmeleriyle), metrajda korkuluk boyu, yay kenarlı
-  boşluk, döşemeye bağlı (döşeme değişince izleyen) korkuluk.
+- **Kesit ve görünüş (`sections::railing`):** döşemesinden (katın döşemesi + kot farkı) yüksekliğine; katmanı dolgusunun
+  (MM-KORK-CUBUK, -CAM, -DOLU), kesiti ince ve taramasız. Dikey çubuklu ve camlı korkulukta yalnız küpeşte katıdır
+  (5 cm, kesitte küçük bir kare); çubuklar (aralık + 2 cm'lik çubuk, ilki yarım adım içeride) ya da camın ayağı ve
+  uçları ayak izi olmayan bir katının çizgileridir: önündeki onları gizler, onlar arkasındakini gizlemez — kapının
+  duvar yüzündeki çizgileri gibi (ADR 8043). İlk sürüm korkuluğu 1,10 m'lik opak bir bant yaptı; A-A'da merdiven
+  holünün penceresi korkuluğun arkasında yarım kaldı (denizliği +3,90'da, küpeştenin altı görünmüyordu). Dolu
+  korkuluk tam yüksekliğinde katıdır, küpeştenin altı iki yüzünde çizgi.
+- **Sonraya:** Denetim › Mevzuat'ta PAİY 38 (korkuluksuz galeri boşluğu ve balkon kenarı, alçak korkuluk, geniş
+  aralık; düzeltmeleriyle), metrajda korkuluk boyu, yay kenarlı boşluk, döşemeye bağlı (döşeme değişince izleyen)
+  korkuluk, dikme ve tutamak ayrıntısı.
 
 ## Doğrulama
 
@@ -181,3 +188,9 @@ için çizilebilen bir korkuluk yoktu.
   açık; üstüne gelince kart “Uzunluk 1.625 m”, “Alan 0.08 m²”), 2,5 cm'lik artık yazılmadı. Öznitelikler: Yükseklik 1.100, Dolgu Dikey çubuk, Çubuk aralığı 0.100,
   Küpeşte eni 0.050, Çizgisi Açık, Uzunluk 2.850, Denetim Uyuyor. Eski ikilide menü araması “Korkuluk menülerde yok”
   diyor.
+- Korkuluk kesitte (§3): kesit modeli testi (bölüm binası, 1. kat, 2,40 m'lik üç korkuluk): çubuklu olan küpeşte katısı
+  +4,05–+4,10 ve 20 çubuk (+3,00'ten +4,05'e, ayak izsiz katının çizgileri), camlı olan küpeşte ve camın ayağı ile iki
+  ucu, dolu olan +3,00–+4,10 tek katı; A-A'nın bloğunda üç katman. Gerçek pencere (`korkuluk-kesit.txt`,
+  `korkuluk-kesit-a.txt`): görünüş binasında Boşluktan'dan sonra B-B'de iki korkuluğun küpeştesi kesilen küçük birer
+  kare, çubukları +3,00'e inen tek çizgi; A-A'da merdiven holünde küpeşte bandı ve 0,12 m'de bir çubuk, arkadaki
+  pencere bütün. Önceki ikilide (korkuluk var, kesitte yok) iki kesitte de korkuluk görünmüyor.

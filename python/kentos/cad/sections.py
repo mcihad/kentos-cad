@@ -28,16 +28,19 @@ class _SectionsEdit(LocalCommand[BuildingSectionsEdit, BuildingSectionsEdited, B
     düzlem, bakış işaretin oklarının yönünde. Kesilen (düzlemin iki yanında olan)
     duvarlar katmanlarıyla, döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve
     merdivenler malzeme malzeme tek kesit olarak kalın çizilir ve taranır; ötede
-    görünenler ince çizilir (gizli çizgiler ayıklanır); katların kotları (EK-4 Şekil
-    4.3), kat yükseklikleri, kesilen akslar, geçilen mahallerin numarası ve adı,
-    ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır
-    (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de,
-    görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin bilmediği
-    çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve merdiven, rampa,
-    lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive (mark: kesit
-    işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı),
-    refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim
-    güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
+    görünenler ince çizilir (gizli çizgiler ayıklanır); korkuluklar ince ve taramasız
+    (docs/adr/8045 §3: dikey çubuklu ve camlı korkulukta yalnız küpeşte katıdır,
+    çubuklar ve camın kenarları arkasını gizlemeyen çizgilerdir; dolu korkuluk tam
+    yüksekliğiyle); katların kotları (EK-4 Şekil 4.3), kat yükseklikleri, kesilen
+    akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A
+    KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün
+    malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez
+    yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin,
+    eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca.
+    operation: derive (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı
+    nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle
+    yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da
+    “Kesiti yeniden çiz”.
     """
     __slots__ = ()
     id = "cad.sections.edit"
@@ -63,16 +66,18 @@ class _SectionsEdit(LocalCommand[BuildingSectionsEdit, BuildingSectionsEdited, B
         oklarının yönünde. Kesilen (düzlemin iki yanında olan) duvarlar katmanlarıyla,
         döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve merdivenler malzeme malzeme
         tek kesit olarak kalın çizilir ve taranır; ötede görünenler ince çizilir (gizli
-        çizgiler ayıklanır); katların kotları (EK-4 Şekil 4.3), kat yükseklikleri, kesilen
-        akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A
-        KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün
-        malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez
-        yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin,
-        eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca.
-        operation: derive (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı
-        nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle
-        yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da
-        “Kesiti yeniden çiz”.
+        çizgiler ayıklanır); korkuluklar ince ve taramasız (docs/adr/8045 §3: dikey çubuklu
+        ve camlı korkulukta yalnız küpeşte katıdır, çubuklar ve camın kenarları arkasını
+        gizlemeyen çizgilerdir; dolu korkuluk tam yüksekliğiyle); katların kotları (EK-4
+        Şekil 4.3), kat yükseklikleri, kesilen akslar, geçilen mahallerin numarası ve adı,
+        ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır
+        (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de,
+        görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin bilmediği
+        çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve merdiven, rampa,
+        lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive (mark: kesit
+        işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı),
+        refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim
+        güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
 
         Args:
             doc: The drawing it works on.
