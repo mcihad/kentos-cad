@@ -138,7 +138,7 @@ fn mapping_shape(m: &ProfileMapping) -> Result<(), (&'static str, String)> {
     if m.title.trim().is_empty() {
         return bad("Eşlemenin başlığı boş olamaz.".into());
     }
-    if m.classes.is_empty() || m.classes.len() > MAX_MAPPING_ITEMS {
+    if (m.classes.is_empty() && m.names.is_none()) || m.classes.len() > MAX_MAPPING_ITEMS {
         return bad(format!(
             "Eşlemede 1 ile {MAX_MAPPING_ITEMS} arası sınıf olur."
         ));
@@ -374,6 +374,11 @@ pub(crate) fn load_mapping(shelf: Shelf<'_>, name: &str) -> Result<Option<Profil
 /// A profile by name: KentOS's, else the drawing's copy, else the folder's file.
 pub fn find_profile(shelf: Shelf<'_>, name: &str) -> Option<DataProfile> {
     builtin_profile(name).or_else(|| load_profile(shelf, name).ok().flatten())
+}
+
+/// A project's mapping by name: the drawing's copy, else the folder's file.
+pub fn find_mapping(shelf: Shelf<'_>, name: &str) -> Option<ProfileMapping> {
+    load_mapping(shelf, name).ok().flatten()
 }
 
 // ── List ────────────────────────────────────────────────────────────────────────────────────────────────────────

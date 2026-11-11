@@ -602,7 +602,7 @@ def mapping_problem(m, p):
         return "Eşlemenin başlığı boş olamaz."
     if m["profile"] != p["name"]:
         return f"Eşleme “{m['profile']}” profili için yazılmış, verilen profil “{p['name']}”."
-    if not m["classes"] or len(m["classes"]) > 256:
+    if (not m["classes"] and "names" not in m) or len(m["classes"]) > 256:  # a form of names alone (docs/adr/5180)
         return "Eşlemede 1 ile 256 arası sınıf olur."
     for i, mc in enumerate(m["classes"]):
         c = next((c for c in p["classes"] if c["id"] == mc["class"]), None)

@@ -220,6 +220,7 @@ COMMANDS: dict[str, Any] = {
     "cad.profiles.import": profiles.import_,
     "cad.profiles.list": profiles.list,
     "cad.profiles.migrate": profiles.migrate,
+    "cad.profiles.names": profiles.names,
     "cad.profiles.remove": profiles.remove,
     "cad.program.check": program.check,
     "cad.program.edit": program.edit,

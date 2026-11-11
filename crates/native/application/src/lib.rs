@@ -352,6 +352,7 @@ mod orthophoto_seams;
 pub mod pointcloud_overlap;
 pub mod pointcloud_network;
 pub mod profiles_compare;
+pub mod profiles_names;
 pub mod pointcloud_register;
 pub mod map_work_edit;
 pub mod map_work_profile;
@@ -1913,6 +1914,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_PROFILES_REMOVE,
         kentos_commands::CAD_PROFILES_REMOVE_VERSION,
+    ),
+    // The fields' names in an institution by a mapping's form of names ([`profiles_names`], docs/adr/5180).
+    (
+        kentos_commands::CAD_PROFILES_NAMES,
+        kentos_commands::CAD_PROFILES_NAMES_VERSION,
     ),
     // The project's line types with patterns ([`line_types_edit`], docs/adr/0313).
     (

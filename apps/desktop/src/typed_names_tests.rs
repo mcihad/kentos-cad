@@ -1,5 +1,5 @@
-//! The command names a Netcad user types (docs/adr/0141, the “Netcad adları”
-//! table and the new commands' own): each starts its command from the command
+//! The command names a user of another survey program types (docs/adr/0141, the names' table
+//! and the new commands' own): each starts its command from the command
 //! line, and no other command answers to it. Test code only.
 
 use iced::{Point, Rectangle, Size};
@@ -64,7 +64,7 @@ fn the_view_names_move_through_the_history_and_show_everything() {
     run(&mut app, "view.zoomIn");
     let zoomed = app.viewpoint();
     assert_ne!(zoomed, start);
-    // Önceki pencere, by its Netcad name and by its short one.
+    // Önceki pencere, by its typed name and by its short one.
     type_name(&mut app, "ONCEKIPENCERE");
     assert_eq!(app.viewpoint(), start, "ONCEKIPENCERE");
     type_name(&mut app, "ZN");
@@ -93,7 +93,7 @@ fn kapsam_names_the_extent_check() {
 
 /// A name that two commands answer to would start whichever comes first.
 #[test]
-fn no_other_command_answers_to_a_netcad_name() {
+fn no_other_command_answers_to_a_typed_name() {
     let names = TOOL_NAMES.iter().map(|(name, _)| *name).chain(VIEW_NAMES);
     for name in names {
         let owners: Vec<&str> = catalog()

@@ -132,6 +132,25 @@ pub(crate) fn mapping_for(
     mapping_name: Option<&str>,
     shelf: Shelf<'_>,
 ) -> Result<Option<ProfileMapping>, Stop> {
+    let found = mapping_found(mapping, mapping_name, shelf)?;
+    if let Some(m) = &found
+        && let Some(why) = mapping_problem(m, profile)
+    {
+        return Err(fail(
+            codes::INVALID_PROFILE_MAPPING,
+            format!("Eşleme geçersiz: {why}"),
+            "mapping",
+        ));
+    }
+    Ok(found)
+}
+
+/// The mapping of a command's input (`mapping`, else the project's `mapping_name`) as it is, not yet held for a profile.
+pub(crate) fn mapping_found(
+    mapping: Option<&ProfileMapping>,
+    mapping_name: Option<&str>,
+    shelf: Shelf<'_>,
+) -> Result<Option<ProfileMapping>, Stop> {
     let found: Option<ProfileMapping> = match (mapping, mapping_name) {
         (Some(m), _) => Some(m.clone()),
         (None, Some(n)) => match crate::profile_files::load_mapping(shelf, n) {
@@ -167,15 +186,6 @@ pub(crate) fn mapping_for(
         },
         (None, None) => None,
     };
-    if let Some(m) = &found
-        && let Some(why) = mapping_problem(m, profile)
-    {
-        return Err(fail(
-            codes::INVALID_PROFILE_MAPPING,
-            format!("Eşleme geçersiz: {why}"),
-            "mapping",
-        ));
-    }
     Ok(found)
 }
 

@@ -9,7 +9,8 @@
 //! are taken out of it again with a question (`cad.profiles.remove`). A mapping makes the profile
 //! read with the institution's layer, field and code names (check and Uygula work through it; nothing is renamed). A
 //! profile with later releases offers its data migration (`cad.profiles.migrate`): the release the data is at, what the
-//! steps would do, and after it the values that did not fit.
+//! steps would do, and after it the values that did not fit. Kurum adları ([`crate::data_profile_names`]) shows the
+//! fields' names in the institution by the mapping and a form of names, and writes the form into the mapping.
 
 use std::path::PathBuf;
 
@@ -32,6 +33,7 @@ use kentos_ui::widget::{
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
+use crate::data_profile_names::{self as name_page, NameForm, Names, Page};
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
@@ -99,9 +101,11 @@ pub struct Window {
     /// The profile's name: a built-in's or a file's of the project.
     pub profile: String,
     /// The mapping's name the profile is read through, when one is chosen.
-    mapping: Option<String>,
+    pub(crate) mapping: Option<String>,
     /// The built-in profiles and the project's files, read again with the findings.
-    listed: Vec<ProfileListed>,
+    pub(crate) listed: Vec<ProfileListed>,
+    /// The Kurum adları page.
+    pub(crate) names: Names,
     /// The release the data is at: where a migration starts.
     from: u32,
     /// İçe aktar writes over a file of the same name.
@@ -161,6 +165,12 @@ impl Window {
         self.removing.is_some()
     }
 
+    /// The findings as the window holds them (test code).
+    #[cfg(test)]
+    pub(crate) fn report_for_test(&self) -> Option<&ProfilesReport> {
+        self.report.as_ref().ok()
+    }
+
     /// The chosen profile or mapping, when the drawing carries it.
     fn carried(&self, kind: ProfileFileKind) -> Option<&str> {
         let name = match kind {
@@ -198,6 +208,15 @@ pub enum Event {
     Removed(bool),
     /// The data moved to the profile's release.
     Migrate,
+    /// Bulgular or Kurum adları chosen.
+    Page(Page),
+    /// The form the names are read with.
+    NamesForm(NameForm),
+    NamesAscii(bool),
+    /// A name's row pressed: its problem said.
+    NamesPick(usize),
+    /// Biçimi eşlemeye yaz.
+    NamesWrite,
 }
 
 fn msg(event: Event) -> Message {
@@ -264,13 +283,14 @@ impl App {
             migration: Err(String::new()),
             last: None,
             chosen: None,
+            names: Names::default(),
         });
         self.dialog = Some(Dialog::DataProfile);
         self.refresh_profile();
     }
 
     /// The open drawing's own file, an absolute path: the project's `profiller` folder is beside it.
-    fn profile_drawing(&self) -> Option<String> {
+    pub(crate) fn profile_drawing(&self) -> Option<String> {
         let path = self.document.as_ref()?.path.as_ref()?;
         std::path::absolute(path)
             .ok()
@@ -355,6 +375,12 @@ impl App {
         w.report = report;
         w.preview = preview;
         w.migration = migration;
+        let read = self.data_profile_names_read();
+        if let Some(w) = self.data_profile.as_mut() {
+            let rows = read.as_ref().map_or(0, |a| a.rows.len());
+            w.names.chosen = w.names.chosen.filter(|i| *i < rows);
+            w.names.answer = read;
+        }
     }
 
     pub(crate) fn data_profile_event(&mut self, event: Event) -> Task<Message> {
@@ -457,6 +483,20 @@ impl App {
             Event::Migrate => {
                 self.migrate_data();
             }
+            Event::Page(page) => {
+                w.names.page = page;
+                return Task::none();
+            }
+            Event::NamesForm(form) => {
+                w.names.form = form;
+                w.names.chosen = None;
+            }
+            Event::NamesAscii(on) => w.names.ascii = on,
+            Event::NamesPick(i) => {
+                w.names.chosen = Some(i);
+                return Task::none();
+            }
+            Event::NamesWrite => self.data_profile_write_form(),
         }
         self.refresh_profile();
         Task::none()
@@ -797,11 +837,17 @@ impl App {
             .push(self.profile_pickers(w))
             .push(label::caption(about))
             .push(label::caption(basis))
-            .push(words::summary(lines))
-            .push(words::field("Bulgular", table, Some(hint)))
-            .push(words::summary(preview));
-        if let Some(m) = migration {
-            body = body.push(m);
+            .push(Segmented::new(Page::ALL, w.names.page, |p| msg(Event::Page(p))));
+        if w.names.page == Page::Names {
+            body = body.push(self.data_profile_names_part(&w.names));
+        } else {
+            body = body
+                .push(words::summary(lines))
+                .push(words::field("Bulgular", table, Some(hint)))
+                .push(words::summary(preview));
+            if let Some(m) = migration {
+                body = body.push(m);
+            }
         }
         let window = Frame::new(PROFILE_TITLE)
             .scroll(body)
@@ -1027,6 +1073,16 @@ impl App {
                 .find(|k| k.to_string() == item)
                 .map(|k| msg(Event::Keep(k))),
             Control::Check(OVERWRITE, on) => Some(msg(Event::Overwrite(on))),
+            Control::Check(name_page::ASCII, on) => Some(msg(Event::NamesAscii(on))),
+            Control::Press(name_page::WRITE) => Some(msg(Event::NamesWrite)),
+            Control::Pick(name_page::FORM_LIST, item) => NameForm::ALL
+                .into_iter()
+                .find(|f| f.to_string() == item)
+                .map(|f| msg(Event::NamesForm(f))),
+            Control::Pick("Sayfa", item) => Page::ALL
+                .into_iter()
+                .find(|p| p.to_string() == item)
+                .map(|p| msg(Event::Page(p))),
             Control::Pick(PROFILE_LIST, item) => w
                 .profiles()
                 .iter()

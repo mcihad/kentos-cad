@@ -242,6 +242,7 @@ mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
 mod data_profile;
+mod data_profile_names;
 mod subnetworks_window;
 mod source_status;
 mod source_trouble;
@@ -650,7 +651,7 @@ mod multipart_scenes;
 mod navigation;
 mod navigation_cards;
 #[cfg(test)]
-mod netcad_names_tests;
+mod typed_names_tests;
 #[cfg(test)]
 mod nurbs_scenes;
 mod object_info;
@@ -725,6 +726,8 @@ mod settings_view;
 mod address_compare_scenes;
 #[cfg(test)]
 mod data_profile_tests;
+#[cfg(test)]
+mod data_profile_names_tests;
 #[cfg(test)]
 mod profile_scenes;
 #[cfg(test)]

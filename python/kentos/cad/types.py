@@ -4384,6 +4384,64 @@ MosaicResolutionName = Literal["highest", "lowest", "average"]
 """The names of :class:`MosaicResolution`, for a plain string."""
 
 
+class NameCase(_StrEnum):
+    """How the words of a name are joined and cased.
+
+    - ``lowerCamelCase``: `kapiNo`: the first word small, every later word with a capital first letter; a word of capitals only (two
+    - ``upperSnakeCase``: `KAPI_NO`: every word in capitals, joined by `_`.
+    """
+    LOWER_CAMEL_CASE = "lowerCamelCase"
+    UPPER_SNAKE_CASE = "upperSnakeCase"
+
+
+NameCaseName = Literal["lowerCamelCase", "upperSnakeCase"]
+"""The names of :class:`NameCase`, for a plain string."""
+
+
+class NameLetters(_StrEnum):
+    """What becomes of the Turkish letters.
+
+    - ``keep``: Kept, cased the Turkish way (i ↔ İ, ı ↔ I).
+    - ``ascii``: ç, ğ, ı, İ, ö, ş, ü (and â, î, û) written c, g, i, I, o, s, u; any other letter beyond ASCII cannot be spelled.
+    """
+    KEEP = "keep"
+    ASCII = "ascii"
+
+
+NameLettersName = Literal["keep", "ascii"]
+"""The names of :class:`NameLetters`, for a plain string."""
+
+
+class NameProblem(_StrEnum):
+    """What is wrong with a field's name in the institution.
+
+    - ``unfit``: The form cannot spell the name: the mapping must write it.
+    - ``clash``: Another field of the class falls on the same name.
+    """
+    UNFIT = "unfit"
+    CLASH = "clash"
+
+
+NameProblemName = Literal["unfit", "clash"]
+"""The names of :class:`NameProblem`, for a plain string."""
+
+
+class NameSource(_StrEnum):
+    """Where a field's name in the institution comes from.
+
+    - ``profile``: The profile's own name: no mapping names it and no form is given.
+    - ``form``: The mapping's form spelled it.
+    - ``mapping``: The mapping writes it itself (`fields`).
+    """
+    PROFILE = "profile"
+    FORM = "form"
+    MAPPING = "mapping"
+
+
+NameSourceName = Literal["profile", "form", "mapping"]
+"""The names of :class:`NameSource`, for a plain string."""
+
+
 class NetworkConnect(_StrEnum):
     """Where edges connect (docs/adr/0209 §3).
 
@@ -57479,6 +57537,26 @@ class MappingField(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MappingNames(_Model):
+    """A mapping's form for the names it does not write itself."""
+    case: NameCase | NameCaseName
+    letters: NameLetters | NameLettersName = NameLetters.KEEP
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["case"] = _enum_out(self.case)
+        out["letters"] = _enum_out(self.letters)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MappingNames:
+        return cls(
+            case=_enum_in(NameCase, data["case"]),
+            letters=_enum_in(NameLetters, data["letters"]) if "letters" in data else NameLetters.KEEP,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MarkReference(_Model):
     """A mark as `cad.viewmarks.references` lists it.
     Attributes:
@@ -75894,6 +75972,8 @@ class ProfileMapping(_Model):
         version: Unit: count.
         name: Small letters, digits and `-`; the file's name.
         profile: The name of the profile it is for.
+        classes: Empty only with `names`: the form alone, every class at the profile's layer path.
+        names: The form of the names of the fields the mapping does not write itself (docs/adr/5180); none: the profile's.
     """
     format: str
     version: int
@@ -75902,6 +75982,7 @@ class ProfileMapping(_Model):
     profile: str
     classes: list[MappingClass]
     description: str | Unset = UNSET
+    names: MappingNames | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -75913,6 +75994,8 @@ class ProfileMapping(_Model):
         out["classes"] = [e0.to_json() for e0 in self.classes]
         if self.description is not UNSET:
             out["description"] = self.description
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else self.names.to_json()
         return out
 
     @classmethod
@@ -75925,6 +76008,7 @@ class ProfileMapping(_Model):
             profile=data["profile"],
             classes=[MappingClass.from_json(e0) for e0 in data["classes"]],
             description=data.get("description", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else MappingNames.from_json(data["names"]),
         )
 
 
@@ -75955,6 +76039,98 @@ class ProfileMigration(_Model):
             to=data["to"],
             title=data["title"],
             steps=[MigrationStep.from_json(e0) for e0 in data["steps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileNameRow(_Model):
+    """A profile field and its name in the institution.
+    Attributes:
+        class_: The profile's class id and title.
+        field: The profile's field name.
+        name: The field's name in the institution; empty when the form cannot spell it.
+        message: The problem in words, with what to do.
+    """
+    class_: str
+    class_title: str
+    field: str
+    name: str
+    source: NameSource | NameSourceName
+    message: str | None | Unset = UNSET
+    problem: NameProblem | NameProblemName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["classTitle"] = self.class_title
+        out["field"] = self.field
+        out["name"] = self.name
+        out["source"] = _enum_out(self.source)
+        if self.message is not UNSET:
+            out["message"] = self.message
+        if self.problem is not UNSET:
+            out["problem"] = None if self.problem is None else _enum_out(self.problem)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileNameRow:
+        return cls(
+            class_=data["class"],
+            class_title=data["classTitle"],
+            field=data["field"],
+            name=data["name"],
+            source=_enum_in(NameSource, data["source"]),
+            message=data.get("message", UNSET),
+            problem=UNSET if "problem" not in data else None if data["problem"] is None else _enum_in(NameProblem, data["problem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileNames(_Model):
+    """Output of `cad.profiles.names`.
+    Attributes:
+        profile: The profile's name.
+        renamed: Fields whose name in the institution is not the profile's, and that have no problem. Unit: count.
+        unfit: Fields the form cannot spell. Unit: count.
+        clashes: Fields that fall on another field's name. Unit: count.
+        holds: Whether every field has a name of its own: the mapping with this form holds.
+        mapping: The mapping's name, when one is read.
+        names: The form the names were read with, when there is one.
+    """
+    profile: str
+    rows: list[ProfileNameRow]
+    renamed: int
+    unfit: int
+    clashes: int
+    holds: bool
+    mapping: str | None | Unset = UNSET
+    names: MappingNames | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["renamed"] = self.renamed
+        out["unfit"] = self.unfit
+        out["clashes"] = self.clashes
+        out["holds"] = self.holds
+        if self.mapping is not UNSET:
+            out["mapping"] = self.mapping
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else self.names.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileNames:
+        return cls(
+            profile=data["profile"],
+            rows=[ProfileNameRow.from_json(e0) for e0 in data["rows"]],
+            renamed=data["renamed"],
+            unfit=data["unfit"],
+            clashes=data["clashes"],
+            holds=data["holds"],
+            mapping=data.get("mapping", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else MappingNames.from_json(data["names"]),
         )
 
 
@@ -77087,6 +77263,52 @@ class ProfilesMigrated(_Model):
             objects=data["objects"],
             revision=data["revision"],
             mapping=data.get("mapping", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesNames(_Model):
+    """Input of `cad.profiles.names` v1 (“Kurumdaki alan adları”): every field of the profile with its name in the
+    institution, where it comes from (the profile, the mapping's form, the mapping itself) and what is wrong with it; it
+    writes nothing. `names` previews another form than the mapping's own (without a mapping, the form alone). Refusals:
+    the profile's (`unknown_profile`, `invalid_profile`) and the mapping's (`unknown_mapping`, `invalid_profile_mapping`
+    for anything but its names: those are said row by row).
+    Attributes:
+        drawing: The open drawing's own file, an absolute path: the project's `profiller` folder is beside it.
+        names: The form to read the names with instead of the mapping's own.
+    """
+    drawing: str | None | Unset = UNSET
+    mapping: ProfileMapping | None | Unset = UNSET
+    mapping_name: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    names: MappingNames | None | Unset = UNSET
+    profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.mapping is not UNSET:
+            out["mapping"] = None if self.mapping is None else self.mapping.to_json()
+        if self.mapping_name is not UNSET:
+            out["mappingName"] = self.mapping_name
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else self.names.to_json()
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesNames:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
+            mapping_name=data.get("mappingName", UNSET),
+            name=data.get("name", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else MappingNames.from_json(data["names"]),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
         )
 
 
@@ -139946,6 +140168,7 @@ __all__ = [
     "MappingCode",
     "MappingCodes",
     "MappingField",
+    "MappingNames",
     "MarkReference",
     "MatchProperty",
     "MatchPropertyName",
@@ -140057,6 +140280,14 @@ __all__ = [
     "MoveSheetPaperOp",
     "MoveTextDimensionEdit",
     "MoveTransform",
+    "NameCase",
+    "NameCaseName",
+    "NameLetters",
+    "NameLettersName",
+    "NameProblem",
+    "NameProblemName",
+    "NameSource",
+    "NameSourceName",
     "NamedFont",
     "NamedKnownPoint",
     "NamedPaperPlotStyleKey",
@@ -140763,6 +140994,8 @@ __all__ = [
     "ProfileMapWorkOperation",
     "ProfileMapping",
     "ProfileMigration",
+    "ProfileNameRow",
+    "ProfileNames",
     "ProfilePoint",
     "ProfileProposed",
     "ProfilePvi",
@@ -140792,6 +141025,7 @@ __all__ = [
     "ProfilesListed",
     "ProfilesMigrate",
     "ProfilesMigrated",
+    "ProfilesNames",
     "ProfilesPropose",
     "ProfilesQueried",
     "ProfilesQuery",

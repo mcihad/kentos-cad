@@ -217,6 +217,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   dizisi bölümü, Hareketler | Doğru ve eşikler tablosu.
 - MAP-18 / ADR 4820: web'in atlas PDF'inde sayfaların görünüş özeti (`look`) ve değişen sayfanın `changes[].look`'u
   (atlas/v1/cases.json'un 3 yeni durumu); web Atlası PDF yap'ın iletisi.
+- MAP-17 / ADR 5180: web'in eşleme okuyucusunda `names` (lowerCamelCase, upperSnakeCase; letters) ve
+  `cad.profiles.names` (cad.profiles.names.json'un 32 durumu); web Veri profili'nde Kurum adları ve Biçimi eşlemeye yaz.
 - MAP-17 / ADR 4800: dxf-wasm yeniden derlenince `dxf.wasm.test.ts`'in blocks.dxf baytları (Kol_boyu ATTDEF'inin
   `tagname` kaydı) ve web'in DXF okuyucusunda tanımın adı.
 - MAP-16 / ADR 4780: web'in `cad.pipes.check` işleyicisinde `diameter.outer`, `wallMismatch` ve `rules`

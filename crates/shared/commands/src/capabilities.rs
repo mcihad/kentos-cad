@@ -5070,6 +5070,13 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    // Kurumdaki alan adları (plan/map-cad.md MAP-17, docs/adr/5180): read-only.
+    Entry {
+        id: "cad.profiles.names",
+        refusals: &[&["unknown_profile", "invalid_profile", "unknown_mapping", "invalid_profile_mapping"]],
+        warnings: &[],
+        targets: none,
+    },
     // Katalog geçiş raporu (plan/map-cad.md MAP-04, docs/adr/4940): read-only.
     Entry {
         id: "cad.profiles.compare",

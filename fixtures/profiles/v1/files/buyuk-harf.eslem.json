@@ -1,0 +1,12 @@
+{
+  "format": "kentos.profile-mapping",
+  "version": 1,
+  "name": "buyuk-harf",
+  "title": "Büyük harfli adlar",
+  "profile": "tucbs-temel",
+  "names": {
+    "case": "upperSnakeCase",
+    "letters": "ascii"
+  },
+  "classes": []
+}
