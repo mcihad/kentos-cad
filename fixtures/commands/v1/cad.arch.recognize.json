@@ -7613,6 +7613,627 @@
    ]
   },
   {
+   "name": "duvar ucundaki kapı: kapıyla biten bölme karşı duvarın eksenine uzar, kapı uzadığı yerde",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ofis planı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "DUVAR",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "KAPI",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "pencere",
+      "name": "PENCERE",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kolon",
+      "name": "KOLON",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aks",
+      "name": "AKS",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "sinir",
+        "name": "Sınır",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": -0.1,
+       "y": -0.1
+      },
+      "b": {
+       "x": 4.1,
+       "y": -0.1
+      }
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0.1,
+       "y": 0.1
+      },
+      "b": {
+       "x": 2.45,
+       "y": 0.1
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.55,
+       "y": 0.1
+      },
+      "b": {
+       "x": 3.9,
+       "y": 0.1
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": -0.1,
+       "y": 3.1
+      },
+      "b": {
+       "x": 4.1,
+       "y": 3.1
+      }
+     },
+     {
+      "kind": "line",
+      "id": 5,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0.1,
+       "y": 2.9
+      },
+      "b": {
+       "x": 3.9,
+       "y": 2.9
+      }
+     },
+     {
+      "kind": "line",
+      "id": 6,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": -0.1,
+       "y": -0.1
+      },
+      "b": {
+       "x": -0.1,
+       "y": 3.1
+      }
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 0.1,
+       "y": 0.1
+      },
+      "b": {
+       "x": 0.1,
+       "y": 2.9
+      }
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 4.1,
+       "y": -0.1
+      },
+      "b": {
+       "x": 4.1,
+       "y": 3.1
+      }
+     },
+     {
+      "kind": "line",
+      "id": 9,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 3.9,
+       "y": 0.1
+      },
+      "b": {
+       "x": 3.9,
+       "y": 2.9
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.45,
+       "y": 0.1
+      },
+      "b": {
+       "x": 2.45,
+       "y": 2.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 11,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.55,
+       "y": 0.1
+      },
+      "b": {
+       "x": 2.55,
+       "y": 2.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 12,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+       "x": 2.45,
+       "y": 2.0
+      },
+      "b": {
+       "x": 2.55,
+       "y": 2.0
+      }
+     },
+     {
+      "kind": "arc",
+      "id": 13,
+      "layerId": "kapi",
+      "attrs": {},
+      "c": {
+       "x": 2.55,
+       "y": 2.0
+      },
+      "r": 0.9,
+      "a0": 1.5707963267948966,
+      "a1": 3.141592653589793
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "e1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "e2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "e3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "e4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "e5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "e6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "e7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "e8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "e9"
+    },
+    {
+     "op": "captureUid",
+     "id": 10,
+     "as": "e10"
+    },
+    {
+     "op": "captureUid",
+     "id": 11,
+     "as": "e11"
+    },
+    {
+     "op": "captureUid",
+     "id": 12,
+     "as": "e12"
+    },
+    {
+     "op": "captureUid",
+     "id": 13,
+     "as": "e13"
+    },
+    {
+     "op": "execute",
+     "result": {
+      "status": "completed",
+      "output": {
+       "walls": [
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18"
+       ],
+       "doors": 1,
+       "windows": 0,
+       "bare": 0,
+       "revision": "$current",
+       "openings": [
+        "$uidOf:19"
+       ],
+       "removed": [
+        "$uid:e1",
+        "$uid:e2",
+        "$uid:e3",
+        "$uid:e4",
+        "$uid:e5",
+        "$uid:e6",
+        "$uid:e7",
+        "$uid:e8",
+        "$uid:e9",
+        "$uid:e10",
+        "$uid:e11",
+        "$uid:e12",
+        "$uid:e13"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ],
+      "entities": {
+       "14": {
+        "kind": "wall",
+        "id": 14,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 4.0,
+          "y": 0.0
+         }
+        ],
+        "width": 0.2,
+        "justify": "center"
+       },
+       "15": {
+        "kind": "wall",
+        "id": 15,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 3.0
+         },
+         {
+          "x": 4.0,
+          "y": 3.0
+         }
+        ],
+        "width": 0.2,
+        "justify": "center"
+       },
+       "16": {
+        "kind": "wall",
+        "id": 16,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.0,
+          "y": 3.0
+         }
+        ],
+        "width": 0.2,
+        "justify": "center"
+       },
+       "17": {
+        "kind": "wall",
+        "id": 17,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 4.0,
+          "y": 0.0
+         },
+         {
+          "x": 4.0,
+          "y": 3.0
+         }
+        ],
+        "width": 0.2,
+        "justify": "center"
+       },
+       "18": {
+        "kind": "wall",
+        "id": 18,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 2.5,
+          "y": 0.0
+         },
+         {
+          "x": 2.5,
+          "y": 3.0
+         }
+        ],
+        "width": 0.1,
+        "justify": "center"
+       },
+       "19": {
+        "kind": "opening",
+        "id": 19,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:18",
+        "at": 2.45,
+        "width": 0.8999999999999999,
+        "form": "door",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 2.45,
+          "y": 2.0
+         },
+         {
+          "x": 2.55,
+          "y": 2.0
+         },
+         {
+          "x": 2.45,
+          "y": 2.9
+         },
+         {
+          "x": 2.55,
+          "y": 2.9
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09,
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:7",
+       "$uidOf:8",
+       "$uidOf:9",
+       "$uidOf:10",
+       "$uidOf:11",
+       "$uidOf:12",
+       "$uidOf:13"
+      ]
+     }
+    }
+   ]
+  },
+  {
    "name": "kolon: kolonda duran duvarlar kolondan geçer ve köşede buluşur; kolon çevresi dolu kolon olur",
    "setup": {
     "format": "kentos.document",

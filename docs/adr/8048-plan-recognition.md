@@ -1,6 +1,7 @@
 # ADR 8048: Planı tanı — patlatılmış DWG/DXF planından duvar ve açıklık
 
-- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon, blok ve duvar üstü açıklık adımları yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
+- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon, blok, duvar üstü açıklık ve duvar ucundaki kapı adımları yapıldı (11
+  Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
   (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2), masaüstü aracı Mimari ›
   Duvar ▾ › Planı tanı (§4); bölüm binasının ofis planı tanımla birebir okunuyor, gerçek pencerede kabul edildi
   (Doğrulama); kolon katmanının dikdörtgeni ve dairesi kolon olur (§5); bloklar yerinde okunur (§6). Açık: L ve
@@ -64,6 +65,10 @@ Uzunluklar metre; ayarlar en ince duvar 0,05 m, en kalın 0,60 m, en geniş aç�
 - **Duvarlar buluşur.** Duvar ucu başka bir duvarın eksenine yarı kalınlıklarının toplamı (ya da durduğu kolonun
   ötesi) kadar yakınsa ona uzar: T'de eksenine, köşede ikisi de kesişime (15°'den geniş açıda); birleşimi ADR 0340 §2
   çözer. Duvar kolondan geçer (bölüm binasında olduğu gibi).
+- **Duvar ucundaki kapı.** Hiçbir duvara ulaşmayan bir uç, doğrultusunda ilk karşılaştığı duvarın yüzüne 0,30 m ile en
+  geniş açıklık arasında bir boşluk bırakıyorsa ve o boşlukta kapı yayı ya da pencere çizgileri varsa (koridor
+  köşesindeki kapı) o duvarın eksenine uzar (T), açıklık uzadığı kısma konur: KentOS'ta açıklık duvarının içindedir.
+  Kanıt yoksa uç olduğu yerde kalır (duvarla duvar arasındaki kapısız geçiş).
 - **Alınan kaynak:** duvar çizgisi bir duvarın bandında (uçta en kalın duvarın yarısı kadar ötesiyle: köşenin dış
   yüzü), kapı ve pencere çizgisi ve yayı açıklığının bölgesinde (tek katmanda çizilmiş planda duvar katmanındaki kanat
   da); kaynağın bütün parçaları alındıysa kaynak alınmıştır. Kolon §5'te.
@@ -149,6 +154,8 @@ katmanda sayılır; açılamayan blok "N blok açılamadı" diye söylenir.
   duvarın doğrultusunda döndürülmüş, dış tarafa göre aynalanmış pencere, parçalar 0 katmanında; DXF içe aktar blokları
   blok olarak getirir): tanım yine mikrometresine kadar aynı (8 duvar, 7 açıklık, menteşe ve yanlar, 8 kolon); 56 duvar
   çizgisi ve 15 blok silinir, 23 nesne kalır. 43 ortak durumun biri bloklar (yarım dönüp aynalanmış pencere bloğu).
+- Duvar ucundaki kapı: bir çekirdek testi (2,0 m'de biten 0,10 m bölme kuzey duvarın eksenine, 3,0 m'ye uzar, kapı
+  2,00–2,90 m) ve bir ortak durum (45).
 - Duvarın üstüne çizilmiş açıklık: 2 çekirdek testi (dört pencere çizgisi pencere, tek çizgi değil; kasalı kapı yayı
   1,00–1,90 m kapı, menteşe başta, sola) ve bir ortak durum (44).
 - Üretici iki dosyayı her koşuda aynı yazar: ezdxf'in CLASSES sırası koşunun karma tohumuyla değişiyordu (adlarına
@@ -170,6 +177,5 @@ katmanda sayılır; açılamayan blok "N blok açılamadı" diye söylenir.
 
 - L ve düzensiz kolon (ADR 0725 §3'ün L kolonu), duvar stilinin ölçülen kalınlıktan seçilmesi (Chief Architect'in
   25 mm'si) ve bileşen çizgilerinden katmanlar.
-- Eğri duvar (eş merkezli yaylar),
-  duvar ucunda dikey duvara dayanan kapı, blok niteliğindeki kapı numarasının açıklığa geçmesi, merdiven ve donatı.
+- Eğri duvar (eş merkezli yaylar), blok niteliğindeki kapı numarasının açıklığa geçmesi, merdiven ve donatı.
 - Gerçek bir ofis DWG'siyle tadilat örneği (ADV-25'in ilk kabulü).

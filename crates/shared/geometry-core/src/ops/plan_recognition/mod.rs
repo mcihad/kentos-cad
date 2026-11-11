@@ -19,7 +19,9 @@
 //!   them (two at least, overlapping) or a door's swing about a point of the wall, its leaf closing along it, is an
 //!   opening drawn over the wall (a block masking it with a wipeout).
 //! - **Walls meet.** A wall's end within reach of another wall's line (their half widths, or the column it stops at)
-//!   runs to it: to the other's line in a tee, both to their crossing at a corner; ADR 0340 §2 then joins them.
+//!   runs to it: to the other's line in a tee, both to their crossing at a corner; ADR 0340 §2 then joins them. An end
+//!   short of another wall by a door's or a window's gap (its swing or its lines there) runs to it too, the opening in
+//!   what it crossed.
 //! - **What is taken.** A wall's line within a wall, a door's or window's line and arc within its opening (a wall's
 //!   line there too: a plan drawn on one layer); a source is taken when all of it is. A column is not made yet.
 
@@ -1008,7 +1010,8 @@ pub fn recognize(lines: &Lines, o: &Options) -> Recognized {
     for d in &mut drafts {
         plan.over(d);
     }
-    meet(&mut drafts, &plan.frames, &lines.rings, o);
+    let joined = meet(&mut drafts, &plan.frames, &lines.rings, o);
+    ends_at_openings(&mut drafts, &joined, &mut plan);
     drafts.sort_by(|a, b| a.first.cmp(&b.first).then(a.t0.total_cmp(&b.t0)));
     let mut out = Recognized::default();
     for (w, d) in drafts.iter().enumerate() {
@@ -1042,7 +1045,7 @@ pub fn recognize(lines: &Lines, o: &Options) -> Recognized {
 
 /// Walls running to the walls they meet: an end within reach of another wall's line runs to it; at a corner both
 /// run to their crossing.
-fn meet(drafts: &mut [Draft], frames: &[Frame], rings: &[Ring], o: &Options) {
+fn meet(drafts: &mut [Draft], frames: &[Frame], rings: &[Ring], o: &Options) -> Vec<[bool; 2]> {
     let turn = sin(JOIN_ANGLE * PI / 180.0);
     // How far past a point a column it lies in reaches along `dir`.
     let column_reach = |p: Vec2, dir: Vec2| -> f64 {
@@ -1120,6 +1123,10 @@ fn meet(drafts: &mut [Draft], frames: &[Frame], rings: &[Ring], o: &Options) {
             to[j][e] = Some(x);
         }
     }
+    let joined = to
+        .iter()
+        .map(|e| [e[0].is_some(), e[1].is_some()])
+        .collect();
     for (d, ends) in drafts.iter_mut().zip(to) {
         let f = frames[d.class];
         if let Some(x) = ends[0] {
@@ -1127,6 +1134,71 @@ fn meet(drafts: &mut [Draft], frames: &[Frame], rings: &[Ring], o: &Options) {
         }
         if let Some(x) = ends[1] {
             d.t1 = f.t(x);
+        }
+    }
+    joined
+}
+
+/// A wall ending short of another with a door or a window between them (a door in a corridor's corner): it runs on to
+/// the other's line, the opening in what it ran across (KentOS keeps an opening inside its wall). An end that met no
+/// wall is looked at: the nearest wall its line meets past it, the gap to that wall's face between 0.30 m and
+/// `max_opening`, its line crossing that wall's inside.
+fn ends_at_openings(drafts: &mut [Draft], joined: &[[bool; 2]], plan: &mut Plan<'_>) {
+    let o = *plan.o;
+    let turn = sin(JOIN_ANGLE * PI / 180.0);
+    for i in 0..drafts.len() {
+        for end in 0..2 {
+            if joined[i][end] {
+                continue;
+            }
+            let d = &drafts[i];
+            let f = plan.frames[d.class];
+            let (t, dir) = if end == 0 {
+                (d.t0, Vec2::new(-f.u.x, -f.u.y))
+            } else {
+                (d.t1, f.u)
+            };
+            let p = f.at(t, d.mid());
+            let mut best: Option<(f64, usize, Vec2)> = None;
+            for (j, h) in drafts.iter().enumerate() {
+                let hf = plan.frames[h.class];
+                let s = cross(dir, hf.u);
+                if j == i || s.abs() < turn {
+                    continue;
+                }
+                let q = hf.at(h.t0, h.mid());
+                let delta = cross(sub(q, p), hf.u) / s;
+                let gap = delta - h.width() / 2.0;
+                if gap < BARE_MIN - o.tol || gap > o.max_opening + o.tol {
+                    continue;
+                }
+                let x = Vec2::new(p.x + dir.x * delta, p.y + dir.y * delta);
+                let tx = hf.t(x);
+                if tx <= h.t0 + d.width() / 2.0 || tx >= h.t1 - d.width() / 2.0 {
+                    continue;
+                }
+                if best.as_ref().is_none_or(|b| delta < b.0) {
+                    best = Some((delta, j, x));
+                }
+            }
+            let Some((delta, j, x)) = best else { continue };
+            let gap = delta - drafts[j].width() / 2.0;
+            let (g0, g1) = if end == 0 { (t - gap, t) } else { (t, t + gap) };
+            let (class, lo, hi) = (d.class, d.lo, d.hi);
+            let found = plan
+                .door(&f, lo, hi, g0, g1)
+                .or_else(|| plan.window(&f, lo, hi, g0, g1));
+            if let Some(found) = found {
+                let d = &mut drafts[i];
+                debug_assert_eq!(d.class, class);
+                if end == 0 {
+                    d.t0 = f.t(x);
+                } else {
+                    d.t1 = f.t(x);
+                }
+                d.openings.push(found);
+                d.openings.sort_by(|a, b| a.t0.total_cmp(&b.t0));
+            }
         }
     }
 }

@@ -10,7 +10,8 @@ window's lines, a column's outline — and says what `cad.arch.recognize` makes 
   ignored); when no layer is a wall's, a layer whose name says nothing ("Çizim") is;
 - a wall's two faces at most `maxWidth` apart make it; it runs between its faces' middle, west to east or south to
   north, as wide as its faces are apart, on its first line's layer (or `wallLayerId`); it runs to the walls it meets
-  (to their line in a tee, both to their crossing at a corner) and through the columns it stops at;
+  (to their line in a tee, both to their crossing at a corner) and through the columns it stops at; a wall ending
+  short of another by a door's gap (its swing there) runs on to the other's line, the door in what it crossed;
 - a gap in it: a face running on is a joint; an arc about a jamb as wide as the gap a door (Kapı 80 under 0.85 m, else
   Kapı 90; two arcs about both jambs İki kanatlı kapı 140), hinged at that jamb, opening to the arc's side, its swing
   the arc's when not 90°; a window's lines along it a window (Pencere 120); nothing in it a bare opening (Boşluk 100)
@@ -435,6 +436,20 @@ def cases():
     walls = [wall(first + k, e, 0.1 if k == 4 else 0.2) for k, e in enumerate(ends)]
     out.append(case("bölme: iki duvara saplanan 0,10 m'lik bölme ikisinin de eksenine uzar; onlar kesintisiz geçer", p,
                     [done(p, walls, all_of(p))]))
+
+    # A partition ending at a door: it runs on to the north wall, the door in what it crossed.
+    p = Plan()
+    p.room(inner_south=[(2.45, 2.55)])
+    p.along_y(2.45, 0.1, 2.0)
+    p.along_y(2.55, 0.1, 2.0)
+    p.line((2.45, 2.0), (2.55, 2.0))
+    p.arc((2.55, 2.0), 0.9, 90.0, 90.0)
+    first = len(p.ents) + 1
+    ends = [SOUTH, NORTH, WEST, EAST, ((2.5, 0), (2.5, 3))]
+    walls = [wall(first + k, e, 0.1 if k == 4 else 0.2) for k, e in enumerate(ends)]
+    door = opening(first + 5, first + 4, ends[4], 2.0, 2.9, "kentos-kapi-90", width=0.1)
+    out.append(case("duvar ucundaki kapı: kapıyla biten bölme karşı duvarın eksenine uzar, kapı uzadığı yerde", p,
+                    [done(p, walls + [door], all_of(p))]))
 
     # Columns.
     p = Plan()

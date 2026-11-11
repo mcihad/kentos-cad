@@ -481,6 +481,8 @@
     katmanındaki parça yerleştirmenin rolüyle okunur; bütünüyle okunan blok silinir.
     Duvarın üstüne çizilmiş açıklık: yüzler sürerken aralarında örtüşen iki pencere çizgisi pencere; duvar bandında
     dönen, kanadı duvar boyunca kapanan kapı yayı kasalarına dek kapı (ADR 8048 §1).
+    Duvar ucundaki kapı: hiçbir duvara ulaşmayan uç, karşı duvara 0,30 m–en geniş açıklık arası boşlukta kapı yayı ya
+    da pencere çizgisi varsa o duvarın eksenine uzar, açıklık uzadığı yerde.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

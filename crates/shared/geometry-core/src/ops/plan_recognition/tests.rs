@@ -487,3 +487,34 @@ fn a_door_s_swing_over_a_wall_s_running_faces_opens_it_from_its_frames() {
     assert!(r.used.contains(&swing));
     assert_eq!(r.used.len(), d.sources);
 }
+
+#[test]
+fn a_partition_ending_at_a_door_runs_to_the_wall_beyond_it_with_the_door() {
+    let mut d = Draw::new();
+    // A 0.1 m partition at x 2.5 from the south wall to y 2.0; its door opens the 0.9 m to the north wall's face.
+    room(&mut d, &[], &[], &[(2.45, 2.55)], &[]);
+    d.along_y(2.45, 0.1, 2.0, &[]);
+    d.along_y(2.55, 0.1, 2.0, &[]);
+    d.line((2.45, 2.0), (2.55, 2.0), Role::Wall);
+    d.arc((2.55, 2.0), 0.9, 90.0, 90.0, Role::Door);
+    let r = recognize(&d.lines, &Options::default());
+    let mut want = ROOM.to_vec();
+    want.push((2.5, 0.0, 2.5, 3.0, 0.1));
+    want.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    assert!(near(&walls(&r), &want), "{:#?}", walls(&r));
+    let partition = r
+        .walls
+        .iter()
+        .position(|w| (w.a.x - 2.5).abs() < 1e-9)
+        .unwrap();
+    assert_eq!(r.openings.len(), 1, "{:#?}", r.openings);
+    let o = r.openings[0];
+    assert_eq!(
+        (o.wall, o.form, o.hand),
+        (partition, Form::Door, End::Start)
+    );
+    assert!(
+        (o.from - 2.0).abs() < 1e-9 && (o.to - 2.9).abs() < 1e-9,
+        "{o:?}"
+    );
+}
