@@ -9961,6 +9961,60 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Birleşme çizgisi ağı (plan/map-cad.md MAP-12, docs/adr/5260).
+        CommandDescriptor {
+            id: crate::CAD_ORTHOPHOTO_NETWORK.into(),
+            version: crate::CAD_ORTHOPHOTO_NETWORK_VERSION,
+            title: "Birleşme çizgisi ağı".into(),
+            summary: "İki ya da daha çok ortofotonun (images, 2–50; projenin sistemindeki rasterler) mozaik elemanlarını kurar: ayak izlerinin (footprints, aynı sırayla; alan ya da kapalı çoklu çizgi, düz kenarlı, dışbükey; verilmezse rasterlerin dört köşesi) birleşiminin her yeri, onu kaplayan görüntülerden ayak izinin merkezi (alan ağırlık merkezi) en yakın olana gider; eşitse önce verilene. Her görüntünün elemanı ayak izinden başkalarının daha yakın kısımları çıkarılarak bulunur; birleşme çizgileri elemanların ortak kenarlarıdır. \
+                      Cevapta her elemanın parçaları (dış halka saat yönünün tersine en güneydeki köşesinden; delikler), alanı, ayak izinin merkezi ve yazılınca kimliği; üç ya da daha çok elemanın buluştuğu düğümler (junctions: yeri ve görüntüleri; üçlü düğüm); kaplanan alan; notlar. Elemanlar alan olarak layer katmanına (verilmezse mozaik-elemanlari, yoksa aynı adımda açılır), öznitelikleri Görüntü ve Yöntem; tek geri alma adımı “Mozaik elemanları ağı”. \
+                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (images[k]); invalid_input (ikiden az ya da 50'den çok görüntü, bir görüntü iki kez, ayak izleri her görüntüye bir değil, dışbükey olmayan ya da alan kaplamayan ayak izi, her yeri başka görüntüye daha yakın olan görüntü); layer_not_found, layer_locked; invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["birlesmecizgisiagi".into(), "mozaikagi".into(), "seamnetwork".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OrthophotoNetwork>(),
+            output: schema::<crate::OrthophotoNetworkBuilt>(),
+            plan: Some(schema::<crate::OrthophotoNetworkBuilt>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Üç ortofotonun mozaik elemanları".into(),
+                input: json!({ "images": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"] }),
+                output: None,
+            }],
+        },
+        // Ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
+        CommandDescriptor {
+            id: crate::CAD_ORTHOPHOTO_FOOTPRINT.into(),
+            version: crate::CAD_ORTHOPHOTO_FOOTPRINT_VERSION,
+            title: "Ayak izi".into(),
+            summary: "Bir rasterin ayak izini piksellerinden çıkarır: NoData olmayan piksellerin (bantlarından biri NoData değilse geçerli; NoData yoksa her piksel) piksel kenarlarından dış sınırı, 4 komşulukla (köşeden değen pikseller ayrı parça), parçaları ve delikleriyle; hull ile bunun yerine geçerli piksellerin dışbükey zarfı (birleşme çizgisi ve ağ bunu ayak izi olarak alır). \
+                      Cevapta parçalar (dış halka saat yönünün tersine en güneydeki köşesinden; delikler), alan, okunan ve geçerli piksel sayısı, NoData değeri, katman ve yazılınca kimliği. Alan layer katmanına (verilmezse ayak-izleri, yoksa aynı adımda açılır), öznitelikleri Görüntü ve Yöntem; tek geri alma adımı “Ayak izi”. Göreli yollu raster dosyası için folder çizimin klasörüdür. \
+                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster); file_not_found, invalid_file_path, import_unreadable (görüntünün dosyası); invalid_input (25 milyondan çok piksel, her piksel NoData); layer_not_found, layer_locked; invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["ayakizi".into(), "footprint".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OrthophotoFootprint>(),
+            output: schema::<crate::OrthophotoFootprintBuilt>(),
+            plan: Some(schema::<crate::OrthophotoFootprintBuilt>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ortofotonun dışbükey ayak izi".into(),
+                input: json!({ "raster": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "hull": true }),
+                output: None,
+            }],
+        },
         // Mozaik birleşme çizgisi (plan/map-cad.md MAP-12, docs/adr/4700).
         CommandDescriptor {
             id: crate::CAD_ORTHOPHOTO_SEAMLINES.into(),
@@ -17356,6 +17410,8 @@ mod tests {
                     crate::CAD_POINTCLOUDS_PLACE => serde_json::from_value::<crate::PointCloudsPlace>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlines>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ORTHOPHOTO_NETWORK => serde_json::from_value::<crate::OrthophotoNetwork>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ORTHOPHOTO_FOOTPRINT => serde_json::from_value::<crate::OrthophotoFootprint>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetwork>(e.input.clone()).map(|_| ()),
@@ -18349,6 +18405,8 @@ mod tests {
                         crate::CAD_POINTCLOUDS_PLACE => serde_json::from_value::<crate::PointCloudsPlaced>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlinesBuilt>(output.clone()).map(|_| ()),
+                        crate::CAD_ORTHOPHOTO_NETWORK => serde_json::from_value::<crate::OrthophotoNetworkBuilt>(output.clone()).map(|_| ()),
+                        crate::CAD_ORTHOPHOTO_FOOTPRINT => serde_json::from_value::<crate::OrthophotoFootprintBuilt>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetworked>(output.clone()).map(|_| ()),

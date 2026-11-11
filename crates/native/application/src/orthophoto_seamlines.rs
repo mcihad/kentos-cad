@@ -87,7 +87,7 @@ fn asked(input: &OrthophotoSeamlines) -> Result<(), Stop> {
 }
 
 /// A raster of the input, checked: the entity.
-fn raster<'a>(doc: &'a Document, uid: &str, path: &str) -> Result<(Uuid, &'a RasterEntity), Stop> {
+pub(crate) fn raster<'a>(doc: &'a Document, uid: &str, path: &str) -> Result<(Uuid, &'a RasterEntity), Stop> {
     let uid = uid.trim();
     if !checks::is_uid_text(uid) {
         return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
@@ -113,7 +113,7 @@ fn raster<'a>(doc: &'a Document, uid: &str, path: &str) -> Result<(Uuid, &'a Ras
 }
 
 /// A footprint given: its one ring (an area without holes or parts, or a closed polyline), straight edges.
-fn footprint(doc: &Document, uid: &str, path: &str) -> Result<Vec<Pt>, Stop> {
+pub(crate) fn footprint(doc: &Document, uid: &str, path: &str) -> Result<Vec<Pt>, Stop> {
     let e = Uuid::parse_str(uid.trim())
         .ok()
         .and_then(|u| doc.slot_of(u))

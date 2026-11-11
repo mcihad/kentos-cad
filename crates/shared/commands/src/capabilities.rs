@@ -2578,6 +2578,20 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Birleşme çizgisi ağı ve ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
+    Entry {
+        id: "cad.orthophoto.network",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.orthophoto.footprint",
+        // The image's file: invalid_file_path, file_not_found, import_unreadable.
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
     // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
     Entry {
         id: "cad.readjustment.distribute",

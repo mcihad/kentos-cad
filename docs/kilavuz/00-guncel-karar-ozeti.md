@@ -734,6 +734,10 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Birleşme çizgisi ağı ve NoData'dan ayak izi (11 Kasım 2026; MAP-12, [ADR 5260](../../docs/adr/5260-seamline-network-and-footprint-from-nodata.md)).**
+  Yeni `cad.orthophoto.network` (2–50 ortofoto; her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın;
+  `junctions`) ve `cad.orthophoto.footprint` (NoData olmayan piksellerin sınırı, 4 komşuluk; `hull` dışbükey zarf).
+  Mozaik birleşme çizgisi › İki görüntü | Ağ | Ayak izi. CAD + CBS.
 - **Tarifin katmanının değer bileşimleri, kuralları, dizinleri ve formları; eksik alanlar (11 Kasım 2026; MAP-20, [ADR 5240](../../docs/adr/5240-recipe-layer-rules-forms-and-missing-fields.md)).**
   `road.project.graph`'ın tarifi katmanın `contingents`, `rules`, `indexes` ve formlarının taslağını (`forms`) taşır;
   `road.project.produce` eklediği katmana verir (form taslak, kimliği doluysa `-2`; `formsAdded`); `addFields` bulunan

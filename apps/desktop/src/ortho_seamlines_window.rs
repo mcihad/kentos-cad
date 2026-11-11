@@ -7,6 +7,9 @@
 //! them in one undo step and selects them, ready for Ortofoto karşılaştırması's Seçili mozaik elemanlarını al
 //! (docs/adr/4460).
 //!
+//! Docs/adr/5260: the kind above (İki görüntü | Ağ | Ayak izi) shows instead the network of the rasters ticked or a
+//! raster's footprint from its pixels (ortho_network_section.rs).
+//!
 //! ```text
 //! ┌ Mozaik birleşme çizgisi ────────────────────────────────────────────────────┐
 //! │ Ortofotolar        [dikis-a.tif · 10.0 cm ▾] [Yer değiştir] [dikis-b.tif ▾]  │
@@ -122,6 +125,8 @@ pub struct State {
     pub layer: String,
     pub show: Show,
     pub answer: Option<Result<OrthophotoSeamlinesBuilt, String>>,
+    /// Docs/adr/5260: the network's and the footprint's choices and plans.
+    pub net: crate::ortho_network_section::NetState,
 }
 
 #[derive(Clone, Debug)]
@@ -139,6 +144,8 @@ pub enum Event {
     Layer(String),
     Show(Show),
     Write,
+    /// Docs/adr/5260: the kind, the network and the footprint.
+    Net(crate::ortho_network_section::NetEvent),
     Close,
 }
 
@@ -222,8 +229,8 @@ impl App {
                 _ => None,
             })
             .collect();
-        if rasters.len() < 2 {
-            self.warn("Mozaik birleşme çizgisi: çizimde birleşme çizgisi kurulacak iki ortofoto (raster) yok; ikincisini ekleyin.");
+        if rasters.is_empty() {
+            self.warn("Mozaik birleşme çizgisi: çizimde ortofoto (raster) yok; önce ekleyin.");
             return Task::none();
         }
         let selected: Vec<String> = self.selection.ids().iter().filter_map(|s| doc.model.uid(*s).map(|u| u.to_string())).collect();
@@ -239,17 +246,29 @@ impl App {
         let layers: Vec<(String, String)> =
             doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
         let layer = if layers.iter().any(|(id, _)| id == SEAMLINE_LAYER) { SEAMLINE_LAYER.to_owned() } else { String::new() };
+        // Docs/adr/5260: one raster only: its footprint.
+        let lone = picked.len() < 2;
         self.ortho_seamlines = State {
-            rasters,
             first: picked[0].clone(),
-            second: picked[1].clone(),
+            second: picked.get(1).cloned().unwrap_or_default(),
+            net: crate::ortho_network_section::NetState {
+                mode: if lone { crate::ortho_network_section::Mode::Footprint } else { Default::default() },
+                ticked: rasters.iter().map(|(u, _)| u.clone()).collect(),
+                raster: picked[0].clone(),
+                ..Default::default()
+            },
+            rasters,
             layers,
             layer,
             step: 1.0,
             cell: 1.0,
             ..Default::default()
         };
-        self.ortho_seamlines_run();
+        if lone {
+            self.ortho_net_run();
+        } else {
+            self.ortho_seamlines_run();
+        }
         self.dialog = Some(Dialog::OrthoSeamlines);
         Task::none()
     }
@@ -326,6 +345,13 @@ impl App {
                 return Task::none();
             }
             Event::Write => return self.ortho_seamlines_write(),
+            Event::Net(e) => {
+                let back = matches!(e, crate::ortho_network_section::NetEvent::Mode(crate::ortho_network_section::Mode::Pair));
+                self.ortho_net_event(e);
+                if !back {
+                    return Task::none();
+                }
+            }
             Event::Close => {
                 self.dialog = None;
                 return Task::none();
@@ -446,8 +472,21 @@ impl App {
         .align_y(Center);
         // The plan takes the height the rest leaves (a resized or full screen window), at least a readable one; the
         // body scrolls in a short window and the footer keeps Kapat on the dialog's bottom edge.
+        let modes = Segmented::new(
+            [crate::ortho_network_section::Mode::Pair, crate::ortho_network_section::Mode::Network, crate::ortho_network_section::Mode::Footprint],
+            s.net.mode,
+            |v| msg(Event::Net(crate::ortho_network_section::NetEvent::Mode(v))),
+        );
+        if s.net.mode != crate::ortho_network_section::Mode::Pair {
+            return Frame::new(TITLE)
+                .scroll(Grows::new().spacing(12.0).push(modes).push(self.ortho_net_view()))
+                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+                .width(880.0)
+                .modal(msg(Event::Close));
+        }
         let body = Grows::new()
             .spacing(12.0)
+            .push(modes)
             .push(form)
             .push(words::summary(lines))
             // Writing is its own section, above the views, so a short window never hides it.

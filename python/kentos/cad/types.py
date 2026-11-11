@@ -65121,6 +65121,89 @@ class OrthoGsd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoNetworkElement(_Model):
+    """An image's mosaic element: its parts (each an outer ring, counter-clockwise, from its southernmost corner, the
+    westernmost of equals; and its holes, clockwise), its area, its footprint's centre, the ids written.
+    Attributes:
+        area: Unit: area.
+        centre: Unit: system.
+    """
+    image: str
+    parts: list[OrthoNetworkPart]
+    area: float
+    centre: list[float]
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["image"] = self.image
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["area"] = float(self.area)
+        out["centre"] = [float(e0) for e0 in self.centre]
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoNetworkElement:
+        return cls(
+            image=data["image"],
+            parts=[OrthoNetworkPart.from_json(e0) for e0 in data["parts"]],
+            area=float(data["area"]),
+            centre=[float(e0) for e0 in data["centre"]],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoNetworkJunction(_Model):
+    """A junction: a place three or more elements meet, and their images (in the input's order).
+    Attributes:
+        at: Unit: system.
+    """
+    at: list[float]
+    images: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["images"] = list(self.images)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoNetworkJunction:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            images=list(data["images"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoNetworkPart(_Model):
+    """A part of an element: its outer ring and holes.
+    Attributes:
+        ring: Unit: system.
+        holes: Unit: system.
+    """
+    ring: list[list[float]]
+    holes: list[list[list[float]]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        if self.holes is not UNSET:
+            out["holes"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.holes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoNetworkPart:
+        return cls(
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            holes=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OrthoPair(_Model):
     """A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,
     and whether it is over the limit.
@@ -65920,6 +66003,179 @@ class OrthophotoCompared(_Model):
             passed=data.get("passed", UNSET),
             seam=UNSET if "seam" not in data else None if data["seam"] is None else OrthoSeam.from_json(data["seam"]),
             second_check=UNSET if "secondCheck" not in data else None if data["secondCheck"] is None else OrthophotoChecked.from_json(data["secondCheck"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoFootprint(_Model):
+    """Input of `cad.orthophoto.footprint` v1: the raster, whether its convex hull is drawn instead of its outline, the
+    layer (none: `ayak-izleri`, made when the drawing has none) and, for a raster whose file is a relative path, the
+    drawing's folder. Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`raster`);
+    `file_not_found`, `invalid_file_path`, `import_unreadable` (its image); `invalid_input` (too many pixels, every
+    pixel NoData); `layer_not_found`, `layer_locked`; `invalid_revision`, `revision_conflict`. A raster without a NoData
+    value has every pixel valid: its footprint is its bounds.
+    """
+    raster: str
+    expected_revision: str | None | Unset = UNSET
+    folder: str | None | Unset = UNSET
+    hull: bool | Unset = UNSET
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["raster"] = self.raster
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        if self.hull is not UNSET:
+            out["hull"] = self.hull
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoFootprint:
+        return cls(
+            raster=data["raster"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            folder=data.get("folder", UNSET),
+            hull=data.get("hull", UNSET),
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoFootprintBuilt(_Model):
+    """Output of `cad.orthophoto.footprint` v1: the footprint's parts (as the network's elements'), its area, the pixels
+    read and valid, the NoData value, whether it is the hull, the layer, the id written, notes and the revision.
+    Attributes:
+        area: Unit: area.
+        pixels: Unit: count.
+        valid: Unit: count.
+        nodata: Unit: 1.
+    """
+    parts: list[OrthoNetworkPart]
+    area: float
+    pixels: int
+    valid: int
+    layer: str
+    notes: list[str]
+    revision: str
+    hull: bool | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    opened: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["area"] = float(self.area)
+        out["pixels"] = self.pixels
+        out["valid"] = self.valid
+        out["layer"] = self.layer
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.hull is not UNSET:
+            out["hull"] = self.hull
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.opened is not UNSET:
+            out["opened"] = self.opened
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoFootprintBuilt:
+        return cls(
+            parts=[OrthoNetworkPart.from_json(e0) for e0 in data["parts"]],
+            area=float(data["area"]),
+            pixels=data["pixels"],
+            valid=data["valid"],
+            layer=data["layer"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            hull=data.get("hull", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            opened=data.get("opened", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoNetwork(_Model):
+    """Input of `cad.orthophoto.network` v1: the orthophotos (2 to 50, rasters of the project's system), their footprints
+    in the same order (areas or closed polylines with straight edges, convex; none: the rasters' four corners), the
+    layer the elements are written on (none: `mozaik-elemanlari`, made when the drawing has none). Refusals:
+    `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`images[k]`); `invalid_input` (fewer than two or
+    more than 50 images, one twice, footprints not one each, a footprint not convex or covering nothing, an image whose
+    footprint is wholly another's nearer one: no element); `layer_not_found`, `layer_locked`; `invalid_revision`,
+    `revision_conflict`.
+    """
+    images: list[str]
+    expected_revision: str | None | Unset = UNSET
+    footprints: list[str] | Unset = UNSET
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["images"] = list(self.images)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.footprints is not UNSET:
+            out["footprints"] = list(self.footprints)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoNetwork:
+        return cls(
+            images=list(data["images"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            footprints=list(data["footprints"]) if "footprints" in data else UNSET,
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoNetworkBuilt(_Model):
+    """Output of `cad.orthophoto.network` v1: the elements in the input's order, the junctions (south to north, west to
+    east), the union's area, the layer (and whether it was made), notes and the revision.
+    Attributes:
+        covered: Unit: area.
+    """
+    elements: list[OrthoNetworkElement]
+    junctions: list[OrthoNetworkJunction]
+    covered: float
+    layer: str
+    notes: list[str]
+    revision: str
+    opened: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["elements"] = [e0.to_json() for e0 in self.elements]
+        out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        out["covered"] = float(self.covered)
+        out["layer"] = self.layer
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.opened is not UNSET:
+            out["opened"] = self.opened
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoNetworkBuilt:
+        return cls(
+            elements=[OrthoNetworkElement.from_json(e0) for e0 in data["elements"]],
+            junctions=[OrthoNetworkJunction.from_json(e0) for e0 in data["junctions"]],
+            covered=float(data["covered"]),
+            layer=data["layer"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            opened=data.get("opened", UNSET),
         )
 
 
@@ -141408,6 +141664,9 @@ __all__ = [
     "OriginHatchEdit",
     "OriginUcsTo",
     "OrthoGsd",
+    "OrthoNetworkElement",
+    "OrthoNetworkJunction",
+    "OrthoNetworkPart",
     "OrthoPair",
     "OrthoPatch",
     "OrthoPoint",
@@ -141428,6 +141687,10 @@ __all__ = [
     "OrthophotoChecked",
     "OrthophotoCompare",
     "OrthophotoCompared",
+    "OrthophotoFootprint",
+    "OrthophotoFootprintBuilt",
+    "OrthophotoNetwork",
+    "OrthophotoNetworkBuilt",
     "OrthophotoSeamlines",
     "OrthophotoSeamlinesBuilt",
     "OverlapCell",

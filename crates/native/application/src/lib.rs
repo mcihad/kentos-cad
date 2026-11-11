@@ -349,6 +349,7 @@ pub mod separation_number_clear;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
 pub mod orthophoto_seamlines;
+pub mod orthophoto_network;
 mod orthophoto_mosaic;
 mod orthophoto_seams;
 pub mod pointcloud_overlap;
@@ -1581,6 +1582,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_ORTHOPHOTO_CHECK, kentos_commands::CAD_ORTHOPHOTO_CHECK_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_COMPARE, kentos_commands::CAD_ORTHOPHOTO_COMPARE_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_SEAMLINES, kentos_commands::CAD_ORTHOPHOTO_SEAMLINES_VERSION),
+    // Birleşme çizgisi ağı ve ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
+    (kentos_commands::CAD_ORTHOPHOTO_NETWORK, kentos_commands::CAD_ORTHOPHOTO_NETWORK_VERSION),
+    (kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT, kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_REGISTER, kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_NETWORK, kentos_commands::CAD_POINTCLOUDS_NETWORK_VERSION),

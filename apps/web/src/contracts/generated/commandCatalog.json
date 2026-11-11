@@ -61183,6 +61183,409 @@
       ]
     },
     {
+      "id": "cad.orthophoto.network",
+      "version": 1,
+      "title": "Birleşme çizgisi ağı",
+      "summary": "İki ya da daha çok ortofotonun (images, 2–50; projenin sistemindeki rasterler) mozaik elemanlarını kurar: ayak izlerinin (footprints, aynı sırayla; alan ya da kapalı çoklu çizgi, düz kenarlı, dışbükey; verilmezse rasterlerin dört köşesi) birleşiminin her yeri, onu kaplayan görüntülerden ayak izinin merkezi (alan ağırlık merkezi) en yakın olana gider; eşitse önce verilene. Her görüntünün elemanı ayak izinden başkalarının daha yakın kısımları çıkarılarak bulunur; birleşme çizgileri elemanların ortak kenarlarıdır. Cevapta her elemanın parçaları (dış halka saat yönünün tersine en güneydeki köşesinden; delikler), alanı, ayak izinin merkezi ve yazılınca kimliği; üç ya da daha çok elemanın buluştuğu düğümler (junctions: yeri ve görüntüleri; üçlü düğüm); kaplanan alan; notlar. Elemanlar alan olarak layer katmanına (verilmezse mozaik-elemanlari, yoksa aynı adımda açılır), öznitelikleri Görüntü ve Yöntem; tek geri alma adımı “Mozaik elemanları ağı”. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (images[k]); invalid_input (ikiden az ya da 50'den çok görüntü, bir görüntü iki kez, ayak izleri her görüntüye bir değil, dışbükey olmayan ya da alan kaplamayan ayak izi, her yeri başka görüntüye daha yakın olan görüntü); layer_not_found, layer_locked; invalid_revision, revision_conflict.",
+      "aliases": [
+        "birlesmecizgisiagi",
+        "mozaikagi",
+        "seamnetwork"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.orthophoto.network` v1: the orthophotos (2 to 50, rasters of the project's system), their footprints\nin the same order (areas or closed polylines with straight edges, convex; none: the rasters' four corners), the\nlayer the elements are written on (none: `mozaik-elemanlari`, made when the drawing has none). Refusals:\n`invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`images[k]`); `invalid_input` (fewer than two or\nmore than 50 images, one twice, footprints not one each, a footprint not convex or covering nothing, an image whose\nfootprint is wholly another's nearer one: no element); `layer_not_found`, `layer_locked`; `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "footprints": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "images": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "images"
+        ],
+        "title": "OrthophotoNetwork",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.network` v1: the elements in the input's order, the junctions (south to north, west to\neast), the union's area, the layer (and whether it was made), notes and the revision.",
+        "properties": {
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "elements": {
+            "items": {
+              "$ref": "#/$defs/OrthoNetworkElement"
+            },
+            "type": "array"
+          },
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/OrthoNetworkJunction"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "elements",
+          "junctions",
+          "covered",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoNetworkBuilt",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.network` v1: the elements in the input's order, the junctions (south to north, west to\neast), the union's area, the layer (and whether it was made), notes and the revision.",
+        "properties": {
+          "covered": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "elements": {
+            "items": {
+              "$ref": "#/$defs/OrthoNetworkElement"
+            },
+            "type": "array"
+          },
+          "junctions": {
+            "items": {
+              "$ref": "#/$defs/OrthoNetworkJunction"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "elements",
+          "junctions",
+          "covered",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoNetworkBuilt",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_raster",
+          "crs_mismatch",
+          "invalid_input",
+          "layer_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üç ortofotonun mozaik elemanları",
+          "input": {
+            "images": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.orthophoto.footprint",
+      "version": 1,
+      "title": "Ayak izi",
+      "summary": "Bir rasterin ayak izini piksellerinden çıkarır: NoData olmayan piksellerin (bantlarından biri NoData değilse geçerli; NoData yoksa her piksel) piksel kenarlarından dış sınırı, 4 komşulukla (köşeden değen pikseller ayrı parça), parçaları ve delikleriyle; hull ile bunun yerine geçerli piksellerin dışbükey zarfı (birleşme çizgisi ve ağ bunu ayak izi olarak alır). Cevapta parçalar (dış halka saat yönünün tersine en güneydeki köşesinden; delikler), alan, okunan ve geçerli piksel sayısı, NoData değeri, katman ve yazılınca kimliği. Alan layer katmanına (verilmezse ayak-izleri, yoksa aynı adımda açılır), öznitelikleri Görüntü ve Yöntem; tek geri alma adımı “Ayak izi”. Göreli yollu raster dosyası için folder çizimin klasörüdür. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster); file_not_found, invalid_file_path, import_unreadable (görüntünün dosyası); invalid_input (25 milyondan çok piksel, her piksel NoData); layer_not_found, layer_locked; invalid_revision, revision_conflict.",
+      "aliases": [
+        "ayakizi",
+        "footprint"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.orthophoto.footprint` v1: the raster, whether its convex hull is drawn instead of its outline, the\nlayer (none: `ayak-izleri`, made when the drawing has none) and, for a raster whose file is a relative path, the\ndrawing's folder. Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`raster`);\n`file_not_found`, `invalid_file_path`, `import_unreadable` (its image); `invalid_input` (too many pixels, every\npixel NoData); `layer_not_found`, `layer_locked`; `invalid_revision`, `revision_conflict`. A raster without a NoData\nvalue has every pixel valid: its footprint is its bounds.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "folder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hull": {
+            "type": "boolean"
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "raster": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "raster"
+        ],
+        "title": "OrthophotoFootprint",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.footprint` v1: the footprint's parts (as the network's elements'), its area, the pixels\nread and valid, the NoData value, whether it is the hull, the layer, the id written, notes and the revision.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "hull": {
+            "type": "boolean"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "nodata": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/$defs/OrthoNetworkPart"
+            },
+            "type": "array"
+          },
+          "pixels": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "valid": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "parts",
+          "area",
+          "pixels",
+          "valid",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoFootprintBuilt",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.footprint` v1: the footprint's parts (as the network's elements'), its area, the pixels\nread and valid, the NoData value, whether it is the hull, the layer, the id written, notes and the revision.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "hull": {
+            "type": "boolean"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "nodata": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/$defs/OrthoNetworkPart"
+            },
+            "type": "array"
+          },
+          "pixels": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "valid": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "parts",
+          "area",
+          "pixels",
+          "valid",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoFootprintBuilt",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_raster",
+          "crs_mismatch",
+          "invalid_input",
+          "layer_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ortofotonun dışbükey ayak izi",
+          "input": {
+            "hull": true,
+            "raster": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.orthophoto.seamlines",
       "version": 1,
       "title": "Mozaik birleşme çizgisi",
@@ -171425,6 +171828,112 @@
       "required": [
         "scale",
         "gsd"
+      ],
+      "type": "object"
+    },
+    "OrthoNetworkElement": {
+      "description": "An image's mosaic element: its parts (each an outer ring, counter-clockwise, from its southernmost corner, the\nwesternmost of equals; and its holes, clockwise), its area, its footprint's centre, the ids written.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "centre": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "image": {
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/OrthoNetworkPart"
+          },
+          "type": "array"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "image",
+        "parts",
+        "area",
+        "centre"
+      ],
+      "type": "object"
+    },
+    "OrthoNetworkJunction": {
+      "description": "A junction: a place three or more elements meet, and their images (in the input's order).",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "images": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "at",
+        "images"
+      ],
+      "type": "object"
+    },
+    "OrthoNetworkPart": {
+      "description": "A part of an element: its outer ring and holes.",
+      "properties": {
+        "holes": {
+          "items": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "system"
+        },
+        "ring": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "system"
+        }
+      },
+      "required": [
+        "ring"
       ],
       "type": "object"
     },

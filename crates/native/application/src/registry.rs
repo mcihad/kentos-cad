@@ -63,6 +63,8 @@ use crate::parcel_register;
 use crate::parcel_register::list_cmd as parcel_register_list;
 use crate::parcel_drafts as parcel_approve;
 use crate::asbuilt_review;
+use crate::orthophoto_network::network as orthophoto_network;
+use crate::orthophoto_network::outline as orthophoto_footprint;
 use crate::parcel_drafts::withdraw as parcel_withdraw;
 use crate::parcels_boundaries;
 use crate::parcels_check;
@@ -645,6 +647,8 @@ macro_rules! by_command {
             kentos_commands::CAD_ORTHOPHOTO_SEAMLINES => {
                 $then!(orthophoto_seamlines, kentos_commands::OrthophotoSeamlines)
             }
+            kentos_commands::CAD_ORTHOPHOTO_NETWORK => $then!(orthophoto_network, kentos_commands::OrthophotoNetwork),
+            kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT => $then!(orthophoto_footprint, kentos_commands::OrthophotoFootprint),
             kentos_commands::CAD_POINTCLOUDS_OVERLAP => {
                 $then!(pointcloud_overlap, kentos_commands::PointCloudsOverlap)
             }

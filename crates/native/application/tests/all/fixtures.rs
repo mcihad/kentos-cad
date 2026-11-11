@@ -4225,6 +4225,16 @@ impl Input for kentos_commands::OrthophotoSeamlines {
         None
     }
 }
+impl Input for kentos_commands::OrthophotoNetwork {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::OrthophotoFootprint {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::ReadjustmentDistribute {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -6133,6 +6143,14 @@ fn run_op(
         }
         kentos_commands::CAD_ORTHOPHOTO_SEAMLINES => {
             run!(orthophoto_seamlines, kentos_commands::OrthophotoSeamlines)
+        }
+        kentos_commands::CAD_ORTHOPHOTO_NETWORK => {
+            use kentos_native_application::orthophoto_network::network as orthophoto_network;
+            run!(orthophoto_network, kentos_commands::OrthophotoNetwork)
+        }
+        kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT => {
+            use kentos_native_application::orthophoto_network::outline as orthophoto_footprint;
+            run!(orthophoto_footprint, kentos_commands::OrthophotoFootprint)
         }
         kentos_commands::CAD_POINTCLOUDS_OVERLAP => {
             run!(pointcloud_overlap, kentos_commands::PointCloudsOverlap)

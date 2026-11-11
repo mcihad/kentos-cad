@@ -202,6 +202,13 @@ fn footprint(ring: &[Pt], o: Pt, k: usize) -> Result<Vec<Pt>, SeamFault> {
     Ok(r)
 }
 
+/// A footprint as the seam takes it, on the ground (docs/adr/5260: the network's too): repeats and corners on a straight
+/// edge dropped, counter-clockwise, convex; or why not (`k` its place).
+pub fn convex_footprint(ring: &[Pt], k: usize) -> Result<Vec<Pt>, SeamFault> {
+    let o = *ring.first().ok_or(SeamFault::Degenerate(k))?;
+    Ok(footprint(ring, o, k)?.into_iter().map(|p| [p[0] + o[0], p[1] + o[1]]).collect())
+}
+
 /// Where segment p–q crosses the line a→b.
 fn cut(a: Pt, b: Pt, p: Pt, q: Pt) -> Pt {
     let ab = sub(b, a);

@@ -1,0 +1,3344 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.orthophoto.footprint",
+ "commandVersion": 1,
+ "title": "Ayak izi",
+ "note": "ADR 5260. Bağımsız başvuru scripts/fixtures/orthophoto_network_cases.py: görüntüler bayt bayt yazılır, ayak izi geçerli piksellerin karelerinin shapely birleşimiyle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ayak izi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "altlik",
+    "name": "Altlık",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "ayak-izi",
+    "name": "Ayak izleri (çizilen)",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "raster",
+    "layerId": "altlik",
+    "attrs": {},
+    "affine": [
+     487000.0,
+     0.5,
+     0.0,
+     4420005.0,
+     0.0,
+     -0.5
+    ],
+    "width": 14,
+    "height": 10,
+    "bands": 1,
+    "sample": "u8",
+    "srid": 5254,
+    "style": {
+     "render": "gray",
+     "bands": [
+      1
+     ]
+    },
+    "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+    "id": 1
+   }
+  ],
+  "uids": [
+   "0192f5c0-5260-7000-8000-000000000001"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "NoData'dan ayak izi: bir delik, köşeden değen ayrı parça, kenardaki çentik",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487005.5,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ]
+         ]
+        },
+        {
+         "ring": [
+          [
+           487001.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420003.5
+          ],
+          [
+           487001.0,
+           4420003.5
+          ]
+         ],
+         "holes": [
+          [
+           [
+            487002.5,
+            4420002.5
+           ],
+           [
+            487002.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420002.5
+           ]
+          ]
+         ]
+        }
+       ],
+       "area": 15.25,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dış sınırı, piksellerin kenarlarından; 2 parça, 1 delik, 15.25 m².",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "yazılır: Ayak izleri katmanına, katman aynı adımda açılır; geri alınır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487005.5,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ]
+         ]
+        },
+        {
+         "ring": [
+          [
+           487001.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420003.5
+          ],
+          [
+           487001.0,
+           4420003.5
+          ]
+         ],
+         "holes": [
+          [
+           [
+            487002.5,
+            4420002.5
+           ],
+           [
+            487002.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420002.5
+           ]
+          ]
+         ]
+        }
+       ],
+       "area": 15.25,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dış sınırı, piksellerin kenarlarından; 2 parça, 1 delik, 15.25 m².",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "opened": true,
+       "uid": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Ayak izi",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "dışbükey zarf: tek parça, deliksiz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "hull": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487005.5,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420001.0
+          ]
+         ]
+        }
+       ],
+       "area": 18.0,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dışbükey zarfı, 18.00 m²; birleşme çizgisi ve ağ bunu ayak izi olarak alır.",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "hull": true,
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "zarf yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "hull": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487005.5,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420001.0
+          ]
+         ]
+        }
+       ],
+       "area": 18.0,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dışbükey zarfı, 18.00 m²; birleşme çizgisi ve ağ bunu ayak izi olarak alır.",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "hull": true,
+       "opened": true,
+       "uid": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Ayak izi",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "NoData'sı olmayan raster: ayak izi rasterin sınırı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-b.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487000.0,
+           4420000.0
+          ],
+          [
+           487007.0,
+           4420000.0
+          ],
+          [
+           487007.0,
+           4420005.0
+          ],
+          [
+           487000.0,
+           4420005.0
+          ]
+         ]
+        }
+       ],
+       "area": 35.0,
+       "pixels": 140,
+       "valid": 140,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 140 pikselin dış sınırı, piksellerin kenarlarından; 1 parça, 0 delik, 35.00 m².",
+        "Rasterin NoData değeri yok: her piksel geçerli, ayak izi rasterin sınırıdır."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "döndürülmüş raster: pikseller afinle yere",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487030.0,
+       0.4698463103929542,
+       0.17101007166283436,
+       4420040.0,
+       0.17101007166283436,
+       -0.4698463103929542
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487032.3077731941,
+           4420036.58324966
+          ],
+          [
+           487036.5363899876,
+           4420038.122340305
+          ],
+          [
+           487035.33931948594,
+           4420041.411264478
+          ],
+          [
+           487031.1107026924,
+           4420039.872173834
+          ],
+          [
+           487031.2817127641,
+           4420039.402327523
+          ],
+          [
+           487031.7515590745,
+           4420039.573337594
+          ],
+          [
+           487031.92256914615,
+           4420039.103491284
+          ],
+          [
+           487031.45272283576,
+           4420038.932481213
+          ]
+         ],
+         "holes": [
+          [
+           [
+            487033.2042819103,
+            4420038.505818806
+           ],
+           [
+            487033.0332718386,
+            4420038.975665117
+           ],
+           [
+            487033.9729644594,
+            4420039.31768526
+           ],
+           [
+            487034.1439745311,
+            4420038.847838949
+           ]
+          ]
+         ]
+        },
+        {
+         "ring": [
+          [
+           487036.70740005927,
+           4420037.652493995
+          ],
+          [
+           487037.1772463697,
+           4420037.823504066
+          ],
+          [
+           487037.00623629807,
+           4420038.293350376
+          ],
+          [
+           487036.5363899876,
+           4420038.122340305
+          ]
+         ]
+        }
+       ],
+       "area": 15.250000002004247,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dış sınırı, piksellerin kenarlarından; 2 parça, 1 delik, 15.25 m².",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "döndürülmüş rasterin zarfı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487030.0,
+       0.4698463103929542,
+       0.17101007166283436,
+       4420040.0,
+       0.17101007166283436,
+       -0.4698463103929542
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "hull": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487032.3077731941,
+           4420036.58324966
+          ],
+          [
+           487036.70740005927,
+           4420037.652493995
+          ],
+          [
+           487037.1772463697,
+           4420037.823504066
+          ],
+          [
+           487037.00623629807,
+           4420038.293350376
+          ],
+          [
+           487035.33931948594,
+           4420041.411264478
+          ],
+          [
+           487031.1107026924,
+           4420039.872173834
+          ]
+         ]
+        }
+       ],
+       "area": 18.000000001773877,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dışbükey zarfı, 18.00 m²; birleşme çizgisi ve ağ bunu ayak izi olarak alır.",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "hull": true,
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "verilen katmana yazılır, katman açılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "izler",
+      "name": "İzler",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "layer": "izler"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487005.5,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ]
+         ]
+        },
+        {
+         "ring": [
+          [
+           487001.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420003.5
+          ],
+          [
+           487001.0,
+           4420003.5
+          ]
+         ],
+         "holes": [
+          [
+           [
+            487002.5,
+            4420002.5
+           ],
+           [
+            487002.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420002.5
+           ]
+          ]
+         ]
+        }
+       ],
+       "area": 15.25,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "izler",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dış sınırı, piksellerin kenarlarından; 2 parça, 1 delik, 15.25 m².",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "uid": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Ayak izi",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol projesinde",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "parts": [
+        {
+         "ring": [
+          [
+           487005.5,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420000.5
+          ],
+          [
+           487006.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ]
+         ]
+        },
+        {
+         "ring": [
+          [
+           487001.0,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420001.0
+          ],
+          [
+           487005.5,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.5
+          ],
+          [
+           487001.0,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420004.0
+          ],
+          [
+           487001.5,
+           4420003.5
+          ],
+          [
+           487001.0,
+           4420003.5
+          ]
+         ],
+         "holes": [
+          [
+           [
+            487002.5,
+            4420002.5
+           ],
+           [
+            487002.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420003.0
+           ],
+           [
+            487003.5,
+            4420002.5
+           ]
+          ]
+         ]
+        }
+       ],
+       "area": 15.25,
+       "pixels": 140,
+       "valid": 61,
+       "layer": "ayak-izleri",
+       "notes": [
+        "Ayak izi: NoData olmayan 61 pikselin dış sınırı, piksellerin kenarlarından; 2 parça, 1 delik, 15.25 m².",
+        "NoData değeri 0: bir piksel, bantlarından biri bu değerde değilse geçerlidir. Köşeden değen pikseller ayrı parçadır."
+       ],
+       "revision": "$current",
+       "nodata": 0.0,
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "her pikseli NoData",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420002.0,
+       0.0,
+       -0.5
+      ],
+      "width": 6,
+      "height": 4,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-c.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Rasterin her pikseli NoData; ayak izi yok.",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok piksel",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4422500.0,
+       0.0,
+       -0.5
+      ],
+      "width": 6000,
+      "height": 5000,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Raster 30000000 piksel; ayak izi en çok 25000000 pikselden çıkarılır. Daha küçük bir kopyasını kullanın.",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyası yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/yok.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "Ortofotonun dosyası “$fixture:orthophoto/v1/files/yok.tif” bulunamadı.",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "raster değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487001.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487001.0,
+        "y": 4420001.0
+       }
+      ],
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000002"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_raster",
+       "message": "“0192f5c0-5260-7000-8000-000000000002” bir raster değil; ortofotoyu seçin.",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "x"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000009"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-5260-7000-8000-000000000009” kimlikli nesne çizimde yok.",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka sistemde raster",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5256,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "Ortofotonun koordinat sistemi EPSG:5256, projeninki EPSG:5254; birleşme çizgisi aynı sistemdeki görüntüler arasında kurulur. Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).",
+       "path": "raster"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” katmanı çizimde yok.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; ayak izi bu katmana yazılır. Kilidi Katmanlar panelinden açın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eski sürüme göre hazırlanmış",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sürüm yazısı geçersiz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ayak izi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       0.5,
+       0.0,
+       4420005.0,
+       0.0,
+       -0.5
+      ],
+      "width": 14,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ayak-izi-a.tif",
+      "id": 1
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "raster": "0192f5c0-5260-7000-8000-000000000001",
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

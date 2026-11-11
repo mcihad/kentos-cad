@@ -43,7 +43,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640, 5040 | taslakta geometri ve plan notu değişikliği; EK-2 standartları denetimde | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660, 5060 | süreyle (hız, yürüme profili) erişim; bakının haritası, derece birimi, özel bakı sınıfları; eskiyen tabloyu yerinde yeniden yazma | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680, 5080 | yaylı parçada yay boyunca yazı; noktaların etiketleri engel; değer esasında yeni parselin değeri ve parayla denkleştirme (kaynak ve veri beklenir) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700, 5260 | ağda radyometrik fark ve kenar algılama; çekimin nadir yeri merkez olarak; alfa bandı ve maskeden ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720, 5100 | kontrol noktalarının ağa ölçü olarak girmesi (düzlem kotu düşey gözlem; kontrol datum); dosyaları farklı konumlu sanal bulutta Dönüşüm uygula ve öbür İşlemler araçlarının konumu okuması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760, 5140 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi); Brükner diyagramı | — |
@@ -1737,6 +1737,17 @@ geri alma adımında Mozaik elemanları katmanına, `Görüntü` özniteliğiyle
 tarama ve ikiye bölmeyle, KentOS'ta doğruların kesişimiyle), çekirdek testleri, Python (yazılan elemanlar Ortofoto
 karşılaştırması'nın ortak sınırında çizginin kendisi), MCP, masaüstü Raster › Birleşme çizgisi. Açık: ikiden çok görüntünün
 birleşme çizgisi ağı, kenar algılama, NoData'dan ayak izi; türeyen nesnenin izi sahip kararını bekler.
+
+**11 Kasım 2026, onuncu tur — ikiden çok görüntünün birleşme çizgisi ağı; NoData'dan ayak izi ([ADR 5260](../docs/adr/5260-seamline-network-and-footprint-from-nodata.md)).**
+Kapsam: **CAD + CBS**. Dayanak: ArcGIS Pro Build Seamlines (her ayak izine bir çizgi; bakış noktasına en yakın
+sıralama; Geometry, Voronoi, Edge detection yöntemleri) ve Build Footprints / gdal_footprint (geçerli piksellerin
+sınırı); BÖHHBÜY birleşme çizgisine kural koymaz. Kanıtlanan: yeni `cad.orthophoto.network` 2–50 ortofotonun mozaik
+elemanlarını kurar (her yer onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; düğümler üç ya da daha çok
+elemanın ortak köşesi, üç merkezde çevrel merkez); yeni `cad.orthophoto.footprint` NoData olmayan piksellerin sınırını
+(4 komşuluk, delik ve parçalarıyla) ya da dışbükey zarfını çizer; 25 + 21 bağımsız durum (shapely; görüntüler bayt bayt),
+Python, MCP; masaüstünde Mozaik birleşme çizgisi › İki görüntü | Ağ | Ayak izi. Açık: ağda radyometrik fark ve kenar
+algılama, nadir yeri, alfa ve maske. Madde `[ ]` kalır.
+
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

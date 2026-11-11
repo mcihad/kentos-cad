@@ -89,6 +89,7 @@ mod exchange_check_window;
 mod asbuilt_window;
 mod asbuilt_trend;
 mod asbuilt_chart;
+mod ortho_network_section;
 mod asbuilt_review_form;
 mod project_graph_window;
 mod survey_network_window;
@@ -435,6 +436,8 @@ mod asbuilt_series_tests;
 mod asbuilt_trend_tests;
 #[cfg(test)]
 mod asbuilt_review_tests;
+#[cfg(test)]
+mod ortho_network_tests;
 #[cfg(test)]
 mod project_graph_window_tests;
 #[cfg(test)]

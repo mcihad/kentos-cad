@@ -148,8 +148,7 @@ tablodaki karşılığıyla okunur.
 
 ## Sonra
 
-- İkiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm, çoklu örtüşmede farkın en küçük olduğu yer).
-- Kenar algılama ve yüksek nesnelerden uzaklaştırma (Metashape'in Refine seamlines'ı); NoData'dan ayak izi
-  (gdal_footprint, ArcGIS Build Footprints).
+- İkiden çok görüntünün birleşme çizgisi ağı ve NoData'dan ayak izi: [ADR 5260](5260-seamline-network-and-footprint-from-nodata.md).
+- Kenar algılama ve yüksek nesnelerden uzaklaştırma (Metashape'in Refine seamlines'ı).
 - Görüntüden türeyen nesnenin kaynağa izi (MAP-01'in sahip kararı).
 - Web (TODOS §0.2).
