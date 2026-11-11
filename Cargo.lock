@@ -2854,6 +2854,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-ifc"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-geometry-core",
+ "kentos-road",
+ "libm",
+]
+
+[[package]]
 name = "kentos-interaction"
 version = "0.1.0"
 dependencies = [
@@ -2944,6 +2954,7 @@ dependencies = [
  "kentos-forms",
  "kentos-geometry-core",
  "kentos-geopackage",
+ "kentos-ifc",
  "kentos-kcad",
  "kentos-maplibre",
  "kentos-ncz",

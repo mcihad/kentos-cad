@@ -9,6 +9,7 @@ mod parking_audit;
 mod dxf_rooms;
 mod roof_sections;
 mod sections;
+mod arch_ifc;
 mod facades;
 mod blocks_find;
 mod review_take;

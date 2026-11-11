@@ -1,14 +1,12 @@
 //! `file.export.ifc` v1 (plan/road.md Y10.3, docs/adr/0908 §8; ROAD-IO-06): a road project's alignments and their
-//! profiles written to an IFC 4.3 file (`IFC4X3_ADD2`) by `kentos-formats`' `ifc_alignment`, whole or not at all. The
-//! drawing does not change. The shared cases are `fixtures/commands/v1/file.export.ifc.json`.
+//! profiles written to an IFC 4.3 file (`IFC4X3_ADD2`) by the IFC core (`kentos_ifc::alignment`, docs/adr/8047), whole
+//! or not at all. The drawing does not change. The shared cases are `fixtures/commands/v1/file.export.ifc.json`.
 
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{CommandResult, CommandWarning, ExportIfc, IfcAlignmentWritten, IfcExported};
 use kentos_domain::Document;
-use kentos_formats::ifc_alignment::{Alignment, Equation, HKind, HSeg, IfcFile, VKind, VSeg, Vertical, write};
-use kentos_road::alignment::element::Kind;
-use kentos_road::profile::vertical::Piece;
+use kentos_ifc::alignment::{Alignment, Equation, IfcFile, horizontal, vertical, write};
 use sha2::{Digest, Sha256};
 
 use crate::ExecutionContext;
@@ -23,35 +21,11 @@ fn bad(path: &str, words: String) -> Stop {
 }
 
 fn losses(message: String) -> CommandWarning {
-    CommandWarning { code: codes::EXPORT_LOSSES.into(), message, path: Some("alignments".into()) }
-}
-
-/// A radius from a curvature (0: a tangent, infinite).
-fn radius(k: f64) -> f64 {
-    if k == 0.0 { 0.0 } else { 1.0 / k }
-}
-
-/// A profile's pieces as IFC's vertical segments, and its end.
-fn vertical(name: &str, pieces: &[Piece]) -> Option<Vertical> {
-    let mut segments = Vec::new();
-    for p in pieces {
-        let (s0, s1) = p.range();
-        if s1 - s0 <= 0.0 {
-            continue;
-        }
-        let (z0, g0, _) = p.at(s0);
-        let (_, g1, _) = p.at(s1);
-        let (kind, r) = match *p {
-            Piece::Grade { .. } => (VKind::Grade, 0.0),
-            Piece::Parabola { r, .. } => (VKind::Parabola, radius(r)),
-            Piece::Circle { radius: rr, sag, .. } => (VKind::Circle, if sag { rr } else { -rr }),
-        };
-        segments.push(VSeg { kind, dist: s0, length: s1 - s0, z0, g0, g1, radius: r });
+    CommandWarning {
+        code: codes::EXPORT_LOSSES.into(),
+        message,
+        path: Some("alignments".into()),
     }
-    let last = pieces.last()?;
-    let (_, s1) = last.range();
-    let (z, g, _) = last.at(s1);
-    Some(Vertical { name: name.to_owned(), segments, end: [s1, z, g] })
 }
 
 struct Planned {
@@ -156,39 +130,10 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
             profiles: Vec::new(),
             vertical_segments: 0,
         };
-        let horizontal: Vec<HSeg> = b
-            .core
-            .elements
-            .iter()
-            .map(|e| {
-                let kind = match e.kind {
-                    Kind::Tangent => {
-                        written.lines += 1;
-                        HKind::Line
-                    }
-                    Kind::Arc => {
-                        written.arcs += 1;
-                        HKind::Arc
-                    }
-                    Kind::Spiral => {
-                        written.clothoids += 1;
-                        HKind::Clothoid
-                    }
-                };
-                HSeg {
-                    kind,
-                    start: e.start,
-                    dir: e.theta0,
-                    dir_end: e.theta(e.length),
-                    r0: radius(e.k0),
-                    r1: radius(e.k1),
-                    length: e.length,
-                }
-            })
-            .collect();
-        let last = b.core.elements.last();
-        let end = last.map_or([0.0, 0.0], |e| e.point(e.length));
-        let end_dir = last.map_or(0.0, |e| e.theta(e.length));
+        let h = horizontal(&b.core.elements);
+        written.lines = h.lines;
+        written.arcs = h.arcs;
+        written.clothoids = h.clothoids;
         let mut verticals = Vec::new();
         if !input.without_profiles {
             for p in doc.road_profiles().iter().filter(|p| p.alignment == def.id) {
@@ -205,11 +150,18 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
         out.push(written);
         file.alignments.push(Alignment {
             name: def.name.clone(),
-            horizontal,
-            end,
-            end_dir,
+            horizontal: h.segments,
+            end: h.end,
+            end_dir: h.end_dir,
             start_km,
-            equations: eqs.iter().map(|q| Equation { dist: q.internal - start_km, back: q.back, ahead: q.ahead }).collect(),
+            equations: eqs
+                .iter()
+                .map(|q| Equation {
+                    dist: q.internal - start_km,
+                    back: q.back,
+                    ahead: q.ahead,
+                })
+                .collect(),
             verticals,
         });
     }

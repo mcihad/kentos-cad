@@ -1001,6 +1001,52 @@ pub fn outline_edges(shape: &Shape) -> Vec<crate::geom::intersect::Edge> {
     out
 }
 
+/// A point's distance from a closed ring's edges.
+fn near_ring(ring: &[Vec2], p: Vec2) -> f64 {
+    let n = ring.len();
+    (0..n)
+        .map(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let l2 = dx * dx + dy * dy;
+            let t = if l2 > 0.0 {
+                (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
+            } else {
+                0.0
+            };
+            js_hypot(a.x + dx * t - p.x, a.y + dy * t - p.y)
+        })
+        .fold(f64::INFINITY, js_min)
+}
+
+/// The exterior walls among `bodies` (one storey's walls' body rings): those with a corner on the outline of all their
+/// bodies together, within a tenth of a millimetre (the plan's dimensions' rule, docs/adr/8026; IFC's `IsExternal`,
+/// docs/adr/8047).
+pub fn exterior(bodies: &[Vec<Vec2>]) -> Vec<usize> {
+    use crate::geom::arrangement::{Area, Ring};
+    let areas: Vec<Area> = bodies
+        .iter()
+        .map(|ring| Area {
+            outer: Ring {
+                pts: ring.clone(),
+                bulges: None,
+            },
+            holes: Vec::new(),
+        })
+        .collect();
+    let outlines: Vec<Vec<Vec2>> = crate::geom::region::union_areas(&areas)
+        .into_iter()
+        .map(|a| crate::entity::polygon_ring(&a.outer.pts, a.outer.bulges.as_deref()))
+        .collect();
+    (0..bodies.len())
+        .filter(|&i| {
+            bodies[i]
+                .iter()
+                .any(|p| outlines.iter().any(|ring| near_ring(ring, *p) <= 1e-4))
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -36,6 +36,10 @@ members = [
     "crates/shared/scene3d",
     # The forms core (docs/adr/0401): a form's preflight, rules and a record's validation.
     "crates/shared/forms",
+    # IFC (docs/adr/8047, 0908 §8): writing the road's alignments and the building as IFC 4.3, the digital project
+    # regulation's classes, names and properties; later reading IFC and checking a model. A crate of its own: the IFC
+    # work grows here.
+    "crates/shared/ifc",
     # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
     "crates/shared/sheet",
     "crates/shared/style-core",

@@ -1,0 +1,15 @@
+[package]
+name = "kentos-ifc"
+description = "KentOS's IFC (ISO 16739, IFC 4.3): writing a project's road alignments and its building as ISO 10303-21 files, the 2026 digital project regulation's IFC classes, names and properties (EK-5, EK-6), and later reading IFC files, checking a model (EK-9) and IDS; one core for the desktop, the server and the web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure, like the other shared cores (CLAUDE.md §14): no file system, network or UI. The application gives it its model
+# (the section model's solids, its openings, the drawing's objects and settings) and writes the text it returns.
+[dependencies]
+kentos-contracts = { path = "../contracts", default-features = false }
+kentos-geometry-core = { path = "../geometry-core" }
+kentos-road = { path = "../road" }
+libm = { workspace = true }

@@ -45,7 +45,6 @@ pub mod json;
 pub mod kml;
 pub mod landxml;
 pub mod landxml_write;
-pub mod ifc_alignment;
 pub mod lin;
 pub mod pdf;
 pub mod math;

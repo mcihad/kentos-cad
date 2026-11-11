@@ -127,6 +127,8 @@ pub struct Gap {
     /// line in plan), and the frame's depth across the wall when its type says.
     pub frame: (P, P),
     pub depth: Option<f64>,
+    /// The opening's persistent id (IFC's opening and its door or window, docs/adr/8047).
+    pub owner: Option<String>,
 }
 
 /// The model as the section reads it.
@@ -511,6 +513,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                 form: o.form,
                 frame: (mid(l0, r0), mid(l1, r1)),
                 depth: o.build.as_ref().and_then(|b| b.frame_depth),
+                owner: Some(opening.to_string()),
             });
         }
         let shown = |c: &kentos_geometry_core::geom::wall::Component| {

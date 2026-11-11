@@ -181,6 +181,11 @@ Mevcut `jsmath`/`libm`, lint ve deterministic davranış kurallarını koruyun;
 Yeni hesap çağrısına sınır/rastgele fixture, native/WASM ve bağımsız referans
 ekleyin. Taşıma ayrıntıları [ADR 0008](docs/adr/0008-shared-core-boundary.md)'dedir.
 
+**IFC (kesin kural):** IFC ile ilgili her şey `crates/shared/ifc` (`kentos-ifc`) içindedir: yazma, okuma, sınıf,
+ad, özellik seti, denetim. Başka crate IFC kodu yazmaz; IFC'ye dokunan kod değiştiğinde oraya taşınır ve diğer
+crate'ler onun işlevlerini, metotlarını ve türlerini doğrudan kullanır (uygulamada yalnız komut/belge bağlayıcısı
+kalır). Ayrıntı [ADR 8047](docs/adr/8047-ifc-building-export.md).
+
 ## 15. CAD ve PostGIS kaynak otoritesi
 
 Mevcut `crates/server/application/src/cad.rs`: basit geometride `geom`,

@@ -1087,7 +1087,7 @@ girer.
 çizimden üretilir. Dayanak S5; Dijital Yönetmelik Md. 4, 9–12; W4 §4/14.
 
 - **DXF/DWG:** ADV-14'teki katman profiliyle; mahal yazıları ve evre katmanları da gider.
-- **IFC4 mimari dışa aktarma:**
+- **IFC4 mimari dışa aktarma** (yönetmelik EK-5 §5.4: IFC 4.3; ADR 8047)**:**
   - Sınıflar: IfcWall, IfcDoor, IfcWindow, IfcSpace, IfcSlab, IfcStair; EK-5'teki zorunlu sınıflarla eşlenir.
   - Öznitelikler EK-6 ve EK-7'ye, proje ve dosya kodları EK-1 ve EK-2'ye göre.
   - Plan ile model arasında tutarlılık denetimi (Md. 9).
@@ -1205,7 +1205,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | M46 | DWG/DXF katman profili | ADV-25 | Dış programda aynı katmanlar ve yazılar **(1. bölüm yapıldı, ADR 8046 §1: mahal DXF'te ekrandaki gibi — sınırı, boşluğun çaprazı ve etiketsiz mahalin yazısı (numara, ad, alan) MM-XXXX-MAHAL'de, etiketli mahalin yazısı etiketinden; DWG aynı DXF'ten. Dış okuyucu ezdxf: önce 5 çizgi 0 yazı, sonra 8 yazı ve çapraz. 2. bölüm yapıldı, ADR 8046 §2: Standard (Arial) yazının genişlik çarpanı satır satır Barlow/Arial — 2+1'de fark −%3,6…+%29'dan ±%0,06'ya. 3. bölümün ilk adımı yapıldı, ADR 8046 §3: başka programlar TrueType yüksekliğini büyük harf yüksekliği okuyor (Tekla, BricsCAD, QCAD, ezdxf) — TEXT, öznitelik, tablo hücresi, eğri yazı ve stil yüksekliği `em × yüz tipinin büyük harf oranı` (Arial 1466/2048), okurken bölünür; 2+1'de 133 TEXT. İkinci adım yapıldı: MTEXT (satır aralığı ve girintiler de oranla) ve kılavuz. Üçüncü adım yapıldı: ölçü yazısı (DIMTXT, bloğun MTEXT'i), tablo stili, MULTILEADER; ezdxf'te 2+1'in etiketleri ve çizelgeleri artık taşmıyor. Dördüncü adım: dikey hizalı yazının taban çizgisi iki programda aynı; bitti)** |
-| M47 | IFC4 mimari dışa aktarma | ADV-25 | Bağımsız okuyucuda sayılar eşit |
+| M47 | IFC4 mimari dışa aktarma | ADV-25 | Bağımsız okuyucuda sayılar eşit **(1. bölüm yapıldı, ADR 8047: IFC'nin ayrı paketi `kentos-ifc` (kullanıcının kuralı, CLAUDE.md), yolun hizalaması da oraya taşındı; bina IFC 4.3'te (EK-5 §5.4) — kat, duvar, kapı, pencere, açıklık, mahal, döşeme, kolon, kiriş, çatı, korkuluk, merdiven; adlar EK-5 §5.5'e göre (MM-DVR-Dış_duvar_25, MM-KAP-K01), EK-6'dan çizimin bildikleri (dışarıda, taşıyıcı, malzeme, net alanlar, emsal ve TAKS); GlobalId nesnenin kimliği. IfcOpenShell bölüm binasında: 0 doğrulama bulgusu, sayılar eşit (2 kat, 16 duvar, 5 kapı, 9 pencere, 10 mahal); ilk koşu 8 iç duvarın "dış" işaretlendiğini buldu, düzeltildi. Sırada: Dosya › Dışa aktar › IFC; EK-7'nin proje bilgileri, EK-9 kalite formu, Md. 9 denetimi)** |
 | M48 | Eski DWG planından tanıma | ADV-25 | Patlatılmış plandan duvar ve açıklık |
 | M49 | Ölçülü bölmede kalıcı bağ; bağ kapsamı | ADV-01 | Yay kenar, kolon, aks bağı |
 | M50 | Modül kapsamı | ADV-05 | Kolon, merdiven, döşeme, mutfak, eğri duvar modülde |

@@ -18,7 +18,6 @@ use kentos_commands::{
     DimensionSetTight, DimensionSetsCreateInput, DimensionsInterior, Entity, InteriorColumns,
     InteriorFaces, NewLook,
 };
-use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_native_application::{ExecutionContext, dimension_sets_create, dimensions_interior};
 
 use crate::Vec2;
@@ -166,49 +165,11 @@ fn level_walls(cx: &Context<'_>) -> Vec<(kentos_domain::Uuid, Vec<Vec2>)> {
     out
 }
 
-fn near_ring(ring: &[Vec2], p: Vec2) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            let (dx, dy) = (b.x - a.x, b.y - a.y);
-            let l2 = dx * dx + dy * dy;
-            let t = if l2 > 0.0 {
-                (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
-            } else {
-                0.0
-            };
-            (a.x + dx * t - p.x).hypot(a.y + dy * t - p.y)
-        })
-        .fold(f64::INFINITY, f64::min)
-}
-
-/// The exterior walls among `walls`: a corner of their body on the outline of all their bodies together.
+/// The exterior walls among `walls`: a corner of their body on the outline of all their bodies together
+/// (`geom::wall::exterior`).
 fn exterior(walls: &[(kentos_domain::Uuid, Vec<Vec2>)]) -> Vec<usize> {
-    let areas: Vec<Area> = walls
-        .iter()
-        .map(|(_, ring)| Area {
-            outer: Ring {
-                pts: ring.clone(),
-                bulges: None,
-            },
-            holes: Vec::new(),
-        })
-        .collect();
-    let outlines: Vec<Vec<Vec2>> = kentos_geometry_core::geom::region::union_areas(&areas)
-        .into_iter()
-        .map(|a| {
-            kentos_geometry_core::entity::polygon_ring(&a.outer.pts, a.outer.bulges.as_deref())
-        })
-        .collect();
-    (0..walls.len())
-        .filter(|&i| {
-            walls[i]
-                .1
-                .iter()
-                .any(|p| outlines.iter().any(|ring| near_ring(ring, *p) <= 1e-4))
-        })
-        .collect()
+    let bodies: Vec<Vec<Vec2>> = walls.iter().map(|(_, ring)| ring.clone()).collect();
+    kentos_geometry_core::geom::wall::exterior(&bodies)
 }
 
 /// The frame of `bodies`: along the longest straight edge among them.
