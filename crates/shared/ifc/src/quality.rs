@@ -189,6 +189,64 @@ pub const QUESTIONS: [(u8, &str, &str, &str, &str); 21] = [
     ),
 ];
 
+/// The form's table header: Tablo 9.1's columns and KentOS's note beside them. A drawing's table with this header is the
+/// form (Mimari › Metraj ▾ › Model kalite kontrol formu places it, Ruhsat takımı writes its answers again).
+pub const FORM_HEADER: [&str; 6] = [
+    "No",
+    "Kategori / Disiplin",
+    "Kontrol Başlığı",
+    "Açıklama",
+    "Evet / Hayır",
+    "Not",
+];
+
+/// The form as a table's rows under [`FORM_HEADER`], as Tablo 9.1 lays them: each group's title on a row of its own,
+/// then its questions: number, discipline, title, words, Evet or Hayır (empty where the architect answers) and KentOS's
+/// note.
+pub fn form_rows(rows: &[Row]) -> Vec<Vec<String>> {
+    let mut out: Vec<Vec<String>> = vec![FORM_HEADER.iter().map(|h| (*h).to_owned()).collect()];
+    let mut group = "";
+    for r in rows {
+        if r.group != group {
+            group = r.group;
+            let mut line = vec![String::new(); FORM_HEADER.len()];
+            line[1] = group.to_owned();
+            out.push(line);
+        }
+        let (answer, note) = match &r.answer {
+            Answer::Yes(why) => ("Evet", why.as_str()),
+            Answer::No(why) => ("Hayır", why.as_str()),
+            Answer::Ask(why) => ("", why.as_str()),
+        };
+        let note = sentence(note);
+        out.push(vec![
+            r.no.to_string(),
+            r.discipline.to_owned(),
+            r.title.to_owned(),
+            r.question.to_owned(),
+            answer.to_owned(),
+            note,
+        ]);
+    }
+    out
+}
+
+/// A note as a sentence on the form: its first letter capital, as Turkish writes it (i İ, ı I).
+fn sentence(words: &str) -> String {
+    let mut chars = words.chars();
+    match chars.next() {
+        Some('i') => format!("İ{}", chars.as_str()),
+        Some('ı') => format!("I{}", chars.as_str()),
+        Some(c) => c.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    }
+}
+
+/// Whether a table's first row is the form's header.
+pub fn is_form(header: &[String]) -> bool {
+    header.len() == FORM_HEADER.len() && header.iter().zip(FORM_HEADER).all(|(a, b)| a == b)
+}
+
 /// The künye's words EK-7 (Tablo 7.2–7.5) and EK-6 (Tablo 6.55: the address and the parcel) ask that it lacks, by
 /// their labels in the künye; the project's code is question 3's (`has_project_code`).
 pub fn project_info_missing(k: &Particulars) -> Vec<&'static str> {
@@ -368,6 +426,29 @@ mod tests {
                 .contains("TUREF")
         );
         assert!(system_problem(None, None).unwrap().contains("yerel"));
+    }
+
+    #[test]
+    fn the_form_s_table_has_its_groups_and_questions() {
+        let rows = ek9(&Building::default(), &Written::default(), &kunye());
+        let table = form_rows(&rows);
+        assert!(is_form(&table[0]));
+        // A header, five groups' titles, 21 questions.
+        assert_eq!(table.len(), 1 + 5 + 21);
+        assert_eq!(table[1][1], "GENEL KONTROL");
+        assert_eq!(
+            table[2][..3],
+            ["1".to_owned(), "Genel".into(), "Dosya Boyutu".into()]
+        );
+        assert_eq!(table[2][4], "", "the architect answers the file size");
+        let system = table.iter().find(|r| r[0] == "6").unwrap();
+        assert_eq!(
+            (system[4].as_str(), system[5].as_str()),
+            ("Hayır", "Çizim yerel koordinatlarda")
+        );
+        assert_eq!(sentence("ilçe"), "İlçe");
+        assert_eq!(sentence("ışık"), "Işık");
+        assert!(!is_form(&table[1]));
     }
 
     #[test]

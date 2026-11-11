@@ -14,6 +14,8 @@ publish.workspace = true
 [dependencies]
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The model quality control form's header (EK-9, docs/adr/8047 §10).
+kentos-ifc = { path = "../../shared/ifc" }
 kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }
 kentos-project = { path = "../project" }

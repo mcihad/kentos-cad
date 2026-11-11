@@ -343,3 +343,16 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
     }
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// Every particular has its field in Ruhsat takımı's window, once (the office's name and tax number, added for the IFC
+/// model's EK-7 organisation, docs/adr/8047 §7, were at first in the künye and not in the window).
+#[test]
+fn every_particular_has_its_field_in_the_window() {
+    for (name, label, _) in kentos_sheet::permit::PARTICULARS {
+        let n = crate::exchange::permit_set::GROUPS
+            .iter()
+            .filter(|(_, names)| names.contains(&name))
+            .count();
+        assert_eq!(n, 1, "{name} ({label})");
+    }
+}

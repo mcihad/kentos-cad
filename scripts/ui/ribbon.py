@@ -496,7 +496,9 @@ CAD = [
           # program is.
           # Kaçış yolları (docs/adr/8035 §2) beside them: the fire rules' walks drawn on the storey.
           # Ruhsat takımı (docs/adr/8037) shown beside Denetim: the set the audit's drawing is delivered as.
-          overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
+          # Model kalite kontrol formu (docs/adr/8047 §10) beside Ruhsat takımı: the digital submission's form.
+          overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet",
+                    "arch.qualityForm", "arch.navigator", "tool.viewCrop",
                     "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
     view_tab(True),

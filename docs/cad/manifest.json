@@ -614,6 +614,22 @@
    "tests": 0
   },
   {
+   "id": "arch.qualityForm",
+   "kind": "command",
+   "title": "Model kalite kontrol formu (EK-9)",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Model kalite kontrol formu (EK-9 Tablo 9.1): cevapları cad.arch.ifc'nin modelinden (kentos_ifc::quality); Ruhsat takımı yeniden yazar ve FR/MKF paftasına koyar (ADR 8047 §10).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.quantities",
    "kind": "command",
    "title": "Metraj",

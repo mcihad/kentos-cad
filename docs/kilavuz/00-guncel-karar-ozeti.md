@@ -463,6 +463,8 @@
     `kentos_ifc::crs` (bina ve yol): TUREF dilimi datum, Transverse Mercator ve dilimle; dönüşüm düzlemde sıfır, yükseklikte
     ±0.00'ın kotu; düşey datum projenin yükseklik sisteminden. EK-9 (ADR 8047 §9): `kentos_ifc::quality::ek9` 21 soruyu
     cevaplar; Mimari denetim › Mevzuat "Dijital Proje Yön." bulguları (`digital_*`, `application::digital_audit`).
+    Form (ADR 8047 §10): Mimari › Proje ▾ › Model kalite kontrol formu (`arch.qualityForm`) tabloyu yerleştirir;
+    başlığından tanınır (`quality::is_form`), Ruhsat takımı künyeden sonra yeniden yazar ve FR/MKF paftasına koyar. M47 bitti.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

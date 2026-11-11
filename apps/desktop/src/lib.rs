@@ -554,6 +554,8 @@ mod road_views_window_tests;
 mod road_exchange_tests;
 #[cfg(test)]
 mod arch_ifc_tests;
+#[cfg(test)]
+mod quality_form_tests;
 mod terrain_layer;
 mod terrain_edits;
 mod terrain_window;

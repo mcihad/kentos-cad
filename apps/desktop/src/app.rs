@@ -3687,6 +3687,8 @@ impl App {
             "arch.revisionList" => self.place_revision_list(),
             // Emsal ve TAKS tablosu (docs/adr/8030).
             "arch.zoningTable" => self.place_zoning_table(),
+            // Model kalite kontrol formu (EK-9, docs/adr/8047 §10).
+            "arch.qualityForm" => self.place_quality_form(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})

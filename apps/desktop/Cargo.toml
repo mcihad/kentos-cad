@@ -107,6 +107,8 @@ serde_json = { workspace = true }
 unicode-segmentation = "=1.13.3"
 
 [dev-dependencies]
+# The model quality control form's header in its tests (EK-9, docs/adr/8047 §10).
+kentos-ifc = { path = "../../crates/shared/ifc" }
 # App boot and font-sensitive widget tests share a reentrant test-only guard.
 parking_lot = "=0.12.5"
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).

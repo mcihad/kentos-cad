@@ -245,8 +245,8 @@ impl Page {
     }
 
     /// A list sheet (EK-2 Tablo 2.12 Liste, LS): `views` (name, box) at `scale` on `paper`, its file `kind` (Tablo
-    /// 2.13: MHL a mahal listesi, MMC the joinery list's drawing), titled `title`; `scaled` when what it shows is drawn
-    /// to scale (docs/adr/8038).
+    /// 2.13: MHL a mahal listesi, MMC the joinery list's drawing; MKF the model control form, a form, FR: docs/adr/8047
+    /// §10), titled `title`; `scaled` when what it shows is drawn to scale (docs/adr/8038).
     pub fn list(
         title: &str,
         kind: &'static str,
@@ -261,7 +261,8 @@ impl Page {
             level: None,
             center: None,
             scale: Some(scale),
-            file_type: "LS",
+            // EK-2 Tablo 2.12–2.13: a list (LS); the model control form (MKF) a form (FR).
+            file_type: if kind == "MKF" { "FR" } else { "LS" },
             file_kind: kind,
             place: "NNN".into(),
             views,

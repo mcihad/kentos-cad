@@ -176,6 +176,13 @@ pub fn model(doc: &Document) -> (Building, Written, Particulars) {
     (b, written, particulars(doc))
 }
 
+/// EK-9's model quality control form as a table's rows (`kentos_ifc::quality::form_rows`): its header, each group's
+/// title and its questions answered from the model `cad.arch.ifc` writes now.
+pub fn form_rows(doc: &Document) -> Vec<Vec<String>> {
+    let (b, written, k) = model(doc);
+    kentos_ifc::quality::form_rows(&kentos_ifc::quality::ek9(&b, &written, &k))
+}
+
 /// The building to write: `stamp` its time (`YYYY-MM-DDThh:mm:ss`), `application` KentOS's name.
 pub fn building(doc: &Document, stamp: &str, application: &str) -> (Building, Written) {
     let (b, written, _) = made(doc, stamp, application);

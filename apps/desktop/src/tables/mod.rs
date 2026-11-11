@@ -189,6 +189,31 @@ impl crate::app::App {
         self.place_table(geometry, "Emsal ve TAKS tablosu");
     }
 
+    /// Model kalite kontrol formu (`arch.qualityForm`, docs/adr/8047 §10): EK-9's model quality control form, its answers
+    /// the IFC model's now (`kentos_ifc::quality`, through the application), placed from the cursor. Ruhsat takımı
+    /// writes its answers again and gives it a sheet of its own (EK-2 FR/MKF).
+    pub(crate) fn place_quality_form(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let model = &doc.model;
+        let rows = kentos_native_application::arch_ifc::form_rows(model);
+        let look = kentos_interaction::table::Look {
+            header: true,
+            height: 2.5 / 1000.0 * model.settings().plot_scale,
+            ..Default::default()
+        };
+        let cells = kentos_geometry_core::ops::table::from_rows(rows, true);
+        let geometry = kentos_interaction::table::new_table(
+            model,
+            &cells,
+            &look,
+            kentos_interaction::Vec2::new(0.0, 0.0),
+            None,
+        );
+        self.place_table(geometry, "Model kalite kontrol formu");
+    }
+
     /// Otopark hesabı and Sığınak hesabı (docs/adr/8036): a live table from the building program's units, placed at the
     /// cursor; a project without units is told where they are given.
     pub(crate) fn place_provision_table(&mut self, source: kentos_commands::TableSource) {

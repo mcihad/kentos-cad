@@ -3182,6 +3182,21 @@
       "status": "implemented"
     },
     {
+      "id": "arch.qualityForm",
+      "title": "Model kalite kontrol formu (EK-9)",
+      "short": "Kontrol formu",
+      "icon": "archAudit",
+      "description": "Dijital Proje Yönetmeliği EK-9 Tablo 9.1'in model kalite kontrol formunu (Mimari) imleçten yerleştirir: 21 soru, KentOS'un IFC modelinden cevapladıkları Evet ya da Hayır ve notuyla, mimarın cevaplayacakları boş (dosya boyutu, gelişim seviyesi, emsal tablosu …). Ruhsat takımı formu her yapılışta yeniden cevaplar ve ayrı bir paftaya (EK-2 FR/MKF) koyar.",
+      "aliases": [
+        "EK9",
+        "KONTROLFORMU",
+        "MKF"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.parkingTable",
       "title": "Otopark hesabı",
       "short": "Otopark hesabı",

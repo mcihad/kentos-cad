@@ -1,11 +1,12 @@
 # ADR 8047: Binanın IFC 4.3'ü — ayrı IFC paketi, EK-5 sınıfları ve adları, EK-6 özellikleri
 
-- **Durum:** 1. ve 2. bölüm, 3. bölümün ilk üç adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
+- **Durum:** 1.–3. bölüm ve 4. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
   çekirdekte ve uygulamada hazır, bağımsız okuyucu sınıyor (§1–§5); komutu `cad.arch.ifc` ve Dosya › Dışa aktar › Bina
   modeli › "IFC dışa aktar (bina)…", gerçek pencerede kabul edildi (§6); EK-7'nin proje, mimar ve büro bilgileri,
   EK-6'nın adres, ada/parsel ve bina kimliği künyeden, dosyanın adı EK-2'den (§7); projenin koordinat sistemi ve
   harita dönüşümü (§8); EK-9'un 21 sorusu modelden cevaplanıyor, çizimin bozduğu sorular Mimari denetim › Mevzuat'ta (§9).
-  Sırada: EK-9 formunun kendisi (PDF, EK-2 `FR_MKF`); başlığın görünüm tanımı (§6).
+  EK-9 formu çizimde bir tablo, Ruhsat takımında kendi paftası (EK-2 `FR_MKF`; §10). Açık kalan: başlığın görünüm
+  tanımı için açıklığı gövdeden önceden kesen bir Reference View çıktısı (§6).
 - **Bağlam belgesi:** ADR 0908 (yolun IFC 4.3 hizalaması), ADR 8042 (kesit modeli), ADR 8040 (düşey model), ADR 8041
   (kiriş, lento, kolon–duvar birleşimi), ADR 0342 (mahal ve net alan), ADR 8030 (İmar durumu), ADR 8032 (Vaziyet planı).
 
@@ -198,6 +199,25 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
 - **Plan dışı:** proje kodu yalnız soru 3'te sayılır (soru 2'nin listesinde ikinci kez söylenmez); mahal no ve adının
   EK-3 biçimi henüz denetlenmiyor, yalnız varlığı.
 
+### 10. EK-9 formu: çizimde tablo, Ruhsat takımında pafta (4. bölüm)
+
+- **Yönetmelik:** Md. 15 teslim edilen BIM modeli için EK-9 formunu ister; EK-2 Tablo 2.13 her disiplinde "Model Kontrol
+  Formu MKF", Tablo 2.12 "Form FR" verir: formun dosyası `ProjeKodu_BinaKodu_MM_XXXX_FR_MKF_NNN_01_Revizyon`.
+- **Karar:** Mimari › Proje ▾ › "Model kalite kontrol formu (EK-9)" (`arch.qualityForm`) formu imleçten yerleştirir:
+  Tablo 9.1'in sütunları (No, Kategori / Disiplin, Kontrol Başlığı, Açıklama, Evet / Hayır) ve KentOS'un "Not"u; her
+  grubun başlığı bir satır; Evet/Hayır modelden, mimarın cevaplayacakları boş, not cümle başı büyük harfle (Türkçe i →
+  İ). Satırları `kentos_ifc::quality::form_rows` kurar, tabloyu `cad.entities.create`.
+- **Ruhsat takımı:** önce künyeyi yazar (formun cevapları ona bakar), sonra `calc_tables::ensure` çizimdeki formu
+  bulur, bulunduğu yerde cevaplarını yeniden yazar ve onu kendi paftasına koyar (liste gibi, sığdığı en küçük A
+  kâğıdında, dosya türü FR: `kentos_sheet::permit::Page::list`). Form kendiliğinden kurulmaz: IFC'siz teslimde form
+  yoktur.
+- **Plan dışı — formun tanınması:** tabloya yeni bir kaynak türü (`.kcad` şeması, kodlayıcı) eklemek yerine form başlık
+  satırından tanınır (`quality::is_form`: Tablo 9.1'in sütunları ve Not); başlığı elle değiştirilen tablo artık form
+  sayılmaz.
+- **Gerçek pencerede bulunan hata:** künyeye eklenen büro adı ve vergi kimlik no Ruhsat takımı penceresinde yoktu
+  (pencere alanları kendi grup listesinden dizer); Müellif grubuna eklendi ve her künye alanının pencerede bir kez
+  olduğunu sınayan test yazıldı.
+
 ## Doğrulama
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`): IfcOpenShell, KentOS kodu olmadan, bölüm binasının kendi
@@ -234,6 +254,12 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   otopark 2; masaüstü: Mevzuat 4 — yardımcıları dijital proje bulgularını kendi testlerine bırakır —, yangın 3,
   otopark/sığınak 2; ortak durumlar `cad.arch.audit*`). Gerçek pencere: Denetim › Mevzuat 10 bulgudan 13'e, son üçü
   EK-9'dan.
+- **4. bölüm:** `kentos-ifc` 13 test (formun satırları: başlık, 5 grup, 21 soru; tanıma; Türkçe büyük harf); masaüstü
+  `quality_form_tests`: eski cevaplı form Ruhsat takımında yeniden yazılır (27 satır; künyede büro adı ve vergi no yok →
+  2. soru Hayır; kod var → 3. soru Evet; yerel → 6. soru Hayır; 1. soru boş) ve "Model kalite kontrol formu" paftasının
+  anteti `260457_00_MM_XXXX_FR_MKF_NNN_01_000` yazar; `every_particular_has_its_field_in_the_window`. Ruhsat takımı,
+  doğrama listesi, çatı planı ve tadilat takımı testleri, katalog testleri geçiyor. Gerçek pencere: menüde yeni öğe,
+  künyede iki yeni alan, Ruhsat takımında UP-06 A2 (594×420) paftası, formu ve MO anteti.
 - **2. bölüm:** 22 ortak durum (`scripts/fixtures/arch_ifc_cases.py`, KentOS kodu olmadan bölüm binasının tanımından:
   sayılar, plan, doğrulama, üzerine yazma, rampa uyarısı, boş/göreli/uzantısı yanlış/klasörü olmayan yol, var olan
   dosya, okunmayan saat, binasız çizim, büyük harfli uzantı, kırpılan yol, saatsiz yazım, 1. katı boş bina) masaüstü

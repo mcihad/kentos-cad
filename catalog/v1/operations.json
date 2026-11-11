@@ -2376,6 +2376,14 @@
       ],
       "note": "Kaçış yolları: Mevzuat grubunun yangın kurallarının ölçtüğü yollar (BYKHY 32/6, 4/i, 48/2, 48/4, Ek-5/B) etkin katta çizgi, ok başı ve sınırıyla yazı olarak çizime; Kaçış özniteliği taşıyan eski yollar silinir (ADR 8035 §2)."
     },
+    "arch.qualityForm": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "Model kalite kontrol formu (EK-9 Tablo 9.1): cevapları cad.arch.ifc'nin modelinden (kentos_ifc::quality); Ruhsat takımı yeniden yazar ve FR/MKF paftasına koyar (ADR 8047 §10)."
+    },
     "arch.zoningTable": {
       "level": "semantic",
       "via": [

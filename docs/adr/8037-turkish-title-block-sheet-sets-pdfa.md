@@ -146,7 +146,9 @@ PDF/A yeter. Kâğıda basılıp taranan PDF kullanılamaz.
     (`kentos_plot::inputs::drawing_variables`; ara yüzsüz yayın her seferinde hesaplar, masaüstü çizim değiştikçe bir
     kez).
 - **Künye** (`permit::PARTICULARS`): 29 değişken (büronun adı ve vergi kimlik no 11 Kasım'da eklendi: IFC modelinin
-  EK-7 kuruluşu, ADR 8047 §7; hiçbir pafta onları istemez, varsayılanları "—"). Zorunlular:
+  EK-7 kuruluşu, ADR 8047 §7; hiçbir pafta onları istemez, varsayılanları "—"; pencerenin Müellif grubunda). Çizimde
+  EK-9 model kalite kontrol formu varsa takım onu yeniden cevaplayıp kendi paftasına (FR/MKF) koyar (ADR 8047 §10).
+  Zorunlular:
   - il, ilçe, mahalle, ada, parsel;
   - yapı sahibi, taşıyıcı sistem;
   - mimar, sicil no, BTB no, büro adresi.
