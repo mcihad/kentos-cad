@@ -2558,7 +2558,8 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.readjustment.distribute",
         refusals: &[&["invalid_input", "area_mismatch", "duplicate_holder", "shares_not_whole", "needs_rule"]],
-        warnings: &[],
+        // docs/adr/5080: an answer by value is no rule of the regulation.
+        warnings: &["value_basis_not_a_rule"],
         targets: none,
     },
     // Düzenleme kapsamı (plan/map-cad.md MAP-11, docs/adr/2060).
@@ -2579,7 +2580,8 @@ const ENTRIES: &[Entry] = &[
             &["unknown_template", "unknown_variable", "invalid_options", "not_fixed_map", "separation_sheet_exists"],
             &["book_unreadable", "bad_asset"],
         ],
-        warnings: &[],
+        // docs/adr/5080: a number outside that touches something wherever it goes.
+        warnings: &["number_crowded"],
         targets: none,
     },
     // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).

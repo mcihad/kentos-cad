@@ -71,9 +71,11 @@ pub struct ReadjustmentSheets {
     pub number_height: Option<f64>,
     /// Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
     /// along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
-    /// leader from the part's label place, its line running east to one text height past the part's boundary on that
-    /// line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
-    /// fit outside it, horizontal, at an offset from its boundary).
+    /// leader from the part's label place, its line running out of the part to one text height past its boundary, its
+    /// landing and note beyond it as a leader lays them out. Docs/adr/5080: the places are tried nearest first (one,
+    /// two, then three text heights past the boundary; east, west, north, south, then the four between) and the first
+    /// whose line outside the part, landing and note touch nothing the sheet's map shows is taken; none clear: the one
+    /// touching the fewest, said in the label (`clear`, `clashes`) and a warning `number_crowded`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub number_leader: bool,
@@ -151,6 +153,17 @@ pub struct SeparationLabel {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub leader: Option<[f64; 2]>,
+    /// Docs/adr/5080, with a leader: whether its line outside the part, its landing and its note touch nothing the
+    /// sheet's map shows (the drawing's lines, texts, leaders and points on shown layers, and this sheet's other
+    /// numbers). False: no place tried was clear, and the number stands where it touches the fewest.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub clear: Option<bool>,
+    /// Docs/adr/5080: what a number that is not clear touches, sorted: the drawing's objects by their persistent ids,
+    /// this sheet's other numbers by their parts' names (“Girmeyen 2”).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub clashes: Vec<String>,
 }
 
 /// Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the

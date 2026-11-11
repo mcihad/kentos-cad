@@ -36,7 +36,18 @@ The rules, by hand (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, as
 - docs/adr/4680: with `numberLeader` only the full height is tried (horizontal, then along the longest edge); a number
   that does not fit goes outside, horizontal, at the full height, on a leader whose tip is the part's place above and
   whose landing starts on that line one text height east of the line's last crossing of the part (`at`), the tip in
-  `leader`.
+  `leader`;
+- docs/adr/5080: the numbers that fit inside first, then those outside in the parts' order, each at the first clear
+  place of: one, two, three text heights past the part (the ray from the tip in the direction, its last crossing of
+  the part's rings — the part turned so the ray runs east, its crossings of the horizontal line — then that many
+  heights on), the directions east, west, north, south, NE, NW, SE, SW; the landing two heights to the right (the line
+  going right or straight up/down) or left, the note half a height beyond it, its box from its left (right) end the
+  letters' advances long, 0.73 h under the line and 0.65 h over; a place touches an obstacle when its line from the
+  part's crossing on (a hit at its very start not counted), its landing or its note's box crosses or touches one of its
+  edges, a box (a corner inside, or sides crossing) or holds its point. Obstacles: every drawing object on a shown
+  layer (an area's or a line's edges, a text's box, a leader's line through its landing and its note's box, a point),
+  the numbers inside (their boxes) and those placed before (their lines from the tip and notes), by part name. None
+  clear: the place touching the fewest, the first of equals; `clear` and the sorted `clashes` said, with a warning.
 """
 
 import copy
@@ -329,12 +340,142 @@ def fitted(part, number, height, leader=False):
     return at, turn, height * share, share, True, None
 
 
-def labels(p, numbers, height=None, scale=None, leader=False):
+# ── docs/adr/5080: the numbers outside kept clear ───────────────────────────────────────────────────────────────
+R2 = math.sqrt(0.5)
+DIRECTIONS = [(1.0, 0.0), (-1.0, 0.0), (0.0, 1.0), (0.0, -1.0), (R2, R2), (-R2, R2), (R2, -R2), (-R2, -R2)]
+REACH = [1.0, 2.0, 3.0]
+
+
+def cross(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+
+def seg_hits(a, b, c, d):
+    """Where segment a→b meets segment c→d, as parameters along a→b (closed; a shared stretch by its start)."""
+    r, q = (b[0] - a[0], b[1] - a[1]), (d[0] - c[0], d[1] - c[1])
+    den = r[0] * q[1] - r[1] * q[0]
+    w = (c[0] - a[0], c[1] - a[1])
+    if den == 0:
+        if w[0] * r[1] - w[1] * r[0] != 0:
+            return []
+        rr = r[0] * r[0] + r[1] * r[1]
+        t0 = (w[0] * r[0] + w[1] * r[1]) / rr
+        t1 = ((d[0] - a[0]) * r[0] + (d[1] - a[1]) * r[1]) / rr
+        lo, hi = max(0.0, min(t0, t1)), min(1.0, max(t0, t1))
+        return [lo] if lo <= hi else []
+    t = (w[0] * q[1] - w[1] * q[0]) / den
+    u = (w[0] * r[1] - w[1] * r[0]) / den
+    return [t] if 0 <= t <= 1 and 0 <= u <= 1 else []
+
+
+def within(box, p):
+    cs = [cross(box[i], box[(i + 1) % 4], p) for i in range(4)]
+    return all(c >= 0 for c in cs) or all(c <= 0 for c in cs)
+
+
+def sides(box):
+    return [(box[i], box[(i + 1) % len(box)]) for i in range(len(box))]
+
+
+def seg_meets_box(a, b, box):
+    return within(box, a) or any(seg_hits(a, b, c, d) for c, d in sides(box))
+
+
+def boxes_meet(p, q):
+    return (any(within(q, c) for c in p) or any(within(p, c) for c in q)
+            or any(seg_hits(a, b, c, d) for a, b in sides(p) for c, d in sides(q)))
+
+
+def note_box(number, point, h, right):
+    """ADR 0145's box of a one-line note held at the middle of its left end (or right end, `right`)."""
+    w = sum(ADVANCE(c) for c in number) / 1000.0 * h
+    x0, x1 = (point[0] - w, point[0]) if right else (point[0], point[0] + w)
+    return [(x0, point[1] - 0.73 * h), (x1, point[1] - 0.73 * h), (x1, point[1] + 0.65 * h), (x0, point[1] + 0.65 * h)]
+
+
+def leader_parts(tip, bend, number, h):
+    """ADR 0146's landing (two heights right when the line goes right or straight, else left) and note's box."""
+    side = 1 if bend[0] - tip[0] >= 0 else -1
+    end = (bend[0] + side * 2 * h, bend[1])
+    return end, note_box(number, (bend[0] + side * 2.5 * h, bend[1]), h, side < 0)
+
+
+def drawing_obstacles(entities, hidden=()):
+    """Every object on a shown layer: (edges, boxes, points), each with its persistent id."""
+    edges, boxes, points = [], [], []
+    for i, e in enumerate(entities):
+        owner = rs.uid(i + 1)
+        if e["layerId"] in hidden:
+            continue
+        xy = lambda q: (q["x"], q["y"])  # noqa: E731
+        if e["kind"] == "polygon":
+            pts = [xy(q) for q in e["pts"]]
+            edges += [((pts[k], pts[(k + 1) % len(pts)]), owner) for k in range(len(pts))]
+        elif e["kind"] == "line":
+            edges.append(((xy(e["a"]), xy(e["b"])), owner))
+        elif e["kind"] == "text":
+            assert e.get("align") == "middleCenter" and e.get("rotation", 0) == 0
+            boxes.append(([(x, y) for x, y in text_box(e["text"], xy(e["p"]), 0, e["height"])], owner))
+        elif e["kind"] == "leader":
+            pts = [xy(q) for q in e["pts"]]
+            assert len(pts) == 2 and e.get("rotation", 0) == 0
+            end, box = leader_parts(pts[0], pts[1], e["text"], e["height"])
+            edges += [((pts[0], pts[1]), owner), ((pts[1], end), owner)]
+            boxes.append((box, owner))
+        elif e["kind"] == "point":
+            points.append((xy(e["p"]), owner))
+    return edges, boxes, points
+
+
+def leaving(part, tip, d, past):
+    """The ray's last crossing of the part's rings from the tip, and the point `past` metres on."""
+    if d == (1.0, 0.0):
+        east = crossings(part, tip[1])[-1]
+        return (east, tip[1]), (east + past, tip[1])
+    local = copy.deepcopy(part)
+    for r in local["rings"]:
+        r["pts"] = [[(q[0] - tip[0]) * d[0] + (q[1] - tip[1]) * d[1], d[0] * (q[1] - tip[1]) - d[1] * (q[0] - tip[0])]
+                    for q in r["pts"]]
+    s = crossings(local, 0.0)[-1]
+    return (tip[0] + s * d[0], tip[1] + s * d[1]), (tip[0] + (s + past) * d[0], tip[1] + (s + past) * d[1])
+
+
+def touched(obstacles, out, bend, end, box):
+    edges, boxes, points = obstacles
+    hit = set()
+    for (c, d), owner in edges:
+        if (any(t > 1e-9 for t in seg_hits(out, bend, c, d)) or seg_hits(bend, end, c, d)
+                or within(box, c) or any(seg_hits(a, b, c, d) for a, b in sides(box))):
+            hit.add(owner)
+    for q, owner in boxes:
+        if seg_meets_box(out, bend, q) or seg_meets_box(bend, end, q) or boxes_meet(box, q):
+            hit.add(owner)
+    for q, owner in points:
+        if within(box, q):
+            hit.add(owner)
+    return sorted(hit)
+
+
+def placed(part, tip, number, h, obstacles):
+    best = None
+    for k in REACH:
+        for d in DIRECTIONS:
+            out, bend = leaving(part, tip, d, k * h)
+            end, box = leader_parts(tip, bend, number, h)
+            hit = touched(obstacles, out, bend, end, box)
+            if best is None or len(hit) < len(best[3]):
+                best = (bend, end, box, hit)
+            if not hit:
+                return best
+    return best
+
+
+def labels(p, numbers, height=None, scale=None, leader=False, drawing=None):
     """docs/adr/3480: each numbered outside part's name, number and place; docs/adr/4280: with a height, its fitted
-    text."""
+    text; docs/adr/5080: with a leader, those outside placed clear of `drawing` and of each other."""
     if numbers is None:
         return []
-    out, k = [], 0
+    out, parts, k = [], [], 0
     for n, part in zip(names(p["parts"]), p["parts"]):
         if part["side"] == "outside":
             number = numbers[k].strip()
@@ -345,7 +486,25 @@ def labels(p, numbers, height=None, scale=None, leader=False):
                 if tip is not None:
                     label["leader"] = tip
             out.append(label)
+            parts.append(part)
             k += 1
+    if not leader or height is None:
+        return out
+    edges, boxes, points = drawing_obstacles(*drawing)
+    for label in out:
+        if "leader" not in label:
+            boxes.append((text_box(label["number"], label["at"], label["rotation"], label["height"]), label["part"]))
+    for label, part in zip(out, parts):
+        if "leader" not in label:
+            continue
+        tip, h = label["leader"], label["height"]
+        bend, end, box, hit = placed(part, tip, label["number"], h, (edges, boxes, points))
+        label["at"] = list(bend)
+        label["clear"] = not hit
+        if hit:
+            label["clashes"] = hit
+        edges += [((tuple(tip), bend), label["part"]), ((bend, end), label["part"])]
+        boxes.append((box, label["part"]))
     return out
 
 
@@ -361,7 +520,7 @@ def part_rows(p, scale, mode, numbers=None):
     return out
 
 
-def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, height=None, leader=False):
+def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, height=None, leader=False, hidden=()):
     """The sheets' answer rows and the book's listing for the partial parcels of the scope."""
     scope_kw = {k: kw[k] for k in ("scale", "mode", "tolerance", "field") if k in kw}
     scope = rs.scope(entities, 0, chosen, **scope_kw)
@@ -384,12 +543,36 @@ def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, heigh
         rows.append({"sheet": sid, "name": name, "uid": p["uid"], "parcel": p["parcel"], "scale": s, "center": centre,
                      "points": len(p["points"]), "areas": areas(p, scale, mode),
                      "parts": part_rows(p, scale, mode, (numbers or {}).get(p["uid"])),
-                     **({"labels": labels(p, (numbers or {}).get(p["uid"]), height, s, leader)}
+                     **({"labels": labels(p, (numbers or {}).get(p["uid"]), height, s, leader, (entities, hidden))}
                         if (numbers or {}).get(p["uid"]) else {})})
         listing.append({"id": sid, "name": name, "width": 210.0, "height": 297.0,
                         "items": len(TEMPLATE["sheet"]["items"]),
                         "maps": [{"item": f"{sid}-item-{MAP_AT}", "name": MAP_NAME, "scale": float(s)}]})
     return rows, listing
+
+
+# docs/adr/5080: what the numbers outside on leaders must keep clear of, beside 101/10's two parts outside (x −8…−4,
+# y −20…−10 and 50…60; at 6 mm and 1:1000 the numbers are 6 m and go out on leaders, the south one east clear, the
+# north one west: east it crosses 101/8).
+def on_road(kind, **kw):
+    return {"kind": kind, "layerId": kw.pop("layer", "yol"), "attrs": {}, **kw}
+
+
+ROAD_TEXT = on_road("text", p=rs.P(25, -15), text="Yol", height=2.0, rotation=0, align="middleCenter")
+HIDDEN_TEXT = on_road("text", layer="gizli", p=rs.P(25, -15), text="Yol", height=2.0, rotation=0, align="middleCenter")
+ROAD_LEADER = on_road("leader", pts=[rs.P(20, -25), rs.P(20, -5)], text="Kanal", height=1.0, rotation=0)
+# A road's edge all round 101/10, 1 m off: every place's line crosses it.
+AROUND = rs.area_entity(rs.rect(-9, -21, -3, 61), "yol", {"Ad": "Yol"})
+# A 4 × 10 m parcel cut by a 1 m strip of the boundary: its two parts outside, 5.5 m apart, at 25 mm and 1:200 (5 m
+# numbers), the north one's east note would sit on the south one's: west it crosses the strip's edge, north it is clear.
+STRIP = [rs.area_entity(rs.rect(-50, 4.5, 4, 5.5), "duzenleme", {"Ad": "Düzenleme sınırı"}),
+         rs.area_entity(rs.rect(0, 0, 4, 10), "parsel", rs.ident(40, "40.00"))]
+
+
+def with_hidden(entities):
+    out = rs.setup(entities)
+    out["layers"].append({**rs.layer("gizli", "Gizli"), "visible": False})
+    return out
 
 
 # The parcel 101/8, wholly outside the boundary (the scope's kind `outside`; ADR 3880's case).
@@ -413,13 +596,28 @@ def made(rows, plan=False):
     return {"group": "$any", "sheets": [{**r, "layer": "$any"} for r in rows], "uids": "$any", "revision": "$current"}
 
 
+def crowded(rows):
+    """docs/adr/5080: a warning for each number outside that touches something wherever it goes."""
+    out = []
+    for r in rows:
+        for label in r.get("labels", []):
+            if label.get("clear") is False:
+                out.append({"code": "number_crowded",
+                            "message": f"“{r['parcel']}” parselinin {label['part']} parçasının numarası ({label['number']}) "
+                                       "dışarıda hiçbir şeye değmeyen bir yere konamadı; en az şeye değdiği yere kondu "
+                                       f"({len(label['clashes'])} nesne ya da numara). Numaranın yazı boyunu küçültün ya "
+                                       "da kılavuzu çizimde taşıyın.",
+                            "path": f"numbers.{r['uid']}"})
+    return out
+
+
 WRITTEN = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
 
 
 def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, numbers=None, height=None,
-       leader=False, **kw):
+       leader=False, hidden=(), **kw):
     given = (options or {}).get("scale")
-    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers, height=height, leader=leader)
+    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers, height=height, leader=leader, hidden=hidden)
     inp = {"scope": scope_input(chosen, **kw)}
     if options:
         inp["options"] = options
@@ -434,7 +632,7 @@ def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, 
         step["result"] = {"status": "completed", "output": None, "warnings": []}
         step["expect"] = {"revision": "same", "sheets": []}
     else:
-        step["result"] = {"status": "completed", "output": made(rows, op == "plan"), "warnings": []}
+        step["result"] = {"status": "completed", "output": made(rows, op == "plan"), "warnings": crowded(rows)}
         step["expect"] = {"revision": "same", "sheets": []} if op == "plan" else {**WRITTEN, "sheets": listing}
     case = {"name": name, "steps": [step]}
     if setup_ is not None:
@@ -491,6 +689,24 @@ def cases():
         ok("numara yazısı 2 mm, kılavuzla: tam boyda sığanlar içeride, kılavuz yok", three,
            numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
                     rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=2.0, leader=True),
+        # docs/adr/5080: the numbers outside kept clear of the sheet.
+        ok("kılavuzlu numara: doğuda yazıya değen numara batıya geçer", [P(10)], rs.MAIN + [ROAD_TEXT],
+           rs.setup(rs.MAIN + [ROAD_TEXT]), numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0,
+           leader=True),
+        ok("kılavuzlu numara: gizli katmandaki yazı engel değil", [P(10)], rs.MAIN + [HIDDEN_TEXT],
+           with_hidden(rs.MAIN + [HIDDEN_TEXT]), numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0,
+           leader=True, hidden=("gizli",)),
+        ok("kılavuzlu numara: başka bir kılavuzun çizgisine değen not batıya geçer", [P(10)], rs.MAIN + [ROAD_LEADER],
+           rs.setup(rs.MAIN + [ROAD_LEADER]), numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0,
+           leader=True),
+        ok("kılavuzlu numara: her yer bir çizgiye değiyorsa en aza değen yer, söylenir", [P(10)], rs.MAIN + [AROUND],
+           rs.setup(rs.MAIN + [AROUND]), numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0,
+           leader=True),
+        ok("kılavuzlu numara: aynı paftanın öbür numarasına değen not kuzeye geçer", None, STRIP, rs.setup(STRIP),
+           numbers={rs.uid(2): ["40/1", "40/2"]}, height=25.0, leader=True),
+        ok("kılavuzlu numaranın planı: yerleşmeyen numara uyarıyla", [P(10)], rs.MAIN + [AROUND],
+           rs.setup(rs.MAIN + [AROUND]), op="plan", numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0,
+           leader=True),
         refused("kılavuz, numaranın yazı boyu olmadan", {"scope": scope_input([P(10)]),
                 "numbers": {rs.uid(P(10) + 1): ["101/24", "101/25"]}, "numberLeader": True}, "invalid_input",
                 "Kılavuz, numaranın yazısıyla olur: numaranın yazı boyunu (numberHeight) da verin.", "numberLeader"),

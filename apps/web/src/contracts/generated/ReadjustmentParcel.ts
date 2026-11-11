@@ -5,4 +5,9 @@ import type { ReadjustmentPart } from "./ReadjustmentPart";
  * A parcel: its registered area, its deduction at the policy's places, its net area, the remainder its holders'
  * split had and the holder it went to (none when there was none), and its holders' parts in the records' order.
  */
-export type ReadjustmentParcel = { parcel: string, area: string, deduction: string, net: string, remainder: string, remainderTo: Array<string>, parts: Array<ReadjustmentPart>, };
+export type ReadjustmentParcel = { parcel: string, area: string, deduction: string, net: string, remainder: string, remainderTo: Array<string>, parts: Array<ReadjustmentPart>, 
+/**
+ * docs/adr/5080, by value: the parcel's value as given and its exact share of the values (`n/d`); its deduction is
+ * then its area − its net, below zero when it gains.
+ */
+value?: string, valueShare?: string, };

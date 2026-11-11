@@ -11,6 +11,8 @@ import type { ReadjustmentRules } from "./ReadjustmentRules";
  * d > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),
  * `duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's
  * shares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is
- * `reject`).
+ * `reject`). Docs/adr/5080: `invalid_input` at `rules.basis` (neither `area` nor `value`), `rules.valueSource` (empty
+ * by value), `entries[i].value` (given by area; by value missing, not plain decimal text, below zero, or another on the
+ * parcel's records), `entries` (by value, the values add up to zero).
  */
 export type ReadjustmentDistribute = { rules: ReadjustmentRules, entries: Array<ReadjustmentEntry>, };

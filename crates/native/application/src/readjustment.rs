@@ -3,7 +3,9 @@
 //! and remainder only by the rule package's policy. The deduction: its exact total (Σ area × ratio) rounded once, then
 //! split over the parcels by their areas; each parcel's net split over its holders by their shares; every remainder's
 //! receivers said. The totals are checked exactly. The answer is a draft, never a decision. The shared cases are
-//! `fixtures/commands/v1/cad.readjustment.distribute.json`.
+//! `fixtures/commands/v1/cad.readjustment.distribute.json`. Docs/adr/5080: by value, the distribution mass (registered −
+//! the rounded deduction) is split over the parcels by their values (the user's) instead, each parcel's deduction its
+//! area less its share, with a warning that the regulation has no such rule.
 
 use kentos_commands::{
     CommandResult, ReadjustmentDistribute, ReadjustmentDistributed, ReadjustmentHolder, ReadjustmentParcel,
@@ -85,10 +87,28 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
     let Some(rule) = RemainderRule::parse(r.remainder.trim()) else {
         return Err(fail(codes::INVALID_INPUT, format!("“{}” bir artık kuralı değil (reject, largest_remainder).", r.remainder), "rules.remainder"));
     };
+    // docs/adr/5080: the basis, and by value the values' source.
+    let by_value = match r.basis.as_deref().map(str::trim) {
+        None | Some("area") => false,
+        Some("value") => true,
+        Some(_) => {
+            let said = r.basis.clone().unwrap_or_default();
+            return Err(fail(codes::INVALID_INPUT, format!("“{said}” bir dağıtım esası değil (area: alan, value: değer)."), "rules.basis"));
+        }
+    };
+    if by_value && r.value_source.as_deref().is_none_or(|t| t.trim().is_empty()) {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Değer esaslı dağıtımda değerlerin kaynağı (kim, hangi kararla belirledi) yazılmalı; KentOS değer üretmez.".into(),
+            "rules.valueSource",
+        ));
+    }
     if input.entries.is_empty() {
         return Err(fail(codes::INVALID_INPUT, "Kayıt yok: parsel, hak sahibi, tapu alanı ve pay verin.".into(), "entries"));
     }
     let scale = r.scale;
+    // docs/adr/5080: each parcel's value, by value only.
+    let mut values: Vec<(String, String)> = Vec::new();
     // The parcels in their first record's order: (parcel, area, [(record, holder, share)]).
     let mut parcels: Vec<(String, String, Vec<(usize, String, Share)>)> = Vec::new();
     for (i, e) in input.entries.iter().enumerate() {
@@ -108,6 +128,38 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
         let Ok(share) = Share::parse(e.share.trim()) else {
             return Err(fail(codes::INVALID_INPUT, format!("{}. kaydın payı “{}” n/d biçiminde değil (payda sıfır olamaz).", i + 1, e.share), &format!("entries[{i}].share")));
         };
+        if e.value.is_some() && !by_value {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("{}. kaydın değeri yalnız değer esaslı dağıtımda okunur (rules.basis: value).", i + 1),
+                &format!("entries[{i}].value"),
+            ));
+        }
+        if by_value {
+            let value = e.value.as_deref().unwrap_or_default().trim();
+            if !plain(value) || value.starts_with('-') {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!(
+                        "{}. kaydın değeri “{}” eksi olmayan düz bir ondalık yazı olmalı: değer esaslı dağıtımda her kayıt parselinin düzenlemeden önceki değerini taşır.",
+                        i + 1,
+                        e.value.as_deref().unwrap_or_default()
+                    ),
+                    &format!("entries[{i}].value"),
+                ));
+            }
+            match values.iter().find(|(p, _)| p == parcel) {
+                Some((_, first)) if parse_decimal(first).ok() != parse_decimal(value).ok() => {
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        format!("“{parcel}” parselinin değeri kayıtlarda farklı: {first} ve {value}."),
+                        &format!("entries[{i}].value"),
+                    ));
+                }
+                Some(_) => {}
+                None => values.push((parcel.to_owned(), value.to_owned())),
+            }
+        }
         match parcels.iter_mut().find(|(p, _, _)| p == parcel) {
             Some((_, first, holders)) => {
                 if parse_decimal(first).ok() != parse_decimal(area).ok() {
@@ -149,7 +201,34 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
     let exact = sum_exact(&product_refs).map_err(|e| numeric(e, "rules.deduction"))?;
     let total = round_decimal(&exact, scale, mode).map_err(|e| numeric(e, "rules.deduction"))?;
     let registered = sum_exact(&areas).map_err(|e| numeric(e, "entries"))?;
-    let split = if parse_decimal(&registered).is_ok_and(|d| d.is_zero()) {
+    // docs/adr/5080: by value, the mass (registered − the rounded deduction) split by the parcels' values; each parcel's
+    // deduction its area less its share.
+    let mut mass: Option<(String, Vec<String>, Vec<String>)> = None;
+    let split = if by_value {
+        let weights: Vec<&str> = parcels
+            .iter()
+            .map(|(p, _, _)| values.iter().find(|(q, _)| q == p).map_or("0", |(_, v)| v.as_str()))
+            .collect();
+        let whole = sum_exact(&weights).map_err(|e| numeric(e, "entries"))?;
+        if parse_decimal(&whole).is_ok_and(|d| d.is_zero()) {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Parsellerin değerleri toplamı sıfır; değer esaslı dağıtım değerlerin oranıyla yapılır.".into(),
+                "entries",
+            ));
+        }
+        let left = fixed(&subtract_exact(&registered, &total).map_err(|e| numeric(e, "entries"))?, scale).map_err(|e| numeric(e, "entries"))?;
+        let shares = distribute(&left, &weights, scale, mode, rule).map_err(|e| numeric(e, "entries"))?;
+        let deductions = parcels
+            .iter()
+            .zip(&shares.parts)
+            .map(|((_, a, _), n)| fixed(&subtract_exact(a, n)?, scale))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| numeric(e, "entries"))?;
+        let fractions = weights.iter().map(|w| fraction_of(w, &whole)).collect::<Result<Vec<_>, _>>().map_err(|e| numeric(e, "entries"))?;
+        mass = Some((shares.remainder, shares.given.iter().map(|&k| parcels[k].0.clone()).collect(), fractions));
+        kentos_geometry_core::numeric::Distribution { parts: deductions, remainder: "0".into(), given: Vec::new() }
+    } else if parse_decimal(&registered).is_ok_and(|d| d.is_zero()) {
         kentos_geometry_core::numeric::Distribution { parts: vec![fixed("0", scale).unwrap_or_default(); areas.len()], remainder: "0".into(), given: Vec::new() }
     } else {
         distribute(&total, &areas, scale, mode, rule).map_err(|e| numeric(e, "rules.deduction"))?
@@ -176,6 +255,7 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
                 None => holders.push((holder.clone(), vec![value.clone()])),
             }
         }
+        let k = out_parcels.len();
         out_parcels.push(ReadjustmentParcel {
             parcel: parcel.clone(),
             area: area.clone(),
@@ -184,6 +264,8 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
             remainder: d.remainder,
             remainder_to: d.given.iter().map(|&k| hs[k].1.clone()).collect(),
             parts,
+            value: mass.as_ref().and_then(|_| values.iter().find(|(p, _)| p == parcel).map(|(_, v)| v.clone())),
+            value_share: mass.as_ref().map(|m| m.2[k].clone()),
         });
         nets.push(net);
     }
@@ -214,7 +296,50 @@ fn run(input: &ReadjustmentDistribute) -> Result<ReadjustmentDistributed, Stop> 
             .into_iter()
             .map(|(holder, values)| Ok(ReadjustmentHolder { holder, value: sum(&values)? }))
             .collect::<Result<_, Stop>>()?,
+        basis: mass.as_ref().map(|_| "value".to_owned()),
+        value_source: mass.as_ref().and(r.value_source.as_ref()).map(|t| t.trim().to_owned()),
+        mass_remainder: mass.as_ref().map(|m| m.0.clone()),
+        mass_remainder_to: mass.map(|m| m.1).unwrap_or_default(),
     })
+}
+
+/// Plain decimal text: digits, at most one point with digits on both sides, an optional leading minus.
+fn plain(text: &str) -> bool {
+    let body = text.strip_prefix('-').unwrap_or(text);
+    let (whole, part) = body.split_once('.').map_or((body, None), |(w, p)| (w, Some(p)));
+    !whole.is_empty()
+        && whole.chars().all(|c| c.is_ascii_digit())
+        && (whole == "0" || !whole.starts_with('0'))
+        && part.is_none_or(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+}
+
+/// `part` / `whole` (both decimal text, `whole` not zero) as a reduced fraction `n/d`.
+fn fraction_of(part: &str, whole: &str) -> Result<String, NumericError> {
+    let (a, b) = (parse_decimal(part)?, parse_decimal(whole)?);
+    let s = a.scale().max(b.scale());
+    let up = |m: i128, scale: u32| 10i128.checked_pow(s - scale).and_then(|p| m.checked_mul(p)).ok_or(NumericError::Overflow);
+    let (mut num, mut den) = (up(a.mantissa(), a.scale())?, up(b.mantissa(), b.scale())?);
+    let (mut x, mut y) = (num.unsigned_abs(), den.unsigned_abs());
+    while y != 0 {
+        (x, y) = (y, x % y);
+    }
+    let g = x.max(1) as i128;
+    num /= g;
+    den /= g;
+    if den < 0 {
+        num = -num;
+        den = -den;
+    }
+    Ok(format!("{num}/{den}"))
+}
+
+/// docs/adr/5080: the warning every answer by value carries.
+fn value_warning() -> kentos_commands::CommandWarning {
+    kentos_commands::CommandWarning {
+        code: "value_basis_not_a_rule".to_owned(),
+        message: "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir (dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler kullanıcınındır.".to_owned(),
+        path: Some("rules.basis".to_owned()),
+    }
 }
 
 pub fn validate(_cx: &ExecutionContext<'_>, input: &ReadjustmentDistribute) -> CommandResult<()> {
@@ -227,7 +352,10 @@ pub fn validate(_cx: &ExecutionContext<'_>, input: &ReadjustmentDistribute) -> C
 /// The draft; reads only.
 pub fn plan(_cx: &ExecutionContext<'_>, input: &ReadjustmentDistribute) -> CommandResult<ReadjustmentDistributed> {
     match run(input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => {
+            let warnings = if output.basis.is_some() { vec![value_warning()] } else { Vec::new() };
+            CommandResult::Completed { output, warnings }
+        }
         Err(stop) => stop.into(),
     }
 }

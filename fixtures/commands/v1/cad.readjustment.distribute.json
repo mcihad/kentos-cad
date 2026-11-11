@@ -2483,6 +2483,1288 @@
      }
     }
    ]
+  },
+  {
+   "name": "değer esaslı: dağıtım kütlesi parsellere değerleri oranında",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1500.50",
+       "deductionExact": "600.2",
+       "deduction": "600.20",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "900.30",
+       "held": "900.30",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "485.54",
+         "net": "514.46",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "25723/150",
+           "value": "171.49"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "25723/75",
+           "value": "342.97"
+          }
+         ],
+         "value": "2000000",
+         "valueShare": "4/7"
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "114.66",
+         "net": "385.84",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "4823/25",
+           "value": "192.92"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "4823/25",
+           "value": "192.92"
+          }
+         ],
+         "value": "1500000",
+         "valueShare": "3/7"
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "171.49"
+        },
+        {
+         "holder": "H2",
+         "value": "535.89"
+        },
+        {
+         "holder": "H3",
+         "value": "192.92"
+        }
+       ],
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir",
+       "massRemainder": "0"
+      },
+      "warnings": [
+       {
+        "code": "value_basis_not_a_rule",
+        "message": "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir (dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler kullanıcınındır.",
+        "path": "rules.basis"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı, uygula: salt okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1500.50",
+       "deductionExact": "600.2",
+       "deduction": "600.20",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "900.30",
+       "held": "900.30",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "485.54",
+         "net": "514.46",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "25723/150",
+           "value": "171.49"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "25723/75",
+           "value": "342.97"
+          }
+         ],
+         "value": "2000000",
+         "valueShare": "4/7"
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "114.66",
+         "net": "385.84",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "4823/25",
+           "value": "192.92"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "4823/25",
+           "value": "192.92"
+          }
+         ],
+         "value": "1500000",
+         "valueShare": "3/7"
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "171.49"
+        },
+        {
+         "holder": "H2",
+         "value": "535.89"
+        },
+        {
+         "holder": "H3",
+         "value": "192.92"
+        }
+       ],
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir",
+       "massRemainder": "0"
+      },
+      "warnings": [
+       {
+        "code": "value_basis_not_a_rule",
+        "message": "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir (dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler kullanıcınındır.",
+        "path": "rules.basis"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı, doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: üç eşit değer, artık en çok eksik kalana",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "A",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/1",
+        "value": "1"
+       },
+       {
+        "parcel": "B",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/1",
+        "value": "1"
+       },
+       {
+        "parcel": "C",
+        "holder": "H2",
+        "area": "100.01",
+        "share": "1/1",
+        "value": "1"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "300.01",
+       "deductionExact": "120.004",
+       "deduction": "120.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "180.01",
+       "held": "180.01",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "A",
+         "area": "100",
+         "deduction": "39.99",
+         "net": "60.01",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/1",
+           "exact": "6001/100",
+           "value": "60.01"
+          }
+         ],
+         "value": "1",
+         "valueShare": "1/3"
+        },
+        {
+         "parcel": "B",
+         "area": "100",
+         "deduction": "40.00",
+         "net": "60.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/1",
+           "exact": "60/1",
+           "value": "60.00"
+          }
+         ],
+         "value": "1",
+         "valueShare": "1/3"
+        },
+        {
+         "parcel": "C",
+         "area": "100.01",
+         "deduction": "40.01",
+         "net": "60.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/1",
+           "exact": "60/1",
+           "value": "60.00"
+          }
+         ],
+         "value": "1",
+         "valueShare": "1/3"
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "120.01"
+        },
+        {
+         "holder": "H2",
+         "value": "60.00"
+        }
+       ],
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir",
+       "massRemainder": "0.01",
+       "massRemainderTo": [
+        "A"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "value_basis_not_a_rule",
+        "message": "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir (dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler kullanıcınındır.",
+        "path": "rules.basis"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: alanla aynı oranda değer, alan esaslıyla aynı net",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "1000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "1000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "500.50"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "500.50"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1500.50",
+       "deductionExact": "600.2",
+       "deduction": "600.20",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "900.30",
+       "held": "900.30",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "400.00",
+         "net": "600.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "200/1",
+           "value": "200.00"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "400/1",
+           "value": "400.00"
+          }
+         ],
+         "value": "1000",
+         "valueShare": "2000/3001"
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "200.20",
+         "net": "300.30",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          }
+         ],
+         "value": "500.50",
+         "valueShare": "1001/3001"
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "200.00"
+        },
+        {
+         "holder": "H2",
+         "value": "550.15"
+        },
+        {
+         "holder": "H3",
+         "value": "150.15"
+        }
+       ],
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir",
+       "massRemainder": "0"
+      },
+      "warnings": [
+       {
+        "code": "value_basis_not_a_rule",
+        "message": "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir (dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler kullanıcınındır.",
+        "path": "rules.basis"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: değeri sıfır parsel pay almaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "A",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/1",
+        "value": "0"
+       },
+       {
+        "parcel": "B",
+        "holder": "H2",
+        "area": "100",
+        "share": "1/1",
+        "value": "250000"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "200.00",
+       "deductionExact": "80",
+       "deduction": "80.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "120.00",
+       "held": "120.00",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "A",
+         "area": "100",
+         "deduction": "100.00",
+         "net": "0.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/1",
+           "exact": "0/1",
+           "value": "0.00"
+          }
+         ],
+         "value": "0",
+         "valueShare": "0/1"
+        },
+        {
+         "parcel": "B",
+         "area": "100",
+         "deduction": "-20.00",
+         "net": "120.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/1",
+           "exact": "120/1",
+           "value": "120.00"
+          }
+         ],
+         "value": "250000",
+         "valueShare": "1/1"
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "0.00"
+        },
+        {
+         "holder": "H2",
+         "value": "120.00"
+        }
+       ],
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir",
+       "massRemainder": "0"
+      },
+      "warnings": [
+       {
+        "code": "value_basis_not_a_rule",
+        "message": "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir (dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler kullanıcınındır.",
+        "path": "rules.basis"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı, artık kuralı reject: artık varsa ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "reject",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "A",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/1",
+        "value": "1"
+       },
+       {
+        "parcel": "B",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/1",
+        "value": "1"
+       },
+       {
+        "parcel": "C",
+        "holder": "H2",
+        "area": "100.01",
+        "share": "1/1",
+        "value": "1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "needs_rule",
+       "message": "Yuvarlanan değerler toplamı 0.01 kadar tutmuyor ve kural paketinin artık kuralı “reject”; hiçbir şey dağıtılmadı. Artık kuralı onaylı bir pakette verin.",
+       "path": "entries"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: değerlerin kaynağı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": " "
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Değer esaslı dağıtımda değerlerin kaynağı (kim, hangi kararla belirledi) yazılmalı; KentOS değer üretmez.",
+       "path": "rules.valueSource"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: değeri olmayan kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "2. kaydın değeri “” eksi olmayan düz bir ondalık yazı olmalı: değer esaslı dağıtımda her kayıt parselinin düzenlemeden önceki değerini taşır.",
+       "path": "entries[1].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: eksi değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "-5"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "-5"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "10"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "10"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. kaydın değeri “-5” eksi olmayan düz bir ondalık yazı olmalı: değer esaslı dağıtımda her kayıt parselinin düzenlemeden önceki değerini taşır.",
+       "path": "entries[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: aynı parselde farklı değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "1999999"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“101/1” parselinin değeri kayıtlarda farklı: 2000000 ve 1999999.",
+       "path": "entries[1].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer esaslı: değerler toplamı sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "value",
+       "valueSource": "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "0"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "0"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "0.00"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "0.00"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Parsellerin değerleri toplamı sıfır; değer esaslı dağıtım değerlerin oranıyla yapılır.",
+       "path": "entries"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "alan esaslıda değer verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3",
+        "value": "2000000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2",
+        "value": "1500000"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. kaydın değeri yalnız değer esaslı dağıtımda okunur (rules.basis: value).",
+       "path": "entries[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen dağıtım esası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder",
+       "basis": "price"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“price” bir dağıtım esası değil (area: alan, value: değer).",
+       "path": "rules.basis"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
   }
  ]
 }

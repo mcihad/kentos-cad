@@ -60680,7 +60680,7 @@
       "id": "cad.readjustment.distribute",
       "version": 1,
       "title": "Düzenleme dağıtım taslağı",
-      "summary": "Arazi düzenlemesinin ilk sayılarını tekrarlanabilir bir taslak olarak hesaplar, karar olarak değil: her parselin tapu alanı (ondalık yazı, yazıldığı gibi), kural paketinin kesinti oranıyla kesinti, net alan ve her hak sahibinin kesin payından (1/3, 1/3 kalır) hakkı. Kural paketi (rules) kurumunu, kaynak belgesini, yürürlüğünü, sürümünü, onayını, kesinti oranını (deduction, [0, 1)) ve sayı politikasını (scale ≤ 6, rounding: half_even…, remainder: reject | largest_remainder) taşır; hiçbir oran kodda sabit değildir. Kesintinin kesin toplamı bir kez yuvarlanır ve parsellere alanlarıyla dağıtılır, net alan hak sahiplerine paylarıyla; her artığın kime gittiği söylenir. Toplamlar kesin denetlenir (conserved). Sayılar ondalık yazıdır, float değil. Sonuç her zaman taslaktır (draft); resmî karar verilmez. Retler: invalid_input, area_mismatch, duplicate_holder, shares_not_whole, needs_rule.",
+      "summary": "Arazi düzenlemesinin ilk sayılarını tekrarlanabilir bir taslak olarak hesaplar, karar olarak değil: her parselin tapu alanı (ondalık yazı, yazıldığı gibi), kural paketinin kesinti oranıyla kesinti, net alan ve her hak sahibinin kesin payından (1/3, 1/3 kalır) hakkı. Kural paketi (rules) kurumunu, kaynak belgesini, yürürlüğünü, sürümünü, onayını, kesinti oranını (deduction, [0, 1)) ve sayı politikasını (scale ≤ 6, rounding: half_even…, remainder: reject | largest_remainder) taşır; hiçbir oran kodda sabit değildir. Kesintinin kesin toplamı bir kez yuvarlanır ve parsellere alanlarıyla dağıtılır, net alan hak sahiplerine paylarıyla; her artığın kime gittiği söylenir. Toplamlar kesin denetlenir (conserved). Sayılar ondalık yazıdır, float değil. Sonuç her zaman taslaktır (draft); resmî karar verilmez. Değer esaslı karşılaştırma (rules.basis: value; ilk değer area, yönetmeliğin alan esaslı dağıtımı): dağıtım kütlesi (tapu toplamı − kesinti) parsellere düzenlemeden önceki değerleri oranında dağıtılır, parselin kesintisi alanı − payıdır (alan kazanırsa eksi); her değer kullanıcınındır (entries[i].value, parselin her kaydında aynı) ve kaynağıyla (rules.valueSource); KentOS değer üretmez. Cevapta basis, valueSource, parsellerin value ve valueShare'i (kesir), kütlenin artığı (massRemainder, massRemainderTo); her zaman value_basis_not_a_rule uyarısı: yönetmelikte kural değildir. Retler: invalid_input (değer esasında: bilinmeyen esas, kaynak yok, değeri olmayan, eksi ya da parselde farklı değer, değerler toplamı sıfır; alan esasında verilen değer), area_mismatch, duplicate_holder, shares_not_whole, needs_rule.",
       "aliases": [
         "duzenlemedagitim",
         "18madde"
@@ -60699,7 +60699,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.readjustment.distribute` v1: the rule package and the records, in order.\n\nRefusals, in this order: `invalid_input` (`rules.*`: an empty id, source or jurisdiction, a deduction off [0, 1),\nplaces over 6, an unknown mode or rule; `entries`: none), then record by record `invalid_input`\n(`entries[i].area` not plain decimal text or finer than the policy's places, `entries[i].share` not `n/d` with\nd > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),\n`duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's\nshares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is\n`reject`).",
+        "description": "Input of `cad.readjustment.distribute` v1: the rule package and the records, in order.\n\nRefusals, in this order: `invalid_input` (`rules.*`: an empty id, source or jurisdiction, a deduction off [0, 1),\nplaces over 6, an unknown mode or rule; `entries`: none), then record by record `invalid_input`\n(`entries[i].area` not plain decimal text or finer than the policy's places, `entries[i].share` not `n/d` with\nd > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),\n`duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's\nshares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is\n`reject`). Docs/adr/5080: `invalid_input` at `rules.basis` (neither `area` nor `value`), `rules.valueSource` (empty\nby value), `entries[i].value` (given by area; by value missing, not plain decimal text, below zero, or another on the\nparcel's records), `entries` (by value, the values add up to zero).",
         "properties": {
           "entries": {
             "items": {
@@ -60722,6 +60722,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.readjustment.distribute` v1: the package's id and release, whether the result is a draft (always\nhere: no official decision is enabled), the totals (registered, the deduction's exact and rounded value, its\nremainder and the parcels it went to, net, the holders' sum) and whether they are kept exactly, the parcels in the\nrecords' order and the holders' totals in their first appearance's order.",
         "properties": {
+          "basis": {
+            "description": "docs/adr/5080, by value: `value`, the values' source as given, and the remainder of the mass's split over the\nparcels and the parcels it went to (the deduction is then not split: its remainder is 0).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "conserved": {
             "type": "boolean"
           },
@@ -60752,6 +60759,18 @@
             },
             "type": "array"
           },
+          "massRemainder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "massRemainderTo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "net": {
             "type": "string"
           },
@@ -60772,6 +60791,12 @@
           },
           "rules": {
             "type": "string"
+          },
+          "valueSource": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -60796,6 +60821,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.readjustment.distribute` v1: the package's id and release, whether the result is a draft (always\nhere: no official decision is enabled), the totals (registered, the deduction's exact and rounded value, its\nremainder and the parcels it went to, net, the holders' sum) and whether they are kept exactly, the parcels in the\nrecords' order and the holders' totals in their first appearance's order.",
         "properties": {
+          "basis": {
+            "description": "docs/adr/5080, by value: `value`, the values' source as given, and the remainder of the mass's split over the\nparcels and the parcels it went to (the deduction is then not split: its remainder is 0).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "conserved": {
             "type": "boolean"
           },
@@ -60826,6 +60858,18 @@
             },
             "type": "array"
           },
+          "massRemainder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "massRemainderTo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "net": {
             "type": "string"
           },
@@ -60846,6 +60890,12 @@
           },
           "rules": {
             "type": "string"
+          },
+          "valueSource": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -60873,6 +60923,9 @@
           "duplicate_holder",
           "shares_not_whole",
           "needs_rule"
+        ],
+        "warnings": [
+          "value_basis_not_a_rule"
         ]
       },
       "examples": [
@@ -61187,7 +61240,7 @@
       "id": "cad.readjustment.sheets",
       "version": 1,
       "title": "Ayırma çapı paftaları",
-      "summary": "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez; numaralı her dış parça parselin katmanına da yazılır: parça alan olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş aralığının ortası); cevapta labels. numberHeight (kâğıt mm, kullanıcının) verilince numara nokta yerine parçanın içine sığan bir yazıdır: boyu numberHeight × ölçek / 1000, sığana dek onda bir adımlarla küçülür; önce yatay, sonra parçanın en uzun düz kenarı boyunca denenir; labels'ta height, rotation, share ve fits. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara; numberHeight 0'dan büyük değil), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).",
+      "summary": "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez; numaralı her dış parça parselin katmanına da yazılır: parça alan olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş aralığının ortası); cevapta labels. numberHeight (kâğıt mm, kullanıcının) verilince numara nokta yerine parçanın içine sığan bir yazıdır: boyu numberHeight × ölçek / 1000, sığana dek onda bir adımlarla küçülür; önce yatay, sonra parçanın en uzun düz kenarı boyunca denenir; labels'ta height, rotation, share ve fits. numberLeader (numberHeight ile): tam boyda sığmayan numara küçülmez, parçanın dışına kılavuzla yazılır; yerler en yakından denenir (çizgi parçanın sınırından 1, 2, 3 yazı boyu öte; doğu, batı, kuzey, güney, sonra ara yönler) ve kılavuzun parçanın dışındaki çizgisi, inişi ve notu paftanın haritasının gösterdiği hiçbir şeye (gösterilen katmanlardaki çizgiler ve alanların sınırları, yazılar, kılavuzlar, noktalar; paftanın öbür numaraları) değmeyen ilk yer seçilir; labels'ta leader (uç) ve clear. Hiçbir yer temiz değilse en az şeye değen yer: clear false, clashes (nesnelerin kalıcı kimlikleri, numaraların parça adları) ve number_crowded uyarısı. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara; numberHeight 0'dan büyük değil; numberHeight'sız numberLeader), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).",
       "aliases": [
         "ayirmacapipaftalari",
         "capinpaftalari"
@@ -61225,7 +61278,7 @@
             "x-unit": "paper-mm"
           },
           "numberLeader": {
-            "description": "Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or\nalong its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a\nleader from the part's label place, its line running east to one text height past the part's boundary on that\nline, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not\nfit outside it, horizontal, at an offset from its boundary).",
+            "description": "Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or\nalong its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a\nleader from the part's label place, its line running out of the part to one text height past its boundary, its\nlanding and note beyond it as a leader lays them out. Docs/adr/5080: the places are tried nearest first (one,\ntwo, then three text heights past the boundary; east, west, north, south, then the four between) and the first\nwhose line outside the part, landing and note touch nothing the sheet's map shows is taken; none clear: the one\ntouching the fewest, said in the label (`clear`, `clashes`) and a warning `number_crowded`.",
             "type": "boolean"
           },
           "numbers": {
@@ -61413,6 +61466,9 @@
           "invalid_options",
           "separation_sheet_exists",
           "book_unreadable"
+        ],
+        "warnings": [
+          "number_crowded"
         ]
       },
       "examples": [
@@ -110846,6 +110902,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yuvarlanan değerler toplamı tutmuyor ve artık kuralı yok; hiçbir şey dağıtılmadı."
+    },
+    {
+      "code": "value_basis_not_a_rule",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Değer esaslı dağıtım yönetmelikte bir kural değildir; sonuç kullanıcının seçtiği bir karşılaştırma taslağıdır."
+    },
+    {
+      "code": "number_crowded",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dışarıdaki numara hiçbir şeye değmeyen bir yere konamadı; en az şeye değdiği yere kondu."
     },
     {
       "code": "area_mismatch",
@@ -186895,6 +186963,13 @@
         },
         "share": {
           "type": "string"
+        },
+        "value": {
+          "description": "docs/adr/5080, with `basis: value` only: the parcel's value before the readjustment (plain decimal text, not\nbelow zero, the same on every record of the parcel; the user's, e.g. a valuation's).",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -186950,6 +187025,19 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "value": {
+          "description": "docs/adr/5080, by value: the parcel's value as given and its exact share of the values (`n/d`); its deduction is\nthen its area − its net, below zero when it gains.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "valueShare": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -186994,6 +187082,13 @@
         "approved": {
           "type": "boolean"
         },
+        "basis": {
+          "description": "docs/adr/5080: what the distribution mass is shared by: `area` (none: the regulation's, by the parcels' areas) or\n`value` (the user's alternative: by their values before the readjustment, `entries[i].value`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "deduction": {
           "type": "string"
         },
@@ -187026,6 +187121,13 @@
         },
         "source": {
           "type": "string"
+        },
+        "valueSource": {
+          "description": "docs/adr/5080, with `basis: value`: who determined the values and by what decision (KentOS makes none).",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -194468,6 +194570,20 @@
           "minItems": 2,
           "type": "array",
           "x-unit": "m"
+        },
+        "clashes": {
+          "description": "Docs/adr/5080: what a number that is not clear touches, sorted: the drawing's objects by their persistent ids,\nthis sheet's other numbers by their parts' names (“Girmeyen 2”).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "clear": {
+          "description": "Docs/adr/5080, with a leader: whether its line outside the part, its landing and its note touch nothing the\nsheet's map shows (the drawing's lines, texts, leaders and points on shown layers, and this sheet's other\nnumbers). False: no place tried was clear, and the number stands where it touches the fewest.",
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "fits": {
           "type": [

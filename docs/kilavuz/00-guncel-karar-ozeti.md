@@ -632,6 +632,12 @@
   `cad.readjustment.sheets`'in `numberLeader`'ı: numara tam boyda sığmazsa küçültülmeden, yatay, kılavuzla dışarıda
   (uç parçanın etiket yeri, iniş doğu sınırdan bir boy öte); cevapta `leader`. Düzenleme › Ayırma çapı › Sığmayan
   numara. Harita ve CBS.
+- **Dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (11 Kasım 2026; MAP-11, [ADR 5080](../../docs/adr/5080-separation-number-clear-and-value-distribution.md)).**
+  `cad.readjustment.sheets`'in kılavuzlu numarası en yakın temiz yere (1–3 boy; doğu, batı, kuzey, güney, ara yönler):
+  çizimin gösterilen çizgileri, alan sınırları, yazıları, kılavuzları, noktaları ve paftanın öbür numaraları engel;
+  temiz yer yoksa en aza değen yer, `clear`/`clashes` ve `number_crowded`. `cad.readjustment.distribute`'a `basis: value`:
+  kütle değer oranında (BauGB § 56–57), değerler ve kaynakları kullanıcının, her cevapta `value_basis_not_a_rule`
+  (yönetmelikte kural değil). Harita ve CBS.
 - **Senaryo ölçülerinde eğim sınıfları ve bakı (10 Kasım 2026; MAP-10, [ADR 4660](../../docs/adr/4660-scenario-slope-classes-and-aspect.md)).**
   `cad.scenarios.impact`'in `slope.classes`'ı (kullanıcının sınırları, %) ve `slope.aspect`'i (sekiz yön ve Düz, ArcGIS'in
   Surface Aspect'i) ölçü satırları olarak. Senaryo ölçüleri › Eğim sınıfları (%) / bakı. Harita + CBS.

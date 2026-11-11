@@ -6,8 +6,8 @@ At 6 mm on paper (6 m at 1:1000) with Kılavuz:
 
 - 101/10's two pieces, 4 m wide, do not take their number at the full height, horizontal nor turned along their long
   sides (the test finds it on its own); each number is a leader instead, not stepped down: its tip the piece's label
-  place (inside it), its line running east to one text height past the piece's east side, the note 6 m tall beyond its
-  2 h landing and 0.5 h gap, wholly outside the piece;
+  place (inside it), its line running out to one text height past the piece's side (east, or west where east is not
+  clear, docs/adr/5080), the note 6 m tall beyond its 2 h landing and 0.5 h gap, wholly outside the piece;
 - without Kılavuz the same numbers step down inside (docs/adr/4280).
 """
 
@@ -84,12 +84,16 @@ class SeparationNumberLeader(unittest.TestCase):
             tip, start = (lead["pts"][0]["x"], lead["pts"][0]["y"]), (lead["pts"][-1]["x"], lead["pts"][-1]["y"])
             self.assertTrue(inside(tip, ring), "the tip in the piece")
             self.assertAlmostEqual(tip[1], (min(ys) + max(ys)) / 2, delta=1e-9)
-            self.assertAlmostEqual(start[0], max(xs) + h, delta=1e-9, msg="one text height past the east side")
             self.assertAlmostEqual(start[1], tip[1], delta=1e-9)
             self.assertEqual(lead["rotation"], 0.0)
-            # ADR 0146: the note's middle-left 2.5 h past the landing's start; its box wholly east of the piece.
-            note_left = start[0] + 2.5 * h
-            self.assertGreater(note_left, max(xs))
+            # One text height past the piece's side: east for the south piece; the north one west (docs/adr/5080: east
+            # its line would cross 101/8). ADR 0146: the note 2.5 h past the landing's start, wholly off the piece.
+            if start[0] > tip[0]:
+                self.assertAlmostEqual(start[0], max(xs) + h, delta=1e-9, msg="one text height past the east side")
+                self.assertGreater(start[0] + 2.5 * h, max(xs))
+            else:
+                self.assertAlmostEqual(start[0], min(xs) - h, delta=1e-9, msg="one text height past the west side")
+                self.assertLess(start[0] - 2.5 * h, min(xs))
 
     def test_without_the_leader_they_step_down_inside(self) -> None:
         records = self.written(False)

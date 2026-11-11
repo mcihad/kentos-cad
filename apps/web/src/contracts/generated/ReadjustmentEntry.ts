@@ -5,4 +5,9 @@
  * parcel's registered area (decimal text, square metres; the same on every record of the parcel) and the holder's
  * share (`n/d`).
  */
-export type ReadjustmentEntry = { parcel: string, holder: string, area: string, share: string, };
+export type ReadjustmentEntry = { parcel: string, holder: string, area: string, share: string, 
+/**
+ * docs/adr/5080, with `basis: value` only: the parcel's value before the readjustment (plain decimal text, not
+ * below zero, the same on every record of the parcel; the user's, e.g. a valuation's).
+ */
+value?: string, };

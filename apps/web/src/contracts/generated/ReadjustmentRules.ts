@@ -5,4 +5,13 @@
  * the deduction ratio (decimal text in [0, 1)), and the numeric policy: places, rounding mode (`half_even`,
  * `half_away_from_zero`, …) and remainder rule (`reject`, `largest_remainder`).
  */
-export type ReadjustmentRules = { id: string, release: number, jurisdiction: string, source: string, effective: string, approved: boolean, deduction: string, scale: number, rounding: string, remainder: string, };
+export type ReadjustmentRules = { id: string, release: number, jurisdiction: string, source: string, effective: string, approved: boolean, deduction: string, scale: number, rounding: string, remainder: string, 
+/**
+ * docs/adr/5080: what the distribution mass is shared by: `area` (none: the regulation's, by the parcels' areas) or
+ * `value` (the user's alternative: by their values before the readjustment, `entries[i].value`).
+ */
+basis?: string, 
+/**
+ * docs/adr/5080, with `basis: value`: who determined the values and by what decision (KentOS makes none).
+ */
+valueSource?: string, };

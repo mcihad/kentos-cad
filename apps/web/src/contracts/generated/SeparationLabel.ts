@@ -16,4 +16,15 @@ height?: number, rotation?: number, share?: number, fits?: boolean,
  * Docs/adr/4680: the leader's tip, inside the part (its label place), when the number goes outside on a leader;
  * `at` is then where the leader's landing starts.
  */
-leader?: [number, number], };
+leader?: [number, number], 
+/**
+ * Docs/adr/5080, with a leader: whether its line outside the part, its landing and its note touch nothing the
+ * sheet's map shows (the drawing's lines, texts, leaders and points on shown layers, and this sheet's other
+ * numbers). False: no place tried was clear, and the number stands where it touches the fewest.
+ */
+clear?: boolean, 
+/**
+ * Docs/adr/5080: what a number that is not clear touches, sorted: the drawing's objects by their persistent ids,
+ * this sheet's other numbers by their parts' names (“Girmeyen 2”).
+ */
+clashes?: Array<string>, };

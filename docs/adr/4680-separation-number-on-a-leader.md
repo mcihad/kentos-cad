@@ -74,6 +74,6 @@ parçanın dışına kılavuz çizgiyle yazılması”.
 
 ## Sonra
 
-- Dışarıdaki notun çakışma denetimi ve öbür yönler; yaylı parçada yay boyunca yerleştirme.
-- Tescil bildirimi (TKGM'nin biçimi beklenir); değer esaslı dağıtım (resmî metinde kural yok).
+- Dışarıdaki notun çakışma denetimi ve öbür yönler: [ADR 5080](5080-separation-number-clear-and-value-distribution.md). Yaylı parçada yay boyunca yerleştirme.
+- Tescil bildirimi (TKGM'nin biçimi beklenir); değer esaslı dağıtım (resmî metinde kural yok; kullanıcının seçtiği karşılaştırma olarak ADR 5080).
 - Web (TODOS §0.2).
