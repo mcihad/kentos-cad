@@ -96,7 +96,11 @@ export class CommandRegistry {
     return id ? this.commands.get(id) : undefined;
   }
 
-  /** Commands whose alias or title starts with / contains the query. */
+  /**
+   * Commands whose alias or title starts with / contains the query: an alias equal first, then a title equal (typing
+   * “Kesit” finds Kesit before Kesit çıkar, whose alias KESITCIKAR only begins with it), then an alias beginning with
+   * it (the shorter first), then a title beginning with it, then one holding it.
+   */
   search(query: string, limit = 8): Command[] {
     const q = foldAlias(query);
     if (!q) return [];
@@ -109,7 +113,8 @@ export class CommandRegistry {
         else if (fa.startsWith(q)) score = Math.min(score, 1 + fa.length / 100);
       }
       const ft = foldAlias(cmd.title);
-      if (ft.startsWith(q)) score = Math.min(score, 2);
+      if (ft === q) score = Math.min(score, 0.5);
+      else if (ft.startsWith(q)) score = Math.min(score, 2);
       else if (ft.includes(q)) score = Math.min(score, 3);
       if (score < Infinity) scored.push({ cmd, score });
     }

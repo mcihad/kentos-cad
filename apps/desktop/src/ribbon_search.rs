@@ -1,13 +1,13 @@
 //! Komut ara, the tab row's search box (the web's `ui/ribbon/search.ts` and
 //! `Ribbon.where` / `reveal`; docs/adr/0077): commands found by name or
 //! command-line alias, Turkish letters folded, as the web's registry
-//! `search` ranks them (an alias equal first, then an alias beginning with
-//! the text, then a title beginning with it, then a title holding it; nine
-//! at most). Each row says where the command is on the ribbon (“Değiştir ›
-//! Değiştir”), or why it does not run here. Enter or a click runs one; Alt+Enter
-//! or the row's pin shows where it lives: its tab opens and its button (or
-//! its panel's ▾, or its folded panel) is outlined for a moment. Alt+Q comes
-//! here (`view.commandSearch`).
+//! `search` ranks them (an alias equal first, then a title equal, then an
+//! alias beginning with the text, then a title beginning with it, then a
+//! title holding it; nine at most). Each row says where the command is on
+//! the ribbon (“Değiştir › Değiştir”), or why it does not run here. Enter or
+//! a click runs one; Alt+Enter or the row's pin shows where it lives: its tab
+//! opens and its button (or its panel's ▾, or its folded panel) is outlined
+//! for a moment. Alt+Q comes here (`view.commandSearch`).
 
 use std::time::Duration;
 
@@ -85,7 +85,11 @@ fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(
                 }
             }
             let title = fold_turkish(command.title);
-            if title.starts_with(q) {
+            // A title equal to the text before an alias that only begins with it: “Kesit” finds Kesit before Kesit
+            // çıkar (KESITCIKAR).
+            if title == q {
+                score = score.min(0.5);
+            } else if title.starts_with(q) {
                 score = score.min(2.0);
             } else if title.contains(q) {
                 score = score.min(3.0);
@@ -356,14 +360,26 @@ mod tests {
         search(query).iter().map(|c| c.id).collect()
     }
 
-    /// The web's ranking: an alias equal first, then one beginning with the
-    /// text, then titles beginning with it, then holding it; Turkish letters
-    /// fold (CIZGI finds Çizgi); nine at most; nothing for blank text.
+    /// The web's ranking: an alias equal first, then a title equal, then an
+    /// alias beginning with the text, then titles beginning with it, then
+    /// holding it; Turkish letters fold (CIZGI finds Çizgi); nine at most;
+    /// nothing for blank text.
     #[test]
     fn commands_are_found_by_alias_and_title_as_on_the_web() {
         assert_eq!(ids("L").first(), Some(&"tool.line"));
         assert_eq!(ids("cizgi").first(), Some(&"tool.line"));
         assert_eq!(ids("ÇİZGİ").first(), Some(&"tool.line"));
+        // “Kesit” is Kesit's title; Kesit çıkar's alias KESITCIKAR, shorter than Kesit's KESITISARETI, only begins
+        // with it.
+        let kesit: Vec<&str> = scored_commands(&fold_turkish("Kesit"), None)
+            .into_iter()
+            .map(|(_, c)| c.id)
+            .collect();
+        let at = |id: &str| kesit.iter().position(|k| *k == id);
+        assert!(
+            at("tool.viewSection") < at("tool.sectionDraw") && at("tool.sectionDraw").is_some(),
+            "{kesit:?}"
+        );
         assert!(ids("a").len() <= 9);
         assert!(ids("  ").is_empty());
         let found = ids("taşı");

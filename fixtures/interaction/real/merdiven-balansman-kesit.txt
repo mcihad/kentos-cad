@@ -38,8 +38,6 @@ key ctrl+a
 type Kesit
 wait 1500
 shot k0-arama
-key Down
-wait 400
 key Return
 wait 1500
 type 14,0.9

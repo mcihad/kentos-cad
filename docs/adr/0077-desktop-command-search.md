@@ -28,7 +28,8 @@
   - Satırda komutun ikonu, adı, altında yeri, kısayolu ve “Şeritte göster” iğnesi vardır.
   - Satırın altındaki yazı komutun şeritteki yeridir, “Değiştir › Değiştir” gibi: önce Giriş dışındaki sekmeler, sonra Giriş aranır. Şeritte olmayan komutun kategorisi yazar. Masaüstünde çalışmayan komut soluk görünür ve “Web'de var; masaüstüne henüz taşınmadı” der.
   - Eşleşme yoksa: “‘x’ ile eşleşen komut yok. Komut satırındaki takma adlar da aranır (ör. L, CIZGI).”
-- **Sıralama** (web'in `search`'ü): önce takma adı yazılana eşit olanlar, sonra takma adı onunla başlayanlar (kısa ad önce), sonra adı onunla başlayanlar, en son adında geçenler. Türkçe harfler katlanır: CIZGI Çizgi'yi bulur.
+- **Sıralama** (web'in `search`'ü): önce takma adı yazılana eşit olanlar, sonra adı yazılana eşit olanlar, sonra takma adı onunla başlayanlar (kısa ad önce), sonra adı onunla başlayanlar, en son adında geçenler. Türkçe harfler katlanır: CIZGI Çizgi'yi bulur.
+  - **Adın tam eşleşmesi (11 Kasım 2026):** önceden ad yalnız "onunla başlayan" sayılıyordu; KentOS Mimari'de "Kesit" yazıp Enter'a basan Kesit çıkar'ı açıyordu, çünkü onun takma adı KESITCIKAR (10 harf) Kesit'inkinden (KESITISARETI, 12) kısa. Gerçek pencerede ölçüldü: önce ilk satır Kesit çıkar, sonra Kesit; Enter kesit işaretinin aracını açıyor. Web ve masaüstü birlikte değişti (`core/commands.test.ts`, `ribbon_search::tests`).
 - **Tuşlar:**
   - ↑ ↓ satır seçer, uçlardan öbür uca döner.
   - Enter çalıştırır; Alt+Enter yerini gösterir.
