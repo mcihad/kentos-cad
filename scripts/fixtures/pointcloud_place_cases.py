@@ -7,7 +7,7 @@ KentOS code.
 
 Everything here is this file's own arithmetic, in other ways than the command's:
 - Euler angles as the product of three elementary turns, Rz(yaw) · Ry(pitch) · Rx(roll) (OGC GeoPose 1.0 Basic-YPR:
-  turns about the turned axes z, y′, x″ in that order; the same matrix as CloudCompare's `initFromParameters`), not the
+  turns about the turned axes z, y′, x″ in that order; ADR 5100 cites a second, matching source), not the
   expanded rows;
 - an axis and an angle by the unit quaternion (cos θ/2, sin θ/2 · n), not Rodrigues' rows;
 - a map about a centre c: p ↦ R(p − c) + c + t;

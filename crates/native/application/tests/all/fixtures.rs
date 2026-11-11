@@ -6675,7 +6675,7 @@ fn run_step(
                 .ok_or(format!("{at}: {index}. mutfak dizisi yok"))?;
             state.uids.insert(name.to_owned(), Uuid::from_bytes(run.id.0));
         }
-        // A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538): a
+        // A file changed by someone else between two steps (another program's edit of a bound table, docs/adr/0538): a
         // fixture's bytes over a `$tmp:` file.
         "copyFile" => {
             let from = with_fixtures(step["from"].as_str().ok_or(format!("{at}: “from” yok"))?);

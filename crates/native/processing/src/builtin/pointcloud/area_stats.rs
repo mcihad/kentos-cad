@@ -1,5 +1,4 @@
-//! Alan sorgusu (docs/adr/0207 §7; Netcad's Nokta Bulutu Alan Sor, ArcGIS
-//! LAS Point Statistics By Area): for each selected area, the points of the
+//! Alan sorgusu (docs/adr/0207 §7): for each selected area, the points of the
 //! clouds in it: how many, how dense, their heights' least, most, mean and
 //! sample standard deviation, and each class's count (`ops::stats`). A
 //! table, with Panoya kopyala and CSV; the drawing does not change.

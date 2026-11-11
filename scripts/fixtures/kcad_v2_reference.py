@@ -53,7 +53,7 @@ DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordin
 SCHEMA_9_STYLES = DIMENSION_STYLES[5:10]
 # Schema 62 (docs/adr/0322): the centre mark, the axis and the level.
 SCHEMA_62_STYLES = DIMENSION_STYLES[10:]
-# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added AutoCAD's
+# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added the DXF
 # others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
 LEADER_ARROWS_30 = ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
@@ -1965,7 +1965,7 @@ KINDS = {
     # Schema 72 (docs/adr/0410 §2): a record without a geometry, only in the drawing; no fields of its own.
     "record": {},
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
-    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
+    # Schema 30 (docs/adr/0205 §7): the DXF arrowheads, the arrowhead's size times the note's height.
     "leader": {
         "pts": (points, True),
         "text": (text, False),
@@ -2959,7 +2959,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     from a map service or one whose objects came from
     a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
     drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
-    dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
+    dimension's lines, a leader's arrowhead's size or one of the DXF arrowheads, in the drawing or a block definition
     (docs/adr/0205), 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
     survey settings' a priori standard deviations (docs/adr/0203 §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
     layer's fields (docs/adr/0199 §1), 25 with a text along a
@@ -5016,7 +5016,7 @@ def broken(minimal_content, minimal_file):
     files["topology-rule-angle-too-large.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustNotHaveSmallAngles", value=f64(2.0))])}))
     files["topology-exception-unknown-rule.kcad"] = with_settings(27, topology=cmap({"rules": array([trule()]), "exceptions": array([cmap({
         "at": array([f64(500000.0), f64(4400000.0)]), "rule": text("r9"), "objects": array([blob(uid_bytes(m["uids"][0]))])})])}))
-    # The annotation heights, a dimension's lines and a leader's AutoCAD arrowheads are schema 30's (docs/adr/0205): in
+    # The annotation heights, a dimension's lines and a leader's DXF arrowheads are schema 30's (docs/adr/0205): in
     # schema 29 unknown fields and unknown values; heights not empty, of a known kind, floats over 0 and at most 100 mm;
     # colours #RRGGBB, weights 0 to 100 mm, line types by name; an arrowhead's size 0.1 to 10 times the note's height.
     files["annotation-in-schema-29.kcad"] = with_settings(29, annotation=cmap({"text": f64(3.5)}))

@@ -574,7 +574,7 @@ pub(super) struct Features {
     /// Schema 50: the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
     pub(super) imperial: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
-    /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
+    /// dimension style's line fields, a leader's `arrowSize` and the DXF
     /// arrowheads (docs/adr/0205).
     pub(super) annotation: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
@@ -4393,7 +4393,7 @@ fn text_run(r: &mut Reader<'_>, stacks: bool) -> Result<TextRun, KcadError> {
 
 /// A text's alignment by its name (§6.6); an unknown name is `bad_value`.
 /// A leader's arrowhead (§6.6, docs/adr/0146): its name; the filled arrow
-/// has none. AutoCAD's arrowheads beside the first three come with schema 30
+/// has none. The DXF arrowheads beside the first three come with schema 30
 /// (docs/adr/0205 §7): an older payload naming one is `bad_value`.
 fn leader_arrow(r: &mut Reader<'_>, has: Features) -> Result<LeaderArrow, KcadError> {
     let names: Vec<(&str, LeaderArrow)> = LeaderArrow::ALL

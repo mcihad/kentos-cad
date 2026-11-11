@@ -1,5 +1,5 @@
 //! Dönüşüm uygula's machine (plan/map-cad.md MAP-13, docs/adr/3100): an affine matrix of 4 × 4 numbers, row-major as
-//! PDAL's filters.transformation and CloudCompare's Apply Transformation take it (the rotation, or any linear part, in
+//! the point cloud tools the ADR read take it (the rotation, or any linear part, in
 //! the upper left 3 × 3, the translation in the fourth column, the bottom row 0 0 0 1), applied to each record's X, Y
 //! and Z. A point's coordinate is its whole number on the grid (X · scale + offset, as the file says); moved, it goes
 //! back onto the same grid rounded half away from zero, so a coordinate is off by at most half the scale. The record's

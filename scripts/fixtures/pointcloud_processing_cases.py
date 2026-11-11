@@ -631,7 +631,7 @@ def placed_box(m, b):
 
 def euler(yaw, pitch, roll, center, translation):
     """docs/adr/5100: Euler açıları's map in the core's fixed order (OGC GeoPose 1.0 Basic-YPR: turns about z, y′, x″;
-    CloudCompare's `initFromParameters` rows): c1, s1 the yaw's cosine and sine, c2, s2 the pitch's, c3, s3 the roll's;
+    the rows ADR 5100 cites): c1, s1 the yaw's cosine and sine, c2, s2 the pitch's, c3, s3 the roll's;
     the rows [c2·c1, s3·s2·c1 − c3·s1, c3·s2·c1 + s3·s1], [c2·s1, s3·s2·s1 + c3·c1, c3·s2·s1 − s3·c1], [−s2, s3·c2,
     c3·c2]; the translation's row as Eksen ve açı's."""
     a, b, c = math.radians(yaw), math.radians(pitch), math.radians(roll)

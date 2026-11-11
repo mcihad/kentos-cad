@@ -1,5 +1,5 @@
-//! Dönüşüm uygula (plan/map-cad.md MAP-13, docs/adr/3100; PDAL's filters.transformation, CloudCompare's Apply
-//! Transformation): the cloud's points moved by an affine 4 × 4 matrix written row by row (Tarama kaydı's matrix takes
+//! Dönüşüm uygula (plan/map-cad.md MAP-13, docs/adr/3100): the cloud's points moved by an affine 4 × 4 matrix written
+//! row by row (Tarama kaydı's matrix takes
 //! the moving scan onto the fixed one), the result written as LAS, LAZ or COPC on the source's grid; the source stays
 //! as it was. Before anything is written the files' boxes are moved, so a matrix that would take points off the grid
 //! is refused at once. The summary says how far the cloud's middle went and, for a rigid matrix, the rotation's angle;

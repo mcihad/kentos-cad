@@ -276,6 +276,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çizimin `layer` kaynaklarıyla tutulması; `road.project.rebuild`'in sıra kuralı; `road.project.edit` `regional` ve
   ağacın `regional`'ı; `.kcad` şema 238 (sheetcontours.json'un 22, project.edit'in 6 yeni durumu); web Pafta eğrileri'nde
   Yerleşik alan satırı ve Proje ağacı'nda Yalnız değişeni yaz.
+- MAP-13 / ADR 5100: web'de `cad.pointclouds.place` işleyicisi (cad.pointclouds.place.json'un 26 durumu), `.kcad` şema
+  243'ün `sources[].pose`'u (`io/columns.ts`: kaynak bayrağı 8 ve 16 sayı), web çizicisinde ve sorgularında konumlu
+  dosyanın noktaları, Dönüşüm uygula'nın Euler açıları, `cad.pointclouds.network`'ün `rounds`'u (27 durum) ve Nokta
+  bulutu › Bulutu konumla penceresi, Tarama ağı'nın Nesnede tut ve Dış döngü (tur) alanları.
 - MAP-13 / ADR 4720: web'de `cad.pointclouds.network` işleyicisi (cad.pointclouds.network.json'un 22 durumu; çekirdek
   `kentos_pointcloud::ops::network` WASM'den) ve Nokta bulutu › Tarama ağı penceresi.
 - MAP-12 / ADR 4700: web'de `cad.orthophoto.seamlines` işleyicisi (cad.orthophoto.seamlines.json'un 44 durumu; çekirdek

@@ -276,7 +276,7 @@ pub const SCHEMA_WITH_RASTERS: u32 = 29;
 /// project's annotation heights, the settings' `annotation`; a dimension's
 /// and a dimension style's line fields (`dimLineColor`, `lineWeight`,
 /// `lineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
-/// leader's `arrowSize` and the arrowheads AutoCAD has beside the first three
+/// leader's `arrowSize` and the DXF arrowheads beside the first three
 /// (docs/adr/0205). A writer writes it only when a drawing has one of these:
 /// any other drawing stays 29 or older, byte for byte; a reader of those
 /// refuses them rather than draw another look.
