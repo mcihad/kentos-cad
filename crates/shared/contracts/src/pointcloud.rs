@@ -243,6 +243,85 @@ pub struct CloudSource {
     /// `[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub bounds: [f64; 6],
+    /// Schema 243 (docs/adr/5100): the file's place in the drawing without writing it again — a rigid map of 16
+    /// numbers, row by row (rotation in the upper left 3 × 3, translation in the fourth column, the bottom row 0 0 0
+    /// 1), taking the file's points to the drawing's; absent: where the file says. Its points are drawn, queried and
+    /// measured there; only Dönüşüm uygula writes them so.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub pose: Option<[f64; 16]>,
+}
+
+/// How far a place's rotation may be from one (|RᵀR − I| per element) and still be rigid (docs/adr/5100).
+pub const POSE_RIGID: f64 = 1e-9;
+
+/// A point taken through a place (`pose`, row by row): each coordinate its row's three products and the translation,
+/// added in that order (the point cloud core's `Affine::apply`).
+#[inline]
+pub fn pose_apply(m: &[f64; 16], p: [f64; 3]) -> [f64; 3] {
+    [
+        m[0] * p[0] + m[1] * p[1] + m[2] * p[2] + m[3],
+        m[4] * p[0] + m[5] * p[1] + m[6] * p[2] + m[7],
+        m[8] * p[0] + m[9] * p[1] + m[10] * p[2] + m[11],
+    ]
+}
+
+/// The box `b` (`[x₁, y₁, z₁, x₂, y₂, z₂]`) taken through the place `m`: the box of its eight corners moved (an
+/// affine map keeps every point inside the moved corners' hull).
+pub fn pose_box(m: &[f64; 16], b: &[f64; 6]) -> [f64; 6] {
+    let (mut lo, mut hi) = ([f64::INFINITY; 3], [f64::NEG_INFINITY; 3]);
+    for k in 0..8 {
+        let pick = |bit: usize, a: usize| if k & bit == 0 { b[a] } else { b[a + 3] };
+        let q = pose_apply(m, [pick(1, 0), pick(2, 1), pick(4, 2)]);
+        for a in 0..3 {
+            lo[a] = lo[a].min(q[a]);
+            hi[a] = hi[a].max(q[a]);
+        }
+    }
+    [lo[0], lo[1], lo[2], hi[0], hi[1], hi[2]]
+}
+
+/// Why 16 numbers are not a place (docs/adr/5100), in the commands' words; none when they are: every number finite,
+/// the bottom row 0 0 0 1, the rotation rigid (RᵀR = I within [`POSE_RIGID`], determinant positive).
+pub fn pose_problem(m: &[f64; 16]) -> Option<String> {
+    if m.iter().any(|v| !v.is_finite()) {
+        return Some("Konumun 16 sayısının hepsi sonlu olmalı.".into());
+    }
+    if m[12] != 0.0 || m[13] != 0.0 || m[14] != 0.0 || m[15] != 1.0 {
+        return Some("Konumun son satırı 0 0 0 1 olmalı.".into());
+    }
+    let col = |j: usize| [m[j], m[4 + j], m[8 + j]];
+    for i in 0..3 {
+        for j in 0..3 {
+            let (a, b) = (col(i), col(j));
+            let dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+            if (dot - if i == j { 1.0 } else { 0.0 }).abs() > POSE_RIGID {
+                return Some(
+                    "Konum yalnız dönme ve ötelemedir (katı dönüşüm): ölçek, kayma ya da yansıma uzunlukları değiştirir. \
+                     Böyle bir matrisi Dönüşüm uygula ile dosyaya yazın."
+                        .into(),
+                );
+            }
+        }
+    }
+    let det = m[0] * (m[5] * m[10] - m[6] * m[9]) - m[1] * (m[4] * m[10] - m[6] * m[8])
+        + m[2] * (m[4] * m[9] - m[5] * m[8]);
+    if det <= 0.0 {
+        return Some(
+            "Konum yalnız dönme ve ötelemedir (katı dönüşüm): ölçek, kayma ya da yansıma uzunlukları değiştirir. \
+             Böyle bir matrisi Dönüşüm uygula ile dosyaya yazın."
+                .into(),
+        );
+    }
+    None
+}
+
+impl CloudSource {
+    /// Its bounds in the drawing: the header's taken through its place (docs/adr/5100), else the header's.
+    pub fn placed_bounds(&self) -> [f64; 6] {
+        self.pose.as_ref().map_or(self.bounds, |m| pose_box(m, &self.bounds))
+    }
 }
 
 /// A point cloud (docs/adr/0207 §3).
@@ -320,6 +399,25 @@ pub fn sources_from_json_text(text: &str) -> Option<Vec<CloudSource>> {
 }
 
 impl PointCloudFields {
+    /// Whether a file of it has a place of its own (docs/adr/5100).
+    pub fn placed(&self) -> bool {
+        self.sources.iter().any(|s| s.pose.is_some())
+    }
+
+    /// The members' bounds in the drawing together (each taken through its place, docs/adr/5100); the files' own
+    /// when none has one.
+    pub fn placed_bounds(&self) -> [f64; 6] {
+        let mut out = [f64::INFINITY, f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        for s in &self.sources {
+            let b = s.placed_bounds();
+            for a in 0..3 {
+                out[a] = out[a].min(b[a]);
+                out[a + 3] = out[a + 3].max(b[a + 3]);
+            }
+        }
+        out
+    }
+
     /// Its plan: `[x₁, y₁, x₂, y₂]`.
     pub fn rect(&self) -> [f64; 4] {
         [
@@ -374,6 +472,12 @@ impl PointCloudFields {
                     i + 1
                 ));
             }
+            if let Some(p) = s.pose.as_ref().and_then(pose_problem) {
+                return Some(format!("{}. dosyanın konumu: {p}", i + 1));
+            }
+            if bounds_problem(&s.placed_bounds()) {
+                return Some(format!("{}. dosyanın konumdaki kapsamı sonlu olmalı.", i + 1));
+            }
         }
         if bounds_problem(&self.bounds) {
             return Some(
@@ -414,6 +518,7 @@ mod tests {
                 format: CloudFormat::Laz,
                 count: 10,
                 bounds: [0.0, 0.0, 0.0, 10.0, 10.0, 5.0],
+                pose: None,
             }],
             bounds: [0.0, 0.0, 0.0, 10.0, 10.0, 5.0],
             count: 10,
@@ -475,5 +580,28 @@ mod tests {
         let mut c = cloud();
         c.bounds[3] = -1.0;
         assert!(c.problem().is_some());
+    }
+
+    /// docs/adr/5100: a place is a rigid map; a quarter turn about Z moves the box's corners; a scale or a mirror is
+    /// refused.
+    #[test]
+    fn places() {
+        let mut c = cloud();
+        let turn = [0.0, -1.0, 0.0, 100.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 1.0];
+        c.sources[0].pose = Some(turn);
+        assert_eq!(c.problem(), None);
+        assert_eq!(c.placed_bounds(), [90.0, 0.0, 2.0, 100.0, 10.0, 7.0]);
+        assert!(c.placed());
+        let mut scaled = turn;
+        scaled[0] = 2.0;
+        c.sources[0].pose = Some(scaled);
+        assert!(c.problem().unwrap().contains("katı dönüşüm"));
+        let mut mirror = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        c.sources[0].pose = Some(mirror);
+        assert!(c.problem().unwrap().contains("katı dönüşüm"));
+        mirror[10] = 1.0;
+        mirror[15] = 2.0;
+        c.sources[0].pose = Some(mirror);
+        assert!(c.problem().unwrap().contains("0 0 0 1"));
     }
 }

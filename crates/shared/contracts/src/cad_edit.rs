@@ -184,6 +184,9 @@ pub enum EditOperation {
     RasterGeoref,
     /// Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
     PointCloudStyle,
+    /// Bulutu konumla (docs/adr/5100): a cloud's files given a place in the drawing (or theirs taken away) without
+    /// writing them again, the cloud updated in place.
+    PointCloudPlace,
     /// Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
     /// an annotation height changed, the texts, leaders, dimensions and
     /// tables still at the old height given the new one

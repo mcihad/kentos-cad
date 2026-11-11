@@ -741,6 +741,12 @@
   `regional`; kendiliğinden yeniden üretim de uyar; `.kcad` şema 238). `builtUp`: yollarda ve yerleşik alanda paftada
   2 cm'de bir kot; `check`: seçilen noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin sınırına göre (uyarı
   `section_check_exceeded`). Pafta eğrileri › Yerleşik alan (63/2). Harita + Yol.
+- **Bulutun dosyasız konumu, Euler açıları, ağda dış döngü (11 Kasım 2026; MAP-13, [ADR 5100](../../docs/adr/5100-point-cloud-pose-euler-and-network-rounds.md)).**
+  Nokta bulutu dosyasının çizimdeki konumu dosya başına, dosya yazılmadan tutulur (`.kcad` şema 243 `sources[].pose`,
+  katı dönüşüm); yeni `cad.pointclouds.place` (matris, eksen ve açı, Euler açıları; Konumu kaldır; tek geri alma adımı).
+  Euler sözleşmesi OGC GeoPose 1.0 Basic-YPR: ENU, z → y′ → x″, derece = R = Rz·Ry·Rx (Sapma, Yunuslama, Yatış). Komutlar,
+  çizim ve XYZ sor konumu izler; Dönüşüm uygula onu dosyaya yazar, öbür araçlar reddeder. Tarama ağı'na `rounds` (dış
+  döngü) ve Nesnede tut. Kontrol noktaları ağa henüz girmez. Harita + CBS.
 - **Tarama ağı dengelemesi (10 Kasım 2026; MAP-13, [ADR 4720](../../docs/adr/4720-scan-network-adjustment.md)).**
   Yeni `cad.pointclouds.network`: üç ve daha çok tarama bir GNSS ağı gibi birlikte dengelenir; bağlar Tarama kaydı gibi
   kaydedilip normal matrisleriyle ağırlıklanır, sabit taramalar yerinde kalır; döngü kapanmaları ve her taramanın yatay

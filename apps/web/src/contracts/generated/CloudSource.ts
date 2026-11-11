@@ -25,4 +25,11 @@ count: number,
 /**
  * `[x₁, y₁, z₁, x₂, y₂, z₂]`, as its header says.
  */
-bounds: [number, number, number, number, number, number], };
+bounds: [number, number, number, number, number, number], 
+/**
+ * Schema 243 (docs/adr/5100): the file's place in the drawing without writing it again — a rigid map of 16
+ * numbers, row by row (rotation in the upper left 3 × 3, translation in the fourth column, the bottom row 0 0 0
+ * 1), taking the file's points to the drawing's; absent: where the file says. Its points are drawn, queried and
+ * measured there; only Dönüşüm uygula writes them so.
+ */
+pose?: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number], };

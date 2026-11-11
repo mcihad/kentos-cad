@@ -122,9 +122,12 @@ LAYERS = [
     # docs/adr/3900: koy.laz under a history of one step and of two (the matrices as if applied before).
     ("gecmis1", "Bir adımlı geçmiş", "#5B8FCF"),
     ("gecmis2", "İki adımlı geçmiş", "#5B8FCF"),
+    # docs/adr/5100: koy.laz placed in the drawing without writing it (its file's place: REGISTERED).
+    ("konumlu", "Konumu nesnede", "#5B8FCF"),
 ]
 # Entity ids in the drawing's order.
-IDS = {"Dikdörtgen": 1, "Daire": 2, "Delikli": 3, "koy": 4, "ikinci": 5, "sinir": 6, "gecmis1": 7, "gecmis2": 8}
+IDS = {"Dikdörtgen": 1, "Daire": 2, "Delikli": 3, "koy": 4, "ikinci": 5, "sinir": 6, "gecmis1": 7, "gecmis2": 8,
+       "konumlu": 9}
 
 
 def drawing():
@@ -145,6 +148,11 @@ def drawing():
     entities.append({**cloud_entity("koy.laz", KOY, SRID, KOY_STYLE), "id": 8, "layerId": "gecmis2",
                      "attrs": {"Kaynak": "koy.laz",
                                "Dönüşümler": f"{matrix_words(ROTATED)} | {matrix_words(MOVED_ONLY)}"}})
+    # docs/adr/5100: the file's place kept on the object; its box in the drawing the header's eight corners moved.
+    placed = cloud_entity("koy.laz", KOY, SRID, KOY_STYLE)
+    placed["sources"][0]["pose"] = REGISTERED
+    placed["bounds"] = placed_box(REGISTERED, placed["sources"][0]["bounds"])
+    entities.append({**placed, "id": 9, "layerId": "konumlu", "attrs": {}})
     return {
         "format": "kentos.document",
         "version": 1,
@@ -614,6 +622,30 @@ def angle(m):
     return math.atan2(math.sqrt(ax * ax + ay * ay + az * az), m[0] + m[5] + m[10] - 1.0) * (180.0 / math.pi)
 
 
+def placed_box(m, b):
+    """docs/adr/5100: a box taken through a place: the box of its eight corners moved."""
+    pts = [apply(m, [b[0] if k & 1 == 0 else b[3], b[1] if k & 2 == 0 else b[4], b[2] if k & 4 == 0 else b[5]])
+           for k in range(8)]
+    return [min(p[a] for p in pts) for a in range(3)] + [max(p[a] for p in pts) for a in range(3)]
+
+
+def euler(yaw, pitch, roll, center, translation):
+    """docs/adr/5100: Euler açıları's map in the core's fixed order (OGC GeoPose 1.0 Basic-YPR: turns about z, y′, x″;
+    the rows ADR 5100 cites): c1, s1 the yaw's cosine and sine, c2, s2 the pitch's, c3, s3 the roll's;
+    the rows [c2·c1, s3·s2·c1 − c3·s1, c3·s2·c1 + s3·s1], [c2·s1, s3·s2·s1 + c3·c1, c3·s2·s1 − s3·c1], [−s2, s3·c2,
+    c3·c2]; the translation's row as Eksen ve açı's."""
+    a, b, c = math.radians(yaw), math.radians(pitch), math.radians(roll)
+    s1, c1, s2, c2, s3, c3 = math.sin(a), math.cos(a), math.sin(b), math.cos(b), math.sin(c), math.cos(c)
+    rot = [[c2 * c1, s3 * s2 * c1 - c3 * s1, c3 * s2 * c1 + s3 * s1],
+           [c2 * s1, s3 * s2 * s1 + c3 * c1, c3 * s2 * s1 - s3 * c1],
+           [-s2, s3 * c2, c3 * c2]]
+    m = []
+    for i in range(3):
+        rc = rot[i][0] * center[0] + rot[i][1] * center[1] + rot[i][2] * center[2]
+        m += [rot[i][0], rot[i][1], rot[i][2], center[i] + translation[i] - rc]
+    return m + [0.0, 0.0, 0.0, 1.0]
+
+
 def shift(m, c):
     q = apply(m, c)
     dx, dy, dz = q[0] - c[0], q[1] - c[1], q[2] - c[2]
@@ -636,6 +668,23 @@ SCALED = about([[1.0001, 0.0, 0.0], [0.0, 1.0001, 0.0], [0.0, 0.0, 1.0001]], mid
 IKINCI_TURNED = about(mul(rz(-0.0015), rx(0.0002)), middle(IKINCI), [0.05, 0.02, -0.01])
 
 
+PLACED_REFUSAL = ("Bulutun konumu nesnede tutuluyor: dosyasının noktaları çizimde gösterildiği yerde değil, bu araç ise "
+                  "dosyanın kendi noktalarını okur. Önce Dönüşüm uygula ile konumu dosyaya yazın ya da Bulutu "
+                  "konumla'da konumu kaldırın.")
+
+
+def placed_case():
+    """docs/adr/5100: Dönüşüm uygula on a cloud placed without writing its file: the identity matrix writes the place
+    into the file (its points where the drawing shows them); the history keeps the place, then the matrix."""
+    identity = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    c = transformed_case("transform-placed", "Konumu nesnede tutulan bulut, birim matris: konum dosyaya yazılır; "
+                         "geçmişte konum ve matris", KOY, "konumlu", "koy", REGISTERED, text=matrix_text(identity))
+    e = c["expect"]
+    e["log"].append({"level": "info", "text": "Bulutun nesnedeki konumu da dosyaya yazıldı; yazılan bulutun konumu yok."})
+    e["added"][0]["attrs"]["Dönüşümler"] = f"{matrix_words(REGISTERED)} | {matrix_words(identity)}"
+    return c
+
+
 def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=True, style=KOY_STYLE, srid=SRID,
                      text=None, invert=False, undo=None, axis=None):
     """`undo` (docs/adr/3900): Son dönüşümü geri al on a cloud whose history ends with `m`; the history left."""
@@ -653,7 +702,7 @@ def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=T
         check["copc"] = True
     values = {"input": on(lid), "matrix": text if text is not None else matrix_text(given)}
     if axis is not None:
-        # docs/adr/4300: the map as an axis and an angle; `m` is what it makes.
+        # docs/adr/4300: the map as an axis and an angle (docs/adr/5100: or Euler angles); `m` is what it makes.
         values = {"input": on(lid), "form": "axisAngle", **axis}
     if invert:
         values["invert"] = True
@@ -740,6 +789,28 @@ def transform_cases():
                          "ötelemenin tersi", KOY, "koy", "koy",
                          axis_angle([0.0, 0.0, 1.0], 0.5, middle(KOY), [1.0, -2.0, 0.5]),
                          axis={"axis": "0 0 1", "angle": 0.5, "translation": "1 -2 0.5"}, invert=True, fmt="las"),
+        # docs/adr/5100: Euler açıları: Z, then the turned Y, then the twice turned X.
+        transformed_case("transform-euler", "Euler açıları: sapma 0,5°, yunuslama −0,1°, yatış 0,05°, merkez boş "
+                         "(bulutun kutusunun ortası), öteleme 1 −2 0,5 m; geçmişte yapılan matris", KOY, "koy", "koy",
+                         euler(0.5, -0.1, 0.05, middle(KOY), [1.0, -2.0, 0.5]),
+                         axis={"form": "euler", "yaw": 0.5, "pitch": -0.1, "roll": 0.05, "translation": "1 -2 0.5"}),
+        transformed_case("transform-euler-centre", "Euler açıları: yalnız sapma −0,3°, verilen merkez, öteleme yok; "
+                         "çizime eklenmez", KOY, "koy", "koy",
+                         euler(-0.3, 0.0, 0.0, [487030.0, 4420040.0, 850.0], [0.0, 0.0, 0.0]),
+                         axis={"form": "euler", "yaw": -0.3, "pitch": 0.0, "roll": 0.0,
+                               "center": "487030 4420040 850"}, add=False),
+        transformed_case("transform-euler-inverse", "Euler açıları, Tersini uygula: üç dönmenin ve ötelemenin tersi",
+                         KOY, "koy", "koy", euler(0.5, -0.1, 0.05, middle(KOY), [1.0, -2.0, 0.5]),
+                         axis={"form": "euler", "yaw": 0.5, "pitch": -0.1, "roll": 0.05, "translation": "1 -2 0.5"},
+                         invert=True, fmt="las"),
+        placed_case(),
+        case("transform-placed-undo", "Konumu nesnede tutulan bulutta Son dönüşümü geri al: ret",
+             "pointcloud.transform", {"input": on("konumlu"), "undoLast": True},
+             {"status": "error", "message": "Bulutun konumu nesnede tutuluyor; Son dönüşümü geri al dosyanın geçmişini "
+                                            "geri alır. Önce Bulutu konumla'da konumu kaldırın."}),
+        case("thin-placed", "Konumu nesnede tutulan bulutu Seyrelt: dosyanın noktaları çizimdeki yerinde değil, ret",
+             "pointcloud.thin", {"input": on("konumlu")},
+             {"status": "error", "message": PLACED_REFUSAL}),
         case("transform-axis-zero", "Eksen ve açı, uzunluğu sıfır eksen: ret", "pointcloud.transform",
              {"input": on("koy"), "form": "axisAngle", "axis": "0 0 0", "angle": 10},
              {"status": "error", "message": "Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1)."}),

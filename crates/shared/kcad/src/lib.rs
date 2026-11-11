@@ -951,11 +951,13 @@ pub const SCHEMA_WITH_GNSS_SESSIONS: u32 = 240;
 pub const SCHEMA_WITH_PARCEL_DRAFTS: u32 = 241;
 /// Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts (`settings.zoningPlan`).
 pub const SCHEMA_WITH_ZONING_DRAFTS: u32 = 242;
+/// Schema 243 (docs/adr/5100): a point cloud file's place in the drawing, kept without writing the file (`pose`).
+pub const SCHEMA_WITH_CLOUD_POSES: u32 = 243;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 240] = [
+pub const SCHEMAS: [u32; 241] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1196,6 +1198,7 @@ pub const SCHEMAS: [u32; 240] = [
     SCHEMA_WITH_GNSS_SESSIONS,
     SCHEMA_WITH_PARCEL_DRAFTS,
     SCHEMA_WITH_ZONING_DRAFTS,
+    SCHEMA_WITH_CLOUD_POSES,
 ];
 
 /// The file a drawing is saved as.

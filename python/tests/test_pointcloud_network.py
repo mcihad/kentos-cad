@@ -85,6 +85,28 @@ class Network(unittest.TestCase):
             self.assertAlmostEqual(theirs[i], mine[i], delta=1e-9)
         self.assertTrue(all(abs(v) < 1e-9 for l in got.links for v in l.residual))
 
+    def test_the_outer_loop_is_the_rounds_maps_together(self) -> None:
+        """docs/adr/5100: five rounds; the first round's matrices are one round's answer, the rounds' moves fall, and
+        each scan's matrix takes the centre as far as its translation says (this test's own arithmetic)."""
+        one = cad.pointclouds.network.plan(opened(), uids=[uid(A), uid(B), uid(C)], fixed=[uid(A)], robust=HUBER)
+        got = cad.pointclouds.network.plan(opened(), uids=[uid(A), uid(B), uid(C)], fixed=[uid(A)], robust=HUBER,
+                                           rounds=5)
+        moves = list(got.rounds)
+        self.assertEqual(len(moves), 5)
+        self.assertGreater(moves[0], 0.3)
+        self.assertLess(moves[1], moves[0] / 50)
+        self.assertFalse(one.rounds, "one round: no list")
+        c = got.centre
+        for s in got.scans:
+            m = s.matrix
+            moved = [m[4 * i] * c[0] + m[4 * i + 1] * c[1] + m[4 * i + 2] * c[2] + m[4 * i + 3] for i in range(3)]
+            for i in range(3):
+                self.assertAlmostEqual(moved[i] - c[i], s.translation[i], delta=1e-6)
+        # The rounds after the first move a scan a few millimetres at most.
+        before = {s.uid: s for s in one.scans}
+        for s in got.scans:
+            self.assertLess(math.dist(s.translation, before[s.uid].translation), 0.02, s.uid)
+
     def test_two_scans_are_refused(self) -> None:
         with self.assertRaises(CommandFailed) as refused:
             cad.pointclouds.network.plan(opened(), uids=[uid(A), uid(B)], fixed=[uid(A)])

@@ -454,6 +454,8 @@ pub enum Dialog {
     Register,
     /// Tarama ağı dengelemesi (scan_network_window.rs, docs/adr/4720); its state is `App::scan_network`.
     ScanNetwork,
+    /// Bulutu konumla (cloud_place_window.rs, docs/adr/5100); its state is `App::cloud_place`.
+    CloudPlace,
     /// Katalog geçiş raporu (catalog_report_window.rs, docs/adr/4940); its state is `App::catalog_report`.
     CatalogReport,
     /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `App::sheet_contours`.
@@ -905,6 +907,7 @@ pub enum Message {
     Overlap(crate::overlap_window::Event),
     Register(crate::register_window::Event),
     ScanNetwork(crate::scan_network_window::Event),
+    CloudPlace(crate::cloud_place_window::Event),
     CatalogReport(crate::catalog_report_window::Event),
     SheetContours(crate::sheet_contours_window::Event),
     SectionCheck(crate::section_check_window::Event),
@@ -1601,6 +1604,7 @@ pub struct App {
     pub(crate) overlap: crate::overlap_window::State,
     pub(crate) register: crate::register_window::State,
     pub(crate) scan_network: crate::scan_network_window::State,
+    pub(crate) cloud_place: crate::cloud_place_window::State,
     pub(crate) catalog_report: crate::catalog_report_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
     pub(crate) section_check: crate::section_check_window::State,
@@ -2088,6 +2092,7 @@ impl App {
             overlap: Default::default(),
             register: Default::default(),
             scan_network: Default::default(),
+            cloud_place: Default::default(),
             catalog_report: Default::default(),
             sheet_contours: Default::default(),
             section_check: Default::default(),
@@ -2928,6 +2933,7 @@ impl App {
             Message::Overlap(event) => return self.overlap_event(event),
             Message::Register(event) => return self.register_event(event),
             Message::ScanNetwork(event) => return self.scan_network_event(event),
+            Message::CloudPlace(event) => return self.cloud_place_event(event),
             Message::CatalogReport(event) => return self.catalog_report_event(event),
             Message::SheetContours(event) => return self.sheet_contours_event(event),
             Message::SectionCheck(event) => return self.section_check_event(event),
@@ -3832,6 +3838,7 @@ impl App {
             "pointcloud.overlap" => return self.open_overlap(),
             "pointcloud.register" => return self.open_register(),
             "pointcloud.network" => return self.open_scan_network(),
+            "pointcloud.place" => return self.open_cloud_place(),
             "map.catalogReport" => return self.open_catalog_report(),
             "terrain.sheetContours" => return self.open_sheet_contours(),
             "terrain.stockpile" => return self.open_stockpile(),

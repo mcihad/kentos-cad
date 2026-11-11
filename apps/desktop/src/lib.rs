@@ -106,6 +106,7 @@ mod ortho_window;
 mod overlap_window;
 mod register_window;
 mod scan_network_window;
+mod cloud_place_window;
 mod catalog_report_window;
 mod section_check_window;
 mod sheet_contours_window;
@@ -481,6 +482,8 @@ mod overlap_window_tests;
 mod register_window_tests;
 #[cfg(test)]
 mod scan_network_window_tests;
+#[cfg(test)]
+mod cloud_place_window_tests;
 #[cfg(test)]
 mod catalog_report_window_tests;
 #[cfg(test)]

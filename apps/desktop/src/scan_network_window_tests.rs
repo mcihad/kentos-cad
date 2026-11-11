@@ -14,7 +14,7 @@ fn cases() -> Value {
     serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.pointclouds.network.json")).expect("cases")
 }
 
-fn opened() -> App {
+pub(crate) fn opened() -> App {
     let mut text = cases()["setup"].to_string();
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
     text = text.replace("$fixture:", &format!("{}/", root.display()));
@@ -106,6 +106,45 @@ fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
     assert_eq!(window.tool.id, "pointcloud.transform");
     assert_eq!(window.values.get("matrix"), Some(&Value::from(crate::register_window::matrix_text(&scan.matrix))));
     assert_eq!(app.selection.ids(), [Slot(2)], "B, the chosen scan, is the tool's input");
+}
+
+/// docs/adr/5100: Nesnede tut keeps the chosen scan's matrix on its object (its file not written) and adjusts the
+/// network again from there: that scan's correction is then what is left, a millimetre or so (a second round).
+#[test]
+fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
+    let mut app = three();
+    let r = app.scan_network.answer.clone().expect("an answer").expect("adjusted");
+    let chosen = app.scan_network.chosen.clone();
+    let scan = r.scans.iter().find(|s| s.uid == chosen).expect("the chosen scan").clone();
+    let _ = app.update(Message::ScanNetwork(N::Keep));
+    let placed = match app.document.as_ref().expect("a drawing").model.get(Slot(2)) {
+        Some(kentos_commands::Entity::PointCloud(c)) => c.cloud.sources[0].pose.expect("its place"),
+        other => panic!("not a cloud: {other:?}"),
+    };
+    near(&serde_json::to_value(placed).expect("json"), &serde_json::to_value(scan.matrix).expect("json"), "pose");
+    let again = app.scan_network.answer.clone().expect("an answer").expect("adjusted");
+    let left = again.scans.iter().find(|s| s.uid == chosen).expect("the chosen scan");
+    let t = left.translation.iter().map(|v| v * v).sum::<f64>().sqrt();
+    let w = left.rotation.iter().map(|v| v * v).sum::<f64>().sqrt();
+    println!("left: {:.3} mm, {:.2e} rad (was {:.1} mm)", t * 1000.0, w, scan.translation.iter().map(|v| v * v).sum::<f64>().sqrt() * 1000.0);
+    assert!(t < 0.005 && w < 1e-3, "what is left: {t} m, {w} rad");
+}
+
+/// docs/adr/5100: Dış döngü 5: the shared case's rounds (each round's largest move) and the scans' rotations and
+/// translations about the centre.
+#[test]
+fn five_rounds_are_the_shared_case() {
+    let mut app = three();
+    let _ = app.update(Message::ScanNetwork(N::Rounds(5.0)));
+    let got = answer(&app);
+    let want = case_output("dış döngü: üç tarama");
+    near(&got["rounds"], &want["rounds"], "rounds");
+    for k in 0..3 {
+        near(&got["scans"][k]["rotation"], &want["scans"][k]["rotation"], "rotation");
+        near(&got["scans"][k]["translation"], &want["scans"][k]["translation"], "translation");
+    }
+    let (lines, _) = app.scan_network_lines();
+    assert!(lines.len() >= 5, "the notes with the outer loop's");
 }
 
 #[test]

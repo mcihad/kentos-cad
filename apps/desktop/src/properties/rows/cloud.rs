@@ -157,6 +157,21 @@ fn header_rows(d: &kentos_commands::CloudSourceDescribed) -> Vec<Row> {
 }
 
 /// The rows of one cloud; editors unless its layer is locked.
+/// Where the cloud's files are in the drawing (docs/adr/5100): their own place, or the one kept on the object — the
+/// first placed file's rotation angle and how far its box's middle went.
+fn place_words(x: &kentos_commands::PointCloudFields) -> String {
+    let Some((m, s)) = x.sources.iter().find_map(|s| s.pose.map(|m| (m, s))) else {
+        return "Dosyanın kendi yeri".to_owned();
+    };
+    let (ax, ay, az) = (m[9] - m[6], m[2] - m[8], m[4] - m[1]);
+    let angle = (ax * ax + ay * ay + az * az).sqrt().atan2(m[0] + m[5] + m[10] - 1.0).to_degrees();
+    let b = s.bounds;
+    let c = [(b[0] + b[3]) / 2.0, (b[1] + b[4]) / 2.0, (b[2] + b[5]) / 2.0];
+    let q = kentos_commands::pose_apply(&m, c);
+    let d = ((q[0] - c[0]).powi(2) + (q[1] - c[1]).powi(2) + (q[2] - c[2]).powi(2)).sqrt();
+    format!("Nesnede: dönme {}°, kayma {} m", fixed(angle, 4), fixed(d, 3))
+}
+
 pub(super) fn rows(
     doc: &Document,
     slot: Slot,
@@ -223,6 +238,17 @@ pub(super) fn rows(
         Row::figure("Yoğunluk", density).unit("nokta/m²"),
         Row::text("Sistem", system),
         Row::text("Dizin", crate::pointclouds::index_words(x)),
+        // docs/adr/5100: its files' place in the drawing, kept on the object.
+        Row::text("Konum", place_words(x)).editor((!locked).then(|| Editor::Select {
+            text: place_words(x),
+            swatch: None,
+            icon: None,
+            items: vec![super::Choice::Command {
+                label: "Bulutu konumla…",
+                icon: crate::icons::from_web(Some("cloudPlace")),
+                id: "pointcloud.place",
+            }],
+        })),
         Row::text("Görünüş", render_name(x.style.render)).editor(style),
         Row::figure("Saydamlık", fixed(clear, 0))
             .unit("%")

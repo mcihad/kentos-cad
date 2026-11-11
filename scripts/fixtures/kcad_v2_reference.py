@@ -53,7 +53,7 @@ DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordin
 SCHEMA_9_STYLES = DIMENSION_STYLES[5:10]
 # Schema 62 (docs/adr/0322): the centre mark, the axis and the level.
 SCHEMA_62_STYLES = DIMENSION_STYLES[10:]
-# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added AutoCAD's
+# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added the DXF
 # others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
 LEADER_ARROWS_30 = ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
@@ -450,6 +450,8 @@ def cloud_source(f):
         "format": (enum(CLOUD_FORMATS), True),
         "count": (uint, True),
         "bounds": (floats, True),
+        # Schema 243 (docs/adr/5100): the file's place in the drawing, 16 numbers row by row.
+        "pose": (floats, False),
     }
     return cmap(fields(f, table, "nokta bulutunun dosyası"))
 
@@ -1965,7 +1967,7 @@ KINDS = {
     # Schema 72 (docs/adr/0410 §2): a record without a geometry, only in the drawing; no fields of its own.
     "record": {},
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
-    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
+    # Schema 30 (docs/adr/0205 §7): the DXF arrowheads, the arrowhead's size times the note's height.
     "leader": {
         "pts": (points, True),
         "text": (text, False),
@@ -2751,6 +2753,9 @@ def document(d):
     if any("profile" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
         # A map work item's typed layers' profile (docs/adr/4880).
         schema = max(schema, 239)
+    if any(e["kind"] == "pointcloud" and any("pose" in s for s in e["sources"]) for e in d["entities"]):
+        # A point cloud file's place in the drawing (docs/adr/5100); 241 and 242 are other work's.
+        schema = max(schema, 243)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -2963,7 +2968,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     from a map service or one whose objects came from
     a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
     drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
-    dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
+    dimension's lines, a leader's arrowhead's size or one of the DXF arrowheads, in the drawing or a block definition
     (docs/adr/0205), 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
     survey settings' a priori standard deviations (docs/adr/0203 §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
     layer's fields (docs/adr/0199 §1), 25 with a text along a
@@ -3662,7 +3667,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-243.kcad"] = container(root(cmap(parts), version=uint(243)))
+    files["schema-version-244.kcad"] = container(root(cmap(parts), version=uint(244)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5020,7 +5025,7 @@ def broken(minimal_content, minimal_file):
     files["topology-rule-angle-too-large.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustNotHaveSmallAngles", value=f64(2.0))])}))
     files["topology-exception-unknown-rule.kcad"] = with_settings(27, topology=cmap({"rules": array([trule()]), "exceptions": array([cmap({
         "at": array([f64(500000.0), f64(4400000.0)]), "rule": text("r9"), "objects": array([blob(uid_bytes(m["uids"][0]))])})])}))
-    # The annotation heights, a dimension's lines and a leader's AutoCAD arrowheads are schema 30's (docs/adr/0205): in
+    # The annotation heights, a dimension's lines and a leader's DXF arrowheads are schema 30's (docs/adr/0205): in
     # schema 29 unknown fields and unknown values; heights not empty, of a known kind, floats over 0 and at most 100 mm;
     # colours #RRGGBB, weights 0 to 100 mm, line types by name; an arrowhead's size 0.1 to 10 times the note's height.
     files["annotation-in-schema-29.kcad"] = with_settings(29, annotation=cmap({"text": f64(3.5)}))
@@ -6227,6 +6232,33 @@ def build():
     network_point = next(x for x in ms_["points"] if x["result"].get("method") == "network")
     network_point["result"]["velocity"] = {"enu": [0.0213, 0.0105, -0.0012],
                                           "grid": {"name": "tr-hiz-ornek.tif", "sha256": "1" * 64}}
+    # Schema 243 (docs/adr/5100): a virtual cloud's two files placed in the drawing without writing them — a quarter
+    # turn about the first file's middle and a lift, a small move; the cloud's box their placed boxes; schema 240
+    # refuses the field; a place that scales, and one of 15 numbers, are refused.
+    posed = load("pointclouds.json")
+    ada = next(e for e in posed["entities"] if e["id"] == 2)
+    ada["sources"][0]["pose"] = [0.0, -1.0, 0.0, 4908150.0, 1.0, 0.0, 0.0, 3932550.0, 0.0, 0.0, 1.0, 0.5,
+                                 0.0, 0.0, 0.0, 1.0]
+    ada["sources"][1]["pose"] = [1.0, 0.0, 0.0, 0.25, 0.0, 1.0, 0.0, -0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    def placed_box(m, b):
+        pts = [[sum(m[4 * i + k] * p[k] for k in range(3)) + m[4 * i + 3] for i in range(3)]
+               for p in ([b[0] if j & 1 == 0 else b[3], b[1] if j & 2 == 0 else b[4], b[2] if j & 4 == 0 else b[5]]
+                         for j in range(8))]
+        return [min(p[a] for p in pts) for a in range(3)] + [max(p[a] for p in pts) for a in range(3)]
+
+    boxes = [placed_box(s["pose"], s["bounds"]) for s in ada["sources"]]
+    ada["bounds"] = [min(b[a] for b in boxes) for a in range(3)] + [max(b[a + 3] for b in boxes) for a in range(3)]
+    out["pointcloud-poses.json"] = json_text(posed).encode("utf-8")
+    posed_data = document(posed)
+    assert posed_data.count(b"\x67version\x18\xf3") == 1, "a cloud file's place is schema 243"
+    out["pointcloud-poses.kcad"] = container(posed_data)
+    out["broken/pointcloud-pose-in-schema-242.kcad"] = container(
+        posed_data.replace(b"\x67version\x18\xf3", b"\x67version\x18\xf2"))
+    for name, change in (("pose-scaled", lambda s: s.__setitem__(0, 2.0)), ("pose-fifteen", lambda s: s.pop())):
+        broken_posed = copy.deepcopy(posed)
+        change(next(e for e in broken_posed["entities"] if e["id"] == 2)["sources"][1]["pose"])
+        out[f"broken/pointcloud-{name}.kcad"] = container(document(broken_posed))
     out["map-survey-sessions.json"] = json_text(sessioned).encode("utf-8")
     sessioned_data = document(sessioned)
     assert sessioned_data.count(b"\x67version\x18\xf0") == 1, "a baseline session is schema 240"

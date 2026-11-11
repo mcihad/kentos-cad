@@ -42,6 +42,8 @@ pub const TITLE: &str = "Tarama ağı dengelemesi";
 const CLOSE: &str = "Kapat";
 pub const TAKE: &str = "Seçili bulutları al";
 pub const APPLY: &str = "Dönüşüm uygula…";
+/// docs/adr/5100: the chosen scan's matrix kept on its object, its file not written.
+pub const KEEP: &str = "Nesnede tut";
 const EDGES: &str = "Kenardaki eşleşmeleri ayıkla";
 /// The layer Dönüşüm uygula writes the moved scan on.
 const MOVED_LAYER: &str = "Ağda dengelenen taramalar";
@@ -90,6 +92,8 @@ pub struct State {
     pub spacing: f64,
     pub reach: f64,
     pub iterations: f64,
+    /// docs/adr/5100: the outer loop's rounds at most (1: one, as before).
+    pub rounds: f64,
     pub weights: Weights,
     pub edges: bool,
     /// The scan Dönüşüm uygula takes.
@@ -105,11 +109,13 @@ pub enum Event {
     Spacing(f64),
     Reach(f64),
     Iterations(f64),
+    Rounds(f64),
     Weights(Weights),
     Edges(bool),
     Chosen(String),
     Show(Show),
     Apply,
+    Keep,
     Close,
 }
 
@@ -158,6 +164,7 @@ impl App {
                 .then(|| RegisterRobust { kind: "huber".into(), k: Some(pointcloud_register::HUBER_K), ratio: None }),
             reject: s.edges.then_some(RegisterReject { edges: true, angle: None }),
             drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.display().to_string()),
+            rounds: (s.rounds > 1.0).then(|| s.rounds.min(10.0) as u32),
             ..Default::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -189,6 +196,7 @@ impl App {
             spacing: 0.5,
             reach: 1.0,
             iterations: 30.0,
+            rounds: 1.0,
             weights: Weights::Huber,
             chosen,
             ..Default::default()
@@ -224,6 +232,38 @@ impl App {
         self.open_processing("pointcloud.transform", values);
     }
 
+    /// Nesnede tut (docs/adr/5100): the chosen scan's matrix taken after its place by `cad.pointclouds.place`, one
+    /// undo step; its file is not written. The network is adjusted again from there: the scan's correction is then
+    /// what is left.
+    fn scan_network_keep(&mut self) {
+        let Some(Ok(r)) = &self.scan_network.answer else { return };
+        let Some(scan) = r.scans.iter().find(|s| s.uid == self.scan_network.chosen) else { return };
+        if scan.fixed {
+            self.warn(format!("{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."));
+            return;
+        }
+        let name = self.scan_network.scans.iter().find(|(u, _)| *u == scan.uid).map(|(_, n)| n.clone()).unwrap_or_default();
+        let input = kentos_commands::PointCloudsPlace {
+            uid: scan.uid.clone(),
+            place: kentos_commands::CloudPlaceBy::Matrix { matrix: scan.matrix.to_vec() },
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        match kentos_native_application::pointcloud_place::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { .. } => {
+                self.say(
+                    kentos_interaction::Level::Success,
+                    format!("{TITLE}: “{name}” taramasının konumu nesnede tutuldu; dosyası değişmedi. Tek adımda geri alınır."),
+                );
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                self.warn(format!("{TITLE}: {}", error.message));
+            }
+            _ => {}
+        }
+        self.scan_network_run();
+    }
+
     pub(crate) fn scan_network_event(&mut self, event: Event) -> Task<Message> {
         let s = &mut self.scan_network;
         match event {
@@ -246,6 +286,7 @@ impl App {
             Event::Spacing(v) => s.spacing = v,
             Event::Reach(v) => s.reach = v,
             Event::Iterations(v) => s.iterations = v,
+            Event::Rounds(v) => s.rounds = v.clamp(1.0, 10.0),
             Event::Weights(v) => s.weights = v,
             Event::Edges(v) => s.edges = v,
             Event::Chosen(v) => {
@@ -258,6 +299,10 @@ impl App {
             }
             Event::Apply => {
                 self.scan_network_apply();
+                return Task::none();
+            }
+            Event::Keep => {
+                self.scan_network_keep();
                 return Task::none();
             }
             Event::Close => {
@@ -359,7 +404,9 @@ impl App {
                     label::caption("Erişim (m)"),
                     NumberInput::new(s.reach, |v| msg(Event::Reach(v))).step(0.5).decimals(2).point().width(80),
                     label::caption("En çok adım"),
-                    NumberInput::new(s.iterations, |v| msg(Event::Iterations(v))).step(5.0).decimals(0).width(80)
+                    NumberInput::new(s.iterations, |v| msg(Event::Iterations(v))).step(5.0).decimals(0).width(80),
+                    label::caption("Dış döngü (tur)"),
+                    NumberInput::new(s.rounds, |v| msg(Event::Rounds(v))).step(1.0).decimals(0).width(70)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -399,6 +446,7 @@ impl App {
             label::caption("Uygulanacak tarama"),
             container(fields::select_owned(free, &s.chosen, |v| msg(Event::Chosen(v)))).width(240),
             space::horizontal().width(Fill),
+            words::secondary(KEEP, ready.then(|| msg(Event::Keep))),
             words::primary(APPLY, ready.then(|| msg(Event::Apply))),
         ]
         .spacing(10)
@@ -418,6 +466,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(TAKE) => Some(msg(Event::Take)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
+            Control::Press(KEEP) => Some(msg(Event::Keep)),
             Control::Check(EDGES, on) => Some(msg(Event::Edges(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

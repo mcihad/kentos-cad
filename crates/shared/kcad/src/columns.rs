@@ -55,7 +55,7 @@
 //! | tag | | | its fields (of, at, content, shape, size, leader, text, anchor, broken) as one JSON object (docs/adr/0344) |
 //! | viewmark | | | its fields (form, points, radius, at, angle, flip, mark, target, size, label, broken) as one JSON object (docs/adr/0345) |
 //! | slab | | | its fields (parts, role, thickness, offset, arch, material, edge, excluded) as one JSON object (docs/adr/0722) |
-//! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
+//! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url; 8 added with a place, docs/adr/5100) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6), its place (16) if any | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
@@ -179,6 +179,8 @@ const CLOUD_SQUARE: u32 = 64;
 const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
+/// A point cloud file with a place in the drawing (docs/adr/5100): its 16 numbers follow its bounds.
+const SOURCE_POSE: u32 = 8;
 
 pub const KINDS: [&str; 33] = [
     "point",
@@ -1636,7 +1638,8 @@ impl Packer {
                     } else {
                         SOURCE_URL
                     };
-                    self.out.ints.extend([count(format), source]);
+                    let placed = if s.pose.is_some() { SOURCE_POSE } else { 0 };
+                    self.out.ints.extend([count(format), source | placed]);
                 }
                 self.out.floats.extend(bounds);
                 self.out.floats.extend([*points as f64, style.size]);
@@ -1650,6 +1653,9 @@ impl Packer {
                 for s in sources {
                     self.float(s.count as f64);
                     self.out.floats.extend(s.bounds);
+                    if let Some(m) = &s.pose {
+                        self.out.floats.extend(m);
+                    }
                 }
                 if let Some(r) = &style.ramp {
                     self.text(r);
@@ -3605,13 +3611,22 @@ fn geometry(
                 None
             };
             let mut numbers = Vec::with_capacity(n);
-            for _ in 0..n {
+            for (_, source) in &kinds {
                 let count = c.float()? as u64;
                 let mut b = [0.0; 6];
                 for v in &mut b {
                     *v = c.float()?;
                 }
-                numbers.push((count, b));
+                let pose = if source & SOURCE_POSE != 0 {
+                    let mut m = [0.0; 16];
+                    for v in &mut m {
+                        *v = c.float()?;
+                    }
+                    Some(m)
+                } else {
+                    None
+                };
+                numbers.push((count, b, pose));
             }
             let ramp = if look & CLOUD_RAMP != 0 {
                 Some(c.text(|| place("style.ramp"))?)
@@ -3619,9 +3634,9 @@ fn geometry(
                 None
             };
             let mut sources = Vec::with_capacity(n);
-            for (i, ((format, source), (count, b))) in kinds.into_iter().zip(numbers).enumerate() {
+            for (i, ((format, source), (count, b, pose))) in kinds.into_iter().zip(numbers).enumerate() {
                 let t = c.text(|| place(&format!("sources[{i}]")))?;
-                let (asset, file, url) = match source {
+                let (asset, file, url) = match source & !SOURCE_POSE {
                     SOURCE_ASSET => (Some(t), None, None),
                     SOURCE_FILE => (None, Some(t), None),
                     SOURCE_URL => (None, None, Some(t)),
@@ -3634,6 +3649,7 @@ fn geometry(
                     format,
                     count,
                     bounds: b,
+                    pose,
                 });
             }
             let style = kentos_contracts::PointCloudStyle {

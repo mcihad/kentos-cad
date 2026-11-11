@@ -14,11 +14,12 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_pointcloud::ops::network::{self, NetworkFault, Observation};
+use kentos_pointcloud::ops::transform::Affine;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::pointcloud_register::registered;
+use crate::pointcloud_register::registered_from;
 use crate::pointclouds::clouds;
 
 /// Fewer pairs than this and a registration says nothing about six unknowns.
@@ -90,63 +91,64 @@ fn run(doc: &Document, input: &PointCloudsNetwork) -> Result<(PointCloudsNetwork
     let centre: [f64; 3] = std::array::from_fn(|i| {
         scans.iter().map(|(_, c)| (c.cloud.bounds[i] + c.cloud.bounds[i + 3]) / 2.0).sum::<f64>() / n
     });
-    // Each link registered and moved to the centre.
-    let mut observations = Vec::with_capacity(links.len());
-    let mut answers = Vec::with_capacity(links.len());
-    let mut warnings = Vec::new();
-    for &(i, j) in &links {
-        let pair = PointCloudsRegister {
-            uids: vec![uids[i].clone(), uids[j].clone()],
-            spacing: input.spacing,
-            reach: input.reach,
-            iterations: input.iterations,
-            tolerance: input.tolerance,
-            neighbours: input.neighbours,
-            robust: input.robust.clone(),
-            reject: input.reject.clone(),
-            drawing: input.drawing.clone(),
-            ..Default::default()
-        };
-        let (out, more, normal) = registered(doc, &pair)?;
-        if out.pairs < LEAST_PAIRS {
-            return Err(fail(
-                format!(
-                    "“{}” ile “{}” taramaları arasında {} eşleşme var; bir bağ için en az {LEAST_PAIRS} gerekir. Erişimi büyütün ya da bu bağı çıkarın.",
-                    uids[i], uids[j], out.pairs
-                ),
-                "links",
-            ));
-        }
-        let m = out.matrix;
-        let r = [[m[0], m[1], m[2]], [m[4], m[5], m[6]], [m[8], m[9], m[10]]];
-        let (obs, weight) = network::moved(out.rotation, r, out.translation, &normal, out.centre, centre);
-        observations.push(Observation { a: i, b: j, m: obs, n: weight });
-        answers.push(out);
-        warnings.extend(more);
+    // docs/adr/5100: the outer loop's rounds; one, as before, unless asked.
+    let most = input.rounds.unwrap_or(1);
+    if !(1..=MOST_ROUNDS).contains(&most) {
+        return Err(fail(format!("Tur sayısı 1 ile {MOST_ROUNDS} arasında olmalı."), "rounds"));
     }
-    let adjusted = network::adjust(uids.len(), &fixed, &observations).map_err(|f| match f {
-        NetworkFault::Unjoined(k) => fail(
-            format!("“{}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da sabit yapın.", uids[k]),
-            "links",
-        ),
-        NetworkFault::Undetermined => fail(
-            "Bağlar ağı belirlemiyor: bir taramanın konumunun bir yönü serbest kalıyor (düz zeminde yatay öteleme gibi). Eğimli yüzey ya da yapı gören bir bağ ekleyin ya da o taramayı sabit yapın.".into(),
-            "links",
-        ),
-    })?;
+    let stop = input.tolerance.unwrap_or(0.0001);
+    // Each scan's map so far (none: where it is), and each round's largest move of a corner of a scan's box.
+    let mut totals: Vec<Option<Affine>> = vec![None; uids.len()];
+    let mut moves: Vec<f64> = Vec::new();
+    let (observations, answers, warnings, adjusted) = loop {
+        let (observations, answers, warnings) = round(doc, input, &uids, &links, centre, &totals)?;
+        let adjusted = network::adjust(uids.len(), &fixed, &observations).map_err(|f| match f {
+            NetworkFault::Unjoined(k) => fail(
+                format!("“{}” taraması bağlarla hiçbir sabit taramaya bağlanmıyor; bir bağ ekleyin ya da onu da sabit yapın.", uids[k]),
+                "links",
+            ),
+            NetworkFault::Undetermined => fail(
+                "Bağlar ağı belirlemiyor: bir taramanın konumunun bir yönü serbest kalıyor (düz zeminde yatay öteleme gibi). Eğimli yüzey ya da yapı gören bir bağ ekleyin ya da o taramayı sabit yapın.".into(),
+                "links",
+            ),
+        })?;
+        if most == 1 {
+            break (observations, answers, warnings, adjusted);
+        }
+        // The round's maps taken after the scans' maps so far; the largest move of a corner of a scan's box.
+        let mut largest: f64 = 0.0;
+        for k in (0..uids.len()).filter(|&k| !fixed[k]) {
+            let Ok(m) = Affine::new(network::matrix(adjusted.x[k], centre)) else { continue };
+            let b = scans[k].1.cloud.bounds;
+            for c in 0..8 {
+                let p0 = [b[if c & 1 == 0 { 0 } else { 3 }], b[if c & 2 == 0 { 1 } else { 4 }], b[if c & 4 == 0 { 2 } else { 5 }]];
+                let p = totals[k].as_ref().map_or(p0, |t| t.apply(p0));
+                largest = largest.max(m.shift(p));
+            }
+            totals[k] = Some(totals[k].as_ref().map_or(m, |t| t.then(&m)));
+        }
+        moves.push(largest);
+        if largest < stop || moves.len() as u32 >= most {
+            break (observations, answers, warnings, adjusted);
+        }
+    };
     let scans_out: Vec<NetworkScan> = uids
         .iter()
         .enumerate()
         .map(|(k, u)| {
             let x = adjusted.x[k];
-            NetworkScan {
-                uid: u.clone(),
-                fixed: fixed[k],
-                rotation: [x[0], x[1], x[2]],
-                translation: [x[3], x[4], x[5]],
-                matrix: network::matrix(x, centre),
-                horizontal: adjusted.horizontal[k],
-            }
+            let (rotation, translation, matrix) = match &totals[k] {
+                // docs/adr/5100: after rounds, the maps so far about the centre: their turns (R = Rz(κ)·Ry(φ)·Rx(ω))
+                // and how far they take the centre.
+                Some(t) if most > 1 => {
+                    let m = t.matrix();
+                    let w = [m[9].atan2(m[10]), -m[8].clamp(-1.0, 1.0).asin(), m[4].atan2(m[0])];
+                    let c = t.apply(centre);
+                    (w, [c[0] - centre[0], c[1] - centre[1], c[2] - centre[2]], m)
+                }
+                _ => ([x[0], x[1], x[2]], [x[3], x[4], x[5]], network::matrix(x, centre)),
+            };
+            NetworkScan { uid: u.clone(), fixed: fixed[k], rotation, translation, matrix, horizontal: adjusted.horizontal[k] }
         })
         .collect();
     let (mut sum, mut pairs) = (0.0, 0_u64);
@@ -213,8 +215,68 @@ fn run(doc: &Document, input: &PointCloudsNetwork) -> Result<(PointCloudsNetwork
             ));
         }
     }
-    notes.push("Ağın mutlak konumu sabit taramalarındır; kontrol noktalarıyla Tarama kaydı'nda ayrıca denetlenir. Taramalar yerinde durur; her birini matrisiyle Dönüşüm uygula taşır.".to_owned());
-    Ok((PointCloudsNetworked { centre, scans: scans_out, links: links_out, loops, shift, notes }, warnings))
+    // docs/adr/5100: the rounds made and what the last one moved.
+    if let Some(last) = moves.last() {
+        notes.push(format!(
+            "Dış döngü: {} tur; bağlar her turda taramaların bir önceki turdaki yerinden yeniden kaydedildi, son turda bir taramanın kutusunun bir köşesi en çok {:.2} mm kaydı{}. Bağlar, artıklar ve döngüler son turunkidir; matrisler turların toplamıdır.",
+            moves.len(),
+            last * 1000.0,
+            if *last < stop { "" } else { " (durma toleransının üstünde)" }
+        ));
+    }
+    notes.push("Ağın mutlak konumu sabit taramalarındır; kontrol noktalarıyla Tarama kaydı'nda ayrıca denetlenir. Taramalar yerinde durur; her birini Nesnede tut nesnede konumlar, Dönüşüm uygula yeni dosyaya taşır.".to_owned());
+    let rounds = (most > 1).then_some(moves);
+    Ok((PointCloudsNetworked { centre, scans: scans_out, links: links_out, loops, shift, notes, rounds }, warnings))
+}
+
+/// The most rounds of the outer loop (docs/adr/5100).
+const MOST_ROUNDS: u32 = 10;
+
+/// One round (docs/adr/5100): each link registered where the scans' maps so far put them, its answer moved to the
+/// network's centre and weighed by its normal matrix moved there.
+#[allow(clippy::type_complexity)]
+fn round(
+    doc: &Document,
+    input: &PointCloudsNetwork,
+    uids: &[String],
+    links: &[(usize, usize)],
+    centre: [f64; 3],
+    totals: &[Option<Affine>],
+) -> Result<(Vec<Observation>, Vec<kentos_commands::PointCloudsRegistered>, Vec<CommandWarning>), Stop> {
+    let mut observations = Vec::with_capacity(links.len());
+    let mut answers = Vec::with_capacity(links.len());
+    let mut warnings = Vec::new();
+    for &(i, j) in links {
+        let pair = PointCloudsRegister {
+            uids: vec![uids[i].clone(), uids[j].clone()],
+            spacing: input.spacing,
+            reach: input.reach,
+            iterations: input.iterations,
+            tolerance: input.tolerance,
+            neighbours: input.neighbours,
+            robust: input.robust.clone(),
+            reject: input.reject.clone(),
+            drawing: input.drawing.clone(),
+            ..Default::default()
+        };
+        let (out, more, normal) = registered_from(doc, &pair, [totals[i].as_ref(), totals[j].as_ref()])?;
+        if out.pairs < LEAST_PAIRS {
+            return Err(fail(
+                format!(
+                    "“{}” ile “{}” taramaları arasında {} eşleşme var; bir bağ için en az {LEAST_PAIRS} gerekir. Erişimi büyütün ya da bu bağı çıkarın.",
+                    uids[i], uids[j], out.pairs
+                ),
+                "links",
+            ));
+        }
+        let m = out.matrix;
+        let r = [[m[0], m[1], m[2]], [m[4], m[5], m[6]], [m[8], m[9], m[10]]];
+        let (obs, weight) = network::moved(out.rotation, r, out.translation, &normal, out.centre, centre);
+        observations.push(Observation { a: i, b: j, m: obs, n: weight });
+        answers.push(out);
+        warnings.extend(more);
+    }
+    Ok((observations, answers, warnings))
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &PointCloudsNetwork) -> CommandResult<()> {

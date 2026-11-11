@@ -351,6 +351,7 @@ mod orthophoto_mosaic;
 mod orthophoto_seams;
 pub mod pointcloud_overlap;
 pub mod pointcloud_network;
+pub mod pointcloud_place;
 pub mod profiles_compare;
 pub mod pointcloud_register;
 pub mod map_work_edit;
@@ -1578,6 +1579,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_REGISTER, kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_NETWORK, kentos_commands::CAD_POINTCLOUDS_NETWORK_VERSION),
+    (kentos_commands::CAD_POINTCLOUDS_PLACE, kentos_commands::CAD_POINTCLOUDS_PLACE_VERSION),
     // The catalog's migration report (plan/map-cad.md MAP-04, docs/adr/4940).
     (kentos_commands::CAD_PROFILES_COMPARE, kentos_commands::CAD_PROFILES_COMPARE_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).

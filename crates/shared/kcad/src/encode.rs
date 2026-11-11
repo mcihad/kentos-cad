@@ -2306,6 +2306,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 243 (docs/adr/5100): a point cloud file's place in the drawing.
+    if objs.iter().any(|e| matches!(e, Entity::PointCloud(c) if c.cloud.placed())) {
+        return crate::SCHEMA_WITH_CLOUD_POSES;
+    }
     // Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts.
     if doc.settings.zoning_plan.is_some() {
         return crate::SCHEMA_WITH_ZONING_DRAFTS;

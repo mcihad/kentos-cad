@@ -561,6 +561,10 @@
         "size": "small"
        },
        {
+        "command": "pointcloud.place",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.profile",
         "size": "small"
        }
@@ -4032,6 +4036,10 @@
         "size": "small"
        },
        {
+        "command": "pointcloud.place",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.profile",
         "size": "small"
        }
@@ -6734,6 +6742,10 @@
       },
       {
        "command": "pointcloud.network",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.place",
        "size": "small"
       },
       {

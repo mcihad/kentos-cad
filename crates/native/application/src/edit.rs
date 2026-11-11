@@ -398,6 +398,7 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::RasterGeoref => "Raster oturt",
         // Nokta bulutu stili (docs/adr/0207 §10).
         EditOperation::PointCloudStyle => "Nokta bulutu stili",
+        EditOperation::PointCloudPlace => "Bulutu konumla",
         // Eğri boyunca yazı (docs/adr/0196 §4).
         EditOperation::TextPath => "Eğriye oturt",
         EditOperation::TextTurn => "Doğrultuya döndür",

@@ -1,0 +1,2840 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.pointclouds.place",
+ "commandVersion": 1,
+ "title": "Bulutu konumla",
+ "note": "Written by scripts/fixtures/pointcloud_place_cases.py from docs/adr/5100 (OGC GeoPose 1.0 Basic-YPR; Euler as Rz·Ry·Rx, axis and angle by quaternion, inverse by Rᵀ); do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Bulutu konumla",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 500.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bulut",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "pointcloud",
+    "id": 1,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 50,
+    "srid": 5254,
+    "style": {
+     "render": "elevation",
+     "min": 100.0,
+     "max": 150.0,
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.txt",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 100,
+    "srid": 5254,
+    "style": {
+     "render": "elevation",
+     "min": 100.0,
+     "max": 150.0,
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ],
+      "pose": [
+       1.0,
+       0.0,
+       0.0,
+       10.0,
+       0.0,
+       1.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       1.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       1.0
+      ]
+     }
+    ],
+    "bounds": [
+     500010.0,
+     4400000.0,
+     100.0,
+     500110.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 50,
+    "srid": 5254,
+    "style": {
+     "render": "elevation",
+     "min": 100.0,
+     "max": 150.0,
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 4,
+    "layerId": "kilitli",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 50,
+    "srid": 5254,
+    "style": {
+     "render": "elevation",
+     "min": 100.0,
+     "max": 150.0,
+     "size": 2
+    }
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "bulut",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 1.0,
+     "y": 0.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5c0-5100-7000-8000-000000000001",
+   "0192f5c0-5100-7000-8000-000000000002",
+   "0192f5c0-5100-7000-8000-000000000003",
+   "0192f5c0-5100-7000-8000-000000000004",
+   "0192f5c0-5100-7000-8000-000000000005"
+  ]
+ },
+ "cases": [
+  {
+   "name": "Euler: Z çevresinde çeyrek dönme, verilen merkez; sorgu döndürülen noktayı bulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "euler",
+       "yaw": 90.0,
+       "pitch": 0.0,
+       "roll": 0.0,
+       "center": [
+        500050.0,
+        4400050.0,
+        125.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        6.123233995736766e-17,
+        -1.0,
+        0.0,
+        4900100.0,
+        1.0,
+        6.123233995736766e-17,
+        0.0,
+        3899999.9999999995,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         6.123233995736766e-17,
+         -1.0,
+         0.0,
+         4900100.0,
+         1.0,
+         6.123233995736766e-17,
+         0.0,
+         3899999.9999999995,
+         0.0,
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        500000.0,
+        4400000.0,
+        100.0,
+        500100.0,
+        4400100.0,
+        150.0
+       ],
+       "shift": 0.0,
+       "angle": 90.0,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500007.1699999996,
+       "y": 4400013.382999999
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500007.1679999996,
+        "y": 4400013.38,
+        "z": 104.491,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Euler: üç açı, merkez boş (kutunun ortası), öteleme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "euler",
+       "yaw": 0.5,
+       "pitch": -0.25,
+       "roll": 0.1,
+       "translation": [
+        0.2,
+        -0.1,
+        0.05
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        0.9999524041473707,
+        -0.008734137324596148,
+        -0.00434790582791226,
+        38455.18472942506,
+        0.008726452428045504,
+        0.9999603335793299,
+        -0.001783338424511923,
+        -4189.005385071039,
+        0.004363309284746571,
+        0.0017453117516301837,
+        0.9999889576485209,
+        -9861.280400303978,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         0.9999524041473707,
+         -0.008734137324596148,
+         -0.00434790582791226,
+         38455.18472942506,
+         0.008726452428045504,
+         0.9999603335793299,
+         -0.001783338424511923,
+         -4189.005385071039,
+         0.004363309284746571,
+         0.0017453117516301837,
+         0.9999889576485209,
+         -9861.280400303978,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        499999.6569752807,
+        4399999.421077239,
+        99.74484500696781,
+        500100.7430247193,
+        4400100.378922761,
+        150.35515499303256
+       ],
+       "shift": 0.2291287845952098,
+       "angle": 0.5680824677725815,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         499999.6569752807,
+         4399999.421077239,
+         99.74484500696781,
+         500100.7430247193,
+         4400100.378922761,
+         150.35515499303256
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500013.2988135909,
+       "y": 4400092.450312808
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500013.2968135909,
+        "y": 4400092.447312809,
+        "z": 104.45619727452504,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Euler: yunuslama 90° (Z ekseni X'e yatar)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "euler",
+       "yaw": 0.0,
+       "pitch": 90.0,
+       "roll": 0.0,
+       "center": [
+        500050.0,
+        4400050.0,
+        125.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        6.123233995736766e-17,
+        0.0,
+        1.0,
+        499924.99999999994,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        6.123233995736766e-17,
+        500175.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         6.123233995736766e-17,
+         0.0,
+         1.0,
+         499924.99999999994,
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         -1.0,
+         0.0,
+         6.123233995736766e-17,
+         500175.0,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        500025.0,
+        4400000.0,
+        75.0,
+        500075.0,
+        4400100.0,
+        175.0
+       ],
+       "shift": 0.0,
+       "angle": 90.0,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         500025.0,
+         4400000.0,
+         75.0,
+         500075.0,
+         4400100.0,
+         175.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500029.49299999996,
+       "y": 4400092.835
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500029.491,
+        "y": 4400092.832,
+        "z": 161.61999999999534,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Euler: yalnız yatış, negatif",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "euler",
+       "yaw": 0.0,
+       "pitch": 0.0,
+       "roll": -2.5,
+       "center": [
+        500050.0,
+        4400050.0,
+        125.0
+       ],
+       "translation": [
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.9990482215818578,
+        0.043619387365336,
+        4182.42020532582,
+        0.0,
+        -0.043619387365336,
+        0.9990482215818578,
+        191928.60434914893,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         0.9990482215818578,
+         0.043619387365336,
+         4182.42020532582,
+         0.0,
+         -0.043619387365336,
+         0.9990482215818578,
+         191928.60434914893,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        500000.0,
+        4399998.957104237,
+        98.84282509217155,
+        500100.0,
+        4400101.042895763,
+        153.15717490779934
+       ],
+       "shift": 1.0,
+       "angle": 2.4999999999998073,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4399998.957104237,
+         98.84282509217155,
+         500100.0,
+         4400101.042895763,
+         153.15717490779934
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500013.382,
+       "y": 4400091.899643411
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500013.38,
+        "y": 4400091.896643411,
+        "z": 103.64221442391863,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Matris: yalnız öteleme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        1.0,
+        0.0,
+        -50.0,
+        0.0,
+        0.0,
+        1.0,
+        2.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        100.0,
+        0.0,
+        1.0,
+        0.0,
+        -50.0,
+        0.0,
+        0.0,
+        1.0,
+        2.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         1.0,
+         0.0,
+         0.0,
+         100.0,
+         0.0,
+         1.0,
+         0.0,
+         -50.0,
+         0.0,
+         0.0,
+         1.0,
+         2.0,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        500100.0,
+        4399950.0,
+        102.0,
+        500200.0,
+        4400050.0,
+        152.0
+       ],
+       "shift": 111.82128598795491,
+       "angle": 0.0,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         500100.0,
+         4399950.0,
+         102.0,
+         500200.0,
+         4400050.0,
+         152.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500113.382,
+       "y": 4400042.835
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500113.38,
+        "y": 4400042.832,
+        "z": 106.491,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Matris: ağın matrisi gibi dönme ve öteleme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        0.9999998019986892,
+        -0.0005236596671728974,
+        -0.00034897440492303396,
+        2304.5713509001653,
+        0.000523598719774243,
+        0.999999847659396,
+        -0.0001747156708257666,
+        -261.3333940897137,
+        0.00034906584331009674,
+        0.0001745329136801831,
+        0.9999999238456466,
+        -942.4439122664094,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        0.9999998019986892,
+        -0.0005236596671728974,
+        -0.00034897440492303396,
+        2304.5713509001653,
+        0.000523598719774243,
+        0.999999847659396,
+        -0.0001747156708257666,
+        -261.3333940897137,
+        0.00034906584331009674,
+        0.0001745329136801831,
+        0.9999999238456466,
+        -942.4439122664094,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         0.9999998019986892,
+         -0.0005236596671728974,
+         -0.00034897440492303396,
+         2304.5713509001653,
+         0.000523598719774243,
+         0.999999847659396,
+         -0.0001747156708257666,
+         -261.3333940897137,
+         0.00034906584331009674,
+         0.0001745329136801831,
+         0.9999999238456466,
+         -942.4439122664094,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        500000.26510255656,
+        4399999.76945979,
+        100.03382196600933,
+        500100.3348974434,
+        4400099.83054021,
+        150.08617803399056
+       ],
+       "shift": 0.36551333774229683,
+       "angle": 0.03741797304599701,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.26510255656,
+         4399999.76945979,
+         100.03382196600933,
+         500100.3348974434,
+         4400099.83054021,
+         150.08617803399056
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500013.66673497594,
+       "y": 4400092.619402533
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500013.66473497596,
+        "y": 4400092.616402534,
+        "z": 104.54569436442648,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksen ve açı: Z çevresinde 30°, verilen merkez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "axisAngle",
+       "axis": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "angle": 30.0,
+       "center": [
+        500050.0,
+        4400050.0,
+        125.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        0.8660254037844387,
+        -0.49999999999999994,
+        0.0,
+        2267018.996837591,
+        0.49999999999999994,
+        0.8660254037844387,
+        0.0,
+        339469.92207828024,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         0.8660254037844387,
+         -0.49999999999999994,
+         0.0,
+         2267018.996837591,
+         0.49999999999999994,
+         0.8660254037844387,
+         0.0,
+         339469.92207828024,
+         0.0,
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        499981.69872981077,
+        4399981.698729811,
+        100.0,
+        500118.30127018923,
+        4400118.301270189,
+        150.0
+       ],
+       "shift": 0.0,
+       "angle": 29.99999999999998,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         499981.69872981077,
+         4399981.698729811,
+         100.0,
+         500118.30127018923,
+         4400118.301270189,
+         150.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 499996.872149713,
+       "y": 4400068.786600095
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 499996.870149713,
+        "y": 4400068.783600096,
+        "z": 104.491,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksen ve açı: eğik eksen, öteleme, merkez boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "axisAngle",
+       "axis": [
+        1.0,
+        1.0,
+        1.0
+       ],
+       "angle": -12.0,
+       "translation": [
+        1.0,
+        2.0,
+        3.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        0.9854317338225371,
+        0.12732200375003505,
+        -0.11275373757257215,
+        -552923.226881105,
+        -0.11275373757257215,
+        0.9854317338225371,
+        0.12732200375003505,
+        120469.69081684109,
+        0.12732200375003505,
+        -0.11275373757257215,
+        0.9854317338225371,
+        432459.5360642632,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         0.9854317338225371,
+         0.12732200375003505,
+         -0.11275373757257215,
+         -552923.226881105,
+         -0.11275373757257215,
+         0.9854317338225371,
+         0.12732200375003505,
+         120469.69081684109,
+         0.12732200375003505,
+         -0.11275373757257215,
+         0.9854317338225371,
+         432459.5360642632,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        499992.54346968187,
+        4399993.907676335,
+        91.36041958827991,
+        500109.4565303179,
+        4400110.092323664,
+        164.63958041166188
+       ],
+       "shift": 3.7416573867739413,
+       "angle": 11.999999999999988,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "bounds": [
+         499992.54346968187,
+         4399993.907676335,
+         91.36041958827991,
+         500109.4565303179,
+         4400110.092323664,
+         164.63958041166188
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500022.6814123759,
+       "y": 4400095.728806918
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 0,
+        "x": 500022.6794123759,
+        "y": 4400095.725806918,
+        "z": 98.29778070590692,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Konumlu bulut: yeni dönüşüm eskisinin ardından",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "place": {
+       "kind": "euler",
+       "yaw": 90.0,
+       "pitch": 0.0,
+       "roll": 0.0,
+       "center": [
+        500050.0,
+        4400050.0,
+        125.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "matrix": [
+        6.123233995736766e-17,
+        -1.0,
+        0.0,
+        4900100.0,
+        1.0,
+        6.123233995736766e-17,
+        0.0,
+        3899999.9999999995,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         6.123233995736766e-17,
+         -1.0,
+         0.0,
+         4900100.0,
+         1.0,
+         6.123233995736766e-17,
+         0.0,
+         3900009.9999999995,
+         0.0,
+         0.0,
+         1.0,
+         0.0,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        500000.0,
+        4400010.0,
+        100.0,
+        500100.0,
+        4400110.0,
+        150.0
+       ],
+       "shift": 14.142135623730951,
+       "angle": 90.0,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "3": {
+        "bounds": [
+         500000.0,
+         4400010.0,
+         100.0,
+         500100.0,
+         4400110.0,
+         150.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500007.1699999996,
+       "y": 4400023.382999999
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:3",
+        "source": 0,
+        "index": 0,
+        "x": 500007.1679999996,
+        "y": 4400023.38,
+        "z": 104.491,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "3": {
+        "bounds": [
+         500010.0,
+         4400000.0,
+         100.0,
+         500110.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki dosyalı bulut: iki dosya aynı dönüşümle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:2",
+      "place": {
+       "kind": "euler",
+       "yaw": -45.0,
+       "pitch": 1.0,
+       "roll": 0.0,
+       "center": [
+        500050.0,
+        4400050.0,
+        125.0
+       ],
+       "translation": [
+        5.0,
+        0.0,
+        0.0
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:2",
+       "matrix": [
+        0.7069990853988243,
+        0.7071067811865475,
+        0.012340714939826926,
+        -2964786.6278029177,
+        -0.7069990853988242,
+        0.7071067811865476,
+        -0.012340714939826924,
+        1642281.242683181,
+        -0.01745240643728351,
+        0.0,
+        0.9998476951563913,
+        8727.09487706907,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        [
+         0.7069990853988243,
+         0.7071067811865475,
+         0.012340714939826926,
+         -2964786.6278029177,
+         -0.7069990853988242,
+         0.7071067811865476,
+         -0.012340714939826924,
+         1642281.242683181,
+         -0.01745240643728351,
+         0.0,
+         0.9998476951563913,
+         8727.09487706907,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ],
+        [
+         0.7069990853988243,
+         0.7071067811865475,
+         0.012340714939826926,
+         -2964786.6278029177,
+         -0.7069990853988242,
+         0.7071067811865476,
+         -0.012340714939826924,
+         1642281.242683181,
+         -0.01745240643728351,
+         0.0,
+         0.9998476951563913,
+         8727.09487706907,
+         0.0,
+         0.0,
+         0.0,
+         1.0
+        ]
+       ],
+       "bounds": [
+        499983.9861887973,
+        4399978.986188797,
+        99.13118729922462,
+        500126.0138112032,
+        4400121.013811203,
+        150.86881270077174
+       ],
+       "shift": 5.0,
+       "angle": 45.01053275841089,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "bounds": [
+         499983.9861887973,
+         4399978.986188797,
+         99.13118729922462,
+         500126.0138112032,
+         4400121.013811203,
+         150.86881270077174
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500059.145395422,
+       "y": 4400106.433199882
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:2",
+        "source": 0,
+        "index": 0,
+        "x": 500059.143395422,
+        "y": 4400106.430199882,
+        "z": 105.13323074376967,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 100,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "2": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Konumu kaldır: dosya kendi yerinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:3",
+      "place": {
+       "kind": "remove"
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        -10.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        null
+       ],
+       "bounds": [
+        500000.0,
+        4400000.0,
+        100.0,
+        500100.0,
+        4400100.0,
+        150.0
+       ],
+       "shift": 10.0,
+       "angle": 0.0,
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "3": {
+        "bounds": [
+         500000.0,
+         4400000.0,
+         100.0,
+         500100.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.pointclouds.query",
+     "input": {
+      "at": {
+       "x": 500013.382,
+       "y": 4400092.835
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:3",
+        "source": 0,
+        "index": 0,
+        "x": 500013.38,
+        "y": 4400092.832,
+        "z": 104.491,
+        "distance": 0.0036055512754639895,
+        "class": 0,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 0.0
+       },
+       "read": 50,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Bulutu konumla",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "3": {
+        "bounds": [
+         500010.0,
+         4400000.0,
+         100.0,
+         500110.0,
+         4400100.0,
+         150.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Konumu kaldır: konumu olmayan bulutta hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "remove"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "poses": [
+        null
+       ],
+       "bounds": [
+        500000.0,
+        4400000.0,
+        100.0,
+        500100.0,
+        4400100.0,
+        150.0
+       ],
+       "shift": 0.0,
+       "angle": 0.0,
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçekli matris: konum yalnız katı dönüşüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Konum yalnız dönme ve ötelemedir (katı dönüşüm): ölçek, kayma ya da yansıma uzunlukları değiştirir. Böyle bir matrisi Dönüşüm uygula ile dosyaya yazın.",
+       "path": "place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yansıyan matris: determinant eksi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Konum yalnız dönme ve ötelemedir (katı dönüşüm): ölçek, kayma ya da yansıma uzunlukları değiştirir. Böyle bir matrisi Dönüşüm uygula ile dosyaya yazın.",
+       "path": "place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "15 sayılı matris",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Matris 16 sayıdır (4 satır, 4 sütun, satır satır); 15 sayı verildi.",
+       "path": "place.matrix"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Son satırı 0 0 0 1 olmayan matris",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        1.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Matrisin son satırı 0 0 0 1 olmalı: yalnız afin dönüşüm uygulanır (perspektif yok).",
+       "path": "place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tekil matris",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Matrisin dönüklük kısmı tekil (determinantı sıfır): noktaları bir düzleme ya da doğruya ezer.",
+       "path": "place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıfır eksen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "axisAngle",
+       "axis": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "angle": 10.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1).",
+       "path": "place"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sapma NaN",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "euler",
+       "yaw": 0.0,
+       "pitch": 0.0,
+       "roll": 0.0
+      }
+     },
+     "nonFinite": {
+      "place.yaw": "NaN"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Sapma sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+       "path": "place.yaw"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Matrisin bir sayısı sonsuz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "matrix",
+       "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ]
+      }
+     },
+     "nonFinite": {
+      "place.matrix[3]": "Infinity"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Matrisin bir sayısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+       "path": "place.matrix"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "bulut",
+      "place": {
+       "kind": "remove"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“bulut” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-5100-7000-8000-000000000063",
+      "place": {
+       "kind": "remove"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-5100-7000-8000-000000000063” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nokta bulutunun kimliğini verin.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi: nokta bulutu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:5",
+      "place": {
+       "kind": "remove"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pointcloud",
+       "message": "Verilen nesne bir nokta bulutu değil; yalnız nokta bulutu konumlanır. Bir nokta bulutunun kimliğini verin.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki bulut",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:4",
+      "place": {
+       "kind": "remove"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki bulut konumlanamaz. Kilidi Katmanlar panelinden açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "remove"
+      },
+      "expectedRevision": "dün"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “dün” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm eski: çakışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "$uidOf:1",
+      "place": {
+       "kind": "remove"
+      },
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

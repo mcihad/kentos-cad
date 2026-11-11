@@ -1,4 +1,4 @@
-//! Karola (docs/adr/0207 §7; PDAL's filters.splitter, LAStools' lastile):
+//! Karola (docs/adr/0207 §7):
 //! the cloud's points in tiles of the given size, their corners on the
 //! size's multiples; a point on a tile's edge goes to the tile on its right
 //! and above it (`ops::tile`). Each tile is a file `<ad>_<x>_<y>` beside
@@ -214,6 +214,7 @@ fn go(
             format,
             count: *c,
             bounds: *b,
+            pose: None,
         })
         .collect();
     let object = (!sources.is_empty()).then(|| {

@@ -138,18 +138,39 @@ def cholesky_ok(a):
     return True
 
 
-def network(names, fixed, links=None, **opts):
-    """The answer for scans `names` (file names), `fixed` (file names), `links` (pairs of file names or none)."""
-    rows = {n: rc.CLOUDS[n] for n in names}
-    boxes = {n: rc.bounds(rows[n]) for n in names}
-    if links is None:
-        links = []
-        for i in range(len(names)):
-            for k in range(i + 1, len(names)):
-                p, q = boxes[names[i]], boxes[names[k]]
-                if max(p[0], q[0]) < min(p[3], q[3]) and max(p[1], q[1]) < min(p[4], q[4]):
-                    links.append((names[i], names[k]))
-    centre = [sum((boxes[n][i] + boxes[n][i + 3]) / 2.0 for n in names) / len(names) for i in range(3)]
+def apply16(m, p):
+    return [m[4 * i] * p[0] + m[4 * i + 1] * p[1] + m[4 * i + 2] * p[2] + m[4 * i + 3] for i in range(3)]
+
+
+def then16(first, after):
+    """`after` applied after `first`, 16 numbers row by row."""
+    out = []
+    for i in range(3):
+        for j in range(4):
+            out.append(sum(after[4 * i + k] * first[4 * k + j] for k in range(4)))
+    return out + [0.0, 0.0, 0.0, 1.0]
+
+
+def corners(b):
+    return [[b[0] if c & 1 == 0 else b[3], b[1] if c & 2 == 0 else b[4], b[2] if c & 4 == 0 else b[5]] for c in range(8)]
+
+
+def corner_box(m, b):
+    pts = [apply16(m, c) for c in corners(b)]
+    return [min(p[a] for p in pts) for a in range(3)] + [max(p[a] for p in pts) for a in range(3)]
+
+
+def matrix_of(xk, centre):
+    """A scan's correction about the centre as a matrix: p ↦ R(p − centre) + centre + t, R = Rz(κ)·Ry(φ)·Rx(ω)."""
+    r = rc.rot(list(xk[:3]))
+    rcen = [sum(r[i][j] * centre[j] for j in range(3)) for i in range(3)]
+    tt = [centre[i] + xk[3 + i] - rcen[i] for i in range(3)]
+    return [r[0][0], r[0][1], r[0][2], tt[0], r[1][0], r[1][1], r[1][2], tt[1], r[2][0], r[2][1], r[2][2], tt[2],
+            0.0, 0.0, 0.0, 1.0]
+
+
+def solve(names, fixed, links, centre, **opts):
+    """One round: each link registered (rc.register reads the scans where the caller put them), the network solved."""
     obs, answers = [], []
     for a, b in links:
         out = rc.register([a, b], **opts)
@@ -231,15 +252,66 @@ def network(names, fixed, links=None, **opts):
         p_, q_, d_ = t[0][0], t[0][1], t[1][1]
         plan_max = (p_ + d_) / 2.0 + math.sqrt(((p_ - d_) / 2.0) ** 2 + q_ * q_)
         horizontal[k] = math.sqrt(max(t[2][2], 0.0) / plan_max) if plan_max > 0.0 else 0.0
+    return obs, answers, held, loops, x, horizontal
+
+
+def network(names, fixed, links=None, rounds=None, **opts):
+    """The answer for scans `names` (file names), `fixed` (file names), `links` (pairs of file names or none); with
+    `rounds` (docs/adr/5100) the outer loop: from the second round each link is registered again where the rounds so
+    far put its scans (their points and boxes moved here), until no corner of a scan's box moves `tolerance`."""
+    rows = {n: rc.CLOUDS[n] for n in names}
+    boxes = {n: rc.bounds(rows[n]) for n in names}
+    if links is None:
+        links = []
+        for i in range(len(names)):
+            for k in range(i + 1, len(names)):
+                p, q = boxes[names[i]], boxes[names[k]]
+                if max(p[0], q[0]) < min(p[3], q[3]) and max(p[1], q[1]) < min(p[4], q[4]):
+                    links.append((names[i], names[k]))
+    centre = [sum((boxes[n][i] + boxes[n][i + 3]) / 2.0 for n in names) / len(names) for i in range(3)]
+    most = rounds or 1
+    tol = opts.get("tolerance", 0.0001)
+    totals = {n: None for n in names}
+    moves = []
+    while True:
+        saved = {n: rc.CLOUDS[n] for n in names}
+        for n in names:
+            if totals[n] is not None:
+                rc.CLOUDS[n] = [tuple(apply16(totals[n], p)) for p in saved[n]]
+                rc.BOXES[n] = corner_box(totals[n], boxes[n])
+        try:
+            obs, answers, held, loops, x, horizontal = solve(names, fixed, links, centre, **opts)
+        finally:
+            for n in names:
+                rc.CLOUDS[n] = saved[n]
+                rc.BOXES.pop(n, None)
+        if most == 1:
+            break
+        largest = 0.0
+        for k, n in enumerate(names):
+            if held[k]:
+                continue
+            m = matrix_of(x[k], centre)
+            for c in corners(boxes[n]):
+                p = apply16(totals[n], c) if totals[n] else c
+                largest = max(largest, math.dist(apply16(m, p), p))
+            totals[n] = then16(totals[n], m) if totals[n] else m
+        moves.append(largest)
+        if largest < tol or len(moves) >= most:
+            break
     scans = []
     for k, n in enumerate(names):
-        r = rc.rot(list(x[k][:3]))
-        rcen = [sum(r[i][j] * centre[j] for j in range(3)) for i in range(3)]
-        tt = [centre[i] + x[k][3 + i] - rcen[i] for i in range(3)]
-        scan = {"uid": uid(IDS[n]), "fixed": held[k], "rotation": [float(v) for v in x[k][:3]],
-                "translation": [float(v) for v in x[k][3:]],
-                "matrix": [r[0][0], r[0][1], r[0][2], tt[0], r[1][0], r[1][1], r[1][2], tt[1], r[2][0], r[2][1],
-                           r[2][2], tt[2], 0.0, 0.0, 0.0, 1.0]}
+        if most > 1 and totals[n] is not None:
+            # docs/adr/5100: the rounds' maps together about the centre: their turns (Rz·Ry·Rx) and the centre's move.
+            mm = totals[n]
+            c = apply16(mm, centre)
+            scan = {"uid": uid(IDS[n]), "fixed": held[k],
+                    "rotation": [math.atan2(mm[9], mm[10]), -math.asin(max(-1.0, min(1.0, mm[8]))),
+                                 math.atan2(mm[4], mm[0])],
+                    "translation": [c[i] - centre[i] for i in range(3)], "matrix": mm}
+        else:
+            scan = {"uid": uid(IDS[n]), "fixed": held[k], "rotation": [float(v) for v in x[k][:3]],
+                    "translation": [float(v) for v in x[k][3:]], "matrix": matrix_of(x[k], centre)}
         if horizontal[k] is not None:
             scan["horizontal"] = horizontal[k]
         scans.append(scan)
@@ -271,9 +343,19 @@ def network(names, fixed, links=None, **opts):
             assert abs(horizontal[k] * 100 % 1 - 0.5) > 1e-6, horizontal[k]
             notes.append(f"“{uid(IDS[n])}” taramasının yatay konumunu ağ zayıf belirliyor (oran {horizontal[k]:.2f}): düz "
                          "zeminde yatay öteleme ölçülmez; düzeltmesi düşeyde anlamlıdır.")
+    if moves:
+        last = moves[-1]
+        assert abs(last * 1e5 % 1 - 0.5) > 1e-6, last
+        notes.append(f"Dış döngü: {len(moves)} tur; bağlar her turda taramaların bir önceki turdaki yerinden yeniden "
+                     f"kaydedildi, son turda bir taramanın kutusunun bir köşesi en çok {last * 1000.0:.2f} mm kaydı"
+                     f"{'' if last < tol else ' (durma toleransının üstünde)'}. Bağlar, artıklar ve "
+                     "döngüler son turunkidir; matrisler turların toplamıdır.")
     notes.append("Ağın mutlak konumu sabit taramalarındır; kontrol noktalarıyla Tarama kaydı'nda ayrıca denetlenir. "
-                 "Taramalar yerinde durur; her birini matrisiyle Dönüşüm uygula taşır.")
-    return {"centre": centre, "scans": scans, "links": out_links, "loops": loops, "shift": shift, "notes": notes}
+                 "Taramalar yerinde durur; her birini Nesnede tut nesnede konumlar, Dönüşüm uygula yeni dosyaya taşır.")
+    answer = {"centre": centre, "scans": scans, "links": out_links, "loops": loops, "shift": shift, "notes": notes}
+    if most > 1:
+        answer["rounds"] = moves
+    return answer
 
 
 def truth_holds(answer, names, within=0.01):
@@ -295,7 +377,7 @@ def truth_holds(answer, names, within=0.01):
         assert err < within, (n, err)
 
 
-def ok(name, names, fixed, links=None, op="plan", within=1e-6, s=None, **opts):
+def ok(name, names, fixed, links=None, op="plan", within=1e-6, s=None, relative=False, **opts):
     answer = network(names, fixed, links, **opts)
     inp = {"uids": [uid(IDS[n]) for n in names], "fixed": [uid(IDS[n]) for n in fixed]}
     if links is not None:
@@ -303,7 +385,7 @@ def ok(name, names, fixed, links=None, op="plan", within=1e-6, s=None, **opts):
     inp.update(opts)
     case = {"name": name, "steps": [{"op": op, "input": inp, "result": {
         "status": "completed", "output": None if op == "validate" else answer, "warnings": []}, "expect": SAME,
-        "within": within}]}
+        "within": within, **({"relative": True} if relative else {})}]}
     if s is not None:
         case["setup"] = s
     return case, answer
@@ -339,6 +421,29 @@ def cases():
     out.append(case)
     case, ans = ok("ağırlıksız: çatı kenarındaki eşleşmeler kayıtları birkaç santimetre saptırır", [a, b, c], [a])
     truth_holds(ans, [a, b, c], within=0.03)
+    out.append(case)
+    # docs/adr/5100: the outer loop: the links registered again where the last round put the scans.
+    # From the second round the registrations read moved points (the file's decimals here, its grid there): the two
+    # agree to about 10⁻¹¹ in a rotation, which the matrices' translation column (c + t − R·c, c ≈ 4.4·10⁶ m) shows as
+    # 10⁻⁵ m; these cases are held relatively, within 10⁻⁷ of each number's size (at least 1).
+    # The rounds' moves fall from the first round's correction to the data's own noise (a few tenths of a millimetre:
+    # the voxels' middles move with the scans); the known shifts stay within a centimetre, as the first round's.
+    case, ans = ok("dış döngü: üç tarama, A sabit, Huber, en çok 5 tur: turların kayması küçülür, bilinen kaymalar 1 cm "
+                   "içinde", [a, b, c], [a], robust=huber, rounds=5, within=1e-7, relative=True)
+    truth_holds(ans, [a, b, c])
+    m = ans["rounds"]
+    assert len(m) == 5 and m[1] < m[0] / 50 and m[2] < m[1] / 4, m
+    print("dış döngü (3):", [round(v * 1000, 3) for v in m], file=sys.stderr)
+    out.append(case)
+    case, ans = ok("dış döngü: dört tarama, 1 mm'lik toleransla turlar erken durur", [a, b, c, d], [a], robust=huber,
+                   rounds=8, tolerance=0.001, within=1e-7, relative=True)
+    truth_holds(ans, [a, b, c, d])
+    m = ans["rounds"]
+    assert len(m) < 8 and m[-1] < 0.001, m
+    print("dış döngü (4):", [round(v * 1000, 3) for v in m], file=sys.stderr)
+    out.append(case)
+    case, ans = ok("dış döngü: tek tur istenir, cevap eskisi gibi", [a, b, c], [a], robust=huber, rounds=1)
+    assert "rounds" not in ans
     out.append(case)
     out.append(ok("doğrulama", [a, b, c], [a], op="validate", robust=huber)[0])
     out.append(ok("sıra değişince aynı ağ: C, A, B", [c, a, b], [a], robust=huber)[0])
@@ -377,6 +482,10 @@ def cases():
     out.append(refused("örtüşmeyen bağ: eşleşme yok", far, "invalid_input",
                        f"“{uid(IDS[b])}” ile “{uid(IDS[e])}” taramaları arasında {pairs} eşleşme var; bir bağ için en az 6 "
                        "gerekir. Erişimi büyütün ya da bu bağı çıkarın.", "links"))
+    out.append(refused("tur sayısı 0", dict(three, rounds=0), "invalid_input", "Tur sayısı 1 ile 10 arasında olmalı.",
+                       "rounds"))
+    out.append(refused("tur sayısı 11", dict(three, rounds=11), "invalid_input", "Tur sayısı 1 ile 10 arasında olmalı.",
+                       "rounds"))
     out.append(refused("kaydın kendi reddi: voksel 0", dict(three, spacing=0.0), "invalid_input",
                        "Voksel kenarı sonlu ve sıfırdan büyük olmalı (yazılan 0).", "spacing"))
     out.append(refused("kimlik UUID değil", dict(three, uids=["x", uid(2), uid(3)]), "invalid_uid",

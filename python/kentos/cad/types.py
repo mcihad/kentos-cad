@@ -2392,6 +2392,7 @@ class EditOperation(_StrEnum):
     - ``rasterStyle``: Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.
     - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     - ``pointCloudStyle``: Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
+    - ``pointCloudPlace``: Bulutu konumla (docs/adr/5100): a cloud's files given a place in the drawing (or theirs taken away) without
     - ``annotationScale``: Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
     - ``edgeWidth``: Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths
     """
@@ -2452,11 +2453,12 @@ class EditOperation(_StrEnum):
     RASTER_STYLE = "rasterStyle"
     RASTER_GEOREF = "rasterGeoref"
     POINT_CLOUD_STYLE = "pointCloudStyle"
+    POINT_CLOUD_PLACE = "pointCloudPlace"
     ANNOTATION_SCALE = "annotationScale"
     EDGE_WIDTH = "edgeWidth"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "matchProperties", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "matchProperties", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "pointCloudPlace", "annotationScale", "edgeWidth"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -9536,6 +9538,30 @@ class ClipBoundary(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ClipBoundary:
         return _variant(_CLIP_BOUNDARY, "ClipBoundary", "kind", data).from_json(data)
+
+
+class CloudPlaceBy(_Union):
+    """How the map is given (docs/adr/5100). A centre left out is the middle of the cloud's box in the drawing; a
+    translation left out is none.
+
+    One of:
+
+    - :class:`MatrixCloudPlaceBy` (``kind: matrix``)
+    - :class:`AxisAngleCloudPlaceBy` (``kind: axisAngle``)
+    - :class:`EulerCloudPlaceBy` (``kind: euler``)
+    - :class:`RemoveCloudPlaceBy` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudPlaceBy:
+        return _variant(_CLOUD_PLACE_BY, "CloudPlaceBy", "kind", data).from_json(data)
 
 
 class CompareAgainst(_Union):
@@ -23960,6 +23986,10 @@ class CloudSource(_Model):
         asset: The project library's asset its bytes are (embedded); exactly one of
             `asset`, `file` and `url` is given.
         file: The file (linked): absolute, or relative to the drawing's folder.
+        pose: Schema 243 (docs/adr/5100): the file's place in the drawing without writing it again — a rigid map of 16
+            numbers, row by row (rotation in the upper left 3 × 3, translation in the fourth column, the bottom row 0 0 0
+            1), taking the file's points to the drawing's; absent: where the file says. Its points are drawn, queried and
+            measured there; only Dönüşüm uygula writes them so. Unit: 1.
         url: An HTTP or HTTPS address read by ranges.
     """
     format: CloudFormat | CloudFormatName
@@ -23967,6 +23997,7 @@ class CloudSource(_Model):
     bounds: list[float]
     asset: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
+    pose: list[float] | None | Unset = UNSET
     url: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -23978,6 +24009,8 @@ class CloudSource(_Model):
             out["asset"] = self.asset
         if self.file is not UNSET:
             out["file"] = self.file
+        if self.pose is not UNSET:
+            out["pose"] = None if self.pose is None else [float(e0) for e0 in self.pose]
         if self.url is not UNSET:
             out["url"] = self.url
         return out
@@ -23990,6 +24023,7 @@ class CloudSource(_Model):
             bounds=[float(e0) for e0 in data["bounds"]],
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
+            pose=UNSET if "pose" not in data else None if data["pose"] is None else [float(e0) for e0 in data["pose"]],
             url=data.get("url", UNSET),
         )
 
@@ -73038,6 +73072,9 @@ class PointCloudsNetwork(_Model):
             boxes overlap.
         neighbours: Unit: count.
         reach: Unit: length.
+        rounds: docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
+            is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
+            as far as `tolerance` (the registration's own stop). Unit: count.
         spacing: Unit: length.
         tolerance: Unit: length.
     """
@@ -73050,6 +73087,7 @@ class PointCloudsNetwork(_Model):
     reach: float | None | Unset = UNSET
     reject: RegisterReject | None | Unset = UNSET
     robust: RegisterRobust | None | Unset = UNSET
+    rounds: int | None | Unset = UNSET
     spacing: float | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
@@ -73071,6 +73109,8 @@ class PointCloudsNetwork(_Model):
             out["reject"] = None if self.reject is None else self.reject.to_json()
         if self.robust is not UNSET:
             out["robust"] = None if self.robust is None else self.robust.to_json()
+        if self.rounds is not UNSET:
+            out["rounds"] = self.rounds
         if self.spacing is not UNSET:
             out["spacing"] = None if self.spacing is None else float(self.spacing)
         if self.tolerance is not UNSET:
@@ -73089,6 +73129,7 @@ class PointCloudsNetwork(_Model):
             reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
             reject=UNSET if "reject" not in data else None if data["reject"] is None else RegisterReject.from_json(data["reject"]),
             robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobust.from_json(data["robust"]),
+            rounds=data.get("rounds", UNSET),
             spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
@@ -73102,6 +73143,9 @@ class PointCloudsNetworked(_Model):
     Attributes:
         centre: Unit: system.
         shift: Unit: length.
+        rounds: docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the
+            scans' matrices are then the rounds' maps together, their rotation and translation those maps' about the
+            centre, and the links, residuals and loops the last round's. Unit: length.
     """
     centre: list[float]
     scans: list[NetworkScan]
@@ -73109,6 +73153,7 @@ class PointCloudsNetworked(_Model):
     loops: list[NetworkLoop]
     shift: float
     notes: list[str]
+    rounds: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -73118,6 +73163,8 @@ class PointCloudsNetworked(_Model):
         out["loops"] = [e0.to_json() for e0 in self.loops]
         out["shift"] = float(self.shift)
         out["notes"] = list(self.notes)
+        if self.rounds is not UNSET:
+            out["rounds"] = None if self.rounds is None else [float(e0) for e0 in self.rounds]
         return out
 
     @classmethod
@@ -73129,6 +73176,7 @@ class PointCloudsNetworked(_Model):
             loops=[NetworkLoop.from_json(e0) for e0 in data["loops"]],
             shift=float(data["shift"]),
             notes=list(data["notes"]),
+            rounds=UNSET if "rounds" not in data else None if data["rounds"] is None else [float(e0) for e0 in data["rounds"]],
         )
 
 
@@ -73295,6 +73343,83 @@ class PointCloudsOverlapped(_Model):
             control_a=UNSET if "controlA" not in data else None if data["controlA"] is None else OverlapControlStats.from_json(data["controlA"]),
             control_b=UNSET if "controlB" not in data else None if data["controlB"] is None else OverlapControlStats.from_json(data["controlB"]),
             passed=data.get("passed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsPlace(_Model):
+    """Input of `cad.pointclouds.place` v1: the cloud's persistent id and the map.
+
+    Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_locked` (`uid`);
+    `not_finite`, `invalid_input` (`place`: 16 numbers, an affine map, rigid; an axis of no length); `invalid_revision`,
+    `revision_conflict`.
+    """
+    uid: str
+    place: CloudPlaceBy
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["place"] = self.place.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsPlace:
+        return cls(
+            uid=data["uid"],
+            place=CloudPlaceBy.from_json(data["place"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsPlaced(_Model):
+    """What `cad.pointclouds.place` wrote: the map taken (16 numbers row by row; Konumu kaldır's is the inverse of the
+    first file's place, the move back), each file's place after it (none: where the file says), the cloud's box in the
+    drawing after it, how far the box's middle went (m) and the map's rotation angle (degrees); `changed` false when
+    nothing was written (taking away the place of a cloud with none).
+    Attributes:
+        matrix: Unit: 1.
+        poses: Unit: 1.
+        bounds: Unit: system.
+        shift: Unit: length.
+        angle: Unit: deg.
+    """
+    uid: str
+    matrix: list[float]
+    poses: list[list[float] | None]
+    bounds: list[float]
+    shift: float
+    angle: float
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        out["poses"] = [None if e0 is None else [float(e1) for e1 in e0] for e0 in self.poses]
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["shift"] = float(self.shift)
+        out["angle"] = float(self.angle)
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsPlaced:
+        return cls(
+            uid=data["uid"],
+            matrix=[float(e0) for e0 in data["matrix"]],
+            poses=[None if e0 is None else [float(e1) for e1 in e0] for e0 in data["poses"]],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            shift=float(data["shift"]),
+            angle=float(data["angle"]),
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -118988,6 +119113,117 @@ class PolygonClipBoundary(ClipBoundary):
 
 
 @dataclass(kw_only=True, slots=True)
+class MatrixCloudPlaceBy(CloudPlaceBy):
+    """Matris: 16 numbers row by row (Tarama kaydı's and Tarama ağı's matrix), a rotation and a translation only.
+    Attributes:
+        matrix: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "matrix"
+    matrix: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "matrix"}
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MatrixCloudPlaceBy:
+        return cls(
+            matrix=[float(e0) for e0 in data["matrix"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AxisAngleCloudPlaceBy(CloudPlaceBy):
+    """Eksen ve açı: a turn of `angle` degrees about `axis` (right-handed; its length does not matter) about `center`,
+    then `translation` (docs/adr/4300).
+    Attributes:
+        axis: Unit: 1.
+        angle: Unit: deg.
+        center: Unit: length.
+        translation: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "axisAngle"
+    axis: list[float]
+    angle: float
+    center: list[float] | None | Unset = UNSET
+    translation: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "axisAngle"}
+        out["axis"] = [float(e0) for e0 in self.axis]
+        out["angle"] = float(self.angle)
+        if self.center is not UNSET:
+            out["center"] = None if self.center is None else [float(e0) for e0 in self.center]
+        if self.translation is not UNSET:
+            out["translation"] = None if self.translation is None else [float(e0) for e0 in self.translation]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AxisAngleCloudPlaceBy:
+        return cls(
+            axis=[float(e0) for e0 in data["axis"]],
+            angle=float(data["angle"]),
+            center=UNSET if "center" not in data else None if data["center"] is None else [float(e0) for e0 in data["center"]],
+            translation=UNSET if "translation" not in data else None if data["translation"] is None else [float(e0) for e0 in data["translation"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EulerCloudPlaceBy(CloudPlaceBy):
+    """Euler açıları: `yaw` about Z, then `pitch` about the turned Y, then `roll` about the twice turned X, degrees,
+    each right-handed (X east, Y north, Z up): R = Rz(yaw)·Ry(pitch)·Rx(roll); about `center`, then `translation`.
+    Attributes:
+        yaw: Unit: deg.
+        pitch: Unit: deg.
+        roll: Unit: deg.
+        center: Unit: length.
+        translation: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "euler"
+    yaw: float
+    pitch: float
+    roll: float
+    center: list[float] | None | Unset = UNSET
+    translation: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "euler"}
+        out["yaw"] = float(self.yaw)
+        out["pitch"] = float(self.pitch)
+        out["roll"] = float(self.roll)
+        if self.center is not UNSET:
+            out["center"] = None if self.center is None else [float(e0) for e0 in self.center]
+        if self.translation is not UNSET:
+            out["translation"] = None if self.translation is None else [float(e0) for e0 in self.translation]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EulerCloudPlaceBy:
+        return cls(
+            yaw=float(data["yaw"]),
+            pitch=float(data["pitch"]),
+            roll=float(data["roll"]),
+            center=UNSET if "center" not in data else None if data["center"] is None else [float(e0) for e0 in data["center"]],
+            translation=UNSET if "translation" not in data else None if data["translation"] is None else [float(e0) for e0 in data["translation"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveCloudPlaceBy(CloudPlaceBy):
+    """Konumu kaldır: the files where they say again."""
+    TAG_VALUE: ClassVar[str] = "remove"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveCloudPlaceBy:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class HistoryCompareAgainst(CompareAgainst):
     """The drawing `steps` undo steps back (the open drawing's history, 1 to what it holds).
     Attributes:
@@ -137650,6 +137886,9 @@ _CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": Code
 _CLIP_BOUNDARY: dict[str, type[ClipBoundary]] = {"rectangle": RectangleClipBoundary, "polygon": PolygonClipBoundary}
 
 
+_CLOUD_PLACE_BY: dict[str, type[CloudPlaceBy]] = {"matrix": MatrixCloudPlaceBy, "axisAngle": AxisAngleCloudPlaceBy, "euler": EulerCloudPlaceBy, "remove": RemoveCloudPlaceBy}
+
+
 _COMPARE_AGAINST: dict[str, type[CompareAgainst]] = {"history": HistoryCompareAgainst, "file": FileCompareAgainst}
 
 
@@ -138360,6 +138599,7 @@ __all__ = [
     "AutoPaperAnnotationScale",
     "AutoPaperLegendEntries",
     "AutoPaperScaleBarLength",
+    "AxisAngleCloudPlaceBy",
     "AzimuthDimensionMeasure",
     "BaselineDatum",
     "BaselineDatumName",
@@ -138608,6 +138848,7 @@ __all__ = [
     "CloudFormatName",
     "CloudHeights",
     "CloudMismatch",
+    "CloudPlaceBy",
     "CloudPoint",
     "CloudRange",
     "CloudRegionPart",
@@ -139148,6 +139389,7 @@ __all__ = [
     "EpochSourceName",
     "EqualConstraintRule",
     "ErrorEllipse",
+    "EulerCloudPlaceBy",
     "EventLink",
     "EventLinkKind",
     "EventLinkKindName",
@@ -139987,6 +140229,7 @@ __all__ = [
     "MaterialsEdited",
     "MaterialsFile",
     "MaterialsOperation",
+    "MatrixCloudPlaceBy",
     "MeasuredExtractValue",
     "MeasuredPoint",
     "MeasuredRefraction",
@@ -140681,6 +140924,8 @@ __all__ = [
     "PointCloudsNetworked",
     "PointCloudsOverlap",
     "PointCloudsOverlapped",
+    "PointCloudsPlace",
+    "PointCloudsPlaced",
     "PointCloudsProfile",
     "PointCloudsProfiled",
     "PointCloudsQueried",
@@ -141073,6 +141318,7 @@ __all__ = [
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveAssetsPaperOp",
+    "RemoveCloudPlaceBy",
     "RemoveConstraintEdit",
     "RemoveControlCurveEdit",
     "RemoveDomainsOp",

@@ -59131,7 +59131,7 @@
       "id": "cad.pointclouds.network",
       "version": 1,
       "title": "Tarama ağı dengelemesi",
-      "summary": "Üç ve daha çok taramayı (nokta bulutu; uids) birlikte kaydeder, bir GNSS ağının bazlarını dengelemesi gibi: her bağ (iki tarama) cad.pointclouds.register'ın iki taramayı kaydettiği gibi kaydedilir (birincisi sabit, ikincisi hareketli; spacing, reach, iterations, tolerance, neighbours, robust, reject her bağda aynı), sonucu ikincinin birinciye göre düzeltmesinin ölçüsüdür ve kaydın son normal matrisiyle ağırlıklandırılır. Ölçü ve ağırlık ağın merkezine (taramaların kutularının ortalarının ortalaması) taşınır. Sabit olmayan taramaların düzeltmeleri (ω, φ, κ, öteleme) en küçük karelerle birlikte dengelenir (birinci derece: küçük açılar; Cholesky). links verilmezse taramaların sırasıyla plan kutuları örtüşen her çift bir bağdır. Cevap: her taramanın düzeltmesi ve Dönüşüm uygula'ya verilecek matrisi (p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur: taramalar yerinde durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi); kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable.",
+      "summary": "Üç ve daha çok taramayı (nokta bulutu; uids) birlikte kaydeder, bir GNSS ağının bazlarını dengelemesi gibi: her bağ (iki tarama) cad.pointclouds.register'ın iki taramayı kaydettiği gibi kaydedilir (birincisi sabit, ikincisi hareketli; spacing, reach, iterations, tolerance, neighbours, robust, reject her bağda aynı), sonucu ikincinin birinciye göre düzeltmesinin ölçüsüdür ve kaydın son normal matrisiyle ağırlıklandırılır. Ölçü ve ağırlık ağın merkezine (taramaların kutularının ortalarının ortalaması) taşınır. Sabit olmayan taramaların düzeltmeleri (ω, φ, κ, öteleme) en küçük karelerle birlikte dengelenir (birinci derece: küçük açılar; Cholesky). links verilmezse taramaların sırasıyla plan kutuları örtüşen her çift bir bağdır. Cevap: her taramanın düzeltmesi ve Dönüşüm uygula'ya verilecek matrisi (p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10, ADR 5100) dış döngüdür: ikinci turdan başlayarak her bağ taramaların bir önceki turdaki yerinden yeniden kaydedilir, bir taramanın kutusunun köşesi tolerance kadar kaymayınca durulur; cevabın rounds listesi her turun en büyük kaymasıdır, matrisler turların toplamı, bağlar ve döngüler son turunkidir. Salt okunur: taramalar yerinde durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi; tur sayısı 1–10 dışında); kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable.",
       "aliases": [
         "taramaagi",
         "agdengelemesi",
@@ -59227,6 +59227,16 @@
               }
             ]
           },
+          "rounds": {
+            "description": "docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link\nis registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves\nas far as `tolerance` (the registration's own stop).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
           "spacing": {
             "format": "double",
             "type": [
@@ -59289,6 +59299,18 @@
             },
             "type": "array"
           },
+          "rounds": {
+            "description": "docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the\nscans' matrices are then the rounds' maps together, their rotation and translation those maps' about the\ncentre, and the links, residuals and loops the last round's.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
           "scans": {
             "items": {
               "$ref": "#/$defs/NetworkScan"
@@ -59344,6 +59366,18 @@
             },
             "type": "array"
           },
+          "rounds": {
+            "description": "docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the\nscans' matrices are then the rounds' maps together, their rotation and translation those maps' about the\ncentre, and the links, residuals and loops the last round's.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
           "scans": {
             "items": {
               "$ref": "#/$defs/NetworkScan"
@@ -59387,6 +59421,213 @@
               "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
               "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.pointclouds.place",
+      "version": 1,
+      "title": "Bulutu konumla",
+      "summary": "Nokta bulutunun dosyalarına, dosyaları yeniden yazmadan çizimde bir konum verir (taramanın konumu gibi): katı bir dönüşüm (dönme ve öteleme), dosyaların bugünkü konumundan sonra uygulanır; Tarama kaydı'nın ya da Tarama ağı'nın matrisi taramayı çizimde gösterildiği yerden taşır. Bulutun noktaları bundan sonra çizimde, sorguda ve ölçüde bu konumdadır; dosyaya yalnız Dönüşüm uygula yazar. Dönüşüm: matrix (satır satır 16 sayı), axisAngle (eksen, açı derece, sağ el kuralı), euler (yaw Z, pitch dönmüş Y, roll iki kez dönmüş X çevresinde, bu sırayla, derece, her biri sağ el kuralıyla; X doğu, Y kuzey, Z yukarı; R = Rz(yaw)·Ry(pitch)·Rx(roll)); center verilmezse bulutun çizimdeki kutusunun ortası, translation verilmezse öteleme yok; remove konumu kaldırır. Ölçek, kayma ya da yansıma içeren matris reddedilir (uzunlukları değiştirir: Dönüşüm uygula ile dosyaya yazılır). Cevap: alınan matris, her dosyanın sonraki konumu, bulutun çizimdeki kutusu, kutunun ortasının kayması ve dönme açısı. Konumu olmayan bulutta remove hiçbir şey yazmaz. Tek geri alma adımı, Bulutu konumla. Retler: invalid_uid, entity_not_found, not_a_pointcloud, layer_locked (uid); not_finite, invalid_input (place); invalid_revision, revision_conflict.",
+      "aliases": [
+        "bulutukonumla",
+        "taramakonumu",
+        "pose",
+        "scanpose"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.place` v1: the cloud's persistent id and the map.\n\nRefusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_locked` (`uid`);\n`not_finite`, `invalid_input` (`place`: 16 numbers, an affine map, rigid; an axis of no length); `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "place": {
+            "$ref": "#/$defs/CloudPlaceBy"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "place"
+        ],
+        "title": "PointCloudsPlace",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.pointclouds.place` wrote: the map taken (16 numbers row by row; Konumu kaldır's is the inverse of the\nfirst file's place, the move back), each file's place after it (none: where the file says), the cloud's box in the\ndrawing after it, how far the box's middle went (m) and the map's rotation angle (degrees); `changed` false when\nnothing was written (taking away the place of a cloud with none).",
+        "properties": {
+          "angle": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "deg"
+          },
+          "bounds": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "matrix": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "1"
+          },
+          "poses": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "type": "array",
+            "x-unit": "1"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "shift": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "matrix",
+          "poses",
+          "bounds",
+          "shift",
+          "angle",
+          "changed",
+          "revision"
+        ],
+        "title": "PointCloudsPlaced",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.entities.edit` would write (plan mode); nothing is written.",
+        "properties": {
+          "changed": {
+            "description": "The objects updated or replaced, each as execute would write it, with\nits own slot (`id`), in the input's order.",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "created": {
+            "description": "The new objects as execute would write them, `id` 0 (their slots are\ngiven when they are written), in the order of their `add`s.",
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "The ids of the objects execute would delete, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document revision the plan was made against. Give it as\n`expectedRevision` to write exactly this plan, or nothing.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "created",
+          "removed",
+          "revision"
+        ],
+        "title": "EntitiesEditPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "pointcloud"
+            ],
+            "refusedWith": "not_a_pointcloud"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "layer_locked",
+          "not_finite",
+          "invalid_input",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Taramayı Euler açılarıyla döndür ve ötele",
+          "input": {
+            "place": {
+              "kind": "euler",
+              "pitch": 0.0,
+              "roll": 0.0,
+              "translation": [
+                0.2,
+                -0.1,
+                0.05
+              ],
+              "yaw": 0.5
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+          }
+        },
+        {
+          "title": "Konumu kaldır",
+          "input": {
+            "place": {
+              "kind": "remove"
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
           }
         }
       ]
@@ -127389,6 +127630,159 @@
       ],
       "type": "object"
     },
+    "CloudPlaceBy": {
+      "description": "How the map is given (docs/adr/5100). A centre left out is the middle of the cloud's box in the drawing; a\ntranslation left out is none.",
+      "oneOf": [
+        {
+          "description": "Matris: 16 numbers row by row (Tarama kaydı's and Tarama ağı's matrix), a rotation and a translation only.",
+          "properties": {
+            "kind": {
+              "const": "matrix",
+              "type": "string"
+            },
+            "matrix": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": "array",
+              "x-unit": "1"
+            }
+          },
+          "required": [
+            "kind",
+            "matrix"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Eksen ve açı: a turn of `angle` degrees about `axis` (right-handed; its length does not matter) about `center`,\nthen `translation` (docs/adr/4300).",
+          "properties": {
+            "angle": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "axis": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array",
+              "x-unit": "1"
+            },
+            "center": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "axisAngle",
+              "type": "string"
+            },
+            "translation": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "length"
+            }
+          },
+          "required": [
+            "kind",
+            "axis",
+            "angle"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Euler açıları: `yaw` about Z, then `pitch` about the turned Y, then `roll` about the twice turned X, degrees,\neach right-handed (X east, Y north, Z up): R = Rz(yaw)·Ry(pitch)·Rx(roll); about `center`, then `translation`.",
+          "properties": {
+            "center": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "euler",
+              "type": "string"
+            },
+            "pitch": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "roll": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "translation": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "yaw": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            }
+          },
+          "required": [
+            "kind",
+            "yaw",
+            "pitch",
+            "roll"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Konumu kaldır: the files where they say again.",
+          "properties": {
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "CloudPoint": {
       "description": "The point found: its lasting id and its record's facts.",
       "properties": {
@@ -127694,6 +128088,20 @@
         },
         "format": {
           "$ref": "#/$defs/CloudFormat"
+        },
+        "pose": {
+          "description": "Schema 243 (docs/adr/5100): the file's place in the drawing without writing it again — a rigid map of 16\nnumbers, row by row (rotation in the upper left 3 × 3, translation in the fourth column, the bottom row 0 0 0\n1), taking the file's points to the drawing's; absent: where the file says. Its points are drawn, queried and\nmeasured there; only Dönüşüm uygula writes them so.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 16,
+          "minItems": 16,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "1"
         },
         "url": {
           "description": "An HTTP or HTTPS address read by ranges.",
@@ -139583,6 +139991,11 @@
         {
           "const": "pointCloudStyle",
           "description": "Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.",
+          "type": "string"
+        },
+        {
+          "const": "pointCloudPlace",
+          "description": "Bulutu konumla (docs/adr/5100): a cloud's files given a place in the drawing (or theirs taken away) without\nwriting them again, the cloud updated in place.",
           "type": "string"
         },
         {

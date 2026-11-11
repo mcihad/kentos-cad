@@ -142,8 +142,25 @@ pub fn clouds<'a>(r: &Resolved<'a>, name: &str) -> Vec<&'a PointCloudEntity> {
         .collect()
 }
 
-/// A run's one cloud: refused with none or several.
+/// Why a tool reading a cloud's files as they are refuses a cloud placed in the drawing without writing its files
+/// (docs/adr/5100): its files' points are not where the drawing shows them.
+pub const PLACED: &str = "Bulutun konumu nesnede tutuluyor: dosyasının noktaları çizimde gösterildiği yerde değil, bu araç \
+     ise dosyanın kendi noktalarını okur. Önce Dönüşüm uygula ile konumu dosyaya yazın ya da Bulutu konumla'da konumu \
+     kaldırın.";
+
+/// A run's one cloud, its files where the drawing shows them: refused with none or several, or a cloud placed
+/// without writing its files (docs/adr/5100).
 pub fn one_cloud<'a>(r: &Resolved<'a>) -> Result<&'a PointCloudEntity, Box<RunResult>> {
+    let c = any_cloud(r)?;
+    if c.cloud.placed() {
+        return Err(Box::new(RunResult::refused(PLACED.to_owned())));
+    }
+    Ok(c)
+}
+
+/// A run's one cloud, placed or not (Dönüşüm uygula writes a place into the file, docs/adr/5100): refused with none
+/// or several.
+pub fn any_cloud<'a>(r: &Resolved<'a>) -> Result<&'a PointCloudEntity, Box<RunResult>> {
     match clouds(r, "input").as_slice() {
         [one] => Ok(one),
         [] => Err(Box::new(RunResult::refused(
@@ -368,6 +385,7 @@ pub fn cloud_object(
         format: p.format,
         count,
         bounds,
+        pose: None,
     };
     Entity::PointCloud(PointCloudEntity {
         base: EntityBase {

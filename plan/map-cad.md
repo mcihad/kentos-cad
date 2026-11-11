@@ -44,7 +44,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660, 5060 | süreyle (hız, yürüme profili) erişim; bakının haritası, derece birimi, özel bakı sınıfları; eskiyen tabloyu yerinde yeniden yazma | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720, 5100 | kontrol noktalarının ağa ölçü olarak girmesi (düzlem kotu düşey gözlem; kontrol datum); dosyaları farklı konumlu sanal bulutta Dönüşüm uygula ve öbür İşlemler araçlarının konumu okuması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760, 5140 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi); Brükner diyagramı | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780, 5160 | yol kaplamasının (yüzey kaplaması) profilde gösterimi; uç çizgisi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
@@ -1850,6 +1850,24 @@ kaydedilir, ölçüsü ve normal matrisi ağın merkezine taşınır, sabit olma
 ağırlığıyla bilinen kaymalar 1 cm içinde (ağırlıksızda çatı kenarları 2,5 cm saptırır). 22 bağımsız durum, çekirdek
 testleri, Python (döngüde artıklar kapanmamayı siler), MCP, masaüstü Nokta bulutu › Tarama ağı. Açık: dönüşümün dosyasız
 nesnede tutulması, dış döngü ve kontrol noktalarının ağa girmesi; Euler açıları artık kaynaklı.
+
+**11 Kasım 2026, onuncu tur — dosyasız konum, Euler açıları, ağda dış döngü ([ADR 5100](../docs/adr/5100-point-cloud-pose-euler-and-network-rounds.md)).**
+Kapsam: **Harita + CBS** (nokta bulutu). Dayanak: OGC GeoPose 1.0 Requirement 13 (ENU, dönmüş z → y′ → x″, derece) ve
+CloudCompare'in `initFromParameters` kaynağı (Tait-Bryan Z1Y2X3, R = Rz·Ry·Rx) aynı matrisi verir; E57, RIEGL SOP, PTX,
+FARO konumu tarama başına tutar; Türk resmî metinlerinde Euler sırası yok. Kanıtlanan:
+- konum dosya başına (`.kcad` şema 243, `sources[].pose`, katı dönüşüm); yeni `cad.pointclouds.place` (matris, eksen ve
+  açı, Euler açıları; konumdan sonra; Konumu kaldır; tek geri alma adımı); sorgu, bölge, profil, uyum, kayıt, ağ, çizim
+  ve XYZ sor konumu izler; Dönüşüm uygula konumu dosyaya yazar, öbür araçlar nedeniyle reddeder;
+- Dönüşüm uygula'ya Euler açıları (Sapma Z, Yunuslama Y, Yatış X);
+- `cad.pointclouds.network`'e `rounds` (dış döngü: bağlar her turda taramaların bir önceki turdaki yerinden yeniden
+  kaydedilir; turların kayması 374 → 5,2 → 0,84 → 0,3 mm, gürültü tabanında kalır; bilinen kaymalara uzaklık ~5 mm,
+  veriden);
+- 26 yeni bağımsız durum (place), işlemlerde 6 yeni (59), ağda 5 yeni (27), `.kcad` örneği ve üç bozuk dosya; Python,
+  MCP, masaüstü Nokta bulutu › Bulutu konumla, Tarama ağı'nda Nesnede tut ve Dış döngü (tur); resimler
+  `.run/gui-evidence/map-13-10/`.
+
+Açık: kontrol noktalarının ağa ölçü olarak girmesi; dosyaları farklı konumlu sanal bulutta Dönüşüm uygula; gerçek veri
+ölçümü. Madde `[ ]` kalır.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

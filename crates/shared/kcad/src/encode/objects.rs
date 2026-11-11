@@ -1970,8 +1970,8 @@ impl<'d> Encoder<'d> {
                 self.open(list.len(), false)?;
                 for (i, s) in list.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        // url (3), file (4), asset (5), count (5), bounds (6), format (6).
-                        e.open(4, true)?;
+                        // url (3), file (4), pose (4), asset (5), count (5), bounds (6), format (6).
+                        e.open(4 + usize::from(s.pose.is_some()), true)?;
                         if let Some(u) = &s.url {
                             e.key("url");
                             e.at(Seg::Name("url"), |e| e.text(u))?;
@@ -1979,6 +1979,11 @@ impl<'d> Encoder<'d> {
                         if let Some(f) = &s.file {
                             e.key("file");
                             e.at(Seg::Name("file"), |e| e.text(f))?;
+                        }
+                        // Schema 243 (docs/adr/5100): the file's place in the drawing.
+                        if let Some(m) = &s.pose {
+                            e.key("pose");
+                            e.at(Seg::Name("pose"), |e| e.floats(m))?;
                         }
                         if let Some(a) = &s.asset {
                             e.key("asset");

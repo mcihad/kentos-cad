@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `242`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-243.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `243`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-244.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1022,6 +1022,12 @@ kenar ölçüleri `lengths` (`ring`, `edge`, `length`); `close` kayıtlı parsel
 dışarıda verilen onayı (`documents[].approval`: `reference` 1–64 karakter, isteğe bağlı `date` 64, `by` 120). Yazıcı
 241'i bunlardan biri varken seçer; 240 ve öncesi `unknown_field` sayar (`broken/parcel-drafts-in-schema-240.kcad`);
 sıfır ölçü ve belgeyle aynı adlı taslak `bad_value`. Örnek `parcel-drafts.json/.kcad`.
+
+**Şema 243** (ADR 5100; MAP-13): nokta bulutu dosyasının çizimdeki konumu (`sources[].pose`): dosyayı yeniden yazmadan
+dosyanın noktalarını çizime götüren katı dönüşüm, satır satır 16 sayı (sol üst 3 × 3 dönme, dördüncü sütun öteleme, son
+satır 0 0 0 1; RᵀR = I 10⁻⁹ içinde, determinant artı); bulutun `bounds`'u dosyaların konumdaki kutularının birleşimidir.
+Yazıcı 243'ü bir dosyanın konumu varken seçer; 242 ve öncesi alanı `unknown_field` sayar
+(`broken/pointcloud-pose-in-schema-242.kcad`); ölçekli konum ve 15 sayı `bad_value`. Örnek `pointcloud-poses.json/.kcad`.
 
 **Şema 240** (ADR 4920; MAP-03): GNSS arşivinin baz oturumları (`mapSurvey.baselineSessions`: `bo-N`, arazi ölçümü,
 dosyadaki adı `name`, isteğe bağlı `start`/`end`, 2–100 bazı `baselines` (bir baz en çok bir oturumda), korelasyon

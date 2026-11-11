@@ -1,4 +1,4 @@
-//! Birleştir (docs/adr/0207 §7; PDAL's filters.merge, LAStools' lasmerge):
+//! Birleştir (docs/adr/0207 §7):
 //! the files of the selected clouds (a virtual cloud's every member) in one
 //! LAS 1.4 file: the widest point format they need (6, 7 or 8), the finest
 //! scale, the first file's offset and system; a coordinate that does not
@@ -55,6 +55,10 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         Err(e) => return *e,
     };
     let list = clouds(r, "input");
+    // A cloud placed without writing its files (docs/adr/5100) is not read here.
+    if list.iter().any(|c| c.cloud.placed()) {
+        return RunResult::refused(super::PLACED.to_owned());
+    }
     let sources: Vec<_> = list
         .iter()
         .flat_map(|c| c.cloud.sources.iter().cloned())

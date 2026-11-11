@@ -1,5 +1,4 @@
-//! Alan sorgusu (docs/adr/0207 §7; Netcad's Nokta Bulutu Alan Sor, ArcGIS
-//! LAS Point Statistics By Area): for each selected area, the points of the
+//! Alan sorgusu (docs/adr/0207 §7): for each selected area, the points of the
 //! clouds in it: how many, how dense, their heights' least, most, mean and
 //! sample standard deviation, and each class's count (`ops::stats`). A
 //! table, with Panoya kopyala and CSV; the drawing does not change.
@@ -88,6 +87,10 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         Err(e) => return *e,
     };
     let list = clouds(r, "input");
+    // A cloud placed without writing its files (docs/adr/5100) is not read here.
+    if list.iter().any(|c| c.cloud.placed()) {
+        return RunResult::refused(super::PLACED.to_owned());
+    }
     if list.is_empty() {
         return RunResult::refused("Sayılacak nokta bulutu yok: bir bulut seçin.".to_owned());
     }
