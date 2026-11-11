@@ -5,8 +5,14 @@
 //! one is) or by the user's choice among the level's area symbols. The command writes only the objects' library symbol;
 //! the decision (the attributes) is never touched, so a symbol changed later changes no decision. The shared cases
 //! are `fixtures/commands/v1/cad.zoning.symbolize.json`.
+//!
+//! docs/adr/5040: the project keeps the user's choices (`.kcad` schema 242, `settings.zoningPlan.symbols`). `keep`
+//! makes the given choices the kept ones, in the same undo step; without it the kept ones are read after the given ones
+//! and before KentOS's table (`from` `project`). Extra field: the command's version stays.
 
 use serde::{Deserialize, Serialize};
+
+use kentos_contracts::ZoningSymbolPick;
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
@@ -71,22 +77,9 @@ impl ZoningSymbols {
     }
 }
 
-/// The user's symbol for a use at a level: a library id among the level's choices.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct ZoningSymbolPick {
-    pub level: String,
-    #[serde(rename = "use")]
-    #[cfg_attr(feature = "ts", ts(rename = "use"))]
-    pub usage: String,
-    pub symbol: String,
-}
-
 /// Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the
-/// user's symbols, which go before KentOS's table.
+/// user's symbols, which go before the project's kept ones and KentOS's table; `keep` (docs/adr/5040): the given symbols
+/// become the project's kept choices (none given: the project keeps none), and the old kept ones are not read.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS
 /// has symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol
@@ -105,13 +98,16 @@ pub struct ZoningSymbolize {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ZoningSymbolPick>>"))]
     pub symbols: Vec<ZoningSymbolPick>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub keep: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
 /// A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from
-/// (`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
+/// (`kentos`, `user` or, docs/adr/5040, `project`: the project's kept choice), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
 /// `unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the
 /// drawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -155,6 +151,10 @@ pub struct ZoningSymbolized {
     pub unmapped: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub skipped: u32,
+    /// With `keep` (docs/adr/5040): the project's kept choices after it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kept: Option<Vec<ZoningSymbolPick>>,
     pub revision: String,
 }
 

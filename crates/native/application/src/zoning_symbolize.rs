@@ -5,12 +5,16 @@
 //! symbol is written, in one undo step; the attributes, which are the decision, are never touched, so a symbol does
 //! not make a decision and a symbol changed later changes none. The shared cases are
 //! `fixtures/commands/v1/cad.zoning.symbolize.json`.
+//!
+//! docs/adr/5040: the project keeps the user's choices (`settings.zoningPlan.symbols`). Without `keep` they are read
+//! after the given ones and before KentOS's table (`from` `project`); a kept choice that is not one of the level's area
+//! symbols is not used and the answer warns. With `keep` the given choices become the kept ones in the same undo step.
 
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, DataProfile, Entity, ZONING_PROFILE, ZoningSymbolRow, ZoningSymbolize, ZoningSymbolized,
-    builtin_profile, builtin_zoning_symbols,
+    CommandResult, CommandWarning, DataProfile, Entity, ZONING_PROFILE, ZoningPlanData, ZoningSymbolPick, ZoningSymbolRow,
+    ZoningSymbolize, ZoningSymbolized, builtin_profile, builtin_zoning_symbols,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -38,10 +42,13 @@ fn attr(e: &Entity, key: &str) -> String {
     e.base().attrs.get(key).map(|v| v.trim().to_owned()).unwrap_or_default()
 }
 
+/// What a run gives: the objects whose symbol changes, the answer and its warnings.
+type Run = (Vec<(Slot, Entity)>, ZoningSymbolized, Vec<CommandWarning>);
+
 /// The objects whose symbol changes and the answer, or why not.
 /// `writes`: whether the symbols are to be written (a locked layer refuses then); the zoning check reads the rows
 /// only (docs/adr/4640).
-fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<(Vec<(Slot, Entity)>, ZoningSymbolized), Stop> {
+fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let (Some(p), Some(table)) = (builtin_profile(ZONING_PROFILE), builtin_zoning_symbols()) else {
         return Err(fail(codes::INVALID_INPUT, "İmar planı profili ya da sembol tablosu okunamadı.".into(), None));
@@ -83,6 +90,27 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<(Vec<(Sl
             ));
         }
         picks.insert((level.to_owned(), usage.to_owned()), symbol.to_owned());
+    }
+    // The project's kept choices (docs/adr/5040), after the given ones; none when the given ones replace them.
+    let mut warnings = Vec::new();
+    let mut kept: HashMap<(String, String), String> = HashMap::new();
+    if !input.keep {
+        for (i, k) in doc.zoning_plan().map(|z| z.symbols.as_slice()).unwrap_or_default().iter().enumerate() {
+            let good = table.level(&k.level).is_some_and(|lv| lv.choices.iter().any(|c| c.id == k.symbol))
+                && listed(&p, "plan-kullanim", &k.usage);
+            if good {
+                kept.insert((k.level.clone(), k.usage.clone()), k.symbol.clone());
+            } else {
+                warnings.push(CommandWarning {
+                    code: codes::KEPT_SYMBOL_IGNORED.into(),
+                    message: format!(
+                        "Projede saklanan “{}” kademesinin “{}” kullanımı için “{}” seçimi kademenin MPYY alan sembollerinden değil; kullanılmadı. Seçimi yeniden yapın.",
+                        k.level, k.usage, k.symbol
+                    ),
+                    path: Some(format!("settings.zoningPlan.symbols[{i}]")),
+                });
+            }
+        }
     }
     let layer_of = |class: &str| {
         p.classes.iter().find(|c| c.id == class).map(|c| (find(doc.layers().nodes(), &c.layer), path_words(&c.layer)))
@@ -178,13 +206,14 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<(Vec<(Sl
         } else if !listed(&p, "plan-kullanim", &usage) {
             "unknownUse"
         } else {
-            let user = picks.get(&(row.level.clone(), usage.clone())).cloned();
+            let key = (row.level.clone(), usage.clone());
             let kentos = || {
                 table.level(&row.level).and_then(|lv| lv.uses.iter().find(|u| u.code == usage)).map(|u| u.symbol.clone())
             };
-            let (symbol, from) = match user {
-                Some(s) => (Some(s), "user"),
-                None => (kentos(), "kentos"),
+            let (symbol, from) = match (picks.get(&key), kept.get(&key)) {
+                (Some(s), _) => (Some(s.clone()), "user"),
+                (None, Some(s)) => (Some(s.clone()), "project"),
+                (None, None) => (kentos(), "kentos"),
             };
             match symbol {
                 None => "unmapped",
@@ -223,15 +252,29 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<(Vec<(Sl
         unmapped: count(&["unmapped"]),
         skipped: count(&["noPlan", "noLevel", "noUse", "unknownUse"]),
         areas: rows,
+        kept: input.keep.then(|| kept_after(input)),
         revision: doc.revision().to_string(),
     };
-    Ok((changed, out))
+    Ok((changed, out, warnings))
+}
+
+/// The choices the project keeps after `keep`: the given ones, trimmed, in their order.
+fn kept_after(input: &ZoningSymbolize) -> Vec<ZoningSymbolPick> {
+    input
+        .symbols
+        .iter()
+        .map(|s| ZoningSymbolPick {
+            level: s.level.trim().to_owned(),
+            usage: s.usage.trim().to_owned(),
+            symbol: s.symbol.trim().to_owned(),
+        })
+        .collect()
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandResult<()> {
     match run(cx.doc, input, false) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok((_, _, warnings)) => CommandResult::Completed { output: (), warnings },
         Err(stop) => stop.into(),
     }
 }
@@ -239,19 +282,28 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandRe
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
     match run(cx.doc, input, false) {
-        Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((_, out, warnings)) => CommandResult::Completed { output: out, warnings },
         Err(stop) => stop.into(),
     }
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
-    let (changed, mut out) = match run(cx.doc, &input, true) {
+    let (changed, mut out, warnings) = match run(cx.doc, &input, true) {
         Ok(done) => done,
         Err(stop) => return stop.into(),
     };
-    cx.doc.update_many(changed, STEP);
+    let kept = out.kept.clone();
+    let _ = cx.doc.transact(STEP, |doc| -> Result<(), ()> {
+        doc.update_many(changed, STEP);
+        if let Some(symbols) = kept {
+            let mut data = doc.zoning_plan().cloned().unwrap_or_default();
+            data.symbols = symbols;
+            doc.set_zoning_plan(Some(data), STEP);
+        }
+        Ok(())
+    });
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed { output: out, warnings }
 }
 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
@@ -267,7 +319,12 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> Command
 /// The decision areas as `cad.zoning.symbolize` reads them without the user's picks, writing nothing (docs/adr/4640, the
 /// zoning check's symbol rule): none when the table or the decision layer is not there.
 pub(crate) fn rows(doc: &Document) -> Option<Vec<kentos_commands::ZoningSymbolRow>> {
-    run(doc, &ZoningSymbolize::default(), false).ok().map(|(_, out)| out.areas)
+    run(doc, &ZoningSymbolize::default(), false).ok().map(|(_, out, _)| out.areas)
+}
+
+/// The project's kept choices (docs/adr/5040), for a window that starts from them.
+pub fn kept(doc: &Document) -> Vec<ZoningSymbolPick> {
+    doc.zoning_plan().map(|z: &ZoningPlanData| z.symbols.clone()).unwrap_or_default()
 }
 
 /// A library symbol's name as KentOS's table lists it among a level's choices; the id itself when it is not there.

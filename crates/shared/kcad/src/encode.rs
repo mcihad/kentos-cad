@@ -518,6 +518,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.review_notes.is_empty())
             + usize::from(s.parcel_register.is_some())
+            + usize::from(s.zoning_plan.is_some())
             + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.table_styles.is_empty())
             + usize::from(!s.standard_exceptions.is_empty())
@@ -810,6 +811,20 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 e.json(&serde_json::to_value(&s.wall_styles).unwrap_or_default())
+            })?;
+        }
+        // Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, as their JSON.
+        if let Some(data) = &s.zoning_plan {
+            self.key("zoningPlan");
+            self.at(Seg::Name("zoningPlan"), |e| {
+                if data.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş imar planı verisi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::zoning_plan_problem(data) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(data).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         if !s.connections.is_empty() {
@@ -2265,7 +2280,7 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// (docs/adr/0207), 30 when the project has
 /// annotation heights or a dimension style lines, or a dimension of it or of
 /// a block definition has lines or a leader an arrowhead size or one of
-/// AutoCAD's arrowheads (docs/adr/0205), 29 when it has a raster
+/// the named arrowheads (docs/adr/0205), 29 when it has a raster
 /// (docs/adr/0204 §2), 28 when its survey settings
 /// name an a priori standard deviation (docs/adr/0203 §1), 27 when the
 /// project has topology settings (docs/adr/0202 §7), 26 when a layer has fields
@@ -2291,6 +2306,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts.
+    if doc.settings.zoning_plan.is_some() {
+        return crate::SCHEMA_WITH_ZONING_DRAFTS;
+    }
     // Schema 240 (docs/adr/4920): a GNSS archive's baseline sessions, kept limits, a network point's velocity.
     if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_sessions) {
         return crate::SCHEMA_WITH_GNSS_SESSIONS;
@@ -3847,7 +3866,7 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return SCHEMA_WITH_POINT_CLOUDS;
     }
     // Schema 30 (docs/adr/0205): annotation heights, a dimension's lines, a
-    // leader's arrowhead size or one of AutoCAD's arrowheads.
+    // leader's arrowhead size or one of the named arrowheads.
     let annotated = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Dimension(d) => d.look.has_lines(),

@@ -848,6 +848,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut map_work = None;
     let mut map_survey = None;
     let mut parcel_register = None;
+    let mut zoning_plan = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1104,6 +1105,18 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 parcel_register = Some(v);
+            }
+            // Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, read whole and
+            // checked.
+            "zoningPlan" if has.zoning_drafts => {
+                let (v, at): (kentos_contracts::ZoningPlanData, usize) = objects::json_part(r, "imar planı verisi")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş imar planı verisi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::zoning_plan_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                zoning_plan = Some(v);
             }
             "mapSurvey" if has.map_survey => {
                 let (v, at): (kentos_contracts::MapSurvey, usize) = objects::json_part(r, "GNSS arşivi")?;
@@ -2087,6 +2100,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         map_work,
         map_survey,
         parcel_register,
+        zoning_plan,
         source_bases,
         heights,
         coordinate_epoch,

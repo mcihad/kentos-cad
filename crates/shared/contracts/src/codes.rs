@@ -2072,6 +2072,12 @@ codes! {
     UNKNOWN_PLAN_SYMBOL = "unknown_plan_symbol", Failed, false, "Kademenin MPYY alan sembolleri arasında bu kimlikte sembol yok; kademenin sembollerinden birini seçin.";
     /// Sembolü karardan ver (docs/adr/4240): the object is not an area on the zoning plan's decision layer.
     NOT_A_DECISION = "not_a_decision", Failed, false, "Nesne imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir.";
+    /// Plan değişikliği taslağı (docs/adr/5040): no plan boundary of the id.
+    UNKNOWN_PLAN = "unknown_plan", Failed, false, "Çizimde bu kimlikte (PlanKimlik) plan sınırı yok; planın kimliğini plan sınırından alın.";
+    /// Plan değişikliği taslağı (docs/adr/5040): no draft of the id in the project.
+    UNKNOWN_DRAFT = "unknown_draft", Failed, false, "Projede bu kimlikte plan değişikliği taslağı yok.";
+    /// Sembolü karardan ver (docs/adr/5040): a kept choice that is no longer one of the level's area symbols.
+    KEPT_SYMBOL_IGNORED = "kept_symbol_ignored", Warning, false, "Projede saklanan bir sembol seçimi kademenin MPYY alan sembollerinden değil; kullanılmadı. Seçimi yeniden yapın.";
     PARCEL_IDENTITY_TAKEN = "parcel_identity_taken", Failed, false, "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı.";
     /// Senaryo ölçüleri (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";

@@ -29,7 +29,7 @@ use crate::geometry::shape;
 use crate::profiles::{Place, find, path_words};
 
 /// The kinds in the order the answer lists them.
-pub const KINDS: [&str; 20] = [
+pub const KINDS: [&str; 21] = [
     "missingLayer",
     "noLevel",
     "upperMissing",
@@ -51,6 +51,8 @@ pub const KINDS: [&str; 20] = [
     "noteUnused",
     // Docs/adr/4640: last, so that the earlier kinds keep their order.
     "symbolMismatch",
+    // Docs/adr/5040.
+    "draftStale",
 ];
 
 /// The uses on which nothing is built: they ask for no TAKS, KAKS or height.
@@ -140,6 +142,7 @@ pub fn kind_word(kind: &str) -> &'static str {
         "noteMissing" => "Plan notu yok",
         "noteUnused" => "Anılmayan not",
         "symbolMismatch" => "Sembol uyuşmazlığı",
+        "draftStale" => "Taslak eskidi",
         _ => "Bulgu",
     }
 }
@@ -702,9 +705,9 @@ fn run_with_regions(
         }
     }
 
-    // Docs/adr/4640: a decision area whose library symbol is not the one its decision gives (KentOS's table, ADR 4240,
-    // read as Sembolleri karardan ver reads it): judged only when the area has a symbol and the table gives its use one;
-    // the symbol shows the decision, never the other way round.
+    // Docs/adr/4640: a decision area whose library symbol is not the one its decision gives (the project's kept choice,
+    // docs/adr/5040, else KentOS's table, ADR 4240, read as Sembolleri karardan ver reads it): judged only when the area
+    // has a symbol and its use has one; the symbol shows the decision, never the other way round.
     if let Some(rows) = crate::zoning_symbolize::rows(doc) {
         for row in rows.iter().filter(|r| r.state == "set") {
             let (Some(was), Some(symbol)) = (row.was.as_deref(), row.symbol.as_deref()) else { continue };
@@ -721,6 +724,14 @@ fn run_with_regions(
                     crate::zoning_symbolize::symbol_name(symbol)
                 ),
             );
+        }
+    }
+    // Docs/adr/5040: a plan change draft whose decision area changed, or is gone, after it was written.
+    for (uid, message) in crate::zoning_draft::stale(doc) {
+        let item = uid.as_deref().and_then(|u| decisions.iter().find(|d| d.uid == u));
+        match item {
+            Some(item) => say("draftStale", &[item], None, message),
+            None => say("draftStale", &[], None, message),
         }
     }
     findings.sort_by_key(|(order, first, _, _)| (*order, *first));

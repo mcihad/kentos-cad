@@ -69,6 +69,7 @@ use crate::asbuilt_check;
 use crate::field_package;
 use crate::zoning_check;
 use crate::zoning_symbolize;
+use crate::zoning_draft;
 use crate::scenarios_impact;
 use crate::readjustment;
 use crate::readjustment_scope;
@@ -604,6 +605,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_ZONING_SYMBOLIZE => {
                 $then!(zoning_symbolize, kentos_commands::ZoningSymbolize)
+            }
+            kentos_commands::CAD_ZONING_DRAFT => {
+                $then!(zoning_draft, kentos_commands::ZoningDraft)
             }
             kentos_commands::CAD_SCENARIOS_IMPACT => {
                 $then!(scenarios_impact, kentos_commands::ScenariosImpact)

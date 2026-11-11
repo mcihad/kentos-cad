@@ -71315,6 +71315,66 @@ class PlaceOn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlanDraft(_Model):
+    """A plan change draft: its id, the plan (`PlanKimlik`) it changes, the drawing's revision it was made from, its
+    reason and its changes.
+    """
+    id: str
+    plan: str
+    revision: str
+    reason: str
+    changes: list[PlanDraftChange]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["plan"] = self.plan
+        out["revision"] = self.revision
+        out["reason"] = self.reason
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanDraft:
+        return cls(
+            id=data["id"],
+            plan=data["plan"],
+            revision=data["revision"],
+            reason=data["reason"],
+            changes=[PlanDraftChange.from_json(e0) for e0 in data["changes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanDraftChange(_Model):
+    """A change a draft makes to a decision area: the field and its value before (empty: the area had none) and after.
+    Attributes:
+        area: The decision area's persistent id.
+    """
+    area: str
+    field: str
+    after: str
+    before: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["field"] = self.field
+        out["after"] = self.after
+        out["before"] = self.before
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanDraftChange:
+        return cls(
+            area=data["area"],
+            field=data["field"],
+            after=data["after"],
+            before=data["before"] if "before" in data else "",
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PlatformBalanceAsk(_Model):
     """The bracket a balance is searched in: the pad's vertical offset from `low` to `high` (m), until cut and fill meet
     within `tolerance` m³.
@@ -78492,7 +78552,7 @@ class ProjectSettings(_Model):
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
             only in an inch or foot drawing.
-        line_type_scale: The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+        line_type_scale: The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;
             absent: 1. Unit: 1.
         line_types: The project's line types with patterns (docs/adr/0313 §1).
         lineage: What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
@@ -78547,6 +78607,8 @@ class ProjectSettings(_Model):
             (see [`ProjectSettings::project_type`]).
         xref_paths: The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
             to the project file's folder with `/` between their parts.
+        zoning_plan: A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
+            (`.kcad` schema 242).
     """
     srid: int
     length_decimals: int
@@ -78606,6 +78668,7 @@ class ProjectSettings(_Model):
     wall_styles: list[WallStyleDef] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
     xref_paths: list[str] | Unset = UNSET
+    zoning_plan: ZoningPlanData | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -78719,6 +78782,8 @@ class ProjectSettings(_Model):
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         if self.xref_paths is not UNSET:
             out["xrefPaths"] = list(self.xref_paths)
+        if self.zoning_plan is not UNSET:
+            out["zoningPlan"] = None if self.zoning_plan is None else self.zoning_plan.to_json()
         return out
 
     @classmethod
@@ -78782,6 +78847,7 @@ class ProjectSettings(_Model):
             wall_styles=[WallStyleDef.from_json(e0) for e0 in data["wallStyles"]] if "wallStyles" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
             xref_paths=list(data["xrefPaths"]) if "xrefPaths" in data else UNSET,
+            zoning_plan=UNSET if "zoningPlan" not in data else None if data["zoningPlan"] is None else ZoningPlanData.from_json(data["zoningPlan"]),
         )
 
 
@@ -115575,6 +115641,181 @@ class ZoningChecked(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ZoningDraft(_Model):
+    """Input of `cad.zoning.draft` v1: the draft's id; the plan (`PlanKimlik`), the reason and the changes it keeps (a draft
+    of the id is replaced); or `remove`, which takes it out of the project.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (`id` empty, with a space at its
+    ends or longer than 64 characters); with `remove`, `unknown_draft` (no draft of the id); `layer_not_found` (the
+    drawing has no plan boundary or decision layer); `invalid_input` (`plan` empty), `unknown_plan` (no plan boundary
+    of the id); `invalid_input` (`reason` empty or longer than 4000 characters; `changes` empty); for `changes[i]`:
+    `invalid_input` (the area's field given twice), `invalid_uid`, `entity_not_found`, `not_a_decision`, `invalid_input`
+    (an area of another plan, a field a draft does not change, a value empty, not in the list or not a number of 0 or
+    more, the area's value already).
+    """
+    id: str
+    changes: list[ZoningDraftChange] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    plan: str | Unset = UNSET
+    reason: str | Unset = UNSET
+    remove: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.changes is not UNSET:
+            out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.plan is not UNSET:
+            out["plan"] = self.plan
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.remove is not UNSET:
+            out["remove"] = self.remove
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraft:
+        return cls(
+            id=data["id"],
+            changes=[ZoningDraftChange.from_json(e0) for e0 in data["changes"]] if "changes" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            plan=data.get("plan", UNSET),
+            reason=data.get("reason", UNSET),
+            remove=data.get("remove", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDraftChange(_Model):
+    """A change the draft makes: a decision area, its field and the value it takes."""
+    uid: str
+    field: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["field"] = self.field
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraftChange:
+        return cls(
+            uid=data["uid"],
+            field=data["field"],
+            value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDraftFinding(_Model):
+    """What Mekânsal Planlar Yapım Yönetmeliği m. 26 asks of the draft: `infrastructureLess` (a social or technical
+    infrastructure use's area gets smaller: m. 26(3); `area` how much), `densityUp` (an area's KAKS or KatAdedi rises:
+    m. 26(5)(a)), `heightUp` (an area's KatAdedi or Hmax rises: m. 26(4), (5)(b)); the area's id where it is one area's.
+    Attributes:
+        area: Unit: area.
+    """
+    kind: str
+    message: str
+    area: float | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+    use: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["message"] = self.message
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        if self.use is not UNSET:
+            out["use"] = self.use
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraftFinding:
+        return cls(
+            kind=data["kind"],
+            message=data["message"],
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            uid=data.get("uid", UNSET),
+            use=data.get("use", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDraftUse(_Model):
+    """A use's area in the plan before and after the draft (square metres); the use empty for areas without one.
+    Attributes:
+        before: Unit: area.
+        after: Unit: area.
+        difference: Unit: area.
+    """
+    use: str
+    before: float
+    after: float
+    difference: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["use"] = self.use
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        out["difference"] = float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraftUse:
+        return cls(
+            use=data["use"],
+            before=float(data["before"]),
+            after=float(data["after"]),
+            difference=float(data["difference"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDrafted(_Model):
+    """Output of `cad.zoning.draft` v1: the draft as kept (none when removed), its plan's level, the plan's areas by use
+    (in the list's order, then areas without a use), what m. 26 asks, the project's drafts after it and the revision.
+    Attributes:
+        drafts: Unit: count.
+    """
+    level: str
+    uses: list[ZoningDraftUse]
+    findings: list[ZoningDraftFinding]
+    drafts: int
+    revision: str
+    draft: PlanDraft | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["uses"] = [e0.to_json() for e0 in self.uses]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["drafts"] = self.drafts
+        out["revision"] = self.revision
+        if self.draft is not UNSET:
+            out["draft"] = None if self.draft is None else self.draft.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDrafted:
+        return cls(
+            level=data["level"],
+            uses=[ZoningDraftUse.from_json(e0) for e0 in data["uses"]],
+            findings=[ZoningDraftFinding.from_json(e0) for e0 in data["findings"]],
+            drafts=data["drafts"],
+            revision=data["revision"],
+            draft=UNSET if "draft" not in data else None if data["draft"] is None else PlanDraft.from_json(data["draft"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ZoningFinding(_Model):
     """A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,
     `overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,
@@ -115610,6 +115851,28 @@ class ZoningFinding(_Model):
             message=data["message"],
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
             regions=[ZoningRegion.from_json(e0) for e0 in data["regions"]] if "regions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningPlanData(_Model):
+    """The project's zoning plan data (schema 242): the kept symbol choices and the plan change drafts."""
+    drafts: list[PlanDraft] | Unset = UNSET
+    symbols: list[ZoningSymbolPick] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drafts is not UNSET:
+            out["drafts"] = [e0.to_json() for e0 in self.drafts]
+        if self.symbols is not UNSET:
+            out["symbols"] = [e0.to_json() for e0 in self.symbols]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningPlanData:
+        return cls(
+            drafts=[PlanDraft.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
+            symbols=[ZoningSymbolPick.from_json(e0) for e0 in data["symbols"]] if "symbols" in data else UNSET,
         )
 
 
@@ -115663,7 +115926,7 @@ class ZoningSymbolPick(_Model):
 @dataclass(kw_only=True, slots=True)
 class ZoningSymbolRow(_Model):
     """A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from
-    (`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
+    (`kentos`, `user` or, docs/adr/5040, `project`: the project's kept choice), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
     `unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the
     drawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).
     """
@@ -115708,7 +115971,8 @@ class ZoningSymbolRow(_Model):
 @dataclass(kw_only=True, slots=True)
 class ZoningSymbolize(_Model):
     """Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the
-    user's symbols, which go before KentOS's table.
+    user's symbols, which go before the project's kept ones and KentOS's table; `keep` (docs/adr/5040): the given symbols
+    become the project's kept choices (none given: the project keeps none), and the old kept ones are not read.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS
     has symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol
@@ -115717,6 +115981,7 @@ class ZoningSymbolize(_Model):
     layer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).
     """
     expected_revision: str | None | Unset = UNSET
+    keep: bool | Unset = UNSET
     symbols: list[ZoningSymbolPick] | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
@@ -115724,6 +115989,8 @@ class ZoningSymbolize(_Model):
         out: dict[str, Any] = {}
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         if self.symbols is not UNSET:
             out["symbols"] = [e0.to_json() for e0 in self.symbols]
         if self.uids is not UNSET:
@@ -115734,6 +116001,7 @@ class ZoningSymbolize(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ZoningSymbolize:
         return cls(
             expected_revision=data.get("expectedRevision", UNSET),
+            keep=data.get("keep", UNSET),
             symbols=[ZoningSymbolPick.from_json(e0) for e0 in data["symbols"]] if "symbols" in data else UNSET,
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
@@ -115748,6 +116016,7 @@ class ZoningSymbolized(_Model):
         same: Unit: count.
         unmapped: Unit: count.
         skipped: Unit: count.
+        kept: With `keep` (docs/adr/5040): the project's kept choices after it.
     """
     areas: list[ZoningSymbolRow]
     set: int
@@ -115755,6 +116024,7 @@ class ZoningSymbolized(_Model):
     unmapped: int
     skipped: int
     revision: str
+    kept: list[ZoningSymbolPick] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -115764,6 +116034,8 @@ class ZoningSymbolized(_Model):
         out["unmapped"] = self.unmapped
         out["skipped"] = self.skipped
         out["revision"] = self.revision
+        if self.kept is not UNSET:
+            out["kept"] = None if self.kept is None else [e0.to_json() for e0 in self.kept]
         return out
 
     @classmethod
@@ -115775,6 +116047,7 @@ class ZoningSymbolized(_Model):
             unmapped=data["unmapped"],
             skipped=data["skipped"],
             revision=data["revision"],
+            kept=UNSET if "kept" not in data else None if data["kept"] is None else [ZoningSymbolPick.from_json(e0) for e0 in data["kept"]],
         )
 
 
@@ -139326,6 +139599,8 @@ __all__ = [
     "PlacementArrayEdit",
     "PlanBox",
     "PlanBoxName",
+    "PlanDraft",
+    "PlanDraftChange",
     "PlanNorthDirection",
     "PlanRoadWork",
     "PlatformBalanceAsk",
@@ -141043,7 +141318,13 @@ __all__ = [
     "Zoning",
     "ZoningCheck",
     "ZoningChecked",
+    "ZoningDraft",
+    "ZoningDraftChange",
+    "ZoningDraftFinding",
+    "ZoningDraftUse",
+    "ZoningDrafted",
     "ZoningFinding",
+    "ZoningPlanData",
     "ZoningRegion",
     "ZoningSymbolPick",
     "ZoningSymbolRow",

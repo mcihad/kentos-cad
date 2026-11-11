@@ -10004,6 +10004,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "İmar planını sembolden değil KentOS'un imar-plani profilinin tipli nesnelerinden denetler: plan sınırı (kademe, üst plan), karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu (no, kapsam). \
                       Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing, levelOrder (üst plan üst kademede değil), outsideUpper (plan sınırı üst planının sınırı dışına taşıyor), noPlan, noUse, unknownUse, missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım), outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol), roadWidth (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını içine alan en alt kademeli plan), roadParcel (aynı şeride parsel \
                       katmanındaki bir parsel giriyor, hangi planda olursa olsun), noteMissing, noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme parçalarını regions'ta taşır (her bölgenin dış halkası saat yönünün tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre). tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. \
+                      symbolMismatch: karar alanının sembolü kararının sembolü değil (projenin saklı seçimi, yoksa KentOS'un tablosu); draftStale: plan değişikliği taslağı (cad.zoning.draft) yazıldıktan sonra karar alanının değeri değişti, alan ya da plan çizimde yok. \
                       Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance)."
                 .into(),
             aliases: vec!["imardenetim".into(), "plandenetim".into()],
@@ -10027,6 +10028,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Sembolü karardan ver".into(),
             summary: "Karar alanlarına MPYY sembolünü kararlarından verir, tersini hiç yapmaz: sembol alanın kullanımından (Kullanim, imar-plani profilinin plan-kullanim listesi) ve planının kademesinden (plan sınırının Seviye'si) seçilir. KentOS'un tablosu (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY alan sembollerinden adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir eşi olmayan kullanım açık kalır (unmapped), sembolünü symbols ile kullanıcı seçer (kademenin alan sembollerinden; KentOS tahmin etmez). \
                       Yalnız nesnenin kitaplık sembolü yazılır; karar (öznitelikler) hiç değişmez, sonra değişen sembol kararı değiştirmez. uids yoksa profilin karar katmanının bütün alanları. Her alanın durumu: set, same, unmapped, noPlan, noLevel, noUse, unknownUse; önceki sembolü was. Tek geri alma adımı “Sembolü karardan ver”. \
+                      Kullanıcının seçimleri projede saklanır: keep verilen seçimleri projenin saklı seçimleri yapar (aynı geri alma adımında; seçim verilmezse proje seçim saklamaz, eski saklılar okunmaz) ve kept onları verir; keep yoksa saklı seçimler verilenlerden sonra, tablodan önce okunur (from project). Kademenin sembollerinden olmayan saklı seçim kullanılmaz, uyarı kept_symbol_ignored. \
                       Retler: invalid_revision, revision_conflict, invalid_input (seçimin kademesi ya da kullanımı, aynı çift iki kez; aynı alan iki kez), unknown_plan_symbol, layer_not_found (karar katmanı yok), invalid_uid, entity_not_found, not_a_decision (uids[i]), layer_locked."
                 .into(),
             aliases: vec!["sembolkarar".into(), "imarsembol".into(), "mpyysembol".into()],
@@ -10048,6 +10050,41 @@ pub fn catalog() -> CommandCatalog {
                     input: json!({ "symbols": [{ "level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani" }] }),
                     output: None,
                 },
+                CommandExample {
+                    title: "Seçim projede saklanır".into(),
+                    input: json!({ "symbols": [{ "level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani" }], "keep": true }),
+                    output: None,
+                },
+            ],
+        },
+        // Plan değişikliği taslağı (plan/map-cad.md MAP-09, docs/adr/5040).
+        CommandDescriptor {
+            id: crate::CAD_ZONING_DRAFT.into(),
+            version: crate::CAD_ZONING_DRAFT_VERSION,
+            title: "Plan değişikliği taslağı".into(),
+            summary: "İmar planının değişikliği için projede taslak saklar (id; aynı kimlikteki taslağın yerine geçer) ya da siler (remove): plan (plan sınırının PlanKimlik'i), gerekçe (reason; Mekânsal Planlar Yapım Yönetmeliği m. 9(4) değişiklik gerekçesini açıklayan plan raporunu ister) ve değişiklikler (changes: planın karar alanı uid, alanı field: Kullanim, Nizam, TAKS, KAKS, KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme; yeni değeri value). Taslak çizimin sürümünü ve her değerin öncesini saklar; yürürlükteki karar alanları hiç değişmez. \
+                      Cevap planın alanlarını kullanıma göre önce ve sonra verir (uses, m²) ve m. 26'nın sorduklarını söyler: infrastructureLess (sosyal ya da teknik altyapı kullanımının alanı küçülüyor, m. 26(3); eşdeğerlik değerlendirilmez), densityUp (KAKS ya da kat adedi artıyor, m. 26(5)(a)), heightUp (kat adedi ya da Hmax artıyor, m. 26(4), (5)(b)). Taslak onaylı değişiklik değildir: onay, plan işlem numarası ve askı KentOS dışındadır. Sonradan değişen karar alanını cad.zoning.check draftStale ile söyler. Tek geri alma adımı. \
+                      Retler: invalid_revision, revision_conflict, invalid_input, unknown_draft (remove), layer_not_found, unknown_plan, invalid_uid, entity_not_found, not_a_decision (changes[i])."
+                .into(),
+            aliases: vec!["plandegisikligi".into(), "imartaslak".into(), "plantaslak".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ZoningDraft>(),
+            output: schema::<crate::ZoningDrafted>(),
+            plan: Some(schema::<crate::ZoningDrafted>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Park alanının ticarete dönmesi".into(),
+                    input: json!({ "id": "T-1", "plan": "UİP-1", "reason": "Gerekçe: …", "changes": [{ "uid": "0192f5c0-5040-7000-8000-000000000005", "field": "Kullanim", "value": "ticaret" }] }),
+                    output: None,
+                },
+                CommandExample { title: "Taslağı sil".into(), input: json!({ "id": "T-1", "remove": true }), output: None },
             ],
         },
         // Saha paketi (plan/map-cad.md MAP-19, docs/adr/1920).
@@ -17050,6 +17087,7 @@ mod tests {
                     crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackage>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolize>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ZONING_DRAFT => serde_json::from_value::<crate::ZoningDraft>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScope>(e.input.clone()).map(|_| ()),
@@ -18033,6 +18071,7 @@ mod tests {
                         crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackaged>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolized>(output.clone()).map(|_| ()),
+                        crate::CAD_ZONING_DRAFT => serde_json::from_value::<crate::ZoningDrafted>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScoped>(output.clone()).map(|_| ()),

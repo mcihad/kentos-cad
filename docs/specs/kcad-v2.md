@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `240`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-241.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `242`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-243.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1002,6 +1002,17 @@ SHA-256'sının ilk 16 hanesidir. `road.rebuildWhole` (mantıksal; yalnız `true
 kendiliğinden de her çizimi bütün çizer; yazılmamışsa yalnız değişeni yazar (ADR 4320). Yazıcı 238'i böyle bir çizim,
 `layer` kaynağı ya da `rebuildWhole` varken seçer; 237 ve öncesi üçünü de `bad_value` sayar
 (`broken/sheet-contour-drawing-in-schema-237.kcad`). Örnek `map-sheet-contours.json/.kcad`.
+
+**Şema 242** (ADR 5040; MAP-09): imar planının projede saklanan verisi, `settings.zoningPlan` (JSON'u olduğu gibi;
+boşsa yazılmaz): `symbols` (kullanıcının sembol seçimleri: `level`, `use`, `symbol`, her biri boşluksuz başlayıp biten
+1–200 karakter; aynı kademe ve kullanım bir kez; en çok 1000) ve `drafts` (plan değişikliği taslakları, en çok 100: `id`
+1–64 karakter, tek; `plan` planın `PlanKimlik`'i; `revision` taslağın yapıldığı çizim sürümü, tamsayı yazısı; `reason`
+gerekçe, 1–4000 karakter; `changes` 1–10000 değişiklik: `area` karar alanının küçük harfli UUID'si, `field` `Kullanim`,
+`Nizam`, `TAKS`, `KAKS`, `KatAdedi`, `Hmax`, `OnCekme`, `YanCekme` ya da `ArkaCekme`, `before` (boş olabilir) ve `after`
+(boş olmaz) en çok 200 karakter ve birbirinden farklı; aynı alanın aynı alanı bir kez). Taslak yürürlükteki karar
+alanlarını değiştirmez. Yazıcı 242'yi veri varken seçer; 240 ve öncesi alanı `unknown_field` sayar
+(`broken/zoning-plan-in-schema-240.kcad`); gerekçesiz taslak, taslağın değiştirmediği alan ve iki kez seçilen kademe ve
+kullanım `bad_value`. Örnek `zoning-plan.json/.kcad`. (241 başka bir dalın şemasıdır.)
 
 **Şema 240** (ADR 4920; MAP-03): GNSS arşivinin baz oturumları (`mapSurvey.baselineSessions`: `bo-N`, arazi ölçümü,
 dosyadaki adı `name`, isteğe bağlı `start`/`end`, 2–100 bazı `baselines` (bir baz en çok bir oturumda), korelasyon

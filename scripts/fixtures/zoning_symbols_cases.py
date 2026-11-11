@@ -16,6 +16,12 @@ checks that catalog/v1/profiles/imar-plani-semboller.json says the same. The rul
   pick for the level and use, else the table's: none is `unmapped`; the area's symbol already that one is `same`,
   else `set` (the symbol changes; `was` the one it had);
 - only `symbol` is written; the attributes stay; refusals as the contract lists them.
+
+ADR 5040, the project's kept choices (`settings.zoningPlan.symbols`): without `keep` a kept choice is read after the
+given ones and before the table (`from` `project`), when its symbol is one of the level's fill symbols and its use is on
+the list; otherwise it is not read and the answer warns (`kept_symbol_ignored`). With `keep` the given choices become
+the kept ones (none given: the project keeps none) in the same undo step, the old ones are not read, and the answer
+says them (`kept`).
 """
 
 import copy
@@ -131,20 +137,31 @@ def entity(i, layer, pts, attrs, symbol):
 ENTS = [entity(i + 1, *o) for i, (_, o) in enumerate(OBJECTS)]
 
 
-def setup(ents=None, locked=False, decisions=True):
+def setup(ents=None, locked=False, decisions=True, kept=None):
     ents = copy.deepcopy(ents if ents is not None else ENTS)
     kids = [node("plan", "Plan sınırı")] + ([node("karar", "Karar alanları", locked=locked)] if decisions else [])
     return {"format": "kentos.document", "version": 2, "name": "Sembolü karardan ver",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
+                         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map",
+                         **({"zoningPlan": {"symbols": list(kept)}} if kept else {})},
             "origin": {"x": X0, "y": Y0}, "layers": [node("0", "0"), node("imar", "İmar planı", kids)],
             "activeLayer": "plan", "entities": ents, "uids": [uid(i + 1) for i in range(len(ents))],
             "styles": {"items": [], "categories": []}}
 
 
-def symbolized(ents, names=None, picks=()):
-    """The answer and the symbols written, by hand."""
+def symbolized(ents, names=None, picks=(), kept=(), keep=False):
+    """The answer, the symbols written and the warnings, by hand."""
+    given = list(picks)
     picks = {(p["level"], p["use"]): p["symbol"] for p in picks}
+    held, warnings = {}, []
+    for i, k in enumerate(() if keep else kept):
+        fill_ids = {f["id"] for f in fills(k["level"])} if k["level"] in BRANCHES else set()
+        if k["symbol"] in fill_ids and k["use"] in USES:
+            held[(k["level"], k["use"])] = k["symbol"]
+        else:
+            warnings.append({"code": "kept_symbol_ignored", "message": f"Projede saklanan “{k['level']}” kademesinin "
+                             f"“{k['use']}” kullanımı için “{k['symbol']}” seçimi kademenin MPYY alan sembollerinden "
+                             "değil; kullanılmadı. Seçimi yeniden yapın.", "path": f"settings.zoningPlan.symbols[{i}]"})
     plans = [(e["attrs"].get("PlanKimlik", ""), e["attrs"].get("Seviye", "")) for e in ents if e["layerId"] == "plan"]
     chosen = [e for e in ents if e["layerId"] == "karar"]
     if names is not None:
@@ -173,7 +190,12 @@ def symbolized(ents, names=None, picks=()):
             row["state"] = "unknownUse"
         else:
             key = (row["level"], usage)
-            symbol, source = (picks[key], "user") if key in picks else (KNOWN.get(row["level"], {}).get(usage), "kentos")
+            if key in picks:
+                symbol, source = picks[key], "user"
+            elif key in held:
+                symbol, source = held[key], "project"
+            else:
+                symbol, source = KNOWN.get(row["level"], {}).get(usage), "kentos"
             if symbol is None:
                 row["state"] = "unmapped"
             else:
@@ -186,33 +208,48 @@ def symbolized(ents, names=None, picks=()):
         rows.append(row)
     count = lambda *states: sum(1 for r in rows if r["state"] in states)  # noqa: E731
     out = {"areas": rows, "set": count("set"), "same": count("same"), "unmapped": count("unmapped"),
-           "skipped": count("noPlan", "noLevel", "noUse", "unknownUse"), "revision": "$current"}
-    return out, written
+           "skipped": count("noPlan", "noLevel", "noUse", "unknownUse")}
+    if keep:
+        out["kept"] = given
+    out["revision"] = "$current"
+    return out, written, warnings
 
 
-def done(name, names=None, picks=(), op="execute", ents=None, note=None):
+def done(name, names=None, picks=(), op="execute", ents=None, note=None, kept=(), keep=False):
     ents = ents if ents is not None else ENTS
-    out, written = symbolized(ents, names, picks)
+    out, written, warnings = symbolized(ents, names, picks, kept, keep)
     input_ = {}
     if names is not None:
         input_["uids"] = [U(n) for n in names]
     if picks:
         input_["symbols"] = list(picks)
+    if keep:
+        input_["keep"] = True
     case = {"name": name}
     if note:
         case["note"] = note
-    if ents is not ENTS:
-        case["setup"] = setup(ents)
-    if op != "execute" or not written:
-        result = {"status": "completed", "output": None if op == "validate" else out, "warnings": []}
+    if ents is not ENTS or kept:
+        case["setup"] = setup(ents, kept=kept)
+    kept_after = (list(picks) if keep else list(kept))
+    kept_changes = list(kept) != kept_after
+    if op != "execute" or not (written or kept_changes):
+        result = {"status": "completed", "output": None if op == "validate" else out, "warnings": warnings}
         case["steps"] = [{"op": op, "input": input_, "result": result, "expect": SAME}]
         return case
     after = {k: {"symbol": v, "attrs": ents[int(k) - 1]["attrs"]} for k, v in written.items()}
     before = {k: {"symbol": ents[int(k) - 1].get("symbol"), "attrs": ents[int(k) - 1]["attrs"]} for k in written}
+    held = lambda xs: {"symbols": xs} if xs else None  # noqa: E731
+    expect_after = {"revision": "changed", "canUndo": True}
+    expect_before = {}
+    if written:
+        expect_after["fields"], expect_before["fields"] = after, before
+    if keep:
+        expect_after["settings"] = {"zoningPlan": held(kept_after)}
+        expect_before["settings"] = {"zoningPlan": held(list(kept))}
     case["steps"] = [
-        {"op": "execute", "input": input_, "result": {"status": "completed", "output": out, "warnings": []},
-         "expect": {"revision": "changed", "canUndo": True, "fields": after}},
-        {"op": "undo", "returns": STEP, "expect": {"fields": before}},
+        {"op": "execute", "input": input_, "result": {"status": "completed", "output": out, "warnings": warnings},
+         "expect": expect_after},
+        {"op": "undo", "returns": STEP, "expect": expect_before},
     ]
     return case
 
@@ -255,6 +292,19 @@ def cases():
         done("Tek plan sınırlı çizimde planı yazılmamış alan o planın", ents=one_plan),
         done("Planı yok, yazılmamış (iki plan varken), kademesi yok, kullanımı yok, bilinmeyen kullanım: atlanır",
              ["YOKPLAN", "YAZILMAMIS", "KULLANIMSIZ", "OTEL", "KADEMESIZ"]),
+        # ADR 5040: the project's kept choices.
+        done("Seçim projede saklanır: konut alanı Gelişme konut alanı, seçim ayarlara yazılır; tek adımda geri alınır",
+             every, picks=(pick("uip", "konut", gelisme),), keep=True),
+        done("Projede saklanan seçim tablodan önce gelir (kaynak: proje)", every,
+             kept=(pick("uip", "konut", gelisme), pick("uip", "park", arboretum))),
+        done("Verilen seçim saklanandan önce gelir", ["PARK", "KONUT"], picks=(pick("uip", "park", "mpyy.uip.acik-yesil.park"),),
+             kept=(pick("uip", "park", arboretum), pick("uip", "konut", gelisme))),
+        done("Seçim verilmeden saklanırsa proje seçim saklamaz; eski saklı seçim okunmaz", ["PARK", "KONUT"], keep=True,
+             kept=(pick("uip", "park", arboretum),)),
+        done("Saklı seçim yeni seçimlerle değişir", ["KONUT"], picks=(pick("uip", "konut", gelisme),), keep=True,
+             kept=(pick("uip", "park", arboretum),)),
+        done("Kademenin alan sembollerinden olmayan saklı seçim kullanılmaz: uyarı", ["KONUT", "SPOR"],
+             kept=(pick("uip", "konut", "mpyy.nip.sosyal.spor-alani"),), op="plan"),
         done("Plan yazmaz", every, op="plan"),
         done("Doğrulama", ["PARK"], op="validate"),
         refused("Sürüm yazısı geçersiz", {"expectedRevision": "abc"}, "invalid_revision",

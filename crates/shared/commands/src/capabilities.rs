@@ -2619,6 +2619,24 @@ const ENTRIES: &[Entry] = &[
                 "layer_locked",
             ],
         ],
+        warnings: &["kept_symbol_ignored"],
+        targets: none,
+    },
+    // Plan değişikliği taslağı (plan/map-cad.md MAP-09, docs/adr/5040).
+    Entry {
+        id: "cad.zoning.draft",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "unknown_draft",
+                "layer_not_found",
+                "unknown_plan",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_decision",
+            ],
+        ],
         warnings: &[],
         targets: none,
     },

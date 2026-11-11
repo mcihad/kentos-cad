@@ -158,6 +158,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             map_work: None,
             map_survey: None,
             parcel_register: None,
+            zoning_plan: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

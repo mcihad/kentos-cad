@@ -44,7 +44,7 @@ PROFILE = json.loads((ROOT / "catalog/v1/profiles/imar-plani.json").read_text("u
 X0, Y0 = 487000.0, 4420000.0
 KINDS = ["missingLayer", "noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noUse", "unknownUse",
          "missingValue", "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "roadGap", "roadWidth",
-         "roadParcel", "noteMissing", "noteUnused", "symbolMismatch"]
+         "roadParcel", "noteMissing", "noteUnused", "symbolMismatch", "draftStale"]
 OPEN = {"park", "yesil", "meydan", "yol"}
 RANK = ["msp", "cdp", "nip", "uip"]
 LAYER_IDS = {"plan-siniri": "plan", "karar-alani": "karar", "plan-notu": "notlar", "yol-aksi": "yollar"}
@@ -61,6 +61,8 @@ def uid(n):
 sys.path.insert(0, str(ROOT / "scripts/fixtures"))
 import zoning_symbols_cases as zs  # noqa: E402
 SYMBOLS = zs.KNOWN
+# ADR 5040: a level's area symbols, among which a kept choice must be to be read.
+CHOICES = {level: {i["id"] for i in zs.fills(level)} for level in zs.BRANCHES}
 NAMES = {i["id"]: i["name"] for i in zs.LIBRARY if i.get("kind") == "symbol"}
 
 
@@ -119,7 +121,7 @@ def parsel(ada, no, r):
     return ("parsel", r, {"Ada": ada, "Parsel": no})
 
 
-def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
+def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), zoning=None):
     ents = []
     for i, (layer, geo, attrs) in enumerate(objects, start=1):
         a = {k: v for k, v in attrs.items() if v is not None and k != "@symbol"}
@@ -135,7 +137,8 @@ def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
                 ents[-1]["symbol"] = attrs["@symbol"]
     return {"format": "kentos.document", "version": 2, "name": "İmar planı denetimi",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
+                         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map",
+                         **({"zoningPlan": zoning} if zoning else {})},
             "origin": {"x": X0, "y": Y0}, "layers": layers(classes) + ([node("parsel", "Parsel")] if any(
                 o[0] == "parsel" for o in objects) else []), "activeLayer": "karar" if
             "karar-alani" in classes else "plan", "entities": ents,
@@ -269,8 +272,9 @@ def intersect(a, b):
 # ── The check ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=0.01):
+def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=0.01, zoning=None):
     found = []
+    zoning = zoning or {}
 
     def say(kind, ats, area, message, regions=()):
         found.append((KINDS.index(kind), min(ats) if ats else -1,
@@ -458,7 +462,10 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
                                                 "parseli giriyor.", outlines(inside, tolerance))
     # ADR 4640: a decision area whose library symbol is not the one KentOS's table gives its use (ADR 4240's rule: its
     # Plan names a plan boundary, else the one plan boundary there is; the level that plan's), judged only when the
-    # area has a symbol and the table maps its use.
+    # area has a symbol and the table maps its use. ADR 5040: the project's kept choice goes before the table, when it
+    # is one of the level's area symbols and its use is on the list.
+    kept = {(k["level"], k["use"]): k["symbol"] for k in zoning.get("symbols", [])
+            if k["symbol"] in CHOICES.get(k["level"], set()) and k["use"] in domain("plan-kullanim")}
     for i, o in decisions:
         symbol = (o[2].get("@symbol") or "").strip()
         if not symbol:
@@ -471,13 +478,32 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
         level, use = g(named[0], "Seviye"), g(o, "Kullanim")
         if not level or not use or use not in domain("plan-kullanim"):
             continue
-        want = SYMBOLS.get(level, {}).get(use)
+        want = kept.get((level, use)) or SYMBOLS.get(level, {}).get(use)
         if want is None or want == symbol:
             continue
         say("symbolMismatch", [i], None, f"Karar alanının sembolü “{NAMES.get(symbol, symbol)}”, kararı "
                                          f"“{label('plan-kullanim', use)}” ({label('plan-seviye', level)}) "
                                          f"“{NAMES.get(want, want)}” sembolünü verir: sembol kararı göstermiyor. "
                                          "Sembolleri karardan ver ile düzeltin.")
+    # ADR 5040: a plan change draft whose plan is gone, whose decision area is gone, or whose area's field is no longer
+    # the value the draft read; each draft in its order, its changes in theirs.
+    plan_ids = [g(q, "PlanKimlik") for _, q in plans] if "karar-alani" in classes else []
+    by_uid = {uid(i + 1): (i, o) for i, o in items}
+    for d in zoning.get("drafts", []):
+        if d["plan"] not in plan_ids:
+            say("draftStale", [], None, f"“{d['id']}” plan değişikliği taslağının planı “{d['plan']}” çizimde yok; "
+                                        "taslağı silin ya da planı geri getirin.")
+        for c in d["changes"]:
+            if c["area"] not in by_uid:
+                say("draftStale", [], None, f"“{d['id']}” plan değişikliği taslağının değiştirdiği “{c['area']}” karar "
+                                            "alanı çizimde yok; taslağı yeniden kaydedin ya da silin.")
+                continue
+            i, o = by_uid[c["area"]]
+            now = g(o, c["field"])
+            if now != c.get("before", ""):
+                say("draftStale", [i] if o[0] == "karar" else [], None,
+                    f"“{d['id']}” plan değişikliği taslağı eskidi: karar alanının {c['field']} değeri taslak yazılırken "
+                    f"“{c.get('before', '')}”, şimdi “{now}”. Taslağı yeniden kaydedin.")
     found.sort(key=lambda f: (f[0], f[1]))
     findings = [f[2] for f in found]
     counts = {}
@@ -570,6 +596,19 @@ SYMBOLED = [
 ]
 
 
+# docs/adr/5040: kept choices and plan change drafts over GOOD (K1 is object 3, K2 4, K3 5).
+GELISME, ARBORETUM = "mpyy.uip.konut.gelisme-konut-alani", "mpyy.uip.acik-yesil.arboretum-botanik-parki"
+DRAFT_OK = {"id": "T-1", "plan": "UIP-1", "revision": "0", "reason": "Gerekçe.",
+            "changes": [{"area": uid(5), "field": "Kullanim", "before": "park", "after": "ticaret"},
+                        {"area": uid(3), "field": "KAKS", "before": "1.20", "after": "1.50"}]}
+DRAFT_STALE = {"id": "T-1", "plan": "UIP-1", "revision": "0", "reason": "Gerekçe.",
+               "changes": [{"area": uid(5), "field": "Kullanim", "before": "park", "after": "ticaret"},
+                           {"area": uid(3), "field": "KAKS", "before": "1.00", "after": "1.50"},
+                           {"area": uid(99), "field": "Hmax", "before": "", "after": "9.50"}]}
+DRAFT_NO_PLAN = {"id": "T-2", "plan": "UIP-9", "revision": "0", "reason": "Gerekçe.",
+                 "changes": [{"area": uid(4), "field": "KatAdedi", "before": "5", "after": "6"}]}
+
+
 def with_(objects, index, **attrs):
     out = copy.deepcopy(objects)
     out[index][2].update(attrs)
@@ -587,13 +626,14 @@ def geo(objects, index, r):
 SAME = {"revision": "same", "canUndo": False}
 
 
-def case(name, objects, op="plan", classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=None, expect=None):
+def case(name, objects, op="plan", classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=None, expect=None,
+         zoning=None):
     kept = [o for o in objects if o[0] == "parsel" or CLASS_OF[o[0]] in classes]
-    out = check(kept, classes, 0.01 if tolerance is None else tolerance)
+    out = check(kept, classes, 0.01 if tolerance is None else tolerance, zoning)
     if expect is not None:
         assert [f["kind"] for f in out["findings"]] == expect, (name, [f["kind"] for f in out["findings"]])
     input_ = {} if tolerance is None else {"tolerance": tolerance}
-    return {"name": name, "setup": setup(kept, classes), "steps": [{"op": op, "input": input_, "result": {
+    return {"name": name, "setup": setup(kept, classes, zoning), "steps": [{"op": op, "input": input_, "result": {
         "status": "completed", "output": None if op == "validate" else out, "warnings": []}, "expect": SAME,
         "within": 1e-9}]}
 
@@ -696,6 +736,20 @@ def cases():
               karar("N1", (0, 0, 100, 50), "sanayi", Plan="NIP-S", TAKS="0.50", KAKS="1.00", KatAdedi="2",
                     **{"@symbol": SYMBOLS["nip"]["spor"]})],
              expect=["symbolMismatch"]),
+        # docs/adr/5040: the project's kept symbol choices; plan change drafts gone stale.
+        case("projede saklanan konut seçimiyle konut alanı da denetlenir",
+             SYMBOLED, zoning={"symbols": [{"level": "uip", "use": "konut", "symbol": GELISME}]},
+             expect=["symbolMismatch", "symbolMismatch"]),
+        case("saklanan park seçimi tablonun önüne geçer: park sembollü park alanı da uyuşmaz",
+             SYMBOLED, zoning={"symbols": [{"level": "uip", "use": "park", "symbol": ARBORETUM}]},
+             expect=["symbolMismatch", "symbolMismatch"]),
+        case("kademenin sembolü olmayan saklı seçim okunmaz",
+             SYMBOLED, zoning={"symbols": [{"level": "uip", "use": "konut", "symbol": SYMBOLS["nip"]["spor"]}]},
+             expect=["symbolMismatch"]),
+        case("taslağın okuduğu değerler yürürlükteki planınki: bulgu yok", GOOD, zoning={"drafts": [DRAFT_OK]},
+             expect=[]),
+        case("taslak eskidi: değişen değer, silinen alan, olmayan plan", GOOD,
+             zoning={"drafts": [DRAFT_STALE, DRAFT_NO_PLAN]}, expect=["draftStale"] * 3),
         refused("tolerans sıfır", 0.0, "0"),
         refused("tolerans eksi", -1.0, "-1"),
     ]
@@ -704,7 +758,7 @@ def cases():
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.zoning.check", "commandVersion": 1,
            "title": "İmar planı denetimi",
-           "note": "ADR 1420, 2020, 2240. Bağımsız başvuru scripts/fixtures/zoning_check_cases.py: kurallar elle, alanlar eksene "
+           "note": "ADR 1420, 2020, 2240, 4640, 5040. Bağımsız başvuru scripts/fixtures/zoning_check_cases.py: kurallar elle, alanlar eksene "
                    "paralel dikdörtgen, parçalar koordinat sıkıştırmasıyla tam; KentOS kodu yok.",
            "setup": setup(GOOD), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

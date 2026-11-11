@@ -16574,12 +16574,13 @@
    "via": [
     "cad.zoning.check",
     "cad.profiles.apply",
-    "cad.zoning.symbolize"
+    "cad.zoning.symbolize",
+    "cad.zoning.draft"
    ],
    "operation": null,
-   "python": "kentos.cad.zoning.check, kentos.cad.profiles.apply, kentos.cad.zoning.symbolize",
-   "mcp": "cad.zoning.check, cad.profiles.apply, cad.zoning.symbolize",
-   "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420). Sembolleri karardan ver… karar alanlarının sembolünü cad.zoning.symbolize ile tek adımda verir (ADR 4240).",
+   "python": "kentos.cad.zoning.check, kentos.cad.profiles.apply, kentos.cad.zoning.symbolize, kentos.cad.zoning.draft",
+   "mcp": "cad.zoning.check, cad.profiles.apply, cad.zoning.symbolize, cad.zoning.draft",
+   "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420). Sembolleri karardan ver… karar alanlarının sembolünü cad.zoning.symbolize ile tek adımda verir, seçimleri projede saklar (ADR 4240, 5040). Plan değişikliği taslağı… taslağı cad.zoning.draft ile projede saklar ya da siler; yürürlükteki karar alanları değişmez (ADR 5040).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

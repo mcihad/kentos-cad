@@ -638,6 +638,12 @@
 - **İmar denetiminde sembol uyuşmazlığı; hata katmanları GeoPackage'a (10 Kasım 2026; MAP-09, [ADR 4640](../../docs/adr/4640-zoning-symbol-mismatch-and-error-geopackage.md)).**
   `cad.zoning.check`'in `symbolMismatch`'i (sembol karardan, tablo ADR 4240'ın); imar ve topoloji hata katmanları İşlem'in
   Sonucun yeri ile GeoPackage tablosu olur, çizim değişmez. Harita + CBS.
+- **Plan değişikliği taslağı; sembol seçimleri projede (11 Kasım 2026; MAP-09, [ADR 5040](../../docs/adr/5040-zoning-plan-change-draft-and-kept-symbols.md)).**
+  `.kcad` şema 242 `settings.zoningPlan` (birleştirmede yeniden numaralanabilir): `cad.zoning.symbolize`'ın `keep`'i
+  seçimleri projede saklar, saklı seçim tablodan önce okunur (`from` `project`, geçersizi `kept_symbol_ignored`); yeni
+  `cad.zoning.draft` taslağı (plan, sürüm, MPYY m. 9(4) gerekçesi, alanın önce ve sonra değeri) saklar ya da siler,
+  yürürlükteki karar alanlarına yazmaz; kullanıma göre alanlar ve m. 26 konuları (`infrastructureLess`, `densityUp`,
+  `heightUp`); denetimin `draftStale`'i. Taslak onaylı değişiklik değildir. Harita + CBS.
 - **İfrazda komşunun sınırının bölünmesi (10 Kasım 2026; MAP-08, [ADR 4620](../../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
   `cad.parcels.record`: yeni köşe güncel komşunun düz sınırının içindeyse (1 µm) ve parçalar belgenin sınırlarıysa
   sınır bölünür, komşunun halkası parçaları alır, eski sınır kapanır; `boundariesSplit`, `neighbours`. Harita + CBS.
