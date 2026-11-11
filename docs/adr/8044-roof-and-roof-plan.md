@@ -1,10 +1,9 @@
 # ADR 8044: Çatı ve çatı planı — saçak çizgisinden çatı yüzleri, mahya, kırma, dere; çatı planı
 
-- **Durum:** sürüyor (10 Kasım 2026); `plan/architecture-advanced.md` ADV-20, M44. 1. bölüm yapıldı: çekirdek
-  geometri (§2), çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). 2. bölüm yapıldı: kesit ve görünüşte çatı
-  (§5). 3. bölüm yapıldı: baca, hava bacası ve çatı penceresi (§6). 4. bölüm yapıldı: çatı planı paftası (§7). 5.
-  bölümün ilk adımı yapıldı: oluk ve kar siperliği (§8). Sırada iniş borusu, görünüşte oluk ve inişler, PAİY 40/42 ve
-  Sivas denetimi.
+- **Durum:** bitti (11 Kasım 2026); `plan/architecture-advanced.md` ADV-20, M44. 1. bölüm: çekirdek geometri (§2),
+  çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). 2. bölüm: kesit ve görünüşte çatı (§5). 3. bölüm: baca, hava
+  bacası ve çatı penceresi (§6). 4. bölüm: çatı planı paftası (§7). 5. bölüm: oluk, kar siperliği ve iniş borusu,
+  görünüşte ve kesitte (§8); çatının mevzuat denetimi (§9). Kalanlar "Sonraya kalan"da.
 - **Bağlam belgesi:** ADR 8040 (düşey model: kat yükseklikleri, döşemenin katmanları), ADR 8042–8043 (kesit ve görünüş:
   "çizilmeyen: çatı"), ADR 8008 (EK-4 katman anahtarı), ADR 8011 (ölçeğe göre ayrıntı).
 

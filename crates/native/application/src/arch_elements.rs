@@ -73,7 +73,16 @@ pub(crate) fn column_valid(c: &ColumnFields, path: &str) -> Result<(), Stop> {
 }
 
 pub(crate) fn stair_valid(s: &StairFields, path: &str) -> Result<(), Stop> {
-    valid(s.problem(), codes::INVALID_STAIR, path)
+    valid(s.problem(), codes::INVALID_STAIR, path)?;
+    // How its turns hold their winders (docs/adr/8045 §1): their zones in their flights and apart.
+    if s.winders.is_some()
+        && let kentos_geometry_core::entity::Shape::Stair { pts, stair } =
+            kentos_formats::arch_elements::core_stair(s)
+        && let Some(why) = kentos_geometry_core::geom::arch::winder_problem(&pts, &stair)
+    {
+        return Err(fail(codes::INVALID_STAIR, why, &format!("{path}.winders")));
+    }
+    Ok(())
 }
 
 pub(crate) fn ramp_valid(r: &RampFields, path: &str) -> Result<(), Stop> {
@@ -1042,6 +1051,7 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
             railings: n.railings,
             height_from_level: bound,
             post: n.post,
+            winders: n.winders,
             arch: n.arch.clone().unwrap_or_default(),
         };
         stair_valid(&s, &at)?;

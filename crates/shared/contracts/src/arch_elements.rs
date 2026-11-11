@@ -509,6 +509,14 @@ pub struct StairFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub post: Option<f64>,
+    /// A balanced stair (balansmanlı, docs/adr/8045 §1, schema 241): this many treads balanced either side of each turn
+    /// of its walking line instead of a landing there, every tread its tread on the walking line, those at the inner
+    /// side narrowing towards the corner (PAİY 31/2-c: at least 0.10 m there, 0.27 m in their middle); absent: a
+    /// landing at each turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub winders: Option<u32>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -758,6 +766,9 @@ impl StairFields {
         if let Some(found) = self.post_problem() {
             return Some(found);
         }
+        if let Some(found) = self.winders_problem() {
+            return Some(found);
+        }
         if self.height_from_level && self.arch.level.is_none() {
             return Some((
                 "heightFromLevel".into(),
@@ -766,6 +777,24 @@ impl StairFields {
             ));
         }
         None
+    }
+
+    /// What is wrong with its balancing (docs/adr/8045 §1) as its fields say it: a count of none, a curved or straight
+    /// stair's, a landing given beside it. How its turns hold their winders is `geom::arch`'s (`winder_problem`).
+    fn winders_problem(&self) -> Problem {
+        let w = self.winders?;
+        let why = if w == 0 {
+            "Balansman basamağı dönüşün iki yanında en az 1 olur; balansman istemiyorsanız alanı boş bırakın."
+        } else if self.bulge() != 0.0 {
+            "Döner merdivende balansman olmaz: basamakları zaten yay boyunca dengeli."
+        } else if self.pts.len() < 3 {
+            "Balansman merdivenin dönüşünde olur; düz merdivenin dönüşü yok."
+        } else if self.landing.is_some() {
+            "Dönüşte ya sahanlık (landing) ya balansman (winders) olur; ikisini birden vermeyin."
+        } else {
+            return None;
+        };
+        Some(("winders".into(), why.into()))
     }
 
     /// Its landing's length: its own, else its width.
@@ -962,6 +991,11 @@ fn letters_after(t: &str) -> String {
         digits[i] = 0;
     }
     digits.iter().map(|&d| GRID_LETTERS[d] as char).collect()
+}
+
+/// Whether `e` is a balanced stair: a file of schema 241 holds its winders (docs/adr/8045 §1).
+pub fn needs_stair_winders(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Stair(s) if s.stair.winders.is_some())
 }
 
 #[cfg(test)]

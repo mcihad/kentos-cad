@@ -1,0 +1,88 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Balansmanlı L merdiven",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.06
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.06,
+          "height": 3.06
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "uids": [
+    "0192f5a1-7240-7000-8000-000000000001"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "stair",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 2.8,
+          "y": 0.0
+        },
+        {
+          "x": 2.8,
+          "y": 2.24
+        }
+      ],
+      "width": 1.0,
+      "risers": 18,
+      "riserHeight": 0.17,
+      "tread": 0.28,
+      "winders": 5,
+      "arch": {
+        "level": "zemin"
+      }
+    }
+  ]
+}

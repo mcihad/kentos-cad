@@ -65,4 +65,9 @@ railings?: Railings,
 /**
  * A curved stair's centre post, its diameter (docs/adr/0724 §3); absent: none.
  */
-post?: number, arch?: ArchInfo, attrs?: { [key in string]: string }, };
+post?: number, 
+/**
+ * A balanced stair (balansmanlı, docs/adr/8045 §1): this many treads balanced either side of each turn instead of a
+ * landing (not with `landing`); its turns' zones lie in their flights and apart. Absent: a landing at each turn.
+ */
+winders?: number, arch?: ArchInfo, attrs?: { [key in string]: string }, };

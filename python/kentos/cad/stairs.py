@@ -27,12 +27,18 @@ class _StairsCreate(LocalCommand[StairsCreate, StairsCreated, StairsPlan]):
     yönüdür), genişlik, rıht sayısı (risers), rıht yüksekliği (riserHeight), basamak
     derinliği (tread), dönüşteki sahanlığın boyu (landing; yoksa genişlik), kesme
     çizgisinin rıhtı (cut), basamak numaraları (numbering). Basamak çizgileri
-    başlangıçtan tread aralıkla, sahanlıkları atlayarak çizilir. Uymayanlar uyarıdır,
-    ret değildir: yol rıhtlara yetmiyorsa stair_short, uzunsa stair_long; 2 × rıht +
-    basamak 0,60–0,65 m dışındaysa stair_step_rule (yalnız bilgi); katın yüksekliği
-    biliniyorsa rıht sayısı × rıht onu tutmuyorsa stair_rise_level. Hiçbir söz
-    yönetmeliğe uyum söylemez. Katman açıkça verilir; kilitli katmana yazılmaz, gizli
-    katmana uyarıyla yazılır.
+    başlangıçtan tread aralıkla, sahanlıkları atlayarak çizilir. Balansmanlı merdiven
+    (winders, docs/adr/8045 §1): L ve U merdivende dönüşlerde sahanlık yerine dönüşün
+    iki yanında winders basamak dengelenir; yürüme çizgisinde her basamak tread, iç
+    kenarda köşeye doğru doğrusal daralır, basamak çizgisi iç kenardan yürüme
+    çizgisinden geçip dış kenara uzanır; landing ile birlikte, düz ya da döner
+    merdivende, sıfır, dönüşün iç kenar kaybından (genişlik × tan(dönüş/2)) kısa, kola
+    sığmayan ya da iki dönüşte çakışan balansman invalid_stair ile reddedilir.
+    Uymayanlar uyarıdır, ret değildir: yol rıhtlara yetmiyorsa stair_short, uzunsa
+    stair_long; 2 × rıht + basamak 0,60–0,65 m dışındaysa stair_step_rule (yalnız
+    bilgi); katın yüksekliği biliniyorsa rıht sayısı × rıht onu tutmuyorsa
+    stair_rise_level. Hiçbir söz yönetmeliğe uyum söylemez. Katman açıkça verilir;
+    kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.stairs.create"
@@ -61,8 +67,14 @@ class _StairsCreate(LocalCommand[StairsCreate, StairsCreated, StairsPlan]):
         (risers), rıht yüksekliği (riserHeight), basamak derinliği (tread), dönüşteki
         sahanlığın boyu (landing; yoksa genişlik), kesme çizgisinin rıhtı (cut), basamak
         numaraları (numbering). Basamak çizgileri başlangıçtan tread aralıkla, sahanlıkları
-        atlayarak çizilir. Uymayanlar uyarıdır, ret değildir: yol rıhtlara yetmiyorsa
-        stair_short, uzunsa stair_long; 2 × rıht + basamak 0,60–0,65 m dışındaysa
+        atlayarak çizilir. Balansmanlı merdiven (winders, docs/adr/8045 §1): L ve U
+        merdivende dönüşlerde sahanlık yerine dönüşün iki yanında winders basamak
+        dengelenir; yürüme çizgisinde her basamak tread, iç kenarda köşeye doğru doğrusal
+        daralır, basamak çizgisi iç kenardan yürüme çizgisinden geçip dış kenara uzanır;
+        landing ile birlikte, düz ya da döner merdivende, sıfır, dönüşün iç kenar kaybından
+        (genişlik × tan(dönüş/2)) kısa, kola sığmayan ya da iki dönüşte çakışan balansman
+        invalid_stair ile reddedilir. Uymayanlar uyarıdır, ret değildir: yol rıhtlara
+        yetmiyorsa stair_short, uzunsa stair_long; 2 × rıht + basamak 0,60–0,65 m dışındaysa
         stair_step_rule (yalnız bilgi); katın yüksekliği biliniyorsa rıht sayısı × rıht onu
         tutmuyorsa stair_rise_level. Hiçbir söz yönetmeliğe uyum söylemez. Katman açıkça
         verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.

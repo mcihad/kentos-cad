@@ -105,3 +105,61 @@ fn a_stair_s_railings_are_chosen_in_its_settings() {
     b.confirm();
     assert_eq!(stair(&b).railings, Some(kentos_commands::Railings::Left));
 }
+
+/// Balansman (docs/adr/8045 §1): A then a count balances so many treads either side of the L's turn instead of a
+/// landing; the design says the narrowest tread at the inner side against PAİY 31/2-c's 0.10 m. A two-point (straight)
+/// stair gets none; A "yok" takes it away.
+#[test]
+fn balansman_balances_the_turn_and_says_its_narrowest_tread() {
+    let mut b = bench();
+    assert!(b.type_text("A"));
+    assert!(b.type_text("5"));
+    b.click(0., 0.);
+    b.click(2.5, 0.);
+    b.move_to(2.5, 3.0);
+    let words = b
+        .session
+        .settings(&Default::default())
+        .into_iter()
+        .find(|s| s.key == "T")
+        .map(|s| s.value)
+        .unwrap_or_default();
+    assert!(
+        words.contains("en dar iç basamak") && words.contains("PAİY 31/2-c'nin 0,10 m'sinden dar"),
+        "1.20 m with 5 winders is too narrow at the corner: {words}"
+    );
+    b.click(2.5, 3.0);
+    b.confirm();
+    let s = stair(&b);
+    assert_eq!((s.winders, s.landing), (Some(5), None), "{s:?}");
+    // Seven keep 0.10 m (the fewest for 1.20 m at 0.28 m treads).
+    assert!(b.type_text("A"));
+    assert!(b.type_text("7"));
+    b.click(5., 0.);
+    b.click(7.5, 0.);
+    b.move_to(7.5, 3.0);
+    let words = b
+        .session
+        .settings(&Default::default())
+        .into_iter()
+        .find(|s| s.key == "T")
+        .map(|s| s.value)
+        .unwrap_or_default();
+    assert!(words.contains("(PAİY 31/2-c: en az 0,10 m)"), "{words}");
+    b.click(7.5, 3.0);
+    b.confirm();
+    assert_eq!(stair(&b).winders, Some(7));
+    // A straight stair has no turn: none written; A emptied: a landing again.
+    b.click(10., 0.);
+    b.click(10., 4.);
+    b.confirm();
+    assert_eq!(stair(&b).winders, None);
+    assert!(b.type_text("A"));
+    assert!(b.type_text("yok"));
+    b.click(13., 0.);
+    b.click(15.5, 0.);
+    b.click(15.5, 3.0);
+    b.confirm();
+    let s = stair(&b);
+    assert_eq!((s.winders, s.landing), (None, None), "{s:?}");
+}

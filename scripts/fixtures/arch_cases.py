@@ -37,6 +37,15 @@ so every length is an exact fraction; a turn's angle is checked as floats within
   landings' edges past the cut, its end, the cut line (the left side at the cut riser to the right a tread on), its
   risers past the cut, its railings past the cut, an arrow and its centre post. A curved stair's sides are arcs.
 - A curved stair's centre post (docs/adr/0724 §3): a circle of its diameter at its arc's centre, after the arrow.
+- A balanced stair (balansman, docs/adr/8045 §1; `balanced` beside `cases`): no landings, its risers a tread apart round
+  its turns. Each turn's zone: its winders × its tread either side of its corner on the walking line; its inner side
+  (the turn's: the left for a counter-clockwise one) runs its width × tan(half the turn) shorter, lost linearly more
+  towards the corner: at walking line arc length s, x = s − (c − D), lost sh·x²/(2D²) before the corner and
+  sh/2 + sh·(y − y²/(2D))/D after it (y = s − c). A riser in a zone runs from the inner side's point at the arc length
+  of the zone start's square foot plus (s − (c − D)) − lost, through the walking line's point, to the outer side; the
+  others square. A tread's width at the inner side: the difference of its two risers' arc lengths there; in its middle
+  its tread. Refused: winders not more than the inner side's loss over the tread (the least: ⌊loss / tread⌋ + 1), a zone
+  past its two flights, two zones overlapping. The fewest winders keeping 0.10 m at the inner side (PAİY 31/2-c).
 """
 
 import argparse
@@ -566,6 +575,169 @@ def ramp_case(name, pts, width, rise, slope=None, base=None, land=None, sides=No
                        "railings": rails(railings_of(pts, width / 2, sides, None))}}
 
 
+def winder_turns(pts, at, width, tread, winders):
+    """A balanced stair's turns: corner, reach, the inner side's loss, whether it is the left; the turn's point."""
+    out = []
+    for k in range(1, len(pts) - 1):
+        d1, d2 = unit(pts[k - 1], pts[k]), unit(pts[k], pts[k + 1])
+        cross = d1[0] * d2[1] - d1[1] * d2[0]
+        dot = d1[0] * d2[0] + d1[1] * d2[1]
+        out.append({"k": k, "c": at[k], "D": winders * tread, "sh": width * abs(cross) / (1 + dot), "left": cross > 0})
+    return out
+
+
+def lost(t, s):
+    c, d, sh = t["c"], t["D"], t["sh"]
+    if s <= c - d:
+        return F(0)
+    if s >= c + d:
+        return sh
+    if s <= c:
+        x = s - (c - d)
+        return sh * x * x / (2 * d * d)
+    y = s - c
+    return sh / 2 + sh * (y - y * y / (2 * d)) / d
+
+
+def side_line(pts, half, on_left):
+    n = len(pts)
+    b = band(pts, half)
+    return b[:n] if on_left else b[n:][::-1]
+
+
+def arc_to(line, j, p):
+    return sum((length(a, b) for a, b in zip(line[:j], line[1:j + 1])), F(0)) + length(line[j], p)
+
+
+def point_at(line, u):
+    for a, b in zip(line, line[1:]):
+        l = length(a, b)
+        if u <= l:
+            t = u / l
+            return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+        u -= l
+    return line[-1]
+
+
+def zone_of(turns, s):
+    for t in turns:
+        if t["c"] - t["D"] + EPS < s < t["c"] + t["D"] - EPS:
+            return t
+    return None
+
+
+def inner_of(pts, at, half, t, s):
+    """Where a balanced turn's riser at walking line arc length s meets its inner side: its arc length there, the point."""
+    line = side_line(pts, half, t["left"])
+    s0 = t["c"] - t["D"]
+    p0, d0 = point_on(pts, at, s0)
+    n0 = left(d0)
+    k = 1 if t["left"] else -1
+    foot = (p0[0] + n0[0] * half * k, p0[1] + n0[1] * half * k)
+    u = arc_to(line, t["k"] - 1, foot) + (s - s0) - lost(t, s)
+    return u, point_at(line, u)
+
+
+def riser_ends(pts, at, width, tread, winders, s):
+    """A riser's line, its left end first: square, or in a zone from the inner side through the walking line."""
+    half = width / 2
+    p, d = point_on(pts, at, s)
+    n = left(d)
+    square = ((p[0] + n[0] * half, p[1] + n[1] * half), (p[0] - n[0] * half, p[1] - n[1] * half))
+    t = zone_of(winder_turns(pts, at, width, tread, winders), s)
+    if t is None:
+        return square
+    _, q = inner_of(pts, at, half, t, s)
+    v = (p[0] - q[0], p[1] - q[1])
+    best = None
+    for a, b in zip(side_line(pts, half, not t["left"]), side_line(pts, half, not t["left"])[1:]):
+        e = (b[0] - a[0], b[1] - a[1])
+        den = v[0] * e[1] - v[1] * e[0]
+        if den == 0:
+            continue
+        r = (a[0] - p[0], a[1] - p[1])
+        k = (r[0] * e[1] - r[1] * e[0]) / den
+        w = (r[0] * v[1] - r[1] * v[0]) / den
+        if k > 0 and 0 <= w <= 1 and (best is None or k < best):
+            best = k
+    o = (p[0] + v[0] * best, p[1] + v[1] * best)
+    return (q, o) if t["left"] else (o, q)
+
+
+def winder_problem(pts, width, tread, winders):
+    at = walk(pts)
+    turns = winder_turns(pts, at, width, tread, winders)
+    for j, t in enumerate(turns):
+        if t["D"] <= t["sh"]:
+            least = math.floor(t["sh"] / tread) + 1
+            return (f"Balansman için dönüşün iki yanında en az {least} basamak gerekir; iç kenar dönüşte "
+                    f"{float(t['sh']):.2f} m kısalıyor.")
+        lo, hi = at[t["k"] - 1], at[t["k"] + 1]
+        if t["c"] - t["D"] < lo or t["c"] + t["D"] > hi:
+            return (f"Balansman kola sığmıyor: dönüşün iki yanında {float(t['D']):.2f} m dengelenecek, kollar "
+                    f"{float(t['c'] - lo):.2f} m ve {float(hi - t['c']):.2f} m. Balansman basamağını azaltın ya da "
+                    f"kolu uzatın.")
+        if j + 1 < len(turns) and turns[j + 1]["c"] - turns[j + 1]["D"] < t["c"] + t["D"]:
+            nxt = turns[j + 1]
+            return (f"İki dönüşün balansmanı çakışıyor: aradaki kol {float(nxt['c'] - t['c']):.2f} m, ikisine "
+                    f"{float(t['D'] + nxt['D']):.2f} m gerekir. Balansman basamağını azaltın ya da dönüşlerde sahanlık "
+                    f"kullanın.")
+    return None
+
+
+def winder_treads(pts, width, count, tread, winders):
+    at = walk(pts)
+    turns = winder_turns(pts, at, width, tread, winders)
+    stations = [k * tread for k in range(count) if k * tread <= at[-1] + EPS]
+    out = []
+    for i, (a, b) in enumerate(zip(stations, stations[1:])):
+        t = zone_of(turns, (a + b) / 2)
+        if t is None:
+            continue
+        ua, _ = inner_of(pts, at, width / 2, t, a)
+        ub, _ = inner_of(pts, at, width / 2, t, b)
+        out.append((i, abs(ub - ua), b - a))
+    return out
+
+
+def balanced_case(name, pts, width, count, riser, tread, winders):
+    """A balanced stair (docs/adr/8045 §1): its risers' ends, its winders' widths, its problem and its fewest winders."""
+    at = walk(pts)
+    stations = [k * tread for k in range(count) if k * tread <= at[-1] + EPS]
+    problem = winder_problem(pts, width, tread, winders)
+    fewest = None
+    for n in range(1, 41):
+        if winder_problem(pts, width, tread, n) is None and all(
+                inner >= F(1, 10) - EPS for _, inner, _ in winder_treads(pts, width, count, tread, n)):
+            fewest = n
+            break
+    shape = {"kind": "stair", "pts": [{"x": float(p[0]), "y": float(p[1])} for p in pts], "width": float(width),
+             "risers": count, "riserHeight": float(riser), "tread": float(tread), "winders": winders}
+    expect = {"stations": [float(s) for s in stations], "problem": problem, "fewest": fewest}
+    if problem is None:
+        expect["risers"] = [[fl(a), fl(b)] for a, b in (riser_ends(pts, at, width, tread, winders, s) for s in stations)]
+        expect["treads"] = [[i, float(inner), float(middle)]
+                            for i, inner, middle in winder_treads(pts, width, count, tread, winders)]
+    return {"name": name, "shape": shape, "expect": expect}
+
+
+def balanced_cases():
+    return [
+        balanced_case("Balansmanlı L merdiven, sola dönen, 5 basamak", [P(0, 0), P(F(14, 5), 0), P(F(14, 5), F(56, 25))],
+                      F(1), 18, F(17, 100), F(7, 25), 5),
+        balanced_case("Balansmanlı L merdiven, sağa dönen, 6 basamak, 1,20 m", [P(0, 0), P(0, 3), P(F(14, 5), 3)],
+                      F(6, 5), 20, F(17, 100), F(7, 25), 6),
+        balanced_case("Balansmanlı U merdiven, kolları uzun", [P(0, 0), P(4, 0), P(4, 4), P(0, 4)], F(1), 30, F(1, 6),
+                      F(7, 25), 5),
+        balanced_case("Balansman dönüşün kaybından kısa", [P(0, 0), P(F(14, 5), 0), P(F(14, 5), F(56, 25))], F(1), 18,
+                      F(17, 100), F(7, 25), 3),
+        balanced_case("Balansman kola sığmıyor", [P(0, 0), P(F(14, 5), 0), P(F(14, 5), F(56, 25))], F(1), 18,
+                      F(17, 100), F(7, 25), 11),
+        balanced_case("İki dönüşün balansmanı çakışıyor", [P(0, 0), P(3, 0), P(3, F(13, 5)), P(0, F(13, 5))], F(1), 30,
+                      F(1, 6), F(7, 25), 5),
+    ]
+
+
 def P(x, y):
     return (F(x), F(y))
 
@@ -683,7 +855,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
-    text = json.dumps({"format": "kentos.arch-cases", "version": 1, "cases": cases()}, ensure_ascii=False, indent=2) + "\n"
+    text = json.dumps({"format": "kentos.arch-cases", "version": 1, "cases": cases(), "balanced": balanced_cases()},
+                      ensure_ascii=False, indent=2) + "\n"
     if args.check:
         if not OUT.exists() or OUT.read_text() != text:
             print(f"{OUT.relative_to(ROOT)} başvurudan farklı; --check'siz yeniden yazın ve farkı okuyun.")

@@ -299,6 +299,84 @@ fn long_ramps_get_landings_where_a_run_would_pass_the_limit() {
         assert!(a - start <= 9.0 + 1e-9, "{a} {start}");
         start = b;
     }
-    assert_eq!(arch::ramp_with_landings(&line, &spec, 30.0, false), line.to_vec());
-    assert_eq!(arch::ramp_with_landings(&line, &spec, 0.0, true), line.to_vec());
+    assert_eq!(
+        arch::ramp_with_landings(&line, &spec, 30.0, false),
+        line.to_vec()
+    );
+    assert_eq!(
+        arch::ramp_with_landings(&line, &spec, 0.0, true),
+        line.to_vec()
+    );
+}
+
+/// Balansmanlı merdivenler (docs/adr/8045 §1; PAİY 31/2-c) against the reference's: no landing, the risers a tread apart
+/// round the turns, each riser's ends (square, or in a turn's zone from the inner side through the walking line), the
+/// winders' widths at the inner side and in their middle, why one cannot be drawn, and the fewest winders keeping
+/// 0.10 m at the inner side.
+#[test]
+fn balanced_stairs_turn_as_the_reference_says() {
+    let file: Value = serde_json::from_str(CASES).unwrap();
+    let cases = file["balanced"].as_array().unwrap();
+    assert_eq!(cases.len(), 6, "durumlar");
+    for c in cases {
+        let name = c["name"].as_str().unwrap();
+        let shape = Shape::from_json(&Json::parse(&c["shape"].to_string()).unwrap()).unwrap();
+        let Shape::Stair { pts, stair } = &shape else {
+            panic!("{name}: merdiven değil");
+        };
+        let e = &c["expect"];
+        let walk = arch::Walk::of(pts);
+        assert!(
+            arch::stair_landings(&walk, stair).is_empty(),
+            "{name}: sahanlık yok"
+        );
+        let (stations, _) = arch::riser_stations(&walk, stair);
+        let want: Vec<f64> = e["stations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s.as_f64().unwrap())
+            .collect();
+        assert_eq!(stations.len(), want.len(), "{name}: rıhtlar");
+        for (s, w) in stations.iter().zip(&want) {
+            close(*s, *w, name);
+        }
+        assert_eq!(
+            arch::winder_problem(pts, stair).as_deref(),
+            e["problem"].as_str(),
+            "{name}: ret"
+        );
+        assert_eq!(
+            arch::winders_for(pts, stair, 0.10).map(|n| n as u64),
+            e["fewest"].as_u64(),
+            "{name}: en az balansman"
+        );
+        if !e["problem"].is_null() {
+            continue;
+        }
+        for (s, w) in stations.iter().zip(e["risers"].as_array().unwrap()) {
+            let (a, b) = arch::riser_ends(&walk, stair, *s);
+            points(&[a, b], w, &format!("{name}: {s} m'deki rıht"));
+        }
+        let treads = arch::winder_treads(pts, stair);
+        let want = e["treads"].as_array().unwrap();
+        assert_eq!(treads.len(), want.len(), "{name}: dengelenen basamaklar");
+        for ((i, inner, middle), w) in treads.iter().zip(want) {
+            assert_eq!(
+                *i as u64,
+                w[0].as_u64().unwrap(),
+                "{name}: basamağın sırası"
+            );
+            close(
+                *inner,
+                w[1].as_f64().unwrap(),
+                &format!("{name}: {i}. basamağın dar ucu"),
+            );
+            close(
+                *middle,
+                w[2].as_f64().unwrap(),
+                &format!("{name}: {i}. basamağın ortası"),
+            );
+        }
+    }
 }

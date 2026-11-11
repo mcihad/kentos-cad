@@ -127,6 +127,8 @@ enum Ask {
     Legs,
     /// A gapped grid's ends (docs/adr/0725 §5).
     Ends,
+    /// A balanced stair's winders either side of each turn (docs/adr/8045 §1).
+    Winders,
 }
 
 fn ask_words(ask: Ask) -> &'static str {
@@ -149,7 +151,13 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::Post => "merkez direğinin çapını yazın (0: yok)",
         Ask::Legs => "L kolonun iki kolunun kalınlığını yazın (0.25 0.30; boş: yarısı)",
         Ask::Ends => "kesik aksın uçlarını kâğıtta mm olarak yazın (boş ya da 0: bütün aks)",
+        Ask::Winders => "dönüşün iki yanında dengelenecek basamak sayısını yazın (boş: sahanlık)",
     }
+}
+
+/// A stair's balancing as an option shows it (docs/adr/8045 §1): "Yok" (landings) or its winders either side.
+fn winders_words(winders: Option<u32>) -> String {
+    winders.map_or_else(|| "Yok".into(), |n| format!("{n} basamak"))
 }
 
 /// A gapped grid's ends as a setting shows them.
@@ -1057,6 +1065,10 @@ pub struct FlightTool {
     /// A curved stair's centre post, its diameter (docs/adr/0724 §3).
     post: Option<f64>,
     landing: Option<f64>,
+    /// Balansman (docs/adr/8045 §1): the treads balanced either side of each turn instead of a landing; none: landings.
+    winders: Option<u32>,
+    /// The planned balanced stair's narrowest tread at its inner side (PAİY 31/2-c: at least 0.10 m).
+    narrow: Option<f64>,
     /// En uzun kol: a landing wherever a sloped run would be longer (docs/adr/0723 §1).
     max_run: Option<f64>,
     /// A ramp's start (docs/adr/0723 §2): its own elevation typed, else Etkin kat's elevation plus `base_offset`.
@@ -1145,6 +1157,8 @@ impl FlightTool {
             railings: None,
             post: None,
             landing: None,
+            winders: None,
+            narrow: None,
             max_run: None,
             ramp_base: None,
             base_offset: 0.0,
@@ -1406,6 +1420,9 @@ impl FlightTool {
             }
             planned(ramps_create::plan_in(cx.doc, &input), |p| p.ramps)
         } else {
+            let balanced = self
+                .winders
+                .filter(|_| !self.spiralling() && pts.len() >= 3);
             let input = StairsCreate {
                 layer_id,
                 stairs: vec![NewStair {
@@ -1420,7 +1437,9 @@ impl FlightTool {
                     max_riser: Some(self.max_riser),
                     cut_height: self.cut,
                     fit: self.fit.then_some(true),
-                    landing: self.landing,
+                    // Balanced turns take the landings' place (docs/adr/8045 §1); a straight stair has no turn.
+                    landing: self.landing.filter(|_| balanced.is_none()),
+                    winders: balanced,
                     numbering: self.numbering.then_some(true),
                     railings: self.railings,
                     post: self.post.filter(|_| self.spiralling()),
@@ -1459,6 +1478,7 @@ impl FlightTool {
         self.design = None;
         self.ramp_design = None;
         self.arc_design = None;
+        self.narrow = None;
         let (pts, bulges) = if self.spiralling() {
             match self.arc_line() {
                 Some((pts, bulges)) => (pts, Some(bulges)),
@@ -1501,6 +1521,18 @@ impl FlightTool {
                     s.stair.tread,
                     arch::Walk::curved(&walk, s.stair.bulge()).length(),
                 ))
+            }
+            _ => None,
+        });
+        self.narrow = made.iter().find_map(|e| match e {
+            Entity::Stair(s) if s.stair.winders.is_some() => {
+                let kentos_geometry_core::entity::Shape::Stair { pts, stair } = shape(e) else {
+                    return None;
+                };
+                arch::winder_treads(&pts, &stair)
+                    .iter()
+                    .map(|(_, inner, _)| *inner)
+                    .reduce(f64::min)
             }
             _ => None,
         });
@@ -1566,7 +1598,21 @@ impl FlightTool {
                 crate::fixed(sweep.abs().to_degrees(), 0),
                 if sweep < 0.0 { "sağa" } else { "sola" },
             ));
-            out.push(format!("iç kenarda basamak {}", f.length(tread * (r - self.width / 2.0) / r)));
+            out.push(format!(
+                "iç kenarda basamak {}",
+                f.length(tread * (r - self.width / 2.0) / r)
+            ));
+        }
+        // A balanced stair's narrowest tread at its inner side (PAİY 31/2-c: at least 0.10 m; docs/adr/8045 §1).
+        if let Some(narrow) = self.narrow {
+            out.push(if narrow < 0.10 - 1e-9 {
+                format!(
+                    "en dar iç basamak {}: PAİY 31/2-c'nin 0,10 m'sinden dar; balansman basamağını artırın",
+                    f.length(narrow)
+                )
+            } else {
+                format!("en dar iç basamak {} (PAİY 31/2-c: en az 0,10 m)", f.length(narrow))
+            });
         }
         out
     }
@@ -1583,6 +1629,19 @@ impl FlightTool {
                 true
             }
             "H" => length(cx).map(|v| self.landing = Some(v)).is_some(),
+            // Balansman (docs/adr/8045 §1): empty or "yok" a landing at each turn, a whole count the treads balanced
+            // either side of it.
+            "A" if !self.ramp && (words.is_empty() || words.starts_with("YOK")) => {
+                self.winders = None;
+                true
+            }
+            "A" if !self.ramp => match js_trim(value).parse::<u32>() {
+                Ok(n) if n >= 1 => {
+                    self.winders = Some(n);
+                    true
+                }
+                _ => false,
+            },
             "L" if self.ramp && (words.is_empty() || words.starts_with("YOK")) => {
                 self.max_run = None;
                 true
@@ -1847,11 +1906,32 @@ impl Tool for FlightTool {
             )
             .option_with("Basamak", "D", n(self.tread))
             .option_with("Genişlik", "E", n(self.width))
-            .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
-            .option_with("Kesme yüksekliği", "K", self.cut.map_or_else(|| "Yok".into(), n))
-            .option_with("Basamak numaraları", "N", if self.numbering { "Açık" } else { "Kapalı" })
+            .option_with(
+                "Sahanlık",
+                "H",
+                self.landing.map_or_else(|| "Genişlik kadar".into(), n),
+            )
+            .option_with("Balansman", "A", winders_words(self.winders))
+            .option_with(
+                "Kesme yüksekliği",
+                "K",
+                self.cut.map_or_else(|| "Yok".into(), n),
+            )
+            .option_with(
+                "Basamak numaraları",
+                "N",
+                if self.numbering { "Açık" } else { "Kapalı" },
+            )
             .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
-            .option_with("Son kol", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" })
+            .option_with(
+                "Son kol",
+                "U",
+                if self.fit {
+                    "Rıhtlara göre"
+                } else {
+                    "Tıklanan yerde"
+                },
+            )
             .option("Bitir", "Enter")
     }
 
@@ -1916,6 +1996,7 @@ impl Tool for FlightTool {
                 Ask::Tread => "D",
                 Ask::Cut => "K",
                 Ask::Post => "M",
+                Ask::Winders => "A",
                 _ => "",
             };
             if !self.apply(field, text, cx) {
@@ -1942,6 +2023,7 @@ impl Tool for FlightTool {
             "D" if !self.ramp => Some(Ask::Tread),
             "K" if !self.ramp => Some(Ask::Cut),
             "M" if self.spiralling() => Some(Ask::Post),
+            "A" if !self.ramp && !self.curved => Some(Ask::Winders),
             "N" if !self.ramp => {
                 self.numbering = !self.numbering;
                 self.see(cx);
@@ -2043,8 +2125,17 @@ impl Tool for FlightTool {
             Setting::text("D", "Basamak", f.length(self.tread)),
             Setting::text("E", "Genişlik", f.length(self.width)),
             Setting::text("H", "Sahanlık", landing),
-            Setting::text("M", "Merkez direği", self.post.map_or_else(|| "Yok".into(), |v| f.length(v))),
-            Setting::text("K", "Kesme yüksekliği", self.cut.map_or_else(|| "Yok".into(), |v| f.length(v))),
+            Setting::text("A", "Balansman", winders_words(self.winders)),
+            Setting::text(
+                "M",
+                "Merkez direği",
+                self.post.map_or_else(|| "Yok".into(), |v| f.length(v)),
+            ),
+            Setting::text(
+                "K",
+                "Kesme yüksekliği",
+                self.cut.map_or_else(|| "Yok".into(), |v| f.length(v)),
+            ),
             Setting::toggle("N", "Basamak numaraları", self.numbering),
             railings_setting(self.railings),
             Setting::choice(
@@ -2057,8 +2148,8 @@ impl Tool for FlightTool {
             ),
         ];
         if self.curved {
-            // A curved stair has no turns, so no landings (docs/adr/0709).
-            rows.retain(|r| r.key != "H");
+            // A curved stair has no turns, so no landings and no balancing (docs/adr/0709, 8045 §1).
+            rows.retain(|r| r.key != "H" && r.key != "A");
         } else {
             // A straight stair has no centre post (docs/adr/0724 §3).
             rows.retain(|r| r.key != "M");

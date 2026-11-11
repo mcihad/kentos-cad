@@ -213,6 +213,8 @@ pub enum ArchField {
     BaseOffset,
     /// A curved stair's centre post, its diameter (docs/adr/0724 §3); empty removes it.
     Post,
+    /// A balanced stair's winders either side of each turn (docs/adr/8045 §1); empty: a landing at each turn.
+    Winders,
     /// A gapped grid's ends on paper, mm (docs/adr/0725 §5); empty or 0 the whole grid.
     Ends,
     /// An L column's legs (docs/adr/0725 §3): the one along its width's thickness, the one along its depth's.
@@ -2195,6 +2197,20 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     post: Some(words.map(|_| n)),
                     ..Default::default()
                 },
+                ArchField::Winders if words.is_none() => ArchChange {
+                    winders: Some(None),
+                    ..Default::default()
+                },
+                ArchField::Winders if n >= 1.0 && n.fract() == 0.0 => ArchChange {
+                    winders: Some(Some(n as u32)),
+                    ..Default::default()
+                },
+                ArchField::Winders => {
+                    return vec![
+                        "Balansman basamağı 1 ya da daha büyük bir tam sayıdır; boş: sahanlık."
+                            .into(),
+                    ];
+                }
                 ArchField::Ends => ArchChange {
                     ends: Some(words.map(|_| n).filter(|v| *v != 0.0)),
                     ..Default::default()

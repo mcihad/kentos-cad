@@ -60364,6 +60364,8 @@ class NewStair(_Model):
         railings: Its railings' sides; absent: none (docs/adr/0705 §2).
         riser_height: A riser's height; 0 or absent with `height` (which gives it: `height / risers`). Unit: length.
         risers: Its risers; 0 or absent with `height`: as many as keep each under `maxRiser`. Unit: count.
+        winders: A balanced stair (balansmanlı, docs/adr/8045 §1): this many treads balanced either side of each turn instead of a
+            landing (not with `landing`); its turns' zones lie in their flights and apart. Absent: a landing at each turn. Unit: count.
     """
     pts: list[Vec2]
     width: float
@@ -60383,6 +60385,7 @@ class NewStair(_Model):
     railings: Railings | RailingsName | None | Unset = UNSET
     riser_height: float = 0.0
     risers: int = 0
+    winders: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -60417,6 +60420,8 @@ class NewStair(_Model):
             out["railings"] = None if self.railings is None else _enum_out(self.railings)
         out["riserHeight"] = float(self.riser_height)
         out["risers"] = self.risers
+        if self.winders is not UNSET:
+            out["winders"] = self.winders
         return out
 
     @classmethod
@@ -60440,6 +60445,7 @@ class NewStair(_Model):
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             riser_height=float(data["riserHeight"]) if "riserHeight" in data else 0.0,
             risers=data["risers"] if "risers" in data else 0,
+            winders=data.get("winders", UNSET),
         )
 
 
@@ -94525,6 +94531,10 @@ class StairEntity(Entity):
         railings: Its railings' sides; absent: none (docs/adr/0705 §2, schema 115).
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        winders: A balanced stair (balansmanlı, docs/adr/8045 §1, schema 241): this many treads balanced either side of each turn
+            of its walking line instead of a landing there, every tread its tread on the walking line, those at the inner
+            side narrowing towards the corner (PAİY 31/2-c: at least 0.10 m there, 0.27 m in their middle); absent: a
+            landing at each turn. Unit: count.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
@@ -94557,6 +94567,7 @@ class StairEntity(Entity):
     railings: Railings | RailingsName | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    winders: int | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -94609,6 +94620,8 @@ class StairEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.winders is not UNSET:
+            out["winders"] = self.winders
         if self.wipeout is not UNSET:
             out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
@@ -94644,6 +94657,7 @@ class StairEntity(Entity):
             railings=UNSET if "railings" not in data else None if data["railings"] is None else _enum_in(Railings, data["railings"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            winders=data.get("winders", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
         )
 
@@ -94737,7 +94751,8 @@ class StairsCreate(_Model):
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the level's height for `heightFromLevel`: not
     with `height`, a level given with a height; else `level_not_found`), `invalid_stair` (the design from the height, the
-    fields with the centre post, the cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,
+    fields with the centre post and the winders (docs/adr/8045 §1: their turns' zones in their flights and apart), the cut
+    height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,
     `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on
     the desktop also `slots_exhausted`.
     Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.
@@ -113786,6 +113801,8 @@ class SetArchOperation(ArchOperation):
         tread: A stair's. Unit: length.
         type: A column's type.
         width: A column's, a stair's, a ramp's or a beam's. Unit: length.
+        winders: A stair's balancing (docs/adr/8045 §1): this many treads balanced either side of each turn instead of a
+            landing; null: a landing at each turn. Unit: count.
     """
     TAG_VALUE: ClassVar[str] = "set"
     anchor: ColumnAnchor | ColumnAnchorName | None | Unset = UNSET
@@ -113827,6 +113844,7 @@ class SetArchOperation(ArchOperation):
     tread: float | None | Unset = UNSET
     type: str | None | Unset = UNSET
     width: float | None | Unset = UNSET
+    winders: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
@@ -113908,6 +113926,8 @@ class SetArchOperation(ArchOperation):
             out["type"] = self.type
         if self.width is not UNSET:
             out["width"] = None if self.width is None else float(self.width)
+        if self.winders is not UNSET:
+            out["winders"] = self.winders
         return out
 
     @classmethod
@@ -113952,6 +113972,7 @@ class SetArchOperation(ArchOperation):
             tread=UNSET if "tread" not in data else None if data["tread"] is None else float(data["tread"]),
             type=data.get("type", UNSET),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+            winders=data.get("winders", UNSET),
         )
 
 

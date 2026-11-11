@@ -394,6 +394,12 @@
     `local_roof_slope_steep`, kar siperliği `local_snow_guard_missing`, çatı penceresi 1,20 × 1,50 m
     `local_roof_window_large`, cepheye 1 m ve birbirine (çatının üstünde) 2 m `local_roof_window_close`. Düzeltmeler
     `cad.arch.edit`: eğim %40, kar siperliği 30 cm, baca 0,80 m, hava bacası 0,60 m.
+  - **Balansmanlı merdiven (M45 1. bölüm, ADR 8045 §1; PAİY 31/2-c):** `StairFields.winders` (`.kcad` 241): L ve U
+    merdivende dönüşün iki yanında dengelenen basamak, sahanlık yerine. `geom::arch`: bölge köşenin iki yanında
+    `winders × basamak`, iç kenar `genişlik × tan(dönüş/2)` kısalır, kayıp köşeye doğru doğrusal; rıht iç kenardan
+    yürüme çizgisinden dış kenara (`riser_ends`); iç basamak genişlikleri `winder_treads`; ret `winder_problem` (kayıptan
+    kısa, kola sığmayan, çakışan); PAİY'nin 0,10 m'sine yeten en az `winders_for` (1,00 m L'de 5, 1,20 m L'de 7).
+    Merdiven aracı A, Öznitelikler Dönüş/Balansman basamağı/En dar iç basamak, Mevzuat `paiy_stair_step` düzeltmesiyle.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

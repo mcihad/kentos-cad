@@ -2743,6 +2743,9 @@ def document(d):
     if any(e["kind"] == "roof" and any(p["kind"] == "downpipe" for p in e.get("parts", [])) for e in d["entities"]):
         # A roof's downpipes (docs/adr/8044 §8).
         schema = max(schema, 240)
+    if any(e["kind"] == "stair" and "winders" in e for e in d["entities"]):
+        # A balanced stair's winders (docs/adr/8045 §1).
+        schema = max(schema, 241)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3647,7 +3650,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-241.kcad"] = container(root(cmap(parts), version=uint(241)))
+    files["schema-version-242.kcad"] = container(root(cmap(parts), version=uint(242)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6753,6 +6756,11 @@ def build():
     assert roof_downpipes.count(b"\x67version\x18\xf0") == 1, "a roof's downpipes are schema 240"
     out["roof-downpipes.kcad"] = container(roof_downpipes)
     out["broken/roof-downpipes-in-schema-239.kcad"] = container(roof_downpipes.replace(b"\x67version\x18\xf0", b"\x67version\x18\xef"))
+    # Schema 241 (docs/adr/8045 §1): a balanced stair's winders; schema 240 refuses them.
+    stair_winders = document(load("stair-winders.json"))
+    assert stair_winders.count(b"\x67version\x18\xf1") == 1, "a balanced stair's winders are schema 241"
+    out["stair-winders.kcad"] = container(stair_winders)
+    out["broken/stair-winders-in-schema-240.kcad"] = container(stair_winders.replace(b"\x67version\x18\xf1", b"\x67version\x18\xf0"))
     # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
     assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"

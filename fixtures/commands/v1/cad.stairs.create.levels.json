@@ -3893,6 +3893,472 @@
           }
         }
       ]
+    },
+    {
+      "name": "Değiştir: L merdivene balansman, sahanlığı kalkar; null sahanlığa döner",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "landing": 0.9
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (5.04 m) 18 rıhta yetmiyor: 2 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "landing": 0.9
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "winders": 5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 2.8,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 2.8,
+                      "y": 32.24
+                    }
+                  ],
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28,
+                  "winders": 5
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 0.28 m kalıyor; merdiven yoldan kısa.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "winders": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 2.8,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 2.8,
+                      "y": 32.24
+                    }
+                  ],
+                  "width": 1.0,
+                  "risers": 18,
+                  "riserHeight": 0.17,
+                  "tread": 0.28
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (5.04 m) 18 rıhta yetmiyor: 2 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kola sığmayan balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.stairs.create",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (5.04 m) 18 rıhta yetmiyor: 2 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "winders": 11
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Balansman kola sığmıyor: dönüşün iki yanında 3.08 m dengelenecek, kollar 2.80 m ve 2.24 m. Balansman basamağını azaltın ya da kolu uzatın.",
+              "path": "uids[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: düz merdivene balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "winders": 5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Balansman merdivenin dönüşünde olur; düz merdivenin dönüşü yok.",
+              "path": "uids[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
     }
   ]
 }

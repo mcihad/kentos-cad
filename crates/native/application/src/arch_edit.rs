@@ -80,6 +80,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.tread.is_some(), "tread", STAIR);
     add(c.landing.is_some(), "landing", FLIGHT);
     add(c.cut.is_some(), "cut", STAIR);
+    add(c.winders.is_some(), "winders", STAIR);
     add(c.numbering.is_some(), "numbering", STAIR);
     add(c.railings.is_some(), "railings", FLIGHT);
     add(c.rise.is_some(), "rise", RAMP);
@@ -249,6 +250,13 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = c.cut {
                 f.cut = v;
+            }
+            // Its balancing (docs/adr/8045 §1): winders take the turns' landings' place, a landing theirs.
+            if let Some(v) = c.winders {
+                f.winders = v;
+                if v.is_some() {
+                    f.landing = None;
+                }
             }
             if let Some(v) = c.numbering {
                 f.numbering = v;

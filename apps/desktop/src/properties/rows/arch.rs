@@ -435,6 +435,67 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                             .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Post)))),
                     });
                 }
+                // A stair that turns (docs/adr/8045 §1): a landing at each turn, or its treads balanced either side.
+                None if x.pts.len() >= 3 => {
+                    use kentos_geometry_core::geom::arch::{winder_treads, winders_for};
+                    let core = kentos_formats::arch_elements::core_stair(x);
+                    let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &core else {
+                        return out;
+                    };
+                    // Balanced: the fewest winders that keep every tread 0.10 m wide at its inner side (PAİY 31/2-c).
+                    let fewest = winders_for(pts, stair, 0.10);
+                    let turn = |winders: Option<u32>| {
+                        set(
+                            slot,
+                            ArchChange {
+                                winders: Some(winders),
+                                landing: winders.is_some().then_some(None),
+                                ..Default::default()
+                            },
+                        )
+                    };
+                    let shown = if x.winders.is_some() {
+                        "Balansmanlı"
+                    } else {
+                        "Sahanlık"
+                    };
+                    let mut choices = vec![pick(
+                        "Sahanlık".into(),
+                        x.winders.is_none(),
+                        turn(None),
+                        None,
+                    )];
+                    if let Some(n) = fewest.or(x.winders.map(f64::from)) {
+                        choices.push(pick(
+                            "Balansmanlı".into(),
+                            x.winders.is_some(),
+                            turn(Some(x.winders.unwrap_or(n as u32))),
+                            None,
+                        ));
+                    }
+                    out.push(
+                        Row::text("Dönüş", shown).editor(edit(select(shown.to_owned(), choices))),
+                    );
+                    match x.winders {
+                        Some(n) => {
+                            out.push(Row::figure("Balansman basamağı", n.to_string()).editor(
+                                edit(Editor::Number(Field::Arch(slot, ArchField::Winders))),
+                            ));
+                            // Its narrowest tread at the inner side (PAİY 31/2-c: at least 0.10 m).
+                            if let Some(narrow) = winder_treads(pts, stair)
+                                .iter()
+                                .map(|(_, inner, _)| *inner)
+                                .reduce(f64::min)
+                            {
+                                out.push(
+                                    Row::figure("En dar iç basamak", f.length_bare(narrow))
+                                        .unit(f.length_unit_label()),
+                                );
+                            }
+                        }
+                        None => out.push(length("Sahanlık", x.landing(), ArchField::Landing)),
+                    }
+                }
                 None => out.push(length("Sahanlık", x.landing(), ArchField::Landing)),
             }
             out.push(railings_row(slot, x.railings, &edit));

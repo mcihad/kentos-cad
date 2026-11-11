@@ -10,7 +10,8 @@ import type { NewStair } from "./NewStair";
  *
  * Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair` (the level's height for `heightFromLevel`: not
  * with `height`, a level given with a height; else `level_not_found`), `invalid_stair` (the design from the height, the
- * fields with the centre post, the cut height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,
+ * fields with the centre post and the winders (docs/adr/8045 §1: their turns' zones in their flights and apart), the cut
+ * height, the fit), `level_not_found`, `invalid_line_weight`, `invalid_revision`,
  * `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`, `attribute_required`; on
  * the desktop also `slots_exhausted`.
  * Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`, `stair_riser_high`.

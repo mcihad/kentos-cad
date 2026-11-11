@@ -500,9 +500,25 @@ def stair_problem(s, path):
     r = post_problem(s, path)
     if r:
         return r
+    w = s.get("winders")
+    if w is not None:
+        # A balanced stair (docs/adr/8045 §1): its fields, as the contract says them.
+        b = (s.get("bulges") or [0.0])[0]
+        why = ("Balansman basamağı dönüşün iki yanında en az 1 olur; balansman istemiyorsanız alanı boş bırakın." if w == 0
+               else "Döner merdivende balansman olmaz: basamakları zaten yay boyunca dengeli." if b != 0.0
+               else "Balansman merdivenin dönüşünde olur; düz merdivenin dönüşü yok." if len(s["pts"]) < 3
+               else "Dönüşte ya sahanlık (landing) ya balansman (winders) olur; ikisini birden vermeyin." if s.get("landing") is not None
+               else None)
+        if why:
+            return refusal(code, why, f"{path}.winders")
     if s.get("heightFromLevel") and (s.get("arch") or {}).get("level") is None:
         return refusal(code, "Merdivenin yüksekliği kata bağlı ama merdivenin katı yok. Merdivene kat verin ya da bağı kaldırın.",
                        f"{path}.heightFromLevel")
+    if w is not None:
+        # How its turns hold them: the zones in their flights and apart (the drawing reference's rule).
+        why = ac.winder_problem(fpts(s["pts"]), F(s["width"]), F(s["tread"]), w)
+        if why:
+            return refusal(code, why, f"{path}.winders")
     return None
 
 
@@ -589,6 +605,9 @@ def stair_warnings(s, path):
     pts = fpts(s["pts"])
     width = F(s["width"])
     land = F(s["landing"]) if s.get("landing") is not None else width
+    if s.get("winders") is not None:
+        # A balanced stair's turns hold no landing (docs/adr/8045 §1).
+        land = F(0)
     if st:
         st, missing, at = ac.risers(pts, width, s["risers"], F(s["tread"]), land)
         if missing:
@@ -1078,6 +1097,9 @@ def stair_fields(n, risers=None, riser=None):
         s["heightFromLevel"] = True
     if n.get("post") is not None:
         s["post"] = n["post"]
+    # docs/adr/8045 §1: balanced turns.
+    if n.get("winders") is not None:
+        s["winders"] = n["winders"]
     return s
 
 
@@ -1219,7 +1241,7 @@ def fitted(s, at):
     if s.get("bulges"):
         return fitted_arc(s, at)
     pts = [(p["x"], p["y"]) for p in s["pts"]]
-    land = s.get("landing", s["width"])
+    land = 0.0 if s.get("winders") is not None else s.get("landing", s["width"])
     got = float_fit_end(pts, s["width"], s["risers"], s["tread"], land)
     exact = ac.fit_end(fpts(s["pts"]), F(s["width"]), s["risers"], F(s["tread"]), F(land))
     assert (got is None) == (exact is None), (got, exact)
@@ -2140,6 +2162,11 @@ def other_step(d, command, inp, change, also):
             "within": 1e-9, "expect": {"ids": d.ids(), "entities": {str(i): entity(d, i) for i in list(also) + ids}, "revision": "changed"}}
 
 
+# A balanced stair's L (docs/adr/8045 §1): 2.80 and 2.24 m flights, 1.00 m wide, 18 risers of 0.17 m, 0.28 m treads.
+BALANCED_L = {"pts": [P(0, 30), P(F(14, 5), 30), P(F(14, 5), F(806, 25))], "width": 1.0, "risers": 18,
+              "riserHeight": 0.17, "tread": 0.28}
+
+
 def stair(**kw):
     s = {"pts": [P(0, 30), P(F(15, 4), 30)], "width": 1.2, "risers": 16, "riserHeight": 0.175, "tread": 0.25}
     s.update(kw)
@@ -2159,6 +2186,10 @@ def stair_cases():
         ("katın yüksekliğini tutmayan rıhtlar stair_rise_level uyarısı", stair(arch={"level": "zemin"})),
         ("katın yüksekliğini tutan rıhtlarda uyarı yok", stair(risers=18, riserHeight=0.17, tread=0.28, pts=[P(0, 30), P(5.04, 30)], arch={"level": "zemin"})),
         ("yüksekliği bilinmeyen katta rıht denetlenmez", stair(arch={"level": "kat-1"})),
+        # docs/adr/8045 §1: balanced turns, no landing.
+        ("balansmanlı L merdiven, dönüşün iki yanında 5 basamak", stair(**BALANCED_L, winders=5)),
+        ("balansmanlı U merdiven", stair(pts=[P(0, 30), P(4, 30), P(4, 34), P(0, 34)], width=1.0, risers=30,
+                                         riserHeight=0.17, tread=0.28, winders=5)),
     ]:
         c.add(name, [create_step(Drawing(), STAIRS, "execute", inp)])
     refusals(c, STAIRS, [
@@ -2173,6 +2204,16 @@ def stair_cases():
         ("sıfır rıht sayısı reddedilir", stair(risers=0), {}),
         ("rıht sayısından büyük kesme reddedilir", stair(cut=20), {}),
         ("olmayan kat reddedilir", stair(arch={"level": "yok"}), {}),
+        # docs/adr/8045 §1.
+        ("düz merdivende balansman reddedilir", stair(winders=5), {}),
+        ("sıfır balansman reddedilir", stair(**BALANCED_L, winders=0), {}),
+        ("sahanlık ve balansman birlikte reddedilir", stair(**BALANCED_L, landing=1.0, winders=5), {}),
+        ("dönüşün kaybından kısa balansman reddedilir", stair(**BALANCED_L, winders=3), {}),
+        ("kola sığmayan balansman reddedilir", stair(**BALANCED_L, winders=11), {}),
+        ("iki dönüşün çakışan balansmanı reddedilir", stair(pts=[P(0, 30), P(3, 30), P(3, F(163, 5)), P(0, F(163, 5))],
+                                                             width=1.0, risers=30, riserHeight=0.17, tread=0.28, winders=5), {}),
+        ("döner merdivende balansman reddedilir", stair(pts=[P(F(3, 2), 30), P(F(-3, 2), 30)], bulges=[1.0, 0.0], width=1.0,
+                                                         risers=17, riserHeight=0.175, tread=0.28, winders=5), {}),
     ])
     common_refusals(c, STAIRS, stair())
     return c.cases
@@ -2664,6 +2705,14 @@ def stair_level_cases():
     d, made = made_with(bound())
     c.add("Değiştir: bağlı merdivenin planı katın yüksekliğinden rıhtı gösterir",
           [made, edit_step(d, "plan", {"uids": [uid_of(NEW)], "operation": {"kind": "set", "risers": 17}})])
+    # docs/adr/8045 §1: balanced turns given and taken away; a landing goes with them.
+    d, made = made_with(stair(**BALANCED_L, landing=0.9))
+    c.add("Değiştir: L merdivene balansman, sahanlığı kalkar; null sahanlığa döner",
+          [made, one(d, [uid_of(NEW)], {"kind": "set", "winders": 5}), one(d, [uid_of(NEW)], {"kind": "set", "winders": None})])
+    d, made = made_with(stair(**BALANCED_L))
+    c.add("Değiştir: kola sığmayan balansman reddedilir", [made, one(d, [uid_of(NEW)], {"kind": "set", "winders": 11})])
+    d = Drawing()
+    c.add("Değiştir: düz merdivene balansman reddedilir", [one(d, [uid_of(8)], {"kind": "set", "winders": 5})])
     return c.cases
 
 # ── cad.arch.edit ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -2675,7 +2724,8 @@ FIELDS = [  # wire name, kinds, nullable
     ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column", "beam"), True), ("fill", ("column",), False),
     ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair",), False),
     ("post", ("stair",), True), ("tread", ("stair",), False),
-    ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
+    ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("winders", ("stair",), True),
+    ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
     # A beam's (docs/adr/8041 §1).
@@ -2720,6 +2770,9 @@ def set_field(f, name, value):
     if name == "riserHeight":
         # A riser height of its own frees a stair from its level's height (docs/adr/0724 §1).
         f.pop("heightFromLevel", None)
+    if name == "winders" and value is not None:
+        # Balanced turns take the landings' place (docs/adr/8045 §1).
+        f.pop("landing", None)
     if name == "shape" and value != "lShape":
         # Another shape has no legs (docs/adr/0725 §3).
         f.pop("legs", None)

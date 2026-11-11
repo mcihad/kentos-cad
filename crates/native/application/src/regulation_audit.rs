@@ -24,9 +24,9 @@
 //! - **Merdivenler (31, docs/adr/8034):** a common stair's flight and landings at least 1.20 m in a dwelling building,
 //!   1.50 m in another; a stair inside a dwelling unit 1.00 m. A stair is a unit's when the room it stands in is; outside
 //!   every room of its level it is the building's outdoor steps, whose flight 31/1-a does not measure. The riser at most
-//!   0.16 m, 0.18 m where the building has an elevator; 2a+b 0.60–0.64 m, the tread at least 0.27 m, a curved stair's
-//!   at least 0.10 m at its narrow end. A common stair has railings on both sides (31/1-ç), any other of more than one
-//!   step at least one (38/1).
+//!   0.16 m, 0.18 m where the building has an elevator; 2a+b 0.60–0.64 m, the tread at least 0.27 m, a curved or a
+//!   balanced stair's (docs/adr/8045 §1) at least 0.10 m at its narrow end (31/2-c). A common stair has railings on both
+//!   sides (31/1-ç), any other of more than one step at least one (38/1).
 //! - **Rampalar (30/12, 38/1):** the slope by the rise: 8 % up to 0.15 m, 7 % to 0.50 m, 6 % to 1.00 m, 5 % above;
 //!   railings. A ramp 2.75 m wide or wider is a vehicle ramp (Otopark Yönetmeliği), not read.
 //! - **Pencereler (38/1):** a window above the ground storey whose sill is below 0.90 m asks for a 1.10 m railing.
@@ -1280,6 +1280,35 @@ pub fn findings(
             )
         {
             push(s, vec![slot], at, None);
+        }
+        // A balanced stair's (docs/adr/8045 §1; 31/2-c: "Balansmanlı (dengelenmiş) merdivenlerde basamak genişliği en
+        // dar kenarda 0.10 metre, basamak ortasında 0.27 metreden az olamaz"): its narrowest tread at its inner side; in
+        // their middle, on the walking line, every tread is its tread, read above. The fix: the fewest winders that
+        // keep 0.10 m.
+        if let Some(inner) = arch::winder_treads(pts, stair)
+            .iter()
+            .map(|(_, inner, _)| *inner)
+            .reduce(f64::min)
+            && let Some(s) = said(
+                codes::PAIY_STAIR_STEP,
+                "Balansmanlı merdivenin basamağı dar uçta",
+                inner,
+                Bound::AtLeast,
+                Limit {
+                    value: 0.10,
+                    article: WINDER_ARTICLE,
+                },
+                None,
+                riser,
+                "",
+                "Balansman basamağını artırın: dönüşün iki yanında daha çok basamak dengelensin.",
+            )
+        {
+            let fix = arch::winders_for(pts, stair, 0.10).map(|n| Fix {
+                label: format!("Balansmanı {} basamak yap", n as u32),
+                operation: json!({"kind": "set", "winders": n as u32}),
+            });
+            push(s, vec![slot], at, fix);
         }
         // Its railings: a common stair's on both sides (31/1-ç), another's of more than one step at least one (38/1).
         let both = Fix {

@@ -107,4 +107,11 @@ heightFromLevel?: boolean,
 /**
  * A curved stair's centre post, its diameter (docs/adr/0724 §3, schema 125); absent: none.
  */
-post?: number, arch?: ArchInfo, };
+post?: number, 
+/**
+ * A balanced stair (balansmanlı, docs/adr/8045 §1, schema 241): this many treads balanced either side of each turn
+ * of its walking line instead of a landing there, every tread its tread on the walking line, those at the inner
+ * side narrowing towards the corner (PAİY 31/2-c: at least 0.10 m there, 0.27 m in their middle); absent: a
+ * landing at each turn.
+ */
+winders?: number, arch?: ArchInfo, };

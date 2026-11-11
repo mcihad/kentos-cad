@@ -122,6 +122,7 @@ pub fn core_stair(s: &StairFields) -> Shape {
             railings: s.railings.map(railings),
             post: s.post,
             upper: false,
+            winders: s.winders.map(f64::from),
         },
     }
 }

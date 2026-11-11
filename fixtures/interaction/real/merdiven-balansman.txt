@@ -1,0 +1,81 @@
+# M45 1. bölüm (docs/adr/8045 §1), on fixtures/arch/v1/facade-building.kcad (--modul mimari): Merdiven with Balansman 5
+# (A), its L walking line typed right of the building (14.5,1 → 17,1 → 17,4; the last flight to its last riser); a
+# close view; the stair's Öznitelikler (Dönüş, Balansman basamağı, En dar iç basamak); Denetim › Mevzuat says PAİY
+# 31/2-c (0.10 m at the narrow end); its Düzelt gives the fewest winders that keep it; the plan again.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key alt+q
+wait 600
+type Merdiven
+wait 1500
+key Return
+wait 1500
+move 1300 650
+wait 800
+type A
+wait 600
+type 5
+key Return
+wait 800
+type 14.5,1
+key Return
+wait 800
+type 17,1
+key Return
+wait 800
+move 1267 588
+wait 1500
+shot m1-onizleme
+type 17,4
+key Return
+wait 1000
+key Return
+wait 2500
+key Escape
+wait 800
+wheel 1221 656 3
+wait 1500
+move 1400 120
+wait 800
+shot m2-plan
+click 800 500 middle
+click 800 500 middle
+wait 2000
+click 1180 725
+wait 1500
+wheel 1720 900 -15
+wait 1200
+move 1400 120
+wait 800
+shot m3-oznitelik
+key Escape
+wait 600
+click 1162 111
+wait 3000
+click 195 712
+wait 1000
+type mevzuat
+wait 800
+click 188 779
+wait 1000
+click 65 712
+wait 3000
+drag 760 663 760 330
+wait 1500
+move 1300 250
+wait 800
+shot m4-mevzuat
+click 600 673
+wait 1000
+click 1480 413
+wait 3000
+move 1300 250
+wait 800
+shot m5-duzeltildi
+click 800 250 middle
+click 800 250 middle
+wait 2000
+shot m6-genel

@@ -1475,6 +1475,210 @@
       ]
     },
     {
+      "name": "balansmanlı L merdiven, dönüşün iki yanında 5 basamak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 0.28 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "balansmanlı U merdiven",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 34.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 34.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 30,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 3.88 m kalıyor; merdiven yoldan kısa.",
+                "path": "stairs[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "stair",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 34.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 34.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 30,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "merdiven verilmezse reddedilir",
       "steps": [
         {
@@ -2021,6 +2225,399 @@
               "code": "level_not_found",
               "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
               "path": "stairs[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "düz merdivende balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.75,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "winders": 5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Balansman merdivenin dönüşünde olur; düz merdivenin dönüşü yok.",
+              "path": "stairs[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Balansman basamağı dönüşün iki yanında en az 1 olur; balansman istemiyorsanız alanı boş bırakın.",
+              "path": "stairs[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sahanlık ve balansman birlikte reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "landing": 1.0,
+                "winders": 5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Dönüşte ya sahanlık (landing) ya balansman (winders) olur; ikisini birden vermeyin.",
+              "path": "stairs[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dönüşün kaybından kısa balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 3
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Balansman için dönüşün iki yanında en az 4 basamak gerekir; iç kenar dönüşte 1.00 m kısalıyor.",
+              "path": "stairs[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kola sığmayan balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 2.8,
+                    "y": 32.24
+                  }
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 11
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Balansman kola sığmıyor: dönüşün iki yanında 3.08 m dengelenecek, kollar 2.80 m ve 2.24 m. Balansman basamağını azaltın ya da kolu uzatın.",
+              "path": "stairs[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki dönüşün çakışan balansmanı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 32.6
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 32.6
+                  }
+                ],
+                "width": 1.0,
+                "risers": 30,
+                "riserHeight": 0.17,
+                "tread": 0.28,
+                "winders": 5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "İki dönüşün balansmanı çakışıyor: aradaki kol 2.60 m, ikisine 2.80 m gerekir. Balansman basamağını azaltın ya da dönüşlerde sahanlık kullanın.",
+              "path": "stairs[0].winders"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "döner merdivende balansman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "merdiven",
+            "stairs": [
+              {
+                "pts": [
+                  {
+                    "x": 1.5,
+                    "y": 30.0
+                  },
+                  {
+                    "x": -1.5,
+                    "y": 30.0
+                  }
+                ],
+                "width": 1.0,
+                "risers": 17,
+                "riserHeight": 0.175,
+                "tread": 0.28,
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "winders": 5
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Döner merdivende balansman olmaz: basamakları zaten yay boyunca dengeli.",
+              "path": "stairs[0].winders"
             }
           },
           "expect": {

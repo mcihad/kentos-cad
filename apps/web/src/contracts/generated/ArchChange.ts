@@ -95,6 +95,11 @@ landing?: number | null,
  */
 cut?: number | null, 
 /**
+ * A stair's balancing (docs/adr/8045 §1): this many treads balanced either side of each turn instead of a
+ * landing; null: a landing at each turn.
+ */
+winders?: number | null, 
+/**
  * A stair's.
  */
 numbering?: boolean, 

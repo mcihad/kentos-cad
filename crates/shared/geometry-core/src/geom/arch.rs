@@ -336,6 +336,9 @@ pub struct StairSpec {
     pub post: Option<f64>,
     /// Drawn as the plan of the level above its own shows it (docs/adr/0724 §4): its part past its cut.
     pub upper: bool,
+    /// A balanced stair (balansmanlı, docs/adr/8045 §1): the treads balanced either side of each turn instead of a
+    /// landing there; none: a landing at each turn.
+    pub winders: Option<f64>,
 }
 
 impl crate::api::json::Flat for StairSpec {
@@ -350,6 +353,7 @@ impl crate::api::json::Flat for StairSpec {
         "railings",
         "bulges",
         "post",
+        "winders",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
@@ -372,6 +376,7 @@ impl crate::api::json::Flat for StairSpec {
             railings: Railings::read(v)?,
             post: number(v, "post")?,
             upper: false,
+            winders: number(v, "winders")?,
         })
     }
 
@@ -397,6 +402,9 @@ impl crate::api::json::Flat for StairSpec {
         }
         if let Some(p) = &self.post {
             field(out, first, "post", p);
+        }
+        if let Some(w) = &self.winders {
+            field(out, first, "winders", w);
         }
     }
 }
@@ -1081,6 +1089,10 @@ fn left(d: Vec2) -> Vec2 {
 /// them made one, so that no riser falls between them (a U-stair's flights a width apart share one landing).
 pub fn stair_landings(walk: &Walk, spec: &StairSpec) -> Vec<(f64, f64)> {
     let mut out: Vec<(f64, f64)> = Vec::new();
+    // A balanced stair's turns are its winders' (docs/adr/8045 §1).
+    if balanced(walk, spec) {
+        return out;
+    }
     for (a, b) in walk.landings(spec.landing()) {
         match out.last_mut() {
             Some(last) if a - last.1 < spec.tread - EPS => last.1 = crate::jsmath::js_max(last.1, b),
@@ -1372,6 +1384,278 @@ fn across(walk: &Walk, s: f64, half: f64) -> Shape {
     )
 }
 
+/// A balanced stair's turn (balansman, docs/adr/8045 §1; PAİY 31/2-c "Balansmanlı (dengelenmiş) merdivenlerde"): the
+/// walking line's arc length at its corner, how far either side along the walking line its treads are balanced (its
+/// winders × its tread), how much shorter its inner side runs (twice its half width × the tangent of half its turn)
+/// and whether that side is the walking line's left; the walking line's point it turns at.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WinderTurn {
+    pub corner: f64,
+    pub reach: f64,
+    pub shortening: f64,
+    pub left: bool,
+    pub k: usize,
+}
+
+/// Whether a stair's turns are balanced: a straight walking line that turns, with winders and a tread.
+fn balanced(walk: &Walk, spec: &StairSpec) -> bool {
+    walk.arc.is_none()
+        && walk.pts.len() >= 3
+        && spec.tread > EPS
+        && spec.winders.is_some_and(|w| w >= 1.0)
+}
+
+/// A balanced stair's turns in order (docs/adr/8045 §1); none for a stair with landings.
+pub fn winder_turns(walk: &Walk, spec: &StairSpec) -> Vec<WinderTurn> {
+    if !balanced(walk, spec) {
+        return Vec::new();
+    }
+    let half = spec.width / 2.0;
+    let reach = spec.winders.unwrap_or(0.0).floor() * spec.tread;
+    let n = walk.pts.len();
+    (1..n - 1)
+        .filter_map(|k| {
+            let (a, b, c) = (walk.pts[k - 1], walk.pts[k], walk.pts[k + 1]);
+            let d1 = unit(Vec2::new(b.x - a.x, b.y - a.y));
+            let d2 = unit(Vec2::new(c.x - b.x, c.y - b.y));
+            let cross = d1.x * d2.y - d1.y * d2.x;
+            let dot = d1.x * d2.x + d1.y * d2.y;
+            // tan(θ/2) = sin θ / (1 + cos θ) for the unit directions.
+            (cross.abs() > 1e-9 && 1.0 + dot > 1e-9).then(|| WinderTurn {
+                corner: walk.at[k],
+                reach,
+                shortening: 2.0 * half * cross.abs() / (1.0 + dot),
+                left: cross > 0.0,
+                k,
+            })
+        })
+        .collect()
+}
+
+/// How much of a balanced turn's inner side lies behind the walking line at its arc length `s`, from its zone's start
+/// on: the length the inner side loses, taken linearly more towards the corner (a tread there the narrowest, those at
+/// the zone's ends square to the walking line), all of it past the zone.
+fn winder_lost(t: &WinderTurn, s: f64) -> f64 {
+    let (c, d, sh) = (t.corner, t.reach, t.shortening);
+    if s <= c - d {
+        return 0.0;
+    }
+    if s >= c + d {
+        return sh;
+    }
+    if s <= c {
+        let x = s - (c - d);
+        sh * x * x / (2.0 * d * d)
+    } else {
+        let y = s - c;
+        sh / 2.0 + sh * (y - y * y / (2.0 * d)) / d
+    }
+}
+
+/// One side of a band, from its start: its left, else its right.
+fn band_side(pts: &[Vec2], half: f64, on_left: bool) -> Vec<Vec2> {
+    let n = pts.len();
+    let b = band(pts, half);
+    if b.len() != 2 * n {
+        return Vec::new();
+    }
+    if on_left {
+        b[..n].to_vec()
+    } else {
+        b[n..].iter().rev().copied().collect()
+    }
+}
+
+/// The arc length along `line` of its point `p` on its segment `j`.
+fn arc_on(line: &[Vec2], j: usize, p: Vec2) -> f64 {
+    let before: f64 = line[..=j]
+        .windows(2)
+        .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+        .sum();
+    before + js_hypot(p.x - line[j].x, p.y - line[j].y)
+}
+
+/// The point at arc length `u` along `line` (its ends past them).
+fn point_on(line: &[Vec2], u: f64) -> Vec2 {
+    let mut left_over = u;
+    for w in line.windows(2) {
+        let l = js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+        if left_over <= l || l <= EPS {
+            let t = if l <= EPS { 0.0 } else { left_over / l };
+            return Vec2::new(w[0].x + (w[1].x - w[0].x) * t, w[0].y + (w[1].y - w[0].y) * t);
+        }
+        left_over -= l;
+    }
+    line.last().copied().unwrap_or(Vec2::new(0.0, 0.0))
+}
+
+/// The balanced turn whose zone holds walking line arc length `s` (its ends excluded).
+fn winder_turn_at(turns: &[WinderTurn], s: f64) -> Option<&WinderTurn> {
+    turns
+        .iter()
+        .find(|t| s > t.corner - t.reach + EPS && s < t.corner + t.reach - EPS)
+}
+
+/// Where a balanced turn's riser at walking line arc length `s` meets its inner side: that side's arc length from its
+/// start and the point.
+fn winder_inner(walk: &Walk, spec: &StairSpec, t: &WinderTurn, s: f64) -> Option<(f64, Vec2)> {
+    let half = spec.width / 2.0;
+    let side = band_side(&walk.pts, half, t.left);
+    if side.len() < 2 || t.k == 0 {
+        return None;
+    }
+    let s0 = t.corner - t.reach;
+    let (p0, d0) = walk.point(s0);
+    let k = if t.left { 1.0 } else { -1.0 };
+    let n0 = left(d0);
+    let foot = Vec2::new(p0.x + n0.x * half * k, p0.y + n0.y * half * k);
+    let u = arc_on(&side, t.k - 1, foot) + (s - s0) - winder_lost(t, s);
+    Some((u, point_on(&side, u)))
+}
+
+/// A riser's line across the band at walking line arc length `s`, its left end first (docs/adr/8045 §1): square to
+/// the walking line; in a balanced turn's zone from where it meets the inner side, through the walking line, to the
+/// outer side.
+pub fn riser_ends(walk: &Walk, spec: &StairSpec, s: f64) -> (Vec2, Vec2) {
+    let half = spec.width / 2.0;
+    let (p, d) = walk.point(s);
+    let n = left(d);
+    let square = (
+        Vec2::new(p.x + n.x * half, p.y + n.y * half),
+        Vec2::new(p.x - n.x * half, p.y - n.y * half),
+    );
+    let turns = winder_turns(walk, spec);
+    let Some(t) = winder_turn_at(&turns, s) else {
+        return square;
+    };
+    let Some((_, q)) = winder_inner(walk, spec, t, s) else {
+        return square;
+    };
+    let v = Vec2::new(p.x - q.x, p.y - q.y);
+    let l = js_hypot(v.x, v.y);
+    if l <= EPS {
+        return square;
+    }
+    let v = Vec2::new(v.x / l, v.y / l);
+    // The outer side, the ray from the walking line on.
+    let outer = band_side(&walk.pts, half, !t.left);
+    let mut far: Option<f64> = None;
+    for w in outer.windows(2) {
+        let e = Vec2::new(w[1].x - w[0].x, w[1].y - w[0].y);
+        let den = v.x * e.y - v.y * e.x;
+        if den.abs() <= EPS {
+            continue;
+        }
+        let r = Vec2::new(w[0].x - p.x, w[0].y - p.y);
+        let a = (r.x * e.y - r.y * e.x) / den;
+        let b = (r.x * v.y - r.y * v.x) / den;
+        if a > EPS && (-EPS..=1.0 + EPS).contains(&b) && far.is_none_or(|f| a < f) {
+            far = Some(a);
+        }
+    }
+    let Some(a) = far else {
+        return square;
+    };
+    let o = Vec2::new(p.x + v.x * a, p.y + v.y * a);
+    if t.left { (q, o) } else { (o, q) }
+}
+
+/// [`riser_ends`] as a line.
+fn riser_line(walk: &Walk, spec: &StairSpec, s: f64) -> Shape {
+    let (a, b) = riser_ends(walk, spec, s);
+    line(a, b)
+}
+
+/// A balanced stair's treads in its turns' zones (docs/adr/8045 §1; PAİY 31/2-c: "basamak genişliği en dar kenarda
+/// 0.10 metre, basamak ortasında 0.27 metreden az olamaz"): each tread's number (from 0, after its riser) with its
+/// width at the inner side, between its two risers along it, and in its middle, on the walking line.
+pub fn winder_treads(pts: &[Vec2], spec: &StairSpec) -> Vec<(usize, f64, f64)> {
+    let walk = Walk::of(pts);
+    let turns = winder_turns(&walk, spec);
+    if turns.is_empty() {
+        return Vec::new();
+    }
+    let (stations, _) = riser_stations(&walk, spec);
+    let mut out = Vec::new();
+    for (i, w) in stations.windows(2).enumerate() {
+        let mid = (w[0] + w[1]) / 2.0;
+        let Some(t) = winder_turn_at(&turns, mid) else {
+            continue;
+        };
+        if let (Some((ua, _)), Some((ub, _))) = (
+            winder_inner(&walk, spec, t, w[0]),
+            winder_inner(&walk, spec, t, w[1]),
+        ) {
+            out.push((i, (ub - ua).abs(), w[1] - w[0]));
+        }
+    }
+    out
+}
+
+/// Why a balanced stair cannot be drawn (docs/adr/8045 §1), in the words a refusal says; none when it can or has
+/// landings. Its zones lie in their two flights and apart; a zone shorter than its inner side's loss would turn its
+/// inner risers back.
+pub fn winder_problem(pts: &[Vec2], spec: &StairSpec) -> Option<String> {
+    let w = spec.winders?;
+    if spec.bulge != 0.0 {
+        return Some("Döner merdivende balansman olmaz: basamakları zaten yay boyunca dengeli.".into());
+    }
+    if pts.len() < 3 {
+        return Some("Balansman merdivenin dönüşünde olur; düz merdivenin dönüşü yok.".into());
+    }
+    if w < 1.0 || w.fract() != 0.0 {
+        return Some("Balansman basamağı dönüşün iki yanında 1 ya da daha çok tam basamaktır.".into());
+    }
+    let walk = Walk::of(pts);
+    let turns = winder_turns(&walk, spec);
+    for (j, t) in turns.iter().enumerate() {
+        if t.reach <= t.shortening + EPS {
+            let least = (t.shortening / spec.tread).floor() + 1.0;
+            return Some(format!(
+                "Balansman için dönüşün iki yanında en az {} basamak gerekir; iç kenar dönüşte {} m kısalıyor.",
+                fixed(least, 0),
+                fixed(t.shortening, 2)
+            ));
+        }
+        let (from, to) = (walk.at[t.k - 1], walk.at[t.k + 1]);
+        if t.corner - t.reach < from - EPS || t.corner + t.reach > to + EPS {
+            return Some(format!(
+                "Balansman kola sığmıyor: dönüşün iki yanında {} m dengelenecek, kollar {} m ve {} m. Balansman \
+                 basamağını azaltın ya da kolu uzatın.",
+                fixed(t.reach, 2),
+                fixed(t.corner - from, 2),
+                fixed(to - t.corner, 2)
+            ));
+        }
+        if let Some(next) = turns.get(j + 1)
+            && next.corner - next.reach < t.corner + t.reach - EPS
+        {
+            return Some(format!(
+                "İki dönüşün balansmanı çakışıyor: aradaki kol {} m, ikisine {} m gerekir. Balansman basamağını azaltın \
+                 ya da dönüşlerde sahanlık kullanın.",
+                fixed(next.corner - t.corner, 2),
+                fixed(t.reach + next.reach, 2)
+            ));
+        }
+    }
+    None
+}
+
+/// The fewest winders either side of each turn that draw the stair with no tread narrower than `narrow` at its inner
+/// side (PAİY 31/2-c: 0.10 m), up to 40; none when no count does.
+pub fn winders_for(pts: &[Vec2], spec: &StairSpec, narrow: f64) -> Option<f64> {
+    (1..=40).map(f64::from).find(|&n| {
+        let s = StairSpec {
+            winders: Some(n),
+            ..spec.clone()
+        };
+        winder_problem(pts, &s).is_none()
+            && winder_treads(pts, &s)
+                .iter()
+                .all(|(_, inner, _)| *inner >= narrow - 1e-9)
+    })
+}
+
 /// The arc lengths of a stair's risers in order, as many as its walking line holds (docs/adr/0343 §2): from its start
 /// a tread apart; a riser that falls inside a landing moves to the landing's end. Then the risers that do not fit.
 pub fn riser_stations(walk: &Walk, spec: &StairSpec) -> (Vec<f64>, u32) {
@@ -1497,16 +1781,14 @@ fn stair_upper_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Leve
             // The band's mitred sides past the cut; a side starting at a turn starts at its mitre.
             let ring = band(pts, half);
             let n = pts.len();
-            let start = |from: f64, k: f64, corner: &dyn Fn(usize) -> Vec2| match walk
-                .at
-                .iter()
-                .position(|a| (a - from).abs() <= EPS)
-            {
-                Some(i) => corner(i),
-                None => side(from, k),
-            };
-            let mut l = vec![start(s, 1.0, &|i| ring[i])];
-            let mut r = vec![start(t, -1.0, &|i| ring[2 * n - 1 - i])];
+            let mut l = vec![match walk.at.iter().position(|a| (a - s).abs() <= EPS) {
+                Some(i) => ring[i],
+                None => riser_ends(&walk, spec, s).0,
+            }];
+            let mut r = vec![match walk.at.iter().position(|a| (a - t).abs() <= EPS) {
+                Some(i) => ring[2 * n - 1 - i],
+                None => riser_ends(&walk, spec, t).1,
+            }];
             for i in 0..n {
                 if walk.at[i] > s + EPS {
                     l.push(ring[i]);
@@ -1527,9 +1809,12 @@ fn stair_upper_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Leve
         }
     }
     out.push(piece(line(side(total, 1.0), side(total, -1.0))));
-    out.push(piece(line(side(s, 1.0), side(t, -1.0))));
+    out.push(piece(line(
+        riser_ends(&walk, spec, s).0,
+        riser_ends(&walk, spec, t).1,
+    )));
     for &x in &stations[c..] {
-        out.push(piece(across(&walk, x, half)));
+        out.push(piece(riser_line(&walk, spec, x)));
     }
     for (shape, over) in stair_railing_arcs(pts, spec) {
         if over && level != Level::Simple {
@@ -1670,7 +1955,7 @@ fn stair_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Level) -> 
     let cut = cut_riser(spec, &stations);
     let shown = cut.unwrap_or(stations.len());
     for (i, &s) in stations.iter().enumerate() {
-        let mut riser = piece(across(&walk, s, half));
+        let mut riser = piece(riser_line(&walk, spec, s));
         if i >= shown {
             // Above the cut plane (docs/adr/0704 §3): dashed, as plans draw what lies over it.
             riser.stroke.line_type = Some("dashed".into());
@@ -1681,12 +1966,10 @@ fn stair_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Level) -> 
         Some(c) if c > 0 => {
             let s = stations[c - 1];
             let t = crate::jsmath::js_min(s + spec.tread, walk.length());
-            let (p, d) = walk.point(s);
-            let (q, e) = walk.point(t);
-            let (n, m) = (left(d), left(e));
+            // From its riser's left end to the right end of the next one's place (a balanced turn's risers slant).
             out.push(piece(line(
-                Vec2::new(p.x + n.x * half, p.y + n.y * half),
-                Vec2::new(q.x - m.x * half, q.y - m.y * half),
+                riser_ends(&walk, spec, s).0,
+                riser_ends(&walk, spec, t).1,
             )));
             s
         }
