@@ -3,7 +3,9 @@
 //! and values, areas, notes); the table says each finding, its objects and the area it measures. Seç ve göster
 //! selects the shown findings' objects and brings them into view; Profili uygula adds the profile's layers when the
 //! drawing lacks them (`cad.profiles.apply`, one undo step); Sembolleri karardan ver… opens the window that gives the
-//! decision areas their MPYY symbols from their decisions (`cad.zoning.symbolize`, docs/adr/4240).
+//! decision areas their MPYY symbols from their decisions (`cad.zoning.symbolize`, docs/adr/4240); Plan değişikliği
+//! taslağı… opens the window that keeps a plan change draft beside the plan in force (`cad.zoning.draft`,
+//! docs/adr/5040).
 
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
@@ -51,7 +53,11 @@ impl Group {
         match self {
             Group::All => true,
             Group::Plans => {
-                matches!(kind, "missingLayer" | "noLevel" | "upperMissing" | "levelOrder" | "outsideUpper" | "noPlan")
+                // docs/adr/5040: a plan change draft gone stale is the plan's business.
+                matches!(
+                    kind,
+                    "missingLayer" | "noLevel" | "upperMissing" | "levelOrder" | "outsideUpper" | "noPlan" | "draftStale"
+                )
             }
             Group::Decisions => {
                 matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview" | "symbolMismatch")
@@ -335,6 +341,11 @@ impl App {
             crate::zoning_symbols_window::OPEN,
             Some(Message::ZoningSymbols(crate::zoning_symbols_window::Event::Open)),
         ));
+        // Plan değişikliği taslağı (docs/adr/5040): a change drafted beside the plan in force.
+        frame = frame.aside(words::secondary(
+            crate::zoning_draft_window::OPEN,
+            Some(Message::ZoningDraft(crate::zoning_draft_window::Event::Open)),
+        ));
         if missing_layer {
             frame = frame.aside(words::secondary(APPLY_PROFILE, Some(msg(Event::ApplyProfile))));
         }
@@ -348,6 +359,9 @@ impl App {
             Control::Press(APPLY_PROFILE) => Some(msg(Event::ApplyProfile)),
             Control::Press(crate::zoning_symbols_window::OPEN) => {
                 Some(Message::ZoningSymbols(crate::zoning_symbols_window::Event::Open))
+            }
+            Control::Press(crate::zoning_draft_window::OPEN) => {
+                Some(Message::ZoningDraft(crate::zoning_draft_window::Event::Open))
             }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

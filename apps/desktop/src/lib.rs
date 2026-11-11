@@ -94,6 +94,7 @@ mod features_reconcile_window;
 mod features_reconcile_fill;
 mod zoning_window;
 mod zoning_symbols_window;
+mod zoning_draft_window;
 mod zoning_marks;
 mod pipes_marks;
 mod survey_baseline_marks;
@@ -445,6 +446,8 @@ mod features_reconcile_reapply_tests;
 mod zoning_window_tests;
 #[cfg(test)]
 mod zoning_symbols_window_tests;
+#[cfg(test)]
+mod zoning_draft_window_tests;
 #[cfg(test)]
 mod impact_window_tests;
 #[cfg(test)]

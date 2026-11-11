@@ -232,6 +232,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `slope.aspect`; cad.scenarios.impact.json'un 5 yeni durumu) ve web Senaryo ölçüleri'nde sınıf ve bakı satırı.
 - MAP-09 / ADR 4640: web'in `cad.zoning.check` işleyicisinde `symbolMismatch` (cad.zoning.check.json'un 4 yeni durumu)
   ve web İmar planı denetiminde Sembol uyuşmazlığı; web İşlem'inde hata katmanının GeoPackage'a yazılması.
+- MAP-09 / ADR 5040: web'de `.kcad` şema 242'nin `settings.zoningPlan`'ı; `cad.zoning.draft` işleyicisi
+  (cad.zoning.draft.json, 33 durum), `cad.zoning.symbolize`'ın `keep`/saklı seçimi (6 yeni durum), `cad.zoning.check`'in
+  saklı seçimle `symbolMismatch`'i ve `draftStale`'i (5 yeni durum); web'de Plan değişikliği taslağı penceresi ve Sembolü
+  karardan ver'in Seçimleri projede sakla anahtarı.
 - MAP-08 / ADR 4620: web'in `cad.parcels.record` işleyicisinde komşunun sınırının bölünmesi (`boundariesSplit`,
   `neighbours`; cad.parcels.record.json'un yeni ve değişen durumları) ve web Parsel kayıtları'nda planın sözü.
 - MAP-08 / ADR 5020: web'in `cad.parcels.record` işleyicisinde `lengths`, `draft` ve yaylı sınırın bölünmesi; web'de

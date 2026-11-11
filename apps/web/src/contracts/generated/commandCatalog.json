@@ -61959,7 +61959,7 @@
       "id": "cad.zoning.check",
       "version": 1,
       "title": "İmar planı denetimi",
-      "summary": "İmar planını sembolden değil KentOS'un imar-plani profilinin tipli nesnelerinden denetler: plan sınırı (kademe, üst plan), karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu (no, kapsam). Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing, levelOrder (üst plan üst kademede değil), outsideUpper (plan sınırı üst planının sınırı dışına taşıyor), noPlan, noUse, unknownUse, missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım), outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol), roadWidth (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını içine alan en alt kademeli plan), roadParcel (aynı şeride parsel katmanındaki bir parsel giriyor, hangi planda olursa olsun), noteMissing, noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme parçalarını regions'ta taşır (her bölgenin dış halkası saat yönünün tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre). tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance).",
+      "summary": "İmar planını sembolden değil KentOS'un imar-plani profilinin tipli nesnelerinden denetler: plan sınırı (kademe, üst plan), karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu (no, kapsam). Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing, levelOrder (üst plan üst kademede değil), outsideUpper (plan sınırı üst planının sınırı dışına taşıyor), noPlan, noUse, unknownUse, missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım), outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol), roadWidth (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını içine alan en alt kademeli plan), roadParcel (aynı şeride parsel katmanındaki bir parsel giriyor, hangi planda olursa olsun), noteMissing, noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme parçalarını regions'ta taşır (her bölgenin dış halkası saat yönünün tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre). tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. symbolMismatch: karar alanının sembolü kararının sembolü değil (projenin saklı seçimi, yoksa KentOS'un tablosu); draftStale: plan değişikliği taslağı (cad.zoning.draft) yazıldıktan sonra karar alanının değeri değişti, alan ya da plan çizimde yok. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance).",
       "aliases": [
         "imardenetim",
         "plandenetim"
@@ -62124,7 +62124,7 @@
       "id": "cad.zoning.symbolize",
       "version": 1,
       "title": "Sembolü karardan ver",
-      "summary": "Karar alanlarına MPYY sembolünü kararlarından verir, tersini hiç yapmaz: sembol alanın kullanımından (Kullanim, imar-plani profilinin plan-kullanim listesi) ve planının kademesinden (plan sınırının Seviye'si) seçilir. KentOS'un tablosu (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY alan sembollerinden adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir eşi olmayan kullanım açık kalır (unmapped), sembolünü symbols ile kullanıcı seçer (kademenin alan sembollerinden; KentOS tahmin etmez). Yalnız nesnenin kitaplık sembolü yazılır; karar (öznitelikler) hiç değişmez, sonra değişen sembol kararı değiştirmez. uids yoksa profilin karar katmanının bütün alanları. Her alanın durumu: set, same, unmapped, noPlan, noLevel, noUse, unknownUse; önceki sembolü was. Tek geri alma adımı “Sembolü karardan ver”. Retler: invalid_revision, revision_conflict, invalid_input (seçimin kademesi ya da kullanımı, aynı çift iki kez; aynı alan iki kez), unknown_plan_symbol, layer_not_found (karar katmanı yok), invalid_uid, entity_not_found, not_a_decision (uids[i]), layer_locked.",
+      "summary": "Karar alanlarına MPYY sembolünü kararlarından verir, tersini hiç yapmaz: sembol alanın kullanımından (Kullanim, imar-plani profilinin plan-kullanim listesi) ve planının kademesinden (plan sınırının Seviye'si) seçilir. KentOS'un tablosu (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY alan sembollerinden adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir eşi olmayan kullanım açık kalır (unmapped), sembolünü symbols ile kullanıcı seçer (kademenin alan sembollerinden; KentOS tahmin etmez). Yalnız nesnenin kitaplık sembolü yazılır; karar (öznitelikler) hiç değişmez, sonra değişen sembol kararı değiştirmez. uids yoksa profilin karar katmanının bütün alanları. Her alanın durumu: set, same, unmapped, noPlan, noLevel, noUse, unknownUse; önceki sembolü was. Tek geri alma adımı “Sembolü karardan ver”. Kullanıcının seçimleri projede saklanır: keep verilen seçimleri projenin saklı seçimleri yapar (aynı geri alma adımında; seçim verilmezse proje seçim saklamaz, eski saklılar okunmaz) ve kept onları verir; keep yoksa saklı seçimler verilenlerden sonra, tablodan önce okunur (from project). Kademenin sembollerinden olmayan saklı seçim kullanılmaz, uyarı kept_symbol_ignored. Retler: invalid_revision, revision_conflict, invalid_input (seçimin kademesi ya da kullanımı, aynı çift iki kez; aynı alan iki kez), unknown_plan_symbol, layer_not_found (karar katmanı yok), invalid_uid, entity_not_found, not_a_decision (uids[i]), layer_locked.",
       "aliases": [
         "sembolkarar",
         "imarsembol",
@@ -62144,13 +62144,16 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the\nuser's symbols, which go before KentOS's table.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS\nhas symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol\nnot one of the level's area symbols); `layer_not_found` (the drawing has no decision layer); for `uids[i]`:\n`invalid_input` (given twice), `invalid_uid`, `entity_not_found`, `not_a_decision` (not an area on the decision\nlayer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).",
+        "description": "Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the\nuser's symbols, which go before the project's kept ones and KentOS's table; `keep` (docs/adr/5040): the given symbols\nbecome the project's kept choices (none given: the project keeps none), and the old kept ones are not read.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS\nhas symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol\nnot one of the level's area symbols); `layer_not_found` (the drawing has no decision layer); for `uids[i]`:\n`invalid_input` (given twice), `invalid_uid`, `entity_not_found`, `not_a_decision` (not an area on the decision\nlayer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).",
         "properties": {
           "expectedRevision": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "keep": {
+            "type": "boolean"
           },
           "symbols": {
             "items": {
@@ -62180,6 +62183,16 @@
               "$ref": "#/$defs/ZoningSymbolRow"
             },
             "type": "array"
+          },
+          "kept": {
+            "description": "With `keep` (docs/adr/5040): the project's kept choices after it.",
+            "items": {
+              "$ref": "#/$defs/ZoningSymbolPick"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "revision": {
             "type": "string"
@@ -62229,6 +62242,16 @@
               "$ref": "#/$defs/ZoningSymbolRow"
             },
             "type": "array"
+          },
+          "kept": {
+            "description": "With `keep` (docs/adr/5040): the project's kept choices after it.",
+            "items": {
+              "$ref": "#/$defs/ZoningSymbolPick"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "revision": {
             "type": "string"
@@ -62280,6 +62303,9 @@
           "entity_not_found",
           "not_a_decision",
           "layer_locked"
+        ],
+        "warnings": [
+          "kept_symbol_ignored"
         ]
       },
       "examples": [
@@ -62297,6 +62323,212 @@
                 "use": "konut"
               }
             ]
+          }
+        },
+        {
+          "title": "Seçim projede saklanır",
+          "input": {
+            "keep": true,
+            "symbols": [
+              {
+                "level": "uip",
+                "symbol": "mpyy.uip.konut.gelisme-konut-alani",
+                "use": "konut"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.zoning.draft",
+      "version": 1,
+      "title": "Plan değişikliği taslağı",
+      "summary": "İmar planının değişikliği için projede taslak saklar (id; aynı kimlikteki taslağın yerine geçer) ya da siler (remove): plan (plan sınırının PlanKimlik'i), gerekçe (reason; Mekânsal Planlar Yapım Yönetmeliği m. 9(4) değişiklik gerekçesini açıklayan plan raporunu ister) ve değişiklikler (changes: planın karar alanı uid, alanı field: Kullanim, Nizam, TAKS, KAKS, KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme; yeni değeri value). Taslak çizimin sürümünü ve her değerin öncesini saklar; yürürlükteki karar alanları hiç değişmez. Cevap planın alanlarını kullanıma göre önce ve sonra verir (uses, m²) ve m. 26'nın sorduklarını söyler: infrastructureLess (sosyal ya da teknik altyapı kullanımının alanı küçülüyor, m. 26(3); eşdeğerlik değerlendirilmez), densityUp (KAKS ya da kat adedi artıyor, m. 26(5)(a)), heightUp (kat adedi ya da Hmax artıyor, m. 26(4), (5)(b)). Taslak onaylı değişiklik değildir: onay, plan işlem numarası ve askı KentOS dışındadır. Sonradan değişen karar alanını cad.zoning.check draftStale ile söyler. Tek geri alma adımı. Retler: invalid_revision, revision_conflict, invalid_input, unknown_draft (remove), layer_not_found, unknown_plan, invalid_uid, entity_not_found, not_a_decision (changes[i]).",
+      "aliases": [
+        "plandegisikligi",
+        "imartaslak",
+        "plantaslak"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.zoning.draft` v1: the draft's id; the plan (`PlanKimlik`), the reason and the changes it keeps (a draft\nof the id is replaced); or `remove`, which takes it out of the project.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (`id` empty, with a space at its\nends or longer than 64 characters); with `remove`, `unknown_draft` (no draft of the id); `layer_not_found` (the\ndrawing has no plan boundary or decision layer); `invalid_input` (`plan` empty), `unknown_plan` (no plan boundary\nof the id); `invalid_input` (`reason` empty or longer than 4000 characters; `changes` empty); for `changes[i]`:\n`invalid_input` (the area's field given twice), `invalid_uid`, `entity_not_found`, `not_a_decision`, `invalid_input`\n(an area of another plan, a field a draft does not change, a value empty, not in the list or not a number of 0 or\nmore, the area's value already).",
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/ZoningDraftChange"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "remove": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "ZoningDraft",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.zoning.draft` v1: the draft as kept (none when removed), its plan's level, the plan's areas by use\n(in the list's order, then areas without a use), what m. 26 asks, the project's drafts after it and the revision.",
+        "properties": {
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlanDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drafts": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/ZoningDraftFinding"
+            },
+            "type": "array"
+          },
+          "level": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/ZoningDraftUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "level",
+          "uses",
+          "findings",
+          "drafts",
+          "revision"
+        ],
+        "title": "ZoningDrafted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.zoning.draft` v1: the draft as kept (none when removed), its plan's level, the plan's areas by use\n(in the list's order, then areas without a use), what m. 26 asks, the project's drafts after it and the revision.",
+        "properties": {
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PlanDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "drafts": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/ZoningDraftFinding"
+            },
+            "type": "array"
+          },
+          "level": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/ZoningDraftUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "level",
+          "uses",
+          "findings",
+          "drafts",
+          "revision"
+        ],
+        "title": "ZoningDrafted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "unknown_draft",
+          "layer_not_found",
+          "unknown_plan",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_decision"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Park alanının ticarete dönmesi",
+          "input": {
+            "changes": [
+              {
+                "field": "Kullanim",
+                "uid": "0192f5c0-5040-7000-8000-000000000005",
+                "value": "ticaret"
+              }
+            ],
+            "id": "T-1",
+            "plan": "UİP-1",
+            "reason": "Gerekçe: …"
+          }
+        },
+        {
+          "title": "Taslağı sil",
+          "input": {
+            "id": "T-1",
+            "remove": true
           }
         }
       ]
@@ -111366,6 +111598,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesne imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir."
+    },
+    {
+      "code": "unknown_plan",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizimde bu kimlikte (PlanKimlik) plan sınırı yok; planın kimliğini plan sınırından alın."
+    },
+    {
+      "code": "unknown_draft",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte plan değişikliği taslağı yok."
+    },
+    {
+      "code": "kept_symbol_ignored",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Projede saklanan bir sembol seçimi kademenin MPYY alan sembollerinden değil; kullanılmadı. Seçimi yeniden yapın."
     },
     {
       "code": "parcel_identity_taken",
@@ -181199,6 +181449,64 @@
         }
       ]
     },
+    "PlanDraft": {
+      "additionalProperties": false,
+      "description": "A plan change draft: its id, the plan (`PlanKimlik`) it changes, the drawing's revision it was made from, its\nreason and its changes.",
+      "properties": {
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/PlanDraftChange"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "plan",
+        "revision",
+        "reason",
+        "changes"
+      ],
+      "type": "object"
+    },
+    "PlanDraftChange": {
+      "additionalProperties": false,
+      "description": "A change a draft makes to a decision area: the field and its value before (empty: the area had none) and after.",
+      "properties": {
+        "after": {
+          "type": "string"
+        },
+        "area": {
+          "description": "The decision area's persistent id.",
+          "type": "string"
+        },
+        "before": {
+          "default": "",
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "area",
+        "field",
+        "after"
+      ],
+      "type": "object"
+    },
     "PlatformBalanceAsk": {
       "description": "The bracket a balance is searched in: the pad's vertical offset from `low` to `high` (m), until cut and fill meet\nwithin `tolerance` m³.",
       "properties": {
@@ -185495,7 +185803,7 @@
           "description": "How lengths are written (docs/adr/0262 §2): none, decimal; the others\nonly in an inch or foot drawing."
         },
         "lineTypeScale": {
-          "description": "The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;\nabsent: 1.",
+          "description": "The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;\nabsent: 1.",
           "format": "double",
           "type": [
             "number",
@@ -185766,6 +186074,17 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "zoningPlan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ZoningPlanData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none\n(`.kcad` schema 242)."
         }
       },
       "required": [
@@ -221543,6 +221862,93 @@
       ],
       "type": "object"
     },
+    "ZoningDraftChange": {
+      "additionalProperties": false,
+      "description": "A change the draft makes: a decision area, its field and the value it takes.",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "field",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ZoningDraftFinding": {
+      "description": "What Mekânsal Planlar Yapım Yönetmeliği m. 26 asks of the draft: `infrastructureLess` (a social or technical\ninfrastructure use's area gets smaller: m. 26(3); `area` how much), `densityUp` (an area's KAKS or KatAdedi rises:\nm. 26(5)(a)), `heightUp` (an area's KatAdedi or Hmax rises: m. 26(4), (5)(b)); the area's id where it is one area's.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "use": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ZoningDraftUse": {
+      "description": "A use's area in the plan before and after the draft (square metres); the use empty for areas without one.",
+      "properties": {
+        "after": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "use": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "use",
+        "before",
+        "after",
+        "difference"
+      ],
+      "type": "object"
+    },
     "ZoningFinding": {
       "description": "A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,\n`overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,\n`levelOrder`; docs/adr/4640's `symbolMismatch`: a decision area whose library symbol is not the one KentOS's table\ngives its use, judged only with a symbol and a mapped use), its objects' persistent ids in the drawing's order, the\narea it measures (square metres) when it measures one, and what it says.",
       "properties": {
@@ -221579,6 +221985,25 @@
         "uids",
         "message"
       ],
+      "type": "object"
+    },
+    "ZoningPlanData": {
+      "additionalProperties": false,
+      "description": "The project's zoning plan data (schema 242): the kept symbol choices and the plan change drafts.",
+      "properties": {
+        "drafts": {
+          "items": {
+            "$ref": "#/$defs/PlanDraft"
+          },
+          "type": "array"
+        },
+        "symbols": {
+          "items": {
+            "$ref": "#/$defs/ZoningSymbolPick"
+          },
+          "type": "array"
+        }
+      },
       "type": "object"
     },
     "ZoningRegion": {
@@ -221621,7 +222046,7 @@
       "type": "object"
     },
     "ZoningSymbolRow": {
-      "description": "A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from\n(`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),\n`unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the\ndrawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).",
+      "description": "A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from\n(`kentos`, `user` or, docs/adr/5040, `project`: the project's kept choice), the one it had; its state: `set` (its symbol changes), `same` (it has it already),\n`unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the\ndrawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).",
       "properties": {
         "from": {
           "type": [

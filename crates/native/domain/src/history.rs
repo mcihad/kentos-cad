@@ -297,6 +297,11 @@ pub(crate) enum Op {
         before: std::sync::Arc<Option<kentos_contracts::ParcelRegister>>,
         after: std::sync::Arc<Option<kentos_contracts::ParcelRegister>>,
     },
+    /// A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040), before and after.
+    ZoningPlan {
+        before: std::sync::Arc<Option<kentos_contracts::ZoningPlanData>>,
+        after: std::sync::Arc<Option<kentos_contracts::ZoningPlanData>>,
+    },
     /// The review notes (docs/adr/1000 §3), before and after: a note is not an object but its change is a step.
     ReviewNotes {
         before: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
@@ -740,6 +745,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::ParcelRegister { before, after } => Op::ParcelRegister {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::ZoningPlan { before, after } => Op::ZoningPlan {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1513,6 +1522,7 @@ impl Document {
                 | Op::MapWork { .. }
                 | Op::MapSurvey { .. }
                 | Op::ParcelRegister { .. }
+                | Op::ZoningPlan { .. }
                 | Op::PatternTables { .. }
                 | Op::ApprovedSheetTemplates { .. }
                 | Op::StyleTables(_)
@@ -1816,6 +1826,10 @@ impl Document {
             }
             Op::ParcelRegister { after, .. } => {
                 self.settings.parcel_register = after.as_ref().clone();
+                return;
+            }
+            Op::ZoningPlan { after, .. } => {
+                self.settings.zoning_plan = after.as_ref().clone();
                 return;
             }
             Op::PatternTables { after, .. } => {

@@ -2071,6 +2071,12 @@ codes! {
     UNKNOWN_PLAN_SYMBOL = "unknown_plan_symbol", Failed, false, "Kademenin MPYY alan sembolleri arasında bu kimlikte sembol yok; kademenin sembollerinden birini seçin.";
     /// Sembolü karardan ver (docs/adr/4240): the object is not an area on the zoning plan's decision layer.
     NOT_A_DECISION = "not_a_decision", Failed, false, "Nesne imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir.";
+    /// Plan değişikliği taslağı (docs/adr/5040): no plan boundary of the id.
+    UNKNOWN_PLAN = "unknown_plan", Failed, false, "Çizimde bu kimlikte (PlanKimlik) plan sınırı yok; planın kimliğini plan sınırından alın.";
+    /// Plan değişikliği taslağı (docs/adr/5040): no draft of the id in the project.
+    UNKNOWN_DRAFT = "unknown_draft", Failed, false, "Projede bu kimlikte plan değişikliği taslağı yok.";
+    /// Sembolü karardan ver (docs/adr/5040): a kept choice that is no longer one of the level's area symbols.
+    KEPT_SYMBOL_IGNORED = "kept_symbol_ignored", Warning, false, "Projede saklanan bir sembol seçimi kademenin MPYY alan sembollerinden değil; kullanılmadı. Seçimi yeniden yapın.";
     /// Parsel kaydı (docs/adr/4220): a current parcel, or another the document makes, has the identity.
     PARCEL_IDENTITY_TAKEN = "parcel_identity_taken", Failed, false, "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı.";
     /// Belge taslağı (docs/adr/5020): no draft of the number in the parcel register.

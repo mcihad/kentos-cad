@@ -295,7 +295,7 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SourceBase>>"))]
     pub source_bases: Vec<crate::SourceBase>,
-    /// The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+    /// The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;
     /// absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -520,6 +520,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parcel_register: Option<crate::ParcelRegister>,
+    /// A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
+    /// (`.kcad` schema 242).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zoning_plan: Option<crate::ZoningPlanData>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names

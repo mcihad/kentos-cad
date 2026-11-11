@@ -2,7 +2,7 @@
 
 /**
  * A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from
- * (`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
+ * (`kentos`, `user` or, docs/adr/5040, `project`: the project's kept choice), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
  * `unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the
  * drawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).
  */

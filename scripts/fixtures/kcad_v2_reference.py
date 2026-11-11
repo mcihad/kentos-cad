@@ -373,6 +373,8 @@ def settings(s):
                 "mapSurvey": (opaque, False),
                 # Schema 216 (docs/adr/4220): the parcel register, as its JSON.
                 "parcelRegister": (opaque, False),
+                # Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, as their JSON.
+                "zoningPlan": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2801,6 +2803,9 @@ def document(d):
         if register.get("lengths") or register.get("drafts") or any("approval" in x for x in register["documents"]):
             # Its stated lengths, drafts, a document's approval (docs/adr/5020).
             schema = max(schema, 241)
+    if "zoningPlan" in d["settings"]:
+        # A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040).
+        schema = max(schema, 242)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3657,7 +3662,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-242.kcad"] = container(root(cmap(parts), version=uint(242)))
+    files["schema-version-243.kcad"] = container(root(cmap(parts), version=uint(243)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6235,6 +6240,32 @@ def build():
         broken_sessioned = copy.deepcopy(sessioned)
         change(broken_sessioned["settings"]["mapSurvey"])
         out[f"broken/map-survey-{name}.kcad"] = container(document(broken_sessioned))
+    # Schema 242 (docs/adr/5040): a zoning plan's kept symbol choice and a plan change draft (a use and a KAKS change);
+    # schema 241 refuses them, and a draft without a reason, a change to a field a draft does not change and the same
+    # use and level chosen twice are refused.
+    zoned = copy.deepcopy(minimal)
+    zoned["name"] = "İmar planı verisi"
+    zoned["settings"]["zoningPlan"] = {
+        "symbols": [{"level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani"}],
+        "drafts": [{"id": "T-1", "plan": "UİP-1", "revision": "12",
+                    "reason": "Parkın yerinin değişmesi (plan raporunun gerekçesi).",
+                    "changes": [{"area": "0192f5c0-5040-7000-8000-000000000005", "field": "Kullanim",
+                                 "before": "park", "after": "ticaret"},
+                                {"area": "0192f5c0-5040-7000-8000-000000000006", "field": "KAKS", "before": "",
+                                 "after": "1.50"}]}]}
+    out["zoning-plan.json"] = json_text(zoned).encode("utf-8")
+    zoned_data = document(zoned)
+    assert zoned_data.count(b"\x67version\x18\xf2") == 1, "a zoning plan's data is schema 242"
+    out["zoning-plan.kcad"] = container(zoned_data)
+    out["broken/zoning-plan-in-schema-241.kcad"] = container(
+        zoned_data.replace(b"\x67version\x18\xf2", b"\x67version\x18\xf1"))
+    for name, change in (
+            ("draft-no-reason", lambda z: z["drafts"][0].update({"reason": ""})),
+            ("draft-field-plan", lambda z: z["drafts"][0]["changes"][0].update({"field": "Plan"})),
+            ("symbol-twice", lambda z: z["symbols"].append(dict(z["symbols"][0])))):
+        broken_zoned = copy.deepcopy(zoned)
+        change(broken_zoned["settings"]["zoningPlan"])
+        out[f"broken/zoning-plan-{name}.kcad"] = container(document(broken_zoned))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

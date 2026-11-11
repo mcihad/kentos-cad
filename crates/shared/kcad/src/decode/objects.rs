@@ -429,6 +429,8 @@ pub(super) struct Features {
     pub(super) review_decisions: bool,
     /// Schema 216: the parcel register (docs/adr/4220).
     pub(super) parcel_register: bool,
+    /// Schema 242: a zoning plan's kept symbol choices and plan change drafts (docs/adr/5040).
+    pub(super) zoning_drafts: bool,
     /// Schema 208: a constraint naming a boundary edge, a map bond (docs/adr/2580).
     pub(super) boundary_bonds: bool,
     /// Schema 217 (docs/adr/8012): the project's plan cut height.
@@ -768,6 +770,7 @@ impl Features {
             surface_pastes: schema >= crate::SCHEMA_WITH_SURFACE_PASTES,
             review_decisions: schema >= crate::SCHEMA_WITH_REVIEW_DECISIONS,
             parcel_register: schema >= crate::SCHEMA_WITH_PARCEL_REGISTER,
+            zoning_drafts: schema >= crate::SCHEMA_WITH_ZONING_DRAFTS,
             boundary_bonds: schema >= crate::SCHEMA_WITH_BOUNDARY_BONDS,
             plan_cut: schema >= crate::SCHEMA_WITH_PLAN_CUT,
             line_groups: schema >= crate::SCHEMA_WITH_LINE_GROUPS,

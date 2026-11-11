@@ -436,6 +436,8 @@ pub enum Dialog {
     Zoning,
     /// Sembolü karardan ver (zoning_symbols_window.rs, docs/adr/4240); its state is `App::zoning_symbols`.
     ZoningSymbols,
+    /// Plan değişikliği taslağı (zoning_draft_window.rs, docs/adr/5040); its state is `App::zoning_draft`.
+    ZoningDraft,
     /// Senaryo ölçüleri (impact_window.rs, docs/adr/1440); its state is `App::impact`.
     Impact,
     /// Düzenleme dağıtım taslağı (readjustment_window.rs, docs/adr/1460); its state is `App::readjustment`.
@@ -892,6 +894,7 @@ pub enum Message {
     FeaturesReconcile(crate::features_reconcile_window::Event),
     Zoning(crate::zoning_window::Event),
     ZoningSymbols(crate::zoning_symbols_window::Event),
+    ZoningDraft(crate::zoning_draft_window::Event),
     Impact(crate::impact_window::Event),
     Readjustment(crate::readjustment_window::Event),
     Ortho(crate::ortho_window::Event),
@@ -1586,6 +1589,7 @@ pub struct App {
     pub(crate) features_reconcile: crate::features_reconcile_window::State,
     pub(crate) zoning: crate::zoning_window::State,
     pub(crate) zoning_symbols: crate::zoning_symbols_window::State,
+    pub(crate) zoning_draft: crate::zoning_draft_window::State,
     pub(crate) impact: crate::impact_window::State,
     pub(crate) readjustment: crate::readjustment_window::State,
     pub(crate) ortho: crate::ortho_window::State,
@@ -2071,6 +2075,7 @@ impl App {
             features_reconcile: Default::default(),
             zoning: Default::default(),
             zoning_symbols: Default::default(),
+            zoning_draft: Default::default(),
             impact: Default::default(),
             readjustment: Default::default(),
             ortho: Default::default(),
@@ -2909,6 +2914,7 @@ impl App {
             Message::FeaturesReconcile(event) => return self.features_reconcile_event(event),
             Message::Zoning(event) => return self.zoning_event(event),
             Message::ZoningSymbols(event) => return self.zoning_symbols_event(event),
+            Message::ZoningDraft(event) => return self.zoning_draft_event(event),
             Message::Impact(event) => return self.impact_event(event),
             Message::Readjustment(event) => return self.readjustment_event(event),
             Message::Ortho(event) => return self.ortho_event(event),

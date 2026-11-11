@@ -518,6 +518,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.review_notes.is_empty())
             + usize::from(s.parcel_register.is_some())
+            + usize::from(s.zoning_plan.is_some())
             + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.table_styles.is_empty())
             + usize::from(!s.standard_exceptions.is_empty())
@@ -810,6 +811,20 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 e.json(&serde_json::to_value(&s.wall_styles).unwrap_or_default())
+            })?;
+        }
+        // Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, as their JSON.
+        if let Some(data) = &s.zoning_plan {
+            self.key("zoningPlan");
+            self.at(Seg::Name("zoningPlan"), |e| {
+                if data.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş imar planı verisi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::zoning_plan_problem(data) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(data).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         if !s.connections.is_empty() {
@@ -2291,6 +2306,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 242 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts.
+    if doc.settings.zoning_plan.is_some() {
+        return crate::SCHEMA_WITH_ZONING_DRAFTS;
+    }
     // Schema 241 (docs/adr/5020): the parcel register's stated lengths, drafts or an approval.
     if doc.settings.parcel_register.as_ref().is_some_and(kentos_contracts::ParcelRegister::has_drafts) {
         return crate::SCHEMA_WITH_PARCEL_DRAFTS;

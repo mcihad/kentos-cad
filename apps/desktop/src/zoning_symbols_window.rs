@@ -4,6 +4,10 @@
 //! it holds and how many change. A use without a symbol is left open until the user chooses one for the row pressed,
 //! among the level's area symbols; KentOS does not guess. Sembolleri ver writes the symbols in one undo step; the
 //! decisions (the attributes) are never written.
+//!
+//! docs/adr/5040: the window opens with the project's kept choices; Seçimleri projede sakla (on) keeps the window's
+//! choices in the project in the same undo step, so the next run and the zoning check read them; Seçimi kaldır takes
+//! the pressed row's choice back to KentOS's table.
 
 use iced::{Element, Task};
 use kentos_commands::{
@@ -13,6 +17,7 @@ use kentos_commands::{
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, zoning_symbolize};
 use kentos_ui::widget::grow::Grows;
+use kentos_ui::widget::switch::Switch;
 use kentos_ui::widget::{Dialog as Frame, Form};
 
 use crate::app::{App, Dialog, Message};
@@ -27,11 +32,17 @@ pub const OPEN: &str = "Sembolleri karardan ver…";
 const CLOSE: &str = "Kapat";
 pub const WRITE: &str = "Sembolleri ver";
 pub const SYMBOL: &str = "Sembol";
+pub const KEEP: &str = "Seçimleri projede sakla";
+pub const UNPICK: &str = "Seçimi kaldır";
 
 #[derive(Clone, Debug, Default)]
 pub struct State {
-    /// The user's symbols, by level and use.
+    /// The user's symbols, by level and use; the project's kept ones when the window opens.
     pub picks: Vec<ZoningSymbolPick>,
+    /// The project's kept choices when the window opened.
+    pub kept: Vec<ZoningSymbolPick>,
+    /// Whether Sembolleri ver keeps the choices in the project.
+    pub keep: bool,
     /// The command's plan for every decision area.
     pub answer: Option<Result<ZoningSymbolized, String>>,
     /// The row pressed (a level and use).
@@ -44,6 +55,9 @@ pub enum Event {
     Choose(usize),
     /// The chosen row's symbol, by its library id.
     Pick(String),
+    /// The chosen row's choice taken back.
+    Unpick,
+    Keep(bool),
     Write,
     Close,
 }
@@ -100,16 +114,19 @@ fn symbol_name(t: &ZoningSymbols, level: &str, id: &str) -> String {
     t.level(level).and_then(|l| l.choices.iter().find(|c| c.id == id)).map_or_else(|| id.to_owned(), |c| c.name.clone())
 }
 
-/// The table's rows.
-pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols) -> Vec<Vec<String>> {
+/// The table's rows; a choice the project keeps as it is says Projede.
+pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols, kept: &[ZoningSymbolPick]) -> Vec<Vec<String>> {
     pairs(r)
         .into_iter()
         .map(|p| {
+            let held = kept.iter().any(|k| k.level == p.level && k.usage == p.usage && Some(&k.symbol) == p.symbol.as_ref());
             vec![
                 label("plan-seviye", &p.level),
                 label("plan-kullanim", &p.usage),
                 p.symbol.as_deref().map_or_else(|| "— seçilmedi".to_owned(), |s| symbol_name(t, &p.level, s)),
                 match p.from.as_deref() {
+                    Some("project") => "Projede".to_owned(),
+                    Some("user") if held => "Projede".to_owned(),
                     Some("user") => "Seçildi".to_owned(),
                     Some(_) => "KentOS".to_owned(),
                     None => "—".to_owned(),
@@ -122,8 +139,19 @@ pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols) -> Vec<Vec<String>> {
 }
 
 impl App {
+    fn zoning_symbols_input(&self) -> ZoningSymbolize {
+        let s = &self.zoning_symbols;
+        ZoningSymbolize { uids: None, symbols: s.picks.clone(), keep: s.keep, expected_revision: None }
+    }
+
+    /// Whether Sembolleri ver has something to write: a symbol, or a choice to keep.
+    fn zoning_symbols_ready(&self) -> bool {
+        let s = &self.zoning_symbols;
+        matches!(&s.answer, Some(Ok(r)) if r.set > 0) || (s.keep && s.picks != s.kept && matches!(s.answer, Some(Ok(_))))
+    }
+
     fn zoning_symbols_run(&mut self) {
-        let input = ZoningSymbolize { uids: None, symbols: self.zoning_symbols.picks.clone(), expected_revision: None };
+        let input = self.zoning_symbols_input();
         let Some(doc) = self.document.as_mut() else { return };
         self.zoning_symbols.answer = Some(match zoning_symbolize::plan(&ExecutionContext::new(&mut doc.model), &input) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -140,7 +168,8 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.zoning_symbols = State::default();
+        let kept = self.document.as_ref().map(|d| zoning_symbolize::kept(&d.model)).unwrap_or_default();
+        self.zoning_symbols = State { picks: kept.clone(), kept, keep: true, ..State::default() };
         self.zoning_symbols_run();
         self.dialog = Some(Dialog::ZoningSymbols);
         Task::none()
@@ -160,15 +189,30 @@ impl App {
                 picks.push(ZoningSymbolPick { level: p.level, usage: p.usage, symbol: id });
                 self.zoning_symbols_run();
             }
+            Event::Unpick => {
+                let Some(Ok(r)) = &self.zoning_symbols.answer else { return Task::none() };
+                let Some(p) = self.zoning_symbols.chosen.and_then(|i| pairs(r).into_iter().nth(i)) else {
+                    return Task::none();
+                };
+                self.zoning_symbols.picks.retain(|k| !(k.level == p.level && k.usage == p.usage));
+                self.zoning_symbols_run();
+            }
+            Event::Keep(on) => {
+                self.zoning_symbols.keep = on;
+                self.zoning_symbols_run();
+            }
             Event::Write => {
-                let input = ZoningSymbolize { uids: None, symbols: self.zoning_symbols.picks.clone(), expected_revision: None };
+                let input = self.zoning_symbols_input();
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match zoning_symbolize::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
+                        let kept = output.kept.as_ref().map_or_else(String::new, |k| {
+                            format!(" Projede {} sembol seçimi saklanıyor.", k.len())
+                        });
                         self.say(
                             Level::Success,
                             format!(
-                                "{TITLE}: {} karar alanının sembolü kararından verildi (tek adımda geri alınır); kararlar değişmedi.",
+                                "{TITLE}: {} karar alanının sembolü kararından verildi (tek adımda geri alınır); kararlar değişmedi.{kept}",
                                 output.set
                             ),
                         );
@@ -199,9 +243,10 @@ impl App {
         let mut table_rows = Vec::new();
         let mut ready = false;
         let mut picker: Option<Element<'_, Message>> = None;
+        let mut picked = false;
         match (&s.answer, &table) {
             (Some(Ok(r)), Some(t)) => {
-                ready = r.set > 0;
+                ready = self.zoning_symbols_ready();
                 let open = pairs(r).iter().filter(|p| p.symbol.is_none()).map(|p| p.areas).sum::<usize>();
                 lines.push(words::text_line(
                     if r.set > 0 { Kind::Ok } else { Kind::Info },
@@ -213,8 +258,15 @@ impl App {
                         r.skipped
                     ),
                 ));
-                table_rows = rows(r, t);
+                table_rows = rows(r, t, &s.kept);
+                if !s.kept.is_empty() {
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!("Projede {} sembol seçimi saklı; KentOS'un tablosundan önce okunur.", s.kept.len()),
+                    ));
+                }
                 if let Some(p) = s.chosen.and_then(|i| pairs(r).into_iter().nth(i)) {
+                    picked = s.picks.iter().any(|k| k.level == p.level && k.usage == p.usage);
                     picker = t.level(&p.level).map(|lv| {
                         let options: Vec<(String, String)> = lv.choices.iter().map(|c| (c.id.clone(), c.name.clone())).collect();
                         fields::select_owned(options, p.symbol.as_deref().unwrap_or(""), |id| msg(Event::Pick(id)))
@@ -244,7 +296,12 @@ impl App {
             Some(p) => form.field(SYMBOL, p).help("Kademenin MPYY alan sembolleri; seçim bu kademe ve kullanımın bütün alanlarına verilir."),
             None => form.field(SYMBOL, words::text_line(Kind::Info, "Tabloda bir satır seçin.")),
         };
-        let form = form.row(words::primary(WRITE, ready.then(|| msg(Event::Write))));
+        let form = form
+            .row(words::secondary(UNPICK, picked.then(|| msg(Event::Unpick))))
+            .section("Ver")
+            .field(KEEP, Switch::new(s.keep, |on| msg(Event::Keep(on))))
+            .help("Açıkken seçimler projede saklanır: sonraki çalıştırma ve imar denetimi onları okur.")
+            .row(words::primary(WRITE, ready.then(|| msg(Event::Write))));
         let body = Grows::new()
             .spacing(12.0)
             .width(iced::Fill)
@@ -261,9 +318,9 @@ impl App {
     pub(crate) fn zoning_symbols_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
-            Control::Press(WRITE) => {
-                matches!(&self.zoning_symbols.answer, Some(Ok(r)) if r.set > 0).then(|| msg(Event::Write))
-            }
+            Control::Press(WRITE) => self.zoning_symbols_ready().then(|| msg(Event::Write)),
+            Control::Press(UNPICK) => Some(msg(Event::Unpick)),
+            Control::Check(KEEP, on) => Some(msg(Event::Keep(on))),
             Control::Row(n) if n > 0 => Some(msg(Event::Choose(n - 1))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

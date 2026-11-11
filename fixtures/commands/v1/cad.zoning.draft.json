@@ -1,0 +1,3627 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.zoning.draft",
+ "commandVersion": 1,
+ "title": "Plan değişikliği taslağı",
+ "note": "ADR 5040. Bağımsız başvuru scripts/fixtures/zoning_draft_cases.py: Mekânsal Planlar Yapım Yönetmeliği m. 4, 9(4) ve 26'nın kuralları elle, alanlar dikdörtgenlerin shoelace alanı; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Plan değişikliği taslağı",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 512000.0,
+   "y": 4410000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "imar",
+    "name": "İmar planı",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "plan",
+      "name": "Plan sınırı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "karar",
+      "name": "Karar alanları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "plan",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "plan",
+    "attrs": {
+     "PlanKimlik": "UİP-1",
+     "Seviye": "uip",
+     "Durum": "yururlukte"
+    },
+    "pts": [
+     {
+      "x": 512000.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512120.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512120.0,
+      "y": 4410040.0
+     },
+     {
+      "x": 512000.0,
+      "y": 4410040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "plan",
+    "attrs": {
+     "PlanKimlik": "UİP-2",
+     "Seviye": "uip",
+     "Durum": "yururlukte"
+    },
+    "pts": [
+     {
+      "x": 512200.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512240.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512240.0,
+      "y": 4410040.0
+     },
+     {
+      "x": 512200.0,
+      "y": 4410040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "karar",
+    "attrs": {
+     "KararKimlik": "K1",
+     "Plan": "UİP-1",
+     "Kullanim": "park"
+    },
+    "pts": [
+     {
+      "x": 512000.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512020.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512020.0,
+      "y": 4410020.0
+     },
+     {
+      "x": 512000.0,
+      "y": 4410020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "karar",
+    "attrs": {
+     "KararKimlik": "K2",
+     "Plan": "UİP-1",
+     "Kullanim": "ticaret",
+     "Nizam": "A",
+     "TAKS": "0.40",
+     "KAKS": "1.50",
+     "KatAdedi": "4",
+     "Hmax": "12.50"
+    },
+    "pts": [
+     {
+      "x": 512020.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512050.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512050.0,
+      "y": 4410020.0
+     },
+     {
+      "x": 512020.0,
+      "y": 4410020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "karar",
+    "attrs": {
+     "KararKimlik": "K3",
+     "Plan": "UİP-1",
+     "Kullanim": "konut",
+     "TAKS": "0.30",
+     "KAKS": "1.20",
+     "KatAdedi": "3",
+     "Hmax": "9.50"
+    },
+    "pts": [
+     {
+      "x": 512050.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512070.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512070.0,
+      "y": 4410020.0
+     },
+     {
+      "x": 512050.0,
+      "y": 4410020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "karar",
+    "attrs": {
+     "KararKimlik": "K4",
+     "Plan": "UİP-1",
+     "Kullanim": "egitim"
+    },
+    "pts": [
+     {
+      "x": 512070.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512095.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512095.0,
+      "y": 4410020.0
+     },
+     {
+      "x": 512070.0,
+      "y": 4410020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "karar",
+    "attrs": {
+     "KararKimlik": "K5",
+     "Plan": "UİP-1"
+    },
+    "pts": [
+     {
+      "x": 512095.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512105.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512105.0,
+      "y": 4410020.0
+     },
+     {
+      "x": 512095.0,
+      "y": 4410020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "karar",
+    "attrs": {
+     "KararKimlik": "K6",
+     "Plan": "UİP-2",
+     "Kullanim": "park"
+    },
+    "pts": [
+     {
+      "x": 512200.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512220.0,
+      "y": 4410000.0
+     },
+     {
+      "x": 512220.0,
+      "y": 4410020.0
+     },
+     {
+      "x": 512200.0,
+      "y": 4410020.0
+     }
+    ]
+   }
+  ],
+  "uids": [
+   "0192f5c0-5040-7000-8000-000000000001",
+   "0192f5c0-5040-7000-8000-000000000002",
+   "0192f5c0-5040-7000-8000-000000000003",
+   "0192f5c0-5040-7000-8000-000000000004",
+   "0192f5c0-5040-7000-8000-000000000005",
+   "0192f5c0-5040-7000-8000-000000000006",
+   "0192f5c0-5040-7000-8000-000000000007",
+   "0192f5c0-5040-7000-8000-000000000008"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Park alanı ticarete dönüyor: alanlar önce ve sonra, m. 26(3) bulgusu; taslak projede, karar alanı değişmez; tek adımda geri alınır",
+   "note": "Yürürlükteki karar alanlarının öznitelikleri olduğu gibi kalır.",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000003",
+          "field": "Kullanim",
+          "before": "park",
+          "after": "ticaret"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 1000.0,
+         "difference": 400.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 0.0,
+         "difference": -400.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "infrastructureLess",
+         "use": "park",
+         "area": 400.0,
+         "message": "“Park” küçülüyor: Mekânsal Planlar Yapım Yönetmeliği m. 26(3) sosyal ve teknik altyapı alanının kaldırılmasını ya da küçültülmesini zorunluluğa, ilgili kurumun görüşüne ve hizmet etki alanında eşdeğer yeni alana bağlar; KentOS eşdeğerliği değerlendirmez."
+        }
+       ],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000003",
+            "field": "Kullanim",
+            "before": "park",
+            "after": "ticaret"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "3": {
+        "attrs": {
+         "KararKimlik": "K1",
+         "Plan": "UİP-1",
+         "Kullanim": "park"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": null
+      },
+      "fields": {
+       "3": {
+        "attrs": {
+         "KararKimlik": "K1",
+         "Plan": "UİP-1",
+         "Kullanim": "park"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yoğunluk ve yükseklik artışı: KAKS, kat adedi ve Hmax",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "KAKS",
+        "value": "2.00"
+       },
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "KatAdedi",
+        "value": "6"
+       },
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "Hmax",
+        "value": "18.50"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000004",
+          "field": "KAKS",
+          "before": "1.50",
+          "after": "2.00"
+         },
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000004",
+          "field": "KatAdedi",
+          "before": "4",
+          "after": "6"
+         },
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000004",
+          "field": "Hmax",
+          "before": "12.50",
+          "after": "18.50"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 600.0,
+         "difference": 0.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "densityUp",
+         "uid": "0192f5c0-5040-7000-8000-000000000004",
+         "message": "“K2” karar alanında yoğunluk artıyor (KAKS 1.50 → 2.00, kat adedi 4 → 6): Mekânsal Planlar Yapım Yönetmeliği m. 26(5)(a) artan nüfusun ihtiyacı olan sosyal ve teknik altyapı alanlarının standartlara uygun ayrılmasını ister."
+        },
+        {
+         "kind": "heightUp",
+         "uid": "0192f5c0-5040-7000-8000-000000000004",
+         "message": "“K2” karar alanında yükseklik artıyor (kat adedi 4 → 6, Hmax 12.50 → 18.50): Mekânsal Planlar Yapım Yönetmeliği m. 26(4) yörenin dokusunu ve siluetini, m. 26(5)(b) karşılıklı bina cepheleri arasında en az K = (Y1 + Y2)/2 + 7,00 m uzaklığı ister; KentOS bu uzaklığı ölçmez."
+        }
+       ],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000004",
+            "field": "KAKS",
+            "before": "1.50",
+            "after": "2.00"
+           },
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000004",
+            "field": "KatAdedi",
+            "before": "4",
+            "after": "6"
+           },
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000004",
+            "field": "Hmax",
+            "before": "12.50",
+            "after": "18.50"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "4": {
+        "attrs": {
+         "KararKimlik": "K2",
+         "Plan": "UİP-1",
+         "Kullanim": "ticaret",
+         "Nizam": "A",
+         "TAKS": "0.40",
+         "KAKS": "1.50",
+         "KatAdedi": "4",
+         "Hmax": "12.50"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": null
+      },
+      "fields": {
+       "4": {
+        "attrs": {
+         "KararKimlik": "K2",
+         "Plan": "UİP-1",
+         "Kullanim": "ticaret",
+         "Nizam": "A",
+         "TAKS": "0.40",
+         "KAKS": "1.50",
+         "KatAdedi": "4",
+         "Hmax": "12.50"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğitim alanı parka dönüyor: eğitim küçülür, eşdeğerlik değerlendirilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000006",
+        "field": "Kullanim",
+        "value": "park"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000006",
+          "field": "Kullanim",
+          "before": "egitim",
+          "after": "park"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 600.0,
+         "difference": 0.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 0.0,
+         "difference": -500.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 900.0,
+         "difference": 500.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "infrastructureLess",
+         "use": "egitim",
+         "area": 500.0,
+         "message": "“Eğitim tesisi alanı” küçülüyor: Mekânsal Planlar Yapım Yönetmeliği m. 26(3) sosyal ve teknik altyapı alanının kaldırılmasını ya da küçültülmesini zorunluluğa, ilgili kurumun görüşüne ve hizmet etki alanında eşdeğer yeni alana bağlar; KentOS eşdeğerliği değerlendirmez."
+        }
+       ],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000006",
+            "field": "Kullanim",
+            "before": "egitim",
+            "after": "park"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "6": {
+        "attrs": {
+         "KararKimlik": "K4",
+         "Plan": "UİP-1",
+         "Kullanim": "egitim"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": null
+      },
+      "fields": {
+       "6": {
+        "attrs": {
+         "KararKimlik": "K4",
+         "Plan": "UİP-1",
+         "Kullanim": "egitim"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Azalan yoğunluk ve nizam değişikliği bulgu vermez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000005",
+        "field": "KAKS",
+        "value": "1.00"
+       },
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "Nizam",
+        "value": "BL"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000005",
+          "field": "KAKS",
+          "before": "1.20",
+          "after": "1.00"
+         },
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000004",
+          "field": "Nizam",
+          "before": "A",
+          "after": "BL"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 600.0,
+         "difference": 0.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000005",
+            "field": "KAKS",
+            "before": "1.20",
+            "after": "1.00"
+           },
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000004",
+            "field": "Nizam",
+            "before": "A",
+            "after": "BL"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "4": {
+        "attrs": {
+         "KararKimlik": "K2",
+         "Plan": "UİP-1",
+         "Kullanim": "ticaret",
+         "Nizam": "A",
+         "TAKS": "0.40",
+         "KAKS": "1.50",
+         "KatAdedi": "4",
+         "Hmax": "12.50"
+        }
+       },
+       "5": {
+        "attrs": {
+         "KararKimlik": "K3",
+         "Plan": "UİP-1",
+         "Kullanim": "konut",
+         "TAKS": "0.30",
+         "KAKS": "1.20",
+         "KatAdedi": "3",
+         "Hmax": "9.50"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": null
+      },
+      "fields": {
+       "4": {
+        "attrs": {
+         "KararKimlik": "K2",
+         "Plan": "UİP-1",
+         "Kullanim": "ticaret",
+         "Nizam": "A",
+         "TAKS": "0.40",
+         "KAKS": "1.50",
+         "KatAdedi": "4",
+         "Hmax": "12.50"
+        }
+       },
+       "5": {
+        "attrs": {
+         "KararKimlik": "K3",
+         "Plan": "UİP-1",
+         "Kullanim": "konut",
+         "TAKS": "0.30",
+         "KAKS": "1.20",
+         "KatAdedi": "3",
+         "Hmax": "9.50"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kullanımı ve KAKS'ı olmayan alan: önceki değer boş, artış söylenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000007",
+        "field": "Kullanim",
+        "value": "konut"
+       },
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000007",
+        "field": "KAKS",
+        "value": "1.00"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000007",
+          "field": "Kullanim",
+          "before": "",
+          "after": "konut"
+         },
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000007",
+          "field": "KAKS",
+          "before": "",
+          "after": "1.00"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 600.0,
+         "difference": 200.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 600.0,
+         "difference": 0.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 0.0,
+         "difference": -200.0
+        }
+       ],
+       "findings": [],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000007",
+            "field": "Kullanim",
+            "before": "",
+            "after": "konut"
+           },
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000007",
+            "field": "KAKS",
+            "before": "",
+            "after": "1.00"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "7": {
+        "attrs": {
+         "KararKimlik": "K5",
+         "Plan": "UİP-1"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": null
+      },
+      "fields": {
+       "7": {
+        "attrs": {
+         "KararKimlik": "K5",
+         "Plan": "UİP-1"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Virgüllü sayı olduğu gibi saklanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000005",
+        "field": "Hmax",
+        "value": "12,50"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000005",
+          "field": "Hmax",
+          "before": "9.50",
+          "after": "12,50"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 600.0,
+         "difference": 0.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "heightUp",
+         "uid": "0192f5c0-5040-7000-8000-000000000005",
+         "message": "“K3” karar alanında yükseklik artıyor (Hmax 9.50 → 12,50): Mekânsal Planlar Yapım Yönetmeliği m. 26(4) yörenin dokusunu ve siluetini, m. 26(5)(b) karşılıklı bina cepheleri arasında en az K = (Y1 + Y2)/2 + 7,00 m uzaklığı ister; KentOS bu uzaklığı ölçmez."
+        }
+       ],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000005",
+            "field": "Hmax",
+            "before": "9.50",
+            "after": "12,50"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "5": {
+        "attrs": {
+         "KararKimlik": "K3",
+         "Plan": "UİP-1",
+         "Kullanim": "konut",
+         "TAKS": "0.30",
+         "KAKS": "1.20",
+         "KatAdedi": "3",
+         "Hmax": "9.50"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": null
+      },
+      "fields": {
+       "5": {
+        "attrs": {
+         "KararKimlik": "K3",
+         "Plan": "UİP-1",
+         "Kullanim": "konut",
+         "TAKS": "0.30",
+         "KAKS": "1.20",
+         "KatAdedi": "3",
+         "Hmax": "9.50"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı kimlikli taslak yenisiyle değişir; saklı sembol seçimi kalır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Plan değişikliği taslağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "zoningPlan": {
+      "symbols": [
+       {
+        "level": "uip",
+        "use": "konut",
+        "symbol": "mpyy.uip.konut.gelisme-konut-alani"
+       }
+      ],
+      "drafts": [
+       {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Eski gerekçe.",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000005",
+          "field": "KAKS",
+          "before": "1.20",
+          "after": "1.00"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 512000.0,
+     "y": 4410000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "plan",
+        "name": "Plan sınırı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "plan",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-1",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-2",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Plan": "UİP-1",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Plan": "UİP-1",
+       "Kullanim": "ticaret",
+       "Nizam": "A",
+       "TAKS": "0.40",
+       "KAKS": "1.50",
+       "KatAdedi": "4",
+       "Hmax": "12.50"
+      },
+      "pts": [
+       {
+        "x": 512020.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Plan": "UİP-1",
+       "Kullanim": "konut",
+       "TAKS": "0.30",
+       "KAKS": "1.20",
+       "KatAdedi": "3",
+       "Hmax": "9.50"
+      },
+      "pts": [
+       {
+        "x": 512050.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Plan": "UİP-1",
+       "Kullanim": "egitim"
+      },
+      "pts": [
+       {
+        "x": 512070.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Plan": "UİP-1"
+      },
+      "pts": [
+       {
+        "x": 512095.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512105.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512105.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Plan": "UİP-2",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512220.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512220.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410020.0
+       }
+      ]
+     }
+    ],
+    "uids": [
+     "0192f5c0-5040-7000-8000-000000000001",
+     "0192f5c0-5040-7000-8000-000000000002",
+     "0192f5c0-5040-7000-8000-000000000003",
+     "0192f5c0-5040-7000-8000-000000000004",
+     "0192f5c0-5040-7000-8000-000000000005",
+     "0192f5c0-5040-7000-8000-000000000006",
+     "0192f5c0-5040-7000-8000-000000000007",
+     "0192f5c0-5040-7000-8000-000000000008"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000003",
+          "field": "Kullanim",
+          "before": "park",
+          "after": "ticaret"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 1000.0,
+         "difference": 400.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 0.0,
+         "difference": -400.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "infrastructureLess",
+         "use": "park",
+         "area": 400.0,
+         "message": "“Park” küçülüyor: Mekânsal Planlar Yapım Yönetmeliği m. 26(3) sosyal ve teknik altyapı alanının kaldırılmasını ya da küçültülmesini zorunluluğa, ilgili kurumun görüşüne ve hizmet etki alanında eşdeğer yeni alana bağlar; KentOS eşdeğerliği değerlendirmez."
+        }
+       ],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "symbols": [
+         {
+          "level": "uip",
+          "use": "konut",
+          "symbol": "mpyy.uip.konut.gelisme-konut-alani"
+         }
+        ],
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000003",
+            "field": "Kullanim",
+            "before": "park",
+            "after": "ticaret"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "3": {
+        "attrs": {
+         "KararKimlik": "K1",
+         "Plan": "UİP-1",
+         "Kullanim": "park"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": {
+        "symbols": [
+         {
+          "level": "uip",
+          "use": "konut",
+          "symbol": "mpyy.uip.konut.gelisme-konut-alani"
+         }
+        ],
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Eski gerekçe.",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000005",
+            "field": "KAKS",
+            "before": "1.20",
+            "after": "1.00"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "3": {
+        "attrs": {
+         "KararKimlik": "K1",
+         "Plan": "UİP-1",
+         "Kullanim": "park"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka kimlikli taslak eklenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Plan değişikliği taslağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "zoningPlan": {
+      "drafts": [
+       {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Eski gerekçe.",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000005",
+          "field": "KAKS",
+          "before": "1.20",
+          "after": "1.00"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 512000.0,
+     "y": 4410000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "plan",
+        "name": "Plan sınırı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "plan",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-1",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-2",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Plan": "UİP-1",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Plan": "UİP-1",
+       "Kullanim": "ticaret",
+       "Nizam": "A",
+       "TAKS": "0.40",
+       "KAKS": "1.50",
+       "KatAdedi": "4",
+       "Hmax": "12.50"
+      },
+      "pts": [
+       {
+        "x": 512020.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Plan": "UİP-1",
+       "Kullanim": "konut",
+       "TAKS": "0.30",
+       "KAKS": "1.20",
+       "KatAdedi": "3",
+       "Hmax": "9.50"
+      },
+      "pts": [
+       {
+        "x": 512050.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Plan": "UİP-1",
+       "Kullanim": "egitim"
+      },
+      "pts": [
+       {
+        "x": 512070.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Plan": "UİP-1"
+      },
+      "pts": [
+       {
+        "x": 512095.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512105.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512105.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Plan": "UİP-2",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512220.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512220.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410020.0
+       }
+      ]
+     }
+    ],
+    "uids": [
+     "0192f5c0-5040-7000-8000-000000000001",
+     "0192f5c0-5040-7000-8000-000000000002",
+     "0192f5c0-5040-7000-8000-000000000003",
+     "0192f5c0-5040-7000-8000-000000000004",
+     "0192f5c0-5040-7000-8000-000000000005",
+     "0192f5c0-5040-7000-8000-000000000006",
+     "0192f5c0-5040-7000-8000-000000000007",
+     "0192f5c0-5040-7000-8000-000000000008"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-2",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-2",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000003",
+          "field": "Kullanim",
+          "before": "park",
+          "after": "ticaret"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 1000.0,
+         "difference": 400.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 0.0,
+         "difference": -400.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "infrastructureLess",
+         "use": "park",
+         "area": 400.0,
+         "message": "“Park” küçülüyor: Mekânsal Planlar Yapım Yönetmeliği m. 26(3) sosyal ve teknik altyapı alanının kaldırılmasını ya da küçültülmesini zorunluluğa, ilgili kurumun görüşüne ve hizmet etki alanında eşdeğer yeni alana bağlar; KentOS eşdeğerliği değerlendirmez."
+        }
+       ],
+       "drafts": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Eski gerekçe.",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000005",
+            "field": "KAKS",
+            "before": "1.20",
+            "after": "1.00"
+           }
+          ]
+         },
+         {
+          "id": "T-2",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000003",
+            "field": "Kullanim",
+            "before": "park",
+            "after": "ticaret"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "3": {
+        "attrs": {
+         "KararKimlik": "K1",
+         "Plan": "UİP-1",
+         "Kullanim": "park"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağı",
+     "expect": {
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Eski gerekçe.",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000005",
+            "field": "KAKS",
+            "before": "1.20",
+            "after": "1.00"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "fields": {
+       "3": {
+        "attrs": {
+         "KararKimlik": "K1",
+         "Plan": "UİP-1",
+         "Kullanim": "park"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "draft": {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000003",
+          "field": "Kullanim",
+          "before": "park",
+          "after": "ticaret"
+         }
+        ]
+       },
+       "level": "uip",
+       "uses": [
+        {
+         "use": "konut",
+         "before": 400.0,
+         "after": 400.0,
+         "difference": 0.0
+        },
+        {
+         "use": "ticaret",
+         "before": 600.0,
+         "after": 1000.0,
+         "difference": 400.0
+        },
+        {
+         "use": "egitim",
+         "before": 500.0,
+         "after": 500.0,
+         "difference": 0.0
+        },
+        {
+         "use": "park",
+         "before": 400.0,
+         "after": 0.0,
+         "difference": -400.0
+        },
+        {
+         "use": "",
+         "before": 200.0,
+         "after": 200.0,
+         "difference": 0.0
+        }
+       ],
+       "findings": [
+        {
+         "kind": "infrastructureLess",
+         "use": "park",
+         "area": 400.0,
+         "message": "“Park” küçülüyor: Mekânsal Planlar Yapım Yönetmeliği m. 26(3) sosyal ve teknik altyapı alanının kaldırılmasını ya da küçültülmesini zorunluluğa, ilgili kurumun görüşüne ve hizmet etki alanında eşdeğer yeni alana bağlar; KentOS eşdeğerliği değerlendirmez."
+        }
+       ],
+       "drafts": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taslağı sil: proje verisi boşalır; geri alma geri getirir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Plan değişikliği taslağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "zoningPlan": {
+      "drafts": [
+       {
+        "id": "T-1",
+        "plan": "UİP-1",
+        "revision": "0",
+        "reason": "Eski gerekçe.",
+        "changes": [
+         {
+          "area": "0192f5c0-5040-7000-8000-000000000005",
+          "field": "KAKS",
+          "before": "1.20",
+          "after": "1.00"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 512000.0,
+     "y": 4410000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "plan",
+        "name": "Plan sınırı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "plan",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-1",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-2",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Plan": "UİP-1",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Plan": "UİP-1",
+       "Kullanim": "ticaret",
+       "Nizam": "A",
+       "TAKS": "0.40",
+       "KAKS": "1.50",
+       "KatAdedi": "4",
+       "Hmax": "12.50"
+      },
+      "pts": [
+       {
+        "x": 512020.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512020.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K3",
+       "Plan": "UİP-1",
+       "Kullanim": "konut",
+       "TAKS": "0.30",
+       "KAKS": "1.20",
+       "KatAdedi": "3",
+       "Hmax": "9.50"
+      },
+      "pts": [
+       {
+        "x": 512050.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512050.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K4",
+       "Plan": "UİP-1",
+       "Kullanim": "egitim"
+      },
+      "pts": [
+       {
+        "x": 512070.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512070.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K5",
+       "Plan": "UİP-1"
+      },
+      "pts": [
+       {
+        "x": 512095.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512105.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512105.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512095.0,
+        "y": 4410020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K6",
+       "Plan": "UİP-2",
+       "Kullanim": "park"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512220.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512220.0,
+        "y": 4410020.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410020.0
+       }
+      ]
+     }
+    ],
+    "uids": [
+     "0192f5c0-5040-7000-8000-000000000001",
+     "0192f5c0-5040-7000-8000-000000000002",
+     "0192f5c0-5040-7000-8000-000000000003",
+     "0192f5c0-5040-7000-8000-000000000004",
+     "0192f5c0-5040-7000-8000-000000000005",
+     "0192f5c0-5040-7000-8000-000000000006",
+     "0192f5c0-5040-7000-8000-000000000007",
+     "0192f5c0-5040-7000-8000-000000000008"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "remove": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "level": "",
+       "uses": [],
+       "findings": [],
+       "drafts": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "zoningPlan": null
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Plan değişikliği taslağını sil",
+     "expect": {
+      "settings": {
+       "zoningPlan": {
+        "drafts": [
+         {
+          "id": "T-1",
+          "plan": "UİP-1",
+          "revision": "0",
+          "reason": "Eski gerekçe.",
+          "changes": [
+           {
+            "area": "0192f5c0-5040-7000-8000-000000000005",
+            "field": "KAKS",
+            "before": "1.20",
+            "after": "1.00"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürüm yazısı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ],
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ],
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Taslağın kimliği boşluksuz başlayıp biten 1–64 karakterdir (yazılan “”).",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimliğin sonunda boşluk",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1 ",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Taslağın kimliği boşluksuz başlayıp biten 1–64 karakterdir (yazılan “T-1 ”).",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan taslak silinemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-9",
+      "remove": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_draft",
+       "message": "“T-9” kimlikli plan değişikliği taslağı projede yok.",
+       "path": "id"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Karar katmanı yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Plan değişikliği taslağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 512000.0,
+     "y": 4410000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "plan",
+        "name": "Plan sınırı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "plan",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-1",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512000.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512120.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512000.0,
+        "y": 4410040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UİP-2",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 512200.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410000.0
+       },
+       {
+        "x": 512240.0,
+        "y": 4410040.0
+       },
+       {
+        "x": 512200.0,
+        "y": 4410040.0
+       }
+      ]
+     }
+    ],
+    "uids": [
+     "0192f5c0-5040-7000-8000-000000000001",
+     "0192f5c0-5040-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“İmar planı › Karar alanları” katmanı yok; imar-plani profilini uygulayın (cad.profiles.apply)."
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazılmamış",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": " ",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Değişecek planı yazın: plan sınırının PlanKimlik'i.",
+       "path": "plan"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan plan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-9",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_plan",
+       "message": "“UİP-9” kimlikli plan sınırı çizimde yok.",
+       "path": "plan"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gerekçesiz taslak (m. 9(4))",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "  ",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Değişikliğin gerekçesini yazın: Mekânsal Planlar Yapım Yönetmeliği m. 9(4) plan değişikliğinde gerekçeyi ve gereklilik analizlerini açıklayan plan raporunu ister.",
+       "path": "reason"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değişikliksiz taslak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Taslakta en az bir değişiklik olmalı: karar alanı, alanı ve yeni değeri.",
+       "path": "changes"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı alanın aynı alanı iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "ticaret"
+       },
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "konut"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f5c0-5040-7000-8000-000000000003” karar alanının Kullanim alanı iki kez değişiyor.",
+       "path": "changes[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "x",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+       "path": "changes[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000063",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-5040-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "changes[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan sınırı karar alanı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000001",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_decision",
+       "message": "“0192f5c0-5040-7000-8000-000000000001” imar planının karar katmanında bir alan değil; taslak karar alanlarını değiştirir.",
+       "path": "changes[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka planın karar alanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000008",
+        "field": "Kullanim",
+        "value": "ticaret"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f5c0-5040-7000-8000-000000000008” karar alanı “UİP-1” planının değil; taslak bir planın karar alanlarını değiştirir.",
+       "path": "changes[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taslağın değiştirmediği alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Plan",
+        "value": "UİP-2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Taslak “Plan” alanını değiştirmez; değiştirdikleri: Kullanim, Nizam, TAKS, KAKS, KatAdedi, Hmax, OnCekme, YanCekme, ArkaCekme.",
+       "path": "changes[0].field"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": " "
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kullanim için yeni değeri yazın; taslak bir değeri silmez.",
+       "path": "changes[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Listede olmayan kullanım",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000003",
+        "field": "Kullanim",
+        "value": "otel"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“otel” kullanım listesinde yok (plan-kullanim).",
+       "path": "changes[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Listede olmayan nizam",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "Nizam",
+        "value": "X"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“X” yapı nizamı listesinde yok (yapi-nizami).",
+       "path": "changes[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksi sayı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "KAKS",
+        "value": "-1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "KAKS için “-1” 0 ya da daha büyük bir sayı değil.",
+       "path": "changes[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sayı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "Hmax",
+        "value": "on iki"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hmax için “on iki” 0 ya da daha büyük bir sayı değil.",
+       "path": "changes[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değer zaten öyle (virgüllü yazılmış aynı sayı)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "id": "T-1",
+      "plan": "UİP-1",
+      "reason": "Okul alanının ihtiyaç analizine göre yeri değişiyor (plan raporu ekte).",
+      "changes": [
+       {
+        "uid": "0192f5c0-5040-7000-8000-000000000004",
+        "field": "KAKS",
+        "value": "1,5"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f5c0-5040-7000-8000-000000000004” karar alanının KAKS değeri zaten “1.50”; değişiklik yok.",
+       "path": "changes[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

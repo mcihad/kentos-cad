@@ -46,6 +46,7 @@ import type { Ucs } from "./Ucs";
 import type { ViewTemplate } from "./ViewTemplate";
 import type { WallStyleDef } from "./WallStyleDef";
 import type { Workspace } from "./Workspace";
+import type { ZoningPlanData } from "./ZoningPlanData";
 
 /**
  * Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
@@ -95,7 +96,7 @@ sources?: Array<SourceLink>,
  */
 sourceBases?: Array<SourceBase>, 
 /**
- * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+ * The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;
  * absent: 1.
  */
 lineTypeScale?: number, 
@@ -296,4 +297,9 @@ mapSurvey?: MapSurvey,
  * parcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;
  * absent: none (`.kcad` schema 216).
  */
-parcelRegister?: ParcelRegister, };
+parcelRegister?: ParcelRegister, 
+/**
+ * A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
+ * (`.kcad` schema 242).
+ */
+zoningPlan?: ZoningPlanData, };
