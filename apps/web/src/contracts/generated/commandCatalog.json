@@ -10274,7 +10274,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.recognize` v1: the plan's objects (a window selection over it); each layer's role (absent: from\nits name — duvar, perde, bölme, wall a wall's; kapı, door a door's; pencere, window, glaz a window's; kolon, column a\ncolumn's; tarama, ölçü, yazı, aks, mobilya and the others none; when no layer is a wall's, every layer not named is);\nthe walls' architectural information (their storey, Mevcut for a tadilat's existing building).\n\nThe walls go on `wallLayerId`, else their first line's layer; the doors and windows on `openingLayerId`, else the\nfirst layer of the door's or window's role, a bare opening its wall's. A door's type is Kapı 80 or 90 (by its\nwidth), İki kanatlı kapı 140 with two leaves; a window's Pencere 120; a bare opening's Boşluk 100; each as wide as\nread. The sources read whole are taken away unless kept; the others stay and are said.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked` (every source locked),\n`layer_not_found` (a role's layer), `not_finite`, `recognize_option` (a width not above zero, the thinnest not\nbelow the thickest, an opening not above zero, an angle outside 0–45°), `level_not_found` (`arch.level`),\n`plan_unrecognized` (no wall read), `invalid_wall`, `opening_off_wall`, the layers written to's `layer_not_found`,\n`not_a_layer`, `layer_locked`, then `invalid_revision`, `revision_conflict`. Warnings: `layer_locked` (sources\nskipped), `layer_hidden` (a layer written to), `plan_unrecognized` (objects not read, by why).",
+        "description": "Input of `cad.arch.recognize` v1: the plan's objects (a window selection over it); each layer's role (absent: from\nits name — duvar, perde, bölme, wall a wall's; kapı, door a door's; pencere, window, glaz a window's; kolon, column a\ncolumn's; tarama, ölçü, yazı, aks, mobilya and the others none; when no layer is a wall's, every layer not named is);\nthe walls' architectural information (their storey, Mevcut for a tadilat's existing building).\n\nThe walls go on `wallLayerId`, else their first line's layer; the doors and windows on `openingLayerId`, else the\nfirst layer of the door's or window's role, a bare opening its wall's. A door's type is Kapı 80 or 90 (by its\nwidth), İki kanatlı kapı 140 with two leaves; a window's Pencere 120; a bare opening's Boşluk 100; each as wide as\nread. A column layer's rectangle is a rectangular column (its centre, its sides, its turn: the side nearer east–west\nits width), its circle a round one, each filled and on its layer; a hatch inside one goes with it. The sources read\nwhole are taken away unless kept; the others stay and are said.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked` (every source locked),\n`layer_not_found` (a role's layer), `not_finite`, `recognize_option` (a width not above zero, the thinnest not\nbelow the thickest, an opening not above zero, an angle outside 0–45°), `level_not_found` (`arch.level`),\n`plan_unrecognized` (no wall read), `invalid_wall`, `opening_off_wall`, the layers written to's `layer_not_found`,\n`not_a_layer`, `layer_locked`, then `invalid_revision`, `revision_conflict`. Warnings: `layer_locked` (sources\nskipped), `layer_hidden` (a layer written to), `plan_unrecognized` (objects not read, by why).",
         "properties": {
           "angle": {
             "description": "Degrees two lines may be apart and be parallel. Absent: 1°.",
@@ -10370,13 +10370,20 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.arch.recognize` v1: the walls and openings written (in the order the plan reads them: walls by\ntheir first line, openings by wall and along it), how many doors, windows and bare openings, the sources taken\naway and those left.",
+        "description": "Output of `cad.arch.recognize` v1: the walls, openings and columns written (in the order the plan reads them: walls\nby their first line, openings by wall and along it, columns in their sources' order), how many doors, windows and\nbare openings, the sources taken away and those left.",
         "properties": {
           "bare": {
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "columns": {
+            "description": "The columns made of the column layers' rectangles and circles.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "doors": {
             "format": "uint32",
@@ -10433,6 +10440,12 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.arch.recognize` would write (plan mode): the walls and openings as they would be stored (their `id` 0,\nan opening's host its wall's provisional id), the sources that would go and those left.",
         "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
           "left": {
             "items": {
               "type": "string"

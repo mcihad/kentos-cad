@@ -15,7 +15,11 @@ window's lines, a column's outline — and says what `cad.arch.recognize` makes 
   Kapı 90; two arcs about both jambs İki kanatlı kapı 140), hinged at that jamb, opening to the arc's side, its swing
   the arc's when not 90°; a window's lines along it a window (Pencere 120); nothing in it a bare opening (Boşluk 100)
   when at least 0.3 m and at most `maxOpening`; each as wide as the gap, its middle the gap's;
-- the walls in the order of their first line, the openings by wall and along it; walls then openings take the new ids;
+- a column layer's closed outline of four right angles is a rectangular column about its middle (its width the side
+  nearer east–west, turned as that side), its circle a round one as wide as it, filled, on its layer; a hatch whose
+  middle lies in one goes with it; another outline stays;
+- the walls in the order of their first line, the openings by wall and along it, the columns in their sources' order;
+  walls, then openings, then columns take the new ids;
 - a source taken whole goes (unless `keepSources`), the others stay, said by why (ignored layers by name, columns,
   others); one undo step “Planı tanı”.
 
@@ -83,6 +87,16 @@ class Plan:
         h = size / 2
         return self.add("polyline", layer_id, pts=[P(c[0] - h, c[1] - h), P(c[0] + h, c[1] - h),
                                                    P(c[0] + h, c[1] + h), P(c[0] - h, c[1] + h)], closed=True)
+
+    def circle(self, c, r, layer_id="kolon"):
+        return self.add("circle", layer_id, c=P(*c), r=float(r))
+
+    def outline(self, pts, layer_id="kolon"):
+        return self.add("polyline", layer_id, pts=[P(*q) for q in pts], closed=True)
+
+    def solid(self, pts, layer_id="kolon"):
+        return self.add("hatch", layer_id, ring=[P(*q) for q in pts], pattern={"type": "solid", "angle": 0.0,
+                                                                             "spacing": 1.0})
 
     def text(self, p, words, layer_id="cizim"):
         return self.add("text", layer_id, p=P(*p), text=words, height=0.2, rotation=0.0)
@@ -158,6 +172,18 @@ def opening(id, host, ends, t0, t1, kind, width=0.2, layer_id="kapi", hand=None,
     return e
 
 
+def column(id, at, width, depth=None, rotation=0.0, shape=None, layer_id="kolon"):
+    e = {"kind": "column", "id": id, "layerId": layer_id, "attrs": {}, "at": P(*at), "width": float(width),
+         "fill": True}
+    if shape:
+        e["shape"] = shape
+    if depth is not None:
+        e["depth"] = float(depth)
+    if rotation:
+        e["rotation"] = round(rotation * 1e9) / 1e9
+    return e
+
+
 def unread(left, ignored=(), columns=0, other=0):
     """`plan_unrecognized`'s warning: how many objects stayed, by why."""
     parts = []
@@ -165,7 +191,7 @@ def unread(left, ignored=(), columns=0, other=0):
         names = sorted({LAYERS[k] for k in ignored}, key=lambda s: s.lower().replace("ç", "c"))
         parts.append(f"{len(ignored)} nesne yok sayılan katmanlarda ({', '.join(names)})")
     if columns:
-        parts.append(f"{columns} kolon çizgisi (kolon henüz kurulmuyor)")
+        parts.append(f"{columns} kolon nesnesi kolona çevrilemedi (dikdörtgen ya da daire değil)")
     if other:
         parts.append(f"{other} nesne duvara, kapıya ya da pencereye ait değil")
     return {"code": "plan_unrecognized", "message": f"{left} nesne tanınmadı ve çizimde kaldı: {'; '.join(parts)}.",
@@ -189,13 +215,16 @@ def done(plan, new, removed, left=(), warnings=(), keep=False, op="execute", cou
     first = len(plan.ents) + 1
     walls = [e for e in new if e["kind"] == "wall"]
     openings = [e for e in new if e["kind"] == "opening"]
-    for k, e in enumerate(walls + openings):
+    columns = [e for e in new if e["kind"] == "column"]
+    for k, e in enumerate(walls + openings + columns):
         assert e["id"] == first + k, (e["id"], first + k)
     forms = [e["form"] for e in openings]
     out = {"walls": [f"$uidOf:{e['id']}" for e in walls], "doors": forms.count("door"),
            "windows": forms.count("window"), "bare": forms.count("opening"), "revision": "$current"}
     if openings:
         out["openings"] = [f"$uidOf:{e['id']}" for e in openings]
+    if columns:
+        out["columns"] = [f"$uidOf:{e['id']}" for e in columns]
     if removed and not keep:
         out["removed"] = [f"$uid:e{i}" for i in removed]
     if left:
@@ -205,6 +234,8 @@ def done(plan, new, removed, left=(), warnings=(), keep=False, op="execute", cou
         planned = {"walls": [dict(e, id=0) for e in walls], "revision": "$current"}
         if openings:
             planned["openings"] = [dict(e, id=0, host="$any") for e in openings]
+        if columns:
+            planned["columns"] = [dict(e, id=0) for e in columns]
         if removed and not keep:
             planned["removed"] = out["removed"]
         if left:
@@ -213,8 +244,8 @@ def done(plan, new, removed, left=(), warnings=(), keep=False, op="execute", cou
                 "expect": {"ids": [e["id"] for e in plan.ents], "canUndo": False, "dirty": False,
                            "revision": "same"}, "within": 1e-9}
     return {"op": "execute", "result": {"status": "completed", "output": out, "warnings": list(warnings)},
-            "expect": {"ids": kept + [e["id"] for e in walls + openings],
-                       "entities": {str(e["id"]): e for e in walls + openings},
+            "expect": {"ids": kept + [e["id"] for e in walls + openings + columns],
+                       "entities": {str(e["id"]): e for e in walls + openings + columns},
                        "canUndo": True, "dirty": True, "revision": "changed"},
             "within": 1e-9}
 
@@ -349,12 +380,31 @@ def cases():
     p.along_y(0.1, 0.15, 2.9)
     p.along_y(4.1, 0.15, 3.1)
     p.along_y(3.9, 0.15, 2.9)
-    cols = [p.square(c, 0.3) for c in ((0, 0), (2, 0), (4, 0))]
+    for c in ((0, 0), (2, 0), (4, 0)):
+        p.square(c, 0.3)
     first = len(p.ents) + 1
     walls = [wall(first + k, ends) for k, ends in enumerate(ROOM)]
-    lines = [i for i in all_of(p) if i not in cols]
-    out.append(case("kolon: kolonda duran duvarlar kolondan geçer ve köşede buluşur; kolon çizgisi kalır ve söylenir",
-                    p, [done(p, walls, lines, cols, [unread(3, columns=3)])]))
+    cols = [column(first + 4 + k, c, 0.3) for k, c in enumerate(((0, 0), (2, 0), (4, 0)))]
+    out.append(case("kolon: kolonda duran duvarlar kolondan geçer ve köşede buluşur; kolon çevresi dolu kolon olur",
+                    p, [done(p, walls + cols, all_of(p))]))
+
+    # A round column, a turned one with its hatch, an L that is no column.
+    p = Plan()
+    p.room()
+    p.circle((2.0, 1.5), 0.2)
+    p.solid([(1.9, 1.4), (2.1, 1.4), (2.1, 1.6), (1.9, 1.6)])
+    turn = math.radians(30.0)
+    u, n = (math.cos(turn), math.sin(turn)), (-math.sin(turn), math.cos(turn))
+    corner = lambda a, b: (1.0 + u[0] * a + n[0] * b, 1.5 + u[1] * a + n[1] * b)  # noqa: E731
+    p.outline([corner(-0.25, -0.15), corner(0.25, -0.15), corner(0.25, 0.15), corner(-0.25, 0.15)])
+    ell = p.outline([(3.0, 1.0), (3.4, 1.0), (3.4, 1.15), (3.15, 1.15), (3.15, 1.6), (3.0, 1.6)])
+    first = len(p.ents) + 1
+    walls = [wall(first + k, ends) for k, ends in enumerate(ROOM)]
+    cols = [column(first + 4, (2.0, 1.5), 0.4, shape="round"),
+            column(first + 5, (1.0, 1.5), 0.5, depth=0.3, rotation=turn)]
+    out.append(case("yuvarlak, dönük ve L kolon: daire yuvarlak kolon, döndürülmüş dikdörtgen dönük kolon olur, "
+                    "taraması kolonla gider; L çevre kalır ve söylenir", p,
+                    [done(p, walls + cols, [i for i in all_of(p) if i != ell], [ell], [unread(1, columns=1)])]))
 
     # Components and neighbours.
     p = Plan()

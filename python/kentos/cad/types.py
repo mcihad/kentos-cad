@@ -16614,7 +16614,9 @@ class ArchRecognize(_Model):
     The walls go on `wallLayerId`, else their first line's layer; the doors and windows on `openingLayerId`, else the
     first layer of the door's or window's role, a bare opening its wall's. A door's type is Kapı 80 or 90 (by its
     width), İki kanatlı kapı 140 with two leaves; a window's Pencere 120; a bare opening's Boşluk 100; each as wide as
-    read. The sources read whole are taken away unless kept; the others stay and are said.
+    read. A column layer's rectangle is a rectangular column (its centre, its sides, its turn: the side nearer east–west
+    its width), its circle a round one, each filled and on its layer; a hatch inside one goes with it. The sources read
+    whole are taken away unless kept; the others stay and are said.
 
     Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked` (every source locked),
     `layer_not_found` (a role's layer), `not_finite`, `recognize_option` (a width not above zero, the thinnest not
@@ -16693,6 +16695,7 @@ class ArchRecognizePlan(_Model):
     """
     walls: list[Entity]
     revision: str
+    columns: list[Entity] | Unset = UNSET
     left: list[str] | Unset = UNSET
     openings: list[Entity] | Unset = UNSET
     removed: list[str] | Unset = UNSET
@@ -16701,6 +16704,8 @@ class ArchRecognizePlan(_Model):
         out: dict[str, Any] = {}
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["revision"] = self.revision
+        if self.columns is not UNSET:
+            out["columns"] = [e0.to_json() for e0 in self.columns]
         if self.left is not UNSET:
             out["left"] = list(self.left)
         if self.openings is not UNSET:
@@ -16714,6 +16719,7 @@ class ArchRecognizePlan(_Model):
         return cls(
             walls=[Entity.from_json(e0) for e0 in data["walls"]],
             revision=data["revision"],
+            columns=[Entity.from_json(e0) for e0 in data["columns"]] if "columns" in data else UNSET,
             left=list(data["left"]) if "left" in data else UNSET,
             openings=[Entity.from_json(e0) for e0 in data["openings"]] if "openings" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
@@ -16722,19 +16728,21 @@ class ArchRecognizePlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ArchRecognized(_Model):
-    """Output of `cad.arch.recognize` v1: the walls and openings written (in the order the plan reads them: walls by
-    their first line, openings by wall and along it), how many doors, windows and bare openings, the sources taken
-    away and those left.
+    """Output of `cad.arch.recognize` v1: the walls, openings and columns written (in the order the plan reads them: walls
+    by their first line, openings by wall and along it, columns in their sources' order), how many doors, windows and
+    bare openings, the sources taken away and those left.
     Attributes:
         doors: Unit: count.
         windows: Unit: count.
         bare: Unit: count.
+        columns: The columns made of the column layers' rectangles and circles.
     """
     walls: list[str]
     doors: int
     windows: int
     bare: int
     revision: str
+    columns: list[str] | Unset = UNSET
     left: list[str] | Unset = UNSET
     openings: list[str] | Unset = UNSET
     removed: list[str] | Unset = UNSET
@@ -16746,6 +16754,8 @@ class ArchRecognized(_Model):
         out["windows"] = self.windows
         out["bare"] = self.bare
         out["revision"] = self.revision
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
         if self.left is not UNSET:
             out["left"] = list(self.left)
         if self.openings is not UNSET:
@@ -16762,6 +16772,7 @@ class ArchRecognized(_Model):
             windows=data["windows"],
             bare=data["bare"],
             revision=data["revision"],
+            columns=list(data["columns"]) if "columns" in data else UNSET,
             left=list(data["left"]) if "left" in data else UNSET,
             openings=list(data["openings"]) if "openings" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,

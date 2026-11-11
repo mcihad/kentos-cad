@@ -1,9 +1,10 @@
 # ADR 8048: Planı tanı — patlatılmış DWG/DXF planından duvar ve açıklık
 
-- **Durum:** 1. ve 2. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
+- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
   (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2), masaüstü aracı Mimari ›
   Duvar ▾ › Planı tanı (§4); bölüm binasının ofis planı tanımla birebir okunuyor, gerçek pencerede kabul edildi
-  (Doğrulama). Açık: kolonun kendisi, duvar stilinin genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri
+  (Doğrulama); kolon katmanının dikdörtgeni ve dairesi kolon olur (§5). Açık: L ve düzensiz kolon, duvar stilinin
+  genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri
   duvar, duvar ucundaki kapı, bloklar (BLOCKIFY benzeri) ve gerçek bir ofis DWG'siyle tadilat örneği (§3).
 - **Bağlam belgesi:** ADR 0339 §5 (Çizgiden duvar, `cad.walls.convert`), ADR 0340 §2 (duvar birleşimleri), ADR 0341
   (açıklıklar), ADR 0772 (açıklık türleri), ADR 8039 (tadilat durumu), ADR 8046 (DWG/DXF katman profili), ADR 8047
@@ -60,7 +61,7 @@ Uzunluklar metre; ayarlar en ince duvar 0,05 m, en kalın 0,60 m, en geniş aç�
   çözer. Duvar kolondan geçer (bölüm binasında olduğu gibi).
 - **Alınan kaynak:** duvar çizgisi bir duvarın bandında (uçta en kalın duvarın yarısı kadar ötesiyle: köşenin dış
   yüzü), kapı ve pencere çizgisi ve yayı açıklığının bölgesinde (tek katmanda çizilmiş planda duvar katmanındaki kanat
-  da); kaynağın bütün parçaları alındıysa kaynak alınmıştır. Kolon bu bölümde kurulmaz.
+  da); kaynağın bütün parçaları alındıysa kaynak alınmıştır. Kolon §5'te.
 
 Çıktı: duvarlar (eksen, genişlik, ilk çizgisi) ilk çizgilerinin sırasıyla; açıklıklar duvarına ve duvar boyunca;
 sayılar nanometreye yuvarlanır (çizim milimetreye çizilir, toplamları daha incesini taşımaz).
@@ -99,6 +100,16 @@ kalır". Enter, Uygula ya da hızlı sağ tık yazar; yazılmayan rol (duvar kat
 yazmaz. Kat ve tadilat durumu Çizgiden duvar'daki gibi (`cx.phased`): mevcut binayı tanırken etkin durum Mevcut ise
 duvarlar Mevcut gelir. 24'ten çok katmanda kalanlar adlarının rolüyle okunur ve söylenir.
 
+### 5. Kolonlar
+
+Kolon katmanının kapalı çevresi (çoklu çizgi, alan) dört dik köşeliyse **dikdörtgen kolon** olur: ortası dört köşenin
+ortası, eni doğu–batıya yakın kenarı (±45°), boyu öbürü (eşitse yazılmaz), dönüşü o kenarın açısı; dairesi **yuvarlak
+kolon** (çapı kadar). Kolon dolgulu (betonarme kesit), katmanı kendi katmanı, `arch` verilmişse onu alır; malzemesi
+yazılmaz (Betonarme varsayılanı, ADR 8041 §2). Ortası bir kolonun içinde kalan kolon katmanı taraması kolonla gider.
+L ya da düzensiz çevre kolon olmaz, kalır ve söylenir ("1 kolon nesnesi kolona çevrilemedi (dikdörtgen ya da daire
+değil)"). Kolon, duvarın tanınmasında yine köprüdür (§1). Çıktıda `columns`, planda kolon nesneleri; araç önizlemede
+çevrelerini çizer ve sözüne "8 kolon" ekler. Sayılar nanometreye yuvarlanır (30° dönüş 0,523598776).
+
 ## Doğrulama
 
 - Çekirdek: 15 test (oda, kapı, dışa açılan kapı, iki kanat, pencere, boşluk ve pervazları, kalem kayması, geniş
@@ -110,11 +121,14 @@ duvarlar Mevcut gelir. 24'ten çok katmanda kalanlar adlarının rolüyle okunur
   4 pencere PENCERE'de (iki yüz, iki cam, dış denizlik), aks, merdiven basamakları (28 cm arayla), oda adları ve bir
   yatak. DXF içe aktar + Planı tanı: **8 duvar ve 7 açıklık tanımla mikrometresine kadar aynı** (eksenler,
   kalınlıklar, açıklıkların yeri, genişliği, türü, kapıların menteşesi ve yanı); 88 kaynak silindi, 39 kaldı ve
-  söylendi; tek geri alma adımı. Aynı çizimin IFC modelinde 8 duvar, 3 kapı, 4 pencere (Md. 9).
+  söylendi; tek geri alma adımı. Aynı çizimin IFC modelinde 8 duvar, 3 kapı, 4 pencere (Md. 9). Kolon adımından
+  sonra: 8 kolon tanımla aynı (ortaları, 30/30, dolgulu), IFC'de 8 kolon; 104 kaynak silinir, 23 kalır (yalnız yok
+  sayılan katmanlar).
 - İlk koşu bir hata buldu: duvar katmanı yok sayılınca "adı bir şey söylemeyen katman duvardır" kuralı MERDIVEN'i duvar
   saydı ve basamaklar 5 duvar oldu. Merdiven, aks, mobilya gibi adlar artık "yok sayılır" rolündedir; yalnız adı bir
   şey söylemeyen katman duvar sayılır.
-- 41 ortak durum `scripts/fixtures/arch_recognize_cases.py` (KentOS kodu olmadan) masaüstü işleyicisinde ve Python
+- 42 ortak durum (kolon adımıyla: yuvarlak, 30° dönük 0,50×0,30 ve taramalı kolon, kalan L çevre)
+  `scripts/fixtures/arch_recognize_cases.py` (KentOS kodu olmadan) masaüstü işleyicisinde ve Python
   SDK'da geçiyor.
 - Araç: 2 etkileşim testi (önizlemenin sözü, katman satırları ve rolleri, Enter'ın tek adımı ve geri alınması; Duvar
   rolü Yok say'a çekilince ret ve hiçbir şey yazılmaması).
@@ -131,8 +145,8 @@ duvarlar Mevcut gelir. 24'ten çok katmanda kalanlar adlarının rolüyle okunur
 
 ## 3. Açık kalanlar
 
-- Kolonun kendisi (kapalı çevre → Kolon; dikdörtgen ve daire), duvar stilinin ölçülen kalınlıktan seçilmesi (Chief
-  Architect'in 25 mm'si) ve bileşen çizgilerinden katmanlar.
+- L ve düzensiz kolon (ADR 0725 §3'ün L kolonu), duvar stilinin ölçülen kalınlıktan seçilmesi (Chief Architect'in
+  25 mm'si) ve bileşen çizgilerinden katmanlar.
 - Yüzleri kesilmeden çizilmiş pencere (pervaz çizgileri arasındaki cam çizgileri), eğri duvar (eş merkezli yaylar),
   duvar ucunda dikey duvara dayanan kapı, bloklar (patlatılmadan tanıma, BLOCKIFY), merdiven ve donatı.
 - Gerçek bir ofis DWG'siyle tadilat örneği (ADV-25'in ilk kabulü).

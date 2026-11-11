@@ -57,14 +57,16 @@ fn the_plan_s_layers_say_their_roles_and_enter_writes_what_the_preview_said() {
     }
     let said = b.session.prompt().text();
     assert!(
-        said.contains("8 duvar, 3 kapı, 4 pencere, 0 boşluk; 88 nesne silinir; 39 nesne kalır"),
+        said.contains(
+            "8 duvar, 3 kapı, 4 pencere, 0 boşluk, 8 kolon; 104 nesne silinir; 23 nesne kalır"
+        ),
         "{said}"
     );
     let preview = b.session.preview(&Default::default()).unwrap();
     assert!(!preview.areas.is_empty() && preview.strokes.len() > 7);
     let before = b.doc.len();
     b.confirm();
-    assert_eq!(b.doc.len(), before - 88 + 8 + 7);
+    assert_eq!(b.doc.len(), before - 104 + 8 + 7 + 8);
     let walls = b
         .doc
         .entities()
@@ -79,7 +81,7 @@ fn the_plan_s_layers_say_their_roles_and_enter_writes_what_the_preview_said() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Planı tanı: 8 duvar, 3 kapı, 4 pencere, 0 boşluk eklendi, 88 nesne silindi, 39 nesne çizimde kaldı."
+            "Planı tanı: 8 duvar, 3 kapı, 4 pencere, 0 boşluk, 8 kolon eklendi, 104 nesne silindi, 23 nesne çizimde kaldı."
         )
     );
     assert_eq!(b.doc.undo().as_deref(), Some("Planı tanı"));

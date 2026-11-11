@@ -146,6 +146,28 @@ fn definition() -> (Vec<Line>, Vec<Hole>) {
     (lines, holes)
 }
 
+/// The ground floor's columns: their middle to the micrometre, width, depth and fill.
+type Post = ([i64; 2], i64, Option<i64>, bool);
+
+fn columns_of(doc: &Document) -> Vec<Post> {
+    let mut out: Vec<Post> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Column(c) if c.column.arch.level.as_deref().is_none_or(|l| l == "zemin") => {
+                Some((
+                    [um(c.column.at.x), um(c.column.at.y)],
+                    um(c.column.width),
+                    c.column.depth.map(um),
+                    c.column.fill,
+                ))
+            }
+            _ => None,
+        })
+        .collect();
+    out.sort();
+    out
+}
+
 fn walls_of(doc: &Document) -> Vec<Line> {
     let mut lines: Vec<Line> = doc
         .entities()
@@ -182,11 +204,16 @@ fn the_office_s_ground_floor_reads_back_as_the_definition() {
     let (walls, openings) = definition();
     assert_eq!(walls_of(&doc), walls);
     assert_eq!(holes(&doc), openings);
-    // 56 wall lines, 3 doors' leaf, swing and two frames, 4 windows' five lines go; the grids, treads, names, the bed
-    // and the columns stay and are said.
+    // The 8 columns where the grids meet the outer walls, 30/30, filled.
+    assert_eq!(
+        columns_of(&doc),
+        columns_of(&Document::from_snapshot_v2(snapshot()).unwrap())
+    );
+    // 56 wall lines, 3 doors' leaf, swing and two frames, 4 windows' five lines, 8 columns' outline and hatch go; the
+    // grids, treads, names and the bed stay and are said.
     assert_eq!(
         out["removed"].as_array().unwrap().len(),
-        56 + 3 * 4 + 4 * 5,
+        56 + 3 * 4 + 4 * 5 + 8 * 2,
         "{out}"
     );
     let warning = answer["warnings"]
@@ -195,19 +222,10 @@ fn the_office_s_ground_floor_reads_back_as_the_definition() {
         .iter()
         .find(|w| w["code"] == "plan_unrecognized")
         .expect("what stays is said");
-    let words = warning["message"].as_str().unwrap();
-    assert!(
-        words.starts_with("39 nesne tanınmadı ve çizimde kaldı"),
-        "{words}"
-    );
     // DXF içe aktar takes AKS and MERDIVEN into the drawing's Aks and Merdiven.
-    assert!(
-        words.contains("23 nesne yok sayılan katmanlarda (Aks, Merdiven, MOBILYA, YAZI)"),
-        "{words}"
-    );
-    assert!(
-        words.contains("16 kolon çizgisi (kolon henüz kurulmuyor)"),
-        "{words}"
+    assert_eq!(
+        warning["message"],
+        "23 nesne tanınmadı ve çizimde kaldı: 23 nesne yok sayılan katmanlarda (Aks, Merdiven, MOBILYA, YAZI)."
     );
     // Every wall on the storey given.
     assert!(doc.entities().all(|e| match e {
@@ -217,7 +235,7 @@ fn the_office_s_ground_floor_reads_back_as_the_definition() {
     // One undo step.
     assert_eq!(doc.undo().as_deref(), Some("Planı tanı"));
     assert!(walls_of(&doc).is_empty());
-    assert_eq!(doc.entities().count(), 39 + 88);
+    assert_eq!(doc.entities().count(), 23 + 104);
 }
 
 #[test]
@@ -240,8 +258,13 @@ fn its_ifc_model_holds_as_many_walls_doors_and_windows_as_the_definition() {
     assert_eq!(model["status"], "completed", "{model}");
     let out = &model["output"];
     assert_eq!(
-        (&out["walls"], &out["doors"], &out["windows"]),
-        (&json!(8), &json!(3), &json!(4)),
+        (
+            &out["walls"],
+            &out["doors"],
+            &out["windows"],
+            &out["columns"]
+        ),
+        (&json!(8), &json!(3), &json!(4), &json!(8)),
         "{out}"
     );
 }
@@ -262,7 +285,7 @@ fn sources_kept_stay_and_a_plan_without_its_walls_layer_is_refused() {
             .as_array()
             .is_none_or(Vec::is_empty)
     );
-    assert_eq!(doc.entities().count(), before + 8 + 7);
+    assert_eq!(doc.entities().count(), before + 8 + 7 + 8);
 
     let (mut doc, uids) = imported();
     let duvar = doc

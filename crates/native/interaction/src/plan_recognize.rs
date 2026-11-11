@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 
 use kentos_commands::{ArchRecognize, CommandResult, Entity, OpeningForm, PlanLayerRole, PlanRole};
 use kentos_geometry_core::geom::affine::Affine;
+use kentos_geometry_core::jsmath::{cos, sin};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, arch_recognize};
 
@@ -58,6 +59,7 @@ struct Plan {
     doors: usize,
     windows: usize,
     bare: usize,
+    columns: usize,
     removed: usize,
     left: usize,
     refused: Option<String>,
@@ -131,6 +133,7 @@ impl PlanRecognize {
         match arch_recognize::plan_in(cx.doc, &self.request(cx)) {
             CommandResult::Completed { output, .. } => {
                 plan.walls = output.walls.len();
+                plan.columns = output.columns.len();
                 plan.removed = output.removed.len();
                 plan.left = output.left.len();
                 for e in output.walls.iter().take(crate::modify::MAX_GHOSTS) {
@@ -154,6 +157,34 @@ impl PlanRecognize {
                             .push(Stroke::solid(pts, true).width(2.0).tone(Tone::Snap));
                     }
                 }
+                // Each column's outline: a rectangle turned as it is, a round one in 24 sides.
+                for e in &output.columns {
+                    let Entity::Column(c) = e else { continue };
+                    let c = &c.column;
+                    let pts: Vec<Vec2> = if c.shape == kentos_commands::ColumnShape::Round {
+                        (0..24)
+                            .map(|k| {
+                                let t = f64::from(k) * std::f64::consts::PI / 12.0;
+                                Vec2::new(
+                                    c.at.x + c.width / 2.0 * cos(t),
+                                    c.at.y + c.width / 2.0 * sin(t),
+                                )
+                            })
+                            .collect()
+                    } else {
+                        let (w, d) = (c.width / 2.0, c.depth.unwrap_or(c.width) / 2.0);
+                        let (cs, sn) = (cos(c.rotation), sin(c.rotation));
+                        [(-w, -d), (w, -d), (w, d), (-w, d)]
+                            .into_iter()
+                            .map(|(a, b)| {
+                                Vec2::new(c.at.x + a * cs - b * sn, c.at.y + a * sn + b * cs)
+                            })
+                            .collect()
+                    };
+                    plan.drawn
+                        .strokes
+                        .push(Stroke::solid(pts, true).width(2.0).tone(Tone::Snap));
+                }
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -172,6 +203,9 @@ impl PlanRecognize {
             "{} duvar, {} kapı, {} pencere, {} boşluk",
             p.walls, p.doors, p.windows, p.bare
         );
+        if p.columns > 0 {
+            out.push_str(&format!(", {} kolon", p.columns));
+        }
         if p.removed > 0 {
             out.push_str(&format!("; {} nesne silinir", p.removed));
         }
@@ -380,12 +414,16 @@ impl Stages for PlanRecognize {
         match points::written(result, cx) {
             Some(done) => {
                 let mut said = format!(
-                    "{LABEL}: {} duvar, {} kapı, {} pencere, {} boşluk eklendi",
+                    "{LABEL}: {} duvar, {} kapı, {} pencere, {} boşluk",
                     done.walls.len(),
                     done.doors,
                     done.windows,
                     done.bare
                 );
+                if !done.columns.is_empty() {
+                    said.push_str(&format!(", {} kolon", done.columns.len()));
+                }
+                said.push_str(" eklendi");
                 if !done.removed.is_empty() {
                     said.push_str(&format!(", {} nesne silindi", done.removed.len()));
                 }

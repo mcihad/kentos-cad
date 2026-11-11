@@ -8,18 +8,20 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::{
-    ArchRecognize, ArchRecognizePlan, ArchRecognized, CommandResult, CommandWarning, Entity,
-    EntityBase, NewOpening, NewWall, OpeningForm, OpeningHand, OpeningSide, OpeningTypeDef,
-    PlanLayerRole, PlanRole, Vec2, WallEntity, WallJustify, WallStyleDef, opening_type,
+    ArchInfo, ArchRecognize, ArchRecognizePlan, ArchRecognized, ColumnEntity, ColumnFields,
+    ColumnShape, CommandResult, CommandWarning, Entity, EntityBase, NewOpening, NewWall,
+    OpeningForm, OpeningHand, OpeningSide, OpeningTypeDef, PlanLayerRole, PlanRole, Vec2,
+    WallEntity, WallJustify, WallStyleDef, opening_type,
 };
 use kentos_domain::{Document, Slot, Uuid, opening_follow};
 use kentos_geometry_core::Vec2 as V;
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::bulge::bulge_arc;
-use kentos_geometry_core::jsmath::{PI, cos, sin};
+use kentos_geometry_core::jsmath::{PI, atan2, cos, js_hypot, js_round, sin};
 use kentos_geometry_core::ops::plan_recognition::{self as read, Role};
 
 use crate::ExecutionContext;
+use crate::arch_elements;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::openings;
@@ -117,11 +119,12 @@ enum Unread {
     Other,
 }
 
-/// What the call writes: the walls and openings with their layers, the sources taken away and those left, why each
-/// left one was, KentOS's styles taken, the warnings.
+/// What the call writes: the walls, openings and columns with their layers, the sources taken away and those left, why
+/// each left one was, KentOS's styles taken, the warnings.
 struct Work {
     walls: Vec<(Uuid, Entity)>,
     openings: Vec<(Uuid, Entity)>,
+    columns: Vec<(Uuid, Entity)>,
     counts: [u32; 3],
     removed: Vec<String>,
     left: Vec<String>,
@@ -276,6 +279,118 @@ fn lines_of(e: &Entity, role: Role, source: usize, lines: &mut read::Lines) -> b
     true
 }
 
+/// A number to the nanometre, as the plan's reading gives its walls'.
+fn clean(x: f64) -> f64 {
+    let r = js_round(x * 1e9) / 1e9;
+    if r == 0.0 { 0.0 } else { r }
+}
+
+/// The column a column layer's object is (docs/adr/8048 §2): a circle a round one as wide as it; a closed outline of
+/// four right angles a rectangular one about its middle, its width the side nearer east–west, turned as that side.
+/// Another outline is none.
+fn column_of(e: &Entity, arch: &ArchInfo) -> Option<ColumnFields> {
+    let made =
+        |at: V, shape: ColumnShape, width: f64, depth: Option<f64>, rotation: f64| ColumnFields {
+            at: Vec2 {
+                x: clean(at.x),
+                y: clean(at.y),
+            },
+            shape,
+            width: clean(width),
+            depth: depth.map(clean),
+            legs: None,
+            rotation: clean(rotation),
+            anchor: Default::default(),
+            kind: None,
+            tag: None,
+            fill: true,
+            material: None,
+            grids: None,
+            place: None,
+            broken: None,
+            arch: arch.clone(),
+        };
+    let pts: Vec<V> = match e {
+        Entity::Circle(c) => {
+            return Some(made(v(c.c), ColumnShape::Round, 2.0 * c.r, None, 0.0));
+        }
+        Entity::Polyline(p)
+            if p.parts.is_none()
+                && p.closed
+                && p.bulges
+                    .as_ref()
+                    .is_none_or(|b| b.iter().all(|x| *x == 0.0)) =>
+        {
+            p.pts.iter().map(|q| v(*q)).collect()
+        }
+        Entity::Polygon(p)
+            if p.parts.is_none()
+                && p.bulges
+                    .as_ref()
+                    .is_none_or(|b| b.iter().all(|x| *x == 0.0)) =>
+        {
+            p.pts.iter().map(|q| v(*q)).collect()
+        }
+        _ => return None,
+    };
+    // Its corners: a point where the outline turns, a repeated or a straight one left out.
+    let n = pts.len();
+    let corners: Vec<V> = (0..n)
+        .filter(|&i| {
+            let (a, b, c) = (pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n]);
+            let (u, w) = ((b.x - a.x, b.y - a.y), (c.x - b.x, c.y - b.y));
+            let turn = u.0 * w.1 - u.1 * w.0;
+            js_hypot(w.0, w.1) > 1e-9 && turn.abs() > 1e-9 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
+        })
+        .map(|i| pts[i])
+        .collect();
+    let [a, b, c, d] = corners[..] else {
+        return None;
+    };
+    let side = |p: V, q: V| (q.x - p.x, q.y - p.y);
+    let square = |u: (f64, f64), w: (f64, f64)| {
+        (u.0 * w.0 + u.1 * w.1).abs() <= 1e-6 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
+    };
+    let sides = [side(a, b), side(b, c), side(c, d), side(d, a)];
+    if !(0..4).all(|i| square(sides[i], sides[(i + 1) % 4])) {
+        return None;
+    }
+    // A side's turn within a half turn either way of east.
+    let turn = |s: (f64, f64)| {
+        let mut t = atan2(s.1, s.0);
+        if t > PI / 2.0 {
+            t -= PI;
+        } else if t <= -PI / 2.0 {
+            t += PI;
+        }
+        t
+    };
+    let (t0, t1) = (turn(sides[0]), turn(sides[1]));
+    let (l0, l1) = (
+        js_hypot(sides[0].0, sides[0].1),
+        js_hypot(sides[1].0, sides[1].1),
+    );
+    let (width, depth, rotation) = if t1.abs() < t0.abs() {
+        (l1, l0, t1)
+    } else {
+        (l0, l1, t0)
+    };
+    let middle = V::new((a.x + b.x + c.x + d.x) / 4.0, (a.y + b.y + c.y + d.y) / 4.0);
+    let depth = ((depth - width).abs() > 1e-9).then_some(depth);
+    Some(made(middle, ColumnShape::Rect, width, depth, rotation))
+}
+
+/// Whether `p` lies in `c`'s outline, within `tol`.
+fn in_column(c: &ColumnFields, p: V, tol: f64) -> bool {
+    let (dx, dy) = (p.x - c.at.x, p.y - c.at.y);
+    if c.shape == ColumnShape::Round {
+        return js_hypot(dx, dy) <= c.width / 2.0 + tol;
+    }
+    let (cos_r, sin_r) = (cos(c.rotation), sin(c.rotation));
+    let (along, across) = (dx * cos_r + dy * sin_r, -dx * sin_r + dy * cos_r);
+    along.abs() <= c.width / 2.0 + tol && across.abs() <= c.depth.unwrap_or(c.width) / 2.0 + tol
+}
+
 /// The KentOS type an opening read is made with: a door as wide as Kapı 80 or 90 (the nearer), İki kanatlı kapı 140
 /// with two leaves; a window Pencere 120; a bare opening Boşluk 100.
 fn type_of(o: &read::Opening) -> OpeningTypeDef {
@@ -371,6 +486,9 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
     // The plan's lines; why each object not given is.
     let mut lines = read::Lines::default();
     let mut unread: BTreeMap<usize, Unread> = BTreeMap::new();
+    // The columns made of the column layers' objects, and those layers' hatches by their middle.
+    let mut made_columns: Vec<(usize, ColumnFields)> = Vec::new();
+    let mut fills: Vec<(usize, V)> = Vec::new();
     for (k, (_, _, e, _)) in found.iter().enumerate() {
         let role = match roles
             .get(&e.base().layer_id)
@@ -387,9 +505,21 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
             }
         };
         let given = lines_of(e, role, k, &mut lines);
-        // A column's object stays whatever it is (its hatch too): columns are not made yet.
         if role == Role::Column {
-            unread.insert(k, Unread::Column);
+            match (e, column_of(e, &input.arch.clone().unwrap_or_default())) {
+                (_, Some(c)) => made_columns.push((k, c)),
+                // A column's hatch goes with the column it fills.
+                (Entity::Hatch(h), None) if !h.ring.is_empty() => {
+                    let n = h.ring.len() as f64;
+                    let x = h.ring.iter().map(|p| p.x).sum::<f64>() / n;
+                    let y = h.ring.iter().map(|p| p.y).sum::<f64>() / n;
+                    fills.push((k, V::new(x, y)));
+                    unread.insert(k, Unread::Column);
+                }
+                _ => {
+                    unread.insert(k, Unread::Column);
+                }
+            }
         } else if !given {
             let why = if matches!(e, Entity::Insert(_)) {
                 Unread::Block
@@ -430,6 +560,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
     let mut work = Work {
         walls: Vec::new(),
         openings: Vec::new(),
+        columns: Vec::new(),
         counts: [0; 3],
         removed: Vec::new(),
         left: Vec::new(),
@@ -517,8 +648,28 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
         work.openings
             .push((Uuid::now_v7(), openings::entity(base(&layer), fields)));
     }
+    // The columns, on their objects' layers; a hatch inside one goes with it.
+    let mut used: BTreeSet<usize> = read.used.iter().copied().collect();
+    for (k, c) in &made_columns {
+        arch_elements::column_valid(c, &format!("uids[{}]", found[*k].0))?;
+        used.insert(*k);
+        work.columns.push((
+            Uuid::now_v7(),
+            Entity::Column(ColumnEntity {
+                base: base(&found[*k].2.base().layer_id),
+                column: c.clone(),
+            }),
+        ));
+    }
+    for (k, middle) in &fills {
+        if made_columns
+            .iter()
+            .any(|(_, c)| in_column(c, *middle, o.tol))
+        {
+            used.insert(*k);
+        }
+    }
     // The sources: those read whole go unless kept; the others stay, each with why.
-    let used: BTreeSet<usize> = read.used.iter().copied().collect();
     for (k, (_, _, _, uid)) in found.iter().enumerate() {
         if used.contains(&k) {
             if !input.keep_sources {
@@ -555,7 +706,9 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
                     ignored_names.join(", ")
                 ),
                 Unread::Block => format!("{n} blok (önce patlatın)"),
-                Unread::Column => format!("{n} kolon çizgisi (kolon henüz kurulmuyor)"),
+                Unread::Column => {
+                    format!("{n} kolon nesnesi kolona çevrilemedi (dikdörtgen ya da daire değil)")
+                }
                 Unread::Other => format!("{n} nesne duvara, kapıya ya da pencereye ait değil"),
             })
             .collect();
@@ -571,7 +724,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
     }
     // The layers written to, each once.
     let mut seen = BTreeSet::new();
-    for (_, e) in work.walls.iter().chain(&work.openings) {
+    for (_, e) in work.walls.iter().chain(&work.openings).chain(&work.columns) {
         let id = &e.base().layer_id;
         if seen.insert(id.clone()) {
             let path = if input.wall_layer_id.as_ref() == Some(id) {
@@ -612,6 +765,7 @@ pub fn plan_in(doc: &Document, input: &ArchRecognize) -> CommandResult<ArchRecog
             output: ArchRecognizePlan {
                 walls: work.walls.into_iter().map(|(_, e)| e).collect(),
                 openings: work.openings.into_iter().map(|(_, e)| e).collect(),
+                columns: work.columns.into_iter().map(|(_, e)| e).collect(),
                 removed: work.removed,
                 left: work.left,
                 revision: doc.revision().to_string(),
@@ -647,7 +801,13 @@ fn write_execute(
     walls::take_styles(doc, &work.added);
     let wall_ids: Vec<String> = work.walls.iter().map(|(u, _)| u.to_string()).collect();
     let opening_ids: Vec<String> = work.openings.iter().map(|(u, _)| u.to_string()).collect();
-    let all: Vec<(Uuid, Entity)> = work.walls.into_iter().chain(work.openings).collect();
+    let column_ids: Vec<String> = work.columns.iter().map(|(u, _)| u.to_string()).collect();
+    let all: Vec<(Uuid, Entity)> = work
+        .walls
+        .into_iter()
+        .chain(work.openings)
+        .chain(work.columns)
+        .collect();
     if let Err(refused) = doc.add_many_with_uids(all, STEP) {
         return Stop::failed(error(codes::SLOTS_EXHAUSTED, refused.0, None)).into();
     }
@@ -665,6 +825,7 @@ fn write_execute(
         output: ArchRecognized {
             walls: wall_ids,
             openings: opening_ids,
+            columns: column_ids,
             doors: work.counts[0],
             windows: work.counts[1],
             bare: work.counts[2],

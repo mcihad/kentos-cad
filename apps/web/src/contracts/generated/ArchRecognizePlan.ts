@@ -5,4 +5,4 @@ import type { Entity } from "./Entity";
  * What `cad.arch.recognize` would write (plan mode): the walls and openings as they would be stored (their `id` 0,
  * an opening's host its wall's provisional id), the sources that would go and those left.
  */
-export type ArchRecognizePlan = { walls: Array<Entity>, openings?: Array<Entity>, removed?: Array<string>, left?: Array<string>, revision: string, };
+export type ArchRecognizePlan = { walls: Array<Entity>, openings?: Array<Entity>, columns?: Array<Entity>, removed?: Array<string>, left?: Array<string>, revision: string, };

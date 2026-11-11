@@ -475,6 +475,8 @@
     tanımla birebir okunur; 41 ortak durum (`arch_recognize_cases.py`). 2. bölüm (ADR 8048 §4): Mimari › Duvar ▾ ›
     Planı tanı (`tool.planRecognize`): seçim önce; Araç ayarlarında seçimin her katmanı rolüyle bir satır
     (`arch_recognize::layer_roles`, komutla aynı); önizleme komutun planı; Kat (L), Kaynak çizgiler (K).
+    Kolonlar (ADR 8048 §5): kolon katmanının dört dik köşeli çevresi dikdörtgen kolon (eni doğu–batıya yakın kenar,
+    dönüşüyle), dairesi yuvarlak kolon; dolgulu; içindeki tarama kolonla gider; L çevre kalır ve söylenir.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
