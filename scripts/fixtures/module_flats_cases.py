@@ -584,7 +584,7 @@ def add_cases():
               "revision": "$current"}))]))
     out.append(case("Ret: çizgi modüle eklenmez", [DEFINE(), run(
         {"kind": "addMembers", "module": "Daire", "instance": "daire-1", "uids": [UID(18)]},
-        refusal("module_kind", "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.",
+        refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
                 "operation.uids[0]"))]))
     out.append(case("Ret: olmayan örnek", [DEFINE(), run(
         {"kind": "addMembers", "module": "Daire", "instance": "daire-9", "uids": [UID(14)]},

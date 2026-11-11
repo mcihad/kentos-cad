@@ -1336,7 +1336,7 @@
             "status": "failed",
             "error": {
               "code": "module_kind",
-              "message": "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.",
+              "message": "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
               "path": "operation.uids[1]"
             }
           }
@@ -1344,7 +1344,7 @@
       ]
     },
     {
-      "name": "Ret: eğrisel duvar ilk kapsamda yok",
+      "name": "Eğrisel duvar modül olur",
       "steps": [
         {
           "op": "execute",
@@ -1362,12 +1362,9 @@
             }
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "module_kind",
-              "message": "Eğrisel duvar ilk modül kapsamında değil; düz duvarlı bir oda seçin.",
-              "path": "operation.uids[0]"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
           }
         }
       ]

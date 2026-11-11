@@ -83,11 +83,17 @@ pub fn slab_look(s: &kentos_contracts::SlabFields) -> kentos_geometry_core::geom
     }
 }
 
-/// The slab as the core's shape (docs/adr/0722): its rings as a space's, drawn by its look.
+/// The slab as the core's shape (docs/adr/0722): its rings as a space's, drawn by its look; a slab bound to walls
+/// carries its seed as a space does, so a transform moves it with the rings (docs/adr/8050 §2).
 pub fn core_slab(s: &kentos_contracts::SlabFields) -> Shape {
     Shape::Space {
         parts: s.parts.iter().map(area).collect(),
         space: Spec {
+            seed: s
+                .bound
+                .as_ref()
+                .and_then(|b| b.seed)
+                .map(|p| CoreVec2::new(p.x, p.y)),
             slab: Some(slab_look(s)),
             ..Spec::default()
         },

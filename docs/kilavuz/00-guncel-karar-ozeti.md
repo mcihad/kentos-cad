@@ -503,6 +503,11 @@
     Yay kenarın geçici ölçüsü/Mesafe'si eş merkezli (1 µm) yaya radyal; yay kenar bağı mevcut `wall` parçasıyla (çözücüde
     çember çizgisi, eş merkezli yaylar arasında uzaklık/paralel/simetrik/sabit). Bu ölçüyü koru bağın değerini verilen
     mesafeden yazar; kilit değeri nanometreye yuvarlar.
+  - **Modül kapsamı (M50 1. bölüm, ADR 8050):** oda modülüne kolon, merdiven, rampa, döşeme ve eğri duvar girer; akslara
+    bağlı kolon girmez (`module_kind`: yeri aksların kesişimi). Yerleşim ve aynalama Taşı/Döndür/Aynala'nın kuralı; kaynağı
+    güncelle aynalı örnekten de. Bağlı döşemenin iç noktası taşınınca onunla gider (çekirdek şeklin `seed`'i). Modül
+    karşılaştırması belgenin yazdıklarına bakmaz: kata bağlı merdivenin rıhtı, kata bağlı rampanın kotu, döşemenin kenar
+    çizgileri, bağlı döşemenin halkaları/duvarları/kopukluğu. Duvarsız modülün tabanı nesnelerin sol altı.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

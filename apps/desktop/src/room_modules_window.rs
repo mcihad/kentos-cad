@@ -397,20 +397,38 @@ impl App {
         };
         let mut uids = Vec::new();
         let (mut x, mut y) = (f64::INFINITY, f64::INFINITY);
+        // Without walls (a stair with its slab, columns), the lower left of the other objects' points (docs/adr/8050
+        // §1): the drawing's origin, far from them, made every placement land as far off.
+        let (mut ox, mut oy) = (f64::INFINITY, f64::INFINITY);
         for s in self.selection.ids() {
             let Some(e) = doc.model.get(*s) else { continue };
             if let Some(u) = doc.model.uid(*s) {
                 uids.push(u.to_string());
             }
-            if let Entity::Wall(w) = e {
-                for p in &w.wall.pts {
-                    x = x.min(p.x);
-                    y = y.min(p.y);
+            let others: Vec<&Vec2> = match e {
+                Entity::Wall(w) => {
+                    for p in &w.wall.pts {
+                        x = x.min(p.x);
+                        y = y.min(p.y);
+                    }
+                    Vec::new()
                 }
+                Entity::Column(c) => vec![&c.column.at],
+                Entity::Stair(st) => st.stair.pts.iter().collect(),
+                Entity::Ramp(r) => r.ramp.pts.iter().collect(),
+                Entity::Slab(sl) => sl.slab.parts.iter().flat_map(|p| &p.outer.pts).collect(),
+                Entity::Space(sp) => sp.space.parts.iter().flat_map(|p| &p.outer.pts).collect(),
+                _ => Vec::new(),
+            };
+            for p in others {
+                ox = ox.min(p.x);
+                oy = oy.min(p.y);
             }
         }
         let base = if x.is_finite() {
             Vec2 { x, y }
+        } else if ox.is_finite() {
+            Vec2 { x: ox, y: oy }
         } else {
             Vec2 { x: 0.0, y: 0.0 }
         };
@@ -836,7 +854,7 @@ impl App {
         }
         let name = kentos_ui::widget::text_field("Yeni modülün adı (Banyo)", &w.name)
             .on_input(|t| msg(Event::Name(t)));
-        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki düz duvarlar, açıklıklar, mahaller, donatı, ölçü ve etiketler (bir oda, bir daire, bir dubleks); taban noktası duvarların sol alt köşesi, taban katı en alçak kat.".into()));
+        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahaller, donatı, kolonlar, merdivenler, rampalar, döşemeler, ölçü ve etiketler (bir oda, bir daire, bir dubleks, bir merdiven evi); akslara bağlı kolon girmez. Taban noktası duvarların sol alt köşesi (duvar yoksa nesnelerin), taban katı en alçak kat.".into()));
         let body = Column::new()
             .spacing(14)
             .push(

@@ -326,6 +326,27 @@ def move_partition(d, dx):
             "result": {"status": "completed", "output": "$any", "warnings": "$any"}, "expect": {"revision": "changed"}}
 
 
+def move_room(d, dx, slabs):
+    """cad.entities.transform's Taşı of the building's five walls and its bound slabs `slabs` by `dx`: each wall's path
+    and each slab's seed moved (docs/adr/8050 §2: a bound slab's seed goes with it, as a space's does), then each
+    found again round its seed among the moved walls: the moved room's outline, whole."""
+    for i in range(1, 6):
+        d.walls[i] = dict(d.walls[i], pts=[P(q["x"] + dx, q["y"]) for q in d.walls[i]["pts"]])
+    for i in slabs:
+        ly, sl_, ex = d.slabs[i]
+        sl_ = copy.deepcopy(sl_)
+        seed = sl_["bound"]["seed"]
+        sl_["bound"]["seed"] = P(seed["x"] + dx, seed["y"])
+        d.slabs[i] = (ly, sl_, ex)
+    follow(d)
+    return {"op": "execute", "command": "cad.entities.transform",
+            "input": {"uids": [uid_of(i) for i in [1, 2, 3, 4, 5, *slabs]],
+                      "transform": {"kind": "move", "dx": float(dx), "dy": 0.0}},
+            "result": {"status": "completed", "output": "$any", "warnings": "$any"},
+            "expect": {"revision": "changed",
+                       "entities": {str(i): entity(d, i, d.slabs[i][0], d.slabs[i][1]) for i in slabs}}}
+
+
 def delete(d, i, slabs):
     """cad.entities.delete of object `i` (its id taken first, the bound slabs naming it after it is gone); the bound
     slabs' fields as they follow."""
@@ -417,6 +438,10 @@ def cases():
     c.add("çıkma döşemenin serbest kenarlarındaki korkuluk duvarla büyüyen sınırı izler", [
         create_step(d, "execute", one(seed=LEFT, bound=True, edgeOffset=1.0, role="balcony", edge={"kind": "railing"})),
         shift_east(d), quant(d)])
+    d = sc.Drawing()
+    made = create_step(d, "execute", one(seed=RIGHT, boundary="room", bound=True, arch={"level": "zemin"}))
+    c.add("duvarlarıyla birlikte taşınan bağlı döşeme iç noktasını götürür, taşınan odaya bağlı kalır, kopmaz", [
+        made, move_room(d, 20, [first])])
     d = sc.Drawing()
     made = create_step(d, "execute", one(seed=LEFT, bound=True))
     c.add("dış duvar silinince bağlı döşeme son sınırıyla kalır, kopuk: lostEnclosure", [made, *delete(d, 1, [first]), quant(d)])

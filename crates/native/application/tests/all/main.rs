@@ -156,3 +156,5 @@ mod grid_bonds;
 mod column_bonds;
 
 mod arc_bonds;
+
+mod module_kinds;

@@ -309,3 +309,31 @@ fn the_window_repeats_a_floor_with_its_loose_objects_in_one_step() {
         before
     );
 }
+
+const KINDS: &str = include_str!("../../../fixtures/commands/v1/cad.modules.edit.kinds.json");
+
+/// docs/adr/8050 §1: a module of a column, a curved stair and a ramp, no wall, has its base at the lower left of their
+/// points (0.5, 0.5), not at the drawing's origin.
+#[test]
+fn a_module_without_walls_has_its_base_at_its_objects_lower_left() {
+    let mut app = app_with_drawing();
+    let file: serde_json::Value = serde_json::from_str(KINDS).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(file["setup"].clone()).unwrap();
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    make_cad(&mut app);
+    app.selection
+        .set([2, 5, 6].into_iter().map(kentos_domain::Slot));
+    let _ = app.update(Message::Run("arch.modules"));
+    let _ = app.update(Message::RoomModules(Event::Name("Merdiven".into())));
+    let _ = app.update(Message::RoomModules(Event::Define));
+    let m = modules(&app);
+    assert_eq!(m.len(), 1);
+    assert_eq!(m[0].members.len(), 3);
+    let at = m[0].instances[0].at;
+    assert!(
+        (at.x - 0.5).abs() < 1e-12 && (at.y - 0.5).abs() < 1e-12,
+        "{at:?}"
+    );
+}

@@ -231,6 +231,11 @@ pub fn module_kind_ok(e: &Entity) -> bool {
             | Entity::Dimension(_)
             | Entity::Tag(_)
             | Entity::Text(_)
+            // docs/adr/8050 §1: a module's columns, stairs, ramps and slabs.
+            | Entity::Column(_)
+            | Entity::Stair(_)
+            | Entity::Ramp(_)
+            | Entity::Slab(_)
     )
 }
 

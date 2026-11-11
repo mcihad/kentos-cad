@@ -49,6 +49,17 @@ fn written_by_the_document(e: &Entity) -> &'static [&'static str] {
         Entity::Tag(_) => &["text", "anchor", "broken"],
         Entity::Dimension(_) => &["broken"],
         Entity::Text(t) if t.label_of.is_some() => &["text"],
+        // docs/adr/8050 §1: a slab's free sides' runs (and a bound slab's outline, its walls and its break, found
+        // again), a stair's riser height from its level's height, a column's place and break.
+        Entity::Slab(s) if s.slab.bound.is_some() => {
+            &["parts", "bound/uids", "bound/broken", "edge/runs"]
+        }
+        Entity::Slab(_) => &["edge/runs"],
+        Entity::Stair(s) if s.stair.height_from_level => &["riserHeight"],
+        // A ramp bound to its level starts at that level's elevation (docs/adr/0723 §2): an instance on another storey
+        // starts at its own.
+        Entity::Ramp(r) if r.ramp.base_offset.is_some() => &["base"],
+        Entity::Column(_) => &["place", "broken"],
         _ => &[],
     }
 }
@@ -76,7 +87,17 @@ fn cleaned(e: &Entity, skip: &[&str]) -> Value {
     if let Some(o) = v.as_object_mut() {
         o.remove("id");
         for k in skip {
-            o.remove(*k);
+            // A nested field by its path (`edge/runs`).
+            match k.split_once('/') {
+                Some((outer, inner)) => {
+                    if let Some(x) = o.get_mut(outer).and_then(Value::as_object_mut) {
+                        x.remove(inner);
+                    }
+                }
+                None => {
+                    o.remove(*k);
+                }
+            }
         }
     }
     v
@@ -362,16 +383,20 @@ pub(super) fn add_members(
                 &path,
             ));
         }
-        let curved = matches!(e, Entity::Wall(w) if w.wall.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)));
-        if !module_kind_ok(e) || curved {
+        if !module_kind_ok(e) {
             return Err(fail(
                 codes::MODULE_KIND,
-                if curved {
-                    "Eğrisel duvar modül kapsamında değil; düz duvar ekleyin.".into()
-                } else {
-                    "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur."
-                        .into()
-                },
+                "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
+                &path,
+            ));
+        }
+        // A column tied to grids stands where they cross (docs/adr/8050 §1).
+        if let Entity::Column(c) = e
+            && c.column.grids.is_some()
+        {
+            return Err(fail(
+                codes::MODULE_KIND,
+                "Akslara bağlı kolon modüle alınmaz: yeri aksların kesişimidir. Önce Bağı kopar'ı seçin ya da kolonu seçimden çıkarın.".into(),
                 &path,
             ));
         }

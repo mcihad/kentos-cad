@@ -2898,6 +2898,140 @@
       ]
     },
     {
+      "name": "duvarlarıyla birlikte taşınan bağlı döşeme iç noktasını götürür, taşınan odaya bağlı kalır, kopmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "boundary": "room",
+                "bound": true,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 7.0,
+                    "y": 2.0
+                  },
+                  "face": "room",
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:1",
+              "$uidOf:2",
+              "$uidOf:3",
+              "$uidOf:4",
+              "$uidOf:5",
+              "$uidOf:8"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 20.0,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed",
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": "$any",
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                },
+                "bound": {
+                  "source": "walls",
+                  "seed": {
+                    "x": 27.0,
+                    "y": 2.0
+                  },
+                  "face": "room",
+                  "uids": [
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:3",
+                    "$uidOf:5"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "dış duvar silinince bağlı döşeme son sınırıyla kalır, kopuk: lostEnclosure",
       "steps": [
         {

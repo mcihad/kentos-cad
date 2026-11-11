@@ -1,0 +1,4190 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.modules.edit",
+  "commandVersion": 1,
+  "title": "Oda modülünde kolon, merdiven, rampa, döşeme ve eğri duvar (ADR 8050)",
+  "note": "Beklenenler scripts/fixtures/module_kinds_cases.py'den: yerleştirmenin dönüşümü ve türlerin aynalanma kuralları (kolon arch_command_cases.mirrored_column ile); KentOS kodu kullanılmadı.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Modül türleri",
+    "uids": [
+      "0192f5a1-8050-7000-8000-000000000001",
+      "0192f5a1-8050-7000-8000-000000000002",
+      "0192f5a1-8050-7000-8000-000000000003",
+      "0192f5a1-8050-7000-8000-000000000004",
+      "0192f5a1-8050-7000-8000-000000000005",
+      "0192f5a1-8050-7000-8000-000000000006",
+      "0192f5a1-8050-7000-8000-000000000007",
+      "0192f5a1-8050-7000-8000-000000000008",
+      "0192f5a1-8050-7000-8000-000000000009",
+      "0192f5a1-8050-7000-8000-00000000000a"
+    ],
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.24
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "doseme",
+        "name": "Döşeme",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mimari",
+        "name": "Mimari",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.0,
+            "y": 0.0
+          }
+        ],
+        "bulges": [
+          0.3,
+          0.0
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "column",
+        "id": 2,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 1.0,
+          "y": 2.0
+        },
+        "width": 0.4,
+        "depth": 0.3,
+        "rotation": 0.2,
+        "anchor": "bottomLeft",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "column",
+        "id": 3,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 3.0,
+          "y": 2.0
+        },
+        "shape": "lShape",
+        "width": 0.6,
+        "depth": 0.5,
+        "legs": [
+          0.2,
+          0.25
+        ],
+        "anchor": "bottomRight",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "slab",
+        "id": 4,
+        "layerId": "doseme",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 0.0,
+                  "y": 3.0
+                }
+              ]
+            }
+          }
+        ],
+        "thickness": 0.15,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "stair",
+        "id": 5,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.5,
+            "y": 0.5
+          },
+          {
+            "x": 0.5,
+            "y": 4.5
+          }
+        ],
+        "bulges": [
+          0.2,
+          0.0
+        ],
+        "width": 1.0,
+        "risers": 18,
+        "riserHeight": 0.16666666666666666,
+        "tread": 0.22,
+        "heightFromLevel": true,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "ramp",
+        "id": 6,
+        "layerId": "mimari",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 2.0,
+            "y": 0.5
+          },
+          {
+            "x": 3.5,
+            "y": 0.5
+          }
+        ],
+        "width": 1.2,
+        "rise": 0.3,
+        "slope": 20.0,
+        "base": 0.0,
+        "baseOffset": 0.0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "column",
+        "id": 7,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 6.0,
+          "y": 0.0
+        },
+        "width": 0.4,
+        "grids": [
+          "0192f5a1-8050-7000-8000-000000000008",
+          "0192f5a1-8050-7000-8000-000000000009"
+        ],
+        "place": "A-1",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 8,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 9,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -1.0
+          },
+          {
+            "x": 6.0,
+            "y": 2.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "column",
+        "id": 10,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 2.0,
+          "y": 2.6
+        },
+        "width": 0.3,
+        "arch": {
+          "level": "zemin"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Tanımla: eğri duvar, iki kolon, döşeme, eğri merdiven ve rampa modül olur, yerinde ilk örneği kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "module": {
+                "id": "oda",
+                "name": "Oda",
+                "version": 1,
+                "members": [
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000001",
+                    "entity": {
+                      "kind": "wall",
+                      "id": 0,
+                      "layerId": "duvar",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 4.0,
+                          "y": 0.0
+                        }
+                      ],
+                      "bulges": [
+                        0.3,
+                        0.0
+                      ],
+                      "width": 0.2,
+                      "justify": "center"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000002",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      "width": 0.4,
+                      "depth": 0.3,
+                      "rotation": 0.2,
+                      "anchor": "bottomLeft"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000003",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 3.0,
+                        "y": 2.0
+                      },
+                      "shape": "lShape",
+                      "width": 0.6,
+                      "depth": 0.5,
+                      "legs": [
+                        0.2,
+                        0.25
+                      ],
+                      "anchor": "bottomRight"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000004",
+                    "entity": {
+                      "kind": "slab",
+                      "id": 0,
+                      "layerId": "doseme",
+                      "attrs": {},
+                      "parts": [
+                        {
+                          "outer": {
+                            "pts": [
+                              {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 3.0
+                              },
+                              {
+                                "x": 0.0,
+                                "y": 3.0
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "thickness": 0.15
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000005",
+                    "entity": {
+                      "kind": "stair",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.5,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 0.5,
+                          "y": 4.5
+                        }
+                      ],
+                      "bulges": [
+                        0.2,
+                        0.0
+                      ],
+                      "width": 1.0,
+                      "risers": 18,
+                      "riserHeight": 0.16666666666666666,
+                      "tread": 0.22,
+                      "heightFromLevel": true
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000006",
+                    "entity": {
+                      "kind": "ramp",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 3.5,
+                          "y": 0.5
+                        }
+                      ],
+                      "width": 1.2,
+                      "rise": 0.3,
+                      "slope": 20.0,
+                      "base": 0.0,
+                      "baseOffset": 0.0
+                    }
+                  }
+                ],
+                "instances": [
+                  {
+                    "id": "oda-1",
+                    "at": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "level": "zemin",
+                    "version": 1,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "0192f5a1-8050-7000-8000-000000000001"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "0192f5a1-8050-7000-8000-000000000002"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "0192f5a1-8050-7000-8000-000000000003"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "0192f5a1-8050-7000-8000-000000000004"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "0192f5a1-8050-7000-8000-000000000005"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "0192f5a1-8050-7000-8000-000000000006"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "instance": "oda-1",
+              "report": {},
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir: 1. katta 10 m sağa; her tür yerini ve katını alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "module": {
+                "id": "oda",
+                "name": "Oda",
+                "version": 1,
+                "members": [
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000001",
+                    "entity": {
+                      "kind": "wall",
+                      "id": 0,
+                      "layerId": "duvar",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 4.0,
+                          "y": 0.0
+                        }
+                      ],
+                      "bulges": [
+                        0.3,
+                        0.0
+                      ],
+                      "width": 0.2,
+                      "justify": "center"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000002",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      "width": 0.4,
+                      "depth": 0.3,
+                      "rotation": 0.2,
+                      "anchor": "bottomLeft"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000003",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 3.0,
+                        "y": 2.0
+                      },
+                      "shape": "lShape",
+                      "width": 0.6,
+                      "depth": 0.5,
+                      "legs": [
+                        0.2,
+                        0.25
+                      ],
+                      "anchor": "bottomRight"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000004",
+                    "entity": {
+                      "kind": "slab",
+                      "id": 0,
+                      "layerId": "doseme",
+                      "attrs": {},
+                      "parts": [
+                        {
+                          "outer": {
+                            "pts": [
+                              {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 3.0
+                              },
+                              {
+                                "x": 0.0,
+                                "y": 3.0
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "thickness": 0.15
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000005",
+                    "entity": {
+                      "kind": "stair",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.5,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 0.5,
+                          "y": 4.5
+                        }
+                      ],
+                      "bulges": [
+                        0.2,
+                        0.0
+                      ],
+                      "width": 1.0,
+                      "risers": 18,
+                      "riserHeight": 0.16666666666666666,
+                      "tread": 0.22,
+                      "heightFromLevel": true
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000006",
+                    "entity": {
+                      "kind": "ramp",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 3.5,
+                          "y": 0.5
+                        }
+                      ],
+                      "width": 1.2,
+                      "rise": 0.3,
+                      "slope": 20.0,
+                      "base": 0.0,
+                      "baseOffset": 0.0
+                    }
+                  }
+                ],
+                "instances": [
+                  {
+                    "id": "oda-1",
+                    "at": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "level": "zemin",
+                    "version": 1,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "0192f5a1-8050-7000-8000-000000000001"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "0192f5a1-8050-7000-8000-000000000002"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "0192f5a1-8050-7000-8000-000000000003"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "0192f5a1-8050-7000-8000-000000000004"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "0192f5a1-8050-7000-8000-000000000005"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "0192f5a1-8050-7000-8000-000000000006"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "oda-2",
+                    "at": {
+                      "x": 10.0,
+                      "y": 0.0
+                    },
+                    "level": "kat1",
+                    "version": 1,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "$uidOf:11"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "$uidOf:12"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "$uidOf:13"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "$uidOf:14"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "$uidOf:15"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "$uidOf:16"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "instance": "oda-2",
+              "created": [
+                "$uidOf:11",
+                "$uidOf:12",
+                "$uidOf:13",
+                "$uidOf:14",
+                "$uidOf:15",
+                "$uidOf:16"
+              ],
+              "report": {},
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "fields": {
+              "11": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 0.0
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "12": {
+                "at": {
+                  "x": 11.0,
+                  "y": 2.0
+                },
+                "rotation": 0.2,
+                "anchor": "bottomLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "13": {
+                "at": {
+                  "x": 13.0,
+                  "y": 2.0
+                },
+                "rotation": null,
+                "anchor": "bottomRight",
+                "width": 0.6,
+                "depth": 0.5,
+                "legs": [
+                  0.2,
+                  0.25
+                ],
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 10.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 14.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 14.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 10.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "15": {
+                "pts": [
+                  {
+                    "x": 10.5,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 10.5,
+                    "y": 4.5
+                  }
+                ],
+                "bulges": [
+                  0.2,
+                  0.0
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.18000000000000002,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "16": {
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 13.5,
+                    "y": 0.5
+                  }
+                ],
+                "width": 1.2,
+                "base": 3.0,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir: aynalı ve 90° döndürülmüş; duvarın yolu geri döner, kolonların hizası ve L'nin kolları değişir, merdivenin yayı ters döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "module": {
+                "id": "oda",
+                "name": "Oda",
+                "version": 1,
+                "members": [
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000001",
+                    "entity": {
+                      "kind": "wall",
+                      "id": 0,
+                      "layerId": "duvar",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 4.0,
+                          "y": 0.0
+                        }
+                      ],
+                      "bulges": [
+                        0.3,
+                        0.0
+                      ],
+                      "width": 0.2,
+                      "justify": "center"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000002",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      "width": 0.4,
+                      "depth": 0.3,
+                      "rotation": 0.2,
+                      "anchor": "bottomLeft"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000003",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 3.0,
+                        "y": 2.0
+                      },
+                      "shape": "lShape",
+                      "width": 0.6,
+                      "depth": 0.5,
+                      "legs": [
+                        0.2,
+                        0.25
+                      ],
+                      "anchor": "bottomRight"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000004",
+                    "entity": {
+                      "kind": "slab",
+                      "id": 0,
+                      "layerId": "doseme",
+                      "attrs": {},
+                      "parts": [
+                        {
+                          "outer": {
+                            "pts": [
+                              {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 3.0
+                              },
+                              {
+                                "x": 0.0,
+                                "y": 3.0
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "thickness": 0.15
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000005",
+                    "entity": {
+                      "kind": "stair",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.5,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 0.5,
+                          "y": 4.5
+                        }
+                      ],
+                      "bulges": [
+                        0.2,
+                        0.0
+                      ],
+                      "width": 1.0,
+                      "risers": 18,
+                      "riserHeight": 0.16666666666666666,
+                      "tread": 0.22,
+                      "heightFromLevel": true
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000006",
+                    "entity": {
+                      "kind": "ramp",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 3.5,
+                          "y": 0.5
+                        }
+                      ],
+                      "width": 1.2,
+                      "rise": 0.3,
+                      "slope": 20.0,
+                      "base": 0.0,
+                      "baseOffset": 0.0
+                    }
+                  }
+                ],
+                "instances": [
+                  {
+                    "id": "oda-1",
+                    "at": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "level": "zemin",
+                    "version": 1,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "0192f5a1-8050-7000-8000-000000000001"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "0192f5a1-8050-7000-8000-000000000002"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "0192f5a1-8050-7000-8000-000000000003"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "0192f5a1-8050-7000-8000-000000000004"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "0192f5a1-8050-7000-8000-000000000005"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "0192f5a1-8050-7000-8000-000000000006"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "oda-2",
+                    "at": {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    "rotation": 1.5707963267948966,
+                    "mirror": true,
+                    "level": "zemin",
+                    "version": 1,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "$uidOf:11"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "$uidOf:12"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "$uidOf:13"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "$uidOf:14"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "$uidOf:15"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "$uidOf:16"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "instance": "oda-2",
+              "created": [
+                "$uidOf:11",
+                "$uidOf:12",
+                "$uidOf:13",
+                "$uidOf:14",
+                "$uidOf:15",
+                "$uidOf:16"
+              ],
+              "report": {},
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "11": {
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 1.0
+                  },
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "12": {
+                "at": {
+                  "x": 18.0,
+                  "y": 4.0
+                },
+                "rotation": 4.5123889803846895,
+                "anchor": "topLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "13": {
+                "at": {
+                  "x": 18.0,
+                  "y": 2.0
+                },
+                "rotation": 3.141592653589793,
+                "anchor": "topLeft",
+                "width": 0.5,
+                "depth": 0.6,
+                "legs": [
+                  0.25,
+                  0.2
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 5.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 17.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 17.0,
+                          "y": 5.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "15": {
+                "pts": [
+                  {
+                    "x": 19.5,
+                    "y": 4.5
+                  },
+                  {
+                    "x": 15.5,
+                    "y": 4.5
+                  }
+                ],
+                "bulges": [
+                  -0.2,
+                  -0.0
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "16": {
+                "pts": [
+                  {
+                    "x": 19.5,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 19.5,
+                    "y": 1.5
+                  }
+                ],
+                "width": 1.2,
+                "base": 0.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir: yalnız aynalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 10.0
+              },
+              "mirror": true,
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "11": {
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 10.0
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "12": {
+                "at": {
+                  "x": 9.0,
+                  "y": 12.0
+                },
+                "rotation": 2.941592653589793,
+                "anchor": "topLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "13": {
+                "at": {
+                  "x": 7.0,
+                  "y": 12.0
+                },
+                "rotation": 1.5707963267948966,
+                "anchor": "topLeft",
+                "width": 0.5,
+                "depth": 0.6,
+                "legs": [
+                  0.25,
+                  0.2
+                ],
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 10.0,
+                          "y": 10.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 10.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 13.0
+                        },
+                        {
+                          "x": 10.0,
+                          "y": 13.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "15": {
+                "pts": [
+                  {
+                    "x": 9.5,
+                    "y": 10.5
+                  },
+                  {
+                    "x": 9.5,
+                    "y": 14.5
+                  }
+                ],
+                "bulges": [
+                  -0.2,
+                  -0.0
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.18000000000000002,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "16": {
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 10.5
+                  },
+                  {
+                    "x": 6.5,
+                    "y": 10.5
+                  }
+                ],
+                "width": 1.2,
+                "base": 3.0,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir: 45° döndürülmüş; kolonun dönüşüne örneğinki eklenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": -10.0
+              },
+              "rotation": 0.7853981633974483,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "11": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": -10.0
+                  },
+                  {
+                    "x": 12.82842712474619,
+                    "y": -7.17157287525381
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "12": {
+                "at": {
+                  "x": 9.292893218813452,
+                  "y": -7.878679656440357
+                },
+                "rotation": 0.9853981633974482,
+                "anchor": "bottomLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "13": {
+                "at": {
+                  "x": 10.707106781186548,
+                  "y": -6.464466094067262
+                },
+                "rotation": 0.7853981633974483,
+                "anchor": "bottomRight",
+                "width": 0.6,
+                "depth": 0.5,
+                "legs": [
+                  0.2,
+                  0.25
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 10.0,
+                          "y": -10.0
+                        },
+                        {
+                          "x": 12.82842712474619,
+                          "y": -7.17157287525381
+                        },
+                        {
+                          "x": 10.707106781186548,
+                          "y": -5.050252531694167
+                        },
+                        {
+                          "x": 7.878679656440358,
+                          "y": -7.878679656440357
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "15": {
+                "pts": [
+                  {
+                    "x": 10.0,
+                    "y": -9.292893218813452
+                  },
+                  {
+                    "x": 7.17157287525381,
+                    "y": -6.464466094067262
+                  }
+                ],
+                "bulges": [
+                  0.2,
+                  0.0
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.16666666666666666,
+                "arch": {
+                  "level": "zemin"
+                }
+              },
+              "16": {
+                "pts": [
+                  {
+                    "x": 11.060660171779821,
+                    "y": -8.232233047033631
+                  },
+                  {
+                    "x": 12.121320343559642,
+                    "y": -7.17157287525381
+                  }
+                ],
+                "width": 1.2,
+                "base": 0.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir: aynalı ve 180° döndürülmüş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 0.0,
+                "y": 20.0
+              },
+              "rotation": 3.141592653589793,
+              "mirror": true,
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "11": {
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "12": {
+                "at": {
+                  "x": 0.9999999999999998,
+                  "y": 18.0
+                },
+                "rotation": 6.083185307179586,
+                "anchor": "topLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "13": {
+                "at": {
+                  "x": 2.9999999999999996,
+                  "y": 18.0
+                },
+                "rotation": 4.71238898038469,
+                "anchor": "topLeft",
+                "width": 0.5,
+                "depth": 0.6,
+                "legs": [
+                  0.25,
+                  0.2
+                ],
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 20.0
+                        },
+                        {
+                          "x": 4.0,
+                          "y": 20.0
+                        },
+                        {
+                          "x": 3.9999999999999996,
+                          "y": 17.0
+                        },
+                        {
+                          "x": -3.6739403974420594e-16,
+                          "y": 17.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "15": {
+                "pts": [
+                  {
+                    "x": 0.49999999999999994,
+                    "y": 19.5
+                  },
+                  {
+                    "x": 0.49999999999999944,
+                    "y": 15.5
+                  }
+                ],
+                "bulges": [
+                  -0.2,
+                  -0.0
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.18000000000000002,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "16": {
+                "pts": [
+                  {
+                    "x": 2.0,
+                    "y": 19.5
+                  },
+                  {
+                    "x": 3.5,
+                    "y": 19.5
+                  }
+                ],
+                "width": 1.2,
+                "base": 3.0,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir ve geri al: tek adım",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Oda modülü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynakla aynı: aynalı ve döndürülmüş örnekten güncellenecek bir şey yok (her tür geri dönüşte kaynağına denk)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-2"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "“oda-2” örneği kaynakla aynı; güncellenecek bir şey yok.",
+              "path": "operation.from"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynakla aynı: 1. kattaki örneğin merdiveni 18 cm rıhtlı, rampası 3 m'den başlar; yine kaynakla aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "15": {
+                "pts": [
+                  {
+                    "x": 10.5,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 10.5,
+                    "y": 4.5
+                  }
+                ],
+                "bulges": [
+                  0.2,
+                  0.0
+                ],
+                "width": 1.0,
+                "risers": 18,
+                "riserHeight": 0.18000000000000002,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "16": {
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 13.5,
+                    "y": 0.5
+                  }
+                ],
+                "width": 1.2,
+                "base": 3.0,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-2"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "“oda-2” örneği kaynakla aynı; güncellenecek bir şey yok.",
+              "path": "operation.from"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: kaynağın kolonu 50 cm olur; düz ve aynalı-döndürülmüş örnek alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000002"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "module": {
+                "id": "oda",
+                "name": "Oda",
+                "version": 2,
+                "members": [
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000001",
+                    "entity": {
+                      "kind": "wall",
+                      "id": 0,
+                      "layerId": "duvar",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 4.0,
+                          "y": 0.0
+                        }
+                      ],
+                      "bulges": [
+                        0.3,
+                        0.0
+                      ],
+                      "width": 0.2,
+                      "justify": "center"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000002",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 1.0,
+                        "y": 2.0
+                      },
+                      "width": 0.5,
+                      "depth": 0.3,
+                      "rotation": 0.2,
+                      "anchor": "bottomLeft"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000003",
+                    "entity": {
+                      "kind": "column",
+                      "id": 0,
+                      "layerId": "kolon",
+                      "attrs": {},
+                      "at": {
+                        "x": 3.0,
+                        "y": 2.0
+                      },
+                      "shape": "lShape",
+                      "width": 0.6,
+                      "depth": 0.5,
+                      "legs": [
+                        0.2,
+                        0.25
+                      ],
+                      "anchor": "bottomRight"
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000004",
+                    "entity": {
+                      "kind": "slab",
+                      "id": 0,
+                      "layerId": "doseme",
+                      "attrs": {},
+                      "parts": [
+                        {
+                          "outer": {
+                            "pts": [
+                              {
+                                "x": 0.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 0.0
+                              },
+                              {
+                                "x": 4.0,
+                                "y": 3.0
+                              },
+                              {
+                                "x": 0.0,
+                                "y": 3.0
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "thickness": 0.15
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000005",
+                    "entity": {
+                      "kind": "stair",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 0.5,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 0.5,
+                          "y": 4.5
+                        }
+                      ],
+                      "bulges": [
+                        0.2,
+                        0.0
+                      ],
+                      "width": 1.0,
+                      "risers": 18,
+                      "riserHeight": 0.16666666666666666,
+                      "tread": 0.22,
+                      "heightFromLevel": true
+                    }
+                  },
+                  {
+                    "key": "0192f5a1-8050-7000-8000-000000000006",
+                    "entity": {
+                      "kind": "ramp",
+                      "id": 0,
+                      "layerId": "mimari",
+                      "attrs": {},
+                      "pts": [
+                        {
+                          "x": 2.0,
+                          "y": 0.5
+                        },
+                        {
+                          "x": 3.5,
+                          "y": 0.5
+                        }
+                      ],
+                      "width": 1.2,
+                      "rise": 0.3,
+                      "slope": 20.0,
+                      "base": 0.0,
+                      "baseOffset": 0.0
+                    }
+                  }
+                ],
+                "instances": [
+                  {
+                    "id": "oda-1",
+                    "at": {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    "level": "zemin",
+                    "version": 2,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "0192f5a1-8050-7000-8000-000000000001"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "0192f5a1-8050-7000-8000-000000000002"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "0192f5a1-8050-7000-8000-000000000003"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "0192f5a1-8050-7000-8000-000000000004"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "0192f5a1-8050-7000-8000-000000000005"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "0192f5a1-8050-7000-8000-000000000006"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "oda-2",
+                    "at": {
+                      "x": 10.0,
+                      "y": 0.0
+                    },
+                    "level": "kat1",
+                    "version": 2,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "$uidOf:11"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "$uidOf:12"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "$uidOf:13"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "$uidOf:14"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "$uidOf:15"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "$uidOf:16"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "oda-3",
+                    "at": {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    "rotation": 1.5707963267948966,
+                    "mirror": true,
+                    "level": "zemin",
+                    "version": 2,
+                    "members": [
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000001",
+                        "uid": "$uidOf:17"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000002",
+                        "uid": "$uidOf:18"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000003",
+                        "uid": "$uidOf:19"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000004",
+                        "uid": "$uidOf:20"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000005",
+                        "uid": "$uidOf:21"
+                      },
+                      {
+                        "key": "0192f5a1-8050-7000-8000-000000000006",
+                        "uid": "$uidOf:22"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "instance": "oda-1",
+              "changed": [
+                "$uidOf:12",
+                "$uidOf:18"
+              ],
+              "report": {
+                "updated": [
+                  "oda-1",
+                  "oda-2",
+                  "oda-3"
+                ],
+                "changedKeys": [
+                  "0192f5a1-8050-7000-8000-000000000002"
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "12": {
+                "at": {
+                  "x": 11.0,
+                  "y": 2.0
+                },
+                "rotation": 0.2,
+                "anchor": "bottomLeft",
+                "width": 0.5,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "18": {
+                "at": {
+                  "x": 18.0,
+                  "y": 4.0
+                },
+                "rotation": 4.5123889803846895,
+                "anchor": "topLeft",
+                "width": 0.5,
+                "depth": 0.3,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: aynalı örnekte L kolonun kolu kalınlaşır; kaynağa ve öbür örneğe ters kolda döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:19"
+            ],
+            "operation": {
+              "kind": "set",
+              "legs": [
+                0.3,
+                0.2
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-3"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "3": {
+                "legs": [
+                  0.2,
+                  0.3
+                ],
+                "at": {
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                "anchor": "bottomRight"
+              },
+              "13": {
+                "at": {
+                  "x": 13.0,
+                  "y": 2.0
+                },
+                "rotation": null,
+                "anchor": "bottomRight",
+                "width": 0.6,
+                "depth": 0.5,
+                "legs": [
+                  0.2,
+                  0.3
+                ],
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "19": {
+                "at": {
+                  "x": 18.0,
+                  "y": 2.0
+                },
+                "rotation": 3.141592653589793,
+                "anchor": "topLeft",
+                "width": 0.5,
+                "depth": 0.6,
+                "legs": [
+                  0.3,
+                  0.2
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: döşemenin kalınlığı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000004"
+            ],
+            "operation": {
+              "kind": "set",
+              "thickness": 0.2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 10.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 14.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 14.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 10.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.2,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: eğri merdivenin basamak sayısı; aynalı örnekte yayı ters kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "set",
+              "risers": 12
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "15": {
+                "pts": [
+                  {
+                    "x": 10.5,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 10.5,
+                    "y": 4.5
+                  }
+                ],
+                "bulges": [
+                  0.2,
+                  0.0
+                ],
+                "width": 1.0,
+                "risers": 12,
+                "riserHeight": 0.27,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "21": {
+                "pts": [
+                  {
+                    "x": 19.5,
+                    "y": 4.5
+                  },
+                  {
+                    "x": 15.5,
+                    "y": 4.5
+                  }
+                ],
+                "bulges": [
+                  -0.2,
+                  -0.0
+                ],
+                "width": 1.0,
+                "risers": 12,
+                "riserHeight": 0.25,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: rampanın eni",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000006"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 1.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "16": {
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 13.5,
+                    "y": 0.5
+                  }
+                ],
+                "width": 1.5,
+                "base": 3.0,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: eğri duvar 50 cm sağa; döndürülmüş aynalı örnekte kendi yönünde kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000001"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0.5,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "11": {
+                "pts": [
+                  {
+                    "x": 10.5,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 14.5,
+                    "y": 0.0
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "17": {
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.5
+                  },
+                  {
+                    "x": 20.0,
+                    "y": 4.5
+                  }
+                ],
+                "bulges": [
+                  0.3,
+                  0.0
+                ],
+                "width": 0.2,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: kolonun dönüşü; aynalı örnekte aynanın dönüşüyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000002"
+            ],
+            "operation": {
+              "kind": "set",
+              "rotation": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "12": {
+                "at": {
+                  "x": 11.0,
+                  "y": 2.0
+                },
+                "rotation": 0.5,
+                "anchor": "bottomLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "18": {
+                "at": {
+                  "x": 18.0,
+                  "y": 4.0
+                },
+                "rotation": 4.21238898038469,
+                "anchor": "topLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "İstisna: örneğin kolonu kaynağın değişikliğini almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "except",
+              "module": "Oda",
+              "uids": [
+                "$uidOf:12"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000002"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": [
+              {
+                "code": "module_exception_kept",
+                "message": "1 nesne yerel istisna olduğu için kaynağın değişikliğini almadı.",
+                "path": "operation"
+              }
+            ]
+          },
+          "expect": {
+            "fields": {
+              "12": {
+                "at": {
+                  "x": 11.0,
+                  "y": 2.0
+                },
+                "rotation": 0.2,
+                "anchor": "bottomLeft",
+                "width": 0.4,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Ayır: ayrılan örneğin döşemesi kaynağı izlemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 20.0,
+                "y": 5.0
+              },
+              "rotation": 1.5707963267948966,
+              "mirror": true,
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "detach",
+              "module": "Oda",
+              "instance": "oda-2"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.slabs.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000004"
+            ],
+            "operation": {
+              "kind": "set",
+              "thickness": 0.2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "14": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 10.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 14.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 14.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 10.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "20": {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 5.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 17.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 17.0,
+                          "y": 5.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.2,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Elle değişen kolon kaynağın değeriyle yazılır, söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.45
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000002"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Oda",
+              "from": "oda-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": [
+              {
+                "code": "module_drift_overwritten",
+                "message": "Elle değiştirilmiş 1 örnek nesnesi kaynağın değeriyle yazıldı; korumak için önce yerel istisna yapın.",
+                "path": "operation"
+              }
+            ]
+          },
+          "expect": {
+            "fields": {
+              "12": {
+                "at": {
+                  "x": 11.0,
+                  "y": 2.0
+                },
+                "rotation": 0.2,
+                "anchor": "bottomLeft",
+                "width": 0.5,
+                "depth": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Modüle ekle: serbest kolon tanıma girer, öbür örnekte yerine yerleşir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "addMembers",
+              "module": "Oda",
+              "instance": "oda-1",
+              "uids": [
+                "0192f5a1-8050-7000-8000-00000000000a"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "fields": {
+              "17": {
+                "at": {
+                  "x": 12.0,
+                  "y": 2.6
+                },
+                "width": 0.3,
+                "arch": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Ret: akslara bağlı kolon modüle eklenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "addMembers",
+              "module": "Oda",
+              "instance": "oda-1",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000007"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "module_kind",
+              "message": "Akslara bağlı kolon modüle alınmaz: yeri aksların kesişimidir. Önce Bağı kopar'ı seçin ya da kolonu seçimden çıkarın.",
+              "path": "operation.uids[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modülden çıkar: rampa ilk örnekte kalır, öbüründe silinir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "removeMembers",
+              "module": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000006"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: akslara bağlı kolon modüle alınmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Aks kolonu",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000007"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "module_kind",
+              "message": "Akslara bağlı kolon modüle alınmaz: yeri aksların kesişimidir. Önce Bağı kopar'ı seçin ya da kolonu seçimden çıkarın.",
+              "path": "operation.uids[0]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: aks modüle alınmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Aks",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000008"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "module_kind",
+              "message": "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
+              "path": "operation.uids[0]"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

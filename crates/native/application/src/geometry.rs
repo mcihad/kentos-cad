@@ -1442,7 +1442,15 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         // runs again after the step; the rest is its own.
         (Entity::Slab(e), Shape::Space { parts, space }) => {
             e.slab.parts = parts.iter().map(kentos_formats::spaces::part).collect();
-            if let (Some(edge), Some(look)) = (&mut e.slab.edge, space.slab.as_ref().and_then(|l| l.edge.as_ref())) {
+            // A bound slab's seed goes with its rings, as a space's does (docs/adr/8050 §2): left behind, the outline
+            // found again round it was the old room's, or none.
+            if let (Some(b), Some(q)) = (&mut e.slab.bound, space.seed) {
+                b.seed = Some(Point { x: q.x, y: q.y });
+            }
+            if let (Some(edge), Some(look)) = (
+                &mut e.slab.edge,
+                space.slab.as_ref().and_then(|l| l.edge.as_ref()),
+            ) {
                 edge.width = look.width;
                 edge.runs = kentos_formats::spaces::runs(&look.runs);
             }

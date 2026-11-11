@@ -346,11 +346,12 @@ def edit_cases():
                 "operation.uids[0]"))]))
     out.append(case("Ret: çizgi modüle alınmaz", [run(
         {"kind": "define", "name": "Çizgi", "uids": [UID(10), UID(12)], "base": P(0, 0)},
-        refusal("module_kind", "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.",
+        refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
                 "operation.uids[1]"))]))
-    out.append(case("Ret: eğrisel duvar ilk kapsamda yok", [run(
-        {"kind": "define", "name": "Eğri", "uids": [UID(14)], "base": P(0, 0)},
-        refusal("module_kind", "Eğrisel duvar ilk modül kapsamında değil; düz duvarlı bir oda seçin.", "operation.uids[0]"))]))
+    # A curved wall makes a module since docs/adr/8050 §1 (scripts/fixtures/module_kinds_cases.py); the case once
+    # refused it.
+    out.append(case("Eğrisel duvar modül olur", [run(
+        {"kind": "define", "name": "Eğri", "uids": [UID(14)], "base": P(0, 0)}, ANY)]))
     # Objects on two levels make a module of two storeys since docs/adr/0796 §1 (scripts/fixtures/
     # module_storeys_cases.py); the case once refused them.
     out.append(case("İki kattaki duvarlar iki katlı modül olur", [run(

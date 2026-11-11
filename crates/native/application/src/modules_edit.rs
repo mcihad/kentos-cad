@@ -203,6 +203,10 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Wall(x) => Some(&mut x.wall.arch),
         Entity::Space(x) => Some(&mut x.space.arch),
         Entity::Insert(x) => Some(&mut x.arch),
+        Entity::Column(x) => Some(&mut x.column.arch),
+        Entity::Stair(x) => Some(&mut x.stair.arch),
+        Entity::Ramp(x) => Some(&mut x.ramp.arch),
+        Entity::Slab(x) => Some(&mut x.slab.arch),
         _ => None,
     }
 }
@@ -550,16 +554,21 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         &path,
                     ));
                 }
-                let curved = matches!(e, Entity::Wall(w) if w.wall.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)));
-                if !module_kind_ok(e) || curved {
+                if !module_kind_ok(e) {
                     return Err(fail(
                         codes::MODULE_KIND,
-                        if curved {
-                            "Eğrisel duvar ilk modül kapsamında değil; düz duvarlı bir oda seçin."
-                                .into()
-                        } else {
-                            "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.".into()
-                        },
+                        "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
+                        &path,
+                    ));
+                }
+                // A column tied to grids stands where they cross (docs/adr/8050 §1): the grids are the building's, not
+                // the module's, so an instance could not move it.
+                if let Entity::Column(c) = e
+                    && c.column.grids.is_some()
+                {
+                    return Err(fail(
+                        codes::MODULE_KIND,
+                        "Akslara bağlı kolon modüle alınmaz: yeri aksların kesişimidir. Önce Bağı kopar'ı seçin ya da kolonu seçimden çıkarın.".into(),
                         &path,
                     ));
                 }
@@ -1104,7 +1113,7 @@ fn in_operation(s: Stop) -> Stop {
 }
 
 fn arch_level_holder(e: &Entity) -> bool {
-    matches!(e, Entity::Wall(_) | Entity::Space(_) | Entity::Insert(_))
+    arch_of(e).is_some()
 }
 
 fn arch_of(e: &Entity) -> Option<&kentos_commands::ArchInfo> {
@@ -1112,6 +1121,10 @@ fn arch_of(e: &Entity) -> Option<&kentos_commands::ArchInfo> {
         Entity::Wall(x) => Some(&x.wall.arch),
         Entity::Space(x) => Some(&x.space.arch),
         Entity::Insert(x) => Some(&x.arch),
+        Entity::Column(x) => Some(&x.column.arch),
+        Entity::Stair(x) => Some(&x.stair.arch),
+        Entity::Ramp(x) => Some(&x.ramp.arch),
+        Entity::Slab(x) => Some(&x.slab.arch),
         _ => None,
     }
 }
