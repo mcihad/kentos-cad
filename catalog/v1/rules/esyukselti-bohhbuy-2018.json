@@ -1,8 +1,8 @@
 {
  "id": "bohhbuy-2018-m78",
- "release": 4,
+ "release": 5,
  "jurisdiction": "Türkiye: Büyük Ölçekli Harita ve Harita Bilgileri Üretim Yönetmeliği",
- "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 78(1)(c)–(ğ) ve Ek-3 0001–0005 (0003: yardımcı eğri 5 mm çizgi, 1 mm boşluk); Madde 63(2) (yerleşik alan ve yollarda paftada yaklaşık 2 cm'de bir kot), 91(2) (KOH_X,Y ve KOH_Z) ve 93(1)(c) (kesit kontrolünde 1,5 · KOH_Z); metin 7 Kasım 2026'da okundu, (ğ) 8 Kasım 2026'da, 63(2), 91(2) ve 93(1)(c) 10 Kasım 2026'da (CK 10455 ile 2025 değişikliği bu maddeleri değiştirmedi)",
+ "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 78(1)(c)–(ğ) ve Ek-3 0001–0005 (0003: yardımcı eğri 5 mm çizgi, 1 mm boşluk); Madde 63(2) (yerleşik alan ve yollarda paftada yaklaşık 2 cm'de bir kot), 91(2) (KOH_X,Y ve KOH_Z) ve 93(1)(b)–(c) (kesitte en çok 20 m aralıklı noktalar; kesit kontrolünde 1,5 · KOH_Z); metin 7 Kasım 2026'da okundu, (ğ) 8 Kasım 2026'da, 63(2), 91(2) ve 93(1)(c) 10 Kasım 2026'da, 93(1)(b) 11 Kasım 2026'da (CK 10455 ile 2025 değişikliği bu maddeleri değiştirmedi)",
  "effective": "2018-06-26",
  "intervals": [
   {"scale": 500, "interval": 1.0},
@@ -21,5 +21,5 @@
  "spotHeight": 1.2,
  "auxiliaryPattern": [5.0, -1.0],
  "heightEvery": 20.0,
- "sectionCheck": {"xy": [-1.665e-6, 0.01745, -1.166], "zFactor": 1.33, "factor": 1.5}
+ "sectionCheck": {"xy": [-1.665e-6, 0.01745, -1.166], "zFactor": 1.33, "factor": 1.5, "spacing": 20.0}
 }

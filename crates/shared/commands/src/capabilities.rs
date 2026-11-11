@@ -1679,6 +1679,20 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden", "section_check_exceeded"],
         targets: none,
     },
+    // Kesit kontrolü (plan/map-cad.md MAP-14, docs/adr/5120): read only.
+    Entry {
+        id: "road.terrains.sectioncheck",
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_height_point",
+            "invalid_input",
+            "layer_not_found",
+            "invalid_contours",
+        ]],
+        warnings: &["section_check_exceeded", "section_spacing_exceeded"],
+        targets: none,
+    },
     Entry {
         id: "file.import.landxml",
         refusals: &[

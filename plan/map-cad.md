@@ -45,7 +45,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740 | katman damgasının katman dizininden okunması; m. 63(2) ızgarasının taban noktası ve dönmesi; kesit kontrolünün kendisi (iki kontrol noktası arasında kesit, m. 93(1)) | gerçek veri ölçümü (karolu hesap) |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; kesik koni formülü ve Brükner sütunu; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi) | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
@@ -1985,6 +1985,15 @@ noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin 1,5 · KOH_Z sınırına g�
 `section_check_exceeded`); 71 bağımsız durum (22 yeni), regional ve proje durumları, `.kcad` örneği, Python, MCP,
 masaüstünde Yerleşik alan (63/2) satırı ve özet. Açık: katman damgasının dizinden okunması, ızgaranın taban noktası,
 kesit kontrolünün kendisi, karolu hesap (gerçek veri).
+
+**11 Kasım 2026, onuncu tur — kesit kontrolü; m. 63(2) ızgarasının taban noktası ve dönmesi ([ADR 5120](../docs/adr/5120-section-check-and-turned-built-up-grid.md)).**
+Kapsam: **Harita + Yol**. Dayanak: BÖHHBÜY m. 93(1)(a)–(c) ve 63(2) (metinden, 11 Kasım 2026); Civil 3D'nin ızgara
+noktaları (taban noktası, hücre, isteğe bağlı dönme). Kanıtlanan: yeni `road.terrains.sectioncheck` (iki kontrol
+noktası arasında kesit; kotlar eğrilerden enterpolasyonla; KOH 1,5 · KOH_Z'yle, aralık 20 m'yle; `outside`, `offLine`,
+`noContour`; yeni uyarı `section_spacing_exceeded`, ret `not_a_height_point`), paket sürüm 5 (`spacing`),
+`builtUp.origin`/`rotation`, katman damgası katman dizininden. 35 + 74 bağımsız durum, Python, MCP, masaüstü (Izgara
+(63/2) satırı, Kesit kontrolü… penceresi) ve resimler. Açık: kesitin çizimde gösterilmesi ve projede saklanması, karolu
+hesap (gerçek veri).
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

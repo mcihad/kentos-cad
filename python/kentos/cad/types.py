@@ -89369,21 +89369,26 @@ class ScopeRing(_Model):
 class SectionCheck(_Model):
     """The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,
     KOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences
-    between measured heights and the heights read from the contour lines is under `factor` times KOH_Z.
+    between measured heights and the heights read from the contour lines is under `factor` times KOH_Z. Docs/adr/5120:
+    the section's points are at most `spacing` metres apart along it (m. 93(1)(b)'s 20 m; none: not checked).
     Attributes:
         xy: The formula's coefficients of S², S and 1, giving centimetres. Unit: 1.
         z_factor: Unit: 1.
         factor: Unit: 1.
+        spacing: Unit: length.
     """
     xy: list[float]
     z_factor: float
     factor: float
+    spacing: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["xy"] = [float(e0) for e0 in self.xy]
         out["zFactor"] = float(self.z_factor)
         out["factor"] = float(self.factor)
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
         return out
 
     @classmethod
@@ -89392,6 +89397,7 @@ class SectionCheck(_Model):
             xy=[float(e0) for e0 in data["xy"]],
             z_factor=float(data["zFactor"]),
             factor=float(data["factor"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
         )
 
 
@@ -89428,6 +89434,34 @@ class SectionCrossing(_Model):
             left=data["left"],
             at_first=float(data["atFirst"]),
             at_second=float(data["atSecond"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionGap(_Model):
+    """Two neighbouring places of the section farther apart than the package's spacing: how far along each is, and the gap.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        length: Unit: length.
+    """
+    from_: float
+    to: float
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionGap:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            length=float(data["length"]),
         )
 
 
@@ -89525,6 +89559,63 @@ class SectionPavement(_Model):
             bottoms=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["bottoms"]],
             formation_cut=float(data["formationCut"]),
             formation_fill=float(data["formationFill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionPointRow(_Model):
+    """A point of the section: its object, its place, how far along the section from `from` its foot is and how far off
+    the line it lies (metres), its measured height, the height read from the contour lines (none: no contour crossing on
+    one side of it, or the point is not on the section), the two contour heights it is read between, and the measured
+    less the read height. `state`: `compared`, `noContour` (no crossing on one side), `outside` (its foot before `from`
+    or after `to`), `offLine` (farther than the corridor).
+    Attributes:
+        at: Unit: length.
+        along: Unit: length.
+        offset: Unit: length.
+        measured: Unit: elevation.
+        between: Unit: elevation.
+        contour: Unit: elevation.
+        difference: Unit: length.
+    """
+    uid: str
+    at: list[float]
+    along: float
+    offset: float
+    measured: float
+    state: str
+    between: list[float] | None | Unset = UNSET
+    contour: float | None | Unset = UNSET
+    difference: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["at"] = [float(e0) for e0 in self.at]
+        out["along"] = float(self.along)
+        out["offset"] = float(self.offset)
+        out["measured"] = float(self.measured)
+        out["state"] = self.state
+        if self.between is not UNSET:
+            out["between"] = None if self.between is None else [float(e0) for e0 in self.between]
+        if self.contour is not UNSET:
+            out["contour"] = None if self.contour is None else float(self.contour)
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionPointRow:
+        return cls(
+            uid=data["uid"],
+            at=[float(e0) for e0 in data["at"]],
+            along=float(data["along"]),
+            offset=float(data["offset"]),
+            measured=float(data["measured"]),
+            state=data["state"],
+            between=UNSET if "between" not in data else None if data["between"] is None else [float(e0) for e0 in data["between"]],
+            contour=UNSET if "contour" not in data else None if data["contour"] is None else float(data["contour"]),
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
         )
 
 
@@ -91377,15 +91468,22 @@ class SheetBuiltUp(_Model):
     """The heights of built-up areas and roads (BÖHHBÜY m. 63(2): “yerleşik alanlar ve yollarda harita üzerinde yaklaşık 2
     cm'de bir”, docs/adr/4740): the layers of the built-up areas' closed boundaries and of the roads' lines, and the
     spacing on the sheet (paper mm; none: the package's `heightEvery`). Along each road line from its start a height
-    every spacing, the first at half of it; then on the grid of the spacing (multiples of it east and north) inside the
-    built-up areas (even-odd over their rings), outside the details and farther than half the spacing from every height
-    already placed. Heights are the surface's, written as the summits' are; a place off the surface is counted.
+    every spacing, the first at half of it; then on the grid of the spacing inside the built-up areas (even-odd over
+    their rings), outside the details and farther than half the spacing from every height already placed. Heights are
+    the surface's, written as the summits' are; a place off the surface is counted. Docs/adr/5120: the grid runs from
+    `origin` (none: the coordinates' origin), turned by `rotation` (radians counter-clockwise from east; none: 0); its
+    places are the origin plus whole multiples of the spacing along the turned east and north. The regulation gives
+    neither: they are the surveyor's.
     Attributes:
         every: Unit: paper-mm.
+        origin: Unit: length.
+        rotation: Unit: rad.
     """
     areas: list[str] | Unset = UNSET
     every: float | None | Unset = UNSET
+    origin: list[float] | None | Unset = UNSET
     roads: list[str] | Unset = UNSET
+    rotation: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -91393,8 +91491,12 @@ class SheetBuiltUp(_Model):
             out["areas"] = list(self.areas)
         if self.every is not UNSET:
             out["every"] = None if self.every is None else float(self.every)
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else [float(e0) for e0 in self.origin]
         if self.roads is not UNSET:
             out["roads"] = list(self.roads)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
         return out
 
     @classmethod
@@ -91402,7 +91504,9 @@ class SheetBuiltUp(_Model):
         return cls(
             areas=list(data["areas"]) if "areas" in data else UNSET,
             every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else [float(e0) for e0 in data["origin"]],
             roads=list(data["roads"]) if "roads" in data else UNSET,
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
         )
 
 
@@ -107669,6 +107773,139 @@ class TerrainsRepaired(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainsSectionCheck(_Model):
+    """Input of `road.terrains.sectioncheck` v1: the section's two control points (`from`, `to`: points with their own
+    height), the points measured along it (`points`: points with their own height), the layers of the contour lines
+    (`contours`: polylines whose every vertex has one same height; others are counted, not read), the scale's
+    denominator (none: the project's plot scale), how far from the section's line a point may lie (`corridor`, metres;
+    none: no limit, the distance is only said) and the rule package (none: KentOS's BÖHHBÜY 2018).
+
+    Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_height_point` (`from`, `to`, `points[i]`: not a
+    point, or one without its own height), `invalid_input` (`to`: the same place as `from`; `points`: none, or a point
+    given twice or as an end; `corridor`: not above nought), `layer_not_found` (`contours[i]`; `contours`: none),
+    `invalid_contours` (a scale of 0; a package without `sectionCheck`). Warning `section_check_exceeded`: the RMS is not
+    under the limit; warning `section_spacing_exceeded`: two neighbouring places of the section (its ends and its points
+    on it) are farther apart than the package's spacing.
+    Attributes:
+        corridor: Unit: length.
+        scale: Unit: scale.
+    """
+    from_: str
+    to: str
+    points: list[str]
+    contours: list[str]
+    corridor: float | None | Unset = UNSET
+    rules: ContourRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["points"] = list(self.points)
+        out["contours"] = list(self.contours)
+        if self.corridor is not UNSET:
+            out["corridor"] = None if self.corridor is None else float(self.corridor)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSectionCheck:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            points=list(data["points"]),
+            contours=list(data["contours"]),
+            corridor=UNSET if "corridor" not in data else None if data["corridor"] is None else float(data["corridor"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else ContourRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsSectionChecked(_Model):
+    """Output of `road.terrains.sectioncheck` v1: the section's length and its ends' heights, each point in order along
+    it, the contour crossings found (how far along and the height), the contour lines not read (without one same
+    height), the gaps past the spacing, the scale and the package (`id release`), and the check: how many points
+    compared, their RMS and largest difference (metres; none without a compared point), KOH_Z and the limit
+    (`factor` · KOH_Z, metres), the spacing, and whether the RMS is under the limit (none without a compared point).
+    Attributes:
+        length: Unit: length.
+        ends: Unit: elevation.
+        crossings: Unit: length.
+        unlevelled: Unit: count.
+        scale: Unit: scale.
+        compared: Unit: count.
+        koh_z: Unit: length.
+        limit: Unit: length.
+        largest: Unit: length.
+        rms: Unit: length.
+        spacing: Unit: length.
+    """
+    length: float
+    ends: list[float]
+    points: list[SectionPointRow]
+    crossings: list[list[float]]
+    unlevelled: int
+    gaps: list[SectionGap]
+    scale: int
+    rules: str
+    compared: int
+    koh_z: float
+    limit: float
+    largest: float | None | Unset = UNSET
+    rms: float | None | Unset = UNSET
+    spacing: float | None | Unset = UNSET
+    within: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["ends"] = [float(e0) for e0 in self.ends]
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["crossings"] = [[float(e1) for e1 in e0] for e0 in self.crossings]
+        out["unlevelled"] = self.unlevelled
+        out["gaps"] = [e0.to_json() for e0 in self.gaps]
+        out["scale"] = self.scale
+        out["rules"] = self.rules
+        out["compared"] = self.compared
+        out["kohZ"] = float(self.koh_z)
+        out["limit"] = float(self.limit)
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else float(self.largest)
+        if self.rms is not UNSET:
+            out["rms"] = None if self.rms is None else float(self.rms)
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        if self.within is not UNSET:
+            out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSectionChecked:
+        return cls(
+            length=float(data["length"]),
+            ends=[float(e0) for e0 in data["ends"]],
+            points=[SectionPointRow.from_json(e0) for e0 in data["points"]],
+            crossings=[[float(e1) for e1 in e0] for e0 in data["crossings"]],
+            unlevelled=data["unlevelled"],
+            gaps=[SectionGap.from_json(e0) for e0 in data["gaps"]],
+            scale=data["scale"],
+            rules=data["rules"],
+            compared=data["compared"],
+            koh_z=float(data["kohZ"]),
+            limit=float(data["limit"]),
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else float(data["largest"]),
+            rms=UNSET if "rms" not in data else None if data["rms"] is None else float(data["rms"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+            within=data.get("within", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsSheetContoured(_Model):
     """Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,
     the lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in
@@ -107759,7 +107996,8 @@ class TerrainsSheetContours(_Model):
 
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
     the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
-    their text height, built-up heights asked without a spacing above nought or with neither areas nor roads),
+    their text height, built-up heights asked without a spacing above nought or with neither areas nor roads, a grid
+    origin or rotation not finite),
     `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,
     `slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,
     `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning
@@ -141042,9 +141280,11 @@ __all__ = [
     "SectionCrossing",
     "SectionFormula",
     "SectionFormulaName",
+    "SectionGap",
     "SectionGround",
     "SectionLayer",
     "SectionPavement",
+    "SectionPointRow",
     "SectionRow",
     "SectionSetDef",
     "SectionSetReport",
@@ -141690,6 +141930,8 @@ __all__ = [
     "TerrainsQuery",
     "TerrainsRepair",
     "TerrainsRepaired",
+    "TerrainsSectionCheck",
+    "TerrainsSectionChecked",
     "TerrainsSheetContoured",
     "TerrainsSheetContours",
     "TerrainsSparseDraw",

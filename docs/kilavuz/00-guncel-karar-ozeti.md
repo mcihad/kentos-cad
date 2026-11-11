@@ -723,6 +723,11 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Kesit kontrolü; m. 63(2) ızgarasının taban noktası ve dönmesi (11 Kasım 2026; MAP-14, [ADR 5120](../../docs/adr/5120-section-check-and-turned-built-up-grid.md)).**
+  `road.terrains.sectioncheck` (salt okunur): iki kontrol noktası arasındaki kesitte noktaların kotu kesitin kestiği iki
+  komşu eğri arasında enterpolasyonla; KOH 1,5 · KOH_Z'yle (m. 93(1)(c)), aralık paketin 20 m'siyle (m. 93(1)(b),
+  paket sürüm 5); uyarılar `section_check_exceeded`, `section_spacing_exceeded`. `builtUp.origin` ve `rotation`
+  ızgarayı kaydırır ve döndürür. Katman damgası katman dizininden. Harita + Yol.
 - **Pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması (10 Kasım 2026; MAP-14, [ADR 4740](../../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
   `road.terrains.sheetcontours` çizimi yüzeyin ve okuduğu katmanların damgasıyla tutulur (yeni kaynak türü `layer`),
   eskir ve yeniden üretilir. Yalnız değişeni yaz sırayı korur: aynı renkli yazısız çizgiler kalır, maskeli yazı ve nokta

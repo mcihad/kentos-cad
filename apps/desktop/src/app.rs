@@ -458,6 +458,8 @@ pub enum Dialog {
     CatalogReport,
     /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `App::sheet_contours`.
     SheetContours,
+    /// Kesit kontrolü (section_check_window.rs, docs/adr/5120); its state is `App::section_check`.
+    SectionCheck,
     /// Stok hacmi (stockpile_window.rs, docs/adr/3140); its state is `App::stockpile`.
     Stockpile,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
@@ -905,6 +907,7 @@ pub enum Message {
     ScanNetwork(crate::scan_network_window::Event),
     CatalogReport(crate::catalog_report_window::Event),
     SheetContours(crate::sheet_contours_window::Event),
+    SectionCheck(crate::section_check_window::Event),
     Stockpile(crate::stockpile_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
@@ -1600,6 +1603,7 @@ pub struct App {
     pub(crate) scan_network: crate::scan_network_window::State,
     pub(crate) catalog_report: crate::catalog_report_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
+    pub(crate) section_check: crate::section_check_window::State,
     pub(crate) stockpile: crate::stockpile_window::State,
     /// Senaryo ölçüleri's base stamps saved this session, by scenario (docs/adr/1440 §3).
     pub(crate) impact_stamps: crate::impact_window::Stamps,
@@ -2086,6 +2090,7 @@ impl App {
             scan_network: Default::default(),
             catalog_report: Default::default(),
             sheet_contours: Default::default(),
+            section_check: Default::default(),
             stockpile: Default::default(),
             impact_stamps: Default::default(),
             xref_watch: Default::default(),
@@ -2925,6 +2930,7 @@ impl App {
             Message::ScanNetwork(event) => return self.scan_network_event(event),
             Message::CatalogReport(event) => return self.catalog_report_event(event),
             Message::SheetContours(event) => return self.sheet_contours_event(event),
+            Message::SectionCheck(event) => return self.section_check_event(event),
             Message::Stockpile(event) => return self.stockpile_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),

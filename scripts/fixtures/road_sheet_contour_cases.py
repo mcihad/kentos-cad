@@ -310,7 +310,15 @@ def built_up_spots(s, built, d, dets, placed):
                 walked += ln
     roads = len(out)
     areas = details_of(built.get("areas", ()))
-    corners = [c for a in areas for ring in a for c in ring]
+    # ADR 5120: the grid from its origin, turned by its rotation (complex numbers: a place is origin + turn · (u + iv)).
+    origin = complex(*built.get("origin", (0.0, 0.0)))
+    turn = complex(math.cos(built.get("rotation", 0.0)), math.sin(built.get("rotation", 0.0)))
+    corners = []
+    for a in areas:
+        for ring in a:
+            for c in ring:
+                w = (complex(*c) - origin) * turn.conjugate()
+                corners.append((w.real, w.imag))
     if corners:
         lo = (min(c[0] for c in corners), min(c[1] for c in corners))
         hi = (max(c[0] for c in corners), max(c[1] for c in corners))
@@ -321,7 +329,8 @@ def built_up_spots(s, built, d, dets, placed):
             return any(math.hypot(sp["x"] - c[0], sp["y"] - c[1]) < d / 2.0 for sp in spots)
         for j in range(j0, j1 + 1):
             for i in range(i0, i1 + 1):
-                c = (float(i) * d, float(j) * d)
+                u, v = float(i) * d, float(j) * d
+                c = (origin.real + u * turn.real - v * turn.imag, origin.imag + u * turn.imag + v * turn.real)
                 if (any(inside(a, c) for a in areas) and not any(inside(x, c) for x in dets)
                         and not near(c, placed) and not near(c, out)):
                     add("builtUp", c)
@@ -887,6 +896,19 @@ def cases():
     drawn(out, "m. 63(2) planı yazmaz (1/5000)", {"scale": 5000, "builtUp": built}, op="plan", scale=5000, built=built)
     drawn(out, "Yalnız yol (1/5000)", {"scale": 5000, "builtUp": {"roads": ["yol-ekseni"]}}, scale=5000,
           built={"roads": ["yol-ekseni"]})
+    # ADR 5120: the grid's origin and rotation, the surveyor's (m. 63(2) gives neither).
+    turned = drawn(out, "m. 63(2) ızgarası 50 g döndürülmüş, başlangıcı kaydırılmış: noktalar dönen eksenlerde aralığın "
+                   "katlarında", {"builtUp": {**built, "origin": [7.0, 3.0], "rotation": math.pi / 4}, "details": ["bina"]},
+                   built={**built, "origin": [7.0, 3.0], "rotation": math.pi / 4}, details=["bina"])
+    grid = [s_ for s_ in turned["spots"] if s_["kind"] == "builtUp"]
+    assert len(grid) >= 20, len(grid)
+    for g_ in grid:
+        w = (complex(g_["x"], g_["y"]) - complex(7.0, 3.0)) * complex(math.cos(math.pi / 4), -math.sin(math.pi / 4))
+        assert abs(w.real / 20.0 - round(w.real / 20.0)) < 1e-9 and abs(w.imag / 20.0 - round(w.imag / 20.0)) < 1e-9, w
+    drawn(out, "m. 63(2) ızgarasının yalnız başlangıcı kaydırılmış (10, 10)", {"builtUp": {**built, "origin": [10.0, 10.0]}},
+          built={**built, "origin": [10.0, 10.0]})
+    drawn(out, "m. 63(2) ızgarası yalnız döndürülmüş (−30°) planı yazmaz", {"builtUp": {**built, "rotation": -math.pi / 6}},
+          op="plan", built={**built, "rotation": -math.pi / 6})
     drawn(out, "Tepe kotu ve yerleşik alan: tepeye yarım aralıktan yakın ızgara noktası yazılmaz",
           {"spots": True, "builtUp": {"areas": ["yerlesik"]}}, spots=True, built={"areas": ["yerlesik"]})
     # docs/adr/4740 (m. 91(2), m. 93(1)(c)): the control points' measured heights against the surface.

@@ -107,6 +107,7 @@ mod overlap_window;
 mod register_window;
 mod scan_network_window;
 mod catalog_report_window;
+mod section_check_window;
 mod sheet_contours_window;
 mod stockpile_window;
 mod xrefs_review_view;
@@ -482,6 +483,8 @@ mod register_window_tests;
 mod scan_network_window_tests;
 #[cfg(test)]
 mod catalog_report_window_tests;
+#[cfg(test)]
+mod section_check_window_tests;
 #[cfg(test)]
 mod sheet_contours_window_tests;
 #[cfg(test)]

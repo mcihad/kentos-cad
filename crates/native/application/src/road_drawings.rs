@@ -61,12 +61,12 @@ fn network_stamp(doc: &Document, id: &str) -> Option<String> {
 /// A layer's stamp (docs/adr/4740): of the geometries of its objects as they are, in the drawing's order; none when the
 /// drawing has no such layer. Only the geometry counts: a building recoloured does not move a contour line, a building
 /// moved does. Every object of the layer counts, the ones a drawing does not read too (a stamp that changes for nothing
-/// only says stale; one that missed a change would say current).
+/// only says stale; one that missed a change would say current). Docs/adr/5120: the objects are read from the layer's
+/// index, in the drawing's order, not by walking the whole drawing.
 fn layer_stamp(doc: &Document, id: &str) -> Option<String> {
     doc.layers().get(id).filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)?;
     let geometries: Vec<Value> = doc
-        .entities()
-        .filter(|e| e.base().layer_id == id)
+        .by_layer(id)
         .map(|e| {
             // The object's JSON without what its base holds (its number, layer, look, attributes, label): its kind and
             // geometry.

@@ -2216,6 +2216,7 @@ impl App {
             Asking::ScanNetwork => self.scan_network_view(),
             Asking::CatalogReport => self.catalog_report_view(),
             Asking::SheetContours => self.sheet_contours_view(),
+            Asking::SectionCheck => self.section_check_view(),
             Asking::Stockpile => self.stockpile_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),

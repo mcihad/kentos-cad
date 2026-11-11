@@ -17,7 +17,8 @@ import type { SheetSlopes } from "./SheetSlopes";
  *
  * Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
  * the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
- * their text height, built-up heights asked without a spacing above nought or with neither areas nor roads),
+ * their text height, built-up heights asked without a spacing above nought or with neither areas nor roads, a grid
+ * origin or rotation not finite),
  * `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,
  * `slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,
  * `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning

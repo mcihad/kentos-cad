@@ -454,6 +454,7 @@ pub mod road_superelevations_edit;
 pub mod road_superelevations_query;
 pub mod road_templates_edit;
 pub mod road_terrains_contours;
+pub mod road_terrains_section;
 pub mod road_terrains_sheet;
 pub mod road_terrains_zeroline;
 pub mod road_terrains_cutfill;
@@ -1363,6 +1364,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS,
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_SECTIONCHECK,
+        kentos_commands::ROAD_TERRAINS_SECTIONCHECK_VERSION,
     ),
     (
         kentos_commands::ROAD_TERRAINS_ZEROLINE,

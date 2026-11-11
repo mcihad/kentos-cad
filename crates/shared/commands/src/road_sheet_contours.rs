@@ -91,7 +91,8 @@ pub struct ContourRules {
 
 /// The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,
 /// KOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences
-/// between measured heights and the heights read from the contour lines is under `factor` times KOH_Z.
+/// between measured heights and the heights read from the contour lines is under `factor` times KOH_Z. Docs/adr/5120:
+/// the section's points are at most `spacing` metres apart along it (m. 93(1)(b)'s 20 m; none: not checked).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -105,6 +106,10 @@ pub struct SectionCheck {
     pub z_factor: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub factor: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub spacing: Option<f64>,
 }
 
 /// KentOS's default package: BÖHHBÜY 2018's Article 78(1)(c)–(g) and Ek-3 0001–0005.
@@ -125,7 +130,8 @@ pub fn contour_rules_default() -> Option<ContourRules> {
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
 /// the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
-/// their text height, built-up heights asked without a spacing above nought or with neither areas nor roads),
+/// their text height, built-up heights asked without a spacing above nought or with neither areas nor roads, a grid
+/// origin or rotation not finite),
 /// `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,
 /// `slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,
 /// `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning
@@ -205,9 +211,12 @@ pub struct SheetSlopes {
 /// The heights of built-up areas and roads (BÖHHBÜY m. 63(2): “yerleşik alanlar ve yollarda harita üzerinde yaklaşık 2
 /// cm'de bir”, docs/adr/4740): the layers of the built-up areas' closed boundaries and of the roads' lines, and the
 /// spacing on the sheet (paper mm; none: the package's `heightEvery`). Along each road line from its start a height
-/// every spacing, the first at half of it; then on the grid of the spacing (multiples of it east and north) inside the
-/// built-up areas (even-odd over their rings), outside the details and farther than half the spacing from every height
-/// already placed. Heights are the surface's, written as the summits' are; a place off the surface is counted.
+/// every spacing, the first at half of it; then on the grid of the spacing inside the built-up areas (even-odd over
+/// their rings), outside the details and farther than half the spacing from every height already placed. Heights are
+/// the surface's, written as the summits' are; a place off the surface is counted. Docs/adr/5120: the grid runs from
+/// `origin` (none: the coordinates' origin), turned by `rotation` (radians counter-clockwise from east; none: 0); its
+/// places are the origin plus whole multiples of the spacing along the turned east and north. The regulation gives
+/// neither: they are the surveyor's.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -224,6 +233,14 @@ pub struct SheetBuiltUp {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub every: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub origin: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub rotation: Option<f64>,
 }
 
 /// The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points

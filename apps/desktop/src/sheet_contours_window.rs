@@ -58,6 +58,12 @@ pub struct State {
     pub built: bool,
     pub built_area: String,
     pub built_road: String,
+    /// Docs/adr/5120: the grid's origin as typed (Y east, X north; empty: the coordinates' origin) and its turn as typed
+    /// in the project's angle unit, with the turn read (radians counter-clockwise; none: 0).
+    pub grid_y: String,
+    pub grid_x: String,
+    pub grid_angle: String,
+    pub grid_turn: Option<f64>,
     pub answer: Option<Result<TerrainsSheetContoured, String>>,
 }
 
@@ -80,6 +86,9 @@ pub enum Event {
     Built(bool),
     BuiltArea(String),
     BuiltRoad(String),
+    GridY(String),
+    GridX(String),
+    GridAngle(String),
     Draw,
     Close,
 }
@@ -109,11 +118,31 @@ impl State {
                 bottom: [&self.slope_bottom].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
             }),
             points: if self.chosen && !self.chosen_layer.is_empty() { vec![self.chosen_layer.clone()] } else { Vec::new() },
-            built_up: self.built.then(|| SheetBuiltUp {
-                areas: [&self.built_area].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
-                roads: [&self.built_road].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
-                every: None,
-            }),
+            built_up: if self.built {
+                let number = |t: &str, what: &str| -> Result<Option<f64>, String> {
+                    match t.trim() {
+                        "" => Ok(None),
+                        t => t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("Izgaranın {what} “{t}” bir sayı değil.")),
+                    }
+                };
+                // Docs/adr/5120: Y is east, X north; one of them alone counts the other as nought.
+                let origin = match (number(&self.grid_y, "başlangıcının Y'si")?, number(&self.grid_x, "başlangıcının X'i")?) {
+                    (None, None) => None,
+                    (y, x) => Some([y.unwrap_or(0.0), x.unwrap_or(0.0)]),
+                };
+                if !self.grid_angle.trim().is_empty() && self.grid_turn.is_none() {
+                    return Err(format!("Izgaranın açısı “{}” bir sayı değil.", self.grid_angle.trim()));
+                }
+                Some(SheetBuiltUp {
+                    areas: [&self.built_area].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                    roads: [&self.built_road].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                    every: None,
+                    origin,
+                    rotation: self.grid_turn,
+                })
+            } else {
+                None
+            },
             ..Default::default()
         })
     }
@@ -212,6 +241,7 @@ impl App {
             built_area,
             built_road,
             answer: None,
+            ..State::default()
         };
         self.sheet_contours_run();
         self.dialog = Some(Dialog::SheetContours);
@@ -266,6 +296,15 @@ impl App {
             Event::Built(v) => s.built = v,
             Event::BuiltArea(v) => s.built_area = v,
             Event::BuiltRoad(v) => s.built_road = v,
+            Event::GridY(v) => s.grid_y = v,
+            Event::GridX(v) => s.grid_x = v,
+            Event::GridAngle(v) => {
+                let typed = v.trim().replace(',', ".").parse::<f64>().ok();
+                let turn = typed.map(|t| self.format().turn_from_typed(t));
+                let s = &mut self.sheet_contours;
+                s.grid_turn = turn;
+                s.grid_angle = v;
+            }
             Event::Draw => {
                 self.sheet_contours_draw();
                 return Task::none();
@@ -372,6 +411,22 @@ impl App {
                 ]
                 .spacing(10)
                 .align_y(Center)
+            })
+            // Docs/adr/5120: the grid's origin and turn, the surveyor's (m. 63(2) gives neither).
+            .field("Izgara (63/2)", {
+                let input = |value: &str, hint: &'static str, on: fn(String) -> Event| {
+                    container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(130)
+                };
+                row![
+                    label::caption("Başlangıç Y"),
+                    input(&s.grid_y, "0", Event::GridY),
+                    label::caption("X"),
+                    input(&s.grid_x, "0", Event::GridX),
+                    label::caption(format!("Açı ({})", self.format().turn_words())),
+                    input(&s.grid_angle, "0", Event::GridAngle)
+                ]
+                .spacing(10)
+                .align_y(Center)
             });
         let mut lines = Vec::new();
         match &s.answer {
@@ -433,6 +488,10 @@ impl App {
         let ready = matches!(s.answer, Some(Ok(_)));
         Frame::new(TITLE)
             .push(body)
+            .aside(words::secondary(
+                crate::section_check_window::OPEN,
+                Some(Message::SectionCheck(crate::section_check_window::Event::Open)),
+            ))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(DRAW, ready.then(|| msg(Event::Draw))))
             .width(820.0)
@@ -443,6 +502,9 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
+            Control::Press(crate::section_check_window::OPEN) => {
+                Some(Message::SectionCheck(crate::section_check_window::Event::Open))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

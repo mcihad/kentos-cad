@@ -7164,7 +7164,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Pafta eş yükselti eğrileri".into(),
             summary: "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). \
                       (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004); istenirse (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz; istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır. Kendi kotu olan, yüzeyde ve yüzeyin köşesi olmayan seçilen noktalarda ölçülen kotla yüzeyin kotu arasındaki farkların karesel ortalaması paketin sınırıyla (sectionCheck: m. 93(1)(c)'nin 1,5 · KOH_Z'si, KOH_Z m. 91(2)'den ölçeğe göre) karşılaştırılır (check); aşarsa uyarı section_check_exceeded. \
-                      İstenirse (builtUp: areas, roads; m. 63(2)) yerleşik alan ve yollarda paftada yaklaşık her heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca başından yarım aralıkta başlayarak, sonra aralığın ızgarasında yerleşik alanın içinde, detayın dışında ve başka bir kota yarım aralıktan uzakta; kotlar yüzeyden. \
+                      İstenirse (builtUp: areas, roads; m. 63(2)) yerleşik alan ve yollarda paftada yaklaşık her heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca başından yarım aralıkta başlayarak, sonra aralığın ızgarasında yerleşik alanın içinde, detayın dışında ve başka bir kota yarım aralıktan uzakta; kotlar yüzeyden. Izgara origin'den (yoksa koordinat başlangıcı) başlar, rotation kadar döner (radyan, doğudan saat yönü tersine; yoksa 0): yönetmelik ikisini de vermez, ölçmecinindir. \
                       3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Çizim projenin ağacında yüzeyin ve okuduğu katmanların (detay, şev, seçilen nokta, yerleşik alan, yol) damgasıyla tutulur: biri değişince eskir, road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
                 .into(),
             aliases: vec!["paftaegrileri".into(), "esyukseltipafta".into()],
@@ -7182,6 +7182,40 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Mevcut zeminin 1/1000 pafta eğrileri, binalar kesilerek".into(),
                 input: json!({ "surface": "Mevcut zemin", "layerId": "esyukselti", "scale": 1000, "details": ["bina"] }),
+                output: None,
+            }],
+        },
+        // Kesit kontrolü (plan/map-cad.md MAP-14, docs/adr/5120).
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_SECTIONCHECK.into(),
+            version: crate::ROAD_TERRAINS_SECTIONCHECK_VERSION,
+            title: "Kesit kontrolü".into(),
+            summary: "Paftanın eş yükselti eğrilerini BÖHHBÜY m. 93(1)'in kesit kontrolüyle denetler: kesit yüksekliği bilinen iki kontrol noktası arasındaki doğrudur (from, to; kendi kotu olan noktalar). Kesit noktaları (points; nivelmanla kotu taşınmış, kendi kotu olan noktalar) kesite izdüşümüyle okunur: başlangıçtan uzaklık ve kesitten uzaklık; corridor verilirse ondan uzak nokta offLine, kesitin uçlarının dışına düşen outside sayılır. \
+                      Eğri katmanlarındaki (contours) her köşesi aynı kotta olan çoklu çizgiler kesitle kesiştirilir (yay kirişiyle; kotu tek olmayan çizgi sayılır, okunmaz); noktanın eğrilerden kotu önündeki ve ardındaki en yakın kesişimin kotları arasında doğrusal enterpolasyondur (bir yanında kesişim yoksa noContour). \
+                      Ölçülen − eğriden farkların karesel ortalaması paketin sınırıyla karşılaştırılır (sectionCheck: KOH_Z m. 91(2)'den ölçeğe göre, sınır 1,5 · KOH_Z, m. 93(1)(c)); kesitin komşu iki yeri (uçlar ve kesitteki noktalar) paketin aralığından (spacing, m. 93(1)(b): 20 m) uzaksa gaps. Uyarılar section_check_exceeded, section_spacing_exceeded. Salt okunur. Uygunluk ya da kurum kabulü söylenmez. \
+                      Retler: invalid_uid, entity_not_found, not_a_height_point (from, to, points[i]), invalid_input (iki uç aynı yerde, nokta yok, nokta iki kez ya da uç olarak, corridor 0'dan büyük değil), layer_not_found (contours), invalid_contours (ölçek 0, paket kesit sınırı vermiyor)."
+                .into(),
+            aliases: vec!["kesitkontrolu".into(), "sectioncheck".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsSectionCheck>(),
+            output: schema::<crate::TerrainsSectionChecked>(),
+            plan: Some(schema::<crate::TerrainsSectionChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki kontrol noktası arasında 1/1000 kesit".into(),
+                input: json!({
+                    "from": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+                    "to": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+                    "points": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e14"],
+                    "contours": ["esyukselti"],
+                    "scale": 1000
+                }),
                 output: None,
             }],
         },
@@ -16966,6 +17000,9 @@ mod tests {
                     crate::ROAD_TERRAINS_SHEET_CONTOURS => {
                         serde_json::from_value::<crate::TerrainsSheetContours>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_SECTIONCHECK => {
+                        serde_json::from_value::<crate::TerrainsSectionCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_TERRAINS_ZEROLINE => {
                         serde_json::from_value::<crate::TerrainsZeroLine>(e.input.clone()).map(|_| ())
                     }
@@ -17922,6 +17959,10 @@ mod tests {
                         }
                         crate::ROAD_TERRAINS_SHEET_CONTOURS => {
                             serde_json::from_value::<crate::TerrainsSheetContoured>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_SECTIONCHECK => {
+                            serde_json::from_value::<crate::TerrainsSectionChecked>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_TERRAINS_ZEROLINE => {

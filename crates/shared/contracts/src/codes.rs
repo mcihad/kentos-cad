@@ -721,6 +721,10 @@ codes! {
     /// A warning: the chosen points' own heights part from the surface's by more than BÖHHBÜY m. 93(1)(c)'s limit
     /// (docs/adr/4740).
     SECTION_CHECK_EXCEEDED = "section_check_exceeded", Warning, false, "Ölçülen kotlarla yüzeyin kotu arasındaki farkların karesel ortalaması m. 93(1)(c)'nin sınırını aşıyor.";
+    /// Kesit kontrolü (docs/adr/5120): two neighbouring places of the section farther apart than m. 93(1)(b)'s spacing.
+    SECTION_SPACING_EXCEEDED = "section_spacing_exceeded", Warning, false, "Kesitte iki komşu nokta m. 93(1)(b)'nin aralığından uzak.";
+    /// Kesit kontrolü (docs/adr/5120): not a point, or a point without its own height.
+    NOT_A_HEIGHT_POINT = "not_a_height_point", Failed, false, "Nesne kendi kotu olan bir nokta değil; kesitin uçları ve noktaları ölçülmüş kotu olan noktalardır.";
     /// Two surfaces whose difference changes sign nowhere: no cut and fill boundary (docs/adr/1620).
     NO_ZERO_LINE = "no_zero_line", Failed, false, "İki yüzeyin farkı hiçbir yerde işaret değiştirmiyor: sıfır hattı yok.";
     /// Two surfaces that do not overlap, or coincide wherever they do: no cut or fill zone (docs/adr/1840).

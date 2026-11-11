@@ -3,10 +3,11 @@
 /**
  * The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,
  * KOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences
- * between measured heights and the heights read from the contour lines is under `factor` times KOH_Z.
+ * between measured heights and the heights read from the contour lines is under `factor` times KOH_Z. Docs/adr/5120:
+ * the section's points are at most `spacing` metres apart along it (m. 93(1)(b)'s 20 m; none: not checked).
  */
 export type SectionCheck = { 
 /**
  * The formula's coefficients of S², S and 1, giving centimetres.
  */
-xy: [number, number, number], zFactor: number, factor: number, };
+xy: [number, number, number], zFactor: number, factor: number, spacing?: number, };

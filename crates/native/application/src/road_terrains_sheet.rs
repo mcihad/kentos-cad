@@ -189,7 +189,7 @@ const MAX_GRID: f64 = 1_000_000.0;
 /// The heights of built-up areas and roads (docs/adr/4740; BÖHHBÜY m. 63(2)), `d` metres apart: along each line or
 /// polyline of the road layers (each of its parts, a closed one round to its start; an arc read as its chord), in the
 /// drawing's order, a place every `d` from its start, the first at half of it, once per place; then the grid of `d`
-/// (multiples of it east and north), south to north and west to east, inside a built-up area's closed boundary
+/// (docs/adr/5120: from its origin, turned by its rotation), row by row of its own axes, inside a built-up area's closed boundary
 /// (even-odd over its rings), outside the details and farther than half `d` from every height placed before (`placed`
 /// and these). Heights the surface's; the places off it counted. Answers the heights, how many along the roads, how
 /// many on the grid, how many off.
@@ -265,7 +265,14 @@ fn built_up_spots(
         })
         .filter(|a: &Detail| !a.is_empty())
         .collect();
-    let corners = areas.iter().flatten().flatten();
+    // Docs/adr/5120: the grid runs from its origin, turned by its rotation; the corners are read in its own axes.
+    let o = b.origin.unwrap_or([0.0, 0.0]);
+    let (sin, cos) = b.rotation.unwrap_or(0.0).sin_cos();
+    let own = |c: &P| {
+        let (dx, dy) = (c[0] - o[0], c[1] - o[1]);
+        [dx * cos + dy * sin, dy * cos - dx * sin]
+    };
+    let corners = areas.iter().flatten().flatten().map(own);
     let (lo, hi) = corners.fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), c| {
         ([lo[0].min(c[0]), lo[1].min(c[1])], [hi[0].max(c[0]), hi[1].max(c[1])])
     });
@@ -283,7 +290,8 @@ fn built_up_spots(
         while j <= j1 {
             let mut i = i0;
             while i <= i1 {
-                let c = [i * d, j * d];
+                let (u, v) = (i * d, j * d);
+                let c = [o[0] + u * cos - v * sin, o[1] + u * sin + v * cos];
                 if areas.iter().any(|a| inside(a, c))
                     && !details.iter().any(|x| inside(x, c))
                     && !near(c, placed)
@@ -492,7 +500,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         || (!rules.auxiliary_pattern.is_empty() && !rules.auxiliary_pattern.iter().any(|l| *l > 0.0))
         // Docs/adr/4740: the built-up heights' spacing and the section check's limit, when the package gives them.
         || rules.height_every.is_some_and(|v| !positive(v))
-        || rules.section_check.as_ref().is_some_and(|c| !(c.xy.iter().all(|v| v.is_finite()) && positive(c.z_factor) && positive(c.factor)))
+        || rules.section_check.as_ref().is_some_and(|c| {
+            !(c.xy.iter().all(|v| v.is_finite()) && positive(c.z_factor) && positive(c.factor) && c.spacing.is_none_or(positive))
+        })
     {
         return Err(fail(
             codes::INVALID_CONTOURS,
@@ -592,6 +602,13 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
                     ));
                 }
             };
+            // Docs/adr/5120: the grid's origin and rotation, the surveyor's.
+            if b.origin.is_some_and(|o| !(o[0].is_finite() && o[1].is_finite())) {
+                return Err(fail(codes::INVALID_CONTOURS, "Izgaranın başlangıç noktası sonlu olmalı.".into(), "builtUp.origin"));
+            }
+            if b.rotation.is_some_and(|r| !r.is_finite()) {
+                return Err(fail(codes::INVALID_CONTOURS, "Izgaranın dönme açısı sonlu olmalı.".into(), "builtUp.rotation"));
+            }
             for (at, layers) in [("builtUp.areas", &b.areas), ("builtUp.roads", &b.roads)] {
                 if let Some(l) = layers.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
                     return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), at));
