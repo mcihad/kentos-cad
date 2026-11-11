@@ -1,7 +1,7 @@
 # ADR 8048: Planı tanı — patlatılmış DWG/DXF planından duvar ve açıklık
 
-- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon, blok, duvar üstü açıklık ve duvar ucundaki kapı adımları yapıldı (11
-  Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
+- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon (L dahil), blok, duvar üstü açıklık ve duvar ucundaki kapı adımları
+  yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
   (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2), masaüstü aracı Mimari ›
   Duvar ▾ › Planı tanı (§4); bölüm binasının ofis planı tanımla birebir okunuyor, gerçek pencerede kabul edildi
   (Doğrulama); kolon katmanının dikdörtgeni ve dairesi kolon olur (§5); bloklar yerinde okunur (§6). Açık: L ve
@@ -116,8 +116,10 @@ Kolon katmanının kapalı çevresi (çoklu çizgi, alan) dört dik köşeliyse 
 ortası, eni doğu–batıya yakın kenarı (±45°), boyu öbürü (eşitse yazılmaz), dönüşü o kenarın açısı; dairesi **yuvarlak
 kolon** (çapı kadar). Kolon dolgulu (betonarme kesit), katmanı kendi katmanı, `arch` verilmişse onu alır; malzemesi
 yazılmaz (Betonarme varsayılanı, ADR 8041 §2). Ortası bir kolonun içinde kalan kolon katmanı taraması kolonla gider.
-L ya da düzensiz çevre kolon olmaz, kalır ve söylenir ("1 kolon nesnesi kolona çevrilemedi (dikdörtgen ya da daire
-değil)"). Kolon, duvarın tanınmasında yine köprüdür (§1). Çıktıda `columns`, planda kolon nesneleri; araç önizlemede
+Altı dik köşeli çevre **L kolon** olur (ADR 0725 §3): kutusu içe dönen köşenin karşısındaki dış köşeden kurulur, eni o
+köşeden çevrenin saat yönü tersine ayrıldığı kol boyunca, boyu öbür kol boyunca; her kolun kalınlığı ucundaki kenar;
+dönüşü enin açısı (çevre saat yönünde çizilmişse önce çevrilir). Düzensiz çevre (üçgen, çok köşeli) kolon olmaz, kalır ve
+söylenir ("1 kolon nesnesi kolona çevrilemedi (dikdörtgen ya da daire değil)"). Kolon, duvarın tanınmasında yine köprüdür (§1). Çıktıda `columns`, planda kolon nesneleri; araç önizlemede
 çevrelerini çizer ve sözüne "8 kolon" ekler. Sayılar nanometreye yuvarlanır (30° dönüş 0,523598776).
 
 ### 6. Bloklar yerinde okunur
@@ -147,7 +149,8 @@ katmanda sayılır; açılamayan blok "N blok açılamadı" diye söylenir.
 - İlk koşu bir hata buldu: duvar katmanı yok sayılınca "adı bir şey söylemeyen katman duvardır" kuralı MERDIVEN'i duvar
   saydı ve basamaklar 5 duvar oldu. Merdiven, aks, mobilya gibi adlar artık "yok sayılır" rolündedir; yalnız adı bir
   şey söylemeyen katman duvar sayılır.
-- 42 ortak durum (kolon adımıyla: yuvarlak, 30° dönük 0,50×0,30 ve taramalı kolon, kalan L çevre)
+- 42 ortak durum (kolon adımıyla: yuvarlak, 30° dönük 0,50×0,30 ve taramalı kolon; L adımıyla iki L — biri yarım
+  dönmüş — ve kalan üçgen çevre)
   `scripts/fixtures/arch_recognize_cases.py` (KentOS kodu olmadan) masaüstü işleyicisinde ve Python
   SDK'da geçiyor.
 - **Bloklu ofis planı** (aynı üretici, `kesit-binasi-zemin-bloklu.dxf`: her kapı, pencere ve kolon kendi bloğu,
@@ -175,7 +178,8 @@ katmanda sayılır; açılamayan blok "N blok açılamadı" diye söylenir.
 
 ## 3. Açık kalanlar
 
-- L ve düzensiz kolon (ADR 0725 §3'ün L kolonu), duvar stilinin ölçülen kalınlıktan seçilmesi (Chief Architect'in
-  25 mm'si) ve bileşen çizgilerinden katmanlar.
+- Duvar stilinin ölçülen kalınlıktan seçilmesi (Chief Architect'in 25 mm'si) ve bileşen çizgilerinden katmanlar: KentOS'un
+  stilleri yeni binanın katmanlarını varsayar (Dış duvar 25'in 5 cm yalıtımı), eski binanın tadilatında yanlış olur;
+  isteğe bağlı bir seçenek olarak düşünülür.
 - Eğri duvar (eş merkezli yaylar), blok niteliğindeki kapı numarasının açıklığa geçmesi, merdiven ve donatı.
 - Gerçek bir ofis DWG'siyle tadilat örneği (ADV-25'in ilk kabulü).

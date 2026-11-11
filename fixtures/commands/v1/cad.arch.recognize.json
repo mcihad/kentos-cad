@@ -8878,7 +8878,7 @@
    ]
   },
   {
-   "name": "yuvarlak, dönük ve L kolon: daire yuvarlak kolon, döndürülmüş dikdörtgen dönük kolon olur, taraması kolonla gider; L çevre kalır ve söylenir",
+   "name": "yuvarlak, dönük ve L kolon: daire yuvarlak, döndürülmüş dikdörtgen dönük, altı dik köşe L kolon olur (yarım dönmüş L dönüşüyle), taraması kolonla gider; üçgen çevre kalır ve söylenir",
    "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -9264,6 +9264,60 @@
        }
       ],
       "closed": true
+     },
+     {
+      "kind": "polyline",
+      "id": 13,
+      "layerId": "kolon",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 3.6,
+        "y": 2.6
+       },
+       {
+        "x": 3.1,
+        "y": 2.6
+       },
+       {
+        "x": 3.1,
+        "y": 2.5
+       },
+       {
+        "x": 3.5,
+        "y": 2.5
+       },
+       {
+        "x": 3.5,
+        "y": 2.2
+       },
+       {
+        "x": 3.6,
+        "y": 2.2
+       }
+      ],
+      "closed": true
+     },
+     {
+      "kind": "polyline",
+      "id": 14,
+      "layerId": "kolon",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 3.0,
+        "y": 0.4
+       },
+       {
+        "x": 3.4,
+        "y": 0.4
+       },
+       {
+        "x": 3.2,
+        "y": 0.7
+       }
+      ],
+      "closed": true
      }
     ]
    },
@@ -9329,23 +9383,35 @@
      "as": "e12"
     },
     {
+     "op": "captureUid",
+     "id": 13,
+     "as": "e13"
+    },
+    {
+     "op": "captureUid",
+     "id": 14,
+     "as": "e14"
+    },
+    {
      "op": "execute",
      "result": {
       "status": "completed",
       "output": {
        "walls": [
-        "$uidOf:13",
-        "$uidOf:14",
         "$uidOf:15",
-        "$uidOf:16"
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18"
        ],
        "doors": 0,
        "windows": 0,
        "bare": 0,
        "revision": "$current",
        "columns": [
-        "$uidOf:17",
-        "$uidOf:18"
+        "$uidOf:19",
+        "$uidOf:20",
+        "$uidOf:21",
+        "$uidOf:22"
        ],
        "removed": [
         "$uid:e1",
@@ -9358,10 +9424,12 @@
         "$uid:e8",
         "$uid:e9",
         "$uid:e10",
-        "$uid:e11"
+        "$uid:e11",
+        "$uid:e12",
+        "$uid:e13"
        ],
        "left": [
-        "$uid:e12"
+        "$uid:e14"
        ]
       },
       "warnings": [
@@ -9374,51 +9442,17 @@
      },
      "expect": {
       "ids": [
-       12,
-       13,
        14,
        15,
        16,
        17,
-       18
+       18,
+       19,
+       20,
+       21,
+       22
       ],
       "entities": {
-       "13": {
-        "kind": "wall",
-        "id": 13,
-        "layerId": "duvar",
-        "attrs": {},
-        "pts": [
-         {
-          "x": 0.0,
-          "y": 0.0
-         },
-         {
-          "x": 4.0,
-          "y": 0.0
-         }
-        ],
-        "width": 0.2,
-        "justify": "center"
-       },
-       "14": {
-        "kind": "wall",
-        "id": 14,
-        "layerId": "duvar",
-        "attrs": {},
-        "pts": [
-         {
-          "x": 0.0,
-          "y": 3.0
-         },
-         {
-          "x": 4.0,
-          "y": 3.0
-         }
-        ],
-        "width": 0.2,
-        "justify": "center"
-       },
        "15": {
         "kind": "wall",
         "id": 15,
@@ -9430,8 +9464,8 @@
           "y": 0.0
          },
          {
-          "x": 0.0,
-          "y": 3.0
+          "x": 4.0,
+          "y": 0.0
          }
         ],
         "width": 0.2,
@@ -9444,6 +9478,42 @@
         "attrs": {},
         "pts": [
          {
+          "x": 0.0,
+          "y": 3.0
+         },
+         {
+          "x": 4.0,
+          "y": 3.0
+         }
+        ],
+        "width": 0.2,
+        "justify": "center"
+       },
+       "17": {
+        "kind": "wall",
+        "id": 17,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.0,
+          "y": 3.0
+         }
+        ],
+        "width": 0.2,
+        "justify": "center"
+       },
+       "18": {
+        "kind": "wall",
+        "id": 18,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+         {
           "x": 4.0,
           "y": 0.0
          },
@@ -9455,9 +9525,9 @@
         "width": 0.2,
         "justify": "center"
        },
-       "17": {
+       "19": {
         "kind": "column",
-        "id": 17,
+        "id": 19,
         "layerId": "kolon",
         "attrs": {},
         "at": {
@@ -9468,9 +9538,9 @@
         "fill": true,
         "shape": "round"
        },
-       "18": {
+       "20": {
         "kind": "column",
-        "id": 18,
+        "id": 20,
         "layerId": "kolon",
         "attrs": {},
         "at": {
@@ -9481,6 +9551,43 @@
         "fill": true,
         "depth": 0.3,
         "rotation": 0.523598776
+       },
+       "21": {
+        "kind": "column",
+        "id": 21,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+         "x": 3.2,
+         "y": 1.3
+        },
+        "width": 0.4,
+        "fill": true,
+        "shape": "lShape",
+        "depth": 0.6,
+        "legs": [
+         0.15,
+         0.15
+        ]
+       },
+       "22": {
+        "kind": "column",
+        "id": 22,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+         "x": 3.35,
+         "y": 2.4
+        },
+        "width": 0.5,
+        "fill": true,
+        "shape": "lShape",
+        "depth": 0.4,
+        "legs": [
+         0.1,
+         0.1
+        ],
+        "rotation": 3.141592654
        }
       },
       "canUndo": true,
@@ -9501,7 +9608,9 @@
        "$uidOf:9",
        "$uidOf:10",
        "$uidOf:11",
-       "$uidOf:12"
+       "$uidOf:12",
+       "$uidOf:13",
+       "$uidOf:14"
       ]
      }
     }

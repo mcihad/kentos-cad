@@ -19,8 +19,10 @@ window's lines, a column's outline — and says what `cad.arch.recognize` makes 
   (a block's wipeout masked them), two overlapping window lines between them are a window as long as they are, a door's
   swing about a point of the wall a door from its frame to its frame;
 - a column layer's closed outline of four right angles is a rectangular column about its middle (its width the side
-  nearer east–west, turned as that side), its circle a round one as wide as it, filled, on its layer; a hatch whose
-  middle lies in one goes with it; another outline stays;
+  nearer east–west, turned as that side), its circle a round one as wide as it, six right angles an L (its box from
+  the corner across from the inner one, its width along the leg the outline leaves that corner by counter-clockwise,
+  each leg as thick as its end, turned as its width); filled, on its layer; a hatch whose middle lies in one goes with
+  it; another outline stays;
 - a block is read where it stands, its pieces by their layers (a piece of layer 0 takes the insert's): a door's, a
   window's or a column's block is that door, window or column, and goes when all of it is read;
 - the walls in the order of their first line, the openings by wall and along it, the columns in their sources' order;
@@ -183,13 +185,15 @@ def opening(id, host, ends, t0, t1, kind, width=0.2, layer_id="kapi", hand=None,
     return e
 
 
-def column(id, at, width, depth=None, rotation=0.0, shape=None, layer_id="kolon"):
+def column(id, at, width, depth=None, rotation=0.0, shape=None, legs=None, layer_id="kolon"):
     e = {"kind": "column", "id": id, "layerId": layer_id, "attrs": {}, "at": P(*at), "width": float(width),
          "fill": True}
     if shape:
         e["shape"] = shape
     if depth is not None:
         e["depth"] = float(depth)
+    if legs is not None:
+        e["legs"] = [float(x) for x in legs]
     if rotation:
         e["rotation"] = round(rotation * 1e9) / 1e9
     return e
@@ -478,14 +482,19 @@ def cases():
     u, n = (math.cos(turn), math.sin(turn)), (-math.sin(turn), math.cos(turn))
     corner = lambda a, b: (1.0 + u[0] * a + n[0] * b, 1.5 + u[1] * a + n[1] * b)  # noqa: E731
     p.outline([corner(-0.25, -0.15), corner(0.25, -0.15), corner(0.25, 0.15), corner(-0.25, 0.15)])
-    ell = p.outline([(3.0, 1.0), (3.4, 1.0), (3.4, 1.15), (3.15, 1.15), (3.15, 1.6), (3.0, 1.6)])
+    p.outline([(3.0, 1.0), (3.4, 1.0), (3.4, 1.15), (3.15, 1.15), (3.15, 1.6), (3.0, 1.6)])
+    # An L turned a half turn: its corner up right, its legs going west and south.
+    p.outline([(3.6, 2.6), (3.1, 2.6), (3.1, 2.5), (3.5, 2.5), (3.5, 2.2), (3.6, 2.2)])
+    wedge = p.outline([(3.0, 0.4), (3.4, 0.4), (3.2, 0.7)])
     first = len(p.ents) + 1
     walls = [wall(first + k, ends) for k, ends in enumerate(ROOM)]
     cols = [column(first + 4, (2.0, 1.5), 0.4, shape="round"),
-            column(first + 5, (1.0, 1.5), 0.5, depth=0.3, rotation=turn)]
-    out.append(case("yuvarlak, dönük ve L kolon: daire yuvarlak kolon, döndürülmüş dikdörtgen dönük kolon olur, "
-                    "taraması kolonla gider; L çevre kalır ve söylenir", p,
-                    [done(p, walls + cols, [i for i in all_of(p) if i != ell], [ell], [unread(1, columns=1)])]))
+            column(first + 5, (1.0, 1.5), 0.5, depth=0.3, rotation=turn),
+            column(first + 6, (3.2, 1.3), 0.4, depth=0.6, shape="lShape", legs=(0.15, 0.15)),
+            column(first + 7, (3.35, 2.4), 0.5, depth=0.4, shape="lShape", legs=(0.1, 0.1), rotation=math.pi)]
+    out.append(case("yuvarlak, dönük ve L kolon: daire yuvarlak, döndürülmüş dikdörtgen dönük, altı dik köşe L kolon "
+                    "olur (yarım dönmüş L dönüşüyle), taraması kolonla gider; üçgen çevre kalır ve söylenir", p,
+                    [done(p, walls + cols, [i for i in all_of(p) if i != wedge], [wedge], [unread(1, columns=1)])]))
 
     # Components and neighbours.
     p = Plan()

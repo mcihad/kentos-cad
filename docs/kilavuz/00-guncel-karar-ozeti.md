@@ -476,7 +476,8 @@
     Planı tanı (`tool.planRecognize`): seçim önce; Araç ayarlarında seçimin her katmanı rolüyle bir satır
     (`arch_recognize::layer_roles`, komutla aynı); önizleme komutun planı; Kat (L), Kaynak çizgiler (K).
     Kolonlar (ADR 8048 §5): kolon katmanının dört dik köşeli çevresi dikdörtgen kolon (eni doğu–batıya yakın kenar,
-    dönüşüyle), dairesi yuvarlak kolon; dolgulu; içindeki tarama kolonla gider; L çevre kalır ve söylenir.
+    dönüşüyle), dairesi yuvarlak kolon, altı dik köşeli çevresi L kolon (iç köşenin karşısındaki köşeden kutu, kol
+    kalınlıkları uçlarından); dolgulu; içindeki tarama kolonla gider; düzensiz çevre kalır ve söylenir.
     Bloklar (ADR 8048 §6): seçimdeki blok çizim değişmeden açılır (iç içe 8 kata dek), parça kendi katmanının, 0
     katmanındaki parça yerleştirmenin rolüyle okunur; bütünüyle okunan blok silinir.
     Duvarın üstüne çizilmiş açıklık: yüzler sürerken aralarında örtüşen iki pencere çizgisi pencere; duvar bandında

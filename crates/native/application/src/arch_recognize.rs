@@ -411,12 +411,15 @@ fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<Colum
         })
         .map(|i| pts[i])
         .collect();
-    let [a, b, c, d] = corners[..] else {
-        return None;
-    };
     let side = |p: V, q: V| (q.x - p.x, q.y - p.y);
     let square = |u: (f64, f64), w: (f64, f64)| {
         (u.0 * w.0 + u.1 * w.1).abs() <= 1e-6 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
+    };
+    if corners.len() == 6 {
+        return l_column(&corners, &made);
+    }
+    let [a, b, c, d] = corners[..] else {
+        return None;
     };
     let sides = [side(a, b), side(b, c), side(c, d), side(d, a)];
     if !(0..4).all(|i| square(sides[i], sides[(i + 1) % 4])) {
@@ -445,6 +448,66 @@ fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<Colum
     let middle = V::new((a.x + b.x + c.x + d.x) / 4.0, (a.y + b.y + c.y + d.y) / 4.0);
     let depth = ((depth - width).abs() > 1e-9).then_some(depth);
     Some(made(middle, ColumnShape::Rect, width, depth, rotation))
+}
+
+/// An L column of six right-angled corners (docs/adr/0725 §3): its box from the corner across from the inner one, its
+/// width along the leg the outline leaves that corner by (counter-clockwise), its depth along the other, each leg as
+/// thick as its end; turned as its width.
+fn l_column(
+    corners: &[V],
+    made: &dyn Fn(V, ColumnShape, f64, Option<f64>, f64) -> ColumnFields,
+) -> Option<ColumnFields> {
+    let n = corners.len();
+    let area: f64 = (0..n)
+        .map(|i| {
+            let (p, q) = (corners[i], corners[(i + 1) % n]);
+            p.x * q.y - q.x * p.y
+        })
+        .sum();
+    let mut pts = corners.to_vec();
+    if area < 0.0 {
+        pts.reverse();
+    }
+    let side = |i: usize| {
+        let (p, q) = (pts[i % n], pts[(i + 1) % n]);
+        (q.x - p.x, q.y - p.y)
+    };
+    let len = |s: (f64, f64)| js_hypot(s.0, s.1);
+    // Every corner square; one turning in (the inner corner), the others out.
+    let mut inner = None;
+    for i in 0..n {
+        let (u, w) = (side(i + n - 1), side(i));
+        if (u.0 * w.0 + u.1 * w.1).abs() > 1e-6 * len(u) * len(w) {
+            return None;
+        }
+        if u.0 * w.1 - u.1 * w.0 < 0.0 {
+            if inner.is_some() {
+                return None;
+            }
+            inner = Some(i);
+        }
+    }
+    let o = (inner? + 3) % n;
+    let (x, y) = (side(o), side(o + 5));
+    let (width, depth) = (len(x), len(y));
+    let (y, depth) = ((-y.0, -y.1), depth);
+    // The leg along the width ends by the side after it, the one along the depth by the side before the corner's.
+    let legs = [len(side(o + 1)), len(side(o + 4))];
+    let (ux, uy) = ((x.0 / width, x.1 / width), (y.0 / depth, y.1 / depth));
+    let corner = pts[o];
+    let middle = V::new(
+        corner.x + ux.0 * width / 2.0 + uy.0 * depth / 2.0,
+        corner.y + ux.1 * width / 2.0 + uy.1 * depth / 2.0,
+    );
+    let mut c = made(
+        middle,
+        ColumnShape::LShape,
+        width,
+        ((depth - width).abs() > 1e-9).then_some(depth),
+        atan2(x.1, x.0),
+    );
+    c.legs = Some(legs.map(clean));
+    Some(c)
 }
 
 /// Whether `p` lies in `c`'s outline, within `tol`.
