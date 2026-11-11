@@ -66651,6 +66651,296 @@
       ]
     },
     {
+      "id": "cad.arch.ifc",
+      "version": 1,
+      "title": "Binayı IFC'ye aktar",
+      "summary": "Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS. GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.",
+      "aliases": [
+        "ifcbina",
+        "ifcbuilding"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time\n(`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there.\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`\n(without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,\nroof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not\nhold: one the section model gives no body, an opening without its outline through a written wall, a room without\nan area, a ramp, not written yet; a curved wall or stair written as straight pieces).",
+        "properties": {
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportIfcBuilding",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.ifc` v1, and its plan: the file, its schema, how many of each class it holds (the\nopenings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its\nSHA-256.",
+        "properties": {
+          "beams": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "openings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "railings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "roofs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "slabs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "spaces": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stairs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "storeys": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "walls": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "windows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "schema",
+          "storeys",
+          "walls",
+          "doors",
+          "windows",
+          "openings",
+          "spaces",
+          "slabs",
+          "columns",
+          "beams",
+          "roofs",
+          "railings",
+          "stairs",
+          "bytes",
+          "sha256"
+        ],
+        "title": "IfcBuildingExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.ifc` v1, and its plan: the file, its schema, how many of each class it holds (the\nopenings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its\nSHA-256.",
+        "properties": {
+          "beams": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "openings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "railings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "roofs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "slabs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "spaces": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stairs": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "storeys": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "walls": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "windows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "schema",
+          "storeys",
+          "walls",
+          "doors",
+          "windows",
+          "openings",
+          "spaces",
+          "slabs",
+          "columns",
+          "beams",
+          "roofs",
+          "railings",
+          "stairs",
+          "bytes",
+          "sha256"
+        ],
+        "title": "IfcBuildingExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "invalid_ifc"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Binanın modeli",
+          "input": {
+            "overwrite": true,
+            "path": "/veri/bina.ifc"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.import",
       "version": 1,
       "title": "LandXML'den aks al",

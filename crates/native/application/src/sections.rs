@@ -105,7 +105,7 @@ impl Left {
         match self {
             Left::Roof => "çatı (modelde yok)",
             Left::NaturalGround => "tabii zemin (modelde yok)",
-            Left::Curved => "eğri duvar ya da merdiven (kirişleriyle)",
+            Left::Curved => "eğri duvar ya da merdiven (düz parçalarla)",
             Left::Ramp => "rampa",
             Left::NoHeight => "yüksekliği olmayan duvar",
             Left::HeadUnknown => "lentosu olmayan açıklık (duvarın tepesine kadar)",

@@ -37267,6 +37267,39 @@ class ExportIfc(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportIfcBuilding(_Model):
+    """Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time
+    (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there.
+
+    Refusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`
+    (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
+    roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
+    hold: one the section model gives no body, an opening without its outline through a written wall, a room without
+    an area, a ramp, not written yet; a curved wall or stair written as straight pieces).
+    """
+    path: str
+    overwrite: bool | Unset = UNSET
+    stamp: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportIfcBuilding:
+        return cls(
+            path=data["path"],
+            overwrite=data.get("overwrite", UNSET),
+            stamp=data.get("stamp", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportLandxml(_Model):
     """Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id
     or name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the
@@ -46080,6 +46113,85 @@ class IfcAlignmentWritten(_Model):
             referents=data["referents"],
             profiles=list(data["profiles"]),
             vertical_segments=data["verticalSegments"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcBuildingExported(_Model):
+    """Output of `cad.arch.ifc` v1, and its plan: the file, its schema, how many of each class it holds (the
+    openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its
+    SHA-256.
+    Attributes:
+        storeys: Unit: count.
+        walls: Unit: count.
+        doors: Unit: count.
+        windows: Unit: count.
+        openings: Unit: count.
+        spaces: Unit: count.
+        slabs: Unit: count.
+        columns: Unit: count.
+        beams: Unit: count.
+        roofs: Unit: count.
+        railings: Unit: count.
+        stairs: Unit: count.
+        bytes: Unit: bytes.
+    """
+    path: str
+    schema: str
+    storeys: int
+    walls: int
+    doors: int
+    windows: int
+    openings: int
+    spaces: int
+    slabs: int
+    columns: int
+    beams: int
+    roofs: int
+    railings: int
+    stairs: int
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["schema"] = self.schema
+        out["storeys"] = self.storeys
+        out["walls"] = self.walls
+        out["doors"] = self.doors
+        out["windows"] = self.windows
+        out["openings"] = self.openings
+        out["spaces"] = self.spaces
+        out["slabs"] = self.slabs
+        out["columns"] = self.columns
+        out["beams"] = self.beams
+        out["roofs"] = self.roofs
+        out["railings"] = self.railings
+        out["stairs"] = self.stairs
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcBuildingExported:
+        return cls(
+            path=data["path"],
+            schema=data["schema"],
+            storeys=data["storeys"],
+            walls=data["walls"],
+            doors=data["doors"],
+            windows=data["windows"],
+            openings=data["openings"],
+            spaces=data["spaces"],
+            slabs=data["slabs"],
+            columns=data["columns"],
+            beams=data["beams"],
+            roofs=data["roofs"],
+            railings=data["railings"],
+            stairs=data["stairs"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
         )
 
 
@@ -135848,6 +135960,7 @@ __all__ = [
     "ExportGml",
     "ExportGpkg",
     "ExportIfc",
+    "ExportIfcBuilding",
     "ExportLandxml",
     "ExportMaplibre",
     "ExportMaterialsOperation",
@@ -136213,6 +136326,7 @@ __all__ = [
     "HorizontalConstraintRule",
     "HydrographPoint",
     "IfcAlignmentWritten",
+    "IfcBuildingExported",
     "IfcExported",
     "ImageClipBy",
     "ImageEntity",

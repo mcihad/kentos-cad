@@ -38,6 +38,11 @@ fn the_drawing_s_walls_doors_windows_and_rooms_are_the_files() {
         "{written:?}"
     );
     assert!(walls > 0 && doors > 0 && windows > 0 && rooms > 0);
+    assert_eq!(
+        written.left,
+        Vec::new(),
+        "every object of the building written"
+    );
     // EK-5's names: MM, the class's code, the description without white space or "-".
     for e in &b.elements {
         let mut parts = e.name.splitn(3, '-');

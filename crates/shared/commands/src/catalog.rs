@@ -10623,6 +10623,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_ARCH_IFC.into(),
+            version: crate::CAD_ARCH_IFC_VERSION,
+            title: "Binayı IFC'ye aktar".into(),
+            summary: "Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS. GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. \
+                      Retler: invalid_file_path, file_exists, invalid_ifc."
+                .into(),
+            aliases: vec!["ifcbina".into(), "ifcbuilding".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportIfcBuilding>(),
+            output: schema::<crate::IfcBuildingExported>(),
+            plan: Some(schema::<crate::IfcBuildingExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Binanın modeli".into(),
+                input: json!({ "path": "/veri/bina.ifc", "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::ROAD_ALIGNMENTS_IMPORT.into(),
             version: crate::ROAD_ALIGNMENTS_IMPORT_VERSION,
             title: "LandXML'den aks al".into(),
@@ -16989,6 +17014,9 @@ mod tests {
                         serde_json::from_value::<crate::ExportLandxml>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_IFC => serde_json::from_value::<crate::ExportIfc>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ARCH_IFC => {
+                        serde_json::from_value::<crate::ExportIfcBuilding>(e.input.clone()).map(|_| ())
+                    }
                     crate::FILE_EXPORT_GLTF => serde_json::from_value::<crate::ExportGltf>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_SEND => {
                         serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
@@ -17971,6 +17999,9 @@ mod tests {
                         }
                         crate::FILE_EXPORT_IFC => {
                             serde_json::from_value::<crate::IfcExported>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ARCH_IFC => {
+                            serde_json::from_value::<crate::IfcBuildingExported>(output.clone()).map(|_| ())
                         }
                         crate::FILE_EXPORT_GLTF => {
                             serde_json::from_value::<crate::GltfExported>(output.clone()).map(|_| ())

@@ -521,6 +521,7 @@ mod road_place;
 mod road_sheets_window;
 mod road_views_window;
 mod road_exchange;
+mod arch_ifc;
 #[cfg(test)]
 mod alignment_window_tests;
 #[cfg(test)]
@@ -551,6 +552,8 @@ mod road_sheets_window_tests;
 mod road_views_window_tests;
 #[cfg(test)]
 mod road_exchange_tests;
+#[cfg(test)]
+mod arch_ifc_tests;
 mod terrain_layer;
 mod terrain_edits;
 mod terrain_window;

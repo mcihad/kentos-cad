@@ -446,6 +446,17 @@
     DIMTXT; tablo stili; MULTILEADER ok oranı) yapıldı. Yabancı dosyanın Arial yazısı artık AutoCAD'deki boyunda
     (eskisinin 1,397 katı) açılır. 3d: hiza noktası `pay × (1 − oran) × em` aşağı yazılır (TEXT/ATTDEF 11, MTEXT 10),
     taban çizgisi iki programda aynı; KentOS'un kesin noktası `at` öğesinde. M46 bitti.
+  - **Binanın IFC 4.3'ü (M47 1.–2. bölüm, ADR 8047; Dijital Proje Yön. EK-5, EK-6):** IFC'ye ait her şey
+    `crates/shared/ifc` (`kentos-ifc`) paketinde (CLAUDE.md kesin kuralı; yolun hizalaması da orada). `kentos_ifc::arch`
+    kesit modelinin gövdelerinden IFC4X3_ADD2 binası kurar: kat başına IfcBuildingStorey; IfcWall, IfcSlab, IfcColumn,
+    IfcBeam (lento LINTEL), IfcRoof, IfcRailing, IfcStair; açıklık duvarını oyan IfcOpeningElement ve onu dolduran
+    IfcDoor/IfcWindow (Tag = numara; gövde, kasa derinliği verilmişse kasanın bandı); mahal IfcSpace. Adlar
+    `MM-<Tablo 5.1 kodu>-<açıklama>`; EK-6'dan IsExternal (duvar: katın duvar + kolon dış çizgisinde), LoadBearing,
+    malzeme, mahal kaplamaları, net alanlar, emsal/TAKS; GlobalId nesnenin KentOS kimliği. Başlık
+    `ViewDefinition [DesignTransferView]`: açıklıklar gövdeden okuyucuca çıkarılır. Komut `cad.arch.ifc` v1 (yol,
+    damga, overwrite; `invalid_file_path`, `file_exists`, `invalid_ifc`; yazılamayan nesne ve rampa `export_losses`);
+    Dosya › Dışa aktar › Bina modeli › "IFC dışa aktar (bina)…" (`arch.ifcExport`). Bağımsız denetim
+    `scripts/fixtures/arch_ifc_check.py` (IfcOpenShell, 0 bulgu), 22 ortak durum `arch_ifc_cases.py`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

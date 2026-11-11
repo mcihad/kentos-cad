@@ -49,7 +49,29 @@ pub struct Input<'a> {
     pub arch: Option<&'a ArchSettings>,
 }
 
-/// What was written, for the command's answer and the acceptance.
+/// Why an object of the drawing's building is not in the file.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Why {
+    /// The section model gives it no body (a wall without a height, a degenerate object).
+    NoBody,
+    /// An opening without its outline through a written wall.
+    NoWall,
+    /// A room without an area.
+    NoArea,
+    /// Its class is not written yet: a ramp (the section model draws no slope for it).
+    NotYet,
+}
+
+/// An object of the drawing's building the file does not hold: its persistent id, what it is ("duvar", "kapı" …) and
+/// why.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Left {
+    pub id: String,
+    pub what: &'static str,
+    pub why: Why,
+}
+
+/// What was written, for the command's answer and the acceptance, and what was not.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Written {
     pub storeys: usize,
@@ -64,6 +86,7 @@ pub struct Written {
     pub roofs: usize,
     pub railings: usize,
     pub stairs: usize,
+    pub left: Vec<Left>,
 }
 
 fn pt(p: P) -> [f64; 2] {
@@ -441,10 +464,15 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     }
     // The openings, each with its door or window (EK-6 Tablo 6.25, 6.67).
     let mut openings: Vec<Opening> = Vec::new();
+    let mut opened: std::collections::BTreeSet<&str> = std::collections::BTreeSet::new();
     for gap in &gaps {
         let Some(owner) = gap.owner.as_ref() else {
             continue;
         };
+        // One opening element per opening: a second outline of it would give its door a second GlobalId.
+        if opened.contains(owner.as_str()) {
+            continue;
+        }
         let Some(&(id, Entity::Opening(o))) = by_uid.get(owner) else {
             continue;
         };
@@ -503,6 +531,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             _ => None,
         };
         written.openings += 1;
+        opened.insert(owner.as_str());
         openings.push(Opening {
             id: None,
             name: name("ACL", mark.as_deref().unwrap_or("Açıklık")),
@@ -521,7 +550,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // The spaces (EK-6 Tablo 6.58): their numbers and names, their finishes as the room list's.
     let mut spaces = Vec::new();
     let mut net_floor: Vec<Option<f64>> = vec![None; storeys.len()];
-    for (bits, _, e) in &entities {
+    for (bits, uid, e) in &entities {
         let Entity::Space(s) = e else { continue };
         let f = &s.space;
         let storey = storey_of(f.arch.level.as_deref());
@@ -541,6 +570,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             .filter(|r: &Vec<[f64; 2]>| r.len() >= 3)
             .collect();
         if rings.is_empty() {
+            written.left.push(Left {
+                id: uid.clone(),
+                what: "mahal",
+                why: Why::NoArea,
+            });
             continue;
         }
         let bottom = f.floor_offset.unwrap_or(0.0);
@@ -594,6 +628,36 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         });
     }
     written.spaces = spaces.len();
+    for (_, uid, e) in &entities {
+        let what = match e {
+            Entity::Wall(_) => "duvar",
+            Entity::Slab(_) => "döşeme",
+            Entity::Column(_) => "kolon",
+            Entity::Beam(_) => "kiriş",
+            Entity::Roof(_) => "çatı",
+            Entity::Railing(_) => "korkuluk",
+            Entity::Stair(_) => "merdiven",
+            Entity::Ramp(_) => "rampa",
+            Entity::Opening(o) => match o.opening.form {
+                OpeningForm::Door => "kapı",
+                OpeningForm::Window => "pencere",
+                _ => "açıklık",
+            },
+            _ => continue,
+        };
+        let (held, why) = match e {
+            Entity::Opening(_) => (opened.contains(uid.as_str()), Why::NoWall),
+            Entity::Ramp(_) => (false, Why::NotYet),
+            _ => (index.contains_key(uid), Why::NoBody),
+        };
+        if !held {
+            written.left.push(Left {
+                id: uid.clone(),
+                what,
+                why,
+            });
+        }
+    }
     // A storey's and the building's net floor area (EK-6 Tablo 6.8, 6.7): its rooms' net areas summed; the building's
     // height its storeys', only where it is the same for all (Tablo 6.7: "sadece yüksekliğin sabit olduğu durumda").
     for (storey, net) in storeys.iter_mut().zip(&net_floor) {

@@ -154,6 +154,15 @@
           ]
          },
          {
+          "label": "Bina modeli",
+          "items": [
+           "arch.ifcExport"
+          ],
+          "works": [
+           "architecture"
+          ]
+         },
+         {
           "label": "Coğrafi veri",
           "items": [
            "file.export.shp",
@@ -3129,6 +3138,15 @@
           "items": [
            "file.export.dwg",
            "file.export.dxf"
+          ]
+         },
+         {
+          "label": "Bina modeli",
+          "items": [
+           "arch.ifcExport"
+          ],
+          "works": [
+           "architecture"
           ]
          },
          {

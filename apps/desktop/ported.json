@@ -453,6 +453,7 @@
     "gltf.export",
     "scene3d.view",
     "arch.program",
+    "arch.ifcExport",
     "lineTypes.manage",
     "hatchPatterns.manage",
     "tool.layerMatch",

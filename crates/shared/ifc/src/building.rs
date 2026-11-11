@@ -763,8 +763,11 @@ pub fn write(b: &Building) -> String {
             Step::refs(list)
         ));
     }
+    // Design Transfer, not Reference View: an opening's body is subtracted from its wall's by the reader (IFC 4.3,
+    // IfcRelVoidsElement: a 'Body' opening is a Boolean difference); a Reference View holds the walls already cut and
+    // its openings as 'Reference' only (BricsCAD's IFC4 RV profile: "Subtract openings from the host geometry").
     w.st.file(
-        "ViewDefinition [ReferenceView]",
+        "ViewDefinition [DesignTransferView]",
         &format!("{}.ifc", b.file),
         &b.stamp,
         &b.application,

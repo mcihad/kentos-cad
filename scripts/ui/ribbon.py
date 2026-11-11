@@ -131,6 +131,8 @@ IMPORT_CAD = M("İçe aktar", [
     ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"], MAP)], size='large')
 EXPORT = M("Dışa aktar", [
     ("Çizim", ["file.export.dwg", "file.export.dxf"]),
+    # A building's model for the digital permit (Dijital Proje Yönetmeliği EK-5: IFC 4.3; docs/adr/8047).
+    ("Bina modeli", ["arch.ifcExport"], ARCHITECTURE),
     ("Coğrafi veri", ["file.export.shp", "file.export.geojson", "file.export.kml", "file.export.gpx",
                       "file.export.gpkg", "file.export.fgb", "file.export.parquet", "file.export.gml",
                       "file.export.csv"], MAP),

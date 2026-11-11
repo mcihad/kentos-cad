@@ -676,6 +676,8 @@ pub const PORTED: &[&str] = &[
     "scene3d.view",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
+    // docs/adr/8047: IFC dışa aktar (bina) (arch_ifc.rs).
+    "arch.ifcExport",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).
     "lineTypes.manage",
     // docs/adr/0331 §1: Tarama desenleri (hatch_patterns_window.rs).

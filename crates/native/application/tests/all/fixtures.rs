@@ -87,24 +87,59 @@ use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_compare,
-    addresses_normalize, adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas,
-    array, blocks_define, blocks_edit, casework_edit, casework_query, casework_run, circle,
-    columns_distances, constructions, crs_transform, curves_construct, delete, dimensions_edit,
-    dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_flatten, entities_order, entities_pick, entities_relate, entities_select,
-    entities_trim, entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit,
-    images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
-    layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
-    layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
-    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define, file_import_landxml, road_alignments_create, road_scene, road_alignments_edit, road_alignments_label, road_alignments_query, road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_query, road_profiles_sight, road_profiles_propose, road_alignments_check, road_profiles_check, road_profiles_lengths, road_profiles_impact, road_alignments_impact, road_sections_draw, road_sections_edit, road_sections_query, road_superelevations_edit, road_superelevations_query, road_superelevations_check, road_superelevations_widen, road_superelevations_transitions, road_corridors_draw, road_corridors_edit, road_corridors_query, road_corridors_water, road_corridors_daylights, road_corridors_protected, road_corridors_preflight, road_volumes_approve, road_volumes_edit, road_volumes_query, road_volumes_uncertainty, road_volumes_progress, road_volumes_compare, road_volumes_ledger, road_volumes_states, road_volumes_history, road_hauls_edit, road_hauls_query, road_hauls_plan, road_hauls_approve, road_hauls_network, road_hauls_trucks, road_guardrails_edit, road_guardrails_query, road_guardrails_draw, road_culverts_edit, road_culverts_query, road_culverts_draw, road_culverts_hydraulics, road_culverts_closure, road_walls_edit, road_walls_query, road_walls_draw, road_platforms_edit, road_platforms_query, road_platforms_draw, road_terrain_cloud, road_drainage, road_drainage_draw, road_swept, road_swept_draw, road_terrains_analysis, road_terrains_compare, road_terrains_quality, road_terrains_repair, road_terrains_coverage, road_terrains_coverage_draw, road_terrains_density, road_terrains_stockpile, road_terrains_sparse, road_pay_edit, road_pay_query, road_routes_find, road_routes_draw, road_junctions_edit, road_junctions_query, road_junctions_draw, road_junctions_clearance, road_junctions_tie, road_junctions_overlap, road_project_query, road_project_graph, road_project_produce, road_project_rebuild, road_project_edit, map_work, map_work_edit, map_work_restore, crs_factors, map_features, survey_baselines, entities_grade, entities_raise, entities_drape, topology_clean, parcels_check, parcels_boundaries, parcel_register, pipes_check, pipes_profile, asbuilt_check, field_package, zoning_check, zoning_symbolize, scenarios_impact, readjustment, readjustment_scope, readjustment_sheets, orthophoto_check, orthophoto_compare, pointcloud_overlap, pointcloud_register, map_survey, map_survey_edit, map_survey_network, map_features_reconcile, road_alignments_import, road_alignments_fit, road_profiles_fit, road_ifc, road_landxml, road_stakeout, road_stakeout_send, road_sheets, road_sheets_sections, road_templates_edit, road_terrains_contours, road_terrains_sheet, road_terrains_zeroline, road_terrains_cutfill, road_terrains_create, road_terrains_edit, road_terrains_query,
-    network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
-    openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, elevations_edit, elevations_query, sections_edit, sections_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
-    rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
-    settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, sheets_details, plot_styles_import, slabs_create,
-    slabs_edit, snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit,
-    survey_adjust, survey_points, tables_edit, texts_check, texts_edit, time_version, transform,
-    ucs_set, units_change, views_edit, walls_create, walls_distances, walls_edit, walls_from_lines,
-    walls_joins, walls_partition, walls_rectangle,
+    addresses_normalize, adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit,
+    arch_ifc, areas, array, asbuilt_check, blocks_define, blocks_edit, casework_edit,
+    casework_query, casework_run, circle, columns_distances, constructions, crs_factors,
+    crs_transform, curves_construct, delete, dimensions_edit, dimensions_query,
+    dimensions_reassociate, edit, elevations_edit, elevations_query, entities_chamfer,
+    entities_drape, entities_extend, entities_fillet, entities_flatten, entities_grade,
+    entities_order, entities_pick, entities_raise, entities_relate, entities_select, entities_trim,
+    entities_vertex, field_package, fields_edit, fields_usage, file_import_landxml, fonts_report,
+    hatches_edit, images_clip, labels_pin, labels_report, layers_compose, layers_contingents,
+    layers_edit, layers_filter, layers_find, layers_indexes, layers_info, layers_labels,
+    layers_renderer, layers_rules, layers_service, layers_set, layers_states, layers_subtypes,
+    layers_table, layers_time, layers_translate, leaders_edit, legends, levels_assign, line,
+    linearref_define, map_features, map_features_reconcile, map_survey, map_survey_edit,
+    map_survey_network, map_work, map_work_edit, map_work_restore, materials_edit, modules_edit,
+    modules_query, network_define, north, nurbs, objects_derive, offset, opening_types_edit,
+    openings_create, openings_distances, openings_edit, openings_query, options_edit,
+    options_query, orthophoto_check, orthophoto_compare, parcel_register, parcels,
+    parcels_boundaries, parcels_check, pipes_check, pipes_profile, plot_styles_import, point,
+    pointcloud_overlap, pointcloud_register, points_construct, polygon, polygon_regular, polyline,
+    readjustment, readjustment_scope, readjustment_sheets, rectangle_create, revcloud_create,
+    revisions, road_alignments_check, road_alignments_create, road_alignments_edit,
+    road_alignments_fit, road_alignments_impact, road_alignments_import, road_alignments_label,
+    road_alignments_query, road_corridors_daylights, road_corridors_draw, road_corridors_edit,
+    road_corridors_preflight, road_corridors_protected, road_corridors_query, road_corridors_water,
+    road_culverts_closure, road_culverts_draw, road_culverts_edit, road_culverts_hydraulics,
+    road_culverts_query, road_drainage, road_drainage_draw, road_guardrails_draw,
+    road_guardrails_edit, road_guardrails_query, road_hauls_approve, road_hauls_edit,
+    road_hauls_network, road_hauls_plan, road_hauls_query, road_hauls_trucks, road_ifc,
+    road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_overlap,
+    road_junctions_query, road_junctions_tie, road_landxml, road_pay_edit, road_pay_query,
+    road_platforms_draw, road_platforms_edit, road_platforms_query, road_profiles_check,
+    road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_fit,
+    road_profiles_impact, road_profiles_lengths, road_profiles_propose, road_profiles_query,
+    road_profiles_sight, road_project_edit, road_project_graph, road_project_produce,
+    road_project_query, road_project_rebuild, road_routes_draw, road_routes_find, road_scene,
+    road_sections_draw, road_sections_edit, road_sections_query, road_sheets, road_sheets_sections,
+    road_stakeout, road_stakeout_send, road_superelevations_check, road_superelevations_edit,
+    road_superelevations_query, road_superelevations_transitions, road_superelevations_widen,
+    road_swept, road_swept_draw, road_templates_edit, road_terrain_cloud, road_terrains_analysis,
+    road_terrains_compare, road_terrains_contours, road_terrains_coverage,
+    road_terrains_coverage_draw, road_terrains_create, road_terrains_cutfill,
+    road_terrains_density, road_terrains_edit, road_terrains_quality, road_terrains_query,
+    road_terrains_repair, road_terrains_sheet, road_terrains_sparse, road_terrains_stockpile,
+    road_terrains_zeroline, road_volumes_approve, road_volumes_compare, road_volumes_edit,
+    road_volumes_history, road_volumes_ledger, road_volumes_progress, road_volumes_query,
+    road_volumes_states, road_volumes_uncertainty, road_walls_draw, road_walls_edit,
+    road_walls_query, roads_edit, scenarios_edit, scenarios_impact, sections_edit, sections_query,
+    sector_create, set, settings_set, shape_edits, sheets_create, sheets_details, sheets_edit,
+    sheets_fit, sheets_levels, slabs_create, slabs_edit, snap_find, spaces_create, spaces_edit,
+    spaces_quantities, styles_edit, survey_adjust, survey_baselines, survey_points, tables_edit,
+    texts_check, texts_edit, time_version, topology_clean, transform, ucs_set, units_change,
+    views_edit, walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins,
+    walls_partition, walls_rectangle, zoning_check, zoning_symbolize,
 };
 use kentos_native_application::{
     arch_edit, beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create, stairs_create,
@@ -4416,6 +4451,12 @@ impl Input for kentos_commands::ExportIfc {
     }
 }
 
+impl Input for kentos_commands::ExportIfcBuilding {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::ExportLandxml {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
@@ -6146,6 +6187,9 @@ fn run_op(
         }
         kentos_commands::FILE_EXPORT_IFC => {
             run!(road_ifc, kentos_commands::ExportIfc)
+        }
+        kentos_commands::CAD_ARCH_IFC => {
+            run!(arch_ifc, kentos_commands::ExportIfcBuilding)
         }
         kentos_commands::ROAD_STAKEOUT_SEND => {
             run!(road_stakeout_send, kentos_commands::StakeoutSend)

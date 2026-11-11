@@ -258,6 +258,22 @@
    "tests": 0
   },
   {
+   "id": "arch.ifcExport",
+   "kind": "command",
+   "title": "IFC dışa aktar (bina)…",
+   "level": "semantic",
+   "via": [
+    "cad.arch.ifc"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.ifc",
+   "mcp": "cad.arch.ifc",
+   "note": "IFC dışa aktar (bina) dosyanın yerini sorar ve cad.arch.ifc ile yazar; çizim değişmez (plan/architecture-advanced.md M47, ADR 8047).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.materials",
    "kind": "command",
    "title": "Malzemeler",

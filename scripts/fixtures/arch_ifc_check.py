@@ -5,7 +5,9 @@ Yönetmelik (RG 5.8.2026/33331): EK-5 Tablo 5.1's classes and codes, §5.5's nam
 
     KENTOS_WRITE_IFC_BUILDING=1 cargo test -p kentos-native-application --test all arch_ifc
     uv run --no-project --python 3.11 --with ifcopenshell --with pytest --with lark \\
-        python3 scripts/fixtures/arch_ifc_check.py
+        python3 scripts/fixtures/arch_ifc_check.py [FILE]
+
+FILE, when given, is another file of the same drawing to check (one the desktop wrote by Dosya › Dışa aktar).
 
 It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - the schema is IFC 4.3 (EK-5 §5.4) and IfcOpenShell's validator (attributes, EXPRESS rules) finds nothing;
@@ -48,7 +50,8 @@ def main() -> int:
     import ifcopenshell.util.element as ue
     import ifcopenshell.validate
 
-    f = ifcopenshell.open(str(FILE))
+    path = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else FILE
+    f = ifcopenshell.open(str(path))
     bad: list[str] = []
 
     def ensure(ok: bool, what: str) -> None:
@@ -173,7 +176,8 @@ def main() -> int:
         for b in bad[:30]:
             print("✗", b)
         return 1
-    print(f"✓ {FILE.relative_to(ROOT)}: IFC4X3_ADD2, 0 validator findings; "
+    shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
+    print(f"✓ {shown}: IFC4X3_ADD2, 0 validator findings; "
           + ", ".join(f"{k} {len(f.by_type(k))}" for k in ("IfcBuildingStorey", "IfcWall", "IfcDoor", "IfcWindow",
                                                            "IfcOpeningElement", "IfcSpace", "IfcSlab", "IfcColumn",
                                                            "IfcBeam", "IfcStair"))

@@ -1568,20 +1568,66 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_REGISTER, kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
-    (kentos_commands::MAP_SURVEY_QUERY, kentos_commands::MAP_SURVEY_QUERY_VERSION),
-    (kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION),
-    (kentos_commands::MAP_SURVEY_NETWORK, kentos_commands::MAP_SURVEY_NETWORK_VERSION),
-    (kentos_commands::MAP_FEATURES_RECONCILE, kentos_commands::MAP_FEATURES_RECONCILE_VERSION),
-    (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
-    (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
-    (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),
-    (kentos_commands::FILE_EXPORT_GLTF, kentos_commands::FILE_EXPORT_GLTF_VERSION),
-    (kentos_commands::ROAD_STAKEOUT_SEND, kentos_commands::ROAD_STAKEOUT_SEND_VERSION),
-    (kentos_commands::ROAD_SHEETS_PLAN, kentos_commands::ROAD_SHEETS_PLAN_VERSION),
-    (kentos_commands::ROAD_SHEETS_SECTIONS, kentos_commands::ROAD_SHEETS_SECTIONS_VERSION),
-    (kentos_commands::ROAD_ALIGNMENTS_FIT, kentos_commands::ROAD_ALIGNMENTS_FIT_VERSION),
-    (kentos_commands::ROAD_PROFILES_FIT, kentos_commands::ROAD_PROFILES_FIT_VERSION),
-    (kentos_commands::ROAD_ALIGNMENTS_IMPORT, kentos_commands::ROAD_ALIGNMENTS_IMPORT_VERSION),
+    (
+        kentos_commands::MAP_SURVEY_QUERY,
+        kentos_commands::MAP_SURVEY_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::MAP_SURVEY_EDIT,
+        kentos_commands::MAP_SURVEY_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::MAP_SURVEY_NETWORK,
+        kentos_commands::MAP_SURVEY_NETWORK_VERSION,
+    ),
+    (
+        kentos_commands::MAP_FEATURES_RECONCILE,
+        kentos_commands::MAP_FEATURES_RECONCILE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_STAKEOUT_QUERY,
+        kentos_commands::ROAD_STAKEOUT_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::FILE_EXPORT_LANDXML,
+        kentos_commands::FILE_EXPORT_LANDXML_VERSION,
+    ),
+    (
+        kentos_commands::FILE_EXPORT_IFC,
+        kentos_commands::FILE_EXPORT_IFC_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ARCH_IFC,
+        kentos_commands::CAD_ARCH_IFC_VERSION,
+    ),
+    (
+        kentos_commands::FILE_EXPORT_GLTF,
+        kentos_commands::FILE_EXPORT_GLTF_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_STAKEOUT_SEND,
+        kentos_commands::ROAD_STAKEOUT_SEND_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SHEETS_PLAN,
+        kentos_commands::ROAD_SHEETS_PLAN_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SHEETS_SECTIONS,
+        kentos_commands::ROAD_SHEETS_SECTIONS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_FIT,
+        kentos_commands::ROAD_ALIGNMENTS_FIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_FIT,
+        kentos_commands::ROAD_PROFILES_FIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_IMPORT,
+        kentos_commands::ROAD_ALIGNMENTS_IMPORT_VERSION,
+    ),
     // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
     (
         kentos_commands::CAD_SUBNETWORKS_FIND,

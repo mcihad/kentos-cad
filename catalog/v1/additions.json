@@ -4445,6 +4445,20 @@
       "status": "implemented"
     },
     {
+      "id": "arch.ifcExport",
+      "title": "IFC dışa aktar (bina)…",
+      "short": "IFC (bina)",
+      "icon": "ifcExport",
+      "description": "Çizimin binasını Dijital Proje Yönetmeliği'nin istediği IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: katlar, duvarlar, döşemeler, kolonlar, kirişler, çatılar, korkuluklar, merdivenler, açıklıklarıyla kapı ve pencereler, mahaller. Adlar EK-5'e göre (MM-DVR-…), EK-6'nın çizimin bildiği özellikleriyle; her nesnenin IFC kimliği çizimdeki kimliğidir. Yazılamayan nesne söylenir. Bütün yazılır ya da hiç; çizim değişmez.",
+      "aliases": [
+        "IFCBINA",
+        "IFCEXPORT"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
       "id": "landxml.export",
       "title": "LandXML ver…",
       "short": "LandXML ver",

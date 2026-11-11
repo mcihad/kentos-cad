@@ -2960,6 +2960,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["export_losses"],
         targets: none,
     },
+    // KentOS Mimari's building as IFC 4.3 (plan/architecture-advanced.md M47, docs/adr/8047).
+    Entry {
+        id: "cad.arch.ifc",
+        refusals: &[&["invalid_file_path", "file_exists", "invalid_ifc"]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
     // KentOS Yol's 3D scene (plan/road.md Y12.3, docs/adr/0910 §3).
     Entry {
         id: "file.export.gltf",

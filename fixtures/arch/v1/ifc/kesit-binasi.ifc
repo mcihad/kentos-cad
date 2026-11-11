@@ -1,6 +1,6 @@
 ISO-10303-21;
 HEADER;
-FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');
+FILE_DESCRIPTION(('ViewDefinition [DesignTransferView]'),'2;1');
 FILE_NAME('Kesit binas\X2\0131\X0\.ifc','2026-11-11T12:00:00',(''),(''),'KentOS Mimari','KentOS Mimari','');
 FILE_SCHEMA(('IFC4X3_ADD2'));
 ENDSEC;

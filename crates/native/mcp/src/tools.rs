@@ -872,6 +872,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.xyz"
             | "file.export.landxml"
             | "file.export.ifc"
+            | "cad.arch.ifc"
             | "file.export.gltf"
             | "road.stakeout.send"
             | "file.export.atlas"

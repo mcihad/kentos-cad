@@ -3304,6 +3304,13 @@
       ],
       "note": "IFC ver dosyanın yerini sorar ve file.export.ifc ile yazar; çizim değişmez (plan/road.md Y10.3, ADR 0908)."
     },
+    "arch.ifcExport": {
+      "level": "semantic",
+      "via": [
+        "cad.arch.ifc"
+      ],
+      "note": "IFC dışa aktar (bina) dosyanın yerini sorar ve cad.arch.ifc ile yazar; çizim değişmez (plan/architecture-advanced.md M47, ADR 8047)."
+    },
     "landxml.export": {
       "level": "semantic",
       "via": [

@@ -1,8 +1,9 @@
 # ADR 8047: Binanın IFC 4.3'ü — ayrı IFC paketi, EK-5 sınıfları ve adları, EK-6 özellikleri
 
-- **Durum:** 1. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si çekirdekte
-  ve uygulamada hazır, bağımsız okuyucu sınıyor (§1–§5). Sırada: 2. bölüm, komut ve Dosya › Dışa aktar (gerçek pencerede
-  kabul); 3. bölüm, EK-7'nin proje ve kişi bilgileri, EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de.
+- **Durum:** 1. ve 2. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
+  çekirdekte ve uygulamada hazır, bağımsız okuyucu sınıyor (§1–§5); komutu `cad.arch.ifc` ve Dosya › Dışa aktar › Bina
+  modeli › "IFC dışa aktar (bina)…", gerçek pencerede kabul edildi (§6). Sırada: 3. bölüm, EK-7'nin proje ve kişi
+  bilgileri, EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de; başlığın görünüm tanımı (§6).
 - **Bağlam belgesi:** ADR 0908 (yolun IFC 4.3 hizalaması), ADR 8042 (kesit modeli), ADR 8040 (düşey model), ADR 8041
   (kiriş, lento, kolon–duvar birleşimi), ADR 0342 (mahal ve net alan), ADR 8030 (İmar durumu), ADR 8032 (Vaziyet planı).
 
@@ -106,6 +107,34 @@ kimliği, yapım yöntemi, yangın koruma sınıfı, kullanım türü, planlanan
 brüt kat alanı, taşıyıcı döşemenin kotu, katmanlı malzeme takımı (`IfcMaterialLayerSetUsage`), beton sınıfı; EK-7'nin
 kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik zorunlu bilgi" olarak sayacak.
 
+### 6. Komut ve arayüz (2. bölüm)
+
+- **Başka programlar (yalnız davranış):** BricsCAD'in "Export To IFC" penceresi: ayar profili, IFC sürümü (IFC4X3 dahil),
+  tür süzgeci, metraj/doğrulama kutuları ve ayrı bir yazar–kuruluş sekmesi; IFC4 RV profilinde "Subtract openings from
+  the host geometry" açık. Archicad: Kaydet penceresinde "hangi elemanlar" ve "çevirmen", IFC Save Options'ta
+  ayarların özeti; belgesi aktarılan modelin bir IFC görüntüleyicide denetlenmesini öğütler. Revit'in "IFC Export Setup
+  Options" sayfası: IFC sürümü, dosya türü, evre, mahal sınırları, özellik setleri, coğrafi başvuru (ekran görüntüsü
+  yok, belgeden okundu).
+- **Komut `cad.arch.ifc` v1:** girdi yol (mutlak, `.ifc`; baştaki ve sondaki boşluk kırpılır, büyük harfli uzantı olur),
+  `stamp` (yoksa şimdi, UTC) ve `overwrite`; çıktı şema, sınıf sınıf sayılar, bayt ve SHA-256; plan ve doğrulama dosyaya
+  dokunmaz. Retler sırasıyla `invalid_file_path`, `file_exists`, `invalid_ifc` (okunmayan saat; yazılacak bina yok).
+  Uyarı `export_losses`, sebebine göre: "N duvar … IFC'ye yazılmadı: kesit modeli gövdesini kuramadı", "… duvarı
+  yazılmadı" (açıklık), "… alanı yok" (mahal), "N rampa IFC'ye yazılmadı: henüz IFC'ye aktarılmıyor"; eğri duvar ve
+  merdiven için "düz parçalarla yazıldı". Yazamadığını çekirdek söyler (`kentos_ifc::arch::Left`, `Why`).
+- **Plan dışı — komutun adı:** `file.export.ifc.building` önce düşünüldü; yolun `file.export.ifc`'ünün altına bir ad
+  açınca Python SDK'da `ifc` hem işlev hem modül olmak zorunda kalıyordu (katalogda başka önek çifti yok). Mimari'nin
+  komutları gibi `cad.arch.ifc` oldu; Python'da `kentos.cad.arch.ifc(doc, path=…)`.
+- **Arayüz:** Dosya › Dışa aktar menüsünde mimari işte "Bina modeli" bloğu, eylemi `arch.ifcExport` ("IFC dışa aktar
+  (bina)…"): kayıt penceresi "IFC 4.3 (.ifc)" süzgeciyle, çizimin adıyla açılır; uzantısız ada `.ifc` eklenir; sonuç
+  durum çubuğunda ve Komut geçmişi'nde "IFC 4.3 yazıldı: 2 kat, 16 duvar, 5 kapı, 9 pencere, 10 mahal, 3 döşeme, 16
+  kolon, 8 kiriş, 1 merdiven (…)". Çizim değişmez, geri alma adımı yazılmaz.
+- **Başlığın görünüm tanımı `DesignTransferView`:** IFC 4.3'te 'Body' gösterimli açıklık, duvarın gövdesinden okuyucunun
+  çıkardığı bir Boole farkıdır (IfcRelVoidsElement); Reference View'da ise duvar zaten kesik, açıklık yalnız 'Reference'
+  olur. Bizim duvarlarımız kesilmemiş prizmalar olduğundan 1. bölümün `ReferenceView` başlığı yanlıştı. Yönetmeliğin
+  eklerinde görünüm tanımı geçmiyor (ekler tarandı). Açıklığı gövdeden önceden kesen bir Reference View çıktısı 3.
+  bölümde değerlendirilecek.
+- **Bilinen sınır:** dosyanın saati UTC yazılıyor (yolun IFC'si gibi), bölge işareti yok.
+
 ## Doğrulama
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`): IfcOpenShell, KentOS kodu olmadan, bölüm binasının kendi
@@ -123,8 +152,18 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
 - Testler: `kentos-ifc` 6 (kasanın bandı: ortada 0,09–0,16; yüzden 2 cm, sol ve sağ; duvar kadar derin kasa duvarı
   doldurur), uygulama `arch_ifc` ve IFC dosyaları, plan ölçüleri (birim ve masaüstü
   `plan_dimensions_writes_four_sides…`).
+- **2. bölüm:** 22 ortak durum (`scripts/fixtures/arch_ifc_cases.py`, KentOS kodu olmadan bölüm binasının tanımından:
+  sayılar, plan, doğrulama, üzerine yazma, rampa uyarısı, boş/göreli/uzantısı yanlış/klasörü olmayan yol, var olan
+  dosya, okunmayan saat, binasız çizim, büyük harfli uzantı, kırpılan yol, saatsiz yazım, 1. katı boş bina) masaüstü
+  işleyicisinde (`fixtures.rs`) ve Python SDK'da (`test_command_cases.py`) geçiyor. Komut kataloğu, TypeScript tipleri,
+  Python SDK ve manifest yeniden üretildi. Masaüstü: `arch_ifc_tests` (2), katalog (9), geçmiş (17).
+- **Gerçek pencere** (`.run/gui-evidence/mimari-m47/`): 1920×1080 sanal ekran, gerçek fare ve klavye, ayrı ev klasörü;
+  dosya penceresi için uygulamaya ait geçici bir D-Bus oturumu ve GTK portalı (sahibinin oturumuna ve portalına
+  dokunulmadı). Dosya › Dışa aktar › "IFC dışa aktar (bina)…" → GTK kayıt penceresi → yol → Kaydet: 123 137 baytlık dosya
+  yazıldı, durum çubuğu ve Komut geçmişi sayıları söyledi; pencereden yazılan dosya da `arch_ifc_check.py`'den **0
+  bulguyla** geçti. ÖNCE (eski şerit) menüde bina modeli yok.
 
 ## Sonuçlar
 
 - IFC'nin bundan sonraki her işi (okuma, başka disiplinler, denetim, IDS) `kentos-ifc`'e gider; başka paket IFC yazmaz.
-- Dışa aktarma henüz komut değil: 2. bölümde Dosya › Dışa aktar › IFC ve komut.
+- Dışa aktarma komut, MCP aracı ve Python işlevi olarak da kullanılır (`cad.arch.ifc`).
