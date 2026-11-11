@@ -9,7 +9,8 @@ Yönetmelik (RG 5.8.2026/33331): EK-5 Tablo 5.1's classes and codes, §5.5's nam
 
 FILE, when given, is another file of the same drawing to check (one the desktop wrote by Dosya › Dışa aktar).
 fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc is the drawing with KUNYE's künye: its EK-7 project, architect, office and
-role, its EK-6 address, parcel and building id are checked too.
+role, its EK-6 address, parcel and building id, its EK-7 system (TUREF / TM33, Antalya heights, ±0.00 at 1285.40 m)
+are checked too.
 
 It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - the schema is IFC 4.3 (EK-5 §5.4) and IfcOpenShell's validator (attributes, EXPRESS rules) finds nothing;
@@ -44,6 +45,9 @@ KUNYE = {"proje_kodu": "260123", "bina_kodu": "00", "revizyon_no": "000", "il": 
          "mahalle": "Esentepe", "ada": "1234", "parsel": "5", "tapu_kaydi": "12/345", "mimar": "Ayşe Nur Yılmaz",
          "mimar_unvan": "Y. Mimar", "sicil_no": "41234", "buro_adi": "Örnek Mimarlık", "vergi_no": "1234567890",
          "buro_adres": "Atatürk Cad. No:1 Sivas"}
+# The second file's system (EK-7 Tablo 7.6–7.7): TUREF's zone of Sivas, Antalya heights, ±0.00's elevation.
+SYSTEM = {"name": "EPSG:5255", "datum": "TUREF", "vertical": "Antalya height (EPSG:5775)",
+          "projection": "Transverse Mercator", "zone": "33", "height": 1285.4}
 # EK-5 Tablo 5.1.
 CODES = {"IfcWall": "DVR", "IfcSlab": "DSM", "IfcColumn": "KLN", "IfcBeam": "KRS", "IfcRoof": "CAT", "IfcRailing": "KRK",
          "IfcStair": "MRD", "IfcDoor": "KAP", "IfcWindow": "PNC", "IfcSpace": "MHL", "IfcOpeningElement": "ACL",
@@ -201,6 +205,23 @@ def main() -> int:
         land = ue.get_pset(site, "Pset_LandRegistration") or {}
         ensure((land.get("LandID"), land.get("LandTitleID")) == (f"{k['ada']}/{k['parsel']}", k["tapu_kaydi"]),
                f"Pset_LandRegistration {land}")
+        crs = f.by_type("IfcProjectedCRS")
+        ensure(len(crs) == 1, f"{len(crs)} projected systems")
+        if crs:
+            c = crs[0]
+            ensure((c.Name, c.GeodeticDatum, c.VerticalDatum, c.MapProjection, c.MapZone) ==
+                   (SYSTEM["name"], SYSTEM["datum"], SYSTEM["vertical"], SYSTEM["projection"], SYSTEM["zone"]),
+                   f"IfcProjectedCRS {c}")
+            ensure(c.MapUnit is not None and c.MapUnit.Name == "METRE" and c.MapUnit.Prefix is None, f"unit {c.MapUnit}")
+            conv = [m for m in f.by_type("IfcMapConversion") if m.TargetCRS == c]
+            ensure(len(conv) == 1, "no map conversion")
+            if conv:
+                m = conv[0]
+                ensure(m.SourceCRS.is_a("IfcGeometricRepresentationContext") and m.SourceCRS.ContextType == "Model",
+                       f"source {m.SourceCRS}")
+                ensure((m.Eastings, m.Northings, m.OrthogonalHeight) == (0.0, 0.0, SYSTEM["height"]),
+                       f"conversion {m}")
+            ensure(site.RefElevation == SYSTEM["height"], f"RefElevation {site.RefElevation}")
         common = ue.get_pset(building, "Pset_BuildingCommon") or {}
         ensure((common.get("BuildingID"), common.get("IsPermanentID")) ==
                (f"{k['proje_kodu']}_{k['bina_kodu']}", False), f"Pset_BuildingCommon {common}")

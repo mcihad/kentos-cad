@@ -3,8 +3,8 @@
 - **Durum:** 1. ve 2. bölüm, 3. bölümün ilk adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
   çekirdekte ve uygulamada hazır, bağımsız okuyucu sınıyor (§1–§5); komutu `cad.arch.ifc` ve Dosya › Dışa aktar › Bina
   modeli › "IFC dışa aktar (bina)…", gerçek pencerede kabul edildi (§6); EK-7'nin proje, mimar ve büro bilgileri,
-  EK-6'nın adres, ada/parsel ve bina kimliği künyeden, dosyanın adı EK-2'den (§7). Sırada: koordinat sistemi (EK-7
-  Tablo 7.6–7.7), EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de; başlığın görünüm tanımı (§6).
+  EK-6'nın adres, ada/parsel ve bina kimliği künyeden, dosyanın adı EK-2'den (§7); projenin koordinat sistemi ve
+  harita dönüşümü (§8). Sırada: EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de; başlığın görünüm tanımı (§6).
 - **Bağlam belgesi:** ADR 0908 (yolun IFC 4.3 hizalaması), ADR 8042 (kesit modeli), ADR 8040 (düşey model), ADR 8041
   (kiriş, lento, kolon–duvar birleşimi), ADR 0342 (mahal ve net alan), ADR 8030 (İmar durumu), ADR 8032 (Vaziyet planı).
 
@@ -160,6 +160,22 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   aynı kaynaktan (`title_facts`, `zoning_report`).
 - Künyesi boş ya da "—" olan değer yazılmaz; 3. bölümün Denetim adımı eksikleri sayacak.
 
+### 8. Koordinat sistemi (EK-7 Tablo 7.6–7.8; 3. bölüm, ikinci adım)
+
+- **EK-7:** `IfcProjectedCRS` adı "Modelin bulunduğu TUREF 3° dilime karşılık gelen EPSG kodu: EPSG:5253 … 5259";
+  jeodezik datum TUREF (ITRF96'nın Türkiye gerçeklemesi, GRS80); düşey datum ("yükseklik referans sistemi olarak ITRF96
+  kullanılır; gerektiğinde TUDKA99'a dönüşüm parametreleri ayrıca belirtilir"); projeksiyon Transverse Mercator; dilim
+  merkez meridyeni (27, 30 … 45); birim metre. `IfcMapConversion`: doğu, kuzey, ortogonal yükseklik, X ekseninin
+  doğrultusu, ölçek. Tablo 7.8: hassasiyet 1E-5…1E-8 (yazılan 1E-5); harita dönüşümü varken gerçek kuzey yalnız bilgi.
+- **Karar:** `kentos_ifc::crs` (yeni modül) sistemi ve dönüşümü yazar; binanın ve yolun IFC'si aynı fonksiyondan geçer
+  (önce iki ayrı `IFCPROJECTEDCRS` yazıcısı vardı). TUREF dilimi adıyla, datumu, projeksiyonu ve dilimiyle; başka bir
+  sistem yalnız adıyla. Çizimin koordinatları zaten projenin sisteminde olduğundan (yolun IFC'si gibi) dönüşüm düzlemde
+  sıfır, yükseklikte ±0.00'ın mutlak kotu (Vaziyet planı; `IfcSite.RefElevation` ile aynı).
+- **Plan dışı — düşey datum:** projenin yükseklik sistemi ortometrikse EPSG adıyla ("Antalya height (EPSG:5775)"),
+  elipsoit yüksekliğiyse "ITRF96" (EK-7'nin notu), bilinmiyorsa yazılmaz. ±0.00'ın kotu belediyenin röperinden, yani
+  deniz seviyesine göre (ortometrik) olduğundan EK-7'nin ITRF96 notu yerine projenin söylediği yazıldı.
+- Yerel koordinatlı çizimde sistem yazılmaz (Denetim eksik sayacak).
+
 ## Doğrulama
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`): IfcOpenShell, KentOS kodu olmadan, bölüm binasının kendi
@@ -184,6 +200,11 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   `kesit-binasi.ifc` bayt bayt aynı. Uygulama testleri 3, `kentos-ifc` 7 (dosya adı). Künyenin iki yeni alanından sonra
   ruhsat takımı testleri (uygulama, pafta paketi 5, masaüstü 5, ortak durumlar) geçiyor. Gerçek pencere: künyeli
   çizimde kayıt penceresi `260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc` önerdi (önce "Kesit binası.ifc").
+- **3. bölüm, ikinci adım:** künyeli dosya EPSG:5255 (TM33), Antalya yükseklikleri ve ±0.00 = 1285,40 m ile:
+  `arch_ifc_check.py` 0 bulgu; IfcProjectedCRS ('EPSG:5255', TUREF, 'Antalya height (EPSG:5775)', Transverse Mercator,
+  33, METRE), IfcMapConversion (Model bağlamından, 0, 0, 1285,4), RefElevation 1285,4. `kentos-ifc` 9 test (TUREF
+  dilimleri, yazım). Yolun IFC'si: `road_ifc_cases.py --written` temiz (şema, EXPRESS, 9 yatay parça, 286 yer ve 346 kot
+  1e-6 m içinde); `yol.ifc`'nin CRS satırı TUREF ile doldu (dosyanın son hanelerdeki eskimişliği de güncellendi).
 - **2. bölüm:** 22 ortak durum (`scripts/fixtures/arch_ifc_cases.py`, KentOS kodu olmadan bölüm binasının tanımından:
   sayılar, plan, doğrulama, üzerine yazma, rampa uyarısı, boş/göreli/uzantısı yanlış/klasörü olmayan yol, var olan
   dosya, okunmayan saat, binasız çizim, büyük harfli uzantı, kırpılan yol, saatsiz yazım, 1. katı boş bina) masaüstü

@@ -265,14 +265,7 @@ pub struct Place {
     pub qtos: Vec<Qto>,
 }
 
-/// The project's coordinate reference system (EK-7): its name (EPSG:5254) and description, and where the model's
-/// origin stands in it (eastings, northings, orthogonal height).
-#[derive(Clone, Debug, PartialEq)]
-pub struct Crs {
-    pub name: String,
-    pub description: Option<String>,
-    pub origin: [f64; 3],
-}
+pub use crate::crs::Crs;
 
 /// A building to write.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -605,17 +598,7 @@ pub fn write(b: &Building) -> String {
         origin,
     };
     if let Some(crs) = &b.crs {
-        let c = w.st.add(format!(
-            "IFCPROJECTEDCRS({},{},$,$,$,$,#{length})",
-            text(&crs.name),
-            Writer::opt(&crs.description)
-        ));
-        w.st.add(format!(
-            "IFCMAPCONVERSION(#{model},#{c},{},{},{},1.,0.,1.)",
-            real(crs.origin[0]),
-            real(crs.origin[1]),
-            real(crs.origin[2])
-        ));
+        crate::crs::write(&mut w.st, crs, model, length);
     }
     // The project.
     let g = w.id(b.project.id);

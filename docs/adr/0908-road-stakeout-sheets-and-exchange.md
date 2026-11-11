@@ -90,7 +90,8 @@ Tarih: 2026-11-03. plan/road.md Y10 (ROAD-SEC-09…11; ROAD-IO-05, 06, 13, 14). 
    ve IfcPolynomialCurve üstünde, IfcOpenShell'in yazdığı gibi; geçiş kodu konum (1 mm), doğrultu ve eğrilikle. İlk
    boykesit aksın düşeyidir, öbürleri IfcRelAggregates ile alt aks. Başlangıç km'si ve km denklemleri Pset_Stationing'li
    (Station, IncomingStation) IfcReferent; azalan km söylenemez (export_losses). Proje sistemi IfcMapConversion ile
-   IfcProjectedCRS'e (EPSG kodu), dönüşüm birim (koordinatlar zaten projenin sisteminde). Paralel aks yazılmaz.
+   IfcProjectedCRS'e (EPSG kodu), dönüşüm birim (koordinatlar zaten projenin sisteminde); 11 Kasım 2026'dan beri
+   TUREF dilimi EK-7 Tablo 7.6'daki gibi datum, projeksiyon ve dilimle (`kentos_ifc::crs`, ADR 8047 §8). Paralel aks yazılmaz.
 
 9. **Alete gönderme (ROAD-IO-13).** `road.stakeout.send` aplikasyon cetvelinin noktalarını (sorgunun koridoru, aralığı,
    adımı ve kodları; plan koordinatı) dosyaya yazar. `landxml`: string yol; koridorun aksı (koridorun tuttuğu

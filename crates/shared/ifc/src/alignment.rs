@@ -450,15 +450,10 @@ pub fn write(file: &IfcFile) -> String {
     let axis = st.add(format!(
         "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Axis','Model',*,*,*,*,#{model},$,.MODEL_VIEW.,$)"
     ));
+    // The project's system (EK-7 Tablo 7.6–7.7): the alignments' coordinates are its own, no offset.
     if let Some((name, words)) = &file.crs {
-        let crs = st.add(format!(
-            "IFCPROJECTEDCRS({},{},$,$,$,$,#{length})",
-            text(name),
-            text(words)
-        ));
-        st.add(format!(
-            "IFCMAPCONVERSION(#{model},#{crs},0.,0.,0.,1.,0.,1.)"
-        ));
+        let crs = crate::crs::projected(name, Some(words.clone()), None, [0.0; 3]);
+        crate::crs::write(&mut st, &crs, model, length);
     }
     let g = st.gid();
     let project = st.add(format!(

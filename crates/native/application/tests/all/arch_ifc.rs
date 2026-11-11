@@ -114,6 +114,19 @@ fn with_kunye() -> Document {
                 ..Default::default()
             });
     }
+    // TUREF / TM33 (Sivas), Antalya heights, ±0.00 at 1285.40 m (EK-7 Tablo 7.6–7.7).
+    snap.settings.srid = 5255;
+    snap.settings.heights = Some(kentos_commands::HeightReference {
+        kind: kentos_commands::HeightKind::Orthometric,
+        vertical_srid: Some(5775),
+        geoid: None,
+    });
+    if let Some(arch) = snap.settings.arch.as_mut() {
+        arch.site = Some(kentos_commands::SitePlan {
+            datum: Some(1285.4),
+            ..Default::default()
+        });
+    }
     Document::from_snapshot_v2(snap).unwrap()
 }
 
@@ -184,6 +197,27 @@ fn the_kunye_is_the_project_s_people_and_place() {
         prop(&b.building.psets, "Pset_BuildingCommon", "IsPermanentID"),
         Some(Value::Bool(false))
     );
+    // EK-7 Tablo 7.6–7.7: TUREF's zone in full, Antalya heights, the model raised to ±0.00's elevation.
+    let crs = b.crs.as_ref().expect("the project's system");
+    assert_eq!(
+        (
+            crs.name.as_str(),
+            crs.geodetic_datum.as_deref(),
+            crs.map_projection.as_deref(),
+            crs.map_zone.as_deref()
+        ),
+        (
+            "EPSG:5255",
+            Some("TUREF"),
+            Some("Transverse Mercator"),
+            Some("33")
+        )
+    );
+    assert_eq!(
+        crs.vertical_datum.as_deref(),
+        Some("Antalya height (EPSG:5775)")
+    );
+    assert_eq!(crs.origin, [0.0, 0.0, 1285.4]);
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("FILE_NAME('260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc'"));
     if std::env::var_os("KENTOS_WRITE_IFC_BUILDING").is_some() {
@@ -202,5 +236,9 @@ fn without_a_kunye_the_drawing_names_the_project_and_the_file() {
         ("Kesit binası", "Kesit binası")
     );
     assert!(b.actors.is_empty());
+    assert!(
+        b.crs.is_none(),
+        "a drawing in local coordinates has no system"
+    );
     assert_eq!(arch_ifc::file_name(&doc), "Kesit binası.ifc");
 }

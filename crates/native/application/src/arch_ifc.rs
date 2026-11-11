@@ -60,6 +60,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         net_area: &mut net_area,
         arch: doc.settings().arch.as_ref(),
         particulars: particulars(doc),
+        crs: crs(doc),
     });
     (b, written, curved)
 }
@@ -127,6 +128,39 @@ pub fn particulars(doc: &Document) -> Particulars {
         footprint: zoning.as_ref().map(|r| r.footprint),
         setbacks,
     }
+}
+
+/// The project's system as the IFC says it (EK-7 Tablo 7.6–7.7, `kentos_ifc::crs`): the drawing's coordinates are the
+/// system's, so the map conversion moves them by nothing in plan and by ±0.00's absolute elevation (Vaziyet planı) in
+/// height; its heights' datum the project's (an orthometric system by its EPSG name, ellipsoidal heights ITRF96's, EK-7's
+/// note). None for a drawing in local coordinates.
+pub fn crs(doc: &Document) -> Option<kentos_ifc::crs::Crs> {
+    let settings = doc.settings();
+    let own = kentos_project::systems::own(settings)?;
+    let name = if own.code.starts_with("EPSG:") {
+        own.code.clone()
+    } else {
+        own.name.clone()
+    };
+    let vertical = settings.heights.as_ref().and_then(|h| match h.kind {
+        kentos_commands::HeightKind::Orthometric => h
+            .vertical()
+            .map(|v| format!("{} (EPSG:{})", v.name, v.srid)),
+        kentos_commands::HeightKind::Ellipsoidal => Some("ITRF96".to_owned()),
+        kentos_commands::HeightKind::Unknown => None,
+    });
+    let datum = settings
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .and_then(|s| s.datum)
+        .unwrap_or(0.0);
+    Some(kentos_ifc::crs::projected(
+        &name,
+        Some(own.title.clone()),
+        vertical,
+        [0.0, 0.0, datum],
+    ))
 }
 
 /// The model file's name the save dialog offers (EK-2 Tablo 2.1): `260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc`, or the

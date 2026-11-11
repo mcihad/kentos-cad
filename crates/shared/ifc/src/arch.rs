@@ -49,6 +49,8 @@ pub struct Input<'a> {
     pub net_area: &'a mut dyn FnMut(&SpaceFields) -> Option<f64>,
     pub arch: Option<&'a ArchSettings>,
     pub particulars: Particulars,
+    /// The project's system (EK-7 Tablo 7.6–7.7; `crate::crs::projected`), none for a drawing in local coordinates.
+    pub crs: Option<crate::crs::Crs>,
 }
 
 /// Why an object of the drawing's building is not in the file.
@@ -404,6 +406,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         net_area,
         arch,
         particulars,
+        crs,
     } = input;
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
@@ -962,7 +965,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         elements,
         openings,
         spaces,
-        crs: None,
+        crs,
     };
     (building, written)
 }
