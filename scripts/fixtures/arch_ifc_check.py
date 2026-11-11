@@ -8,6 +8,8 @@ Yönetmelik (RG 5.8.2026/33331): EK-5 Tablo 5.1's classes and codes, §5.5's nam
         python3 scripts/fixtures/arch_ifc_check.py [FILE]
 
 FILE, when given, is another file of the same drawing to check (one the desktop wrote by Dosya › Dışa aktar).
+fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc is the drawing with KUNYE's künye: its EK-7 project, architect, office and
+role, its EK-6 address, parcel and building id are checked too.
 
 It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - the schema is IFC 4.3 (EK-5 §5.4) and IfcOpenShell's validator (attributes, EXPRESS rules) finds nothing;
@@ -37,6 +39,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import section_building as sb  # noqa: E402
 
 FILE = ROOT / "fixtures/arch/v1/ifc/kesit-binasi.ifc"
+# The künye of the second file (the permit set's particulars, docs/adr/8037), as the application test gives it.
+KUNYE = {"proje_kodu": "260123", "bina_kodu": "00", "revizyon_no": "000", "il": "Sivas", "ilce": "Merkez",
+         "mahalle": "Esentepe", "ada": "1234", "parsel": "5", "tapu_kaydi": "12/345", "mimar": "Ayşe Nur Yılmaz",
+         "mimar_unvan": "Y. Mimar", "sicil_no": "41234", "buro_adi": "Örnek Mimarlık", "vergi_no": "1234567890",
+         "buro_adres": "Atatürk Cad. No:1 Sivas"}
 # EK-5 Tablo 5.1.
 CODES = {"IfcWall": "DVR", "IfcSlab": "DSM", "IfcColumn": "KLN", "IfcBeam": "KRS", "IfcRoof": "CAT", "IfcRailing": "KRK",
          "IfcStair": "MRD", "IfcDoor": "KAP", "IfcWindow": "PNC", "IfcSpace": "MHL", "IfcOpeningElement": "ACL",
@@ -161,6 +168,42 @@ def main() -> int:
             ensure(made_of(o) == want_m, f"{o.Name}: material {made_of(o)}, the drawing {want_m}")
             if cls == "IfcWall":
                 want_m = None
+
+    # EK-7 and EK-6's künye, when the file has an actor.
+    actors = f.by_type("IfcActor")
+    if actors:
+        k = KUNYE
+        stem = f"{k['proje_kodu']}_{k['bina_kodu']}_MM_XXXX_MD_XXX_NNN_01_{k['revizyon_no']}"
+        ensure(f.header.file_name.name == f"{stem}.ifc", f"FILE_NAME {f.header.file_name.name}")
+        project = f.by_type("IfcProject")[0]
+        ensure(project.Name == k["proje_kodu"], f"project name {project.Name}")
+        ensure(len(actors) == 1, f"{len(actors)} actors")
+        who = actors[0].TheActor
+        ensure(who.is_a("IfcPersonAndOrganization"), f"actor {who.is_a()}")
+        if who.is_a("IfcPersonAndOrganization"):
+            person, org = who.ThePerson, who.TheOrganization
+            given, family = k["mimar"].rsplit(" ", 1)
+            ensure((person.Identification, person.GivenName, person.FamilyName) == (k["sicil_no"], given, family),
+                   f"person {person}")
+            ensure((org.Name, org.Identification) == (k["buro_adi"], k["vergi_no"]), f"organization {org}")
+            lines = org.Addresses[0].AddressLines if org.Addresses else None
+            ensure(lines == (k["buro_adres"],), f"office address {lines}")
+        rels = [r for r in f.by_type("IfcRelAssignsToActor") if r.RelatingActor == actors[0]]
+        ensure(len(rels) == 1 and project in rels[0].RelatedObjects, "the actor is not the project's")
+        if rels:
+            role = rels[0].ActingRole
+            ensure(role.Role == "ARCHITECT" and role.Description == k["mimar_unvan"], f"role {role}")
+        site, building = f.by_type("IfcSite")[0], f.by_type("IfcBuilding")[0]
+        for place in (site, building):
+            addr = ue.get_pset(place, "Pset_Address") or {}
+            ensure((addr.get("Town"), addr.get("Region"), list(addr.get("AddressLines") or [])) ==
+                   (k["il"], k["ilce"], [k["mahalle"]]), f"{place.is_a()} Pset_Address {addr}")
+        land = ue.get_pset(site, "Pset_LandRegistration") or {}
+        ensure((land.get("LandID"), land.get("LandTitleID")) == (f"{k['ada']}/{k['parsel']}", k["tapu_kaydi"]),
+               f"Pset_LandRegistration {land}")
+        common = ue.get_pset(building, "Pset_BuildingCommon") or {}
+        ensure((common.get("BuildingID"), common.get("IsPermanentID")) ==
+               (f"{k['proje_kodu']}_{k['bina_kodu']}", False), f"Pset_BuildingCommon {common}")
 
     # Shapes.
     settings = ifcopenshell.geom.settings()

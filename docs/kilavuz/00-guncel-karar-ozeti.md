@@ -456,7 +456,10 @@
     `ViewDefinition [DesignTransferView]`: açıklıklar gövdeden okuyucuca çıkarılır. Komut `cad.arch.ifc` v1 (yol,
     damga, overwrite; `invalid_file_path`, `file_exists`, `invalid_ifc`; yazılamayan nesne ve rampa `export_losses`);
     Dosya › Dışa aktar › Bina modeli › "IFC dışa aktar (bina)…" (`arch.ifcExport`). Bağımsız denetim
-    `scripts/fixtures/arch_ifc_check.py` (IfcOpenShell, 0 bulgu), 22 ortak durum `arch_ifc_cases.py`.
+    `scripts/fixtures/arch_ifc_check.py` (IfcOpenShell, 0 bulgu), 22 ortak durum `arch_ifc_cases.py`. 3. bölümün ilk
+    adımı (ADR 8047 §7): dosya adı EK-2 (`naming::model_file`: `…_MM_XXXX_MD_XXX_NNN_01_…`), EK-7 aktörü (mimar, sicil,
+    büro, vergi no, ARCHITECT) ve EK-6 adresi, `Pset_LandRegistration`, `TREpys_ParselOzellikSeti`, BuildingID künyeden
+    (`application::arch_ifc::particulars`); künye 29 değişken (büro adı, vergi no).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

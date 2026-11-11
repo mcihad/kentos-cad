@@ -28,6 +28,8 @@ pub enum Value {
     Ratio(f64),
     Count(i64),
     Real(f64),
+    /// Several short names (`IfcPropertyListValue` of `IfcLabel`s: Pset_Address's AddressLines).
+    Labels(Vec<String>),
 }
 
 impl Value {
@@ -43,6 +45,13 @@ impl Value {
             Value::Ratio(v) => format!("IFCRATIOMEASURE({})", real(*v)),
             Value::Count(v) => format!("IFCCOUNTMEASURE({v})"),
             Value::Real(v) => format!("IFCREAL({})", real(*v)),
+            Value::Labels(list) => format!(
+                "({})",
+                list.iter()
+                    .map(|l| format!("IFCLABEL({})", text(l)))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         }
     }
 }
@@ -221,6 +230,28 @@ pub struct Address {
     pub country: Option<String>,
 }
 
+/// An organisation (EK-7 Tablo 7.4): its tax number (`Identification`), its name and its address.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Organization {
+    pub identification: Option<String>,
+    pub name: String,
+    pub address: Option<Address>,
+}
+
+/// One who acts on the project (EK-7 Tablo 7.2–7.5): a person (their chamber's registration number as
+/// `Identification`, their family and given names), the organisation they act for, and their role (an `IfcRoleEnum`
+/// value, ARCHITECT; its description their title, Mimar). Written as an `IfcActor` assigned to the project
+/// (`IfcRelAssignsToActor`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Actor {
+    pub identification: Option<String>,
+    pub family: Option<String>,
+    pub given: Option<String>,
+    pub organization: Option<Organization>,
+    pub role: &'static str,
+    pub role_description: Option<String>,
+}
+
 /// A spatial object's words and data: the project, the site or the building.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Place {
@@ -254,6 +285,8 @@ pub struct Building {
     /// The project's phase (`IfcProject.Phase`: Ön proje, Uygulama projesi).
     pub phase: Option<String>,
     pub project: Place,
+    /// Those who act on the project (EK-7): the architect.
+    pub actors: Vec<Actor>,
     pub site: Place,
     /// The site's height over sea level (`RefElevation`).
     pub site_elevation: Option<f64>,
@@ -454,12 +487,17 @@ impl Writer {
             let props: Vec<usize> = p
                 .props
                 .iter()
-                .map(|(n, v)| {
-                    self.st.add(format!(
+                .map(|(n, v)| match v {
+                    Value::Labels(_) => self.st.add(format!(
+                        "IFCPROPERTYLISTVALUE({},$,{},$)",
+                        text(n),
+                        v.step()
+                    )),
+                    _ => self.st.add(format!(
                         "IFCPROPERTYSINGLEVALUE({},$,{},$)",
                         text(n),
                         v.step()
-                    ))
+                    )),
                 })
                 .collect();
             let g = self.st.gid();
@@ -590,6 +628,43 @@ pub fn write(b: &Building) -> String {
         Writer::opt(&b.phase)
     ));
     w.psets(project, &b.project.psets, &b.project.qtos);
+    // Those who act on it (EK-7): person, organisation, role, assigned to the project.
+    for a in &b.actors {
+        let person = w.st.add(format!(
+            "IFCPERSON({},{},{},$,$,$,$,$)",
+            Writer::opt(&a.identification),
+            Writer::opt(&a.family),
+            Writer::opt(&a.given)
+        ));
+        let who = match &a.organization {
+            Some(o) => {
+                let address = w.address(&o.address);
+                let addresses = if address == "$" {
+                    "$".to_owned()
+                } else {
+                    format!("({address})")
+                };
+                let org = w.st.add(format!(
+                    "IFCORGANIZATION({},{},$,$,{addresses})",
+                    Writer::opt(&o.identification),
+                    text(&o.name)
+                ));
+                w.st.add(format!("IFCPERSONANDORGANIZATION(#{person},#{org},$)"))
+            }
+            None => person,
+        };
+        let role = w.st.add(format!(
+            "IFCACTORROLE(.{}.,$,{})",
+            a.role,
+            Writer::opt(&a.role_description)
+        ));
+        let g = w.st.gid();
+        let actor = w.st.add(format!("IFCACTOR({g},$,$,$,$,#{who})"));
+        let g = w.st.gid();
+        w.st.add(format!(
+            "IFCRELASSIGNSTOACTOR({g},$,$,$,(#{project}),$,#{actor},#{role})"
+        ));
+    }
     // The site, the building and the storeys.
     let site_place = w.placement(None, 0.0);
     let g = w.id(b.site.id);

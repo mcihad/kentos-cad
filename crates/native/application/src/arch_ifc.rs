@@ -7,8 +7,9 @@
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{CommandResult, CommandWarning, ExportIfcBuilding, IfcBuildingExported};
+use kentos_commands::{SiteEdgeKind, VariableValue};
 use kentos_domain::Document;
-use kentos_ifc::arch::{Gap, Input, Why, Written};
+use kentos_ifc::arch::{Gap, Input, Particulars, Why, Written};
 use kentos_ifc::building::Building;
 use sha2::{Digest, Sha256};
 
@@ -58,8 +59,80 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         wall_style_name: &wall_style_name,
         net_area: &mut net_area,
         arch: doc.settings().arch.as_ref(),
+        particulars: particulars(doc),
     });
     (b, written, curved)
+}
+
+/// The drawing's künye (the permit set's particulars, docs/adr/8037) and the measures its title block reads, for the
+/// IFC's EK-6 and EK-7 words: a value not given, or given as "—" (the künye's default), is none. The areas are İmar
+/// durumu's (yapı inşaat alanı: all the storeys'; taban alanı), the use the building program's, the gardens' distances
+/// the Vaziyet planı's, each kind's least edge (a public area's edge an ön bahçe, PAİY 23/1-a).
+pub fn particulars(doc: &Document) -> Particulars {
+    let fold = |s: &str| kentos_sheet::expr::fold(s);
+    let vars = &doc.settings().variables;
+    let get = |name: &str| -> Option<String> {
+        let v = vars.iter().find(|v| fold(&v.name) == fold(name))?;
+        let t = match &v.value {
+            VariableValue::Text(t) => t.trim().to_owned(),
+            VariableValue::Number(n) if n.fract() == 0.0 && n.abs() < 1e15 => {
+                format!("{}", *n as i64)
+            }
+            VariableValue::Number(n) => format!("{n}"),
+            VariableValue::Null | VariableValue::Bool(_) => return None,
+        };
+        (!t.is_empty() && t != "—" && t != "-").then_some(t)
+    };
+    let facts = doc.title_facts();
+    let fact = |name: &str| {
+        facts
+            .iter()
+            .find(|f| f.name == name)
+            .map(|f| f.value.clone())
+    };
+    let zoning = doc.zoning_report();
+    let mut setbacks: [Option<f64>; 3] = [None; 3];
+    if let Some(site) = doc.site_report() {
+        for e in &site.edges {
+            let k = match e.kind {
+                SiteEdgeKind::Front | SiteEdgeKind::Public => 0,
+                SiteEdgeKind::Side => 1,
+                SiteEdgeKind::Back => 2,
+            };
+            setbacks[k] = Some(setbacks[k].map_or(e.required, |v: f64| v.min(e.required)));
+        }
+    }
+    Particulars {
+        work: get("proje_adi")
+            .or_else(|| Some(doc.name().trim().to_owned()).filter(|n| !n.is_empty())),
+        project_code: get("proje_kodu"),
+        building_code: get("bina_kodu"),
+        revision: get("revizyon_no"),
+        province: get("il"),
+        district: get("ilce"),
+        neighbourhood: get("mahalle"),
+        block: get("ada"),
+        parcel: get("parsel"),
+        title_deed: get("tapu_kaydi"),
+        architect: get("mimar"),
+        architect_title: get("mimar_unvan"),
+        registration: get("sicil_no"),
+        office: get("buro_adi"),
+        office_tax_number: get("vergi_no"),
+        office_address: get("buro_adres"),
+        occupancy: fact("kullanim_amaci"),
+        gross_area: zoning
+            .as_ref()
+            .map(|r| r.levels.iter().map(|l| l.all()).sum::<f64>()),
+        footprint: zoning.as_ref().map(|r| r.footprint),
+        setbacks,
+    }
+}
+
+/// The model file's name the save dialog offers (EK-2 Tablo 2.1): `260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc`, or the
+/// drawing's name while the künye has no project code.
+pub fn file_name(doc: &Document) -> String {
+    format!("{}.ifc", particulars(doc).file_stem(doc.name()))
 }
 
 /// The building to write: `stamp` its time (`YYYY-MM-DDThh:mm:ss`), `application` KentOS's name.

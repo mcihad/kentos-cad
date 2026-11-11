@@ -1,9 +1,10 @@
 # ADR 8047: Binanın IFC 4.3'ü — ayrı IFC paketi, EK-5 sınıfları ve adları, EK-6 özellikleri
 
-- **Durum:** 1. ve 2. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
+- **Durum:** 1. ve 2. bölüm, 3. bölümün ilk adımı yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M47. Binanın IFC'si
   çekirdekte ve uygulamada hazır, bağımsız okuyucu sınıyor (§1–§5); komutu `cad.arch.ifc` ve Dosya › Dışa aktar › Bina
-  modeli › "IFC dışa aktar (bina)…", gerçek pencerede kabul edildi (§6). Sırada: 3. bölüm, EK-7'nin proje ve kişi
-  bilgileri, EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de; başlığın görünüm tanımı (§6).
+  modeli › "IFC dışa aktar (bina)…", gerçek pencerede kabul edildi (§6); EK-7'nin proje, mimar ve büro bilgileri,
+  EK-6'nın adres, ada/parsel ve bina kimliği künyeden, dosyanın adı EK-2'den (§7). Sırada: koordinat sistemi (EK-7
+  Tablo 7.6–7.7), EK-9 kalite formu ve Md. 9 tutarlılık denetimi Denetim'de; başlığın görünüm tanımı (§6).
 - **Bağlam belgesi:** ADR 0908 (yolun IFC 4.3 hizalaması), ADR 8042 (kesit modeli), ADR 8040 (düşey model), ADR 8041
   (kiriş, lento, kolon–duvar birleşimi), ADR 0342 (mahal ve net alan), ADR 8030 (İmar durumu), ADR 8032 (Vaziyet planı).
 
@@ -135,6 +136,30 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
   bölümde değerlendirilecek.
 - **Bilinen sınır:** dosyanın saati UTC yazılıyor (yolun IFC'si gibi), bölge işareti yok.
 
+### 7. Proje, kişi ve yer bilgileri; dosyanın adı (3. bölüm, ilk adım)
+
+- **Yönetmeliğin ana metni** (RG 5.8.2026/33331): Md. 9 "BIM modeli ile CAD çizim dosyası PDF/A nüshasının birbiriyle
+  uyumlu olması zorunludur"; Md. 13 proje bilgileri EK-7; Md. 15 EK-9 kalite kontrol formları; Md. 6 dosya adları;
+  Geçici Md. 1 IFC teslimi 1.9.2029 (büyükşehirde 10 000 m² üstü) … 1.9.2032 (öbürleri); yürürlük 1.9.2027.
+- **EK-2** (sayfa görüntülerinden): Tablo 2.12 "Model MD", Tablo 2.13 her disiplinde "Tip yok XXX" ve "Model Kontrol
+  Formu MKF", Tablo 2.14 "Kattan Bağımsız NNN". Modelin dosya adı `ProjeKodu_BinaKodu_MM_XXXX_MD_XXX_NNN_01_Revizyon`
+  (`naming::model_file`); kayıt penceresi bunu önerir, künyesiz çizimde çizimin adını. **Plan dışı:** mimari
+  tiplerinin (MMC, MAP …) hiçbiri model olmadığından tip XXX.
+- **EK-7** (Tablo 7.1–7.5): `IfcProject` adı proje kodu (EK-1), uzun adı işin adı; mimar `IfcPerson` (kimlik oda sicil
+  no; soyadı adının son kelimesi, adı öncekiler — **plan dışı** ayırma), büro `IfcOrganization` (adı, kimliği vergi
+  kimlik no, adresi), ikisi `IfcPersonAndOrganization`; `IfcActorRole` ARCHITECT, açıklaması unvan; `IfcActor` projeye
+  `IfcRelAssignsToActor` ile. Künyeye "Büronun adı" ve "Büronun vergi kimlik no" eklendi (ADR 8037; varsayılan "—",
+  paftaları bekletmez).
+- **EK-6 Tablo 6.55, 6.7** (sayfa görüntüsünden kesin adlar): sahada ve binada `Pset_Address` (İl → Town, İlçe →
+  Region, mahalle bir satır) ve `IfcPostalAddress`; sahada `Pset_LandRegistration` (LandID "ada/parsel" — **plan dışı**:
+  tablo "Parsel Numarası" der, ada olmadan parsel tek başına belirsiz; LandTitleID tapu kaydı) ve
+  `TREpys_ParselOzellikSeti` (TAKS, KAKS İmar durumundan; CekmeOn, CekmeYan, CekmeArka Vaziyet planının her türdeki en
+  küçük kenarından, kamu alanı kenarı ön bahçe, PAİY 23/1-a); binada BuildingID "projekodu_binakodu" ve IsPermanentID
+  yanlış (Tablo 6.7: ruhsatta geçici kimlik; künyenin 000000'ı kimlik değildir), OccupancyType (bina programının
+  kullanım amacı), GrossPlannedArea ve GrossFloorArea (yapı inşaat alanı), FootprintArea (taban alanı) — pafta antediyle
+  aynı kaynaktan (`title_facts`, `zoning_report`).
+- Künyesi boş ya da "—" olan değer yazılmaz; 3. bölümün Denetim adımı eksikleri sayacak.
+
 ## Doğrulama
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`): IfcOpenShell, KentOS kodu olmadan, bölüm binasının kendi
@@ -152,6 +177,13 @@ kişileri ve kuruluşu, koordinat sistemi. 3. bölümde Denetim bunları "eksik 
 - Testler: `kentos-ifc` 6 (kasanın bandı: ortada 0,09–0,16; yüzden 2 cm, sol ve sağ; duvar kadar derin kasa duvarı
   doldurur), uygulama `arch_ifc` ve IFC dosyaları, plan ölçüleri (birim ve masaüstü
   `plan_dimensions_writes_four_sides…`).
+- **3. bölüm, ilk adım:** `kesit-binasi-kunye.ifc` (bölüm binası + örnek künye: 260123, Sivas/Merkez/Esentepe,
+  1234/5, Ayşe Nur Yılmaz, sicil 41234, Örnek Mimarlık) `arch_ifc_check.py`'de: **0 bulgu**; FILE_NAME EK-2 adı, proje
+  adı 260123, aktör IfcPersonAndOrganization (sicil, ad, soyad; büro adı, vergi no, adres), rol ARCHITECT/Y. Mimar,
+  projeye atanmış; sahada ve binada Pset_Address, sahada LandID 1234/5 ve tapu, binada BuildingID 260123_00. Künyesiz
+  `kesit-binasi.ifc` bayt bayt aynı. Uygulama testleri 3, `kentos-ifc` 7 (dosya adı). Künyenin iki yeni alanından sonra
+  ruhsat takımı testleri (uygulama, pafta paketi 5, masaüstü 5, ortak durumlar) geçiyor. Gerçek pencere: künyeli
+  çizimde kayıt penceresi `260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc` önerdi (önce "Kesit binası.ifc").
 - **2. bölüm:** 22 ortak durum (`scripts/fixtures/arch_ifc_cases.py`, KentOS kodu olmadan bölüm binasının tanımından:
   sayılar, plan, doğrulama, üzerine yazma, rampa uyarısı, boş/göreli/uzantısı yanlış/klasörü olmayan yol, var olan
   dosya, okunmayan saat, binasız çizim, büyük harfli uzantı, kırpılan yol, saatsiz yazım, 1. katı boş bina) masaüstü

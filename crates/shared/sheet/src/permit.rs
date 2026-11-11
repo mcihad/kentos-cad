@@ -357,7 +357,7 @@ pub const NOTES: &str = "1. Ölçüler santimetre, kotlar metre cinsindendir.\n2
 
 /// The drawing's variables a set's title block and information table read (docs/adr/8037): name, label and the value a
 /// drawing that lacks it gets; none: it must be given (the sheet says it is missing).
-pub const PARTICULARS: [(&str, &str, Option<&str>); 27] = [
+pub const PARTICULARS: [(&str, &str, Option<&str>); 29] = [
     ("proje_adi", "İşin adı", None),
     ("yapi_sahibi", "Yapı sahibi", None),
     ("il", "İl", None),
@@ -374,7 +374,11 @@ pub const PARTICULARS: [(&str, &str, Option<&str>); 27] = [
     ("mimar_unvan", "Mimarın unvanı", Some("Mimar")),
     ("sicil_no", "Mimarlar Odası sicil no", None),
     ("btb_no", "Büro tescil belgesi (BTB) no", None),
+    // The office's name and tax number: the IFC model's organisation (Dijital Proje Yön. EK-7 Tablo 7.4,
+    // docs/adr/8047); no sheet needs them, so they do not hold a publication.
+    ("buro_adi", "Büronun adı", Some("—")),
     ("buro_adres", "Büronun adresi", None),
+    ("vergi_no", "Büronun vergi kimlik no", Some("—")),
     ("tasarlayan", "Tasarlayan", Some("—")),
     ("cizen", "Çizen", Some("—")),
     ("kontrol_eden", "Kontrol eden", Some("—")),

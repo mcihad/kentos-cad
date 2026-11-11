@@ -16,7 +16,8 @@ use kentos_geometry_core::geom::opening::HoleFrame;
 use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
-    Address, Building, Class, Element, Opening, Place, Pset, Qto, Shape, Space, Storey, Value,
+    Actor, Address, Building, Class, Element, Opening, Organization, Place, Pset, Qto, Shape,
+    Space, Storey, Value,
 };
 use crate::naming::name;
 
@@ -47,6 +48,7 @@ pub struct Input<'a> {
     pub wall_style_name: &'a dyn Fn(Option<&str>) -> String,
     pub net_area: &'a mut dyn FnMut(&SpaceFields) -> Option<f64>,
     pub arch: Option<&'a ArchSettings>,
+    pub particulars: Particulars,
 }
 
 /// Why an object of the drawing's building is not in the file.
@@ -69,6 +71,128 @@ pub struct Left {
     pub id: String,
     pub what: &'static str,
     pub why: Why,
+}
+
+/// The drawing's künye (the permit set's particulars, docs/adr/8037) and the measures its title block reads, for EK-6's
+/// and EK-7's words: none of them is a value the drawing does not hold ("—", "000000" are none).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Particulars {
+    /// İşin adı.
+    pub work: Option<String>,
+    /// Proje kodu (EK-1), bina kodu, revizyon no (EK-2).
+    pub project_code: Option<String>,
+    pub building_code: Option<String>,
+    pub revision: Option<String>,
+    /// İl, ilçe, mahalle.
+    pub province: Option<String>,
+    pub district: Option<String>,
+    pub neighbourhood: Option<String>,
+    /// Ada, parsel, tapu kaydı.
+    pub block: Option<String>,
+    pub parcel: Option<String>,
+    pub title_deed: Option<String>,
+    /// Mimar (adı soyadı), unvanı, Mimarlar Odası sicil no.
+    pub architect: Option<String>,
+    pub architect_title: Option<String>,
+    pub registration: Option<String>,
+    /// Büronun adı, vergi kimlik no, adresi.
+    pub office: Option<String>,
+    pub office_tax_number: Option<String>,
+    pub office_address: Option<String>,
+    /// Kullanım amacı (the building program's), yapı inşaat alanı and taban alanı (İmar durumu's measures), m².
+    pub occupancy: Option<String>,
+    pub gross_area: Option<f64>,
+    pub footprint: Option<f64>,
+    /// The gardens' distances, m: ön, yan, arka (each the least of its edges'; Vaziyet planı).
+    pub setbacks: [Option<f64>; 3],
+}
+
+impl Particulars {
+    /// The parcel as the land registry names it: "ada/parsel", or the parcel alone.
+    pub fn land_id(&self) -> Option<String> {
+        match (&self.block, &self.parcel) {
+            (Some(a), Some(p)) => Some(format!("{a}/{p}")),
+            (None, Some(p)) => Some(p.clone()),
+            _ => None,
+        }
+    }
+
+    /// The site's and the building's address (EK-6 Tablo 6.55's labels: İl → Town, İlçe → Region; the mahalle a line).
+    pub fn address(&self) -> Option<Address> {
+        if self.province.is_none() && self.district.is_none() && self.neighbourhood.is_none() {
+            return None;
+        }
+        Some(Address {
+            lines: self.neighbourhood.iter().cloned().collect(),
+            town: self.province.clone(),
+            region: self.district.clone(),
+            postal_code: None,
+            country: Some("Türkiye".into()),
+        })
+    }
+
+    /// The architect (EK-7 Tablo 7.2–7.5): their family name the last word of their name, their given name the words
+    /// before it; their registration number their identification; their office, when it has a name.
+    pub fn architect(&self) -> Option<Actor> {
+        let whole = self.architect.as_deref()?;
+        let words: Vec<&str> = whole.split_whitespace().collect();
+        let (given, family) = match words.split_last() {
+            Some((last, rest)) if !rest.is_empty() => {
+                (Some(rest.join(" ")), Some((*last).to_owned()))
+            }
+            Some((last, _)) => (None, Some((*last).to_owned())),
+            None => return None,
+        };
+        let organization = self.office.as_ref().map(|name| Organization {
+            identification: self.office_tax_number.clone(),
+            name: name.clone(),
+            address: self.office_address.as_ref().map(|a| Address {
+                lines: vec![a.clone()],
+                country: Some("Türkiye".into()),
+                ..Address::default()
+            }),
+        });
+        Some(Actor {
+            identification: self.registration.clone(),
+            family,
+            given,
+            organization,
+            role: "ARCHITECT",
+            role_description: self.architect_title.clone(),
+        })
+    }
+
+    /// The model file's name without its extension (EK-2 Tablo 2.1: `crate::naming::model_file`), or the drawing's
+    /// title while the project has no code.
+    pub fn file_stem(&self, title: &str) -> String {
+        match &self.project_code {
+            Some(code) => crate::naming::model_file(
+                code,
+                self.building_code.as_deref().unwrap_or("00"),
+                self.revision.as_deref().unwrap_or("000"),
+            ),
+            None => title.to_owned(),
+        }
+    }
+}
+
+/// Pset_Address (EK-6 Tablo 6.7, 6.55) of an address.
+fn address_pset(a: &Option<Address>) -> Option<Pset> {
+    let a = a.as_ref()?;
+    let mut props = Vec::new();
+    if !a.lines.is_empty() {
+        props.push(("AddressLines".to_owned(), Value::Labels(a.lines.clone())));
+    }
+    if let Some(t) = &a.town {
+        props.push(("Town".to_owned(), label(t)));
+    }
+    if let Some(r) = &a.region {
+        props.push(("Region".to_owned(), label(r)));
+    }
+    Some(Pset {
+        name: "Pset_Address".into(),
+        props,
+    })
 }
 
 /// What was written, for the command's answer and the acceptance, and what was not.
@@ -279,6 +403,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         wall_style_name,
         net_area,
         arch,
+        particulars,
     } = input;
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
@@ -688,7 +813,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let total: f64 = net_floor.iter().flatten().sum();
         building_quantities.push(("NetFloorArea".to_owned(), Value::Area(total)));
     }
-    // The project, its site and its building (EK-6 Tablo 6.7, 6.55; EK-7).
+    // The project, its site and its building (EK-6 Tablo 6.7, 6.55; EK-7), their words the drawing's künye's.
+    let k = &particulars;
     let mut site_psets = Vec::new();
     let mut site_qtos = Vec::new();
     if let Some(z) = arch.and_then(|a| a.zoning.as_ref()) {
@@ -712,31 +838,115 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             });
         }
     }
+    // Tablo 6.55: the address as the regulation's labels map it (İl → Town, İlçe → Region), the parcel ("ada/parsel")
+    // and its title deed, and TREpys_ParselOzellikSeti: the plan's TAKS and KAKS (emsal), the gardens' distances.
+    let address = k.address();
+    if let Some(p) = address_pset(&address) {
+        site_psets.push(p.clone());
+    }
+    let mut land = Vec::new();
+    if let Some(id) = k.land_id() {
+        land.push(("LandID".to_owned(), label(&id)));
+    }
+    if let Some(t) = &k.title_deed {
+        land.push(("LandTitleID".to_owned(), label(t)));
+    }
+    if !land.is_empty() {
+        site_psets.push(Pset {
+            name: "Pset_LandRegistration".into(),
+            props: land,
+        });
+    }
+    let mut parcel = Vec::new();
+    if let Some(z) = arch.and_then(|a| a.zoning.as_ref()) {
+        if let Some(c) = z.coverage {
+            parcel.push(("TAKS".to_owned(), Value::Real(c)));
+        }
+        if let Some(far) = z.far {
+            parcel.push(("KAKS".to_owned(), Value::Real(far)));
+        }
+    }
+    for (key, v) in [
+        ("CekmeOn", k.setbacks[0]),
+        ("CekmeYan", k.setbacks[1]),
+        ("CekmeArka", k.setbacks[2]),
+    ] {
+        if let Some(v) = v {
+            parcel.push((key.to_owned(), Value::Real(v)));
+        }
+    }
+    if !parcel.is_empty() {
+        site_psets.push(Pset {
+            name: "TREpys_ParselOzellikSeti".into(),
+            props: parcel,
+        });
+    }
+    // Tablo 6.7: the building's temporary id (its project code and building code; not permanent until it is
+    // registered), its use, its planned gross area and its footprint.
+    let mut building_psets = Vec::new();
+    if let Some(p) = address_pset(&address) {
+        building_psets.push(p);
+    }
+    let mut common = Vec::new();
+    // The künye's 000000 is a project not yet given its code (EK-1): no id of a building.
+    if let Some(code) = k
+        .project_code
+        .as_ref()
+        .filter(|c| c.chars().any(|ch| ch != '0'))
+    {
+        let id = format!("{code}_{}", k.building_code.as_deref().unwrap_or("00"));
+        common.push(("BuildingID".to_owned(), Value::Id(id)));
+        common.push(("IsPermanentID".to_owned(), Value::Bool(false)));
+    }
+    if let Some(u) = &k.occupancy {
+        common.push(("OccupancyType".to_owned(), label(u)));
+    }
+    if let Some(a) = k.gross_area {
+        common.push(("GrossPlannedArea".to_owned(), Value::Area(a)));
+    }
+    common.push((
+        "NumberOfStoreys".to_owned(),
+        Value::Count(storeys.len() as i64),
+    ));
+    building_psets.push(Pset {
+        name: "Pset_BuildingCommon".into(),
+        props: common,
+    });
+    if let Some(a) = k.footprint {
+        building_quantities.push(("FootprintArea".to_owned(), Value::Area(a)));
+    }
+    if let Some(a) = k.gross_area {
+        building_quantities.push(("GrossFloorArea".to_owned(), Value::Area(a)));
+    }
     let title = title.to_owned();
+    let work = k.work.clone().unwrap_or_else(|| title.clone());
+    // EK-7 Tablo 7.1: the project's name is its code (EK-1), its long name the work's.
+    let project_name = k.project_code.clone().unwrap_or_else(|| title.clone());
+    let actors = k.architect().into_iter().collect();
     let building = Building {
-        file: title.clone(),
+        file: k.file_stem(&title),
         stamp: stamp.to_owned(),
         application: application.to_owned(),
         phase: None,
         project: Place {
-            name: title.clone(),
-            long_name: Some(title.clone()),
+            name: project_name,
+            long_name: Some(work.clone()),
             ..Place::default()
         },
+        actors,
         site: Place {
             name: name("SAH", "Parsel"),
+            long_name: k.land_id(),
             psets: site_psets,
             qtos: site_qtos,
+            address: address.clone(),
             ..Place::default()
         },
         site_elevation: arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum),
         building: Place {
-            name: name("BNA", &title),
-            long_name: Some(title),
-            psets: vec![Pset {
-                name: "Pset_BuildingCommon".into(),
-                props: vec![("NumberOfStoreys".into(), Value::Count(storeys.len() as i64))],
-            }],
+            name: name("BNA", &work),
+            long_name: Some(work),
+            psets: building_psets,
             qtos: if building_quantities.is_empty() {
                 Vec::new()
             } else {
@@ -745,7 +955,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     quantities: building_quantities,
                 }]
             },
-            address: None::<Address>,
+            address,
             ..Place::default()
         },
         storeys,

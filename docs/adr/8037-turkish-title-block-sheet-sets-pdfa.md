@@ -145,7 +145,8 @@ PDF/A yeter. Kâğıda basılıp taranan PDF kullanılamaz.
   - Paftaya çizimin değişkenlerinden sonra gider: kullanıcının aynı adlı değişkeni önce gelir
     (`kentos_plot::inputs::drawing_variables`; ara yüzsüz yayın her seferinde hesaplar, masaüstü çizim değiştikçe bir
     kez).
-- **Künye** (`permit::PARTICULARS`): 27 değişken. Zorunlular:
+- **Künye** (`permit::PARTICULARS`): 29 değişken (büronun adı ve vergi kimlik no 11 Kasım'da eklendi: IFC modelinin
+  EK-7 kuruluşu, ADR 8047 §7; hiçbir pafta onları istemez, varsayılanları "—"). Zorunlular:
   - il, ilçe, mahalle, ada, parsel;
   - yapı sahibi, taşıyıcı sistem;
   - mimar, sicil no, BTB no, büro adresi.

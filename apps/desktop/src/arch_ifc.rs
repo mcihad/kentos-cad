@@ -18,7 +18,8 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         };
-        let name = format!("{}.ifc", doc.model.name());
+        // EK-2's model file name from the künye (`260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc`), else the drawing's.
+        let name = arch_ifc::file_name(&doc.model);
         Task::perform(
             async move {
                 let file = rfd::AsyncFileDialog::new()
