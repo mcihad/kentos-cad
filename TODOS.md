@@ -230,6 +230,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `reach` yolları), eğim haritası (`slope.map`), `scenarioStamp` ve `records` (cad.scenarios.impact.json'un 11 yeni
   durumu); yeni `cad.scenarios.record` işleyicisi (22 durum); web Senaryo ölçüleri'nde Erişim ağı / bağlanma, Eğimi
   çizimde göster ve Ölçüleri çizime yaz.
+- MAP-11 / ADR 5080: web'in `cad.readjustment.sheets` işleyicisinde kılavuzlu numaranın çakışma denetimi (`clear`,
+  `clashes`, `number_crowded`; 6 yeni durum) ve `cad.readjustment.distribute`'ta değer esası (`basis`, `valueSource`,
+  kayıtların `value`'su, `value_basis_not_a_rule`; 14 yeni durum); web dağıtım penceresinde Dağıtım esası.
 - MAP-10 / ADR 4660: web'in `cad.scenarios.impact` işleyicisinde eğim sınıfları ve bakı (`slope.classes`,
   `slope.aspect`; cad.scenarios.impact.json'un 5 yeni durumu) ve web Senaryo ölçüleri'nde sınıf ve bakı satırı.
 - MAP-09 / ADR 4640: web'in `cad.zoning.check` işleyicisinde `symbolMismatch` (cad.zoning.check.json'un 4 yeni durumu)

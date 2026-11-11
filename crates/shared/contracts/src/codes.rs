@@ -2093,6 +2093,10 @@ codes! {
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
     /// Düzenleme dağıtım taslağı (docs/adr/1460): rounded values that do not add up while the remainder rule is `reject`.
     NEEDS_RULE = "needs_rule", Failed, false, "Yuvarlanan değerler toplamı tutmuyor ve artık kuralı yok; hiçbir şey dağıtılmadı.";
+    /// Düzenleme dağıtım taslağı by value (docs/adr/5080): the user's comparison, no rule of the regulation.
+    VALUE_BASIS_NOT_A_RULE = "value_basis_not_a_rule", Warning, false, "Değer esaslı dağıtım yönetmelikte bir kural değildir; sonuç kullanıcının seçtiği bir karşılaştırma taslağıdır.";
+    /// Ayırma çapı paftaları (docs/adr/5080): a number outside that touches something wherever it goes; placed where it touches the fewest.
+    NUMBER_CROWDED = "number_crowded", Warning, false, "Dışarıdaki numara hiçbir şeye değmeyen bir yere konamadı; en az şeye değdiği yere kondu.";
     /// A parcel's records that disagree on its registered area (docs/adr/1460).
     AREA_MISMATCH = "area_mismatch", Failed, false, "Parselin tapu alanı kayıtlarında farklı.";
     /// A holder twice in one parcel (docs/adr/1460).

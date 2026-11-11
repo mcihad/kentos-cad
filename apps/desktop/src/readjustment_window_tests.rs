@@ -633,8 +633,8 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
 }
 
 /// docs/adr/4680: with Sığmayan numara on, at 6 mm the numbers of 101/10's 4 m pieces do not fit at the full height: they
-/// are leaders on its pieces' layer, 6 m tall (the sheet's 1:1000), their tips inside the pieces and their lines running
-/// east past them; no text is stepped down.
+/// are leaders on its pieces' layer, 6 m tall (the sheet's 1:1000), their tips inside the pieces; no text is stepped
+/// down. Docs/adr/5080: the south one runs east (clear), the north one west: east its line would cross 101/8.
 #[test]
 fn the_numbers_too_big_go_outside_on_leaders() {
     let mut app = named();
@@ -657,12 +657,135 @@ fn the_numbers_too_big_go_outside_on_leaders() {
         })
         .collect();
     assert_eq!(leaders.iter().map(|l| l.text.clone().unwrap_or_default()).collect::<Vec<_>>(), ["101/24", "101/25"]);
-    for l in &leaders {
+    for (l, east) in leaders.iter().zip([true, false]) {
         assert!((l.height - 6.0).abs() < 1e-9, "{:?}", l.height);
         assert_eq!(l.rotation, 0.0);
         let (tip, start) = (l.pts[0], l.pts[l.pts.len() - 1]);
-        assert!(start.x > tip.x && (start.y - tip.y).abs() < 1e-9, "east of the tip: {tip:?} → {start:?}");
+        assert!((start.x > tip.x) == east && (start.y - tip.y).abs() < 1e-9, "{tip:?} → {start:?}");
         assert_eq!(l.base.attrs["ParselNo"], l.text.clone().unwrap_or_default());
+    }
+    assert!(!app.log.lines().any(|l| l.text.contains("konamadı")), "both are clear");
+}
+
+/// docs/adr/5080: a road's edge drawn all round 101/10, 1 m off: every place of its numbers crosses it, so each goes where
+/// it touches the fewest and the window says so; the numbers are still written.
+#[test]
+fn a_number_that_touches_something_everywhere_is_said() {
+    let mut setup = scope_cases()["setup"].clone();
+    for e in setup["entities"].as_array_mut().expect("entities") {
+        if e["attrs"]["Parsel"] == "11" && e["attrs"].get("Ada").is_none() {
+            e["attrs"]["Ada"] = "101".into();
+        }
+    }
+    let ring: Vec<serde_json::Value> = [(-9.0, -21.0), (-3.0, -21.0), (-3.0, 61.0), (-9.0, 61.0)]
+        .iter()
+        .map(|(x, y)| serde_json::json!({"x": 487000.0 + x, "y": 4420000.0 + y}))
+        .collect();
+    let n = setup["entities"].as_array().map_or(0, Vec::len) + 1;
+    setup["entities"].as_array_mut().expect("entities").push(
+        serde_json::json!({"kind": "polygon", "id": n, "layerId": "yol", "attrs": {"Ad": "Yol"}, "pts": ring}),
+    );
+    setup["uids"].as_array_mut().expect("uids").push(format!("0192f800-2060-7000-8000-{n:012x}").into());
+    let mut app = bounded_on(setup, true);
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+    let _ = app.update(Message::Readjustment(R::NumberHeight("6".into())));
+    let _ = app.update(Message::Readjustment(R::NumberLeader(true)));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert_eq!(app.dialog, None, "the sheets are made");
+    let said: Vec<String> = app.log.lines().filter(|l| l.text.contains("konamadı")).map(|l| l.text.clone()).collect();
+    assert_eq!(said.len(), 2, "{said:?}");
+    assert!(said[0].contains("“101/10” parselinin Girmeyen 1") && said[1].contains("(101/25)"), "{said:?}");
+}
+
+const VALUE_CSV: &str = "parsel;hak sahibi;tapu alanı;pay;değer\n101/1;H1;1000;1/3;2000000\n101/1;H2;1000;2/3;2000000\n101/2;H2;500.50;1/2;1500000\n101/2;H3;500.50;1/2;1500000\n";
+
+/// docs/adr/5080: Dağıtım esası Değer with the values' source and a CSV with the values: the mass goes by the values as
+/// the shared case has it (4/7 and 3/7: 514.46 and 385.84 m²), said to be no rule of the regulation; without the source
+/// it is refused at its place; Alan again gives the area basis.
+#[test]
+fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
+    assert_eq!(records(VALUE_CSV).expect("reads")[0].value.as_deref(), Some("2000000"));
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::Basis("value".into())));
+    filled_with(&mut app, VALUE_CSV);
+    let why = app.readjustment.answer.clone().expect("an answer").expect_err("no source");
+    assert!(why.contains("rules.valueSource"), "{why}");
+    let _ = app.update(Message::Readjustment(R::ValueSource("Sentetik deneme değerleri".into())));
+    let a = app.readjustment.answer.clone().expect("an answer").expect("distributed");
+    assert_eq!(a.basis.as_deref(), Some("value"));
+    assert!(a.draft && a.conserved);
+    let nets: Vec<(&str, &str, &str)> =
+        a.parcels.iter().map(|p| (p.net.as_str(), p.value_share.as_deref().unwrap_or_default(), p.deduction.as_str())).collect();
+    assert_eq!(nets, [("514.46", "4/7", "485.54"), ("385.84", "3/7", "114.66")]);
+    let saved = crate::readjustment_window::csv(&a);
+    assert!(saved.contains("Dağıtım esası;değer") && saved.contains("101/1;2000000;4/7;485.54;514.46"), "{saved}");
+    let _ = app.update(Message::Readjustment(R::Basis("area".into())));
+    let why = app.readjustment.answer.clone().expect("an answer").expect_err("values by area");
+    assert!(why.contains("entries[0].value"), "{why}");
+}
+
+/// docs/adr/5080: the distribution by value (Parseller with the values and their shares, the warning first) and the
+/// model on 101/10's numbers kept clear (south east, north west); light wide and dark narrow,
+/// `.run/gui-evidence/map-11-10/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::clear_and_value_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn clear_and_value_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/map-11-10");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("readjustment.distribute"));
+        let _ = app.update(Message::Readjustment(R::Basis("value".into())));
+        let _ = app.update(Message::Readjustment(R::ValueSource("Sentetik deneme değerleri; kıymet takdiri değil".into())));
+        filled_with(&mut app, VALUE_CSV);
+        let _ = app.update(Message::Readjustment(R::View(View::Parcels)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("1-deger-esasli-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+        println!("{}", path.display());
+        for made in [false, true] {
+            let mut app = named();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("readjustment.distribute"));
+            let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+            let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+            let _ = app.update(Message::Readjustment(R::NumberHeight("6".into())));
+            let _ = app.update(Message::Readjustment(R::NumberLeader(true)));
+            if made {
+                let _ = app.update(Message::Readjustment(R::MakeSheets));
+                let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
+                // 101/10's pieces with 101/1 and 101/8 beside them: the south number east, the north one west.
+                let b = kentos_commands::Bounds { min_x: 486955.0, min_y: 4419970.0, max_x: 487040.0, max_y: 4420072.0 };
+                app.zoom_to_bounds(&b);
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{}-{name}.png", if made { "3-model-cakismasiz" } else { "2-pencere" }));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
     }
 }
 

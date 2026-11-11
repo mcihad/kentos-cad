@@ -5,6 +5,9 @@
 //! each holder's entitlement from their exact share (1/3 stays 1/3). Every rounding is the package's numeric policy
 //! (places, mode, remainder rule); the totals are kept exactly (registered = deduction + net; Σ entitlements = net)
 //! and the answer says where each remainder went. Numbers cross as decimal text, never as floats (CLAUDE.md §23).
+//! docs/adr/5080: by value (`basis: value`), a user-chosen alternative the regulation does not have: the distribution
+//! mass (registered − deduction) goes to the parcels in proportion to their values before the readjustment, each value
+//! the user's with its source; the answer says so in a warning.
 //! The shared cases are `fixtures/commands/v1/cad.readjustment.distribute.json`.
 
 use serde::{Deserialize, Serialize};
@@ -35,6 +38,15 @@ pub struct ReadjustmentRules {
     pub scale: u32,
     pub rounding: String,
     pub remainder: String,
+    /// docs/adr/5080: what the distribution mass is shared by: `area` (none: the regulation's, by the parcels' areas) or
+    /// `value` (the user's alternative: by their values before the readjustment, `entries[i].value`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<String>,
+    /// docs/adr/5080, with `basis: value`: who determined the values and by what decision (KentOS makes none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value_source: Option<String>,
 }
 
 /// A record: the parcel, the holder (an id, not a name: personal data stays in its own access-controlled record), the
@@ -50,6 +62,11 @@ pub struct ReadjustmentEntry {
     pub holder: String,
     pub area: String,
     pub share: String,
+    /// docs/adr/5080, with `basis: value` only: the parcel's value before the readjustment (plain decimal text, not
+    /// below zero, the same on every record of the parcel; the user's, e.g. a valuation's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value: Option<String>,
 }
 
 /// Input of `cad.readjustment.distribute` v1: the rule package and the records, in order.
@@ -60,7 +77,9 @@ pub struct ReadjustmentEntry {
 /// d > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),
 /// `duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's
 /// shares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is
-/// `reject`).
+/// `reject`). Docs/adr/5080: `invalid_input` at `rules.basis` (neither `area` nor `value`), `rules.valueSource` (empty
+/// by value), `entries[i].value` (given by area; by value missing, not plain decimal text, below zero, or another on the
+/// parcel's records), `entries` (by value, the values add up to zero).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -100,6 +119,14 @@ pub struct ReadjustmentParcel {
     pub remainder: String,
     pub remainder_to: Vec<String>,
     pub parts: Vec<ReadjustmentPart>,
+    /// docs/adr/5080, by value: the parcel's value as given and its exact share of the values (`n/d`); its deduction is
+    /// then its area − its net, below zero when it gains.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value_share: Option<String>,
 }
 
 /// A holder's total over the parcels.
@@ -137,4 +164,18 @@ pub struct ReadjustmentDistributed {
     pub conserved: bool,
     pub parcels: Vec<ReadjustmentParcel>,
     pub holders: Vec<ReadjustmentHolder>,
+    /// docs/adr/5080, by value: `value`, the values' source as given, and the remainder of the mass's split over the
+    /// parcels and the parcels it went to (the deduction is then not split: its remainder is 0).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value_source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub mass_remainder: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub mass_remainder_to: Vec<String>,
 }

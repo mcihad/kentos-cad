@@ -11,7 +11,14 @@ The rules (docs/adr/1460 §2):
   units, else refused) given one unit at a time to the parts furthest short (ties: the records' order), or refused
   when the rule is `reject`;
 - a parcel's net is its area minus its deduction; it is split over its holders by their exact shares the same way;
-- the totals: registered = Σ deductions + Σ nets, Σ holders' values = Σ nets, Σ deductions = the rounded total.
+- the totals: registered = Σ deductions + Σ nets, Σ holders' values = Σ nets, Σ deductions = the rounded total;
+- docs/adr/5080, `basis: value` (a user-chosen alternative; the Turkish readjustment regulation distributes by area): the
+  distribution mass (registered − the rounded deduction) is split over the parcels in proportion to their values before
+  the readjustment (Baugesetzbuch §§ 56(1), 57: the Verteilungsmasse in the ratio of the former parcels' values), the
+  same rounding and remainder; a parcel's deduction is then its area − its share (below zero when it gains); every
+  value is the user's (`entries[i].value`, plain decimal, the same on a parcel's records) with their source
+  (`rules.valueSource`); the answer says the basis, each parcel's value and exact share, the mass split's remainder and
+  a warning that it is no rule of the regulation.
 """
 
 import copy
@@ -146,8 +153,16 @@ def run(inp):
                       "rules.remainder")
     if not inp["entries"]:
         raise Refused("invalid_input", "Kayıt yok: parsel, hak sahibi, tapu alanı ve pay verin.", "entries")
+    basis = r.get("basis", "area").strip()
+    if basis not in ("area", "value"):
+        raise Refused("invalid_input", f"“{r['basis']}” bir dağıtım esası değil (area: alan, value: değer).",
+                      "rules.basis")
+    if basis == "value" and not r.get("valueSource", "").strip():
+        raise Refused("invalid_input", "Değer esaslı dağıtımda değerlerin kaynağı (kim, hangi kararla belirledi) "
+                                       "yazılmalı; KentOS değer üretmez.", "rules.valueSource")
     scale, mode, rule = r["scale"], r["rounding"].strip(), r["remainder"].strip()
     parcels = []
+    values = {}
     for i, e in enumerate(inp["entries"]):
         parcel, holder, area = e["parcel"].strip(), e["holder"].strip(), e["area"].strip()
         if not parcel or not holder:
@@ -161,6 +176,19 @@ def run(inp):
             raise Refused("invalid_input", f"{i + 1}. kaydın payı “{e['share']}” n/d biçiminde değil (payda sıfır olamaz).",
                           f"entries[{i}].share")
         share = Fraction(int(m.group(1)), int(m.group(2)))
+        if "value" in e and basis == "area":
+            raise Refused("invalid_input", f"{i + 1}. kaydın değeri yalnız değer esaslı dağıtımda okunur "
+                                           "(rules.basis: value).", f"entries[{i}].value")
+        if basis == "value":
+            value = e.get("value", "").strip()
+            if not PLAIN.match(value) or value.startswith("-"):
+                raise Refused("invalid_input", f"{i + 1}. kaydın değeri “{e.get('value', '')}” eksi olmayan düz bir "
+                                               "ondalık yazı olmalı: değer esaslı dağıtımda her kayıt parselinin "
+                                               "düzenlemeden önceki değerini taşır.", f"entries[{i}].value")
+            if parcel in values and frac(values[parcel]) != frac(value):
+                raise Refused("invalid_input", f"“{parcel}” parselinin değeri kayıtlarda farklı: {values[parcel]} ve "
+                                               f"{value}.", f"entries[{i}].value")
+            values.setdefault(parcel, value)
         found = [p for p in parcels if p[0] == parcel]
         if found:
             p = found[0]
@@ -182,14 +210,28 @@ def run(inp):
     exact = sum((frac(a) * ratio for _, a, _ in parcels), Fraction(0))
     total = round_to(exact, scale, mode)
     registered = sum((frac(a) for _, a, _ in parcels), Fraction(0))
-    try:
-        if registered == 0:
-            dparts, drem, dgiven = [Fraction(0)] * len(parcels), "0", []
-        else:
-            dparts, drem, dgiven = split(total, [frac(a) for _, a, _ in parcels], scale, mode, rule)
-    except Refused as x:
-        x.path = "rules.deduction"
-        raise
+    mass = None
+    if basis == "value":
+        weights = [frac(values[p]) for p, _, _ in parcels]
+        if sum(weights, Fraction(0)) == 0:
+            raise Refused("invalid_input", "Parsellerin değerleri toplamı sıfır; değer esaslı dağıtım değerlerin "
+                                           "oranıyla yapılır.", "entries")
+        try:
+            shares, mrem, mgiven = split(registered - total, weights, scale, mode, rule)
+        except Refused as x:
+            x.path = "entries"
+            raise
+        dparts, drem, dgiven = [frac(a) - n for (_, a, _), n in zip(parcels, shares)], "0", []
+        mass = (mrem, mgiven, [w / sum(weights, Fraction(0)) for w in weights])
+    else:
+        try:
+            if registered == 0:
+                dparts, drem, dgiven = [Fraction(0)] * len(parcels), "0", []
+            else:
+                dparts, drem, dgiven = split(total, [frac(a) for _, a, _ in parcels], scale, mode, rule)
+        except Refused as x:
+            x.path = "rules.deduction"
+            raise
     out_parcels, holders, nets, held = [], [], [], []
     for (parcel, area, hs), ded in zip(parcels, dparts):
         net = frac(area) - ded
@@ -209,16 +251,33 @@ def run(inp):
                 found[0][1].append(v)
             else:
                 holders.append((holder, [v]))
-        out_parcels.append({"parcel": parcel, "area": area, "deduction": text(ded, scale), "net": text(net, scale),
-                            "remainder": rem, "remainderTo": [hs[k][1] for k in given], "parts": ps})
+        row = {"parcel": parcel, "area": area, "deduction": text(ded, scale), "net": text(net, scale),
+               "remainder": rem, "remainderTo": [hs[k][1] for k in given], "parts": ps}
+        if mass is not None:
+            v = mass[2][len(out_parcels)]
+            row.update({"value": values[parcel], "valueShare": f"{v.numerator}/{v.denominator}"})
+        out_parcels.append(row)
         nets.append(net)
     conserved = (sum(dparts, Fraction(0)) + sum(nets, Fraction(0)) == registered and sum(held, Fraction(0)) ==
                  sum(nets, Fraction(0)) and sum(dparts, Fraction(0)) == total)
-    return {"rules": r["id"].strip(), "release": r["release"], "draft": True, "registered": text(registered, scale),
-            "deductionExact": normal(exact), "deduction": text(total, scale), "deductionRemainder": drem,
-            "deductionRemainderTo": [parcels[k][0] for k in dgiven], "net": text(sum(nets, Fraction(0)), scale),
-            "held": text(sum(held, Fraction(0)), scale), "conserved": conserved, "parcels": out_parcels,
-            "holders": [{"holder": h, "value": text(sum(v, Fraction(0)), scale)} for h, v in holders]}
+    out = {"rules": r["id"].strip(), "release": r["release"], "draft": True, "registered": text(registered, scale),
+           "deductionExact": normal(exact), "deduction": text(total, scale), "deductionRemainder": drem,
+           "deductionRemainderTo": [parcels[k][0] for k in dgiven], "net": text(sum(nets, Fraction(0)), scale),
+           "held": text(sum(held, Fraction(0)), scale), "conserved": conserved, "parcels": out_parcels,
+           "holders": [{"holder": h, "value": text(sum(v, Fraction(0)), scale)} for h, v in holders]}
+    if mass is not None:
+        out.update({"basis": "value", "valueSource": r["valueSource"].strip(), "massRemainder": mass[0]})
+        if mass[1]:
+            out["massRemainderTo"] = [parcels[k][0] for k in mass[1]]
+    return out
+
+
+VALUE_WARNING = {"code": "value_basis_not_a_rule",
+                 "message": "Değer esaslı dağıtım arazi ve arsa düzenlemesinin yönetmeliğinde bir kural değildir "
+                            "(dağıtım alan esaslıdır); bu, kullanıcının seçtiği bir karşılaştırma taslağıdır. Yöntem: "
+                            "dağıtım kütlesi parsellere düzenlemeden önceki değerleri oranında verilir; değerler "
+                            "kullanıcınındır.",
+                 "path": "rules.basis"}
 
 
 RULES = {"id": "ornek-paket", "release": 1, "jurisdiction": "Örnek kurum (sentetik)",
@@ -243,6 +302,16 @@ SEVENTHS = [entry("P", f"H{i}", "100", "1/7") for i in range(1, 8)]
 SAME = {"revision": "same", "canUndo": False}
 
 
+def valued(entries, values):
+    """The records with each parcel's value before the readjustment (the user's)."""
+    return [dict(e, value=values[e["parcel"]]) for e in entries]
+
+
+# Synthetic values (TL), not a valuation: the same two parcels as BASIC, the smaller one worth more per square metre.
+BASIC_VALUES = valued(BASIC, {"101/1": "2000000", "101/2": "1500000"})
+VALUE_SOURCE = "Sentetik deneme değerleri; bir kıymet takdiri değildir"
+
+
 def case(name, entries, op="plan", **kw):
     inp = {"rules": rules(**kw), "entries": copy.deepcopy(entries)}
     try:
@@ -250,8 +319,9 @@ def case(name, entries, op="plan", **kw):
     except Refused as x:
         return {"name": name, "steps": [{"op": "execute", "input": inp, "result": {"status": "failed", "error": {
             "code": x.code, "message": x.message, "path": x.path}}, "expect": SAME}]}
+    warnings = [VALUE_WARNING] if out.get("basis") == "value" and op != "validate" else []
     return {"name": name, "steps": [{"op": op, "input": inp, "result": {
-        "status": "completed", "output": None if op == "validate" else out, "warnings": []}, "expect": SAME}]}
+        "status": "completed", "output": None if op == "validate" else out, "warnings": warnings}, "expect": SAME}]}
 
 
 def cases():
@@ -290,6 +360,33 @@ def cases():
         case("basamak 7", BASIC, scale=7),
         case("bilinmeyen yuvarlama", BASIC, rounding="bankers"),
         case("bilinmeyen artık kuralı", BASIC, remainder="last"),
+        # docs/adr/5080: by value, the user's alternative.
+        case("değer esaslı: dağıtım kütlesi parsellere değerleri oranında", BASIC_VALUES, basis="value",
+             valueSource=VALUE_SOURCE),
+        case("değer esaslı, uygula: salt okunur", BASIC_VALUES, op="execute", basis="value", valueSource=VALUE_SOURCE),
+        case("değer esaslı, doğrulama", BASIC_VALUES, op="validate", basis="value", valueSource=VALUE_SOURCE),
+        case("değer esaslı: üç eşit değer, artık en çok eksik kalana",
+             valued([entry("A", "H1", "100", "1/1"), entry("B", "H1", "100", "1/1"), entry("C", "H2", "100.01", "1/1")],
+                    {"A": "1", "B": "1", "C": "1"}), basis="value", valueSource=VALUE_SOURCE),
+        case("değer esaslı: alanla aynı oranda değer, alan esaslıyla aynı net",
+             valued(BASIC, {"101/1": "1000", "101/2": "500.50"}), basis="value", valueSource=VALUE_SOURCE),
+        case("değer esaslı: değeri sıfır parsel pay almaz",
+             valued([entry("A", "H1", "100", "1/1"), entry("B", "H2", "100", "1/1")], {"A": "0", "B": "250000"}),
+             basis="value", valueSource=VALUE_SOURCE),
+        case("değer esaslı, artık kuralı reject: artık varsa ret",
+             valued([entry("A", "H1", "100", "1/1"), entry("B", "H1", "100", "1/1"), entry("C", "H2", "100.01", "1/1")],
+                    {"A": "1", "B": "1", "C": "1"}), basis="value", valueSource=VALUE_SOURCE, remainder="reject"),
+        case("değer esaslı: değerlerin kaynağı yok", BASIC_VALUES, basis="value", valueSource=" "),
+        case("değer esaslı: değeri olmayan kayıt", BASIC_VALUES[:1] + BASIC[1:], basis="value",
+             valueSource=VALUE_SOURCE),
+        case("değer esaslı: eksi değer", valued(BASIC, {"101/1": "-5", "101/2": "10"}), basis="value",
+             valueSource=VALUE_SOURCE),
+        case("değer esaslı: aynı parselde farklı değer", BASIC_VALUES[:1] + [dict(BASIC_VALUES[1], value="1999999")]
+             + BASIC_VALUES[2:], basis="value", valueSource=VALUE_SOURCE),
+        case("değer esaslı: değerler toplamı sıfır", valued(BASIC, {"101/1": "0", "101/2": "0.00"}), basis="value",
+             valueSource=VALUE_SOURCE),
+        case("alan esaslıda değer verilmez", BASIC_VALUES),
+        case("bilinmeyen dağıtım esası", BASIC, basis="price"),
     ]
     return out
 

@@ -344,6 +344,7 @@ pub mod scenarios_record;
 pub mod readjustment;
 pub mod readjustment_scope;
 pub mod readjustment_sheets;
+pub mod separation_number_clear;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
 pub mod orthophoto_seamlines;

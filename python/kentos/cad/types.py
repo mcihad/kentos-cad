@@ -82504,7 +82504,9 @@ class ReadjustmentDistribute(_Model):
     d > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),
     `duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's
     shares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is
-    `reject`).
+    `reject`). Docs/adr/5080: `invalid_input` at `rules.basis` (neither `area` nor `value`), `rules.valueSource` (empty
+    by value), `entries[i].value` (given by area; by value missing, not plain decimal text, below zero, or another on the
+    parcel's records), `entries` (by value, the values add up to zero).
     """
     rules: ReadjustmentRules
     entries: list[ReadjustmentEntry]
@@ -82531,6 +82533,8 @@ class ReadjustmentDistributed(_Model):
     records' order and the holders' totals in their first appearance's order.
     Attributes:
         release: Unit: count.
+        basis: docs/adr/5080, by value: `value`, the values' source as given, and the remainder of the mass's split over the
+            parcels and the parcels it went to (the deduction is then not split: its remainder is 0).
     """
     rules: str
     release: int
@@ -82545,6 +82549,10 @@ class ReadjustmentDistributed(_Model):
     conserved: bool
     parcels: list[ReadjustmentParcel]
     holders: list[ReadjustmentHolder]
+    basis: str | None | Unset = UNSET
+    mass_remainder: str | None | Unset = UNSET
+    mass_remainder_to: list[str] | Unset = UNSET
+    value_source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82561,6 +82569,14 @@ class ReadjustmentDistributed(_Model):
         out["conserved"] = self.conserved
         out["parcels"] = [e0.to_json() for e0 in self.parcels]
         out["holders"] = [e0.to_json() for e0 in self.holders]
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        if self.mass_remainder is not UNSET:
+            out["massRemainder"] = self.mass_remainder
+        if self.mass_remainder_to is not UNSET:
+            out["massRemainderTo"] = list(self.mass_remainder_to)
+        if self.value_source is not UNSET:
+            out["valueSource"] = self.value_source
         return out
 
     @classmethod
@@ -82579,6 +82595,10 @@ class ReadjustmentDistributed(_Model):
             conserved=data["conserved"],
             parcels=[ReadjustmentParcel.from_json(e0) for e0 in data["parcels"]],
             holders=[ReadjustmentHolder.from_json(e0) for e0 in data["holders"]],
+            basis=data.get("basis", UNSET),
+            mass_remainder=data.get("massRemainder", UNSET),
+            mass_remainder_to=list(data["massRemainderTo"]) if "massRemainderTo" in data else UNSET,
+            value_source=data.get("valueSource", UNSET),
         )
 
 
@@ -82587,11 +82607,15 @@ class ReadjustmentEntry(_Model):
     """A record: the parcel, the holder (an id, not a name: personal data stays in its own access-controlled record), the
     parcel's registered area (decimal text, square metres; the same on every record of the parcel) and the holder's
     share (`n/d`).
+    Attributes:
+        value: docs/adr/5080, with `basis: value` only: the parcel's value before the readjustment (plain decimal text, not
+            below zero, the same on every record of the parcel; the user's, e.g. a valuation's).
     """
     parcel: str
     holder: str
     area: str
     share: str
+    value: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82599,6 +82623,8 @@ class ReadjustmentEntry(_Model):
         out["holder"] = self.holder
         out["area"] = self.area
         out["share"] = self.share
+        if self.value is not UNSET:
+            out["value"] = self.value
         return out
 
     @classmethod
@@ -82608,6 +82634,7 @@ class ReadjustmentEntry(_Model):
             holder=data["holder"],
             area=data["area"],
             share=data["share"],
+            value=data.get("value", UNSET),
         )
 
 
@@ -82635,6 +82662,9 @@ class ReadjustmentHolder(_Model):
 class ReadjustmentParcel(_Model):
     """A parcel: its registered area, its deduction at the policy's places, its net area, the remainder its holders'
     split had and the holder it went to (none when there was none), and its holders' parts in the records' order.
+    Attributes:
+        value: docs/adr/5080, by value: the parcel's value as given and its exact share of the values (`n/d`); its deduction is
+            then its area − its net, below zero when it gains.
     """
     parcel: str
     area: str
@@ -82643,6 +82673,8 @@ class ReadjustmentParcel(_Model):
     remainder: str
     remainder_to: list[str]
     parts: list[ReadjustmentPart]
+    value: str | None | Unset = UNSET
+    value_share: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82653,6 +82685,10 @@ class ReadjustmentParcel(_Model):
         out["remainder"] = self.remainder
         out["remainderTo"] = list(self.remainder_to)
         out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.value is not UNSET:
+            out["value"] = self.value
+        if self.value_share is not UNSET:
+            out["valueShare"] = self.value_share
         return out
 
     @classmethod
@@ -82665,6 +82701,8 @@ class ReadjustmentParcel(_Model):
             remainder=data["remainder"],
             remainder_to=list(data["remainderTo"]),
             parts=[ReadjustmentPart.from_json(e0) for e0 in data["parts"]],
+            value=data.get("value", UNSET),
+            value_share=data.get("valueShare", UNSET),
         )
 
 
@@ -82704,6 +82742,9 @@ class ReadjustmentRules(_Model):
     Attributes:
         release: Unit: count.
         scale: Unit: count.
+        basis: docs/adr/5080: what the distribution mass is shared by: `area` (none: the regulation's, by the parcels' areas) or
+            `value` (the user's alternative: by their values before the readjustment, `entries[i].value`).
+        value_source: docs/adr/5080, with `basis: value`: who determined the values and by what decision (KentOS makes none).
     """
     id: str
     release: int
@@ -82715,6 +82756,8 @@ class ReadjustmentRules(_Model):
     scale: int
     rounding: str
     remainder: str
+    basis: str | None | Unset = UNSET
+    value_source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82728,6 +82771,10 @@ class ReadjustmentRules(_Model):
         out["scale"] = self.scale
         out["rounding"] = self.rounding
         out["remainder"] = self.remainder
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        if self.value_source is not UNSET:
+            out["valueSource"] = self.value_source
         return out
 
     @classmethod
@@ -82743,6 +82790,8 @@ class ReadjustmentRules(_Model):
             scale=data["scale"],
             rounding=data["rounding"],
             remainder=data["remainder"],
+            basis=data.get("basis", UNSET),
+            value_source=data.get("valueSource", UNSET),
         )
 
 
@@ -83003,9 +83052,11 @@ class ReadjustmentSheets(_Model):
             straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480). Unit: paper-mm.
         number_leader: Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
             along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
-            leader from the part's label place, its line running east to one text height past the part's boundary on that
-            line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
-            fit outside it, horizontal, at an offset from its boundary).
+            leader from the part's label place, its line running out of the part to one text height past its boundary, its
+            landing and note beyond it as a leader lays them out. Docs/adr/5080: the places are tried nearest first (one,
+            two, then three text heights past the boundary; east, west, north, south, then the four between) and the first
+            whose line outside the part, landing and note touch nothing the sheet's map shows is taken; none clear: the one
+            touching the fewest, said in the label (`clear`, `clashes`) and a warning `number_crowded`.
         numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
             docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
             outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
@@ -91194,6 +91245,11 @@ class SeparationLabel(_Model):
     height of its outer ring's corners (inside the part whatever its shape).
     Attributes:
         at: Unit: m.
+        clashes: Docs/adr/5080: what a number that is not clear touches, sorted: the drawing's objects by their persistent ids,
+            this sheet's other numbers by their parts' names (“Girmeyen 2”).
+        clear: Docs/adr/5080, with a leader: whether its line outside the part, its landing and its note touch nothing the
+            sheet's map shows (the drawing's lines, texts, leaders and points on shown layers, and this sheet's other
+            numbers). False: no place tried was clear, and the number stands where it touches the fewest.
         height: With `numberHeight` (docs/adr/4280): the text's height, metres on the drawing, its turn (degrees, counter-clockwise
             from east), its share of the height asked (1, 0.9 … 0.1) and whether its box lies inside the part; `at` is then
             its middle. Unit: m.
@@ -91205,6 +91261,8 @@ class SeparationLabel(_Model):
     part: str
     number: str
     at: list[float]
+    clashes: list[str] | Unset = UNSET
+    clear: bool | None | Unset = UNSET
     fits: bool | None | Unset = UNSET
     height: float | None | Unset = UNSET
     leader: list[float] | None | Unset = UNSET
@@ -91216,6 +91274,10 @@ class SeparationLabel(_Model):
         out["part"] = self.part
         out["number"] = self.number
         out["at"] = [float(e0) for e0 in self.at]
+        if self.clashes is not UNSET:
+            out["clashes"] = list(self.clashes)
+        if self.clear is not UNSET:
+            out["clear"] = self.clear
         if self.fits is not UNSET:
             out["fits"] = self.fits
         if self.height is not UNSET:
@@ -91234,6 +91296,8 @@ class SeparationLabel(_Model):
             part=data["part"],
             number=data["number"],
             at=[float(e0) for e0 in data["at"]],
+            clashes=list(data["clashes"]) if "clashes" in data else UNSET,
+            clear=data.get("clear", UNSET),
             fits=data.get("fits", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             leader=UNSET if "leader" not in data else None if data["leader"] is None else [float(e0) for e0 in data["leader"]],

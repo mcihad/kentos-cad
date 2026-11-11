@@ -40,8 +40,10 @@ numberHeight?: number,
 /**
  * Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
  * along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
- * leader from the part's label place, its line running east to one text height past the part's boundary on that
- * line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
- * fit outside it, horizontal, at an offset from its boundary).
+ * leader from the part's label place, its line running out of the part to one text height past its boundary, its
+ * landing and note beyond it as a leader lays them out. Docs/adr/5080: the places are tried nearest first (one,
+ * two, then three text heights past the boundary; east, west, north, south, then the four between) and the first
+ * whose line outside the part, landing and note touch nothing the sheet's map shows is taken; none clear: the one
+ * touching the fewest, said in the label (`clear`, `clashes`) and a warning `number_crowded`.
  */
 numberLeader?: boolean, expectedRevision?: string, };

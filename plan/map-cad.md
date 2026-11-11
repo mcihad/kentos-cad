@@ -42,7 +42,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620, 5020 | semt ve yarıçap ölçüleri, ölçülerden alan ve kapanma; kenar ölçülerinin pencerede girilmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640, 5040 | taslakta geometri ve plan notu değişikliği; EK-2 standartları denetimde | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660, 5060 | süreyle (hız, yürüme profili) erişim; bakının haritası, derece birimi, özel bakı sınıfları; eskiyen tabloyu yerinde yeniden yazma | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680, 5080 | yaylı parçada yay boyunca yazı; noktaların etiketleri engel; değer esasında yeni parselin değeri ve parayla denkleştirme (kaynak ve veri beklenir) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720, 5100 | kontrol noktalarının ağa ölçü olarak girmesi (düzlem kotu düşey gözlem; kontrol datum); dosyaları farklı konumlu sanal bulutta Dönüşüm uygula ve öbür İşlemler araçlarının konumu okuması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
@@ -1596,6 +1596,18 @@ boyda denenir; sığmazsa küçültülmeden, yatay, ucu parçanın etiket yerind
 öteye uzanan bir kılavuzla dışarıda yazılır; cevapta `leader`. 46 bağımsız durum (3 yeni), Python, MCP, masaüstü
 (Sığmayan numara anahtarı) ve resimler. Açık: dışarıdaki notun çakışma denetimi, değer esaslı dağıtım (resmî metinde
 kural yok).
+
+**11 Kasım 2026, onuncu tur — dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım ([ADR 5080](../docs/adr/5080-separation-number-clear-and-value-distribution.md)).**
+Kapsam: **Harita ve CBS**. Araştırma: yönetmelik ve BÖHHBÜY'de numaranın dışarıda yazılması ve çakışma için hüküm
+yok; dağıtım alan esaslı (m. 17). ArcGIS Pro'nun iç/sınır ağırlığı ve “en az ağırlığa” yerleştirmesi; BauGB § 56–57
+(resmî Alman metni: kütle eski değerlerin oranında). Netcad wiki giriş istiyor, okunmadı. Kanıtlanan:
+`cad.readjustment.sheets`'in kılavuzlu numarası en yakın temiz yere (1–3 boy; doğu, batı, kuzey, güney, ara yönler):
+engeller çizimin gösterilen çizgileri, alan sınırları, yazıları, kılavuzları, noktaları ve paftanın öbür numaraları;
+temiz yer yoksa en aza değen yer, `clear`/`clashes` ve `number_crowded` uyarısı (52 bağımsız durum, 6 yeni; ADR 4680'in
+kuzeydeki numarası artık batıda). `cad.readjustment.distribute`'a kullanıcının seçtiği `basis: value`: kütle
+parsellere değerleri oranında, değerler ve kaynakları kullanıcının, her cevapta `value_basis_not_a_rule` (44 durum, 14
+yeni). Python, MCP, masaüstü (Dağıtım esası, Değerlerin kaynağı, CSV'de değer sütunu) ve resimler. Açık: yaylı parçada
+yay boyunca yazı, noktaların etiketleri, değer esasında yeni parselin değeri ve parayla denkleştirme.
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 
