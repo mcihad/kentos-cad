@@ -1073,7 +1073,9 @@ fn area(ring: &[P]) -> f64 {
 /// A stair: each straight leg a flight, each landing a slab, as thick as the slab it arrives at (docs/adr/8042 §3).
 fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<String>, m: &mut Model) {
     use kentos_geometry_core::entity::Shape;
-    use kentos_geometry_core::geom::arch::{Walk, riser_stations, stair_landings};
+    use kentos_geometry_core::geom::arch::{
+        Walk, riser_stations, stair_landings, tread_ring, winder_turns,
+    };
     let Shape::Stair { pts, stair: spec } = kentos_formats::arch_elements::core_stair(s) else {
         return;
     };
@@ -1087,6 +1089,28 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
     let walk = Walk::of(&pts);
     let (stations, _) = riser_stations(&walk, &spec);
     let landings = stair_landings(&walk, &spec);
+    // A balanced stair's turns (docs/adr/8045 §2): each winds from its last square riser before its zone to its first
+    // after it (else the stair's last); the flights stop there as at a landing and its treads stand one by one.
+    let winding: Vec<(f64, f64)> = winder_turns(&walk, &spec)
+        .iter()
+        .filter_map(|t| {
+            let a = stations
+                .iter()
+                .copied()
+                .rfind(|st| *st <= t.corner - t.reach + 1e-9)?;
+            let b = stations
+                .iter()
+                .copied()
+                .find(|st| *st >= t.corner + t.reach - 1e-9)
+                .or_else(|| stations.last().copied())?;
+            (b > a + 1e-9).then_some((a, b))
+        })
+        .collect();
+    let stops: &[(f64, f64)] = if winding.is_empty() {
+        &landings
+    } else {
+        &winding
+    };
     let end = *pts.last().unwrap_or(&pts[0]);
     let start = pts[0];
     // Its waist: the structure of the slab it arrives at, else of the one it starts from.
@@ -1119,11 +1143,11 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
         let across = P::new(-dir.y, dir.x);
         // Its flight: from the end of a landing that holds its start (else its start) to the start of one that holds
         // its end (else its end).
-        let lo = landings
+        let lo = stops
             .iter()
             .find(|(x, y)| *x <= sa + 1e-9 && *y > sa + 1e-9)
             .map_or(sa, |(_, y)| *y);
-        let hi = landings
+        let hi = stops
             .iter()
             .find(|(x, y)| *x < sb - 1e-9 && *y >= sb - 1e-9)
             .map_or(sb, |(x, _)| *x);
@@ -1182,6 +1206,38 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
             look.clone(),
             owner.clone(),
         );
+    }
+    // Its winders (docs/adr/8045 §2): each tread between its two risers, its top its height, its bottom a riser and its
+    // waist under it, never under its floor (down to its floor without a waist): a stepped underside, the warped one a
+    // balanced stair's concrete has is not modelled.
+    for (a, b) in &winding {
+        let mine: Vec<(usize, f64)> = stations
+            .iter()
+            .copied()
+            .enumerate()
+            .filter(|(_, st)| *st >= a - 1e-9 && *st <= b + 1e-9)
+            .collect();
+        for w in mine.windows(2) {
+            let ((i, s0), (_, s1)) = (w[0], w[1]);
+            let ring = tread_ring(&walk, &spec, s0, s1);
+            if ring.len() < 3 {
+                continue;
+            }
+            let top = base + rh * (i + 1) as f64;
+            let bottom = waist.map_or(base, |wst| (top - rh - wst).max(base));
+            push(
+                m,
+                Solid {
+                    rings: vec![ring],
+                    height: Height::Prism { bottom, top },
+                    voids: Vec::new(),
+                    marks: Vec::new(),
+                    finish: None,
+                },
+                look.clone(),
+                owner.clone(),
+            );
+        }
     }
     // Its landings: the band between their ends, as thick as its waist (or down to its floor without one).
     let band = kentos_geometry_core::geom::arch::stair_band(&pts, &spec);

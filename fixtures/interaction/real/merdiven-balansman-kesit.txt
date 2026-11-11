@@ -1,0 +1,83 @@
+# M45 1. bölüm (docs/adr/8045 §2), on fixtures/arch/v1/facade-building.kcad (--modul mimari): a 1.20 m L Merdiven with
+# Balansman 7 right of the building (14.5,1 → 17,1 → 17,4); Kesit across its first flight and its turn (14,0.9 →
+# 18.5,0.9); Kesit çıkar on it, placed under the plan; the whole view, then a close view of the section's winders.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key alt+q
+wait 600
+type Merdiven
+wait 1500
+key Return
+wait 1500
+move 1300 650
+wait 800
+type A
+wait 600
+type 7
+key Return
+wait 800
+type 14.5,1
+key Return
+wait 800
+type 17,1
+key Return
+wait 800
+type 17,4
+key Return
+wait 1000
+key Return
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+key ctrl+a
+type Kesit
+wait 1500
+shot k0-arama
+key Down
+wait 400
+key Return
+wait 1500
+type 14,0.9
+key Return
+wait 800
+type 18.5,0.9
+key Return
+wait 800
+move 1250 600
+wait 1200
+shot k1-isaret
+key Return
+wait 1500
+key Escape
+wait 800
+key alt+q
+wait 600
+key ctrl+a
+type Kesit çıkar
+wait 1500
+key Return
+wait 1500
+click 1130 729
+wait 1500
+move 1000 950
+wait 1500
+click 1000 950
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot k2-genel
+wheel 1000 870 4
+wait 1500
+move 1400 120
+wait 800
+shot k3-yakin

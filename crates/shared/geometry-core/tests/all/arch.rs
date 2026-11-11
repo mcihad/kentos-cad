@@ -380,3 +380,52 @@ fn balanced_stairs_turn_as_the_reference_says() {
         }
     }
 }
+
+/// A tread's outline (docs/adr/8045 §2): a straight one its rectangle; a balanced L's winders at the corner its risers'
+/// ends and the inner corner (2.3, 0.5) and the outer one (3.3, −0.5) between them, counter-clockwise.
+#[test]
+fn a_tread_s_outline_holds_the_band_s_corners_it_wraps() {
+    use kentos_geometry_core::vec2::Vec2;
+    let pts = [
+        Vec2::new(0.0, 0.0),
+        Vec2::new(2.8, 0.0),
+        Vec2::new(2.8, 2.24),
+    ];
+    let mut stair = arch::StairSpec {
+        width: 1.0,
+        risers: 18.0,
+        riser_height: 0.17,
+        tread: 0.28,
+        ..Default::default()
+    };
+    let walk = arch::Walk::of(&pts);
+    let square = arch::tread_ring(&walk, &stair, 0.28, 0.56);
+    points(
+        &square,
+        &serde_json::json!([[0.28, -0.5], [0.56, -0.5], [0.56, 0.5], [0.28, 0.5]]),
+        "düz basamak",
+    );
+    stair.winders = Some(5.0);
+    let area = |r: &[Vec2]| {
+        (0..r.len())
+            .map(|i| r[i].x * r[(i + 1) % r.len()].y - r[(i + 1) % r.len()].x * r[i].y)
+            .sum::<f64>()
+            / 2.0
+    };
+    let before = arch::tread_ring(&walk, &stair, 2.52, 2.8);
+    points(
+        &before,
+        &serde_json::json!([[2.84, -0.5], [3.3, -0.5], [2.3, 0.5], [2.2, 0.5]]),
+        "köşeden önceki",
+    );
+    let after = arch::tread_ring(&walk, &stair, 2.8, 3.08);
+    points(
+        &after,
+        &serde_json::json!([[3.3, -0.5], [3.3, -0.04], [2.3, 0.6], [2.3, 0.5]]),
+        "köşeden sonraki",
+    );
+    assert!(
+        area(&before) > 0.0 && area(&after) > 0.0,
+        "saat yönünün tersi"
+    );
+}

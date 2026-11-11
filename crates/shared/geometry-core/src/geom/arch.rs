@@ -15,7 +15,7 @@ use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::display::fixed;
 use crate::entity::{HatchPattern, Shape};
-use crate::jsmath::{PI, atan, atan2, cos, js_hypot, js_round, sin};
+use crate::jsmath::{PI, atan, atan2, cos, js_hypot, js_max, js_min, js_round, sin};
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
@@ -1558,6 +1558,74 @@ pub fn riser_ends(walk: &Walk, spec: &StairSpec, s: f64) -> (Vec2, Vec2) {
     };
     let o = Vec2::new(p.x + v.x * a, p.y + v.y * a);
     if t.left { (q, o) } else { (o, q) }
+}
+
+/// Where a point `p` lying on `line` (within 1 mm) is along it, from its start.
+fn arc_along(line: &[Vec2], p: Vec2) -> f64 {
+    let mut best = (f64::INFINITY, 0.0);
+    let mut at = 0.0;
+    for w in line.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let l = js_hypot(b.x - a.x, b.y - a.y);
+        if l > EPS {
+            let t = js_max(
+                0.0,
+                js_min(
+                    l,
+                    ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l,
+                ),
+            );
+            let q = Vec2::new(a.x + (b.x - a.x) * t / l, a.y + (b.y - a.y) * t / l);
+            let d = js_hypot(p.x - q.x, p.y - q.y);
+            if d < best.0 {
+                best = (d, at + t);
+            }
+        }
+        at += l;
+    }
+    best.1
+}
+
+/// A tread's outline between its risers at walking line arc lengths `a` and `b` (docs/adr/8045 §2), counter-clockwise:
+/// the two risers' ends ([`riser_ends`]) and the band's corners between them on each side; a balanced turn's winder
+/// holds the inner corner or the outer one it wraps.
+pub fn tread_ring(walk: &Walk, spec: &StairSpec, a: f64, b: f64) -> Vec<Vec2> {
+    let half = spec.width / 2.0;
+    let (la, ra) = riser_ends(walk, spec, a);
+    let (lb, rb) = riser_ends(walk, spec, b);
+    let between = |line: &[Vec2], from: Vec2, to: Vec2| -> Vec<Vec2> {
+        let (u0, u1) = (arc_along(line, from), arc_along(line, to));
+        let mut at = 0.0;
+        let mut out = Vec::new();
+        for (k, w) in line.windows(2).enumerate() {
+            at += js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+            if k + 2 < line.len() && at > u0 + 1e-9 && at < u1 - 1e-9 {
+                out.push(w[1]);
+            }
+        }
+        out
+    };
+    let left_side = band_side(&walk.pts, half, true);
+    let right_side = band_side(&walk.pts, half, false);
+    let mut ring = vec![ra];
+    ring.extend(between(&right_side, ra, rb));
+    ring.push(rb);
+    ring.push(lb);
+    let mut back = between(&left_side, la, lb);
+    back.reverse();
+    ring.extend(back);
+    ring.push(la);
+    let n = ring.len();
+    let twice: f64 = (0..n)
+        .map(|i| {
+            let (p, q) = (ring[i], ring[(i + 1) % n]);
+            p.x * q.y - q.x * p.y
+        })
+        .sum();
+    if twice < 0.0 {
+        ring.reverse();
+    }
+    ring
 }
 
 /// [`riser_ends`] as a line.

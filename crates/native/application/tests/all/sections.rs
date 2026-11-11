@@ -552,3 +552,71 @@ fn the_regulation_asks_two_sections_one_through_the_common_stair() {
     ));
     assert!(regulation(&mut doc).is_empty());
 }
+
+/// Balansmanlı merdiven kesitte (docs/adr/8045 §2): its flights stop at its turn's zone as at a landing and each winder
+/// stands between its two risers at its own height. A 1.00 m L of 5 winders either side (2.80 + 2.24 m, 18 risers of
+/// 0.17 m) beside the building: two flights and ten winders, the treads after risers 6 to 15; the corner's two hold the
+/// inner corner and reach the outer one; no landing.
+#[test]
+fn a_balanced_stair_s_winders_stand_one_by_one() {
+    use kentos_geometry_core::geom::section::Height;
+    let mut doc = building();
+    let p = |x: f64, y: f64| serde_json::json!({"x": 30.0 + x, "y": y});
+    let answer = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.stairs.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "stairs": [{
+            "pts": [p(0.0, 0.0), p(2.8, 0.0), p(2.8, 2.24)], "width": 1.0, "risers": 18, "riserHeight": 0.17,
+            "tread": 0.28, "winders": 5, "arch": {"level": "zemin"}
+        }]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| matches!(e, Entity::Stair(s) if s.stair.winders.is_some()).then_some(u))
+        .expect("the balanced stair")
+        .to_string();
+    let m = sections::model(&doc);
+    let mine: Vec<&kentos_geometry_core::geom::section::Solid> = m
+        .solids
+        .iter()
+        .zip(&m.owners)
+        .filter(|(_, o)| o.as_deref() == Some(uid.as_str()))
+        .map(|(s, _)| s)
+        .collect();
+    let flights = mine
+        .iter()
+        .filter(|s| matches!(s.height, Height::Flight(_)))
+        .count();
+    let winders: Vec<(f64, f64, &Vec<kentos_geometry_core::Vec2>)> = mine
+        .iter()
+        .filter_map(|s| match s.height {
+            Height::Prism { bottom, top } => Some((bottom, top, &s.rings[0])),
+            _ => None,
+        })
+        .collect();
+    assert_eq!((flights, winders.len()), (2, 10), "{mine:?}");
+    // No slab holds either end: no waist, every winder stands on its floor.
+    for (k, (bottom, top, _)) in winders.iter().enumerate() {
+        assert!(
+            (top - 0.17 * (6 + k) as f64).abs() < 1e-9,
+            "winder {k}: {top}"
+        );
+        assert_eq!(*bottom, 0.0, "winder {k}");
+    }
+    let has = |ring: &Vec<kentos_geometry_core::Vec2>, x: f64, y: f64| {
+        ring.iter()
+            .any(|q| (q.x - x).abs() < 1e-9 && (q.y - y).abs() < 1e-9)
+    };
+    // The two at the corner (after risers 10 and 11): the inner corner and the outer one.
+    for (_, top, ring) in &winders {
+        if (top - 1.70).abs() < 1e-9 || (top - 1.87).abs() < 1e-9 {
+            assert!(
+                has(ring, 32.3, 0.5) && has(ring, 33.3, -0.5),
+                "{top}: {ring:?}"
+            );
+        }
+    }
+}

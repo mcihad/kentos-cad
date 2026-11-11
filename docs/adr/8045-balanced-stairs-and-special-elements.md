@@ -1,8 +1,8 @@
 # ADR 8045: Merdiven ve özel elemanlar — balansmanlı merdiven, korkuluk, asansör, otopark yeri
 
-- **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölümün ilk adımı yapıldı:
-  balansmanlı (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c
-  denetimi (§1). Sırada kesitte dengelenmiş basamaklar, sonra korkuluk, asansör ve otopark yeri.
+- **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölüm yapıldı: balansmanlı
+  (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c denetimi (§1),
+  kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). Sırada korkuluk, asansör ve otopark yeri.
 - **Bağlam belgesi:** ADR 0343 (merdivenin yürüme çizgisi, sahanlıklar, basamak çizgileri), ADR 0704 (yükseklikten
   merdiven), ADR 0709 (döner merdiven), ADR 0724 (kata bağlı merdiven, üst kat planı), ADR 8034 (PAİY 31 denetimi).
 
@@ -61,8 +61,25 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
 - **Denetim › Mevzuat (`paiy_stair_step`, PAİY 31/2-c):** en dar iç basamak 0,10 m'den darsa "Balansmanlı merdivenin
   basamağı dar uçta 0.090 m < 0.10 m — PAİY 31/2-c"; düzeltmesi PAİY'ye yeten en az balansman (`cad.arch.edit`).
   Basamağın ortası yürüme çizgisidir; oradaki 0,27 m mevcut basamak denetimi.
-- **Sonraya:** kesitte dengelenmiş basamaklar (bugün kesit kolları yürüme çizgisine dik basamaklarla kurar), kısa ara
-  kollu U merdivende birleşik bölge, iç köşesi yuvarlatılmış (gözlü) merdiven.
+- **Sonraya:** kısa ara kollu U merdivende birleşik bölge, iç köşesi yuvarlatılmış (gözlü) merdiven.
+
+### 2. Kesitte dengelenmiş basamaklar (1. bölüm, ikinci adım)
+
+Kesit, merdiveni kollar (eğik plak üstünde dik basamaklar) ve sahanlıklarla kuruyordu. Balansmanlı merdivende sahanlık
+olmadığı için ilk kol yürüme çizgisinin köşesinde bitiyor, dönüşün dış yarısı boş kalıyor, ikinci kol havada duruyordu;
+plandaki dengelenmiş basamakların kesitte karşılığı yoktu.
+
+- **Kollar dönüş bölgesinde durur (`sections::stair`, `stops`):** her dönüş, bölgesinden önceki son dik rıhttan
+  bölgesinden sonraki ilk dik rıhta (yoksa merdivenin son rıhtına) uzanır; kol orada sahanlıktaki gibi biter.
+- **Her dengelenmiş basamak ayrı bir prizma:** tabanı iki rıhtının uçları ve aralarında kalan band köşeleri
+  (`geom::arch::tread_ring`, saat yönünün tersi); köşedeki iki basamak iç köşeyi tutar ve dış köşeye uzanır. Üstü kendi
+  yüksekliği (taban + rıht × sırası), altı bir rıht ve merdivenin kalınlığı aşağısı, döşemenin altına inmez; merdiveni
+  tutan döşeme yoksa (kalınlık bilinmiyor) döşemeye kadar dolu, kollarla aynı.
+- **Alt yüz basamaklı (karar):** betonarme balansmanlı merdivenin alt yüzü burulmuş bir yüzeydir; onu çizmek kesit
+  motoruna yeni bir yüzey türü ister. Ruhsat ölçeğinde (1/50, 1/100) basamak basamak inen alt yüz okunuyor; burulmuş
+  alt yüz sonraya.
+- Görünüşler aynı katı modelden çıkarıldığı için dengelenmiş basamaklar görünüşte de görünür; kesit düzleminin
+  ardında kalan basamakların rıhtları görünüş çizgisiyle çizilir.
 
 ## Doğrulama
 
@@ -82,3 +99,12 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
   "Balansmanı 7 basamak yap", bulgu düştü (28, 4). Balansman 7 ile çizilen merdivenin Öznitelikler'i: Dönüş
   Balansmanlı, Balansman basamağı 7, En dar iç basamak 0.119 m, Denetim Uyuyor. Eski ikili aynı yolu dönüşte
   sahanlıkla çiziyor.
+- Kesit (§2): çekirdek testi düz basamağın dikdörtgenini ve 1,00 m'lik L'nin köşesindeki iki dengelenmiş basamağın
+  rıht uçlarıyla birlikte iç (2,3; 0,5) ve dış (3,3; −0,5) köşeyi tuttuğunu, saat yönünün tersine döndüğünü denetler.
+  Kesit modeli testi: 1,00 m'lik L, 5 balansman, 18 rıht × 0,17 m: 2 kol ve 10 dengelenmiş basamak (6. ile 15. rıhtların
+  üstü, üstleri 1,02 … 2,55 m), sahanlık yok, köşedeki ikisi iç ve dış köşeyi tutuyor, kalınlık olmadan hepsi döşemede.
+- Gerçek pencere (`fixtures/interaction/real/merdiven-balansman-kesit.txt`): 1,20 m'lik L, Balansman 7, 18 rıht ×
+  0,167 m; A-A kesiti ilk kolu ve dönüşü 0,10 m yürüme çizgisinin dışından kesiyor. Eski ikili: ilk kolun 9 basamağı
+  yürüme çizgisinin köşesinde (x = 17,00) bitiyor, dönüşün dış 0,60 m'si boş, ikinci kol +1,50'de havada. Yeni ikili:
+  gövde merdivenin dış kenarına (17,60) kadar dolu, dengelenmiş basamaklar tek tek kesiliyor, ardındakilerin rıhtları
+  görünüyor; ±0,00'dan son basamağın +2,83'üne kesintisiz.

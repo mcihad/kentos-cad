@@ -400,6 +400,8 @@
     yürüme çizgisinden dış kenara (`riser_ends`); iç basamak genişlikleri `winder_treads`; ret `winder_problem` (kayıptan
     kısa, kola sığmayan, çakışan); PAİY'nin 0,10 m'sine yeten en az `winders_for` (1,00 m L'de 5, 1,20 m L'de 7).
     Merdiven aracı A, Öznitelikler Dönüş/Balansman basamağı/En dar iç basamak, Mevzuat `paiy_stair_step` düzeltmesiyle.
+    Kesitte (ADR 8045 §2) kollar dönüş bölgesinde sahanlıktaki gibi durur, her dengelenmiş basamak `tread_ring`
+    tabanlı ayrı prizma (rıht uçları + sardığı band köşeleri); alt yüz basamaklı yaklaşım, burulmuş yüzey sonraya.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
