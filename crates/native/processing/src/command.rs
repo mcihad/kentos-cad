@@ -791,6 +791,14 @@ impl ToolHost for Tools {
         let built = crate::network::from_document(doc, id)?;
         Ok((built.def, built.session))
     }
+
+    fn network_of(
+        &self,
+        doc: &Document,
+        def: &kentos_commands::NetworkDef,
+    ) -> Result<kentos_geometry_core::ops::network::NetworkSession, String> {
+        Ok(crate::network::from_definition(doc, def.clone())?.session)
+    }
 }
 
 /// The most rows one batch takes (docs/adr/0529 §1).

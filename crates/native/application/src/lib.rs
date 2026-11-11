@@ -338,6 +338,8 @@ pub mod field_package;
 pub mod zoning_check;
 pub mod zoning_symbolize;
 pub mod scenarios_impact;
+mod scenarios_impact_network;
+pub mod scenarios_record;
 pub mod readjustment;
 pub mod readjustment_scope;
 pub mod readjustment_sheets;
@@ -1559,6 +1561,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_ZONING_CHECK, kentos_commands::CAD_ZONING_CHECK_VERSION),
     (kentos_commands::CAD_ZONING_SYMBOLIZE, kentos_commands::CAD_ZONING_SYMBOLIZE_VERSION),
     (kentos_commands::CAD_SCENARIOS_IMPACT, kentos_commands::CAD_SCENARIOS_IMPACT_VERSION),
+    (kentos_commands::CAD_SCENARIOS_RECORD, kentos_commands::CAD_SCENARIOS_RECORD_VERSION),
     (kentos_commands::CAD_READJUSTMENT_DISTRIBUTE, kentos_commands::CAD_READJUSTMENT_DISTRIBUTE_VERSION),
     (kentos_commands::CAD_READJUSTMENT_SCOPE, kentos_commands::CAD_READJUSTMENT_SCOPE_VERSION),
     (kentos_commands::CAD_READJUSTMENT_SHEETS, kentos_commands::CAD_READJUSTMENT_SHEETS_VERSION),

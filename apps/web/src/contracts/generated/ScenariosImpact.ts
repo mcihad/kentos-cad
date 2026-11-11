@@ -18,6 +18,8 @@ import type { ImpactSlope } from "./ImpactSlope";
  * zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
  * none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
  * `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
- * `terrain_unbuildable` (the surface cannot be made).
+ * `terrain_unbuildable` (the surface cannot be made). Along a network (docs/adr/5060): `invalid_input`
+ * (`access.connect`: none or not above zero with a network), `unknown_network` (`access.network`), `invalid_network`
+ * (`access.network`: the network cannot be built), `tools_unavailable` (no host here builds networks).
  */
 export type ScenariosImpact = { scenario: string, field?: string, key?: string, since?: string, impervious?: { [key in string]: number }, access?: ImpactAccess, infrastructure?: ImpactInfrastructure, slope?: ImpactSlope, };

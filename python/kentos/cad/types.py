@@ -1690,6 +1690,7 @@ class CreateOperation(_StrEnum):
     - ``drainage``: `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     - ``lowConfidence``: `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
     - ``sparse``: `road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.
+    - ``scenarioRecord``: `cad.scenarios.record` (docs/adr/5060): a comparison written as a table, “Ölçüleri çizime yaz”.
     """
     SWEPT = "swept"
     PARALLEL = "parallel"
@@ -1747,9 +1748,10 @@ class CreateOperation(_StrEnum):
     DRAINAGE = "drainage"
     LOW_CONFIDENCE = "lowConfidence"
     SPARSE = "sparse"
+    SCENARIO_RECORD = "scenarioRecord"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse", "scenarioRecord"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -47377,18 +47379,30 @@ class ImagesEdited(_Model):
 class ImpactAccess(_Model):
     """Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)
     and the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).
+
+    Ağ üzerinden erişim (docs/adr/5060): with `network` (a network of the project, by id or name) the distance runs along
+    it instead: each area's centroid joins the network at its nearest place (a leg no longer than `connect` metres, the
+    user's; farther, the area is off the network), and the distance is the `from` area's leg, the way along the network
+    as its definition travels it, and the `to` area's leg. A network layer the scenario stands in for is each side's own.
     Attributes:
         distance: Unit: m.
+        connect: Unit: m.
     """
     distance: float
     from_: list[str]
     to: list[str]
+    connect: float | None | Unset = UNSET
+    network: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["distance"] = float(self.distance)
         out["from"] = list(self.from_)
         out["to"] = list(self.to)
+        if self.connect is not UNSET:
+            out["connect"] = None if self.connect is None else float(self.connect)
+        if self.network is not UNSET:
+            out["network"] = self.network
         return out
 
     @classmethod
@@ -47397,6 +47411,8 @@ class ImpactAccess(_Model):
             distance=float(data["distance"]),
             from_=list(data["from"]),
             to=list(data["to"]),
+            connect=UNSET if "connect" not in data else None if data["connect"] is None else float(data["connect"]),
+            network=data.get("network", UNSET),
         )
 
 
@@ -47702,6 +47718,10 @@ class ImpactOwn(_Model):
 class ImpactReach(_Model):
     """Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in
     the drawing's order, the `from` areas reached, those not reached, and the `to` areas.
+    Attributes:
+        base_off: The `from` areas off the network (their centroid farther from it than `connect`), by persistent id.
+        base_routes: Along a network (docs/adr/5060): each side's `from` areas on the network, in the drawing's order, with the
+            nearest `to` area they reach along it, however far; none off the network or with no way to a `to` area.
     """
     base_reached: list[str]
     base_unreached: list[str]
@@ -47709,6 +47729,10 @@ class ImpactReach(_Model):
     alternative_reached: list[str]
     alternative_unreached: list[str]
     alternative_targets: list[str]
+    alternative_off: list[str] | Unset = UNSET
+    alternative_routes: list[ImpactRoute] | Unset = UNSET
+    base_off: list[str] | Unset = UNSET
+    base_routes: list[ImpactRoute] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -47718,6 +47742,14 @@ class ImpactReach(_Model):
         out["alternativeReached"] = list(self.alternative_reached)
         out["alternativeUnreached"] = list(self.alternative_unreached)
         out["alternativeTargets"] = list(self.alternative_targets)
+        if self.alternative_off is not UNSET:
+            out["alternativeOff"] = list(self.alternative_off)
+        if self.alternative_routes is not UNSET:
+            out["alternativeRoutes"] = [e0.to_json() for e0 in self.alternative_routes]
+        if self.base_off is not UNSET:
+            out["baseOff"] = list(self.base_off)
+        if self.base_routes is not UNSET:
+            out["baseRoutes"] = [e0.to_json() for e0 in self.base_routes]
         return out
 
     @classmethod
@@ -47729,6 +47761,42 @@ class ImpactReach(_Model):
             alternative_reached=list(data["alternativeReached"]),
             alternative_unreached=list(data["alternativeUnreached"]),
             alternative_targets=list(data["alternativeTargets"]),
+            alternative_off=list(data["alternativeOff"]) if "alternativeOff" in data else UNSET,
+            alternative_routes=[ImpactRoute.from_json(e0) for e0 in data["alternativeRoutes"]] if "alternativeRoutes" in data else UNSET,
+            base_off=list(data["baseOff"]) if "baseOff" in data else UNSET,
+            base_routes=[ImpactRoute.from_json(e0) for e0 in data["baseRoutes"]] if "baseRoutes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactRecord(_Model):
+    """A comparison written in the drawing (docs/adr/5060, `cad.scenarios.record`): the table's persistent id, the base's
+    and the scenario's stamps it was written with, and whether each has changed since (the table is then stale: its
+    numbers are not the drawing's now and are not updated by themselves).
+    """
+    table: str
+    stamp: str
+    scenario_stamp: str
+    base_changed: bool
+    scenario_changed: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["stamp"] = self.stamp
+        out["scenarioStamp"] = self.scenario_stamp
+        out["baseChanged"] = self.base_changed
+        out["scenarioChanged"] = self.scenario_changed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactRecord:
+        return cls(
+            table=data["table"],
+            stamp=data["stamp"],
+            scenario_stamp=data["scenarioStamp"],
+            base_changed=data["baseChanged"],
+            scenario_changed=data["scenarioChanged"],
         )
 
 
@@ -47763,6 +47831,43 @@ class ImpactRegion(_Model):
             to=float(data["to"]),
             from_text=data["fromText"],
             to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactRoute(_Model):
+    """A `from` area's way to its nearest `to` area along the network (docs/adr/5060): both by persistent id, the
+    distance in all, the two legs (the `from` centroid to the network, the network to the `to` centroid), and the way
+    as points: the `from` centroid, its place on the network, the network's way, the `to` area's place on it, its
+    centroid.
+    Attributes:
+        distance: Unit: length.
+        legs: Unit: length.
+        path: Unit: length.
+    """
+    area: str
+    target: str
+    distance: float
+    legs: list[float]
+    path: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["target"] = self.target
+        out["distance"] = float(self.distance)
+        out["legs"] = [float(e0) for e0 in self.legs]
+        out["path"] = [[float(e1) for e1 in e0] for e0 in self.path]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactRoute:
+        return cls(
+            area=data["area"],
+            target=data["target"],
+            distance=float(data["distance"]),
+            legs=[float(e0) for e0 in data["legs"]],
+            path=[[float(e1) for e1 in e0] for e0 in data["path"]],
         )
 
 
@@ -47804,18 +47909,21 @@ class ImpactSlope(_Model):
     takes that slope. The surface is the same on both sides.
     Attributes:
         threshold: Unit: percent.
-        aspect: Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in ArcGIS's
-            Surface Aspect's eight directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
+        aspect: Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in eight
+            directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
             flat (a level triangle, no aspect).
-        classes: Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20), as ArcGIS's Surface
-            Slope's class breaks: the classes run from 0 to the first break, between two breaks and from the last one up,
+        classes: Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20):
+            the classes run from 0 to the first break, between two breaks and from the last one up,
             each holding its lower break. Unit: percent.
+        map: Docs/adr/5060: the slope map: each measured area's parts on the surface's triangles with their slope class and
+            aspect (`slopeMap`), so a host can colour them; their sizes are the class and aspect measures' own parts.
     """
     surface: str
     threshold: float
     aspect: bool | Unset = UNSET
     classes: list[float] | Unset = UNSET
     from_: list[str] | Unset = UNSET
+    map: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -47827,6 +47935,8 @@ class ImpactSlope(_Model):
             out["classes"] = [float(e0) for e0 in self.classes]
         if self.from_ is not UNSET:
             out["from"] = list(self.from_)
+        if self.map is not UNSET:
+            out["map"] = self.map
         return out
 
     @classmethod
@@ -47837,6 +47947,76 @@ class ImpactSlope(_Model):
             aspect=data.get("aspect", UNSET),
             classes=[float(e0) for e0 in data["classes"]] if "classes" in data else UNSET,
             from_=list(data["from"]) if "from" in data else UNSET,
+            map=data.get("map", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactSlopeMap(_Model):
+    """The slope map (docs/adr/5060): each side's measured areas cut by the surface's triangles, the areas in the drawing's
+    order, an area's parts by their first vertex (south first, then west).
+    """
+    base: list[ImpactSlopePiece]
+    alternative: list[ImpactSlopePiece]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = [e0.to_json() for e0 in self.base]
+        out["alternative"] = [e0.to_json() for e0 in self.alternative]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactSlopeMap:
+        return cls(
+            base=[ImpactSlopePiece.from_json(e0) for e0 in data["base"]],
+            alternative=[ImpactSlopePiece.from_json(e0) for e0 in data["alternative"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactSlopePiece(_Model):
+    """A measured area's part on one triangle of the surface (docs/adr/5060): the area's persistent id, the slope class
+    (0 the first, below the first break; 0 with no breaks) and the aspect (0 flat, 1–8 north … north-west), the
+    triangle's slope (percent), the part's size (m²) and its outer ring (counter-clockwise, from its lowest vertex, the
+    westmost of equals) and holes.
+    Attributes:
+        class_: Unit: index.
+        aspect: Unit: index.
+        slope: Unit: percent.
+        size: Unit: area.
+        ring: Unit: length.
+        holes: Unit: length.
+    """
+    area: str
+    class_: int
+    aspect: int
+    slope: float
+    size: float
+    ring: list[list[float]]
+    holes: list[list[list[float]]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["class"] = self.class_
+        out["aspect"] = self.aspect
+        out["slope"] = float(self.slope)
+        out["size"] = float(self.size)
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        if self.holes is not UNSET:
+            out["holes"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.holes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactSlopePiece:
+        return cls(
+            area=data["area"],
+            class_=data["class"],
+            aspect=data["aspect"],
+            slope=float(data["slope"]),
+            size=float(data["size"]),
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            holes=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
         )
 
 
@@ -88269,7 +88449,9 @@ class ScenariosImpact(_Model):
     zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
     none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
     `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
-    `terrain_unbuildable` (the surface cannot be made).
+    `terrain_unbuildable` (the surface cannot be made). Along a network (docs/adr/5060): `invalid_input`
+    (`access.connect`: none or not above zero with a network), `unknown_network` (`access.network`), `invalid_network`
+    (`access.network`: the network cannot be built), `tools_unavailable` (no host here builds networks).
     Attributes:
         impervious: Unit: 1.
     """
@@ -88322,7 +88504,12 @@ class ScenariosImpacted(_Model):
     changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
     asked, docs/adr/2260), and the drawing's revision.
     Attributes:
+        scenario_stamp: The scenario layers' stamp now, made as the base's (docs/adr/5060): what a table written in the drawing is
+            checked against besides the base's.
         near: Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
+        records: The comparisons of this scenario written in the drawing (`cad.scenarios.record`, docs/adr/5060), in the drawing's
+            order.
+        slope_map: The slope map (only when `slope.map` is asked, docs/adr/5060).
     """
     scenario: str
     name: str
@@ -88335,9 +88522,12 @@ class ScenariosImpacted(_Model):
     gaps: list[str]
     assumptions: list[str]
     stamp: str
+    scenario_stamp: str
     revision: str
     near: ImpactNear | None | Unset = UNSET
     reach: ImpactReach | None | Unset = UNSET
+    records: list[ImpactRecord] | Unset = UNSET
+    slope_map: ImpactSlopeMap | None | Unset = UNSET
     stale: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -88353,11 +88543,16 @@ class ScenariosImpacted(_Model):
         out["gaps"] = list(self.gaps)
         out["assumptions"] = list(self.assumptions)
         out["stamp"] = self.stamp
+        out["scenarioStamp"] = self.scenario_stamp
         out["revision"] = self.revision
         if self.near is not UNSET:
             out["near"] = None if self.near is None else self.near.to_json()
         if self.reach is not UNSET:
             out["reach"] = None if self.reach is None else self.reach.to_json()
+        if self.records is not UNSET:
+            out["records"] = [e0.to_json() for e0 in self.records]
+        if self.slope_map is not UNSET:
+            out["slopeMap"] = None if self.slope_map is None else self.slope_map.to_json()
         if self.stale is not UNSET:
             out["stale"] = self.stale
         return out
@@ -88376,10 +88571,80 @@ class ScenariosImpacted(_Model):
             gaps=list(data["gaps"]),
             assumptions=list(data["assumptions"]),
             stamp=data["stamp"],
+            scenario_stamp=data["scenarioStamp"],
             revision=data["revision"],
             near=UNSET if "near" not in data else None if data["near"] is None else ImpactNear.from_json(data["near"]),
             reach=UNSET if "reach" not in data else None if data["reach"] is None else ImpactReach.from_json(data["reach"]),
+            records=[ImpactRecord.from_json(e0) for e0 in data["records"]] if "records" in data else UNSET,
+            slope_map=UNSET if "slopeMap" not in data else None if data["slopeMap"] is None else ImpactSlopeMap.from_json(data["slopeMap"]),
             stale=data.get("stale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosRecord(_Model):
+    """Input of `cad.scenarios.record` v1: the comparison as `cad.scenarios.impact` takes it, the layer the table is written
+    on (not one of the compared layers: the table would change their measures), the table's top left corner (none: two
+    table heights right of the compared layers' areas, at their top) and the revision the write expects.
+
+    Refusals, in this order: the comparison's own (their paths under `impact.`), `invalid_input` (`layerId`: no such
+    layer, a group, or a compared layer; `at`: not finite), `stale_revision`, and the write's (a locked layer).
+    Attributes:
+        at: Unit: length.
+    """
+    impact: ScenariosImpact
+    layer_id: str
+    at: list[float] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["impact"] = self.impact.to_json()
+        out["layerId"] = self.layer_id
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosRecord:
+        return cls(
+            impact=ScenariosImpact.from_json(data["impact"]),
+            layer_id=data["layerId"],
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosRecorded(_Model):
+    """Output of `cad.scenarios.record` v1: the table's persistent id, the stamps it keeps, its cells (the heading, a row
+    a measure, the stamps' row) and the drawing's revision after the write.
+    """
+    table: str
+    stamp: str
+    scenario_stamp: str
+    cells: list[list[str]]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["stamp"] = self.stamp
+        out["scenarioStamp"] = self.scenario_stamp
+        out["cells"] = [list(e0) for e0 in self.cells]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosRecorded:
+        return cls(
+            table=data["table"],
+            stamp=data["stamp"],
+            scenario_stamp=data["scenarioStamp"],
+            cells=[list(e0) for e0 in data["cells"]],
+            revision=data["revision"],
         )
 
 
@@ -138748,9 +139013,13 @@ __all__ = [
     "ImpactNear",
     "ImpactOwn",
     "ImpactReach",
+    "ImpactRecord",
     "ImpactRegion",
+    "ImpactRoute",
     "ImpactSections",
     "ImpactSlope",
+    "ImpactSlopeMap",
+    "ImpactSlopePiece",
     "ImpactTarget",
     "ImpactTargetName",
     "ImpactUse",
@@ -140461,6 +140730,8 @@ __all__ = [
     "ScenariosEdited",
     "ScenariosImpact",
     "ScenariosImpacted",
+    "ScenariosRecord",
+    "ScenariosRecorded",
     "SceneMeshKind",
     "SceneMeshKindName",
     "SceneMeshWritten",

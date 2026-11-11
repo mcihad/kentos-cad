@@ -452,6 +452,8 @@ mod impact_slope_tests;
 #[cfg(test)]
 mod impact_slope_classes_tests;
 #[cfg(test)]
+mod impact_network_record_tests;
+#[cfg(test)]
 mod readjustment_window_tests;
 #[cfg(test)]
 mod brand_tests;

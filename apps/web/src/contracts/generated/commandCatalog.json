@@ -61432,7 +61432,7 @@
       "id": "cad.scenarios.impact",
       "version": 1,
       "title": "Senaryo ölçüleri",
-      "summary": "Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların toplamı, near'da yakın ve uzak alanlar ve katmanın nesneleri, baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface, threshold %, from): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, slope.threshold 0'dan büyük değil), scenario_not_found, nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable (slope).",
+      "summary": "Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların toplamı, near'da yakın ve uzak alanlar ve katmanın nesneleri, baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface, threshold %, from): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan (slopeOff, veri eksiği); slope.classes (artan % sınırları) ile sınıflara, slope.aspect ile bakıya göre alanlar; slope.map ile slopeMap: her ölçülen alanın üçgenlere düşen parçaları sınıfı, bakısı, eğimi, alanı ve halkasıyla (haritada boyamak için; sınıf ölçülerinin parçalarıdır). access.network (projenin Ağlar'daki ağı, kimlik ya da ad) ve access.connect (m, kullanıcının) ile erişim ağ boyunca: ağırlık merkezi ağın en yakın yerine bağlanır (connect'ten uzaksa ağa bağlanamaz, erişmez sayılır, veri eksiği), uzaklık = bağlanma + ağın tanımına göre en kısa yol + hedefin merkezine bağlanma; reach'te her alanın yolu (baseRoutes/alternativeRoutes: hedef, uzaklık, iki bağlanma, noktalar) ve ağa bağlanamayanlar; senaryonun yerine geçtiği ağ katmanı her tarafın kendisinindir. scenarioStamp senaryo katmanlarının özetidir; records cad.scenarios.record ile çizime yazılmış bu senaryonun tablolarıdır, her biri tabanın ya da senaryonun o zamandan beri değişip değişmediğiyle (eskiyen tablo kendiliğinden güncellenmez). Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, access.connect ağla verilmemiş ya da 0'dan büyük değil, slope.threshold 0'dan büyük değil, slope.classes), scenario_not_found, nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable (slope), unknown_network, invalid_network, tools_unavailable (access.network).",
       "aliases": [
         "senaryoolculeri",
         "alternatifetkisi",
@@ -61452,7 +61452,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;\n`infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer;\n`slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.\n\nRefusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,\n`infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.classes` (docs/adr/4660):\na break not finite or not above zero, not rising, or more than 20; `slope.threshold`: not above\nzero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:\nnone of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),\n`not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),\n`terrain_unbuildable` (the surface cannot be made).",
+        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;\n`infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer;\n`slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.\n\nRefusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,\n`infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.classes` (docs/adr/4660):\na break not finite or not above zero, not rising, or more than 20; `slope.threshold`: not above\nzero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:\nnone of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),\n`not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),\n`terrain_unbuildable` (the surface cannot be made). Along a network (docs/adr/5060): `invalid_input`\n(`access.connect`: none or not above zero with a network), `unknown_network` (`access.network`), `invalid_network`\n(`access.network`: the network cannot be built), `tools_unavailable` (no host here builds networks).",
         "properties": {
           "access": {
             "anyOf": [
@@ -61587,11 +61587,33 @@
               }
             ]
           },
+          "records": {
+            "description": "The comparisons of this scenario written in the drawing (`cad.scenarios.record`, docs/adr/5060), in the drawing's\norder.",
+            "items": {
+              "$ref": "#/$defs/ImpactRecord"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
           "scenario": {
             "type": "string"
+          },
+          "scenarioStamp": {
+            "description": "The scenario layers' stamp now, made as the base's (docs/adr/5060): what a table written in the drawing is\nchecked against besides the base's.",
+            "type": "string"
+          },
+          "slopeMap": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactSlopeMap"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The slope map (only when `slope.map` is asked, docs/adr/5060)."
           },
           "stale": {
             "type": [
@@ -61621,6 +61643,7 @@
           "gaps",
           "assumptions",
           "stamp",
+          "scenarioStamp",
           "revision"
         ],
         "title": "ScenariosImpacted",
@@ -61690,11 +61713,33 @@
               }
             ]
           },
+          "records": {
+            "description": "The comparisons of this scenario written in the drawing (`cad.scenarios.record`, docs/adr/5060), in the drawing's\norder.",
+            "items": {
+              "$ref": "#/$defs/ImpactRecord"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
           "scenario": {
             "type": "string"
+          },
+          "scenarioStamp": {
+            "description": "The scenario layers' stamp now, made as the base's (docs/adr/5060): what a table written in the drawing is\nchecked against besides the base's.",
+            "type": "string"
+          },
+          "slopeMap": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactSlopeMap"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The slope map (only when `slope.map` is asked, docs/adr/5060)."
           },
           "stale": {
             "type": [
@@ -61724,6 +61769,7 @@
           "gaps",
           "assumptions",
           "stamp",
+          "scenarioStamp",
           "revision"
         ],
         "title": "ScenariosImpacted",
@@ -61736,7 +61782,10 @@
           "nothing_to_compare",
           "not_a_road_project",
           "unknown_terrain",
-          "terrain_unbuildable"
+          "terrain_unbuildable",
+          "unknown_network",
+          "invalid_network",
+          "tools_unavailable"
         ]
       },
       "examples": [
@@ -61744,6 +61793,164 @@
           "title": "Bir senaryoyu mevcut durumla",
           "input": {
             "scenario": "alternatif-a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.scenarios.record",
+      "version": 1,
+      "title": "Ölçüleri çizime yaz",
+      "summary": "cad.scenarios.impact'in karşılaştırmasını (impact, onun girdisi) çizime tablo olarak yazar: başlık (ölçü ve senaryonun adı, birim, mevcut durum, senaryo, fark), her ölçü bir satır (alanlar projenin alan basamağıyla, uzunluklar uzunluk basamağıyla, paylar bir basamak, sayılar tam; fark işaretli), son satırda taban ve senaryo damgaları. Senaryonun kimliği ve iki damga tablonun öznitelikleridir (SenaryoKimlik, TabanDamgasi, SenaryoDamgasi): senaryo yeniden karşılaştırılınca records tablonun eskiyip eskimediğini söyler; tablo kendiliğinden güncellenmez. layerId karşılaştırılan katmanlardan biri olamaz (tablo ölçüleri değiştirir); at tablonun sol üst köşesi (yoksa karşılaştırılan nesnelerin sağında, tablo yüksekliğinin iki katı, üstleri hizasında). Tek geri alma adımı “Ölçüleri çizime yaz”. Retler: karşılaştırmanınkiler (yolları impact. altında), invalid_input (layerId: katman yok, grup ya da karşılaştırılan katman; at sonlu değil), invalid_revision, revision_conflict, layer_locked.",
+      "aliases": [
+        "olculeriyaz",
+        "senaryotablosu"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.scenarios.record` v1: the comparison as `cad.scenarios.impact` takes it, the layer the table is written\non (not one of the compared layers: the table would change their measures), the table's top left corner (none: two\ntable heights right of the compared layers' areas, at their top) and the revision the write expects.\n\nRefusals, in this order: the comparison's own (their paths under `impact.`), `invalid_input` (`layerId`: no such\nlayer, a group, or a compared layer; `at`: not finite), `stale_revision`, and the write's (a locked layer).",
+        "properties": {
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "impact": {
+            "$ref": "#/$defs/ScenariosImpact"
+          },
+          "layerId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "impact",
+          "layerId"
+        ],
+        "title": "ScenariosRecord",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.scenarios.record` v1: the table's persistent id, the stamps it keeps, its cells (the heading, a row\na measure, the stamps' row) and the drawing's revision after the write.",
+        "properties": {
+          "cells": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scenarioStamp": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": "string"
+          },
+          "table": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "stamp",
+          "scenarioStamp",
+          "cells",
+          "revision"
+        ],
+        "title": "ScenariosRecorded",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.scenarios.record` v1: the table's persistent id, the stamps it keeps, its cells (the heading, a row\na measure, the stamps' row) and the drawing's revision after the write.",
+        "properties": {
+          "cells": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scenarioStamp": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": "string"
+          },
+          "table": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "stamp",
+          "scenarioStamp",
+          "cells",
+          "revision"
+        ],
+        "title": "ScenariosRecorded",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "scenario_not_found",
+          "nothing_to_compare",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "unknown_network",
+          "invalid_network",
+          "tools_unavailable",
+          "invalid_revision",
+          "revision_conflict",
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Senaryonun ölçüleri Senaryo ölçüleri katmanına",
+          "input": {
+            "impact": {
+              "scenario": "alternatif-a"
+            },
+            "layerId": "senaryo-olculeri"
           }
         }
       ]
@@ -130752,6 +130959,11 @@
           "const": "sparse",
           "description": "`road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.",
           "type": "string"
+        },
+        {
+          "const": "scenarioRecord",
+          "description": "`cad.scenarios.record` (docs/adr/5060): a comparison written as a table, “Ölçüleri çizime yaz”.",
+          "type": "string"
         }
       ]
     },
@@ -150472,8 +150684,16 @@
     },
     "ImpactAccess": {
       "additionalProperties": false,
-      "description": "Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)\nand the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).",
+      "description": "Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)\nand the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).\n\nAğ üzerinden erişim (docs/adr/5060): with `network` (a network of the project, by id or name) the distance runs along\nit instead: each area's centroid joins the network at its nearest place (a leg no longer than `connect` metres, the\nuser's; farther, the area is off the network), and the distance is the `from` area's leg, the way along the network\nas its definition travels it, and the `to` area's leg. A network layer the scenario stands in for is each side's own.",
       "properties": {
+        "connect": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
         "distance": {
           "format": "double",
           "type": "number",
@@ -150484,6 +150704,12 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "network": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "to": {
           "items": {
@@ -150819,9 +151045,21 @@
     "ImpactReach": {
       "description": "Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in\nthe drawing's order, the `from` areas reached, those not reached, and the `to` areas.",
       "properties": {
+        "alternativeOff": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "alternativeReached": {
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        },
+        "alternativeRoutes": {
+          "items": {
+            "$ref": "#/$defs/ImpactRoute"
           },
           "type": "array"
         },
@@ -150837,9 +151075,23 @@
           },
           "type": "array"
         },
+        "baseOff": {
+          "description": "The `from` areas off the network (their centroid farther from it than `connect`), by persistent id.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "baseReached": {
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        },
+        "baseRoutes": {
+          "description": "Along a network (docs/adr/5060): each side's `from` areas on the network, in the drawing's order, with the\nnearest `to` area they reach along it, however far; none off the network or with no way to a `to` area.",
+          "items": {
+            "$ref": "#/$defs/ImpactRoute"
           },
           "type": "array"
         },
@@ -150863,6 +151115,34 @@
         "alternativeReached",
         "alternativeUnreached",
         "alternativeTargets"
+      ],
+      "type": "object"
+    },
+    "ImpactRecord": {
+      "description": "A comparison written in the drawing (docs/adr/5060, `cad.scenarios.record`): the table's persistent id, the base's\nand the scenario's stamps it was written with, and whether each has changed since (the table is then stale: its\nnumbers are not the drawing's now and are not updated by themselves).",
+      "properties": {
+        "baseChanged": {
+          "type": "boolean"
+        },
+        "scenarioChanged": {
+          "type": "boolean"
+        },
+        "scenarioStamp": {
+          "type": "string"
+        },
+        "stamp": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "table",
+        "stamp",
+        "scenarioStamp",
+        "baseChanged",
+        "scenarioChanged"
       ],
       "type": "object"
     },
@@ -150901,6 +151181,53 @@
       ],
       "type": "object"
     },
+    "ImpactRoute": {
+      "description": "A `from` area's way to its nearest `to` area along the network (docs/adr/5060): both by persistent id, the\ndistance in all, the two legs (the `from` centroid to the network, the network to the `to` centroid), and the way\nas points: the `from` centroid, its place on the network, the network's way, the `to` area's place on it, its\ncentroid.",
+      "properties": {
+        "area": {
+          "type": "string"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "legs": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "path": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "area",
+        "target",
+        "distance",
+        "legs",
+        "path"
+      ],
+      "type": "object"
+    },
     "ImpactSections": {
       "description": "A section set on the profile: how many of its stations fall in a change, of how many.",
       "properties": {
@@ -150936,11 +151263,11 @@
       "description": "Arazi eğimi (docs/adr/4260): a terrain surface of the project (by id or name), the slope from which an area is\nsteep (percent, the rise over the run), and the uses measured (none or empty: every area). Each triangle of the\nsurface has one slope, from its plane (its normal, the cross product of two edges); an area's part on a triangle\ntakes that slope. The surface is the same on both sides.",
       "properties": {
         "aspect": {
-          "description": "Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in ArcGIS's\nSurface Aspect's eight directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and\nflat (a level triangle, no aspect).",
+          "description": "Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in eight\ndirections (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and\nflat (a level triangle, no aspect).",
           "type": "boolean"
         },
         "classes": {
-          "description": "Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20), as ArcGIS's Surface\nSlope's class breaks: the classes run from 0 to the first break, between two breaks and from the last one up,\neach holding its lower break.",
+          "description": "Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20):\nthe classes run from 0 to the first break, between two breaks and from the last one up,\neach holding its lower break.",
           "items": {
             "format": "double",
             "type": "number"
@@ -150954,6 +151281,10 @@
           },
           "type": "array"
         },
+        "map": {
+          "description": "Docs/adr/5060: the slope map: each measured area's parts on the surface's triangles with their slope class and\naspect (`slopeMap`), so a host can colour them; their sizes are the class and aspect measures' own parts.",
+          "type": "boolean"
+        },
         "surface": {
           "type": "string"
         },
@@ -150966,6 +151297,96 @@
       "required": [
         "surface",
         "threshold"
+      ],
+      "type": "object"
+    },
+    "ImpactSlopeMap": {
+      "description": "The slope map (docs/adr/5060): each side's measured areas cut by the surface's triangles, the areas in the drawing's\norder, an area's parts by their first vertex (south first, then west).",
+      "properties": {
+        "alternative": {
+          "items": {
+            "$ref": "#/$defs/ImpactSlopePiece"
+          },
+          "type": "array"
+        },
+        "base": {
+          "items": {
+            "$ref": "#/$defs/ImpactSlopePiece"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "base",
+        "alternative"
+      ],
+      "type": "object"
+    },
+    "ImpactSlopePiece": {
+      "description": "A measured area's part on one triangle of the surface (docs/adr/5060): the area's persistent id, the slope class\n(0 the first, below the first break; 0 with no breaks) and the aspect (0 flat, 1–8 north … north-west), the\ntriangle's slope (percent), the part's size (m²) and its outer ring (counter-clockwise, from its lowest vertex, the\nwestmost of equals) and holes.",
+      "properties": {
+        "area": {
+          "type": "string"
+        },
+        "aspect": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "class": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "holes": {
+          "items": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "ring": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "size": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "slope": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        }
+      },
+      "required": [
+        "area",
+        "class",
+        "aspect",
+        "slope",
+        "size",
+        "ring"
       ],
       "type": "object"
     },
@@ -193197,6 +193618,78 @@
       "required": [
         "base",
         "layer"
+      ],
+      "type": "object"
+    },
+    "ScenariosImpact": {
+      "additionalProperties": false,
+      "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;\n`infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer;\n`slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.\n\nRefusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,\n`infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.classes` (docs/adr/4660):\na break not finite or not above zero, not rising, or more than 20; `slope.threshold`: not above\nzero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:\nnone of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),\n`not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),\n`terrain_unbuildable` (the surface cannot be made). Along a network (docs/adr/5060): `invalid_input`\n(`access.connect`: none or not above zero with a network), `unknown_network` (`access.network`), `invalid_network`\n(`access.network`: the network cannot be built), `tools_unavailable` (no host here builds networks).",
+      "properties": {
+        "access": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImpactAccess"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "impervious": {
+          "additionalProperties": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "infrastructure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImpactInfrastructure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "since": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "slope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImpactSlope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "scenario"
       ],
       "type": "object"
     },

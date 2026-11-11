@@ -3,5 +3,10 @@
 /**
  * Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)
  * and the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).
+ *
+ * Ağ üzerinden erişim (docs/adr/5060): with `network` (a network of the project, by id or name) the distance runs along
+ * it instead: each area's centroid joins the network at its nearest place (a leg no longer than `connect` metres, the
+ * user's; farther, the area is off the network), and the distance is the `from` area's leg, the way along the network
+ * as its definition travels it, and the `to` area's leg. A network layer the scenario stands in for is each side's own.
  */
-export type ImpactAccess = { distance: number, from: Array<string>, to: Array<string>, };
+export type ImpactAccess = { distance: number, from: Array<string>, to: Array<string>, network?: string, connect?: number, };

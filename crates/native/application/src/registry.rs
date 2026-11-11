@@ -72,6 +72,7 @@ use crate::field_package;
 use crate::zoning_check;
 use crate::zoning_symbolize;
 use crate::scenarios_impact;
+use crate::scenarios_record;
 use crate::readjustment;
 use crate::readjustment_scope;
 use crate::readjustment_sheets;
@@ -611,6 +612,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_SCENARIOS_IMPACT => {
                 $then!(scenarios_impact, kentos_commands::ScenariosImpact)
+            }
+            kentos_commands::CAD_SCENARIOS_RECORD => {
+                $then!(scenarios_record, kentos_commands::ScenariosRecord)
             }
             kentos_commands::CAD_READJUSTMENT_DISTRIBUTE => {
                 $then!(readjustment, kentos_commands::ReadjustmentDistribute)
