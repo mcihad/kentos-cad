@@ -651,8 +651,16 @@ def expected_runs(e: dict) -> list[dict]:
     return out
 
 
-def check_paragraph(o: list[tuple[int, str]], e: dict, where: str) -> None:
-    """A multi-line text's MTEXT (docs/adr/0182 §5)."""
+def spacing_written(spacing: float | None, share: float | None) -> float | None:
+    """An MTEXT's 44 (docs/adr/8046 §3): AutoCAD's lines are 5/3 × 40 × 44 apart, KentOS's 5/3 × em × spacing; with a
+    share the spacing (1 when none) over it, within 0.25 to 4."""
+    if share is None:
+        return spacing
+    return min(max((1.0 if spacing is None else spacing) / share, 0.25), 4.0)
+
+
+def check_paragraph(o: list[tuple[int, str]], e: dict, where: str, styled: tuple, spec: dict) -> None:
+    """A multi-line text's MTEXT (docs/adr/0182 §5); its 40 and 44 in its capitals' height (docs/adr/8046 §3)."""
     r = math.radians(e["rotation"])
     h = e["height"]
     if e.get("align") in ATTACH:
@@ -665,11 +673,22 @@ def check_paragraph(o: list[tuple[int, str]], e: dict, where: str) -> None:
             top = (e["p"]["x"] - math.sin(r) * h, e["p"]["y"] + math.cos(r) * h)
             got = point(o, 10)
             ensure(abs(got[0] - top[0]) <= 1e-9 and abs(got[1] - top[1]) <= 1e-9, f"{where}: at its box's top left {top}, not {got}")
-    ensure(float(group(o, 40)) == h, f"{where}: its height")
+    share = text_share(e, styled, spec)
+    ensure(float(group(o, 40)) == capitals(h, share), f"{where}: its capitals' height")
+    keep = kept_height(h, share)
+    got = kentos(o).get("height")
+    ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{where}: its own height {keep} in KentOS's data")
     ensure(float(group(o, 41)) == float(e.get("boxWidth") or 0.0), f"{where}: its box's width (0 without one)")
     ensure(group(o, 72) == "1", f"{where}: left to right")
-    if "lineSpacing" in e:
-        ensure(group(o, 73) == "1" and float(group(o, 44)) == e["lineSpacing"], f"{where}: its line spacing")
+    factor = spacing_written(e.get("lineSpacing"), share)
+    if factor is not None:
+        ensure(group(o, 73) == "1" and float(group(o, 44)) == factor, f"{where}: its line spacing {factor} (44)")
+        back = factor * share if share else factor
+        back = None if abs(back - 1.0) <= 1e-9 else back
+        exact = back == e.get("lineSpacing") or (back is None and e.get("lineSpacing") is None)
+        got = kentos(o).get("spacing")
+        want = None if exact else (e.get("lineSpacing") or 1.0)
+        ensure((got is None) if want is None else (got is not None and float(got[0]) == want), f"{where}: its own line spacing {want} in KentOS's data")
     else:
         ensure(group(o, 44) is None, f"{where}: no line spacing of its own")
     d = point(o, 11)
@@ -997,7 +1016,12 @@ def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: d
     ensure(group(o, 75) == ("1" if note else "0"), f"{where}: a hookline with a note (75)")
     if note:
         ensure(group(o, 74) == ("1" if side > 0 else "0"), f"{where}: the landing's side (74)")
-    ensure(float(group(o, 40)) == h, f"{where}: its height")
+    # Its note's height as its capitals' in Standard's Arial (docs/adr/8046 §3); its own in KentOS's data when needed.
+    arial = 1466 / 2048
+    ensure(float(group(o, 40)) == capitals(h, arial), f"{where}: its capitals' height")
+    keep = kept_height(h, arial)
+    got = kentos(o).get("height")
+    ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{where}: its own height {keep} in KentOS's data")
     xs = [float(v) for c, v in o if c == 10]
     ys = [float(v) for c, v in o if c == 20]
     ensure(int(group(o, 76)) == len(xs) == len(pts) + (1 if note else 0), f"{where}: its vertices' count (76)")
@@ -1038,7 +1062,9 @@ def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: d
     ensure(group(m, 8) == group(o, 8), f"{where}: the MTEXT on the LEADER's layer")
     at = along(2.5)
     ensure(abs(float(group(m, 10)) - at[0]) <= 1e-8 and abs(float(group(m, 20)) - at[1]) <= 1e-8, f"{where}: the note 2.5 heights past the last vertex ({at})")
-    ensure(float(group(m, 40)) == h, f"{where}: the note as high as the leader")
+    ensure(float(group(m, 40)) == capitals(h, arial), f"{where}: the note as high as the leader, its capitals'")
+    got = kentos(m).get("height")
+    ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{where}: the note's own height {keep} in KentOS's data")
     ensure(group(m, 71) == ("4" if side > 0 else "6") and group(m, 72) == "1", f"{where}: the note's middle left or right (71), left to right")
     ensure(group(m, 1) == mtext_notation(note), f"{where}: the note in MTEXT's notation")
     ensure(abs(float(group(m, 11)) - u[0]) <= 1e-12 and abs(float(group(m, 21)) - u[1]) <= 1e-12, f"{where}: the note's direction (11)")
@@ -1877,7 +1903,7 @@ def check(name: str) -> list[str]:
                 if note_of(e):
                     check_look(objects[k + 1], e, layers, f"{where} › MTEXT")
             if is_paragraph(e):
-                check_paragraph(o, e, where)
+                check_paragraph(o, e, where, styled, spec)
             if e["kind"] == "text":
                 check_face(o, e, styled, is_paragraph(e), where)
             if e["kind"] == "dimension":
@@ -1979,7 +2005,7 @@ def check(name: str) -> list[str]:
     for n, (e, o) in enumerate(zip(paragraphs, written)):
         where = f"çok satırlı yazı {n + 1}"
         ensure(group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: in model space, on its layer")
-        check_paragraph(o, e, where)
+        check_paragraph(o, e, where, styled, spec)
         check_face(o, e, styled, True, where)
     if paragraphs:
         said.append(f"{len(paragraphs)} çok satırlı yazı ({sum(len(e.get('runs') or []) for e in paragraphs)} biçim dilimi)")

@@ -25,6 +25,7 @@
 //! 1002 {  1000 mask                              1002 }   the text is drawn over a mask of the drawing's background (docs/adr/0145; DXF's TEXT has none)
 //! 1002 {  1000 fit      1040 <factor>            1002 }   the TEXT is in KentOS's own face: its 41 is its width factor times this, Arial's fit (docs/adr/8046 §2)
 //! 1002 {  1000 height   1040 <em>                1002 }   the text's own height (an em), when its 40 (the capitals' height) divided back does not give it exactly (docs/adr/8046 §3)
+//! 1002 {  1000 spacing  1040 <factor>            1002 }   an MTEXT's own line spacing, when its 44 times its face's share does not give it back exactly (docs/adr/8046 §3)
 //! 1002 {  1000 arrow    <string>                 1002 }   a LEADER's arrowhead DXF cannot name (its AutoCAD block's name taken; docs/adr/0146 §8, 0205 §7)
 //! 1002 {  1000 arrowsize 1040 <times>            1002 }   a LEADER's arrowhead's length over its height, exactly (DIMASZ over 40 rounds it; docs/adr/0205 §7)
 //! 1002 {  1000 note     <string>                 1002 }   a LEADER's note, exactly (when its MTEXT's notation cannot say it)
@@ -102,6 +103,9 @@ pub struct Meta {
     /// The text's own height (an em), when the file's capitals' height divided back by its face's share does not give it
     /// exactly (docs/adr/8046 §3).
     pub height: Option<f64>,
+    /// An MTEXT's own line spacing, when the file's 44 times its face's share does not give it back exactly
+    /// (docs/adr/8046 §3).
+    pub spacing: Option<f64>,
     /// A LEADER's arrowhead by the app's name, when DXF cannot say it
     /// (docs/adr/0146 §8), its note and the note's turn (degrees), exactly.
     pub arrow: Option<String>,
@@ -333,6 +337,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(h) = meta.height {
         item("height", &mut out, |o| o.push((1040, dxf_real(h))));
+    }
+    if let Some(s) = meta.spacing {
+        item("spacing", &mut out, |o| o.push((1040, dxf_real(s))));
     }
     if let Some(a) = &meta.arrow {
         item("arrow", &mut out, |o| string(a, o));
@@ -592,6 +599,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "mask" => m.mask = true,
             "fit" => m.fit = real(a).or(m.fit),
             "height" => m.height = real(a).or(m.height),
+            "spacing" => m.spacing = real(a).or(m.spacing),
             "arrow" => m.arrow = text(a).or(m.arrow),
             "note" => m.note = text(a).or(m.note),
             "face" => m.face = text(a).or(m.face),
@@ -692,6 +700,7 @@ mod tests {
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
             fit: Some(0.921),
             height: Some(1.0 / 3.0),
+            spacing: Some(1.5),
             look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
             table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
             table_style: Some(r#"{"name":"Metraj ^","title":{"height":3.5}}"#.into()),

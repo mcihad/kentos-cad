@@ -322,8 +322,14 @@ impl Emitter<'_> {
         }
         let style = own_style.over(self.dim_style(style));
         let meta = e.meta.as_ref();
-        // Its text's height (40) as the file has it, for its arrowhead's size.
-        let text_height = *height;
+        // Its text's height: the file's 40 is its capitals' in Standard's face, KentOS's em over the share (docs/adr/8046
+        // §3), KentOS's own exactly while the file has what it wrote; for its arrowhead's size too.
+        let share = self.capitals("Standard");
+        let text_height = if *height > 0.0 {
+            crate::dxf::capitals::back(*height, share, meta.and_then(|m| m.height))
+        } else {
+            *height
+        };
         let arrow = if *arrow {
             // KentOS's own arrowhead, while the file still draws one.
             match meta
@@ -337,7 +343,7 @@ impl Emitter<'_> {
             Some(LeaderArrow::None)
         };
         // The text's height (40), else the style's arrow, else AutoCAD's own.
-        let (own, fallback) = match Some(*height)
+        let (own, fallback) = match Some(text_height)
             .filter(|h| *h > 0.0)
             .or_else(|| style.arrow_length())
         {

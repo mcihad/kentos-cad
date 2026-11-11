@@ -91,7 +91,10 @@ impl Writer<'_> {
         self.out.int(73, if note.is_some() { 0 } else { 3 });
         self.out.int(74, i64::from(laid.side > 0.0));
         self.out.int(75, i64::from(landing.is_some()));
-        self.out.real(40, l.height);
+        // Its note's height as its capitals' in Standard's Arial (docs/adr/8046 §3); its width Arial's at the em.
+        let share = self.styles.share("Standard");
+        self.out
+            .real(40, crate::dxf::capitals::written(l.height, share));
         let width = note.map_or(0.0, |t| width_em(t, Font::from_id("arimo")) * l.height);
         self.out.real(41, width);
         self.out
@@ -137,9 +140,15 @@ impl Writer<'_> {
             .filter(|t| note_read_back(t).as_deref() != Some(*t))
             .map(str::to_owned);
         meta.note_turn = (turn_read_back(l.rotation) != l.rotation).then_some(l.rotation);
+        // Its own height when its 40's capitals do not give it back exactly (docs/adr/8046 §3).
+        meta.height = crate::dxf::capitals::kept(l.height, share);
         // Its other arms (docs/adr/0326 §1): in its data, and each a LEADER of its own other programs draw.
         if !l.arms.is_empty() {
-            let arms: Vec<Vec<[f64; 2]>> = l.arms.iter().map(|a| a.pts.iter().map(|p| [p.x, p.y]).collect()).collect();
+            let arms: Vec<Vec<[f64; 2]>> = l
+                .arms
+                .iter()
+                .map(|a| a.pts.iter().map(|p| [p.x, p.y]).collect())
+                .collect();
             meta.arms = serde_json::to_string(&arms).ok();
         }
         let words = super::form_words(WHAT, false, self.forms.metadata);
@@ -176,7 +185,10 @@ impl Writer<'_> {
         self.out.int(73, 3);
         self.out.int(74, 1);
         self.out.int(75, 0);
-        self.out.real(40, l.height);
+        self.out.real(
+            40,
+            crate::dxf::capitals::written(l.height, self.styles.share("Standard")),
+        );
         self.out.real(41, 0.0);
         self.out.int(76, (pts.len() + 1) as i64);
         for p in pts.iter().copied().chain(std::iter::once(last)) {
@@ -339,7 +351,10 @@ impl Writer<'_> {
         self.head("MTEXT", &l.base, h, &[leader]);
         self.out.str(100, "AcDbMText");
         self.out.xyz(10, at);
-        self.out.real(40, l.height);
+        // Its capitals' height in Standard's Arial (docs/adr/8046 §3); its own in its KENTOS data when needed.
+        let share = self.styles.share("Standard");
+        self.out
+            .real(40, crate::dxf::capitals::written(l.height, share));
         self.out.real(41, 0.0);
         // The middle of its left (4) or right (6), left to right.
         self.out.int(
@@ -363,6 +378,9 @@ impl Writer<'_> {
             self.out.int(441, 0);
         }
         self.grow(at);
-        self.end(Meta::default());
+        self.end(Meta {
+            height: crate::dxf::capitals::kept(l.height, share),
+            ..Meta::default()
+        });
     }
 }

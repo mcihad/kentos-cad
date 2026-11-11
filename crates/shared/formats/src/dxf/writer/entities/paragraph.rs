@@ -73,21 +73,26 @@ pub(crate) fn paragraph_value(
     runs: &[TextRun],
     width_factor: Option<f64>,
     layout: Option<&ParagraphLayout>,
+    share: Option<f64>,
 ) -> (String, bool) {
     let percent = text.contains("%%");
     let letters: Vec<char> = text.chars().collect();
     let mut out = String::with_capacity(text.len() + 16 * runs.len() + 8);
-    // Its indents and tab stops (docs/adr/0324 §4), in its height: MTEXT's paragraph format, for the whole text.
-    if let Some(l) = layout.filter(|l| l.indent.is_some() || l.left_indent.is_some() || !l.tabs.is_empty()) {
+    // Its indents and tab stops (docs/adr/0324 §4), in its height: MTEXT's paragraph format, for the whole text. The
+    // file's are in its 40s, the capitals' height: KentOS's em over the face's share (docs/adr/8046 §3).
+    let file = |v: f64| crate::dxf::capitals::in_file(v, share);
+    if let Some(l) =
+        layout.filter(|l| l.indent.is_some() || l.left_indent.is_some() || !l.tabs.is_empty())
+    {
         let mut items: Vec<String> = Vec::new();
         if let Some(i) = l.indent {
-            items.push(format!("i{i}"));
+            items.push(format!("i{}", file(i)));
         }
         if let Some(left) = l.left_indent {
-            items.push(format!("l{left}"));
+            items.push(format!("l{}", file(left)));
         }
         if !l.tabs.is_empty() {
-            let stops: Vec<String> = l.tabs.iter().map(|t| t.to_string()).collect();
+            let stops: Vec<String> = l.tabs.iter().map(|t| file(*t).to_string()).collect();
             items.push(format!("t{}", stops.join(",")));
         }
         out.push_str(&format!("\\px{};", items.join(",")));
@@ -231,11 +236,16 @@ impl Writer<'_> {
                 (n, v(q.x, q.y))
             }
         };
+        // Its style (docs/adr/0183 §7) and the capital share of its face: its 40, line spacing and indents are in the
+        // capitals' height in the file (docs/adr/8046 §3).
+        let style = self.styles.text(&t.face).to_owned();
+        let share = self.styles.share(&style);
         let (value, unstacked) = paragraph_value(
             &t.text,
             &t.paragraph.runs,
             t.width_factor,
             t.paragraph.layout.as_deref(),
+            share,
         );
         // Its layout whole in its KentOS data (docs/adr/0324 §4); columns only there, MTEXT shows one.
         if let Some(l) = &t.paragraph.layout {
@@ -261,13 +271,14 @@ impl Writer<'_> {
         self.begin("MTEXT", &t.base);
         self.out.str(100, "AcDbMText");
         self.out.xyz(10, p);
-        self.out.real(40, t.height);
+        self.out
+            .real(40, crate::dxf::capitals::written(t.height, share));
         self.out.real(41, t.paragraph.box_width.unwrap_or(0.0));
         self.out.int(71, attach);
         self.out.int(72, 1);
         mtext_chunks(self.out, &value);
-        // Its style (docs/adr/0183 §7); its face in its KENTOS data.
-        self.out.str(7, self.styles.text(&t.face));
+        // Its style; its face in its KENTOS data.
+        self.out.str(7, &style);
         if !t.face.is_plain() {
             meta.face = serde_json::to_string(&t.face).ok();
         }
@@ -277,11 +288,24 @@ impl Writer<'_> {
         }
         let (s, c) = sin_cos_deg(t.rotation);
         self.out.xyz(11, v(c, s));
-        if let Some(spacing) = t.paragraph.line_spacing {
-            // At least this spacing (AutoCAD's style 1), the factor itself.
+        // At least this spacing (AutoCAD's style 1): AutoCAD's lines are 5/3 × 40 × 44 apart, KentOS's 5/3 × em ×
+        // spacing, so 44 is the spacing over the share (docs/adr/8046 §3), within AutoCAD's 0.25 to 4.
+        if let Some(factor) = crate::dxf::capitals::spacing_written(t.paragraph.line_spacing, share)
+        {
             self.out.int(73, 1);
-            self.out.real(44, spacing);
+            self.out.real(44, factor);
+            if factor == 4.0 && t.paragraph.line_spacing.unwrap_or(1.0) / share.unwrap_or(1.0) > 4.0
+            {
+                self.report.note(
+                    WHAT,
+                    "satır aralığı başka programlarda en çok 4 kat olabildiğinden 4 yazıldı; KentOS kendi aralığını verisinden geri alır",
+                    0,
+                );
+            }
         }
+        // Its own height and line spacing in its KENTOS data when the file's do not give them back exactly.
+        meta.height = crate::dxf::capitals::kept(t.height, share);
+        meta.spacing = crate::dxf::capitals::spacing_kept(t.paragraph.line_spacing, share);
         if t.mask {
             // The drawing's background behind it, a tenth of its height round (the app's margin).
             self.out.int(90, 3);
@@ -330,7 +354,7 @@ mod tests {
             tabs: vec![2.0, 6.5],
             columns: None,
         };
-        let (value, unstacked) = paragraph_value(text, &runs, None, Some(&layout));
+        let (value, unstacked) = paragraph_value(text, &runs, None, Some(&layout), None);
         assert!(!unstacked, "{value}");
         assert!(value.starts_with("\\pxi-2,l2,t2,6.5;"), "{value}");
         let back = mtext_content(&caret_decode(&value));
@@ -367,7 +391,7 @@ mod tests {
                 ..run(39, 40)
             },
         ];
-        let (value, unstacked) = paragraph_value(text, &runs, Some(0.8), None);
+        let (value, unstacked) = paragraph_value(text, &runs, Some(0.8), None, None);
         assert!(!unstacked);
         let back = mtext_content(&caret_decode(&value));
         assert_eq!(back.text, text, "{value}");
@@ -382,7 +406,7 @@ mod tests {
             script: Some(TextScript::Super),
             ..run(1, 4)
         }];
-        let (value, unstacked) = paragraph_value("a1/2", &runs, None, None);
+        let (value, unstacked) = paragraph_value("a1/2", &runs, None, None, None);
         assert!(unstacked);
         assert_eq!(value, "a{1/2}");
     }

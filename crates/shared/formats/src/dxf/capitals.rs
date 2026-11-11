@@ -94,6 +94,45 @@ pub fn back(height: f64, share: Option<f64>, kept: Option<f64>) -> f64 {
     }
 }
 
+/// An MTEXT's line spacing factor (44) for KentOS's `spacing` (none: 1). AutoCAD's lines are 5/3 × 40 × 44 apart,
+/// KentOS's 5/3 × em × spacing (`text::paragraph::PITCH`): with a share, 44 is the spacing over it, within AutoCAD's
+/// 0.25 to 4; without one, KentOS's own (none for 1).
+pub fn spacing_written(spacing: Option<f64>, share: Option<f64>) -> Option<f64> {
+    match share {
+        Some(s) => Some((spacing.unwrap_or(1.0) / s).clamp(0.25, 4.0)),
+        None => spacing,
+    }
+}
+
+/// KentOS's line spacing for a file's 44 (`spacing`; 1 where the file has none): times the share; KentOS's own `kept`
+/// while the file still has what KentOS wrote of it; none for 1.
+pub fn spacing_back(spacing: f64, share: Option<f64>, kept: Option<f64>) -> Option<f64> {
+    let s = match (share, kept) {
+        (Some(sh), Some(k)) if spacing_written(Some(k), Some(sh)) == Some(spacing) => k,
+        (Some(sh), _) => spacing * sh,
+        (None, _) => spacing,
+    };
+    ((s - 1.0).abs() > 1e-9).then_some(s)
+}
+
+/// The line spacing to keep in KentOS's data: when the file's 44 does not give it back exactly (a share's division,
+/// AutoCAD's range).
+pub fn spacing_kept(spacing: Option<f64>, share: Option<f64>) -> Option<f64> {
+    let written = spacing_written(spacing, share)?;
+    (spacing_back(written, share, None) != spacing).then_some(spacing.unwrap_or(1.0))
+}
+
+/// An MTEXT's indents and tab stops (`\px…;`) are in its 40s (ezdxf: "multiples of the default text height"),
+/// KentOS's in its em: a KentOS value over the share in the file, a file's value times the share in KentOS.
+pub fn in_file(value: f64, share: Option<f64>) -> f64 {
+    share.map_or(value, |s| value / s)
+}
+
+/// A file's indent or tab stop in KentOS's em.
+pub fn from_file(value: f64, share: Option<f64>) -> f64 {
+    share.map_or(value, |s| value * s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -136,6 +175,32 @@ mod tests {
             assert_eq!(share(none, None, false, false), None, "{none}");
         }
         assert_eq!(share("", None, false, false), None);
+    }
+
+    #[test]
+    fn a_line_spacing_goes_out_and_comes_back() {
+        let s = Some(ARIAL);
+        // None (1): 1 / share in the file, none back.
+        assert_eq!(spacing_written(None, s), Some(2048.0 / 1466.0));
+        assert_eq!(
+            spacing_back(2048.0 / 1466.0, s, spacing_kept(None, s)),
+            None
+        );
+        for sp in [0.25, 0.5, 1.5, 2.0, 1.0 / 3.0 + 1.0, 4.0] {
+            let w = spacing_written(Some(sp), s).unwrap();
+            assert!((0.25..=4.0).contains(&w), "{w}");
+            assert_eq!(
+                spacing_back(w, s, spacing_kept(Some(sp), s)),
+                Some(sp),
+                "{sp}"
+            );
+        }
+        // 4 over the share is past AutoCAD's 4: 4 in the file, KentOS's own kept.
+        assert_eq!(spacing_written(Some(4.0), s), Some(4.0));
+        assert_eq!(spacing_kept(Some(4.0), s), Some(4.0));
+        // A file without 44 (AutoCAD's 1) is KentOS's share.
+        assert_eq!(spacing_back(1.0, s, None), Some(ARIAL));
+        assert_eq!(spacing_back(1.0, None, None), None);
     }
 
     #[test]

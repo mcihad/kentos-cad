@@ -3,8 +3,9 @@
 - **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M46. 1. bölüm yapıldı: mahalin yazısı ve
   boşluğun çaprazı DXF'te ekrandaki gibi (§1). 2. bölüm yapıldı: KentOS'un yazı tipiyle yazılan yazının genişlik
   çarpanı, Arial'da KentOS'taki genişliği verecek biçimde (§2). 3. bölümün ilk adımı yapıldı: TrueType yazının
-  yüksekliği DXF'te büyük harf yüksekliği — TEXT, öznitelik, tablo hücresi, eğri yazı ve stilin sabit yüksekliği (§3a).
-  Sırada: MTEXT (satır aralığı ve girintiler dahil, §3b); ölçü yazısı, kılavuz notu, tablo stili (§3c).
+  yüksekliği DXF'te büyük harf yüksekliği — TEXT, öznitelik, tablo hücresi, eğri yazı ve stilin sabit yüksekliği (§3a);
+  MTEXT (satır aralığı ve girintiler dahil) ve kılavuz (§3b). Sırada: ölçü yazısı (DIMTXT ve bloğundaki MTEXT), tablo
+  stili, MULTILEADER okuma (§3c).
 - **Bağlam belgesi:** ADR 8008 (EK-4 katman anahtarı), ADR 0342 (mahal), ADR 0708 (boşluk mahal), ADR 0344 (etiket ve
   27 Ekim eki: etiketli mahalin yazısı etiketidir), ADR 8039 §4 (tadilat durumunun katmanları), ADR 0586 (DWG kodeği).
 
@@ -119,10 +120,15 @@ kalır (ADR 0914); dönüşüm yalnız DXF/DWG sınırında (`formats::dxf::capi
   okurken stilin yüksekliği de bölünür). Hizalı (72 = 3) ve sığdırılmış (72 = 5) yazının yüksekliği iki noktasının
   arasından ve Arial genişliğinden çıkar: değişmedi (em zaten oradan). Tanımı olmayan özniteliğin görünmez ATTRIB'i
   (ISO 3098'in 2,5 mm'si) büyük harf yüksekliğidir: dönüşümsüz.
-- **3b (sırada):** MTEXT. Satır aralığı ve girinti/sekme durakları da yüksekliğe bağlı: AutoCAD satır aralığı 5/3 × 40 ×
-  44, ezdxf "girintiler ve sekme durakları varsayılan yazı yüksekliğinin katlarıdır"; KentOS'unkiler em'in katı
-  (`paragraph::PITCH`). 44 ve `\px` değerleri oranla bölünmeli.
-- **3c (sırada):** ölçü yazısı (DIMTXT ve bloğundaki MTEXT), kılavuz notu (LEADER 40 ve MTEXT), tablo stili (TABLESTYLE).
+- **3b (yapıldı):** MTEXT ve kılavuz. Satır aralığı ve girinti/sekme durakları da yüksekliğe bağlı: AutoCAD'in satırları
+  5/3 × 40 × 44 aralıklı, ezdxf: "girintiler ve sekme durakları varsayılan yazı yüksekliğinin katlarıdır"; KentOS'unkiler
+  em'in katı (`paragraph::PITCH`). Yazıcı: `40 = em × oran`, `44 = aralık / oran` (aralık yoksa 1 / oran; 73 = 1), AutoCAD'in
+  0,25–4 aralığında — aşan 4 yazılır ve söylenir; `\px` değerleri oranla bölünür. Okuyucu tersini yapar: 44'ü olmayan
+  yabancı Arial MTEXT'in aralığı 0,7158 olur, satırları AutoCAD'deki gibi 5/3 × 40 aralıklı. KentOS'un kendi düzeni (`layout`)
+  verisinden aynen; aralık bölmeyle tam dönmüyorsa verisinde `spacing` öğesi. Kılavuz: LEADER 40'ı ve notunun MTEXT'i
+  Standard'ın oranıyla; notun KentOS verisinde `height`; ok boyunun oranı KentOS'un em'ine göre okunur.
+- **3c (sırada):** ölçü yazısı (DIMTXT ve bloğundaki MTEXT; blok biçimli kılavuzun notu da aynı yazıcıdan), tablo stili
+  (TABLESTYLE), yabancı MULTILEADER'ın yazı yüksekliği.
 - **Bilinen sınır:** yazının yeri KentOS'un hiza kuralıyla yazılır (11). Orta ve üst hizalı yazıda başka program taban
   çizgisini 40'ın payıyla bulduğu için yazı, yüksekliğin (1 − oran) × payı kadar kayar (Arial'da orta %14, üst %28);
   taban hizalı yazı (tablo hücreleri dahil) aynı yerde. Ölçülüp ayrı adımda ele alınacak.
@@ -130,6 +136,19 @@ kalır (ADR 0914); dönüşüm yalnız DXF/DWG sınırında (`formats::dxf::capi
   Prime) olduğunda o projenin yabancı yazısı biraz farklı boyda okunur.
 
 ## Doğrulama
+
+### 3. bölüm, ikinci adım (MTEXT ve kılavuz)
+
+- Bölüm binasının zemin katı (`dxf_rooms`): beş mahal yazısı MTEXT, 0,25 m'lik yazının 40'ı **0,178955078125** (0,25 ×
+  1466/2048), 44'ü **1,397** (2048/1466): AutoCAD'in satır aralığı 5/3 × 0,179 × 1,397 = 5/3 × 0,25, KentOS'unkiyle aynı.
+  2+1 dairenin DXF'inde değişen yok (mahaller etiketli: yazıları TEXT; 8 MTEXT ölçülerin bloğunda, 3c).
+- `an_mtext_s_height_spacing_and_indents_are_its_capitals`: Arial MTEXT 40 = 2.5 → em 2.5 / 0,7158; 44'süz aralık 0,7158,
+  44 = 2 ile 2 × 0,7158 (iki durumda da KentOS'un satır aralığı 5/3 × 2.5 × 44); `\pxi2;` girintisi 2 × 0,7158 em; SHX
+  stilinde hiçbiri değişmez. `capitals` birim testleri: aralıklar 0,25 … 4 gidip aynen geliyor, 4'ün 4'te kesilip KentOS
+  verisinde tutulduğu.
+- Bağımsız başvuru: MTEXT'in 40'ını, 73/44'ünü ve `height`/`spacing` öğelerini, kılavuzun LEADER ve not 40'ını ve
+  `height` öğesini denetler; 11 dosyada tutarlı. Testler: DXF yazma 59 (kılavuzların gidiş-dönüşü dahil), biçim DXF birim
+  49 ve bütünleşme 43, ölçü/CAD G/Ç 21, headless DXF/DWG 19, uygulama DXF 7, masaüstü `layer_keys`.
 
 ### 3. bölüm, ilk adım (TEXT ailesi)
 

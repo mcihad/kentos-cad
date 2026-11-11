@@ -2809,3 +2809,51 @@ fn a_truetype_text_s_height_is_its_capitals_height() {
     .expect("read");
     assert!(matches!(&bare.entities[..], [Entity::Text(t)] if t.height == 2.5));
 }
+
+/// An MTEXT's height, line spacing and indents are in its capitals' height too (docs/adr/8046 §3): AutoCAD's lines are
+/// 5/3 × 40 × 44 apart and its indents and tab stops multiples of 40, KentOS's of its em. An Arial MTEXT of 40 = 2.5 is
+/// an em of 2.5 / (1466/2048) whose lines stand as far apart as AutoCAD draws them: spacing 1466/2048 without a 44, twice
+/// that with 44 = 2; its first-line indent of 2 (5 drawing units) is 2 × 1466/2048 ems. In an SHX style none changes.
+#[test]
+fn an_mtext_s_height_spacing_and_indents_are_its_capitals() {
+    let arial = 1466.0 / 2048.0;
+    let tables = groups(&[
+        (0, "TABLE"), (2, "STYLE"),
+        (0, "STYLE"), (2, "ARIAL"), (70, "0"), (40, "0"), (41, "1"), (50, "0"), (71, "0"), (42, "2.5"), (3, "arial.ttf"), (4, ""),
+        (0, "STYLE"), (2, "SHX"), (70, "0"), (40, "0"), (41, "1"), (50, "0"), (71, "0"), (42, "2.5"), (3, "romans.shx"), (4, ""),
+        (0, "ENDTAB"),
+    ]);
+    let mtext = |style: &'static str, y: &'static str, spacing: Option<&'static str>, words: &'static str| {
+        let mut g = vec![(0, "MTEXT"), (8, "0"), (10, "0"), (20, y), (40, "2.5"), (41, "0"), (71, "1"), (1, words), (7, style)];
+        if let Some(s) = spacing {
+            g.extend([(73, "1"), (44, s)]);
+        }
+        g
+    };
+    let mut entities = Vec::new();
+    entities.extend(mtext("ARIAL", "0", None, "Bir\\Piki"));
+    entities.extend(mtext("ARIAL", "10", Some("2"), "Bir\\Piki"));
+    entities.extend(mtext("ARIAL", "20", None, "\\pxi2;Girintili"));
+    entities.extend(mtext("SHX", "30", Some("2"), "Bir\\Piki"));
+    let r = dxf::read(&dxf_of(&[("TABLES", tables), ("ENTITIES", groups(&entities))]), &DxfReadOptions::default())
+        .expect("read");
+    let texts: Vec<&kentos_contracts::TextEntity> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some(t),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(texts.len(), 4);
+    let near = |a: f64, b: f64| (a - b).abs() <= 1e-12;
+    assert!(near(texts[0].height, 2.5 / arial), "{}", texts[0].height);
+    assert!(texts[0].paragraph.line_spacing.is_some_and(|s| near(s, arial)), "{:?}", texts[0].paragraph.line_spacing);
+    assert!(texts[1].paragraph.line_spacing.is_some_and(|s| near(s, 2.0 * arial)), "{:?}", texts[1].paragraph.line_spacing);
+    let indent = texts[2].paragraph.layout.as_ref().and_then(|l| l.indent);
+    assert!(indent.is_some_and(|i| near(i, 2.0 * arial)), "{indent:?}");
+    // The same lines in KentOS's ems: 5/3 × em × spacing = 5/3 × 40 × 44.
+    let pitch = |t: &kentos_contracts::TextEntity| 5.0 / 3.0 * t.height * t.paragraph.line_spacing.unwrap_or(1.0);
+    assert!(near(pitch(texts[0]), 5.0 / 3.0 * 2.5) && near(pitch(texts[1]), 5.0 / 3.0 * 2.5 * 2.0));
+    assert_eq!((texts[3].height, texts[3].paragraph.line_spacing), (2.5, Some(2.0)), "SHX: as the file says");
+}

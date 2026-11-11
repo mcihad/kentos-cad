@@ -2680,7 +2680,7 @@ impl<'l> Emitter<'l> {
         if content.text.trim().is_empty() {
             return self.skip("Çok satırlı yazı (MTEXT)", "boş yazı", e.line);
         }
-        let height = if height > 0.0 {
+        let raw = if height > 0.0 {
             height
         } else {
             self.lib
@@ -2689,9 +2689,14 @@ impl<'l> Emitter<'l> {
                 .copied()
                 .unwrap_or(0.0)
         };
-        if !(height > 0.0) {
+        if !(raw > 0.0) {
             return self.skip("Çok satırlı yazı (MTEXT)", "yazı yüksekliği yok", e.line);
         }
+        // Its 40, line spacing and indents are in its capitals' height in its STYLE's face: KentOS's em, spacing and
+        // indents over or times the share (docs/adr/8046 §3); KentOS's own exactly while the file has what it wrote.
+        let share = self.capitals(style);
+        let kept = e.meta.as_ref();
+        let height = super::capitals::back(raw, share, kept.and_then(|m| m.height));
         // Direction: the x axis vector (world), else the rotation (radians) in the object plane.
         let dir = match (xdir, rotation) {
             (Some(x), _) if hypot(x[0], x[1]) > 0.0 => {
@@ -2727,22 +2732,31 @@ impl<'l> Emitter<'l> {
         // Its layout (docs/adr/0324 §4): KentOS's own data whole (columns too) when the file has it and it holds,
         // else MTEXT's first paragraph format.
         let box_width = (width.is_finite() && width > 0.0).then_some(width);
-        let kept = e
+        let kept_layout = e
             .meta
             .as_ref()
             .and_then(|m| m.layout.as_deref())
             .and_then(|json| serde_json::from_str::<kentos_contracts::ParagraphLayout>(json).ok())
             .filter(|l| !l.is_plain() && l.problem(box_width.is_some()).is_none());
-        let layout = kept
-            .or(content.layout)
+        // MTEXT's paragraph format is in its 40s: KentOS's em times the share.
+        let from_file = |l: kentos_contracts::ParagraphLayout| kentos_contracts::ParagraphLayout {
+            indent: l.indent.map(|v| super::capitals::from_file(v, share)),
+            left_indent: l.left_indent.map(|v| super::capitals::from_file(v, share)),
+            tabs: l.tabs.iter().map(|v| super::capitals::from_file(*v, share)).collect(),
+            ..l
+        };
+        let layout = kept_layout
+            .or(content.layout.map(from_file))
             .filter(|l| l.problem(box_width.is_some()).is_none())
             .map(Box::new);
         let paragraph = Paragraph {
             fields: kept_fields(e, &content.text),
             layout,
             box_width,
-            line_spacing: (spacing.is_finite() && spacing > 0.0 && spacing != 1.0)
-                .then(|| spacing.clamp(MIN_LINE_SPACING, MAX_LINE_SPACING)),
+            line_spacing: (spacing.is_finite() && spacing > 0.0)
+                .then(|| super::capitals::spacing_back(spacing, share, kept.and_then(|m| m.spacing)))
+                .flatten()
+                .map(|s| s.clamp(MIN_LINE_SPACING, MAX_LINE_SPACING)),
             runs: content.runs,
         };
         // A background fill (90: 1 its colour, 2 the drawing's) is a mask; 16 is a frame alone.
