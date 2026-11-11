@@ -1523,7 +1523,11 @@ def check_style_tables(spec: dict, p: list[tuple[int, str]], names: tuple, paper
         w = f"ölçü stili {s['name']}"
         h = length(s["height"])
         look = {k: (v / s["height"] if k in ("arrowSize", "extOffset", "extBeyond", "textGap") else v) for k, v in s.items() if k in LOOK_KEYS}
-        check_vars({c: v for c, v in r if c not in (1001, 1000, 1002)}, look, h, s.get("decimals", 2), per_metre, w, ltype_handles(p))
+        # Its value's face: the project's text style it names (DIMTXSTY), else Standard's Arial (docs/adr/8046 §3).
+        named = next((t for t in spec.get("textStyles", []) if s.get("textStyle") and t["name"].lower() == s["textStyle"].lower()), None)
+        share = (cap_share(named.get("fontFile") or font_file(named["font"], bool(named.get("bold")), bool(named.get("italic"))))
+                 if named else 1466 / 2048)
+        check_vars({c: v for c, v in r if c not in (1001, 1000, 1002)}, look, h, s.get("decimals", 2), per_metre, w, ltype_handles(p), share)
         flags_at = r.index((70, "0"))
         post = dimpost(look)
         ensure(post is None or r[flags_at + 1] == (3, post), f"{w}: DIMPOST {post!r} after the flags")
@@ -1537,12 +1541,14 @@ def dimpost(look: dict) -> str | None:
     return f"{look.get('prefix', '')}<>{look.get('suffix', '')}"
 
 
-def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, where: str, ltypes: dict[str, str]) -> None:
-    """A look's variables (a DIMSTYLE record's groups or a DIMENSION's DSTYLE overrides, code -> value) at height h."""
+def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, where: str, ltypes: dict[str, str],
+               share: float | None = None) -> None:
+    """A look's variables (a DIMSTYLE record's groups or a DIMENSION's DSTYLE overrides, code -> value) at height h; the
+    value's height (DIMTXT) its capitals' in a face of capital share `share` (docs/adr/8046 §3), the sizes lengths of h."""
     tick = "arrow" not in look
     size = look.get("arrowSize", 0.6 if tick else 1.0) * h
     real = lambda code: float(v[code]) if code in v else None
-    ensure(close(real(140), h, 1e-12), f"{where}: its value's height (140)")
+    ensure(close(real(140), capitals(h, share), 1e-12), f"{where}: its value's capitals' height (140)")
     if tick:
         ensure(close(real(142), size * math.sqrt(0.5), 1e-12), f"{where}: ticks, half a 45° tick of {size} (DIMTSZ)")
     else:
@@ -1628,7 +1634,9 @@ def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, 
     _, dims, synthetic = names
     look = own(e, LOOK_KEYS)
     ensure(group(o[after(o, "AcDbDimension") :], 3) == dims.get(e.get("dimStyle"), "Standard"), f"{where}: names its style's record (3)")
-    check_vars(dstyle(o), look, e["height"], spec["lengthDecimals"], per_metre, f"{where} (DSTYLE)", ltypes)
+    # Its value is in its typeface's record, else Standard's Arial: DIMTXT its capitals' height (docs/adr/8046 §3).
+    share = cap_share(font_file(e["font"], False, False)) if e.get("font") else 1466 / 2048
+    check_vars(dstyle(o), look, e["height"], spec["lengthDecimals"], per_metre, f"{where} (DSTYLE)", ltypes, share)
     got = kentos(o).get("look")
     ensure((got is None) if not look else (got is not None and json.loads(item_text(got)) == look), f"{where}: its look {look} in KentOS's data")
     name = group(o, 2)

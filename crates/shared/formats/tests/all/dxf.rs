@@ -2429,9 +2429,10 @@ fn another_programs_styles_come_in_as_the_projects() {
                 unit: Some(DrawingUnit::Cm),
                 prefix: Some("L=".into()),
                 font: Some(DrawingFont::Arimo),
-                // Its DIMTXSTY, by the style's name (docs/adr/1023).
+                // Its DIMTXSTY, by the style's name (docs/adr/1023). ADA is arial.ttf: its DIMTXT of 6 mm is the
+                // capitals' height, KentOS's em 6 / (1466/2048) (docs/adr/8046 §3); the others are in Standard, txt.
                 text_style: Some("ADA".into()),
-                ..plain("dxf-dim-1", "KADASTRO", 6.0)
+                ..plain("dxf-dim-1", "KADASTRO", 6.0 / (1466.0 / 2048.0))
             },
             DimensionStyleDef {
                 arrow: Some(DimensionArrow::Dot),
@@ -2461,14 +2462,14 @@ fn another_programs_styles_come_in_as_the_projects() {
         .collect();
     assert_eq!(looks.len(), 5);
     let near = |a: Option<f64>, b: f64| a.is_some_and(|a| (a - b).abs() < 1e-12);
-    // KADASTRO: its sizes times the value's height (DIMTXT × DIMSCALE, 3 m).
+    // KADASTRO: its sizes times the value's height (DIMTXT × DIMSCALE, 3 m of capitals in ADA's Arial: an em of
+    // 3 / (1466/2048), docs/adr/8046 §3); the sizes are lengths, the same.
+    let em = 3.0 / (1466.0 / 2048.0);
     let (h, k) = &looks[0];
-    assert_eq!(*h, 3.0);
-    assert!(near(k.arrow_size, std::f64::consts::SQRT_2 / 3.0), "{k:?}");
+    assert!((*h - em).abs() < 1e-12, "{h}");
+    assert!(near(k.arrow_size, std::f64::consts::SQRT_2 / em), "{k:?}");
     assert!(
-        near(k.ext_offset, 0.5 / 3.0)
-            && near(k.ext_beyond, 1.0 / 3.0)
-            && near(k.text_gap, 0.8 / 3.0),
+        near(k.ext_offset, 0.5 / em) && near(k.ext_beyond, 1.0 / em) && near(k.text_gap, 0.8 / em),
         "{k:?}"
     );
     assert_eq!(

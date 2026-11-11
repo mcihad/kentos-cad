@@ -53,6 +53,7 @@ pub fn read(
     dec: Decoder,
     metres: &dyn Fn(f64) -> f64,
     plot: f64,
+    share: &dyn Fn(&str) -> Option<f64>,
     report: &mut Report,
 ) -> Result<Read, String> {
     let mut lex = Lexer::new(bytes);
@@ -130,7 +131,7 @@ pub fn read(
             Some(s) => s.clone(),
             None if followed.contains(&h) => {
                 let id = format!("dxf-table-{}", out.styles.len() + 1);
-                let (s, lost) = from_groups(&o.groups, id, name.trim(), metres, plot);
+                let (s, lost) = from_groups(&o.groups, id, name.trim(), metres, plot, share);
                 report.decide(
                     Style,
                     "table_style_from_acad_table",
@@ -176,6 +177,7 @@ fn from_groups(
     name: &str,
     metres: &dyn Fn(f64) -> f64,
     plot: f64,
+    share: &dyn Fn(&str) -> Option<f64>,
 ) -> (TableStyleDef, Vec<String>) {
     let mut lost: Vec<String> = Vec::new();
     let mm = |v: Option<f64>| v.filter(|v| v.is_finite()).map(|v| metres(v) * 1000.0 / plot);
@@ -215,7 +217,16 @@ fn from_groups(
     for (k, b) in blocks.iter().take(3).enumerate() {
         let what = ["veri", "başlık", "sütun başı"][k];
         let text_style = b.iter().find(|g| g.0 == 7).map(|g| g.1.trim().to_owned()).filter(|n| !n.is_empty() && !styles::is_standard(n));
-        let height = keep(mm(real(b, 140)), true);
+        // Its capitals' height in its text style's face: KentOS's em over the share (docs/adr/8046 §3).
+        let named = b
+            .iter()
+            .find(|g| g.0 == 7)
+            .map(|g| g.1.trim())
+            .unwrap_or("");
+        let height = keep(
+            mm(real(b, 140).map(|h| crate::dxf::capitals::read(h, share(named)))),
+            true,
+        );
         let align = int(b, 170).filter(|a| (1..=9).contains(a)).map(|a| {
             if !(4..=6).contains(&a) {
                 lost.push(format!("{what} hücresinin üst ya da alt hizası (ortalı çizilir)"));

@@ -1916,8 +1916,11 @@ impl Writer<'_> {
         // Its lines' types by their LTYPE records' handles (docs/adr/0205 §6).
         let types = [d.look.dim_line_type, d.look.ext_line_type]
             .map(|t| t.and_then(|t| ltype_handle(self.ltypes, self.handles, t)));
+        // Its value's height as its capitals' in its face (DIMTXT, docs/adr/8046 §3); its other sizes are lengths.
+        let share = self.styles.share(self.styles.value(d.look.font));
         self.out.xdata(&dim_overrides(
             d.height,
+            share,
             self.decimals,
             self.grads,
             d.mask,
@@ -2362,10 +2365,12 @@ impl Writer<'_> {
     ) {
         self.block_head("MTEXT", record);
         let (s, c) = sin_cos_deg(rotation);
+        // Its capitals' height in its style's face (docs/adr/8046 §3).
+        let share = self.styles.share(style);
         let o = &mut *self.blocks;
         o.str(100, "AcDbMText");
         o.xyz(10, middle);
-        o.real(40, height);
+        o.real(40, super::super::capitals::written(height, share));
         o.real(41, 0.0);
         // Where it hangs from its point, left to right.
         o.int(71, attach);
@@ -2732,6 +2737,7 @@ fn mtext_chunks(o: &mut Out, text: &str) {
 #[allow(clippy::too_many_arguments)]
 fn dim_overrides(
     height: f64,
+    share: Option<f64>,
     decimals: u32,
     grads: bool,
     mask: bool,
@@ -2749,8 +2755,9 @@ fn dim_overrides(
         g.push((1070, code.into()));
         g.push((1040, dxf_real(x)));
     };
-    // Its look's sizes (docs/adr/0183 §7); a plain look's are the ones dimensions always had.
-    real("140", height);
+    // Its look's sizes (docs/adr/0183 §7); a plain look's are the ones dimensions always had. DIMTXT is the value's
+    // capitals' height (docs/adr/8046 §3), the others lengths of its em.
+    real("140", crate::dxf::capitals::written(height, share));
     let size = look.arrow_size_or_default() * height;
     match look.arrow {
         // Oblique ticks: DIMTSZ is half a 45° tick's length along the line.

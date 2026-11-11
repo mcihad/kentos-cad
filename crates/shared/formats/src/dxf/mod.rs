@@ -1139,9 +1139,25 @@ fn read_once(
         .unwrap_or(1000.0);
     let metres = |x: f64| scale.apply(x);
     // The table styles (docs/adr/1128 §4), and the text styles their cell styles name, kept with them.
-    let tables = table_styles::read(bytes, rd.dec, &metres, plot, &mut out.report)?;
+    // A cell style's height is its capitals' in its text style's face (docs/adr/8046 §3).
+    let share = |name: &str| {
+        let key = if name.trim().is_empty() {
+            "STANDARD".to_owned()
+        } else {
+            name.trim().to_uppercase()
+        };
+        lib.text_records
+            .get(&key)
+            .and_then(styles::StyleRecord::capitals)
+    };
+    let tables = table_styles::read(bytes, rd.dec, &metres, plot, &share, &mut out.report)?;
     for key in &tables.text_styles {
-        if lib.text_records.get(key).is_some_and(|r| !styles::is_standard(&r.name)) && !text_used.contains(key) {
+        if lib
+            .text_records
+            .get(key)
+            .is_some_and(|r| !styles::is_standard(&r.name))
+            && !text_used.contains(key)
+        {
             text_used.push(key.clone());
         }
     }
@@ -1196,8 +1212,12 @@ fn read_once(
             font,
             &metres,
             plot,
+            styles::dim_share(vars, &lib.style_handles, &lib.text_records),
         );
-        let style = kentos_contracts::DimensionStyleDef { text_style, ..style };
+        let style = kentos_contracts::DimensionStyleDef {
+            text_style,
+            ..style
+        };
         if let Some(block) = said.arrow {
             out.report.note(
                 "Ölçü stili (DIMSTYLE)",

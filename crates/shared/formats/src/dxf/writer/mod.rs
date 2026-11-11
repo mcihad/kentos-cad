@@ -652,12 +652,17 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
         &length,
         unit.per_metre(),
         &ltypes,
+        // A project text style by its name: its STYLE record's handle and its face's capital share (docs/adr/8046 §3).
         &|name: &str| {
-            input
+            let t = input
                 .text_styles
                 .iter()
-                .find(|t| t.name.eq_ignore_ascii_case(name))
-                .and_then(|t| style_handles.0.get(&t.id).copied())
+                .find(|t| t.name.eq_ignore_ascii_case(name))?;
+            let handle = style_handles.0.get(&t.id).copied()?;
+            let record = style_names
+                .text_named(&input.text_styles, name)
+                .unwrap_or("Standard");
+            Some((handle, style_names.share(record)))
         },
     );
     template::block_record_table(&mut tables, &records, &papers);

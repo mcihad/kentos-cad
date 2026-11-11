@@ -161,7 +161,9 @@ def expected_groups(style):
         align = {"left": 4, "center": 5, "right": 6}.get(c.get("align"), 4 if i == 0 else 5)
         out["cells"].append({
             "7": "A-TABLO" if c.get("textStyle") == "A-TABLO" else "Standard",
-            "140": c.get("height", 6.35 if i == 1 else 4.572) * k,
+            # Its capitals' height in its style's face (docs/adr/8046 §3): A-TABLO is romans.shx (none), Standard Arial's
+            # capital H, 1466 of 2048.
+            "140": c.get("height", 6.35 if i == 1 else 4.572) * k * (1.0 if c.get("textStyle") == "A-TABLO" else 1466 / 2048),
             "170": align,
             "62": nearest.get(c.get("color"), 0) if "color" in c else 0,
             "283": 1 if "fill" in c else 0,

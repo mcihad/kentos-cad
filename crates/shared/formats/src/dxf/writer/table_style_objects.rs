@@ -112,8 +112,9 @@ pub fn write(
             }
             out.str(7, style);
             // A cell style without a height: the table's own; AutoCAD's data and heading default (0,18 in), the
-            // title's (0,25 in) as paper mm.
-            out.real(140, length(c.height.unwrap_or(if i == 1 { 6.35 } else { 4.572 })));
+            // title's (0,25 in) as paper mm. Its capitals' height in its style's face (docs/adr/8046 §3).
+            let h = length(c.height.unwrap_or(if i == 1 { 6.35 } else { 4.572 }));
+            out.real(140, crate::dxf::capitals::written(h, names.share(style)));
             out.int(170, alignment(c.align, i == 0));
             let (text, text_changed) = colour(c.color.as_deref());
             out.int(62, text);

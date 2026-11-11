@@ -42,6 +42,9 @@ pub fn font_file(font: DrawingFont, bold: bool, italic: bool) -> String {
     }
 }
 
+/// A project text style's STYLE record: its handle, and its face's capital share (docs/adr/8046 §3).
+pub type StyleRecordOf = (u64, Option<f64>);
+
 /// A project style's record's file (3): its own, else its family's.
 fn record_file(s: &TextStyleDef) -> String {
     s.font_file
@@ -400,6 +403,7 @@ fn dimension_vars(
     length: &dyn Fn(f64) -> f64,
     per_metre: f64,
     ltypes: &[(LineType, u64)],
+    share: Option<f64>,
 ) -> Vec<(i32, String)> {
     let look = s.look();
     let h = length(s.height);
@@ -411,7 +415,8 @@ fn dimension_vars(
     };
     let mut v = vec![
         (40, "1.0".to_owned()),
-        (140, dxf_real(h)),
+        // The value's capitals' height in its face (docs/adr/8046 §3); the sizes after it lengths of its em.
+        (140, dxf_real(super::super::capitals::written(h, share))),
         (41, dxf_real(asz)),
         (142, dxf_real(tsz)),
         (42, dxf_real(look.ext_offset_or_default() * h)),
@@ -475,7 +480,7 @@ pub fn dimstyle_table(
     length: &dyn Fn(f64) -> f64,
     per_metre: f64,
     ltypes: &[(LineType, u64)],
-    text_style: &dyn Fn(&str) -> Option<u64>,
+    text_style: &dyn Fn(&str) -> Option<StyleRecordOf>,
 ) {
     super::template::dimstyle_head(out, 1 + styles.len());
     super::template::dimstyle_standard(out);
@@ -485,9 +490,15 @@ pub fn dimstyle_table(
         };
         let h = handles.take();
         let json = serde_json::to_string(s).unwrap_or_default();
-        let mut vars = dimension_vars(s, length, per_metre, ltypes);
-        // Its value's text style (DIMTXSTY, docs/adr/1023): the STYLE record of the project's style it names.
-        if let Some(handle) = s.text_style.as_deref().and_then(text_style) {
+        // Its value's text style (DIMTXSTY, docs/adr/1023): the STYLE record of the project's style it names, else
+        // Standard (no DIMTXSTY written); its DIMTXT in that face's capitals (docs/adr/8046 §3).
+        let named = s.text_style.as_deref().and_then(text_style);
+        let share = match named {
+            Some((_, share)) => share,
+            None => names.share("Standard"),
+        };
+        let mut vars = dimension_vars(s, length, per_metre, ltypes, share);
+        if let Some((handle, _)) = named {
             vars.push((340, format!("{handle:X}")));
         }
         super::template::dimstyle_record(out, h, name, &vars, Some(&json));

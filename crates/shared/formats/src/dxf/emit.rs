@@ -759,6 +759,8 @@ impl<'l> Emitter<'l> {
                         .or_else(|| super::styles::family_of(&r.file))
                 })
             });
+        let share =
+            super::styles::dim_share(&vars, &self.lib.style_handles, &self.lib.text_records);
         let (def, _) = super::styles::dimension_style(
             &vars,
             id.clone().unwrap_or_default(),
@@ -768,6 +770,7 @@ impl<'l> Emitter<'l> {
             font,
             &|x| x,
             1000.0,
+            share,
         );
         kentos_contracts::DimensionLook {
             dim_style: id,
@@ -1773,10 +1776,22 @@ impl<'l> Emitter<'l> {
                     }
                     return;
                 }
-                // Its style's text height (DIMTXT × DIMSCALE, the entity's own changes first) and fill.
+                // Its style's text height (DIMTXT × DIMSCALE, the entity's own changes first) and fill; DIMTXT is the
+                // value's capitals' height, KentOS's em over its face's share (docs/adr/8046 §3).
                 let named = style;
                 let style = own_style.over(self.dim_style(named));
-                let height = style.text_length().unwrap_or(DIMENSION_HEIGHT);
+                // Its style's variables as the file has them (no style is taken in for this).
+                let vars = match self.lib.dim_records.get(&named.to_uppercase()) {
+                    Some((_, v)) => (**overrides).clone().over(v),
+                    None => (**overrides).clone(),
+                };
+                let share = super::styles::dim_share(
+                    &vars,
+                    &self.lib.style_handles,
+                    &self.lib.text_records,
+                );
+                let height =
+                    super::capitals::read(style.text_length().unwrap_or(DIMENSION_HEIGHT), share);
                 let mask = style.fill == Some(1);
                 match dimension::foreign(groups, b(), height, mask) {
                     dimension::Foreign::Taken(mut d) if flat => {

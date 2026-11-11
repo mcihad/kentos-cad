@@ -451,10 +451,25 @@ pub struct DimSaid {
     pub lfac: Option<f64>,
 }
 
+/// The capital share of the face a dimension style's value is in (docs/adr/8046 §3): its DIMTXSTY's record's, else
+/// Standard's; none for an SHX font.
+pub fn dim_share(
+    v: &DimVars,
+    handles: &HashMap<u64, String>,
+    records: &HashMap<String, StyleRecord>,
+) -> Option<f64> {
+    v.dimtxsty
+        .and_then(|h| handles.get(&h))
+        .and_then(|n| records.get(n))
+        .or_else(|| records.get("STANDARD"))
+        .and_then(StyleRecord::capitals)
+}
+
 /// The dimension style `v` is, its id `id`: sizes in paper mm (DIMSCALE
 /// times them, drawing units turned into metres by `metres`, the project's
 /// scale), its typeface the text style's (`font`), its line types the
-/// LTYPE records' (`ltypes`, by handle).
+/// LTYPE records' (`ltypes`, by handle); its DIMTXT its value's capitals'
+/// height in a face of capital share `share` (docs/adr/8046 §3).
 #[allow(clippy::too_many_arguments)]
 pub fn dimension_style(
     v: &DimVars,
@@ -465,6 +480,7 @@ pub fn dimension_style(
     font: Option<DrawingFont>,
     metres: &dyn Fn(f64) -> f64,
     scale: f64,
+    share: Option<f64>,
 ) -> (DimensionStyleDef, DimSaid) {
     if let Some(own) = &v.kentos {
         return (
@@ -482,7 +498,7 @@ pub fn dimension_style(
     let height = v
         .dimtxt
         .filter(|t| *t > 0.0)
-        .map(size)
+        .map(|t| size(super::capitals::read(t, share)))
         .filter(|h| h.is_finite() && *h > 0.0 && *h <= kentos_contracts::MAX_STYLE_MM)
         .unwrap_or(kentos_contracts::STANDARD_DIMENSION_HEIGHT_MM);
     let mut said = DimSaid::default();
@@ -615,6 +631,7 @@ mod tests {
             None,
             &|x| x,
             1000.0,
+            None,
         );
         assert_eq!(
             (

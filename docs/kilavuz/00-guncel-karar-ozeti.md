@@ -442,8 +442,9 @@
     yüksekliği okur (Tekla, BricsCAD, QCAD, ezdxf); KentOS em. `formats::dxf::capitals`: `40 = em × oran`, okurken bölünür;
     oran STYLE dosyasının yüzünden (Arial 1466/2048, KentOS yüzlerinin OS/2'si, olmayan yüz Barlow'unki), SHX'te yok.
     Kesin dönüş için TEXT/ATTDEF/MTEXT/kılavuzda `height`, MTEXT'te `spacing` öğesi. 3a (TEXT, öznitelik, tablo hücresi,
-    eğri yazı, stil yüksekliği) ve 3b (MTEXT: `44 = aralık / oran`, `\px` / oran; kılavuz) yapıldı; sırada ölçü, tablo
-    stili, MULTILEADER. Yabancı dosyanın Arial yazısı artık AutoCAD'deki boyunda (eskisinin 1,397 katı) açılır.
+    eğri yazı, stil yüksekliği), 3b (MTEXT: `44 = aralık / oran`, `\px` / oran; kılavuz) ve 3c (ölçü: blok MTEXT'i ve
+    DIMTXT; tablo stili; MULTILEADER ok oranı) yapıldı. Yabancı dosyanın Arial yazısı artık AutoCAD'deki boyunda
+    (eskisinin 1,397 katı) açılır. Açık: orta/üst hizalı yazının başka programdaki taban çizgisi.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

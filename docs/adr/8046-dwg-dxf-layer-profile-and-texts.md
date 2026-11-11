@@ -4,8 +4,8 @@
   boşluğun çaprazı DXF'te ekrandaki gibi (§1). 2. bölüm yapıldı: KentOS'un yazı tipiyle yazılan yazının genişlik
   çarpanı, Arial'da KentOS'taki genişliği verecek biçimde (§2). 3. bölümün ilk adımı yapıldı: TrueType yazının
   yüksekliği DXF'te büyük harf yüksekliği — TEXT, öznitelik, tablo hücresi, eğri yazı ve stilin sabit yüksekliği (§3a);
-  MTEXT (satır aralığı ve girintiler dahil) ve kılavuz (§3b). Sırada: ölçü yazısı (DIMTXT ve bloğundaki MTEXT), tablo
-  stili, MULTILEADER okuma (§3c).
+  MTEXT (satır aralığı ve girintiler dahil) ve kılavuz (§3b); ölçü yazısı, tablo stili ve MULTILEADER (§3c). Bölümün
+  geri kalanı: dikey hizalı yazının taban çizgisi (aşağıda, bilinen sınır).
 - **Bağlam belgesi:** ADR 8008 (EK-4 katman anahtarı), ADR 0342 (mahal), ADR 0708 (boşluk mahal), ADR 0344 (etiket ve
   27 Ekim eki: etiketli mahalin yazısı etiketidir), ADR 8039 §4 (tadilat durumunun katmanları), ADR 0586 (DWG kodeği).
 
@@ -127,8 +127,12 @@ kalır (ADR 0914); dönüşüm yalnız DXF/DWG sınırında (`formats::dxf::capi
   yabancı Arial MTEXT'in aralığı 0,7158 olur, satırları AutoCAD'deki gibi 5/3 × 40 aralıklı. KentOS'un kendi düzeni (`layout`)
   verisinden aynen; aralık bölmeyle tam dönmüyorsa verisinde `spacing` öğesi. Kılavuz: LEADER 40'ı ve notunun MTEXT'i
   Standard'ın oranıyla; notun KentOS verisinde `height`; ok boyunun oranı KentOS'un em'ine göre okunur.
-- **3c (sırada):** ölçü yazısı (DIMTXT ve bloğundaki MTEXT; blok biçimli kılavuzun notu da aynı yazıcıdan), tablo stili
-  (TABLESTYLE), yabancı MULTILEADER'ın yazı yüksekliği.
+- **3c (yapıldı):** ölçü yazısı: bloğundaki MTEXT (blok biçimli kılavuzun notu da aynı yazıcıdan) ve DIMTXT — ölçünün
+  DSTYLE'ında değerin yazı tipinin oranıyla, DIMSTYLE kaydında DIMTXSTY'sinin (yoksa Standard'ın) oranıyla; okları,
+  uzatma çizgileri ve boşluk em'in katı uzunluklardır, değişmez. Okurken DIMTXT, DIMTXSTY kaydının (yoksa Standard'ın)
+  oranıyla bölünür: yabancı ölçünün yüksekliği ve görünüşünün oranları KentOS'un em'ine göre (stil bu yüzden içe
+  alınmaz). Tablo stili (TABLESTYLE) hücre yükseklikleri hücrenin yazı stilinin oranıyla; MULTILEADER'ın notu MTEXT
+  yolundan zaten çevriliyor, ok oranı artık notun em'ine göre. KentOS'un kendi ölçüsü ve tablo stili verisinden aynen.
 - **Bilinen sınır:** yazının yeri KentOS'un hiza kuralıyla yazılır (11). Orta ve üst hizalı yazıda başka program taban
   çizgisini 40'ın payıyla bulduğu için yazı, yüksekliğin (1 − oran) × payı kadar kayar (Arial'da orta %14, üst %28);
   taban hizalı yazı (tablo hücreleri dahil) aynı yerde. Ölçülüp ayrı adımda ele alınacak.
@@ -136,6 +140,19 @@ kalır (ADR 0914); dönüşüm yalnız DXF/DWG sınırında (`formats::dxf::capi
   Prime) olduğunda o projenin yabancı yazısı biraz farklı boyda okunur.
 
 ## Doğrulama
+
+### 3. bölüm, üçüncü adım (ölçü, tablo stili, MULTILEADER) ve dış çizim
+
+- 2+1 dairenin DXF'inde 8 ölçünün değer MTEXT'i ve DSTYLE DIMTXT'i 0,7158 katı; tablo ve etiketler 3a'dan.
+- Dış çizim (`.run/gui-evidence/mimari-m46/3-yukseklik/`, ezdxf 1.4.5 + gerçek Arial; ezdxf, AutoCAD gibi yüksekliği büyük
+  harf yüksekliği okur): **önce** (1. bölümün yazıcısı) mahal etiketleri çerçevelerinden, kapı/pencere kodları
+  altıgenlerinden ve çizelge yazıları hücrelerinden taşıyordu ("Genişlik (m)Yükseklik (m)", "Pencere 1201.200");
+  **sonra** hepsi yerinde, yazılar KentOS'taki boyunda.
+- Testler: DXF yazma 59 (ölçü bloğu testinde DSTYLE 140 = 0,75 × 1466/2048 = 0,536865234375; taban dosyası 38171 → 38311
+  bayt), biçim DXF bütünleşme ve ölçü/CAD G/Ç 61 (yabancı KADASTRO ölçü stili ADA'nın Arial'ında: 6 mm → 6 / 0,7158 mm;
+  ölçüsü 3 m → 4,191 m em, ok ve boşluk oranları buna göre), birim 49, headless DXF/DWG 19, uygulama DXF 7, masaüstü
+  `layer_keys`. Bağımsız başvuru DSTYLE ve DIMSTYLE 140'ını denetler, 11 dosyada tutarlı; tablo stili dışa aktarmasının
+  ezdxf denetimi Standard hücrelerinde 140'ı 1466/2048 katı bekler, "güncel".
 
 ### 3. bölüm, ikinci adım (MTEXT ve kılavuz)
 

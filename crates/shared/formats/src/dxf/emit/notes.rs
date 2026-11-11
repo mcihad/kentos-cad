@@ -554,7 +554,9 @@ impl Emitter<'_> {
         };
         // Its arrowhead's length over its note's height (docs/adr/0205 §7).
         let arrow_size = if m.text.is_some() && !m.block {
-            self.arrow_ratio(Some(m.arrow_size), m.text_height, MLEADER, e.line)
+            // Over its note's em: the context's 41 is the capitals' height in Standard's face (docs/adr/8046 §3).
+            let em = crate::dxf::capitals::read(m.text_height, self.capitals(""));
+            self.arrow_ratio(Some(m.arrow_size), em, MLEADER, e.line)
         } else {
             None
         };

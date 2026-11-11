@@ -869,12 +869,13 @@ fn a_dimension_is_a_dxf_dimension_with_a_block_of_its_own() {
             .find(|b| group(b, 2) == Some(name))
             .expect("block");
         assert_eq!(group(block, 70), Some("1"));
-        // AutoCAD's DSTYLE data: the text height is the dimension's.
+        // AutoCAD's DSTYLE data: the text height is the dimension's, as its capitals' in Standard's Arial
+        // (0.75 × 1466/2048, docs/adr/8046 §3).
         let at = d
             .iter()
             .position(|x| *x == (1000, "DSTYLE"))
             .expect("DSTYLE");
-        assert_eq!(d[at + 2..at + 4], [(1070, "140"), (1040, "0.75")]);
+        assert_eq!(d[at + 2..at + 4], [(1070, "140"), (1040, "0.536865234375")]);
     }
     // Standard shows a redrawn value as KentOS does: DIMZIN and DIMAZIN keep
     // trailing zeros, DIMDSEP is a point, DIMRND is left out (ezdxf rounds 0 to whole numbers).
@@ -1237,7 +1238,7 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// the elevations existed (without the NURBS curves, which came later, docs/adr/0259), with two changes since: a
 /// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups; a
 /// text in KentOS's own face carries its Arial fit in its 41 and its KENTOS data (docs/adr/8046 §2), 134 bytes more; a
-/// TrueType text's 40 is its capitals' height (§3), 11 bytes more.
+/// TrueType text's 40 is its capitals' height (§3), 11 bytes more; so is a dimension's DIMTXT, 140 bytes more.
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let old: Vec<Entity> = objects()
@@ -1245,7 +1246,7 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
         .filter(|e| !matches!(e, Entity::Nurbs(_)))
         .collect();
     let (bytes, report) = dxf::write(&input(old));
-    assert_eq!((bytes.len(), fnv64(&bytes)), (38171, 0x1e8b_46c5_a85f_cec9));
+    assert_eq!((bytes.len(), fnv64(&bytes)), (38311, 0xa860_7edc_f4cc_481d));
     // And it says nothing of elevations.
     assert!(
         report
