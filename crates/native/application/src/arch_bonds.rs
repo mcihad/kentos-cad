@@ -8,6 +8,9 @@
 //! (`map_bonds`), and the straight segment it keeps its distance from a line that only holds, unless the same edge is
 //! the boundary of another bond (a chain: then it is that boundary's shift).
 //!
+//! A straight grid's line (docs/adr/8049 §2) is a line as a wall's is: moved square to itself, the grid's points
+//! shifted along its left normal; the columns on it follow in the step (docs/adr/0343 §3).
+//!
 //! The shared cases are `fixtures/commands/v1/cad.constraints.edit.arch.json` (`scripts/fixtures/arch_bond_cases.py`)
 //! and, for map bonds, `cad.shapes.edit.bond.json` (`scripts/fixtures/map_bond_cases.py`).
 
@@ -108,6 +111,18 @@ fn unit(a: P, b: P) -> P {
     P::new((b.x - a.x) / l, (b.y - a.y) / l)
 }
 
+/// A straight grid's start and direction; none for an arc grid or one of no length.
+fn grid_line(g: &kentos_commands::GridFields) -> Option<(P, P)> {
+    if !kentos_domain::constraints::straight_grid(g) {
+        return None;
+    }
+    let (a, b) = (
+        P::new(g.pts[0].x, g.pts[0].y),
+        P::new(g.pts[1].x, g.pts[1].y),
+    );
+    ((b.x - a.x).hypot(b.y - a.y) > 0.0).then(|| (a, unit(a, b)))
+}
+
 impl<'a> View<'a> {
     pub(crate) fn new(doc: &'a Document) -> View<'a> {
         View {
@@ -155,6 +170,14 @@ impl<'a> View<'a> {
         Some((P::new(a.x - u.y * o, a.y + u.x * o), u))
     }
 
+    /// A straight grid's line (docs/adr/8049 §2): its start and direction, as the view has it.
+    fn grid(&self, uid: EntityId) -> Option<(P, P)> {
+        match self.entity(slot_of(self.doc, uid)?)? {
+            Entity::Grid(g) => grid_line(&g.grid),
+            _ => None,
+        }
+    }
+
     /// An opening's jamb: the middle of its jamb line, the direction of its wall's edge there, its wall and that
     /// edge. None when its wall is gone, its interval falls off the wall or the edge is an arc.
     fn jamb(&self, uid: EntityId, end: JambEnd) -> Option<(P, P, Slot, usize)> {
@@ -183,12 +206,18 @@ enum Var {
     Boundary(Slot, u32, u32, u32),
     /// A straight segment a map bond keeps its distance from, not the boundary of another bond: always held.
     Segment(Slot, u32, u32, u32),
+    /// A straight grid's line (docs/adr/8049 §2).
+    Grid(Slot),
 }
 
 impl Var {
     fn slot(&self) -> Slot {
         match *self {
-            Var::Edge(s, _) | Var::Opening(s) | Var::Boundary(s, ..) | Var::Segment(s, ..) => s,
+            Var::Edge(s, _)
+            | Var::Opening(s)
+            | Var::Boundary(s, ..)
+            | Var::Segment(s, ..)
+            | Var::Grid(s) => s,
         }
     }
 
@@ -238,6 +267,14 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
                 at,
                 dir,
                 host,
+            }))
+        }
+        CadElement::Grid => {
+            let (at, dir) = view.grid(e.uid)?;
+            Some(Item::Line(Line {
+                var: var(vars, Var::Grid(slot)),
+                at,
+                dir,
             }))
         }
         CadElement::Boundary { part, ring, index } => {
@@ -298,6 +335,9 @@ fn read(view: &View<'_>, set: &ConstraintSet, values: &BTreeMap<String, f64>) ->
                 }
                 CadElement::Boundary { part, ring, index } => {
                     var(&mut out.vars, Var::Boundary(slot, part, ring, index));
+                }
+                CadElement::Grid => {
+                    var(&mut out.vars, Var::Grid(slot));
                 }
                 _ => {}
             }
@@ -585,7 +625,14 @@ fn equations(
                     .get(b)
                     .is_some_and(|bond| bond_vars(bond).iter().any(|&v| read.vars[v].is_map()))
             });
-            Err((bonds, why_words(why, map).into()))
+            let grid = bonds.iter().any(|&b| {
+                read.bonds.get(b).is_some_and(|bond| {
+                    bond_vars(bond)
+                        .iter()
+                        .any(|&v| matches!(read.vars[v], Var::Grid(_)))
+                })
+            });
+            Err((bonds, why_words(why, map, grid).into()))
         }
         Outcome::Solved { shifts, dof } => Ok((shifts, dof)),
     }
@@ -624,6 +671,8 @@ fn held(
                     out[k] = true
                 }
                 (Some(CadElement::Jamb { .. }), Var::Opening(_)) => out[k] = true,
+                // A grid held by its line or by one of its points (a grip; docs/adr/8049 §2).
+                (Some(CadElement::Grid | CadElement::Point { .. }), Var::Grid(_)) => out[k] = true,
                 // A boundary edge held by name, or by one of its two vertices (a grip).
                 (
                     Some(
@@ -685,6 +734,17 @@ fn held(
                     _ => true,
                 }
             }
+            // A grid the write turned or moved across (docs/adr/8049 §2); one only lengthened along itself is not.
+            (Var::Grid(_), Shape::Grid { pts, .. }) => match (pts.as_slice(), view.grid(id)) {
+                ([a0, b0], Some((a1, u1))) if (b0.x - a0.x).hypot(b0.y - a0.y) > 0.0 => {
+                    let u0 = unit(*a0, *b0);
+                    let turned = (u0.x * u1.y - u0.y * u1.x).abs() > core::PARALLEL;
+                    let n = P::new(-u0.y, u0.x);
+                    let across = n.x * (a1.x - a0.x) + n.y * (a1.y - a0.y);
+                    turned || across.abs() > core::TIE
+                }
+                _ => true,
+            },
             // A boundary edge the write turned or moved across (docs/adr/2580).
             (Var::Boundary(s, p, r, i), was) => view
                 .entity(*s)
@@ -718,11 +778,15 @@ fn held(
     (out, fixed_moved)
 }
 
-/// Why the bonds do not hold, in Turkish; `map`: a map bond is among them (docs/adr/2580).
-fn why_words(why: Why, map: bool) -> &'static str {
+/// Why the bonds do not hold, in Turkish; `map`: a map bond is among them (docs/adr/2580); `grid`: a grid's line
+/// (docs/adr/8049 §2).
+fn why_words(why: Why, map: bool, grid: bool) -> &'static str {
     match (why, map) {
         (Why::NotParallel, true) => {
             "Bağlı kenar artık referansına paralel değil (referans ya da kenar döndü; bağlı kenar döndürülmez)"
+        }
+        (Why::NotParallel, false) if grid => {
+            "Bağlı aks ve duvar çizgileri artık paralel değil (bir aks ya da duvar döndü)"
         }
         (Why::NotParallel, false) => "Bağlı duvar çizgileri artık paralel değil (bir duvar döndü)",
         (Why::Crossing, _) => "Pervazın bağlandığı çizgi açıklığın duvarını en az 30° ile kesmiyor",
@@ -805,6 +869,26 @@ fn solve_once(
             continue;
         }
         match boundary_shift(&view, slot, part, ring, index, shifts[k]) {
+            Ok(next) => {
+                view.shapes.insert(slot, next);
+            }
+            Err(words) => {
+                let bonds: Vec<usize> = (0..read.bonds.len())
+                    .filter(|&b| bond_vars(&read.bonds[b]).contains(&k))
+                    .collect();
+                out.refused_at = Some((k, shifts.clone()));
+                conflict(&mut out, bonds, words);
+                return out;
+            }
+        }
+    }
+    // The grids' lines moved square to themselves (docs/adr/8049 §2).
+    for (k, v) in read.vars.iter().enumerate() {
+        let Var::Grid(slot) = *v else { continue };
+        if shifts[k] == 0.0 {
+            continue;
+        }
+        match grid_shift(&view, slot, shifts[k]) {
             Ok(next) => {
                 view.shapes.insert(slot, next);
             }
@@ -948,6 +1032,32 @@ fn boundary_shift(
     crate::map_bonds::shifted(&e, part, ring, index, by)
 }
 
+/// A grid's line moved `by` along its left normal on the view (docs/adr/8049 §2): the grid as it would be written; why
+/// not, in Turkish (a locked layer: a locked grid is held, so only a set that wants it moved anyway reaches here).
+fn grid_shift(view: &View<'_>, slot: Slot, by: f64) -> Result<Entity, String> {
+    let mut e = view.entity(slot).ok_or("Bağlı aks çizimde yok")?;
+    let layer = e.base().layer_id.clone();
+    if view.doc.layers().is_locked(&layer) {
+        let name = view
+            .doc
+            .layers()
+            .get(&layer)
+            .map_or(layer.as_str(), |n| n.name.as_str());
+        return Err(format!(
+            "Bağ “{name}” katmanındaki bir aksı kaydırmak istiyor ve o katman kilitli. Kilidi açın ya da bağı kaldırın."
+        ));
+    }
+    let Entity::Grid(g) = &mut e else {
+        return Err("Bağlı aks çizimde yok".into());
+    };
+    let (_, u) = grid_line(&g.grid).ok_or("Bağlı aks düz değil")?;
+    for p in &mut g.grid.pts {
+        p.x -= u.y * by;
+        p.y += u.x * by;
+    }
+    Ok(e)
+}
+
 /// The openings of the walls moved, read back from their jambs onto their walls' new paths (docs/adr/0341 §3): their
 /// `at` (their hand and side when the path turned round them), their place in the world kept.
 fn carry(view: &mut View<'_>, walls: &[Slot]) {
@@ -1060,6 +1170,13 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
                 Some(Entity::Opening(_)) => "açıklığın pervazı".to_owned(),
                 _ => return Some("pervaz yalnız bir açıklıkta olur".into()),
             },
+            CadElement::Grid => match slot_of(doc, e.uid).and_then(|s| doc.get(s)) {
+                Some(Entity::Grid(g)) if grid_line(&g.grid).is_none() => {
+                    return Some("yay aks bağlanmaz; aks düz olmalı".into());
+                }
+                Some(Entity::Grid(_)) => "aks".to_owned(),
+                _ => return Some("aks çizgisi yalnız bir aksta olur".into()),
+            },
             _ => return None,
         };
         match item(&view, &mut vars, e) {
@@ -1112,6 +1229,9 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
             } => {
                 "pervazın bağlandığı duvar çizgisi açıklığın duvarını en az 30° ile kesmeli".into()
             }
+            _ if rule.elements().iter().any(|e| e.element.is_grid()) => {
+                "bağlanan aks ve duvar çizgileri paralel olmalı".into()
+            }
             _ => "bağlanan duvar çizgileri paralel olmalı".into(),
         }),
     }
@@ -1147,6 +1267,17 @@ pub fn part_place(
             Some((P::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0), Some((p, q))))
         }
         CadElement::Jamb { end } => view.jamb(uid, end).map(|(at, ..)| (at, None)),
+        CadElement::Grid => {
+            let Entity::Grid(g) = view.entity(slot_of(doc, uid)?)? else {
+                return None;
+            };
+            grid_line(&g.grid)?;
+            let (p, q) = (
+                P::new(g.grid.pts[0].x, g.grid.pts[0].y),
+                P::new(g.grid.pts[1].x, g.grid.pts[1].y),
+            );
+            Some((P::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0), Some((p, q))))
+        }
         _ => None,
     }
 }
@@ -1160,6 +1291,32 @@ pub struct SideBond {
     pub left: bool,
     /// Only measures: the side moves freely.
     pub reference: bool,
+}
+
+/// The distance bonds that hold edge `edge` of wall `uid` by its axis from grid `grid` (docs/adr/8049 §2), in the set's
+/// order; `left` the side the grid stands on, as the caller has it.
+pub fn grid_bonds(doc: &Document, uid: Uuid, edge: u32, grid: Uuid, left: bool) -> Vec<SideBond> {
+    let (me, grid) = (EntityId(uid.into_bytes()), EntityId(grid.into_bytes()));
+    let axis = |r: &ElementRef| {
+        r.uid == me
+            && matches!(r.element, CadElement::Wall { edge: e, line: WallLine::Axis } if e == edge)
+    };
+    let on_grid = |r: &ElementRef| r.uid == grid && r.element.is_grid();
+    doc.constraints()
+        .constraints
+        .iter()
+        .filter_map(|c| match &c.rule {
+            ConstraintRule::Distance {
+                a, b, parameter, ..
+            } if (on_grid(a) && axis(b)) || (on_grid(b) && axis(a)) => Some(SideBond {
+                id: Uuid::from_bytes(c.id.0),
+                parameter: parameter.clone(),
+                left,
+                reference: c.reference,
+            }),
+            _ => None,
+        })
+        .collect()
 }
 
 /// The distance bonds that hold edge `edge` of wall `uid` by one of its faces, in the set's order.

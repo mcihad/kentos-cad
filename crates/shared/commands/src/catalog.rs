@@ -1387,7 +1387,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_CONSTRAINTS_QUERY.into(),
             version: crate::CAD_CONSTRAINTS_QUERY_VERSION,
             title: "Kısıtları oku".into(),
-            summary: "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz. Eski ifadelerin boyut uyuşmazlıkları parameter_units_legacy uyarısında parametre yolu ile bildirilir; saklanan ifade ve sayısal anlamı korunur."
+            summary: "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi, aks ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz. Eski ifadelerin boyut uyuşmazlıkları parameter_units_legacy uyarısında parametre yolu ile bildirilir; saklanan ifade ve sayısal anlamı korunur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,

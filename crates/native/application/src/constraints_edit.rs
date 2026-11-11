@@ -360,9 +360,13 @@ fn flipped(rule: &ConstraintRule) -> Option<ConstraintRule> {
         ConstraintRule::Distance {
             a, b, axis, left, ..
         } => match (b.element, *axis) {
-            (CadElement::Segment { .. } | CadElement::Wall { .. } | CadElement::Boundary { .. }, _) => {
-                *left = !*left
-            }
+            (
+                CadElement::Segment { .. }
+                | CadElement::Wall { .. }
+                | CadElement::Boundary { .. }
+                | CadElement::Grid,
+                _,
+            ) => *left = !*left,
             (_, DistanceAxis::Horizontal | DistanceAxis::Vertical) => std::mem::swap(a, b),
             _ => return None,
         },
@@ -489,7 +493,7 @@ fn check_parts(doc: &Document, rule: &ConstraintRule, at: &str) -> Result<(), St
                     vec![uid.to_string()],
                 ));
             };
-            if e.element.is_boundary()
+            if (e.element.is_boundary() || e.element.is_grid())
                 && let Some(why) = doc.governed(entity)
             {
                 return Err(refuse_ids(

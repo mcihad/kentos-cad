@@ -65,6 +65,9 @@ pub enum CadElement {
     },
     /// An opening's start or end jamb, the middle of its jamb line (docs/adr/0770 §4, 0694).
     Jamb { end: JambEnd },
+    /// A straight grid's line (docs/adr/8049 §2): it moves square to itself as a wall's edge does, the walls and
+    /// openings bonded to it following. Only the architectural rules take it (distance, parallel, symmetric, fix).
+    Grid,
     /// A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next
     /// (part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours
     /// lengthening or shortening to meet it (Paralel kaydır's rule, docs/adr/0191). Only the map bond takes it: the
@@ -130,7 +133,15 @@ pub enum JambEnd {
 impl CadElement {
     /// Whether it is an architectural part (a wall line or a jamb): docs/adr/0770 §4.
     pub fn is_architectural(&self) -> bool {
-        matches!(self, CadElement::Wall { .. } | CadElement::Jamb { .. })
+        matches!(
+            self,
+            CadElement::Wall { .. } | CadElement::Jamb { .. } | CadElement::Grid
+        )
+    }
+
+    /// Whether it is a grid's line (docs/adr/8049 §2).
+    pub fn is_grid(&self) -> bool {
+        matches!(self, CadElement::Grid)
     }
 
     /// Whether it is a map bond's boundary edge (docs/adr/2580).
@@ -545,6 +556,7 @@ enum Shape {
     WallLine,
     Jamb,
     Boundary,
+    Grid,
 }
 
 fn shape(e: &ElementRef) -> Shape {
@@ -555,6 +567,7 @@ fn shape(e: &ElementRef) -> Shape {
         CadElement::Wall { .. } => Shape::WallLine,
         CadElement::Jamb { .. } => Shape::Jamb,
         CadElement::Boundary { .. } => Shape::Boundary,
+        CadElement::Grid => Shape::Grid,
     }
 }
 
@@ -592,6 +605,11 @@ pub fn rule_is_architectural(rule: &ConstraintRule) -> bool {
     rule.elements().iter().any(|e| e.element.is_architectural())
 }
 
+/// Whether a rule names a grid's line (docs/adr/8049 §2): what only schema 243 holds.
+pub fn rule_names_grid(rule: &ConstraintRule) -> bool {
+    rule.elements().iter().any(|e| e.element.is_grid())
+}
+
 /// Whether a rule is a map bond: it names a boundary edge (docs/adr/2580).
 pub fn rule_is_map_bond(rule: &ConstraintRule) -> bool {
     rule.elements().iter().any(|e| e.element.is_boundary())
@@ -607,8 +625,11 @@ pub fn rule_is_bond(rule: &ConstraintRule) -> bool {
 /// segment or a boundary edge (`a`, what is held) to a boundary edge (`b`, what follows).
 fn map_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
     use Shape::{Boundary, Segment};
-    if kinds.iter().any(|k| matches!(k, Shape::WallLine | Shape::Jamb)) {
-        return Some("sınır kenarı duvar çizgisi ve pervazla bağlanmaz".into());
+    if kinds
+        .iter()
+        .any(|k| matches!(k, Shape::WallLine | Shape::Jamb | Shape::Grid))
+    {
+        return Some("sınır kenarı duvar çizgisi, aks ve pervazla bağlanmaz".into());
     }
     let fits = match rule {
         ConstraintRule::Distance { axis, .. } => {
@@ -624,30 +645,34 @@ fn map_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
     })
 }
 
-/// Why an architectural rule's parts do not fit it (docs/adr/0770 §4): only distance, parallel, symmetric and fix, and
-/// architectural parts only.
+/// Why an architectural rule's parts do not fit it (docs/adr/0770 §4, 8049 §2): only distance, parallel, symmetric and
+/// fix, and architectural parts only; a grid's line is a line as a wall's is.
 fn architectural_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
-    use Shape::{Jamb, WallLine};
-    if kinds.iter().any(|k| !matches!(k, WallLine | Jamb)) {
-        return Some("duvar çizgisi ve pervaz yalnız duvar çizgisi ve pervazla bağlanır".into());
+    use Shape::{Grid, Jamb, WallLine};
+    if kinds.iter().any(|k| !matches!(k, WallLine | Jamb | Grid)) {
+        return Some(
+            "duvar çizgisi, aks ve pervaz yalnız duvar çizgisi, aks ve pervazla bağlanır".into(),
+        );
     }
+    let line = |k: Shape| matches!(k, WallLine | Grid);
     let fits = match rule {
         ConstraintRule::Distance { axis, left, .. } => {
             *axis == DistanceAxis::Aligned
                 && match (kinds[0], kinds[1]) {
-                    (WallLine, WallLine) | (Jamb, WallLine) => true,
+                    (a, b) if line(a) && line(b) => true,
+                    (Jamb, b) if line(b) => true,
                     (Jamb, Jamb) => !left,
                     _ => false,
                 }
         }
-        ConstraintRule::Parallel { .. } => kinds == [WallLine, WallLine],
-        ConstraintRule::Symmetric { .. } => kinds == [WallLine, WallLine, WallLine],
+        ConstraintRule::Parallel { .. } => kinds.iter().all(|k| line(*k)),
+        ConstraintRule::Symmetric { .. } => kinds.len() == 3 && kinds.iter().all(|k| line(*k)),
         ConstraintRule::Fix { .. } => true,
         _ => false,
     };
     (!fits).then(|| {
         format!(
-            "{} kısıtı duvar çizgisi ve pervaz almaz; mimari bağlar uzaklık, paralel, simetrik (eşit aralık) ve sabittir",
+            "{} kısıtı duvar çizgisi, aks ve pervaz almaz; mimari bağlar uzaklık, paralel, simetrik (eşit aralık) ve sabittir",
             rule_label(rule)
         )
     })
@@ -1018,6 +1043,111 @@ mod tests {
         let text = serde_json::to_string(&set).unwrap();
         assert_eq!(serde_json::from_str::<ConstraintSet>(&text).unwrap(), set);
         assert!(text.contains("\"kind\":\"parallel\""), "{text}");
+    }
+
+    /// A grid's line (docs/adr/8049 §2) is a line as a wall's is: a distance to a wall's line, parallel and equal
+    /// spacing with lines, a jamb's distance to it, a fix; never a point's rule or a map bond's.
+    #[test]
+    fn a_grid_s_line_takes_the_rules_a_wall_s_line_takes() {
+        let grid = |n: u8| ElementRef {
+            uid: uid(n),
+            element: CadElement::Grid,
+        };
+        let wall = |n: u8| ElementRef {
+            uid: uid(n),
+            element: CadElement::Wall {
+                edge: 0,
+                line: WallLine::Axis,
+            },
+        };
+        let jamb = ElementRef {
+            uid: uid(3),
+            element: CadElement::Jamb {
+                end: JambEnd::Start,
+            },
+        };
+        let distance = |a: ElementRef, b: ElementRef| ConstraintRule::Distance {
+            a,
+            b,
+            axis: DistanceAxis::Aligned,
+            left: true,
+            parameter: "d1".into(),
+        };
+        let problem = |rule: ConstraintRule| {
+            let set = ConstraintSet {
+                parameters: vec![CadParameter {
+                    name: "d1".into(),
+                    kind: ParameterKind::Length,
+                    expression: "1.5".into(),
+                    min: None,
+                    max: None,
+                    description: String::new(),
+                }],
+                constraints: vec![Constraint {
+                    id: ConstraintId([9; 16]),
+                    rule,
+                    reference: false,
+                }],
+            };
+            // An unused parameter is no problem of the rule.
+            constraints_problem(&set, None).map(|(_, why)| why)
+        };
+        assert_eq!(problem(distance(grid(1), wall(2))), None);
+        assert_eq!(problem(distance(wall(2), grid(1))), None);
+        assert_eq!(problem(distance(grid(1), grid(4))), None);
+        assert_eq!(
+            problem(ConstraintRule::Distance {
+                a: jamb,
+                b: grid(1),
+                axis: DistanceAxis::Aligned,
+                left: false,
+                parameter: "d1".into(),
+            }),
+            None
+        );
+        assert_eq!(
+            problem(ConstraintRule::Parallel {
+                a: grid(1),
+                b: wall(2)
+            }),
+            None
+        );
+        assert_eq!(
+            problem(ConstraintRule::Symmetric {
+                a: wall(2),
+                b: wall(5),
+                axis: grid(1),
+            }),
+            None
+        );
+        assert_eq!(problem(ConstraintRule::Fix { a: grid(1) }), None);
+        assert!(rule_names_grid(&distance(grid(1), wall(2))));
+        assert!(!rule_names_grid(&distance(wall(5), wall(2))));
+        let words = problem(ConstraintRule::Coincident {
+            a: grid(1),
+            b: wall(2),
+        })
+        .unwrap();
+        assert!(
+            words.contains("duvar çizgisi, aks ve pervaz almaz"),
+            "{words}"
+        );
+        let words = problem(ConstraintRule::Parallel {
+            a: grid(1),
+            b: segment(2),
+        })
+        .unwrap();
+        assert!(words.contains("aks ve pervazla bağlanır"), "{words}");
+        let boundary = ElementRef {
+            uid: uid(6),
+            element: CadElement::Boundary {
+                part: 0,
+                ring: 0,
+                index: 0,
+            },
+        };
+        let words = problem(distance(grid(1), boundary)).unwrap();
+        assert!(words.contains("aks"), "{words}");
     }
 
     #[test]

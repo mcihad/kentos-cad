@@ -9347,6 +9347,7 @@ class CadElement(_Union):
     - :class:`CircleCadElement` (``kind: circle``)
     - :class:`WallCadElement` (``kind: wall``)
     - :class:`JambCadElement` (``kind: jamb``)
+    - :class:`GridCadElement` (``kind: grid``)
     - :class:`BoundaryCadElement` (``kind: boundary``)
     """
     __slots__ = ()
@@ -24847,7 +24848,8 @@ class ConstraintsQuery(_Model):
     Refusals: `invalid_uid` (`uids[i]` or `ids[i]` not a persistent id), `constraint_not_found` (`ids[i]` no
     constraint of the drawing).
     Attributes:
-        architectural: Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+        architectural: Only the architectural bonds: the constraints naming a wall's line, a grid's or an opening's jamb (docs/adr/0770
+            §4, 8049 §2).
         ids: Only these constraints (their ids); none: all of them. With `uids` too, those of these naming one of them.
         uids: Only the constraints naming one of these objects (persistent ids); none: all of them.
     """
@@ -115913,6 +115915,22 @@ class JambCadElement(CadElement):
 
 
 @dataclass(kw_only=True, slots=True)
+class GridCadElement(CadElement):
+    """A straight grid's line (docs/adr/8049 §2): it moves square to itself as a wall's edge does, the walls and
+    openings bonded to it following. Only the architectural rules take it (distance, parallel, symmetric, fix).
+    """
+    TAG_VALUE: ClassVar[str] = "grid"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "grid"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridCadElement:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class BoundaryCadElement(CadElement):
     """A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next
     (part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours
@@ -134361,7 +134379,8 @@ class DistanceWallsOperation(WallsOperation):
         distance: Unit: length.
         edge: Unit: index.
         keep: Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`
-            (its face towards this one), this wall's face on that side `b`, a new parameter its value. Faces only.
+            (its face towards this one), this wall's face on that side `b`, a new parameter its value; with `to: grid`
+            (docs/adr/8049 §2) the grid `a`, this wall's axis `b`.
     """
     TAG_VALUE: ClassVar[str] = "distance"
     side: DimensionSetFace | DimensionSetFaceName
@@ -134680,7 +134699,7 @@ _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": 
 _BUILDING_SECTIONS_OPERATION: dict[str, type[BuildingSectionsOperation]] = {"derive": DeriveBuildingSectionsOperation, "refresh": RefreshBuildingSectionsOperation}
 
 
-_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement, "boundary": BoundaryCadElement}
+_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement, "grid": GridCadElement, "boundary": BoundaryCadElement}
 
 
 _CASEWORK_CHANGE: dict[str, type[CaseworkChange]] = {"module": ModuleCaseworkChange, "recipe": RecipeCaseworkChange, "release": ReleaseCaseworkChange}
@@ -136437,6 +136456,7 @@ __all__ = [
     "GridArrayLayout",
     "GridBubbles",
     "GridBubblesName",
+    "GridCadElement",
     "GridChoice",
     "GridEntity",
     "GridGap",

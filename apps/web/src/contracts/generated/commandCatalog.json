@@ -5543,7 +5543,7 @@
       "id": "cad.constraints.query",
       "version": 1,
       "title": "Kısıtları oku",
-      "summary": "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz. Eski ifadelerin boyut uyuşmazlıkları parameter_units_legacy uyarısında parametre yolu ile bildirilir; saklanan ifade ve sayısal anlamı korunur.",
+      "summary": "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi, aks ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz. Eski ifadelerin boyut uyuşmazlıkları parameter_units_legacy uyarısında parametre yolu ile bildirilir; saklanan ifade ve sayısal anlamı korunur.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -5561,7 +5561,7 @@
         "description": "Input of `cad.constraints.query` v1: the constraints of the drawing, or those naming these objects, or these\nconstraints (a refusal's `bonds`, docs/adr/0780 §2), or only the architectural bonds (Bağı göster).\n\nRefusals: `invalid_uid` (`uids[i]` or `ids[i]` not a persistent id), `constraint_not_found` (`ids[i]` no\nconstraint of the drawing).",
         "properties": {
           "architectural": {
-            "description": "Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).",
+            "description": "Only the architectural bonds: the constraints naming a wall's line, a grid's or an opening's jamb (docs/adr/0770\n§4, 8049 §2).",
             "type": "boolean"
           },
           "ids": {
@@ -122951,6 +122951,20 @@
         },
         {
           "additionalProperties": false,
+          "description": "A straight grid's line (docs/adr/8049 §2): it moves square to itself as a wall's edge does, the walls and\nopenings bonded to it following. Only the architectural rules take it (distance, parallel, symmetric, fix).",
+          "properties": {
+            "kind": {
+              "const": "grid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
           "description": "A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next\n(part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours\nlengthening or shortening to meet it (Paralel kaydır's rule, docs/adr/0191). Only the map bond takes it: the\ndistance from a straight segment (`Segment`, or another boundary) to it.",
           "properties": {
             "index": {
@@ -216370,7 +216384,7 @@
               "x-unit": "index"
             },
             "keep": {
-              "description": "Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`\n(its face towards this one), this wall's face on that side `b`, a new parameter its value. Faces only.",
+              "description": "Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`\n(its face towards this one), this wall's face on that side `b`, a new parameter its value; with `to: grid`\n(docs/adr/8049 §2) the grid `a`, this wall's axis `b`.",
               "type": "boolean"
             },
             "kind": {

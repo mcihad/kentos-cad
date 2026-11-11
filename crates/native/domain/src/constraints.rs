@@ -66,13 +66,21 @@ pub fn core_element(e: &CadElement) -> Element {
             index: *index,
         },
         CadElement::Circle => Element::Circle,
-        // Architectural parts are their adapter's (docs/adr/0770 §4); to the core solver a part no object has.
-        CadElement::Wall { .. } | CadElement::Jamb { .. } => Element::Segment {
+        // Architectural parts are their adapter's (docs/adr/0770 §4, 8049 §2); to the core solver a part no object has.
+        CadElement::Wall { .. } | CadElement::Jamb { .. } | CadElement::Grid => Element::Segment {
             part: u32::MAX,
             ring: u32::MAX,
             index: u32::MAX,
         },
     }
+}
+
+/// Whether a grid is straight (docs/adr/8049 §2): two points and no arc, what a grid's line bond takes.
+pub fn straight_grid(g: &kentos_contracts::GridFields) -> bool {
+    g.pts.len() == 2
+        && g.bulges
+            .as_ref()
+            .is_none_or(|b| b.iter().all(|x| *x == 0.0))
 }
 
 /// The solver's rule for a constraint's, its objects numbered by `object`.
@@ -271,6 +279,10 @@ impl Document {
                     return reshaped || edge as usize >= edges || arc;
                 }
                 CadElement::Jamb { .. } => return !matches!(entity.as_ref(), Entity::Opening(_)),
+                // A grid's line (docs/adr/8049 §2) goes when its object is no longer a straight grid.
+                CadElement::Grid => {
+                    return !matches!(entity.as_ref(), Entity::Grid(g) if straight_grid(&g.grid));
+                }
                 _ => {}
             }
             let Some(was) = before.get(&r.uid) else {

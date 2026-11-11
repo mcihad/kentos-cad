@@ -1420,6 +1420,7 @@ __all__ = [
     "GridArrayLayout",
     "GridBubbles",
     "GridBubblesName",
+    "GridCadElement",
     "GridChoice",
     "GridEntity",
     "GridGap",

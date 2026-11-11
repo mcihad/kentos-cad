@@ -188,9 +188,9 @@ edit = _ConstraintsEdit()
 class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, ConstraintsListed]):
     """``cad.constraints.query`` v1. Kısıtları oku: Çizimin kısıtlarını (uids verilirse
     yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile
-    yalnız duvar çizgisi ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının
-    bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup
-    tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum,
+    yalnız duvar çizgisi, aks ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü
+    kısıtının bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve
+    tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum,
     serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir
     şey yazmaz. Eski ifadelerin boyut uyuşmazlıkları parameter_units_legacy uyarısında
     parametre yolu ile bildirilir; saklanan ifade ve sayısal anlamı korunur.
@@ -216,7 +216,7 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         expected: Expected | None = None,
     ) -> ConstraintsListed:
         """Kısıtları oku: Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids
-        verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi ve pervaz
+        verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi, aks ve pervaz
         bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured:
         metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds),
         parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen,
@@ -226,7 +226,8 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
 
         Args:
             doc: The drawing it works on.
-            architectural: Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+            architectural: Only the architectural bonds: the constraints naming a wall's line, a grid's or an opening's jamb (docs/adr/0770
+                §4, 8049 §2).
             ids: Only these constraints (their ids); none: all of them. With `uids` too, those of these naming one of them.
             uids: Only the constraints naming one of these objects (persistent ids); none: all of them.
             request_id: Names this write: sent again with the same call it is answered as

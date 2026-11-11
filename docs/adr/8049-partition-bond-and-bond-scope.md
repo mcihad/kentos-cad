@@ -1,8 +1,8 @@
 # ADR 8049: Ölçülü bölmede kalıcı bağ ve bağların kapsamı
 
-- **Durum:** 1. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme mesafesini
-  "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1). Açık: bağların yay kenar, kolon, aks ve döşeme kapsamı (ADR 0770'in
-  sınırları; §2).
+- **Durum:** 1. ve 2. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme
+  mesafesini "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2). Açık: kolon yüzü, yay kenar ve döşeme
+  kenarı bağı (§3).
 - **Bağlam belgesi:** ADR 0770 (bağlantılı odalar ve kalıcı mimari bağlar), ADR 0657 ve 0734 (ölçülü bölme, yay kenar),
   ADR 0710 (duvarın mesafesi, Kaydır), ADR 0780 ve 0790 (yoldaki bağlar), ADR 0334–0338 (kısıtlar).
 
@@ -40,11 +40,42 @@ yoludur.
 - **Araç:** Mimari › Duvar ▾ › Ölçülü bölme'de "Bu ölçüyü koru" (K) aç/kapa satırı Araç ayarlarında ve komut satırında;
   K tek basışta değiştirir.
 
-### 2. Bağların kapsamı (açık)
+### 2. Aks bağı
 
-ADR 0770 §4 mimari bağları düz duvar kenarlarının çizgileri ve açıklık pervazlarıyla sınırlıyor. Kalanlar: yay kenar
-(eş merkezli yayların radyal mesafesi), kolon (kolon yüzü ya da merkezi ile duvar çizgisi), aks (aks çizgisiyle duvar
-çizgisi; Mesafe'nin aksa ölçüsünün korunması) ve döşeme (döşeme kenarıyla duvar yüzü).
+Revit'te ölçünün kilidine basınca ölçülen öğeler birbirine bağlanır ve "kısıt kurulduktan sonra model değişse de
+korunur" (Autodesk Revit yardımı, *Understanding Constraints*; BIM Pure, *17 Tips to Master Dimensions*, 16–17: "Entire
+Walls" ölçüsü duvarı kesen aksları da alır, kilit onları birlikte tutar). Archicad duvarı aksa bağlamaz; yalnız kolonu aks
+kesişimine oturtur ("Associative Grid Lines", duvar yüzü aksla gitsin isteği Graphisoft'un istek listesinde bekliyor).
+
+Mevzuat: Mimari Proje Çizim ve Sunuş Standartları A.1.1.3 planlarda taşıyıcı aks sisteminin "statik projeye uygun harf
+ve sayılarla" gösterilmesini, dış ölçülerin 3. çizgisinin taşıyıcı akslar olmasını ve "inşai akslar ve kesişme
+noktaları"nın belirtilmesini ister; statik projede düşey taşıyıcılar akslarla tariflenir ve "seçilen aks sistemi mimari
+projeleri ile uyumlu olacaktır" (AB Bakanlığı, *İnşaat Rehberi*, 2015, aynen aktarır). Statik proje değişip aks
+kaydığında mimari plan aynı kalırsa iki proje ayrışır; dijital proje yönetmeliğinin Md. 9'u (RG 5.8.2026/33331) da model
+ile çizimin uyuşmasını ister. Ofislerde dış duvar aksına göre ölçülendirilir; aks kayınca duvarın elle izlemesi ölçü
+hatası doğuruyordu.
+
+- **Sözleşme:** kısıtın parçasında yeni tür `grid` (`CadElement::Grid`, alanı yok): düz bir aksın çizgisi (iki nokta,
+  bükümsüz), ilk noktasından ikincisine yönlü. Mimari parçadır: duvar çizgisi gibi uzaklık (duvar çizgisine, başka
+  aksa; pervazdan ona), paralel, simetrik (eşit aralık) ve sabit alır; nokta kuralları ve harita bağı almaz (`bad_value`
+  / `invalid_constraint`).
+- **Çözücü:** ADR 0770'in bağdaştırıcısında aks bir kayma bilinmeyenidir (`Var::Grid`); kayınca iki noktası sol
+  normali boyunca aynı kadar gider. Düzenlemenin taşıdığı ya da döndürdüğü aks tutulur (yalnız kendi boyunca uzayan
+  tutulmaz), kilitli katmandaki aks kımıldamaz. Aksın kesişimindeki kolonlar aksla aynı adımda gider (ADR 0343 §3'ün
+  izlemesi bağdaştırıcının yazdığı aksı da görür): duvar → aks → kolon zinciri tek geri alma adımıdır.
+- **Kopma:** aks silinirse ya da yaya çevrilirse bağı aynı adımda kalkar (ADR 0334'ün kuralı).
+- **Mesafe'de koru:** `cad.walls.edit` Mesafe `to: grid` + `keep` artık reddedilmez: o yandaki aks (`a`) ile duvarın
+  ekseni (`b`) arasında mesafe bağı ve verilen değerle parametresi yazılır. Masaüstünde geçici ölçünün aks yanındaki
+  kilidi aynı bağı yazar ya da kaldırır; mesaj "Mesafe bağlandı (d1 = 2.000 m): aks kayınca duvar, duvar kayınca aks
+  izler."
+- **Dosya:** `.kcad` şema 243 (`SCHEMA_WITH_GRID_BONDS`); yazıcı bir kısıt aks anınca seçer, 242 ve öncesi `bad_value`
+  sayar. Örnek `arch-grid-bond.json/.kcad`, bozuklar `arch-grid-bond-in-schema-242`, `-coincident`, `-boundary`; en
+  yeni olmayan şema örneği `schema-version-244.kcad`.
+
+### 3. Bağların kalan kapsamı (açık)
+
+Yay kenar (eş merkezli yayların radyal mesafesi; yayın Kaydır'ı gerekir), kolon yüzü (kolon yüzüyle duvar çizgisi;
+kolon aks kesişimindeyse aks bağı bugün de onu taşır) ve döşeme kenarıyla duvar yüzü.
 
 ## Doğrulama
 
@@ -53,3 +84,10 @@ ADR 0770 §4 mimari bağları düz duvar kenarlarının çizgileri ve açıklık
 - 92 ortak durum (`walls_partition_cases.py`): bağ ve `d1 = 3` aynı adımda; yay kaynaktan `keep` reddedilir, hiçbir şey
   yazılmaz; masaüstü işleyicisinde ve Python'da.
 - Araç: K satırı Kapalı → Açık, komut satırında "Bu ölçüyü koru", yerleşince bağ ve parametre, geri alma ikisini alır.
+- Aks (§2): 43 ortak durum (`arch_bond_cases.py`, 30'dan; aks 0,5 m güneye → güney duvarı, kapıları ve T bağlı bölme
+  izler; duvar kaydırılınca aks izler; Mesafe 1,50 → 2,00 m korunur, aks taşınınca duvar döner; sabit aks reddeder;
+  zincir aks → güney duvarı → koridor duvarı; yay aks, dik aks ve aks olmayan nesne reddedilir) masaüstü işleyicisinde ve
+  Python'da. Uygulama: duvar 0,5 m güneye → aks −1,5'ten −2,0'a, A-1 kolonu (−1, −1,5)'ten (−1, −2,0)'a, tek geri
+  alma "Duvarı düzenle" üçünü alır; aks silinince ya da yaya çevrilince bağ kalkar. Etkileşim: aks yanındaki kilit
+  bağı yazar (d1 = 2), aks 0,5 m kuzeye → duvar izler, "Taşı" tek adım; kilit yeniden bağı kaldırır. `.kcad` 244 test,
+  bağımsız okuyucu 1796 dosya.

@@ -242,3 +242,78 @@ fn a_column_and_an_opening_switch_to_their_grids() {
         _ => panic!("the door"),
     }
 }
+
+/// docs/adr/8049 §2: on the grid's side the padlock keeps the axis's distance to the grid as a bond, nothing moving;
+/// the grid moved, the wall follows it, one undo taking both back; the padlock again lets the bond go.
+#[test]
+fn the_grid_side_s_padlock_bonds_the_wall_to_its_grid() {
+    let mut b = bench();
+    let wall = site(&mut b, false);
+    b.selection.set([wall]);
+    b.move_to(2.5, 0.5);
+    let grid_side = b
+        .session
+        .temporary_squares()
+        .into_iter()
+        .find(|q| (q.y - (N + 2.9)).abs() < 1e-6)
+        .expect("the face across, which has a grid too");
+    b.click(grid_side.x - E, grid_side.y - N);
+    assert!(
+        texts(&b).iter().any(|t| t.contains("2.000")),
+        "the grid: {:?}",
+        texts(&b)
+    );
+    let locks = b.session.temporary_locks();
+    assert_eq!(locks.len(), 1, "a padlock on the grid's side: {locks:?}");
+    b.click(locks[0].x - E, locks[0].y - N);
+    let set = b.doc.constraints().clone();
+    assert_eq!(set.constraints.len(), 1, "one bond");
+    assert_eq!(set.parameters[0].expression, "2");
+    assert!(
+        close(wall_pts(&b, wall)[0], 0., 0.),
+        "nothing moves: {:?}",
+        wall_pts(&b, wall)
+    );
+    assert!(
+        b.last_text().is_some_and(|t| t.contains(
+            "Mesafe bağlandı (d1 = 2.000 m): aks kayınca duvar, duvar kayınca aks izler."
+        )),
+        "{:?}",
+        b.last_text()
+    );
+    // The grid 50 cm north: the wall's axis follows, 2 m from it.
+    let grid = b
+        .doc
+        .entities()
+        .find(|e| matches!(e, Entity::Grid(_)))
+        .map(|e| b.doc.uid(Slot(e.base().id)).expect("its id").to_string())
+        .expect("the grid");
+    run(
+        &mut b,
+        "cad.entities.transform",
+        json!({"uids": [grid], "transform": {"kind": "move", "dx": 0.0, "dy": 0.5}}),
+    );
+    assert!(
+        close(wall_pts(&b, wall)[0], 0., 0.5),
+        "{:?}",
+        wall_pts(&b, wall)
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Taşı"), "one step");
+    assert!(
+        close(wall_pts(&b, wall)[0], 0., 0.),
+        "{:?}",
+        wall_pts(&b, wall)
+    );
+    // The padlock, filled now, lets the bond go.
+    b.selection.set([]);
+    b.move_to(2.5, 0.5);
+    b.selection.set([wall]);
+    b.move_to(2.5, 0.5);
+    let locks = b.session.temporary_locks();
+    assert_eq!(locks.len(), 1, "{locks:?}");
+    b.click(locks[0].x - E, locks[0].y - N);
+    assert!(
+        b.doc.constraints().constraints.is_empty(),
+        "the bond let go"
+    );
+}

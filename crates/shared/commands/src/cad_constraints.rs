@@ -190,7 +190,8 @@ pub struct ConstraintsQuery {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub ids: Vec<String>,
-    /// Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+    /// Only the architectural bonds: the constraints naming a wall's line, a grid's or an opening's jamb (docs/adr/0770
+    /// §4, 8049 §2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub architectural: bool,

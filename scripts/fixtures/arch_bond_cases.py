@@ -2,20 +2,23 @@
 """Shared cases of the architectural bonds (docs/adr/0770 §4, §5), from the ADR's rules, without KentOS code.
 
 Writes fixtures/commands/v1/cad.constraints.edit.arch.json; `--check` compares and writes nothing. A case adds bonds
-with cad.constraints.edit (a wall's line: `wall` edge and line; an opening's jamb: `jamb` end), then edits walls, a
-parameter or an opening; what the bonds make of it is written here:
+with cad.constraints.edit (a wall's line: `wall` edge and line; an opening's jamb: `jamb` end; a straight grid's line:
+`grid`, docs/adr/8049 §2), then edits walls, a parameter, an opening or moves a grid; what the bonds make of it is
+written here:
 
-- every bonded edge shifts square to itself (`Δ` along its left normal), every bonded opening along its edge (`δ`);
+- every bonded edge and grid shifts square to itself (`Δ` along its left normal, a grid's from its first point to its
+  second), every bonded opening along its edge (`δ`);
   the rules are linear (the ADR's table); a distance's side `left` is read from the drawing when it is made (two jambs
   in their order along the wall);
-- an edit holds the edges whose line it moved or turned and the openings it moved along their wall (their start jamb
+- an edit holds the edges and grids whose line it moved or turned and the openings it moved along their wall (their start jamb
   then, from their place, and now, from their wall and `at`); a new bond or a parameter's new value holds the `a` of
   each distance that does not hold now; equal spacing (symmetric) always holds its two ends, its axis follows; a fix whose part an edit moved, lines a
   bond wants parallel that are not, rows left contradicting: refused (`constraint_conflict`), nothing written;
-- the rest is the least change: rows in the bonds' order, shifts in their order (edges first as the bonds name them,
-  then openings), the first row with a coefficient the pivot, x = Rᵀ (R Rᵀ)⁻¹ d;
+- the rest is the least change: rows in the bonds' order, shifts in their order (edges and grids first as the bonds
+  name them, then openings), the first row with a coefficient the pivot, x = Rᵀ (R Rᵀ)⁻¹ d;
 - each edge shifted by Kaydır (wall_shift_cases.py's independent rule, joined walls following), in the shifts' order;
-  the openings of moved walls read back from their jambs; then each bonded opening's `at` plus its shift.
+  the openings of moved walls read back from their jambs; each grid's two points moved along its left normal; then
+  each bonded opening's `at` plus its shift.
 
     python3 scripts/fixtures/arch_bond_cases.py
     python3 scripts/fixtures/arch_bond_cases.py --check
@@ -64,9 +67,14 @@ WALLS = {
     11: ws.wall(11, [(0, 22), (4, 22)], layer="kilitli"),     # a wall on a locked layer
     12: ws.wall(12, [(0, 23.2), (4, 23.2)]),
 }
+GRIDS = {
+    13: ws.grid(13, (-2, -1.5), (10, -1.5), "A"),   # south of S: S's axis 1.50 m from it
+    14: ws.grid(14, (-1, -2), (-1, 7), "1"),        # west of W, square to A
+    15: ws.grid(15, (-2, 25), (6, 25), "B", bulges=[0.2, 0.0]),   # an arc grid
+}
 ENTITIES = [WALLS[1], WALLS[2], WALLS[3], WALLS[4], WALLS[5], WALLS[6],
             door(7, 1, 2.0, 0.9, WALLS), door(8, 1, 6.0, 0.9, WALLS), door(9, 5, 3.0, 0.8, WALLS),
-            WALLS[10], WALLS[11], WALLS[12]]
+            WALLS[10], WALLS[11], WALLS[12], GRIDS[13], GRIDS[14], GRIDS[15]]
 SETUP = copy.deepcopy(ws.SETUP)
 SETUP["name"] = "Mimari bağlar"
 SETUP["entities"] = ENTITIES
@@ -84,6 +92,10 @@ def W(i, line, edge=0):
 
 def J(i, end):
     return {"uid": u(i), "element": {"kind": "jamb", "end": end}}
+
+
+def G(i):
+    return {"uid": u(i), "element": {"kind": "grid"}}
 
 
 # ── Geometry of the parts ────────────────────────────────────────────────────────────────────────────────────────────
@@ -112,6 +124,17 @@ def wall_line(state, el):
 
 def el_id(el):
     return int(el["uid"].rsplit("-", 1)[1], 16)
+
+
+def straight(g):
+    return g["kind"] == "grid" and len(g["pts"]) == 2 and all(x == 0.0 for x in (g.get("bulges") or []))
+
+
+def grid_line(state, el):
+    """(its first point, its direction) of a straight grid's line (docs/adr/8049 §2)."""
+    g = state[el_id(el)]
+    a, b = xy(g["pts"][0]), xy(g["pts"][1])
+    return a, unit(a, b)
 
 
 def host_of(state, o):
@@ -144,6 +167,8 @@ def items(state, rules):
             el = r.get(k)
             if type(el) is dict and el["element"]["kind"] == "wall":
                 v(("edge", el_id(el), el["element"]["edge"]))
+            elif type(el) is dict and el["element"]["kind"] == "grid":
+                v(("grid", el_id(el)))
     parts = []
     for r in rules:
         got = []
@@ -154,6 +179,9 @@ def items(state, rules):
             if el["element"]["kind"] == "wall":
                 at, d = wall_line(state, el)
                 got.append(("line", v(("edge", el_id(el), el["element"]["edge"])), at, d))
+            elif el["element"]["kind"] == "grid":
+                at, d = grid_line(state, el)
+                got.append(("line", v(("grid", el_id(el))), at, d))
             else:
                 p, d, h = jamb(state, el)
                 host = ("edge", h, 0)
@@ -300,6 +328,12 @@ def equations(state, rules, values, edited=None):
                     u0, u1 = unit(*b0), unit(*b1)
                     across = dot(left(u0), sub(b1[0], b0[0]))
                     held[k] = held[k] or abs(cross(u0, u1)) > PARALLEL or abs(across) > TIE
+            elif key[0] == "grid":
+                # A grid moved across or turned (one lengthened along itself is not).
+                a0, b0 = xy(before["pts"][0]), xy(before["pts"][1])
+                a1, u1 = grid_line(state, {"uid": u(oid)})
+                u0 = unit(a0, b0)
+                held[k] = held[k] or abs(cross(u0, u1)) > PARALLEL or abs(dot(left(u0), sub(a1, a0))) > TIE
             else:
                 # Moved along its wall in the world: its start jamb then (from its place) and now (wall and at).
                 pl = [xy(q) for q in before["place"]]
@@ -321,7 +355,10 @@ def equations(state, rules, values, edited=None):
                 held[parts[i][0][1]] = True
     eqs = rows(len(var), rules, parts, values)
     if isinstance(eqs, tuple):
-        return None, ([eqs[0]], {"parallel": "Bağlı duvar çizgileri artık paralel değil (bir duvar döndü)",
+        gridded = any(p[0] == "line" and var[p[1]][0] == "grid" for p in parts[eqs[0]])
+        parallel = ("Bağlı aks ve duvar çizgileri artık paralel değil (bir aks ya da duvar döndü)" if gridded
+                    else "Bağlı duvar çizgileri artık paralel değil (bir duvar döndü)")
+        return None, ([eqs[0]], {"parallel": parallel,
                                   "crossing": "Pervazın bağlandığı çizgi açıklığın duvarını en az 30° ile kesmiyor"}[eqs[1]])
     x, bad = solve(held, eqs)
     if bad is not None:
@@ -359,6 +396,16 @@ def follow(state, rules, values, held_ids=None, edited=None, late=None):
     for i, o in ws.carried(state, moved_walls).items():
         now[i] = o
         changed[i] = o
+    # The grids' lines square to themselves (docs/adr/8049 §2).
+    for k, key in enumerate(var):
+        if key[0] != "grid" or x[k] == 0.0:
+            continue
+        g = copy.deepcopy(now[key[1]])
+        a, d = grid_line(now, {"uid": u(key[1])})
+        n = left(d)
+        g["pts"] = [P(q["x"] + n[0] * x[k], q["y"] + n[1] * x[k]) for q in g["pts"]]
+        now[key[1]] = g
+        changed[key[1]] = g
     for k, key in enumerate(var):
         if key[0] != "opening" or x[k] == 0.0:
             continue
@@ -629,18 +676,17 @@ class Case:
             step["expect"] = {"ids": IDS, "revision": "same"}
             self.steps.append(step)
             return
-        if to == "grid":
-            step["result"] = {"status": "failed", "error": {
-                "code": "invalid_wall", "message": "Bu ölçüyü koru yalnız duvar yüzüne olan mesafede olur; aks bağlanmaz.",
-                "path": "operation.keep"}}
-            step["expect"] = {"ids": IDS, "revision": "same"}
-            self.steps.append(step)
-            return
         written = dict(self.state)
         written.update(changed or {})
-        g = ws.gaps(written, i, edge)[0 if side == "left" else 1]
-        rule = dist(W(g["wall"], "leftFace" if g["left"] else "rightFace", g["edge"]),
-                    W(i, "leftFace" if side == "left" else "rightFace", edge))
+        if to == "grid":
+            # The grid beside it on that side, found before the move (docs/adr/8049 §2), to this wall's axis.
+            at, dirn = ws.axis_middle(self.state[i], edge)
+            g = ws.beside(self.state, ws.level(self.state[i]), at, dirn)[0 if side == "left" else 1]
+            rule = dist(G(g["grid"]), W(i, "axis", edge))
+        else:
+            g = ws.gaps(written, i, edge)[0 if side == "left" else 1]
+            rule = dist(W(g["wall"], "leftFace" if g["left"] else "rightFace", g["edge"]),
+                        W(i, "leftFace" if side == "left" else "rightFace", edge))
         gap, sense = measured(written, rule)
         if sense:
             rule["left"] = True
@@ -676,6 +722,16 @@ class Case:
                           "parameters": [{"name": n, "kind": "length", "expression": e} for n, e in self.params],
                           "entities": {str(i): self.state[i] for i in sorted(changed)}}
         self.steps.append(step)
+
+    def move_grid(self, i, dx, dy):
+        """cad.entities.transform's move of a grid: its two points moved by (dx, dy)."""
+        inp = {"uids": [ws.u(i)], "transform": {"kind": "move", "dx": dx, "dy": dy}}
+
+        def write(state):
+            g = copy.deepcopy(state[i])
+            g["pts"] = [P(q["x"] + dx, q["y"] + dy) for q in g["pts"]]
+            return {i: g}
+        self.edit("cad.entities.transform", inp, write)
 
     def move_opening(self, i, by):
         inp = {"uids": [ws.u(i)], "operation": {"kind": "move", "by": by}}
@@ -788,8 +844,32 @@ def cases():
     c.shift(1, -0.5)
     c = case("Bu ölçüyü koru, mesafe değişmeden: yalnız bağ yazılır, hiçbir şey kımıldamaz")
     c.keep(6, "right", 1.2)
-    c = case("Bu ölçüyü koru aksa: yanında aks yoksa reddedilir")
-    c.keep(6, "right", 1.2, to="grid")
+    c = case("Bu ölçüyü koru aksa: o yanda aks yoksa reddedilir")
+    c.keep(6, "left", 1.2, to="grid")
+    c = case("Aks bağı: güney duvarının ekseni A aksına 1,50 m ölçülür, hiçbir şey kımıldamaz")
+    c.add(dist(G(13), W(1, "axis")))
+    c = case("A aksı 50 cm güneye taşınınca bağlı güney duvarı izler, kapıları da")
+    c.add(dist(G(13), W(1, "axis")))
+    c.move_grid(13, 0.0, -0.5)
+    c = case("Bağlı güney duvarı kaydırılınca A aksı da izler")
+    c.add(dist(G(13), W(1, "axis")))
+    c.shift(1, -0.5)
+    c = case("Bağsız: aks taşınır, duvar yerinde")
+    c.move_grid(13, 0.0, -0.5)
+    c = case("Bu ölçüyü koru aksa: güney duvarı A aksına 2,00 m, bağ aynı adımda; aks taşınınca duvar izler")
+    c.keep(1, "right", 2.0, to="grid")
+    c.move_grid(13, 0.0, -0.5)
+    c = case("Bu ölçüyü koru aksa, mesafe değişmeden: yalnız bağ yazılır")
+    c.keep(1, "right", 1.5, to="grid")
+    c = case("Sabit aks ve bağlı duvar: duvarı kaydırmak reddedilir")
+    c.add(dist(G(13), W(1, "axis")), {"kind": "fix", "a": G(13)})
+    c.shift(1, -0.5)
+    c = case("Aks ve kuzey duvarı paralel: duvar kayar, aks yerinde")
+    c.add({"kind": "parallel", "a": G(13), "b": W(3, "axis")})
+    c.shift(3, 0.3)
+    c = case("Bağlar zinciri aksla: aks taşınınca güney duvarı ve koridor duvarı izler")
+    c.add(dist(G(13), W(1, "axis")), CORRIDOR)
+    c.move_grid(13, 0.0, -0.5)
     c = case("Bu ölçüyü koru, o yanda paralel duvar yok: reddedilir")
     c.keep(12, "left", 1.0)
     return [x.done() for x in out]
@@ -817,12 +897,17 @@ def refusals():
                 "iki pervaz aynı duvarın aynı kenarında olmalı"),
         refused("Pervaz bir açıklığın olmalı", {"kind": "distance", "a": {"uid": u(1), "element": {"kind": "jamb", "end": "start"}},
                                                "b": W(4, "leftFace"), "parameter": ""}, "pervaz yalnız bir açıklıkta olur"),
+        refused("Yay aksa bağ kurulmaz", dist(G(15), W(12, "axis")), "yay aks bağlanmaz; aks düz olmalı"),
+        refused("Paralel olmayan aks ve duvar çizgisi arasına uzaklık kurulmaz", dist(G(14), W(1, "axis")),
+                "bağlanan aks ve duvar çizgileri paralel olmalı"),
+        refused("Aks çizgisi bir aksın olmalı", dist({"uid": u(1), "element": {"kind": "grid"}}, W(3, "axis")),
+                "aks çizgisi yalnız bir aksta olur"),
     ]
 
 
 def document():
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.constraints.edit", "commandVersion": 1,
-            "title": "Mimari bağlar: duvar yüzü, eksen ve pervaz arasında kalıcı ölçü (ADR 0770)",
+            "title": "Mimari bağlar: duvar yüzü, eksen, aks ve pervaz arasında kalıcı ölçü (ADR 0770, 8049)",
             "note": "Beklenenler scripts/fixtures/arch_bond_cases.py'den: ADR 0770 §4'ün doğrusal kuralları, Kaydır ve "
                     "açıklıkların taşınması wall_shift_cases.py'nin bağımsız kuralıyla; KentOS kodu kullanılmadı.",
             "setup": SETUP, "cases": cases() + refusals()}

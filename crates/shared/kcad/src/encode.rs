@@ -2291,6 +2291,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 243 (docs/adr/8049 §2): a constraint naming a grid's line.
+    if doc
+        .constraints
+        .constraints
+        .iter()
+        .any(|c| kentos_contracts::rule_names_grid(&c.rule))
+    {
+        return crate::SCHEMA_WITH_GRID_BONDS;
+    }
     // Schema 242 (docs/adr/8045 §3): a railing.
     if objs.iter().any(|e| matches!(e, Entity::Railing(_))) {
         return crate::SCHEMA_WITH_RAILING_OBJECTS;

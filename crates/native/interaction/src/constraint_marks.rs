@@ -125,7 +125,7 @@ fn part(
             };
             Some((at, vec![chords(&edge)]))
         }
-        CadElement::Wall { .. } | CadElement::Jamb { .. } => None,
+        CadElement::Wall { .. } | CadElement::Jamb { .. } | CadElement::Grid => None,
         CadElement::Circle => {
             let (c, r) = match shape {
                 Shape::Circle { c, r } | Shape::Arc { c, r, .. } => (c, r),

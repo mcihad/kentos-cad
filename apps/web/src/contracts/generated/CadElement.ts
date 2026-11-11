@@ -6,4 +6,4 @@ import type { WallLine } from "./WallLine";
 /**
  * A part of an object a constraint names.
  */
-export type CadElement = { "kind": "point", place: SubPlace, } | { "kind": "segment", part: number, ring: number, index: number, } | { "kind": "arcEdge", part: number, ring: number, index: number, } | { "kind": "circle" } | { "kind": "wall", edge: number, line: WallLine, } | { "kind": "jamb", end: JambEnd, } | { "kind": "boundary", part: number, ring: number, index: number, };
+export type CadElement = { "kind": "point", place: SubPlace, } | { "kind": "segment", part: number, ring: number, index: number, } | { "kind": "arcEdge", part: number, ring: number, index: number, } | { "kind": "circle" } | { "kind": "wall", edge: number, line: WallLine, } | { "kind": "jamb", end: JambEnd, } | { "kind": "grid" } | { "kind": "boundary", part: number, ring: number, index: number, };

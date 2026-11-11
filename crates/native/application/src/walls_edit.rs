@@ -1173,7 +1173,8 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
 }
 
 /// Mesafe's `keep` (docs/adr/0770 §5): the distance bond from the wall across on `side` (its face towards this one,
-/// `a`) to this wall's face on that side (`b`); faces only (a grid is not a wall).
+/// `a`) to this wall's face on that side (`b`); to a grid (docs/adr/8049 §2), from the grid's line beside it on that
+/// side (`a`) to this wall's axis (`b`), as Mesafe measures to a grid.
 fn kept(
     doc: &Document,
     found: &[(usize, Slot, &WallEntity)],
@@ -1185,22 +1186,54 @@ fn kept(
         CadElement, ConstraintRule, DimensionSetFace, ElementRef, EntityId, WallLine,
     };
     use kentos_geometry_core::ops::wall_shift;
-    if to == kentos_commands::DistanceTo::Grid {
-        return Err(fail(
-            codes::INVALID_WALL,
-            "Bu ölçüyü koru yalnız duvar yüzüne olan mesafede olur; aks bağlanmaz.".into(),
-            "operation.keep",
-        ));
-    }
     let [(_, slot, wall)] = found else {
         return Err(fail(codes::INVALID_WALL, "Tek duvar verin.".into(), "uids"));
     };
     let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
     let ins = walls.ins();
     let k = edge.unwrap_or(0) as usize;
+    let left = side == DimensionSetFace::Left;
+    let uid = |s: Slot| doc.uid(s).map(|u| EntityId(u.into_bytes()));
+    let no_id = || fail(codes::INVALID_WALL, "Duvarın kimliği yok.".into(), "uids");
+    if to == kentos_commands::DistanceTo::Grid {
+        let grids = crate::grid_refs::Grids::of(doc);
+        let (at, u) = wall_shift::axis_middle(&ins, 0, k)
+            .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+        let Some(g) = kentos_geometry_core::ops::grid_ref::beside(
+            &grids.ins(),
+            wall_shift::level(&ins[0]),
+            at,
+            u,
+        )[usize::from(!left)] else {
+            return Err(fail(
+                codes::INVALID_WALL,
+                "Bu yanda paralel bir aks yok; bağlanacak aks bulunamadı.".into(),
+                "operation.to",
+            ));
+        };
+        let grid = grids.uid_of(doc, g.grid).map(|u| EntityId(u.into_bytes()));
+        let (Some(grid), Some(me)) = (grid, uid(*slot)) else {
+            return Err(no_id());
+        };
+        return Ok(ConstraintRule::Distance {
+            a: ElementRef {
+                uid: grid,
+                element: CadElement::Grid,
+            },
+            b: ElementRef {
+                uid: me,
+                element: CadElement::Wall {
+                    edge: k as u32,
+                    line: WallLine::Axis,
+                },
+            },
+            axis: kentos_commands::DistanceAxis::Aligned,
+            left: false,
+            parameter: String::new(),
+        });
+    }
     let gaps = wall_shift::gaps(&ins, 0, k)
         .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
-    let left = side == DimensionSetFace::Left;
     let Some(g) = gaps[usize::from(!left)] else {
         return Err(fail(
             codes::INVALID_WALL,
@@ -1208,13 +1241,8 @@ fn kept(
             "operation.side",
         ));
     };
-    let uid = |s: Slot| doc.uid(s).map(|u| EntityId(u.into_bytes()));
     let (Some(across), Some(me)) = (uid(walls.slots[g.wall]), uid(*slot)) else {
-        return Err(fail(
-            codes::INVALID_WALL,
-            "Duvarın kimliği yok.".into(),
-            "uids",
-        ));
+        return Err(no_id());
     };
     let a = ElementRef {
         uid: across,

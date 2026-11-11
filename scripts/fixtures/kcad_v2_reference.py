@@ -2774,6 +2774,9 @@ def document(d):
     if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "boundary" for r in rules for k in ("a", "b", "axis")):
         # A constraint naming a boundary edge, a map bond (docs/adr/2580).
         schema = max(schema, 208)
+    if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "grid" for r in rules for k in ("a", "b", "axis")):
+        # A constraint naming a grid's line (docs/adr/8049 §2).
+        schema = max(schema, 243)
     if any("version" in x or "revision" in x for x in d["settings"].get("road", {}).get("drawings", [])):
         # A road drawing's record with the version that drew it and the revision its write made (docs/adr/2840).
         schema = max(schema, 209)
@@ -3655,7 +3658,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-243.kcad"] = container(root(cmap(parts), version=uint(243)))
+    files["schema-version-244.kcad"] = container(root(cmap(parts), version=uint(244)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6923,6 +6926,20 @@ def build():
         out["broken/arch-bonds-" + name + ".kcad"] = container(document(d))
     bond_bad("coincident", lambda d: d["constraints"]["constraints"][1]["rule"].update(kind="coincident"))
     bond_bad("mixed", lambda d: d["constraints"]["constraints"][2]["rule"].update(b={"uid": d["uids"][0], "element": {"kind": "point", "place": {"kind": "start"}}}))
+    # Schema 243 (docs/adr/8049 §2): a wall's axis kept 1.5 m from a grid and another wall parallel to it; schema 242
+    # refuses the grid's line, a grid in a coincident and a grid with a boundary edge are refused too.
+    gridded = load("arch-grid-bond.json")
+    gb = document(gridded)
+    assert gb.count(b"\x67version\x18\xf3") == 1, "a grid's bond is schema 243"
+    out["arch-grid-bond.kcad"] = container(gb)
+    out["broken/arch-grid-bond-in-schema-242.kcad"] = container(gb.replace(b"\x67version\x18\xf3", b"\x67version\x18\xf2"))
+
+    def grid_bad(name, change):
+        d = copy.deepcopy(gridded)
+        change(d)
+        out["broken/arch-grid-bond-" + name + ".kcad"] = container(document(d))
+    grid_bad("coincident", lambda d: d["constraints"]["constraints"][1]["rule"].update(kind="coincident"))
+    grid_bad("boundary", lambda d: d["constraints"]["constraints"][1]["rule"].update(b={"uid": d["uids"][0], "element": {"kind": "boundary", "part": 0, "ring": 0, "index": 0}}))
     keyed_layer = load("layer-indexes.json")
     li = document(keyed_layer)
     assert li.count(b"\x67version\x18\x88") == 1, "the indexes are schema 136"

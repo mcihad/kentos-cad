@@ -683,7 +683,8 @@ pub enum WallsOperation {
         #[cfg_attr(feature = "ts", ts(as = "Option<DistanceTo>", optional))]
         to: DistanceTo,
         /// Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`
-        /// (its face towards this one), this wall's face on that side `b`, a new parameter its value. Faces only.
+        /// (its face towards this one), this wall's face on that side `b`, a new parameter its value; with `to: grid`
+        /// (docs/adr/8049 §2) the grid `a`, this wall's axis `b`.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         keep: bool,

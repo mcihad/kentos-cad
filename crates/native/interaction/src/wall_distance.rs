@@ -319,15 +319,20 @@ impl Overlay {
                     },
                 ));
             }
-            // The padlock beside the number: a click keeps the distance as a bond, or lets the bond go (§3).
-            let bond = (to == DistanceTo::Face)
-                .then(|| {
-                    arch_bonds::side_bonds(cx.doc, uid, g.edge)
+            // The padlock beside the number: a click keeps the distance as a bond, or lets the bond go (§3); to a grid,
+            // the axis's distance to it (docs/adr/8049 §2).
+            let bond = match (to, grid) {
+                (DistanceTo::Face, _) => arch_bonds::side_bonds(cx.doc, uid, g.edge)
+                    .into_iter()
+                    .find(|b| b.left == left && !b.reference),
+                (DistanceTo::Grid, Some(x)) => Uuid::parse_str(&x.uid).ok().and_then(|id| {
+                    arch_bonds::grid_bonds(cx.doc, uid, g.edge, id, left)
                         .into_iter()
-                        .find(|b| b.left == left && !b.reference)
-                })
-                .flatten();
-            if to == DistanceTo::Face && length > 1e-9 {
+                        .find(|b| !b.reference)
+                }),
+                _ => None,
+            };
+            if length > 1e-9 {
                 // Across the dimension, on the same hand for both sides: above it, or right of an upright one.
                 let (dx, dy) = ((at.x - from.x) / length, (at.y - from.y) / length);
                 let (nx, ny) =
@@ -360,18 +365,22 @@ impl Overlay {
                         edge: g.edge,
                         side,
                         value,
+                        to,
                         bond: bond.as_ref().map(|b| b.id),
                     },
                 ));
                 // Across from the padlock, the + that makes it a permanent dimension bound to both faces (docs/adr/8019).
-                let keep = Vec2::new(text_at.x - nx * height * 1.9, text_at.y - ny * height * 1.9);
-                self.preview.markers.push(Marker {
-                    at: keep,
-                    shape: MarkerShape::Plus(4.5),
-                    tone: Tone::Accent,
-                });
-                self.squares
-                    .push((keep, Switch::Permanent { from, to: at }));
+                if to == DistanceTo::Face {
+                    let keep =
+                        Vec2::new(text_at.x - nx * height * 1.9, text_at.y - ny * height * 1.9);
+                    self.preview.markers.push(Marker {
+                        at: keep,
+                        shape: MarkerShape::Plus(4.5),
+                        tone: Tone::Accent,
+                    });
+                    self.squares
+                        .push((keep, Switch::Permanent { from, to: at }));
+                }
             }
             self.sides.push(Side {
                 left,
@@ -1001,6 +1010,7 @@ pub fn toggle_bond(switch: crate::temporary_refs::Switch, cx: &mut Context<'_>) 
         edge,
         side,
         value,
+        to,
         bond,
     } = switch
     else {
@@ -1033,21 +1043,40 @@ pub fn toggle_bond(switch: crate::temporary_refs::Switch, cx: &mut Context<'_>) 
                         DimensionSetFace::Right
                     },
                     distance: value,
-                    to: DistanceTo::Face,
+                    to,
                     keep: true,
                 },
             };
             let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
             if crate::points::written(result, cx).is_some() {
-                let name = arch_bonds::side_bonds(cx.doc, uid, edge)
-                    .into_iter()
-                    .rfind(|b| b.left == (side == 0))
-                    .map(|b| b.parameter)
-                    .unwrap_or_default();
+                // The bond just written is the last of the set.
+                let name = match to {
+                    DistanceTo::Face => arch_bonds::side_bonds(cx.doc, uid, edge)
+                        .into_iter()
+                        .rfind(|b| b.left == (side == 0))
+                        .map(|b| b.parameter),
+                    DistanceTo::Grid => {
+                        cx.doc
+                            .constraints()
+                            .constraints
+                            .last()
+                            .and_then(|c| match &c.rule {
+                                kentos_commands::ConstraintRule::Distance { parameter, .. } => {
+                                    Some(parameter.clone())
+                                }
+                                _ => None,
+                            })
+                    }
+                }
+                .unwrap_or_default();
                 let shown = cx.format().length(value);
+                let follows = match to {
+                    DistanceTo::Face => "karşıdaki duvar kayınca bu duvar izler",
+                    DistanceTo::Grid => "aks kayınca duvar, duvar kayınca aks izler",
+                };
                 cx.say(
                     Level::Success,
-                    format!("Mesafe bağlandı ({name} = {shown}): karşıdaki duvar kayınca bu duvar izler."),
+                    format!("Mesafe bağlandı ({name} = {shown}): {follows}."),
                 );
             }
         }

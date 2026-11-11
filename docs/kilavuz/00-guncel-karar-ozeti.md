@@ -488,6 +488,10 @@
     K): bölmeyle aynı adımda kaynağın yüzünden (net) ya da ekseninden bölmenin bakan yüzüne ya da eksenine mesafe bağı
     ve verilen değerle parametresi (ADR 0770 §4); kaynak kayınca bölme izler; yay kaynakta `invalid_constraint`;
     `WallsCreated.bonds`.
+  - **Aks bağı (M49 2. bölüm, ADR 8049 §2):** kısıt parçası `grid` (düz aksın çizgisi; `.kcad` şema 243): duvar
+    çizgisi gibi uzaklık, paralel, simetrik ve sabit alır. Aks taşınınca bağlı duvar, duvar kayınca aks izler; aks
+    kesişimindeki kolonlar aynı adımda gider. Mesafe `to: grid` + `keep` bağı yazar; geçici ölçünün aks kilidi de.
+    Aks silinir ya da yaya döner: bağ kalkar.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

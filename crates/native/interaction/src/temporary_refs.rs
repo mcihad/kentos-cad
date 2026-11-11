@@ -77,12 +77,14 @@ pub enum Switch {
         anchor: WallAnchor,
     },
     /// A wall's clear distance on side `side` kept as a bond (`bond` none: `value` bonded now) or let go (`bond`, the
-    /// constraint's id; docs/adr/0770 §3). Written, not a session choice.
+    /// constraint's id; docs/adr/0770 §3); `to` a grid: its axis's distance to the grid there (docs/adr/8049 §2).
+    /// Written, not a session choice.
     Bond {
         uid: Uuid,
         edge: u32,
         side: u32,
         value: f64,
+        to: DistanceTo,
         bond: Option<Uuid>,
     },
     /// A wall's clear distance written as a permanent dimension from `from` (on the wall's face) to `to` (on the face

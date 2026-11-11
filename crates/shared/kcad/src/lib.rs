@@ -947,11 +947,14 @@ pub const SCHEMA_WITH_ROOF_DOWNPIPES: u32 = 240;
 pub const SCHEMA_WITH_STAIR_WINDERS: u32 = 241;
 /// Schema 242 (docs/adr/8045 §3): free-standing railings (`railing`), the drawing's only.
 pub const SCHEMA_WITH_RAILING_OBJECTS: u32 = 242;
+/// Schema 243 (docs/adr/8049 §2): a constraint naming a straight grid's line (`{"kind":"grid"}`), an architectural
+/// bond's part as a wall's line is.
+pub const SCHEMA_WITH_GRID_BONDS: u32 = 243;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 240] = [
+pub const SCHEMAS: [u32; 241] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1192,6 +1195,7 @@ pub const SCHEMAS: [u32; 240] = [
     SCHEMA_WITH_ROOF_DOWNPIPES,
     SCHEMA_WITH_STAIR_WINDERS,
     SCHEMA_WITH_RAILING_OBJECTS,
+    SCHEMA_WITH_GRID_BONDS,
 ];
 
 /// The file a drawing is saved as.
