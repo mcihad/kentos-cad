@@ -126,3 +126,6 @@ Yay kenar (eş merkezli yayların radyal mesafesi; yayın Kaydır'ı gerekir) ve
   kolon ve duvar tek "Taşı" adımı. Etkileşim: seçili kolonun dört yanında kilit; güney kilidi d1 = 1.2 yazar (büyük
   koordinatlarda 1.199999999814 çıkıyordu; kilit değeri nanometreye yuvarlar), duvar 0,5 m dışa → kolon izler; kilit
   yeniden bağı kaldırır. `.kcad` 244 test, bağımsız okuyucu 1800 dosya.
+- Gerçek pencere (§3; `fixtures/interaction/real/kolon-bagi.txt`): eski sürümde seçili kolonun ölçülerinde kilit yok;
+  yeni sürümde dört yanda kilit, güney kilidi "d1 = 0.8 m" yazıyor (kolon kımıldamıyor), duvarın güney kenarı A aksına
+  1,40'tan 0,90'a alınınca kolon da 0,5 m güneye gidiyor, Ctrl+Z ("Geri alındı: Duvarı…") ikisini birlikte geri alıyor.
