@@ -83,11 +83,13 @@ pub(crate) fn follow_with_axes(
     let befores = doc.step_befores();
     let mut removed = doc.settle_constraints_now();
     let set = doc.constraints().clone();
-    let named: HashSet<EntityId> = set
+    let mut named: HashSet<EntityId> = set
         .constraints
         .iter()
         .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
         .collect();
+    // A tied column's side is its grid's line (docs/adr/8049 §3): a write that moves the grid moves the side.
+    named.extend(crate::arch_bonds::implied_parts(doc, &set));
     let edited: Vec<(EntityId, Shape)> = befores
         .iter()
         .filter_map(|(slot, before)| {

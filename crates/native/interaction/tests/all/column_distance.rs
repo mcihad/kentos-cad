@@ -157,3 +157,81 @@ fn a_column_on_grids_says_why_it_does_not_move() {
     );
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
+
+/// docs/adr/8049 §3: the south side's padlock keeps the column's 1.20 m from the south wall as a bond, nothing moving;
+/// the wall shifted 0.5 m out, the column follows; the padlock again lets the bond go.
+#[test]
+fn the_south_padlock_bonds_the_column_to_its_wall() {
+    let (mut b, column) = room();
+    let south = b
+        .session
+        .temporary_numbers()
+        .into_iter()
+        .min_by(|a, b| a.y.total_cmp(&b.y))
+        .unwrap();
+    let near = |b: &crate::common::Bench| {
+        b.session
+            .temporary_locks()
+            .into_iter()
+            .min_by(|p, q| {
+                (p.x - south.x)
+                    .hypot(p.y - south.y)
+                    .total_cmp(&(q.x - south.x).hypot(q.y - south.y))
+            })
+            .expect("a padlock")
+    };
+    assert_eq!(
+        b.session.temporary_locks().len(),
+        4,
+        "a padlock on each side facing a wall"
+    );
+    let lock = near(&b);
+    b.click(lock.x - E, lock.y - N);
+    let set = b.doc.constraints().clone();
+    assert_eq!(set.constraints.len(), 1, "one bond");
+    assert_eq!(set.parameters[0].expression, "1.2");
+    let (x, y) = at(&b, column);
+    assert!(
+        (x - 2.0).abs() < 1e-9 && (y - 1.5).abs() < 1e-9,
+        "nothing moves: ({x}, {y})"
+    );
+    assert!(
+        b.last_text().is_some_and(|t| t.contains(
+            "Mesafe bağlandı (d1 = 1.200 m): karşıdaki yüz kayınca kolon, kolon kayınca yüz izler."
+        )),
+        "{:?}",
+        b.last_text()
+    );
+    // The south wall 0.5 m out: the column follows, 1.20 m from it.
+    let wall = b
+        .doc
+        .entities()
+        .find(|e| matches!(e, Entity::Wall(w) if w.wall.pts.iter().all(|p| (p.y - N).abs() < 1e-9)))
+        .map(|e| b.doc.uid(Slot(e.base().id)).unwrap().to_string())
+        .expect("the south wall");
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
+        "cad.walls.edit",
+        kentos_commands::CallOp::Execute,
+        json!({"uids": [wall], "operation": {"kind": "shift", "by": -0.5}}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let (x, y) = at(&b, column);
+    assert!(
+        (x - 2.0).abs() < 1e-9 && (y - 1.0).abs() < 1e-9,
+        "({x}, {y})"
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Duvarı düzenle"));
+    // The padlock, filled now, lets the bond go.
+    b.selection.set([]);
+    b.move_to(4.5, 3.);
+    b.selection.set([column]);
+    b.move_to(4.5, 3.);
+    let lock = near(&b);
+    b.click(lock.x - E, lock.y - N);
+    assert!(
+        b.doc.constraints().constraints.is_empty(),
+        "the bond let go"
+    );
+}

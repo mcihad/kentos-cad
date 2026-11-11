@@ -2777,6 +2777,9 @@ def document(d):
     if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "grid" for r in rules for k in ("a", "b", "axis")):
         # A constraint naming a grid's line (docs/adr/8049 §2).
         schema = max(schema, 243)
+    if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "columnSide" for r in rules for k in ("a", "b", "axis")):
+        # A constraint naming a column's side (docs/adr/8049 §3).
+        schema = max(schema, 244)
     if any("version" in x or "revision" in x for x in d["settings"].get("road", {}).get("drawings", [])):
         # A road drawing's record with the version that drew it and the revision its write made (docs/adr/2840).
         schema = max(schema, 209)
@@ -3658,7 +3661,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-244.kcad"] = container(root(cmap(parts), version=uint(244)))
+    files["schema-version-245.kcad"] = container(root(cmap(parts), version=uint(245)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6940,6 +6943,21 @@ def build():
         out["broken/arch-grid-bond-" + name + ".kcad"] = container(document(d))
     grid_bad("coincident", lambda d: d["constraints"]["constraints"][1]["rule"].update(kind="coincident"))
     grid_bad("boundary", lambda d: d["constraints"]["constraints"][1]["rule"].update(b={"uid": d["uids"][0], "element": {"kind": "boundary", "part": 0, "ring": 0, "index": 0}}))
+    # Schema 244 (docs/adr/8049 §3): a wall's face kept flush with a column's side and another wall parallel to the
+    # column's next side; schema 243 refuses the column's side, a side past 3 and a column's side in a coincident are
+    # refused too.
+    sided = load("arch-column-bond.json")
+    cb = document(sided)
+    assert cb.count(b"\x67version\x18\xf4") == 1, "a column side's bond is schema 244"
+    out["arch-column-bond.kcad"] = container(cb)
+    out["broken/arch-column-bond-in-schema-243.kcad"] = container(cb.replace(b"\x67version\x18\xf4", b"\x67version\x18\xf3"))
+
+    def side_bad(name, change):
+        d = copy.deepcopy(sided)
+        change(d)
+        out["broken/arch-column-bond-" + name + ".kcad"] = container(document(d))
+    side_bad("side-4", lambda d: d["constraints"]["constraints"][0]["rule"]["b"]["element"].update(side=4))
+    side_bad("coincident", lambda d: d["constraints"]["constraints"][1]["rule"].update(kind="coincident"))
     keyed_layer = load("layer-indexes.json")
     li = document(keyed_layer)
     assert li.count(b"\x67version\x18\x88") == 1, "the indexes are schema 136"

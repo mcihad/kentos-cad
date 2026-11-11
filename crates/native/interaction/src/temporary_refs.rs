@@ -87,6 +87,14 @@ pub enum Switch {
         to: DistanceTo,
         bond: Option<Uuid>,
     },
+    /// A column's clear distance on side `side` kept as a bond (`bond` none: `value` bonded now) or let go (`bond`, the
+    /// constraint's id; docs/adr/8049 §3). Written, not a session choice.
+    ColumnBond {
+        uid: Uuid,
+        side: u32,
+        value: f64,
+        bond: Option<Uuid>,
+    },
     /// A wall's clear distance written as a permanent dimension from `from` (on the wall's face) to `to` (on the face
     /// it meets), each end bound to its face: it follows the walls (docs/adr/8019; Revit's “make this temporary
     /// dimension permanent”). Written, not a session choice.
@@ -104,7 +112,7 @@ impl Switch {
                 to,
             } => choices.set_to(uid, edge, side, to),
             Switch::Anchor { uid, edge, anchor } => choices.set_anchor(uid, edge, anchor),
-            Switch::Bond { .. } | Switch::Permanent { .. } => {}
+            Switch::Bond { .. } | Switch::ColumnBond { .. } | Switch::Permanent { .. } => {}
         }
     }
 }

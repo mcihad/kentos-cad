@@ -5,4 +5,10 @@ import type { DistanceTo } from "./DistanceTo";
 /**
  * What `cad.arch.edit` does (docs/adr/0343 §4).
  */
-export type ArchOperation = { "kind": "set" } & ArchChange | { "kind": "renumber", start: string, } | { "kind": "attach", grids: Array<string>, } | { "kind": "detach" } | { "kind": "distance", side: number, distance: number, to?: DistanceTo, };
+export type ArchOperation = { "kind": "set" } & ArchChange | { "kind": "renumber", start: string, } | { "kind": "attach", grids: Array<string>, } | { "kind": "detach" } | { "kind": "distance", side: number, distance: number, to?: DistanceTo, 
+/**
+ * Bu ölçüyü koru (docs/adr/8049 §3): in the same step a lasting distance bond holds it, the face across `a`
+ * (a wall's face or another column's side), this column's side `b`, a new parameter `distance`. Faces only:
+ * a column goes with grids by standing where they cross (Akslara bağla).
+ */
+keep?: boolean, };

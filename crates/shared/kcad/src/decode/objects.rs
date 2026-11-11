@@ -488,6 +488,8 @@ pub(super) struct Features {
     pub(super) railing_objects: bool,
     /// Schema 243 (docs/adr/8049 §2): a constraint naming a grid's line.
     pub(super) grid_bonds: bool,
+    /// Schema 244 (docs/adr/8049 §3): a constraint naming a column's side.
+    pub(super) column_side_bonds: bool,
     /// Schema 235 (docs/adr/8041 §2): a column's material.
     pub(super) column_material: bool,
     /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
@@ -808,6 +810,7 @@ impl Features {
             stair_winders: schema >= crate::SCHEMA_WITH_STAIR_WINDERS,
             railing_objects: schema >= crate::SCHEMA_WITH_RAILING_OBJECTS,
             grid_bonds: schema >= crate::SCHEMA_WITH_GRID_BONDS,
+            column_side_bonds: schema >= crate::SCHEMA_WITH_COLUMN_SIDE_BONDS,
             column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
             beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,

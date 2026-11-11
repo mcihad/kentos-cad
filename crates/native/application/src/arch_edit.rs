@@ -596,7 +596,12 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 out.push((*slot, Entity::Column(c)));
             }
         }
-        ArchOperation::Distance { side, distance, to } => {
+        ArchOperation::Distance {
+            side,
+            distance,
+            to,
+            keep,
+        } => {
             // docs/adr/0712: one column, not tied to grids, moved square to a side.
             let [(at, slot, e, _)] = found.as_slice() else {
                 return Err(fail(
@@ -672,17 +677,22 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 }
             };
             let from = c.column.at;
-            if (to.x - from.x).hypot(to.y - from.y) <= kentos_geometry_core::ops::wall_shift::TIE {
+            let still =
+                (to.x - from.x).hypot(to.y - from.y) <= kentos_geometry_core::ops::wall_shift::TIE;
+            // The distance kept as it is (docs/adr/8049 §3): only the bond is written.
+            if still && !*keep {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     "Kolon zaten bu konumda; kaydırılacak bir şey yok.".into(),
                     "operation",
                 ));
             }
-            let mut c = c.clone();
-            c.column.at = kentos_commands::Vec2 { x: to.x, y: to.y };
-            column_valid(&c.column, &format!("uids[{at}]"))?;
-            out.push((*slot, Entity::Column(c)));
+            if !still {
+                let mut c = c.clone();
+                c.column.at = kentos_commands::Vec2 { x: to.x, y: to.y };
+                column_valid(&c.column, &format!("uids[{at}]"))?;
+                out.push((*slot, Entity::Column(c)));
+            }
         }
         ArchOperation::Detach => {
             for (_, slot, e, _) in &found {
@@ -753,6 +763,88 @@ pub fn plan_in(doc: &Document, input: &ArchEdit) -> CommandResult<ArchEdited> {
     }
 }
 
+/// Mesafe's `keep` for a column (docs/adr/8049 §3): the distance bond from the face across side `side` (a wall's face
+/// towards the column or another column's side, `a`) to this column's side (`b`); faces only.
+fn kept_column(
+    doc: &Document,
+    uids: &[String],
+    side: u32,
+    to: kentos_commands::DistanceTo,
+) -> Result<kentos_commands::ConstraintRule, Stop> {
+    use kentos_commands::{
+        CadElement, ConstraintRule, DistanceAxis, ElementRef, EntityId, WallLine,
+    };
+    use kentos_geometry_core::ops::column_shift::{Target, gaps};
+    if to == kentos_commands::DistanceTo::Grid {
+        return Err(fail(
+            codes::INVALID_COLUMN,
+            "Bu ölçüyü koru kolonda yalnız yüze olan mesafede olur; kolonu aksla götürmek için Akslara bağla ile aksların kesişimine oturtun.".into(),
+            "operation.keep",
+        ));
+    }
+    let slot = uids
+        .first()
+        .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
+        .and_then(|u| doc.slot_of(u))
+        .ok_or_else(|| fail(codes::INVALID_COLUMN, "Tek kolon verin.".into(), "uids"))?;
+    let around = crate::column_distances::Around::of(doc, slot);
+    let (walls, columns) = (around.walls(), around.columns());
+    let Some(g) = gaps(&walls, &columns, 0)[side as usize % 4] else {
+        return Err(fail(
+            codes::INVALID_COLUMN,
+            "Bu yanda paralel bir yüz yok; bağlanacak yüz bulunamadı.".into(),
+            "operation.side",
+        ));
+    };
+    let id = |s: Slot| doc.uid(s).map(|u| EntityId(u.into_bytes()));
+    let across = match g.target {
+        Target::Wall {
+            wall,
+            edge,
+            left_face,
+        } => around
+            .wall_slots
+            .get(wall)
+            .and_then(|s| id(*s))
+            .map(|uid| ElementRef {
+                uid,
+                element: CadElement::Wall {
+                    edge: edge as u32,
+                    line: if left_face {
+                        WallLine::LeftFace
+                    } else {
+                        WallLine::RightFace
+                    },
+                },
+            }),
+        Target::Column { column, side } => around
+            .column_slots
+            .get(column)
+            .and_then(|s| id(*s))
+            .map(|uid| ElementRef {
+                uid,
+                element: CadElement::ColumnSide { side: side as u32 },
+            }),
+    };
+    let (Some(a), Some(me)) = (across, id(slot)) else {
+        return Err(fail(
+            codes::INVALID_COLUMN,
+            "Kolonun ya da karşıdaki yüzün kimliği yok.".into(),
+            "uids",
+        ));
+    };
+    Ok(ConstraintRule::Distance {
+        a,
+        b: ElementRef {
+            uid: me,
+            element: CadElement::ColumnSide { side },
+        },
+        axis: DistanceAxis::Aligned,
+        left: false,
+        parameter: String::new(),
+    })
+}
+
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchEdit) -> CommandResult<ArchEdited> {
     crate::call::recorded(
         cx,
@@ -768,8 +860,32 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ArchEdit) -> CommandResul
         Ok(work) => work,
         Err(stop) => return stop.into(),
     };
+    // Bu ölçüyü koru (docs/adr/8049 §3): the bond read before the column moves, written after it in the same step.
+    let keep = match &input.operation {
+        ArchOperation::Distance {
+            side,
+            distance,
+            to,
+            keep: true,
+        } => match kept_column(cx.doc, &input.uids, *side, *to) {
+            Ok(rule) => Some((rule, *distance)),
+            Err(stop) => return stop.into(),
+        },
+        _ => None,
+    };
     let slots: Vec<Slot> = work.iter().map(|(s, _)| *s).collect();
     cx.doc.update_many(work, STEP);
+    if let Some((rule, distance)) = keep
+        && let Err(stop) = crate::constraints_edit::add_bond_given(
+            cx.doc,
+            rule,
+            STEP,
+            Some(distance),
+            "operation.keep",
+        )
+    {
+        return stop.into();
+    }
     // As written: a column follows its grids in the step.
     let elements = slots
         .iter()

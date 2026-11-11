@@ -9348,6 +9348,7 @@ class CadElement(_Union):
     - :class:`WallCadElement` (``kind: wall``)
     - :class:`JambCadElement` (``kind: jamb``)
     - :class:`GridCadElement` (``kind: grid``)
+    - :class:`ColumnSideCadElement` (``kind: columnSide``)
     - :class:`BoundaryCadElement` (``kind: boundary``)
     """
     __slots__ = ()
@@ -114696,16 +114697,22 @@ class DistanceArchOperation(ArchOperation):
     Attributes:
         side: Unit: index.
         distance: Unit: length.
+        keep: Bu ölçüyü koru (docs/adr/8049 §3): in the same step a lasting distance bond holds it, the face across `a`
+            (a wall's face or another column's side), this column's side `b`, a new parameter `distance`. Faces only:
+            a column goes with grids by standing where they cross (Akslara bağla).
     """
     TAG_VALUE: ClassVar[str] = "distance"
     side: int
     distance: float
+    keep: bool | Unset = UNSET
     to: DistanceTo | DistanceToName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "distance"}
         out["side"] = self.side
         out["distance"] = float(self.distance)
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         if self.to is not UNSET:
             out["to"] = _enum_out(self.to)
         return out
@@ -114715,6 +114722,7 @@ class DistanceArchOperation(ArchOperation):
         return cls(
             side=data["side"],
             distance=float(data["distance"]),
+            keep=data.get("keep", UNSET),
             to=_enum_in(DistanceTo, data["to"]) if "to" in data else UNSET,
         )
 
@@ -115928,6 +115936,29 @@ class GridCadElement(CadElement):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> GridCadElement:
         return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnSideCadElement(CadElement):
+    """A side of a column's box (docs/adr/8049 §3): `side` 0–3 from its first corner counter-clockwise, as
+    `cad.columns.distances` numbers them; a line as a wall's is, the column moving square to it (a column tied
+    to grids with them). Only the architectural rules take it (distance, parallel, symmetric, fix).
+    Attributes:
+        side: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "columnSide"
+    side: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "columnSide"}
+        out["side"] = self.side
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnSideCadElement:
+        return cls(
+            side=data["side"],
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -134699,7 +134730,7 @@ _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": 
 _BUILDING_SECTIONS_OPERATION: dict[str, type[BuildingSectionsOperation]] = {"derive": DeriveBuildingSectionsOperation, "refresh": RefreshBuildingSectionsOperation}
 
 
-_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement, "grid": GridCadElement, "boundary": BoundaryCadElement}
+_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement, "grid": GridCadElement, "columnSide": ColumnSideCadElement, "boundary": BoundaryCadElement}
 
 
 _CASEWORK_CHANGE: dict[str, type[CaseworkChange]] = {"module": ModuleCaseworkChange, "recipe": RecipeCaseworkChange, "release": ReleaseCaseworkChange}
@@ -135684,6 +135715,7 @@ __all__ = [
     "ColumnRefers",
     "ColumnShape",
     "ColumnShapeName",
+    "ColumnSideCadElement",
     "ColumnWidthTableEdit",
     "ColumnsCreate",
     "ColumnsCreated",

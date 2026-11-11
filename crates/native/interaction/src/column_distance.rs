@@ -5,13 +5,20 @@
 //! column square to that side by `cad.arch.edit`'s `distance`, the face or grid across fixed, in one undo step; Esc
 //! leaves it as it was. A column tied to grids says why it does not move at the click, before anything is typed.
 
-use kentos_commands::{ArchEdit, ArchOperation, ColumnGaps, CommandResult, DistanceTo, Entity, TextAlign};
+use kentos_commands::{
+    ArchEdit, ArchOperation, ColumnGaps, CommandResult, DistanceTo, Entity, TextAlign,
+};
 use kentos_domain::{Slot, Uuid};
-use kentos_native_application::{ExecutionContext, arch_edit, column_distances};
+use kentos_native_application::{
+    ExecutionContext, arch_bonds, arch_edit, column_distances, constraints_edit,
+};
 
 use crate::prompt::Prompt;
 use crate::temporary_refs::{Choices, Switch, other, shown};
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange};
+use crate::tool::{
+    Context, Flow, Label, Marker, MarkerShape, Pointer, Preview, Stroke, TextField, TextGhost,
+    Tone, Tool, ViewChange,
+};
 use crate::{Format, Level, Vec2, dimension_layout};
 
 pub const ID: &str = "columnDistance";
@@ -153,6 +160,46 @@ impl Overlay {
                 if let Some(layout) = dimension_layout(&entity) {
                     text_at = layout.text_at;
                 }
+                // The padlock beside the number (docs/adr/8049 §3): a click keeps the distance to the face as a bond,
+                // or lets the bond go; a column tied to grids goes with them instead.
+                if kind == DistanceTo::Face && !gaps.tied {
+                    let bond = arch_bonds::column_bonds(cx.doc, uid, k)
+                        .into_iter()
+                        .find(|b| !b.reference);
+                    let (nx, ny) =
+                        if dx.abs() > 1e-9 && dx.signum() < 0.0 || dx.abs() <= 1e-9 && dy > 0.0 {
+                            (dy, -dx)
+                        } else {
+                            (-dy, dx)
+                        };
+                    let lock =
+                        Vec2::new(text_at.x + nx * height * 1.9, text_at.y + ny * height * 1.9);
+                    match &bond {
+                        Some(b) => {
+                            self.preview.markers.push(Marker {
+                                at: lock,
+                                shape: MarkerShape::Square(4.5),
+                                tone: Tone::Accent,
+                            });
+                            self.preview.labels.push(Label {
+                                at: lock,
+                                text: b.parameter.clone(),
+                                offset: [9.0, -7.0],
+                                tone: Tone::Accent,
+                            });
+                        }
+                        None => self.preview.squares.push(lock),
+                    }
+                    self.squares.push((
+                        lock,
+                        Switch::ColumnBond {
+                            uid,
+                            side: k,
+                            value: gap.distance,
+                            bond: bond.as_ref().map(|b| b.id),
+                        },
+                    ));
+                }
             }
             self.sides.push(Side {
                 side: gap.side,
@@ -178,6 +225,64 @@ impl Overlay {
     }
 }
 
+/// A column padlock's click (docs/adr/8049 §3): the side's distance kept as a bond (`cad.arch.edit`'s `keep`, nothing
+/// moving), or its bond let go (`cad.constraints.edit`'s `remove`); one undo step.
+pub fn toggle_bond(switch: Switch, cx: &mut Context<'_>) {
+    let Switch::ColumnBond {
+        uid,
+        side,
+        value,
+        bond,
+    } = switch
+    else {
+        return;
+    };
+    match bond {
+        Some(id) => {
+            let input = kentos_commands::ConstraintsEdit {
+                edit: kentos_commands::ConstraintEdit::Remove {
+                    ids: vec![id.to_string()],
+                },
+                hold: Vec::new(),
+                allow_flip: false,
+                expected_revision: None,
+            };
+            let result = constraints_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if crate::points::written(result, cx).is_some() {
+                cx.say(Level::Success, "Bağ kaldırıldı; kolon artık serbest.");
+            }
+        }
+        None => {
+            // To the nanometre: the parameter reads as the number shown (1.2, not 1.199999999814 far from the origin),
+            // and the column, within the tie, does not move.
+            let value = (value * 1e9).round() / 1e9;
+            let input = ArchEdit {
+                uids: vec![uid.to_string()],
+                operation: ArchOperation::Distance {
+                    side,
+                    distance: value,
+                    to: DistanceTo::Face,
+                    keep: true,
+                },
+                expected_revision: None,
+            };
+            let result = arch_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if crate::points::written(result, cx).is_some() {
+                let name = arch_bonds::column_bonds(cx.doc, uid, side)
+                    .into_iter()
+                    .next_back()
+                    .map(|b| b.parameter)
+                    .unwrap_or_default();
+                let shown = cx.format().length(value);
+                cx.say(
+                    Level::Success,
+                    format!("Mesafe bağlandı ({name} = {shown}): karşıdaki yüz kayınca kolon, kolon kayınca yüz izler."),
+                );
+            }
+        }
+    }
+}
+
 /// The text field over a number, and the move it writes.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColumnDistance {
@@ -199,6 +304,7 @@ impl ColumnDistance {
                 side: self.side,
                 distance,
                 to: self.to,
+                keep: false,
             },
             expected_revision: None,
         }

@@ -117999,6 +117999,10 @@
               "type": "number",
               "x-unit": "length"
             },
+            "keep": {
+              "description": "Bu ölçüyü koru (docs/adr/8049 §3): in the same step a lasting distance bond holds it, the face across `a`\n(a wall's face or another column's side), this column's side `b`, a new parameter `distance`. Faces only:\na column goes with grids by standing where they cross (Akslara bağla).",
+              "type": "boolean"
+            },
             "kind": {
               "const": "distance",
               "type": "string"
@@ -122960,6 +122964,27 @@
           },
           "required": [
             "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A side of a column's box (docs/adr/8049 §3): `side` 0–3 from its first corner counter-clockwise, as\n`cad.columns.distances` numbers them; a line as a wall's is, the column moving square to it (a column tied\nto grids with them). Only the architectural rules take it (distance, parallel, symmetric, fix).",
+          "properties": {
+            "kind": {
+              "const": "columnSide",
+              "type": "string"
+            },
+            "side": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            }
+          },
+          "required": [
+            "kind",
+            "side"
           ],
           "type": "object"
         },

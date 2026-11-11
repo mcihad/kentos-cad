@@ -11,19 +11,13 @@ fn uid(i: u64) -> String {
     format!("0192f5a1-7100-7000-8000-{i:012x}")
 }
 
-/// The drawing, a column of 30 × 30 cm tied to grids A (13) and 1 (14) where they cross, at (−1, −1.5).
+/// The drawing; its column 17 (40 × 40 cm) is tied to grids A (13) and 1 (14) where they cross, at (−1, −1.5).
 fn drawing() -> Document {
     let f: Value = serde_json::from_str(include_str!(
         "../../../../../fixtures/commands/v1/cad.constraints.edit.arch.json"
     ))
     .unwrap();
-    let mut setup = f["setup"].clone();
-    setup["entities"].as_array_mut().unwrap().push(json!({
-        "kind": "column", "id": 16, "layerId": "aks", "attrs": {}, "at": {"x": -1.0, "y": -1.5},
-        "width": 0.3, "depth": 0.3, "grids": [uid(13), uid(14)], "place": "A-1"
-    }));
-    setup["uids"].as_array_mut().unwrap().push(json!(uid(16)));
-    let snapshot: DocumentSnapshotV2 = serde_json::from_value(setup).unwrap();
+    let snapshot: DocumentSnapshotV2 = serde_json::from_value(f["setup"].clone()).unwrap();
     Document::from_snapshot_v2(snapshot).unwrap()
 }
 
@@ -64,7 +58,7 @@ fn south_y(doc: &Document) -> f64 {
 }
 
 fn column_at(doc: &Document) -> (f64, f64) {
-    match entity(doc, 16) {
+    match entity(doc, 17) {
         Entity::Column(c) => (c.column.at.x, c.column.at.y),
         other => panic!("{other:?}"),
     }

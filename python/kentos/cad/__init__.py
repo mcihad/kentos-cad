@@ -630,6 +630,7 @@ __all__ = [
     "ColumnRefers",
     "ColumnShape",
     "ColumnShapeName",
+    "ColumnSideCadElement",
     "ColumnWidthTableEdit",
     "ColumnsCreate",
     "ColumnsCreated",

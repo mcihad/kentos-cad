@@ -3,7 +3,7 @@
   "version": 1,
   "command": "cad.constraints.edit",
   "commandVersion": 1,
-  "title": "Mimari bağlar: duvar yüzü, eksen, aks ve pervaz arasında kalıcı ölçü (ADR 0770, 8049)",
+  "title": "Mimari bağlar: duvar yüzü, eksen, aks, kolon yanı ve pervaz arasında kalıcı ölçü (ADR 0770, 8049)",
   "note": "Beklenenler scripts/fixtures/arch_bond_cases.py'den: ADR 0770 §4'ün doğrusal kuralları, Kaydır ve açıklıkların taşınması wall_shift_cases.py'nin bağımsız kuralıyla; KentOS kodu kullanılmadı.",
   "setup": {
     "format": "kentos.document",
@@ -104,6 +104,20 @@
       {
         "id": "aks",
         "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -426,6 +440,35 @@
           0.2,
           0.0
         ]
+      },
+      {
+        "kind": "column",
+        "id": 16,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 6.0,
+          "y": 0.5
+        },
+        "width": 0.4,
+        "depth": 0.4
+      },
+      {
+        "kind": "column",
+        "id": 17,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": -1.0,
+          "y": -1.5
+        },
+        "width": 0.4,
+        "depth": 0.4,
+        "grids": [
+          "0192f5a1-7100-7000-8000-00000000000d",
+          "0192f5a1-7100-7000-8000-00000000000e"
+        ],
+        "place": "A-1"
       }
     ],
     "uids": [
@@ -443,7 +486,9 @@
       "0192f5a1-7100-7000-8000-00000000000c",
       "0192f5a1-7100-7000-8000-00000000000d",
       "0192f5a1-7100-7000-8000-00000000000e",
-      "0192f5a1-7100-7000-8000-00000000000f"
+      "0192f5a1-7100-7000-8000-00000000000f",
+      "0192f5a1-7100-7000-8000-000000000010",
+      "0192f5a1-7100-7000-8000-000000000011"
     ]
   },
   "cases": [
@@ -511,7 +556,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -593,7 +640,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -639,7 +688,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -858,7 +909,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [],
@@ -1088,7 +1141,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1134,7 +1189,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1398,7 +1455,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1494,7 +1553,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -1556,7 +1617,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1619,7 +1682,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -1709,7 +1774,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same",
             "constraintKinds": []
@@ -1781,7 +1848,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -1827,7 +1896,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "parameters": [
@@ -1928,7 +1999,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2036,7 +2109,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2076,7 +2151,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2333,7 +2410,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2412,7 +2491,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -2482,7 +2563,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2528,7 +2611,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2730,7 +2815,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2776,7 +2863,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2931,7 +3020,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -2983,7 +3074,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3252,7 +3345,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3299,7 +3394,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [],
@@ -3529,7 +3626,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3609,7 +3708,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -3672,7 +3773,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3745,7 +3848,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -3785,7 +3890,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4017,7 +4124,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4063,7 +4172,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4472,7 +4583,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4518,7 +4631,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4711,7 +4826,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4757,7 +4874,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -4960,7 +5079,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5025,7 +5146,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5246,7 +5369,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5306,7 +5431,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -5375,7 +5502,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5455,7 +5584,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5502,7 +5633,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5681,6 +5814,23 @@
                   }
                 ],
                 "name": "A"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.0,
+                  "y": -2.0
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
               }
             }
           }
@@ -5749,7 +5899,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5795,7 +5947,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -5974,6 +6128,23 @@
                   }
                 ],
                 "name": "A"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.0,
+                  "y": -2.0
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
               }
             }
           }
@@ -6014,7 +6185,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [],
@@ -6035,6 +6208,23 @@
                   }
                 ],
                 "name": "A"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.0,
+                  "y": -2.0
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
               }
             }
           }
@@ -6077,7 +6267,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6281,7 +6473,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6460,6 +6654,23 @@
                   }
                 ],
                 "name": "A"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.0,
+                  "y": -2.0
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
               }
             }
           }
@@ -6502,7 +6713,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6594,7 +6807,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6686,7 +6901,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -6754,7 +6971,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6794,7 +7013,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -6991,7 +7212,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7044,7 +7267,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "changed",
             "constraintKinds": [
@@ -7242,6 +7467,1569 @@
                   }
                 ],
                 "name": "A"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.0,
+                  "y": -2.0
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolon yanı bağı: kolonun güney yanı güney duvarına 0,20 m; duvar dışa kayınca kolon izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000010",
+                      "element": {
+                        "kind": "columnSide",
+                        "side": 0
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "0.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              },
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 5.551115123125783e-17
+                },
+                "width": 0.4,
+                "depth": 0.4
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolon taşınınca bağlı güney duvarı izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000010",
+                      "element": {
+                        "kind": "columnSide",
+                        "side": 0
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "0.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:16"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0.0,
+              "dy": 0.3
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.3000000000000001
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.3000000000000001
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 0.3000000000000001
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 0.3000000000000001
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.3000000000000001
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.40000000000000013
+                  },
+                  {
+                    "x": 1.55,
+                    "y": 0.2000000000000001
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.40000000000000013
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.2000000000000001
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.40000000000000013
+                  },
+                  {
+                    "x": 5.55,
+                    "y": 0.2000000000000001
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.40000000000000013
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.2000000000000001
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 2.6999999999999997,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              },
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 0.8
+                },
+                "width": 0.4,
+                "depth": 0.4
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru kolonda: güney yanı güney duvarına 0,50 m, bağ aynı adımda; duvar kayınca kolon izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:16"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 0,
+              "distance": 0.5,
+              "keep": true
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "0.5"
+              }
+            ],
+            "entities": {
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 0.8
+                },
+                "width": 0.4,
+                "depth": 0.4
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              },
+              "16": {
+                "kind": "column",
+                "id": 16,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 0.30000000000000004
+                },
+                "width": 0.4,
+                "depth": 0.4
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru kolonda, mesafe değişmeden: yalnız bağ yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:16"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 0,
+              "distance": 0.2,
+              "keep": true
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "0.2"
+              }
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru kolonda aksa: reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:16"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": 0,
+              "distance": 1.5,
+              "to": "grid",
+              "keep": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Bu ölçüyü koru kolonda yalnız yüze olan mesafede olur; kolonu aksla götürmek için Akslara bağla ile aksların kesişimine oturtun.",
+              "path": "operation.keep"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Akslara bağlı kolonun yanı batı duvarına: duvar batıya kayınca 1 aksı ve kolon izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000011",
+                      "element": {
+                        "kind": "columnSide",
+                        "side": 1
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "0.7"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:4"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.3
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.3,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "3": {
+                "kind": "wall",
+                "id": 3,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": -0.3,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.3,
+                    "y": 5.0
+                  },
+                  {
+                    "x": -0.3,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.3,
+                    "y": 1.35
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.35
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.3,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.5499999999999998,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.5499999999999998,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.3,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.2999999999999998,
+                    "y": -2.0
+                  },
+                  {
+                    "x": -1.2999999999999998,
+                    "y": 7.0
+                  }
+                ],
+                "name": "1"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.2999999999999998,
+                  "y": -1.5
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 aksı taşınınca akslara bağlı kolon ve ona bağlı batı duvarı izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000011",
+                      "element": {
+                        "kind": "columnSide",
+                        "side": 1
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "0.7"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:14"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": -0.3,
+              "dy": 0.0
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.30000000000000004,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "3": {
+                "kind": "wall",
+                "id": 3,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": -0.30000000000000004,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.30000000000000004,
+                    "y": 5.0
+                  },
+                  {
+                    "x": -0.30000000000000004,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.30000000000000004,
+                    "y": 1.35
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.35
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.3,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.5499999999999998,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.5499999999999998,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.3,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "14": {
+                "kind": "grid",
+                "id": 14,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -1.3,
+                    "y": -2.0
+                  },
+                  {
+                    "x": -1.3,
+                    "y": 7.0
+                  }
+                ],
+                "name": "1"
+              },
+              "17": {
+                "kind": "column",
+                "id": 17,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": -1.3,
+                  "y": -1.5
+                },
+                "width": 0.4,
+                "depth": 0.4,
+                "grids": [
+                  "0192f5a1-7100-7000-8000-00000000000d",
+                  "0192f5a1-7100-7000-8000-00000000000e"
+                ],
+                "place": "A-1"
               }
             }
           }
@@ -7289,7 +9077,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7355,7 +9145,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7421,7 +9213,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7487,7 +9281,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7552,7 +9348,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7616,7 +9414,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7681,7 +9481,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7745,7 +9547,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7809,7 +9613,9 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }
@@ -7873,7 +9679,143 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolon yanı bir kolonun olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000003",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "columnSide",
+                        "side": 0
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: kolon yanı yalnız bir kolonda olur.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel olmayan kolon yanı ve duvar çizgisi arasına uzaklık kurulmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000010",
+                      "element": {
+                        "kind": "columnSide",
+                        "side": 1
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: bağlanan kolon yanı ve duvar çizgileri paralel olmalı.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
             ],
             "revision": "same"
           }

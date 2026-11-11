@@ -36,6 +36,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wall_shift_cases as ws  # noqa: E402  (Kaydır and the openings carried, independently)
 import wall_command_cases as wc  # noqa: E402
+import column_shift_cases as cs  # noqa: E402  (a column's sides and Mesafe, independently)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.constraints.edit.arch.json"
@@ -72,10 +73,18 @@ GRIDS = {
     14: ws.grid(14, (-1, -2), (-1, 7), "1"),        # west of W, square to A
     15: ws.grid(15, (-2, 25), (6, 25), "B", bulges=[0.2, 0.0]),   # an arc grid
 }
+COLUMNS = {
+    # A free 40 x 40 cm column in room B, its lower side 0.20 m from S's inner face.
+    16: {"kind": "column", "id": 16, "layerId": "kolon", "attrs": {}, "at": ws.P(6.0, 0.5), "width": 0.4, "depth": 0.4},
+    # A column where grids A and 1 cross, tied to them.
+    17: {"kind": "column", "id": 17, "layerId": "kolon", "attrs": {}, "at": ws.P(-1.0, -1.5), "width": 0.4, "depth": 0.4,
+         "grids": [ws.uid(13), ws.uid(14)], "place": "A-1"},
+}
 ENTITIES = [WALLS[1], WALLS[2], WALLS[3], WALLS[4], WALLS[5], WALLS[6],
             door(7, 1, 2.0, 0.9, WALLS), door(8, 1, 6.0, 0.9, WALLS), door(9, 5, 3.0, 0.8, WALLS),
-            WALLS[10], WALLS[11], WALLS[12], GRIDS[13], GRIDS[14], GRIDS[15]]
+            WALLS[10], WALLS[11], WALLS[12], GRIDS[13], GRIDS[14], GRIDS[15], COLUMNS[16], COLUMNS[17]]
 SETUP = copy.deepcopy(ws.SETUP)
+SETUP["layers"] = SETUP["layers"] + [wc.layer("kolon", "Kolon")]
 SETUP["name"] = "Mimari bağlar"
 SETUP["entities"] = ENTITIES
 SETUP["uids"] = [ws.uid(e["id"]) for e in ENTITIES]
@@ -96,6 +105,10 @@ def J(i, end):
 
 def G(i):
     return {"uid": u(i), "element": {"kind": "grid"}}
+
+
+def C(i, side):
+    return {"uid": u(i), "element": {"kind": "columnSide", "side": side}}
 
 
 # ── Geometry of the parts ────────────────────────────────────────────────────────────────────────────────────────────
@@ -137,6 +150,51 @@ def grid_line(state, el):
     return a, unit(a, b)
 
 
+def column_line(state, el):
+    """(its start, the direction whose left normal its shift moves it along, its shift's key) of a column's side
+    (docs/adr/8049 §3): the column's own across sides `side % 2` (the direction of side 0 or 1), or for a column tied to
+    grids its grid parallel to the side (the direction then the grid's way round)."""
+    c = state[el_id(el)]
+    s = el["element"]["side"]
+    sd = cs.sides(c)
+    a = sd[s][0]
+    d = unit(*sd[s % 2])
+    for g in c.get("grids", []):
+        gid = el_id({"uid": g})
+        if gid not in state or not straight(state[gid]):
+            continue
+        gd = grid_line(state, {"uid": g})[1]
+        if abs(cross(d, gd)) <= PARALLEL:
+            return a, (d if dot(d, gd) > 0 else (-d[0], -d[1])), ("grid", gid)
+    return a, d, ("column", el_id(el), s % 2)
+
+
+def crossing(state, c):
+    """Where a tied column's two straight grids cross."""
+    (pa, da), (pb, db) = (grid_line(state, {"uid": g}) for g in c["grids"])
+    t = cross(sub(pb, pa), db) / cross(da, db)
+    return along(pa, da, t)
+
+
+def settle(state, changed):
+    """The columns tied to grids `changed` moved, settled where their grids cross (docs/adr/0343 §3), into both."""
+    for i in sorted(state):
+        c = state[i]
+        if c["kind"] != "column" or "grids" not in c:
+            continue
+        if not any(el_id({"uid": g}) in changed for g in c["grids"]):
+            continue
+        p = crossing(state, c)
+        if dist2(p, xy(c["at"])) > 0.0:
+            moved = dict(c, at=P(*p))
+            state[i] = moved
+            changed[i] = moved
+
+
+def dist2(a, b):
+    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
+
+
 def host_of(state, o):
     return next(i for i in state if ws.uid(i) == o["host"])
 
@@ -169,6 +227,8 @@ def items(state, rules):
                 v(("edge", el_id(el), el["element"]["edge"]))
             elif type(el) is dict and el["element"]["kind"] == "grid":
                 v(("grid", el_id(el)))
+            elif type(el) is dict and el["element"]["kind"] == "columnSide":
+                v(column_line(state, el)[2])
     parts = []
     for r in rules:
         got = []
@@ -182,6 +242,9 @@ def items(state, rules):
             elif el["element"]["kind"] == "grid":
                 at, d = grid_line(state, el)
                 got.append(("line", v(("grid", el_id(el))), at, d))
+            elif el["element"]["kind"] == "columnSide":
+                at, d, key = column_line(state, el)
+                got.append(("line", v(key), at, d))
             else:
                 p, d, h = jamb(state, el)
                 host = ("edge", h, 0)
@@ -317,6 +380,9 @@ def equations(state, rules, values, edited=None):
         oid = key[1]
         if state[oid]["layerId"] == "kilitli":
             held[k] = True
+        # A tied column whose side no grid is parallel to moves only with its grids.
+        if key[0] == "column" and "grids" in state[oid]:
+            held[k] = True
         if edited and oid in edited:
             before = edited[oid]
             if key[0] == "edge":
@@ -328,6 +394,15 @@ def equations(state, rules, values, edited=None):
                     u0, u1 = unit(*b0), unit(*b1)
                     across = dot(left(u0), sub(b1[0], b0[0]))
                     held[k] = held[k] or abs(cross(u0, u1)) > PARALLEL or abs(across) > TIE
+            elif key[0] == "column":
+                # A column turned or moved across its sides `axis` (either of the two).
+                s0, s1 = cs.sides(before), cs.sides(state[oid])
+                ax = key[2]
+                u0, u1 = unit(*s0[ax]), unit(*s1[ax])
+                n = left(u0)
+                held[k] = (held[k] or abs(cross(u0, u1)) > PARALLEL
+                           or abs(dot(n, sub(s1[ax][0], s0[ax][0]))) > TIE
+                           or abs(dot(n, sub(s1[ax + 2][0], s0[ax + 2][0]))) > TIE)
             elif key[0] == "grid":
                 # A grid moved across or turned (one lengthened along itself is not).
                 a0, b0 = xy(before["pts"][0]), xy(before["pts"][1])
@@ -406,6 +481,25 @@ def follow(state, rules, values, held_ids=None, edited=None, late=None):
         g["pts"] = [P(q["x"] + n[0] * x[k], q["y"] + n[1] * x[k]) for q in g["pts"]]
         now[key[1]] = g
         changed[key[1]] = g
+    # The free columns square to their sides (docs/adr/8049 §3).
+    for k, key in enumerate(var):
+        if key[0] != "column" or x[k] == 0.0:
+            continue
+        c = copy.deepcopy(now[key[1]])
+        n = left(unit(*cs.sides(c)[key[2]]))
+        c["at"] = P(c["at"]["x"] + n[0] * x[k], c["at"]["y"] + n[1] * x[k])
+        now[key[1]] = c
+        changed[key[1]] = c
+    # The tied columns the bonds name, settled on their grids as moved.
+    named = {el_id(r[k]) for r in rules for k in ("a", "b", "axis")
+             if type(r.get(k)) is dict and r[k]["element"]["kind"] == "columnSide"}
+    for i in sorted(named):
+        c = now[i]
+        if "grids" in c and any(el_id({"uid": g}) in changed for g in c["grids"]):
+            p = crossing(now, c)
+            if dist2(p, xy(c["at"])) > 0.0:
+                now[i] = dict(c, at=P(*p))
+                changed[i] = now[i]
     for k, key in enumerate(var):
         if key[0] != "opening" or x[k] == 0.0:
             continue
@@ -591,6 +685,7 @@ class Case:
             return
         self.rules, self.params = rules, params
         self.state.update(changed)
+        settle(self.state, changed)
         step["within"] = 1e-9
         step["result"] = {"status": "completed", "output": {
             "added": ["$any"] * len(news), "removed": [], "changed": [u(i) for i in sorted(changed)],
@@ -616,7 +711,12 @@ class Case:
         written.update(got)
         edited = {i: before[i] for i in got}
         named = {i for r in self.rules for k in ("a", "b", "axis") if type(r.get(k)) is dict for i in [el_id(r[k])]}
+        # A tied column's side is its grid's line: its grids are named too (docs/adr/8049 §3).
+        named |= {el_id({"uid": g}) for r in self.rules for k in ("a", "b", "axis")
+                  if type(r.get(k)) is dict and r[k]["element"]["kind"] == "columnSide"
+                  for g in before[el_id(r[k])].get("grids", [])}
         if relax:
+            settle(written, got)
             values = self.values()
             gone = [i for i, r in enumerate(self.rules) if (lambda m: m is None or abs(m) > SETTLED)(miss(written, r, values))]
             if gone:
@@ -633,7 +733,13 @@ class Case:
         if not (named & set(got)):
             changed, why = {}, None
         else:
+            # The tied columns the write's grids moved, where the bonds read them (the step settles them as it closes).
+            pre = dict(got)
+            settle(written, pre)
             changed, why = follow(written, self.rules, self.values(), edited=edited)
+            for i in pre:
+                if i not in got:
+                    changed.setdefault(i, written[i])
         if why is not None:
             bonds = in_the_way(written, self.rules, self.values(), why[0], edited)
             step["result"] = {"status": "failed", "error": {
@@ -646,6 +752,7 @@ class Case:
         written.update(changed)
         every = dict(got)
         every.update(changed)
+        settle(written, every)
         self.state = written
         step["within"] = 1e-9
         step["result"] = "$any"
@@ -716,6 +823,7 @@ class Case:
             return
         self.params = params
         self.state.update(changed)
+        settle(self.state, changed)
         step["within"] = 1e-9
         step["result"] = "$any"
         step["expect"] = {"ids": IDS, "revision": "changed",
@@ -732,6 +840,59 @@ class Case:
             g["pts"] = [P(q["x"] + dx, q["y"] + dy) for q in g["pts"]]
             return {i: g}
         self.edit("cad.entities.transform", inp, write)
+
+    def move_column(self, i, dx, dy):
+        """cad.entities.transform's move of a free column."""
+        inp = {"uids": [ws.u(i)], "transform": {"kind": "move", "dx": dx, "dy": dy}}
+
+        def write(state):
+            c = copy.deepcopy(state[i])
+            c["at"] = P(c["at"]["x"] + dx, c["at"]["y"] + dy)
+            return {i: c}
+        self.edit("cad.entities.transform", inp, write)
+
+    def keep_column(self, i, side, distance, to=None):
+        """cad.arch.edit's Mesafe with `keep` (docs/adr/8049 §3): the column moved to `distance` as Mesafe moves it
+        (column_shift_cases.py's rule), then a distance bond from the face across (read before the move) to this
+        column's side, valued `distance`, in the same step."""
+        op = {"kind": "distance", "side": side, "distance": distance, **({"to": to} if to else {}), "keep": True}
+        inp = {"uids": [ws.u(i)], "operation": op}
+        step = {"op": "execute", "command": "cad.arch.edit", "input": inp}
+        plain = {"uids": [ws.u(i)], "operation": {k: v for k, v in op.items() if k != "keep"}}
+        result, changed = cs.edit(self.state, plain)
+        if changed is None and result["error"]["code"] == "nothing_to_set" and to != "grid":
+            changed = {}
+        if changed is None or to == "grid":
+            if changed is not None:
+                result = {"status": "failed", "error": {
+                    "code": "invalid_column",
+                    "message": "Bu ölçüyü koru kolonda yalnız yüze olan mesafede olur; kolonu aksla götürmek için "
+                               "Akslara bağla ile aksların kesişimine oturtun.",
+                    "path": "operation.keep"}}
+            step["result"] = result
+            step["expect"] = {"ids": IDS, "revision": "same"}
+            self.steps.append(step)
+            return
+        g = cs.gaps(self.state, i)[side]
+        a = (W(g["id"], "leftFace" if g["face"] == "left" else "rightFace", g["edge"]) if g["target"] == "wall"
+             else C(g["id"], g["edge"]))
+        rule = dist(a, C(i, side))
+        written = dict(self.state)
+        written.update(changed)
+        _, sense = measured(written, rule)
+        if sense:
+            rule["left"] = True
+        name = f"d{1 + sum(1 for n, _ in self.params if n.startswith('d'))}"
+        rule["parameter"] = name
+        self.rules.append(rule)
+        self.params.append((name, wc_value(distance)))
+        self.state = written
+        step["within"] = 1e-9
+        step["result"] = "$any"
+        step["expect"] = {"ids": IDS, "revision": "changed", "constraintKinds": [r["kind"] for r in self.rules],
+                          "parameters": [{"name": n, "kind": "length", "expression": e} for n, e in self.params],
+                          "entities": {str(k): written[k] for k in sorted(changed)}}
+        self.steps.append(step)
 
     def move_opening(self, i, by):
         inp = {"uids": [ws.u(i)], "operation": {"kind": "move", "by": by}}
@@ -870,6 +1031,25 @@ def cases():
     c = case("Bağlar zinciri aksla: aks taşınınca güney duvarı ve koridor duvarı izler")
     c.add(dist(G(13), W(1, "axis")), CORRIDOR)
     c.move_grid(13, 0.0, -0.5)
+    c = case("Kolon yanı bağı: kolonun güney yanı güney duvarına 0,20 m; duvar dışa kayınca kolon izler")
+    c.add(dist(W(1, "leftFace"), C(16, 0)))
+    c.shift(1, -0.5)
+    c = case("Kolon taşınınca bağlı güney duvarı izler")
+    c.add(dist(W(1, "leftFace"), C(16, 0)))
+    c.move_column(16, 0.0, 0.3)
+    c = case("Bu ölçüyü koru kolonda: güney yanı güney duvarına 0,50 m, bağ aynı adımda; duvar kayınca kolon izler")
+    c.keep_column(16, 0, 0.5)
+    c.shift(1, -0.5)
+    c = case("Bu ölçüyü koru kolonda, mesafe değişmeden: yalnız bağ yazılır")
+    c.keep_column(16, 0, 0.2)
+    c = case("Bu ölçüyü koru kolonda aksa: reddedilir")
+    c.keep_column(16, 0, 1.5, to="grid")
+    c = case("Akslara bağlı kolonun yanı batı duvarına: duvar batıya kayınca 1 aksı ve kolon izler")
+    c.add(dist(W(4, "rightFace"), C(17, 1)))
+    c.shift(4, -0.3)
+    c = case("1 aksı taşınınca akslara bağlı kolon ve ona bağlı batı duvarı izler")
+    c.add(dist(W(4, "rightFace"), C(17, 1)))
+    c.move_grid(14, -0.3, 0.0)
     c = case("Bu ölçüyü koru, o yanda paralel duvar yok: reddedilir")
     c.keep(12, "left", 1.0)
     return [x.done() for x in out]
@@ -902,12 +1082,16 @@ def refusals():
                 "bağlanan aks ve duvar çizgileri paralel olmalı"),
         refused("Aks çizgisi bir aksın olmalı", dist({"uid": u(1), "element": {"kind": "grid"}}, W(3, "axis")),
                 "aks çizgisi yalnız bir aksta olur"),
+        refused("Kolon yanı bir kolonun olmalı", dist(W(3, "axis"), {"uid": u(1), "element": {"kind": "columnSide", "side": 0}}),
+                "kolon yanı yalnız bir kolonda olur"),
+        refused("Paralel olmayan kolon yanı ve duvar çizgisi arasına uzaklık kurulmaz", dist(W(1, "axis"), C(16, 1)),
+                "bağlanan kolon yanı ve duvar çizgileri paralel olmalı"),
     ]
 
 
 def document():
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.constraints.edit", "commandVersion": 1,
-            "title": "Mimari bağlar: duvar yüzü, eksen, aks ve pervaz arasında kalıcı ölçü (ADR 0770, 8049)",
+            "title": "Mimari bağlar: duvar yüzü, eksen, aks, kolon yanı ve pervaz arasında kalıcı ölçü (ADR 0770, 8049)",
             "note": "Beklenenler scripts/fixtures/arch_bond_cases.py'den: ADR 0770 §4'ün doğrusal kuralları, Kaydır ve "
                     "açıklıkların taşınması wall_shift_cases.py'nin bağımsız kuralıyla; KentOS kodu kullanılmadı.",
             "setup": SETUP, "cases": cases() + refusals()}

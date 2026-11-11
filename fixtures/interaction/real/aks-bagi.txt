@@ -1,0 +1,42 @@
+# M49 2. bölüm (docs/adr/8049 §2), on fixtures/arch/v1/section-building.kcad emptied and an 8 x 5 m room drawn with
+# grid A 1.40 m south of the south wall's axis, grid 1 west of it and a column where they cross (the drawing made by
+# the Python SDK: cad.walls.rectangle, cad.grids.create, cad.columns.create with grids). The south wall selected: the
+# grid side's padlock; clicked: the bond (d1); grid A moved 0.5 m south with Taşı: the wall and column A-1 follow;
+# Ctrl+Z: one step takes them back. The old binary shows no padlock on the grid side and leaves the wall in place.
+fit Kesit binası — KentOS CAD
+wait 3000
+click 800 600 middle
+click 800 600 middle
+wait 2500
+click 800 710
+wait 1200
+move 800 692
+wait 1500
+shot m49-sonra-gecici-olcu
+click 823 758
+wait 1500
+move 800 692
+wait 1500
+shot m49-sonra-kilit
+key Escape
+wait 800
+click 1000 807
+wait 1500
+click 178 70   # Taşı (Mimari nesne)
+wait 1200
+type 0,0
+key Return
+wait 1000
+type 0,-0.5
+key Return
+wait 2000
+key Escape
+wait 600
+move 1400 950
+wait 1000
+shot m49-sonra-aks-tasindi
+key ctrl+z
+wait 1500
+move 1400 960
+wait 1000
+shot m49-sonra-geri-al

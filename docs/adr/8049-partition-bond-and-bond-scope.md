@@ -1,8 +1,8 @@
 # ADR 8049: Ölçülü bölmede kalıcı bağ ve bağların kapsamı
 
-- **Durum:** 1. ve 2. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme
-  mesafesini "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2). Açık: kolon yüzü, yay kenar ve döşeme
-  kenarı bağı (§3).
+- **Durum:** 1.–3. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme
+  mesafesini "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2); kolon yanı bağı (§3). Açık: yay kenar ve
+  döşeme kenarı bağı (§4).
 - **Bağlam belgesi:** ADR 0770 (bağlantılı odalar ve kalıcı mimari bağlar), ADR 0657 ve 0734 (ölçülü bölme, yay kenar),
   ADR 0710 (duvarın mesafesi, Kaydır), ADR 0780 ve 0790 (yoldaki bağlar), ADR 0334–0338 (kısıtlar).
 
@@ -72,10 +72,33 @@ hatası doğuruyordu.
   sayar. Örnek `arch-grid-bond.json/.kcad`, bozuklar `arch-grid-bond-in-schema-242`, `-coincident`, `-boundary`; en
   yeni olmayan şema örneği `schema-version-244.kcad`.
 
-### 3. Bağların kalan kapsamı (açık)
+### 3. Kolon yanı bağı
 
-Yay kenar (eş merkezli yayların radyal mesafesi; yayın Kaydır'ı gerekir), kolon yüzü (kolon yüzüyle duvar çizgisi;
-kolon aks kesişimindeyse aks bağı bugün de onu taşır) ve döşeme kenarıyla duvar yüzü.
+Dış duvar çoğu zaman kolon yüzüyle aynı hizada ya da ondan belirli bir pay içeride/dışarıda durur; kolon kayınca duvarın,
+duvar kayınca kolonun izlemesi gerekir. Revit'te kilitli ölçü kolonu da taşır; Archicad'de kolon ile duvar arasında
+kalıcı ölçü yoktur.
+
+- **Sözleşme:** kısıtın parçasında yeni tür `columnSide` (`side` 0–3): kolon kutusunun yanı, ilk köşesinden saat
+  yönünün tersine (`cad.columns.distances`'ın numaraları: 0 alt, 1 sağ, 2 üst, 3 sol, kolonun dönüşüyle). Duvar çizgisi
+  gibi uzaklık, paralel, simetrik ve sabit alır; 3'ten büyük yan `bad_value`.
+- **Çözücü:** serbest kolonun karşılıklı iki yanı tek kayma bilinmeyenidir (`Var::Column`, 0 ile 2'nin ya da 1 ile
+  3'ün): kolon o yanlara dik kayar (`at` taşınır). Akslara bağlı kolonun yanı, o yana paralel aksının bilinmeyenidir:
+  bağ aksı kaydırır, kolon aksların yeni kesişimine oturur. Hiçbir aksı yana paralel olmayan (döndürülmüş) bağlı kolon
+  yerinde tutulur. Düzenlemenin taşıdığı, döndürdüğü ya da yanlarını oynattığı (genişlik) kolon tutulur.
+- **Kolonun oturması:** aks bir yazımla kayınca kolon ancak adım kapanırken kesişime oturuyordu; bağ ise yazımın hemen
+  ardından çözülür ve kolonu eski yerinde ölçerdi (bağ sessizce bozulurdu). Bağdaştırıcı okumaya başlamadan bağların
+  andığı bağlı kolonları güncel aksların kesişimine oturtur; yazımdan sonra izlenecek nesnelere bu kolonların aksları da
+  katılır (`implied_parts`).
+- **Mesafe'de koru:** `cad.arch.edit` Mesafe'nin `keep`'i: kolon kaydırılır ve aynı adımda karşıdaki yüz (duvar yüzü ya
+  da başka kolonun yanı, `a`) ile kolonun yanı (`b`) arasında bağ ve verilen değerle parametresi yazılır; kolon zaten o
+  mesafedeyse yalnız bağ yazılır. Aksa olan mesafede `keep` reddedilir (`invalid_column`, `operation.keep`): kolon aksa
+  kesişime oturarak bağlanır (Akslara bağla). Masaüstünde kolonun geçici ölçüsündeki kilit aynı bağı yazar ya da kaldırır.
+- **Dosya:** `.kcad` şema 244 (`SCHEMA_WITH_COLUMN_SIDE_BONDS`); örnek `arch-column-bond.json/.kcad`, bozuklar
+  `arch-column-bond-in-schema-243`, `-side-4`, `-coincident`; en yeni olmayan şema örneği `schema-version-245.kcad`.
+
+### 4. Bağların kalan kapsamı (açık)
+
+Yay kenar (eş merkezli yayların radyal mesafesi; yayın Kaydır'ı gerekir) ve döşeme kenarıyla duvar yüzü.
 
 ## Doğrulama
 
@@ -91,3 +114,15 @@ kolon aks kesişimindeyse aks bağı bugün de onu taşır) ve döşeme kenarıy
   alma "Duvarı düzenle" üçünü alır; aks silinince ya da yaya çevrilince bağ kalkar. Etkileşim: aks yanındaki kilit
   bağı yazar (d1 = 2), aks 0,5 m kuzeye → duvar izler, "Taşı" tek adım; kilit yeniden bağı kaldırır. `.kcad` 244 test,
   bağımsız okuyucu 1796 dosya.
+- Gerçek pencere (§2; `fixtures/interaction/real/aks-bagi.txt`, Xvfb 1920×1080, gerçek fare/klavye): eski sürümde aks
+  tarafındaki 1,400 m'de kilit yok ve aks 0,5 m güneye taşınınca duvar yerinde kalıyor (kolon izliyor); yeni sürümde
+  kilit bağı yazıyor ("d1 = 1.4 m"), aks taşınınca güney duvarı ve A-1 kolonu birlikte gidiyor, Ctrl+Z tek adımda
+  ("Geri alındı: Taşı") üçünü geri alıyor. Görüntüler `.run/gui-evidence/mimari-m49/`.
+- Kolon yanı (§3): 52 ortak durum (43'ten; serbest kolon: güney duvarı 0,5 m dışa → kolon 0,5 m izler; kolon 0,3 m
+  kuzeye → duvar izler; Mesafe 0,50 m korunur ve duvar kayınca kolon y 0,8 → 0,3; mesafe aynıyken yalnız bağ; aksa
+  koru reddedilir; akslara bağlı kolon: batı duvarı 0,3 m batıya → 1 aksı ve kolon (−1,3; −1,5); 1 aksı 0,3 m batıya →
+  kolon ve batı duvarı izler; kolon olmayan nesne ve paralel olmayan yan reddedilir) masaüstü işleyicisinde ve
+  Python'da. Uygulama: Mesafe+koru tek geri alma "Mimari nesneyi düzenle" kaymayı ve bağı birlikte alır; aks taşınınca
+  kolon ve duvar tek "Taşı" adımı. Etkileşim: seçili kolonun dört yanında kilit; güney kilidi d1 = 1.2 yazar (büyük
+  koordinatlarda 1.199999999814 çıkıyordu; kilit değeri nanometreye yuvarlar), duvar 0,5 m dışa → kolon izler; kilit
+  yeniden bağı kaldırır. `.kcad` 244 test, bağımsız okuyucu 1800 dosya.

@@ -535,7 +535,13 @@ impl Select {
             .iter()
             .chain(&self.wall_temporary.squares)
             .chain(&self.column_temporary.squares)
-            .filter(|(_, s)| matches!(s, crate::temporary_refs::Switch::Bond { .. }))
+            .filter(|(_, s)| {
+                matches!(
+                    s,
+                    crate::temporary_refs::Switch::Bond { .. }
+                        | crate::temporary_refs::Switch::ColumnBond { .. }
+                )
+            })
             .map(|(at, _)| *at)
             .collect()
     }
@@ -566,6 +572,9 @@ impl Select {
         match switch {
             crate::temporary_refs::Switch::Bond { .. } => {
                 crate::wall_distance::toggle_bond(switch, cx)
+            }
+            crate::temporary_refs::Switch::ColumnBond { .. } => {
+                crate::column_distance::toggle_bond(switch, cx)
             }
             crate::temporary_refs::Switch::Permanent { .. } => {
                 crate::wall_distance::make_permanent(switch, cx)

@@ -1479,6 +1479,12 @@ pub enum ArchOperation {
         #[serde(default, skip_serializing_if = "crate::DistanceTo::is_face")]
         #[cfg_attr(feature = "ts", ts(as = "Option<crate::DistanceTo>", optional))]
         to: crate::DistanceTo,
+        /// Bu ölçüyü koru (docs/adr/8049 §3): in the same step a lasting distance bond holds it, the face across `a`
+        /// (a wall's face or another column's side), this column's side `b`, a new parameter `distance`. Faces only:
+        /// a column goes with grids by standing where they cross (Akslara bağla).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        keep: bool,
     },
 }
 

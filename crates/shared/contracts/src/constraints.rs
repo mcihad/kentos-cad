@@ -68,6 +68,13 @@ pub enum CadElement {
     /// A straight grid's line (docs/adr/8049 §2): it moves square to itself as a wall's edge does, the walls and
     /// openings bonded to it following. Only the architectural rules take it (distance, parallel, symmetric, fix).
     Grid,
+    /// A side of a column's box (docs/adr/8049 §3): `side` 0–3 from its first corner counter-clockwise, as
+    /// `cad.columns.distances` numbers them; a line as a wall's is, the column moving square to it (a column tied
+    /// to grids with them). Only the architectural rules take it (distance, parallel, symmetric, fix).
+    ColumnSide {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        side: u32,
+    },
     /// A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next
     /// (part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours
     /// lengthening or shortening to meet it (Paralel kaydır's rule, docs/adr/0191). Only the map bond takes it: the
@@ -135,13 +142,21 @@ impl CadElement {
     pub fn is_architectural(&self) -> bool {
         matches!(
             self,
-            CadElement::Wall { .. } | CadElement::Jamb { .. } | CadElement::Grid
+            CadElement::Wall { .. }
+                | CadElement::Jamb { .. }
+                | CadElement::Grid
+                | CadElement::ColumnSide { .. }
         )
     }
 
     /// Whether it is a grid's line (docs/adr/8049 §2).
     pub fn is_grid(&self) -> bool {
         matches!(self, CadElement::Grid)
+    }
+
+    /// Whether it is a column's side (docs/adr/8049 §3).
+    pub fn is_column_side(&self) -> bool {
+        matches!(self, CadElement::ColumnSide { .. })
     }
 
     /// Whether it is a map bond's boundary edge (docs/adr/2580).
@@ -557,6 +572,7 @@ enum Shape {
     Jamb,
     Boundary,
     Grid,
+    ColumnSide,
 }
 
 fn shape(e: &ElementRef) -> Shape {
@@ -568,6 +584,7 @@ fn shape(e: &ElementRef) -> Shape {
         CadElement::Jamb { .. } => Shape::Jamb,
         CadElement::Boundary { .. } => Shape::Boundary,
         CadElement::Grid => Shape::Grid,
+        CadElement::ColumnSide { .. } => Shape::ColumnSide,
     }
 }
 
@@ -595,6 +612,9 @@ fn element_problem(e: &ElementRef) -> Option<String> {
             Some("kenarın sırası sınırı aşıyor".into())
         }
         CadElement::Wall { edge, .. } if index(edge) => Some("duvar kenarının sırası sınırı aşıyor".into()),
+        CadElement::ColumnSide { side } if side > 3 => {
+            Some("kolonun yanı 0, 1, 2 ya da 3'tür".into())
+        }
         _ => None,
     }
 }
@@ -608,6 +628,11 @@ pub fn rule_is_architectural(rule: &ConstraintRule) -> bool {
 /// Whether a rule names a grid's line (docs/adr/8049 §2): what only schema 243 holds.
 pub fn rule_names_grid(rule: &ConstraintRule) -> bool {
     rule.elements().iter().any(|e| e.element.is_grid())
+}
+
+/// Whether a rule names a column's side (docs/adr/8049 §3): what only schema 244 holds.
+pub fn rule_names_column_side(rule: &ConstraintRule) -> bool {
+    rule.elements().iter().any(|e| e.element.is_column_side())
 }
 
 /// Whether a rule is a map bond: it names a boundary edge (docs/adr/2580).
@@ -625,11 +650,13 @@ pub fn rule_is_bond(rule: &ConstraintRule) -> bool {
 /// segment or a boundary edge (`a`, what is held) to a boundary edge (`b`, what follows).
 fn map_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
     use Shape::{Boundary, Segment};
-    if kinds
-        .iter()
-        .any(|k| matches!(k, Shape::WallLine | Shape::Jamb | Shape::Grid))
-    {
-        return Some("sınır kenarı duvar çizgisi, aks ve pervazla bağlanmaz".into());
+    if kinds.iter().any(|k| {
+        matches!(
+            k,
+            Shape::WallLine | Shape::Jamb | Shape::Grid | Shape::ColumnSide
+        )
+    }) {
+        return Some("sınır kenarı duvar çizgisi, aks, kolon yanı ve pervazla bağlanmaz".into());
     }
     let fits = match rule {
         ConstraintRule::Distance { axis, .. } => {
@@ -645,16 +672,17 @@ fn map_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
     })
 }
 
-/// Why an architectural rule's parts do not fit it (docs/adr/0770 §4, 8049 §2): only distance, parallel, symmetric and
-/// fix, and architectural parts only; a grid's line is a line as a wall's is.
+/// Why an architectural rule's parts do not fit it (docs/adr/0770 §4, 8049 §2, §3): only distance, parallel, symmetric
+/// and fix, and architectural parts only; a grid's line and a column's side are lines as a wall's is.
 fn architectural_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
-    use Shape::{Grid, Jamb, WallLine};
-    if kinds.iter().any(|k| !matches!(k, WallLine | Jamb | Grid)) {
-        return Some(
-            "duvar çizgisi, aks ve pervaz yalnız duvar çizgisi, aks ve pervazla bağlanır".into(),
-        );
+    use Shape::{ColumnSide, Grid, Jamb, WallLine};
+    if kinds
+        .iter()
+        .any(|k| !matches!(k, WallLine | Jamb | Grid | ColumnSide))
+    {
+        return Some("duvar çizgisi, aks, kolon yanı ve pervaz yalnız birbiriyle bağlanır".into());
     }
-    let line = |k: Shape| matches!(k, WallLine | Grid);
+    let line = |k: Shape| matches!(k, WallLine | Grid | ColumnSide);
     let fits = match rule {
         ConstraintRule::Distance { axis, left, .. } => {
             *axis == DistanceAxis::Aligned
@@ -672,7 +700,7 @@ fn architectural_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<Strin
     };
     (!fits).then(|| {
         format!(
-            "{} kısıtı duvar çizgisi, aks ve pervaz almaz; mimari bağlar uzaklık, paralel, simetrik (eşit aralık) ve sabittir",
+            "{} kısıtı duvar çizgisi, aks, kolon yanı ve pervaz almaz; mimari bağlar uzaklık, paralel, simetrik (eşit aralık) ve sabittir",
             rule_label(rule)
         )
     })
@@ -1129,7 +1157,7 @@ mod tests {
         })
         .unwrap();
         assert!(
-            words.contains("duvar çizgisi, aks ve pervaz almaz"),
+            words.contains("duvar çizgisi, aks, kolon yanı ve pervaz almaz"),
             "{words}"
         );
         let words = problem(ConstraintRule::Parallel {
@@ -1137,7 +1165,7 @@ mod tests {
             b: segment(2),
         })
         .unwrap();
-        assert!(words.contains("aks ve pervazla bağlanır"), "{words}");
+        assert!(words.contains("yalnız birbiriyle bağlanır"), "{words}");
         let boundary = ElementRef {
             uid: uid(6),
             element: CadElement::Boundary {
@@ -1148,6 +1176,28 @@ mod tests {
         };
         let words = problem(distance(grid(1), boundary)).unwrap();
         assert!(words.contains("aks"), "{words}");
+        // A column's side (docs/adr/8049 §3): a line too; its side 0–3.
+        let side = |n: u8, side: u32| ElementRef {
+            uid: uid(n),
+            element: CadElement::ColumnSide { side },
+        };
+        assert_eq!(problem(distance(wall(2), side(7, 0))), None);
+        assert_eq!(problem(distance(side(8, 1), side(7, 3))), None);
+        assert_eq!(
+            problem(ConstraintRule::Parallel {
+                a: side(7, 1),
+                b: grid(1)
+            }),
+            None
+        );
+        assert!(rule_names_column_side(&distance(wall(2), side(7, 0))));
+        let words = problem(distance(wall(2), side(7, 4))).unwrap();
+        assert!(
+            words.contains("kolonun yanı 0, 1, 2 ya da 3'tür"),
+            "{words}"
+        );
+        let words = problem(distance(side(7, 0), boundary)).unwrap();
+        assert!(words.contains("kolon yanı"), "{words}");
     }
 
     #[test]

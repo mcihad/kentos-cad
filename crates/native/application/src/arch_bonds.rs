@@ -9,7 +9,9 @@
 //! the boundary of another bond (a chain: then it is that boundary's shift).
 //!
 //! A straight grid's line (docs/adr/8049 §2) is a line as a wall's is: moved square to itself, the grid's points
-//! shifted along its left normal; the columns on it follow in the step (docs/adr/0343 §3).
+//! shifted along its left normal; the columns on it follow in the step (docs/adr/0343 §3). A column's side (§3) is too:
+//! a free column moves square to it (one shift for its two opposite sides); a column tied to two grids moves with the
+//! grid parallel to that side, so the side is that grid's shift, and the column is settled on its grids again here.
 //!
 //! The shared cases are `fixtures/commands/v1/cad.constraints.edit.arch.json` (`scripts/fixtures/arch_bond_cases.py`)
 //! and, for map bonds, `cad.shapes.edit.bond.json` (`scripts/fixtures/map_bond_cases.py`).
@@ -178,6 +180,52 @@ impl<'a> View<'a> {
         }
     }
 
+    /// A column's side (docs/adr/8049 §3): a point on it and the direction whose left normal its shift moves it along,
+    /// and its shift: the column's own across its sides `side % 2` (the first side's direction for 0 and 2, the second's
+    /// for 1 and 3), or for a column tied to grids the shift of its grid parallel to the side (its direction then the
+    /// grid's way round), or its own (held) when neither grid is.
+    fn column_side(&self, uid: EntityId, side: u32) -> Option<(P, P, Var)> {
+        let slot = slot_of(self.doc, uid)?;
+        let e = self.entity(slot)?;
+        let Entity::Column(c) = &e else { return None };
+        let Shape::Column { at, column } = shape(&e) else {
+            return None;
+        };
+        let sides = kentos_geometry_core::ops::column_shift::sides(
+            &kentos_geometry_core::ops::column_shift::ColumnIn {
+                at,
+                spec: &column,
+                level: None,
+            },
+        );
+        let k = side as usize;
+        let (a, b) = *sides.get(k)?;
+        let (a0, b0) = sides[k % 2];
+        if (b0.x - a0.x).hypot(b0.y - a0.y) <= 0.0 || (b.x - a.x).hypot(b.y - a.y) <= 0.0 {
+            return None;
+        }
+        let dir = unit(a0, b0);
+        if let Some([g0, g1]) = c.column.grids.as_deref() {
+            for g in [g0, g1] {
+                let Some(gs) = Uuid::parse_str(g).ok().and_then(|u| self.doc.slot_of(u)) else {
+                    continue;
+                };
+                let Some((_, gd)) = self.entity(gs).and_then(|e| match e {
+                    Entity::Grid(g) => grid_line(&g.grid),
+                    _ => None,
+                }) else {
+                    continue;
+                };
+                if (dir.x * gd.y - dir.y * gd.x).abs() <= core::PARALLEL {
+                    let same = dir.x * gd.x + dir.y * gd.y > 0.0;
+                    let d = if same { dir } else { P::new(-dir.x, -dir.y) };
+                    return Some((a, d, Var::Grid(gs)));
+                }
+            }
+        }
+        Some((a, dir, Var::Column(slot, side % 2)))
+    }
+
     /// An opening's jamb: the middle of its jamb line, the direction of its wall's edge there, its wall and that
     /// edge. None when its wall is gone, its interval falls off the wall or the edge is an arc.
     fn jamb(&self, uid: EntityId, end: JambEnd) -> Option<(P, P, Slot, usize)> {
@@ -208,6 +256,8 @@ enum Var {
     Segment(Slot, u32, u32, u32),
     /// A straight grid's line (docs/adr/8049 §2).
     Grid(Slot),
+    /// A column's shift across its sides 0 and 2 (`0`) or 1 and 3 (`1`) (docs/adr/8049 §3).
+    Column(Slot, u32),
 }
 
 impl Var {
@@ -217,7 +267,8 @@ impl Var {
             | Var::Opening(s)
             | Var::Boundary(s, ..)
             | Var::Segment(s, ..)
-            | Var::Grid(s) => s,
+            | Var::Grid(s)
+            | Var::Column(s, _) => s,
         }
     }
 
@@ -273,6 +324,14 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
             let (at, dir) = view.grid(e.uid)?;
             Some(Item::Line(Line {
                 var: var(vars, Var::Grid(slot)),
+                at,
+                dir,
+            }))
+        }
+        CadElement::ColumnSide { side } => {
+            let (at, dir, key) = view.column_side(e.uid, side)?;
+            Some(Item::Line(Line {
+                var: var(vars, key),
                 at,
                 dir,
             }))
@@ -338,6 +397,11 @@ fn read(view: &View<'_>, set: &ConstraintSet, values: &BTreeMap<String, f64>) ->
                 }
                 CadElement::Grid => {
                     var(&mut out.vars, Var::Grid(slot));
+                }
+                CadElement::ColumnSide { side } => {
+                    if let Some((.., key)) = view.column_side(e.uid, side) {
+                        var(&mut out.vars, key);
+                    }
                 }
                 _ => {}
             }
@@ -671,8 +735,13 @@ fn held(
                     out[k] = true
                 }
                 (Some(CadElement::Jamb { .. }), Var::Opening(_)) => out[k] = true,
-                // A grid held by its line or by one of its points (a grip; docs/adr/8049 §2).
+                // A grid held by its line or by one of its points (a grip; docs/adr/8049 §2); a column by a side or
+                // a point (§3).
                 (Some(CadElement::Grid | CadElement::Point { .. }), Var::Grid(_)) => out[k] = true,
+                (
+                    Some(CadElement::ColumnSide { .. } | CadElement::Point { .. }),
+                    Var::Column(..),
+                ) => out[k] = true,
                 // A boundary edge held by name, or by one of its two vertices (a grip).
                 (
                     Some(
@@ -696,6 +765,12 @@ fn held(
                 }
                 _ => {}
             }
+        }
+        // A column tied to grids whose side no grid is parallel to moves only with its grids (docs/adr/8049 §3).
+        if let Var::Column(s, _) = v
+            && matches!(doc.get(*s), Some(Entity::Column(c)) if c.column.grids.is_some())
+        {
+            out[k] = true;
         }
         let Some(was) = before.and_then(|b| b.get(&id)) else {
             continue;
@@ -730,6 +805,31 @@ fn held(
                 match (then, view.jamb(id, JambEnd::Start)) {
                     (Some(p0), Some((p1, h, ..))) => {
                         (h.x * (p1.x - p0.x) + h.y * (p1.y - p0.y)).abs() > core::TIE
+                    }
+                    _ => true,
+                }
+            }
+            // A column the write turned or moved across its sides `axis` (docs/adr/8049 §3), or whose sides it moved (a
+            // new width).
+            (Var::Column(_, axis), Shape::Column { at, column }) => {
+                let then = kentos_geometry_core::ops::column_shift::sides(
+                    &kentos_geometry_core::ops::column_shift::ColumnIn {
+                        at: *at,
+                        spec: column,
+                        level: None,
+                    },
+                );
+                let k0 = *axis as usize;
+                let (a0, b0) = then[k0];
+                let u0 = unit(a0, b0);
+                let n = P::new(-u0.y, u0.x);
+                let across =
+                    |p0: P, p1: P| (n.x * (p1.x - p0.x) + n.y * (p1.y - p0.y)).abs() > core::TIE;
+                match (view.column_side(id, *axis), view.column_side(id, *axis + 2)) {
+                    (Some((a1, u1, _)), Some((c1, ..))) => {
+                        (u0.x * u1.y - u0.y * u1.x).abs() > core::PARALLEL
+                            || across(a0, a1)
+                            || across(then[k0 + 2].0, c1)
                     }
                     _ => true,
                 }
@@ -813,6 +913,7 @@ fn solve_once(
         return out;
     }
     let mut view = View::new(doc);
+    settle_columns(&mut view, set);
     let read = read(&view, set, values);
     out.broken = read.broken.clone();
     if read.bonds.is_empty() {
@@ -902,6 +1003,30 @@ fn solve_once(
             }
         }
     }
+    // The free columns moved square to their sides (docs/adr/8049 §3).
+    for (k, v) in read.vars.iter().enumerate() {
+        let Var::Column(slot, axis) = *v else {
+            continue;
+        };
+        if shifts[k] == 0.0 {
+            continue;
+        }
+        match shift_column(&view, slot, axis, shifts[k]) {
+            Ok(next) => {
+                view.shapes.insert(slot, next);
+            }
+            Err(words) => {
+                let bonds: Vec<usize> = (0..read.bonds.len())
+                    .filter(|&b| bond_vars(&read.bonds[b]).contains(&k))
+                    .collect();
+                out.refused_at = Some((k, shifts.clone()));
+                conflict(&mut out, bonds, words);
+                return out;
+            }
+        }
+    }
+    // The columns tied to grids the bonds name, settled on their grids as moved (docs/adr/0343 §3).
+    settle_columns(&mut view, set);
     for (k, v) in read.vars.iter().enumerate() {
         let Var::Opening(slot) = *v else { continue };
         if shifts[k] == 0.0 {
@@ -1058,6 +1183,77 @@ fn grid_shift(view: &View<'_>, slot: Slot, by: f64) -> Result<Entity, String> {
     Ok(e)
 }
 
+/// A free column moved `by` square to its sides `axis` on the view (docs/adr/8049 §3): along the left normal of its side
+/// 0 (`axis` 0) or 1; the column as it would be written; why not, in Turkish.
+fn shift_column(view: &View<'_>, slot: Slot, axis: u32, by: f64) -> Result<Entity, String> {
+    let mut e = view.entity(slot).ok_or("Bağlı kolon çizimde yok")?;
+    let layer = e.base().layer_id.clone();
+    if view.doc.layers().is_locked(&layer) {
+        let name = view
+            .doc
+            .layers()
+            .get(&layer)
+            .map_or(layer.as_str(), |n| n.name.as_str());
+        return Err(format!(
+            "Bağ “{name}” katmanındaki bir kolonu kaydırmak istiyor ve o katman kilitli. Kilidi açın ya da bağı kaldırın."
+        ));
+    }
+    let uid = view
+        .doc
+        .uid(slot)
+        .map(|u| EntityId(u.into_bytes()))
+        .ok_or("Bağlı kolon çizimde yok")?;
+    let (_, dir, _) = view
+        .column_side(uid, axis)
+        .ok_or("Bağlı kolonun yanı yok")?;
+    let Entity::Column(c) = &mut e else {
+        return Err("Bağlı kolon çizimde yok".into());
+    };
+    c.column.at.x -= dir.y * by;
+    c.column.at.y += dir.x * by;
+    Ok(e)
+}
+
+/// The columns tied to grids that `set`'s bonds name, settled on their grids as the view has them (docs/adr/0343 §3):
+/// where the grids cross nearest where each stood. Before the bonds are read too: a write that moved a grid has not
+/// settled its columns yet (the step does when it closes), and the bonds must see them where they will be.
+fn settle_columns(view: &mut View<'_>, set: &ConstraintSet) {
+    let mut named: Vec<Slot> = Vec::new();
+    for c in &set.constraints {
+        for e in c.rule.elements() {
+            if e.element.is_column_side()
+                && let Some(s) = slot_of(view.doc, e.uid)
+                && !named.contains(&s)
+            {
+                named.push(s);
+            }
+        }
+    }
+    for slot in named {
+        let Some(Entity::Column(mut c)) = view.entity(slot) else {
+            continue;
+        };
+        let (g0, g1) = match c.column.grids.as_deref() {
+            Some([a, b]) => (a.clone(), b.clone()),
+            _ => continue,
+        };
+        let grid = |id: &str| -> Option<kentos_commands::GridFields> {
+            let s = view.doc.slot_of(Uuid::parse_str(id).ok()?)?;
+            match view.entity(s)? {
+                Entity::Grid(g) => Some(g.grid),
+                _ => None,
+            }
+        };
+        if let (Some(a), Some(b)) = (grid(&g0), grid(&g1))
+            && let Some(p) = kentos_domain::arch_follow::grid_cross(&a, &b, c.column.at)
+            && (p.x != c.column.at.x || p.y != c.column.at.y)
+        {
+            c.column.at = p;
+            view.shapes.insert(slot, Entity::Column(c));
+        }
+    }
+}
+
 /// The openings of the walls moved, read back from their jambs onto their walls' new paths (docs/adr/0341 §3): their
 /// `at` (their hand and side when the path turned round them), their place in the world kept.
 fn carry(view: &mut View<'_>, walls: &[Slot]) {
@@ -1091,6 +1287,31 @@ fn carry(view: &mut View<'_>, walls: &[Slot]) {
     }
 }
 
+/// The objects a set's bonds move through without naming them (docs/adr/8049 §3): the grids of the columns tied to them
+/// whose sides the bonds name. A write that moves such a grid moves those sides, so its bonds follow it.
+pub(crate) fn implied_parts(doc: &Document, set: &ConstraintSet) -> Vec<EntityId> {
+    let mut out = Vec::new();
+    for c in &set.constraints {
+        for e in c.rule.elements() {
+            if !e.element.is_column_side() {
+                continue;
+            }
+            let Some(Entity::Column(col)) = slot_of(doc, e.uid).and_then(|s| doc.get(s)) else {
+                continue;
+            };
+            for g in col.column.grids.iter().flatten() {
+                if let Ok(u) = Uuid::parse_str(g) {
+                    let id = EntityId(u.into_bytes());
+                    if !out.contains(&id) {
+                        out.push(id);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
 /// What an architectural constraint measures now (metres): a distance its clear distance (along the wall for two
 /// jambs); none for the others or when its parts do not fit.
 pub(crate) fn measured(doc: &Document, rule: &ConstraintRule) -> Option<f64> {
@@ -1121,7 +1342,8 @@ pub(crate) fn unmet(
     set: &ConstraintSet,
     values: &BTreeMap<String, f64>,
 ) -> Vec<usize> {
-    let view = View::new(doc);
+    let mut view = View::new(doc);
+    settle_columns(&mut view, set);
     let read = read(&view, set, values);
     let mut out = read.broken.clone();
     for (b, bond) in read.bonds.iter().enumerate() {
@@ -1176,6 +1398,10 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
                 }
                 Some(Entity::Grid(_)) => "aks".to_owned(),
                 _ => return Some("aks çizgisi yalnız bir aksta olur".into()),
+            },
+            CadElement::ColumnSide { side } => match slot_of(doc, e.uid).and_then(|s| doc.get(s)) {
+                Some(Entity::Column(_)) => format!("kolonun {}. yanı", side + 1),
+                _ => return Some("kolon yanı yalnız bir kolonda olur".into()),
             },
             _ => return None,
         };
@@ -1232,6 +1458,9 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
             _ if rule.elements().iter().any(|e| e.element.is_grid()) => {
                 "bağlanan aks ve duvar çizgileri paralel olmalı".into()
             }
+            _ if rule.elements().iter().any(|e| e.element.is_column_side()) => {
+                "bağlanan kolon yanı ve duvar çizgileri paralel olmalı".into()
+            }
             _ => "bağlanan duvar çizgileri paralel olmalı".into(),
         }),
     }
@@ -1278,6 +1507,21 @@ pub fn part_place(
             );
             Some((P::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0), Some((p, q))))
         }
+        CadElement::ColumnSide { side } => {
+            let e = view.entity(slot_of(doc, uid)?)?;
+            let Shape::Column { at, column } = shape(&e) else {
+                return None;
+            };
+            let sides = kentos_geometry_core::ops::column_shift::sides(
+                &kentos_geometry_core::ops::column_shift::ColumnIn {
+                    at,
+                    spec: &column,
+                    level: None,
+                },
+            );
+            let (p, q) = *sides.get(side as usize)?;
+            Some((P::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0), Some((p, q))))
+        }
         _ => None,
     }
 }
@@ -1312,6 +1556,29 @@ pub fn grid_bonds(doc: &Document, uid: Uuid, edge: u32, grid: Uuid, left: bool) 
                 id: Uuid::from_bytes(c.id.0),
                 parameter: parameter.clone(),
                 left,
+                reference: c.reference,
+            }),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The distance bonds that hold side `side` of column `uid` (docs/adr/8049 §3), in the set's order; `left` unused (false).
+pub fn column_bonds(doc: &Document, uid: Uuid, side: u32) -> Vec<SideBond> {
+    let me = EntityId(uid.into_bytes());
+    let mine = |r: &ElementRef| {
+        r.uid == me && matches!(r.element, CadElement::ColumnSide { side: s } if s == side)
+    };
+    doc.constraints()
+        .constraints
+        .iter()
+        .filter_map(|c| match &c.rule {
+            ConstraintRule::Distance {
+                a, b, parameter, ..
+            } if mine(a) || mine(b) => Some(SideBond {
+                id: Uuid::from_bytes(c.id.0),
+                parameter: parameter.clone(),
+                left: false,
                 reference: c.reference,
             }),
             _ => None,

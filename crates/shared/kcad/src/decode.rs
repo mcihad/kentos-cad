@@ -339,6 +339,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
                     has.arc_edge_bonds,
                     has.boundary_bonds,
                     has.grid_bonds,
+                    has.column_side_bonds,
                 )?)
             }
             "dimensionSets" if has.dimension_sets => {
@@ -525,6 +526,7 @@ fn constraints(
     arcs: bool,
     boundaries: bool,
     grids: bool,
+    column_sides: bool,
 ) -> Result<(usize, kentos_contracts::ConstraintSet), KcadError> {
     let at = r.position();
     let value = r.opaque()?;
@@ -558,6 +560,19 @@ fn constraints(
         })
     }) {
         return Err(r.fail_at(Code::BadValue, at, "yaylı kenar kısıtları şema 157 ister"));
+    }
+    // Schema 244 (docs/adr/8049 §3): a column's side only from it on.
+    if !column_sides
+        && set
+            .constraints
+            .iter()
+            .any(|c| kentos_contracts::rule_names_column_side(&c.rule))
+    {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "kolon yanı kısıtları şema 244'ten önce yazılmaz",
+        ));
     }
     // Schema 243 (docs/adr/8049 §2): a grid's line only from it on.
     if !grids

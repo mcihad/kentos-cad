@@ -492,6 +492,10 @@
     çizgisi gibi uzaklık, paralel, simetrik ve sabit alır. Aks taşınınca bağlı duvar, duvar kayınca aks izler; aks
     kesişimindeki kolonlar aynı adımda gider. Mesafe `to: grid` + `keep` bağı yazar; geçici ölçünün aks kilidi de.
     Aks silinir ya da yaya döner: bağ kalkar.
+  - **Kolon yanı bağı (M49 3. bölüm, ADR 8049 §3):** kısıt parçası `columnSide` (kutunun yanı 0–3; `.kcad` şema 244).
+    Serbest kolon bağlı yanına dik kayar; akslara bağlı kolonun yanı paralel aksının kaymasıdır (bağ aksı kaydırır,
+    kolon kesişime oturur). `cad.arch.edit` Mesafe `keep` bağı yazar (aksa olanda reddedilir); kolonun geçici ölçüsünde
+    kilit. Aks yazımla kayınca bağlar kolonu yeni kesişimde ölçer (`implied_parts`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

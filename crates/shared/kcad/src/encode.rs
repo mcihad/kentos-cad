@@ -2291,6 +2291,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 244 (docs/adr/8049 §3): a constraint naming a column's side.
+    if doc
+        .constraints
+        .constraints
+        .iter()
+        .any(|c| kentos_contracts::rule_names_column_side(&c.rule))
+    {
+        return crate::SCHEMA_WITH_COLUMN_SIDE_BONDS;
+    }
     // Schema 243 (docs/adr/8049 §2): a constraint naming a grid's line.
     if doc
         .constraints

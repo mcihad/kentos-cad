@@ -67,7 +67,10 @@ pub fn core_element(e: &CadElement) -> Element {
         },
         CadElement::Circle => Element::Circle,
         // Architectural parts are their adapter's (docs/adr/0770 §4, 8049 §2); to the core solver a part no object has.
-        CadElement::Wall { .. } | CadElement::Jamb { .. } | CadElement::Grid => Element::Segment {
+        CadElement::Wall { .. }
+        | CadElement::Jamb { .. }
+        | CadElement::Grid
+        | CadElement::ColumnSide { .. } => Element::Segment {
             part: u32::MAX,
             ring: u32::MAX,
             index: u32::MAX,
@@ -279,9 +282,13 @@ impl Document {
                     return reshaped || edge as usize >= edges || arc;
                 }
                 CadElement::Jamb { .. } => return !matches!(entity.as_ref(), Entity::Opening(_)),
-                // A grid's line (docs/adr/8049 §2) goes when its object is no longer a straight grid.
+                // A grid's line (docs/adr/8049 §2) goes when its object is no longer a straight grid; a column's side
+                // (§3) when it is no longer a column's.
                 CadElement::Grid => {
                     return !matches!(entity.as_ref(), Entity::Grid(g) if straight_grid(&g.grid));
+                }
+                CadElement::ColumnSide { .. } => {
+                    return !matches!(entity.as_ref(), Entity::Column(_));
                 }
                 _ => {}
             }
