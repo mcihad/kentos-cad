@@ -2856,5 +2856,86 @@ fn an_mtext_s_height_spacing_and_indents_are_its_capitals() {
     // The same lines in KentOS's ems: 5/3 × em × spacing = 5/3 × 40 × 44.
     let pitch = |t: &kentos_contracts::TextEntity| 5.0 / 3.0 * t.height * t.paragraph.line_spacing.unwrap_or(1.0);
     assert!(near(pitch(texts[0]), 5.0 / 3.0 * 2.5) && near(pitch(texts[1]), 5.0 / 3.0 * 2.5 * 2.0));
-    assert_eq!((texts[3].height, texts[3].paragraph.line_spacing), (2.5, Some(2.0)), "SHX: as the file says");
+    assert_eq!(
+        (texts[3].height, texts[3].paragraph.line_spacing),
+        (2.5, Some(2.0)),
+        "SHX: as the file says"
+    );
+}
+
+/// An aligned text's baseline stands where another program draws it (docs/adr/8046 §3): a middle-centred Arial text
+/// of 40 = 2.5 at 11 = (0, 0) has its baseline half the file's height (its capitals) under 11 there, at −1.25; KentOS
+/// puts its point half its em over its baseline, so the point is raised to −1.25 + ½ × 2.5 / (1466/2048). A top
+/// aligned one, the whole height; a baseline one does not move; in an SHX style none moves.
+#[test]
+fn an_aligned_text_s_baseline_is_where_another_program_draws_it() {
+    let arial = 1466.0 / 2048.0;
+    let tables = groups(&[
+        (0, "TABLE"),
+        (2, "STYLE"),
+        (0, "STYLE"),
+        (2, "ARIAL"),
+        (70, "0"),
+        (40, "0"),
+        (41, "1"),
+        (50, "0"),
+        (71, "0"),
+        (42, "2.5"),
+        (3, "arial.ttf"),
+        (4, ""),
+        (0, "STYLE"),
+        (2, "SHX"),
+        (70, "0"),
+        (40, "0"),
+        (41, "1"),
+        (50, "0"),
+        (71, "0"),
+        (42, "2.5"),
+        (3, "romans.shx"),
+        (4, ""),
+        (0, "ENDTAB"),
+    ]);
+    let text = |style: &'static str, h: &'static str, v: &'static str| {
+        vec![
+            (0, "TEXT"),
+            (8, "0"),
+            (10, "0"),
+            (20, "0"),
+            (40, "2.5"),
+            (1, "Ada"),
+            (7, style),
+            (72, h),
+            (11, "0"),
+            (21, "0"),
+            (73, v),
+        ]
+    };
+    let mut entities = Vec::new();
+    entities.extend(text("ARIAL", "1", "2")); // middle centre
+    entities.extend(text("ARIAL", "1", "3")); // top centre
+    entities.extend(text("ARIAL", "1", "0")); // baseline centre
+    entities.extend(text("SHX", "1", "2"));
+    let r = dxf::read(
+        &dxf_of(&[("TABLES", tables), ("ENTITIES", groups(&entities))]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
+    let ys: Vec<(f64, f64)> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some((t.p.y, t.height)),
+            _ => None,
+        })
+        .collect();
+    let em = 2.5 / arial;
+    let near = |a: f64, b: f64| (a - b).abs() <= 1e-12;
+    // Each one's KentOS baseline: its point less its alignment's share of its em.
+    assert!(
+        near(ys[0].0 - 0.5 * ys[0].1, -0.5 * 2.5) && near(ys[0].1, em),
+        "{ys:?}"
+    );
+    assert!(near(ys[1].0 - ys[1].1, -2.5), "{ys:?}");
+    assert_eq!(ys[2].0, 0.0);
+    assert_eq!(ys[3], (0.0, 2.5), "SHX: as the file says");
 }

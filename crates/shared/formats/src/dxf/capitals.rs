@@ -133,6 +133,57 @@ pub fn from_file(value: f64, share: Option<f64>) -> f64 {
     share.map_or(value, |s| value * s)
 }
 
+/// How much lower the file's alignment point stands than KentOS's, along the text's up (docs/adr/8046 §3). Other
+/// programs find the baseline a share `up` of the file's height (40: the capitals') under the alignment point
+/// (0 baseline, −0.2 bottom, ½ middle, 1 top; an MTEXT's attachment the same way), KentOS a share of its em
+/// (`text::TextAlign::up`, `paragraph::rise`; the lines' pitch is the same in both): with the point `up × (1 −
+/// share) × em` lower the baseline stands where KentOS draws it. None without a share.
+pub fn drop(up: f64, height: f64, share: Option<f64>) -> f64 {
+    share.map_or(0.0, |s| up * (1.0 - s) * height)
+}
+
+/// The share of an MTEXT's attachment point (71) over its first baseline, as a text alignment's: 1 to 3 the top, 4
+/// to 6 the middle, 7 to 9 the bottom (`text::TextAlign::up`).
+pub fn attach_up(attach: i64) -> f64 {
+    match attach {
+        4..=6 => 0.5,
+        7..=9 => -0.2,
+        _ => 1.0,
+    }
+}
+
+/// The file's alignment point for KentOS's `p` of a text turned `(sin, cos)` (its up is `(−sin, cos)`), `drop` lower.
+pub fn lowered(p: (f64, f64), turn: (f64, f64), drop: f64) -> (f64, f64) {
+    (p.0 + turn.0 * drop, p.1 - turn.1 * drop)
+}
+
+/// KentOS's point back from the file's: `drop` higher.
+pub fn raised(at: (f64, f64), turn: (f64, f64), drop: f64) -> (f64, f64) {
+    (at.0 - turn.0 * drop, at.1 + turn.1 * drop)
+}
+
+/// KentOS's own point `kept` while the file's `at` still is where KentOS put it (within a nanometre's share of its
+/// size: an edit elsewhere wins), else `at` raised.
+pub fn point_back(
+    at: (f64, f64),
+    turn: (f64, f64),
+    drop: f64,
+    kept: Option<(f64, f64)>,
+) -> (f64, f64) {
+    match kept {
+        Some(k) => {
+            let w = lowered(k, turn, drop);
+            let near = |a: f64, b: f64| (a - b).abs() <= 1e-9 * a.abs().max(b.abs()).max(1.0);
+            if near(w.0, at.0) && near(w.1, at.1) {
+                k
+            } else {
+                raised(at, turn, drop)
+            }
+        }
+        None => raised(at, turn, drop),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -175,6 +226,27 @@ mod tests {
             assert_eq!(share(none, None, false, false), None, "{none}");
         }
         assert_eq!(share("", None, false, false), None);
+    }
+
+    #[test]
+    fn an_aligned_text_s_point_drops_so_its_baseline_stays() {
+        // A middle aligned Arial text of em 2.5 at (10, 20), unturned: the file's point 0.5 × (1 − 0.7158) × 2.5
+        // lower; another program's baseline half the file's height under it is KentOS's, half the em under (10, 20).
+        let s = Some(ARIAL);
+        let d = drop(0.5, 2.5, s);
+        let at = lowered((10.0, 20.0), (0.0, 1.0), d);
+        assert!((at.1 - (20.0 - 0.5 * (1.0 - ARIAL) * 2.5)).abs() < 1e-12);
+        assert!(((at.1 - 0.5 * written(2.5, s)) - (20.0 - 0.5 * 2.5)).abs() < 1e-12);
+        // Baseline alignments and SHX fonts do not move.
+        assert_eq!(drop(0.0, 2.5, s), 0.0);
+        assert_eq!(drop(1.0, 2.5, None), 0.0);
+        // Back exactly with KentOS's kept point; an edit elsewhere wins.
+        let p = (452_345.123, 4_412_345.678);
+        let turn = (0.5, 3f64.sqrt() / 2.0);
+        let at = lowered(p, turn, drop(1.0, 0.25, s));
+        assert_eq!(point_back(at, turn, drop(1.0, 0.25, s), Some(p)), p);
+        let moved = (at.0 + 0.01, at.1);
+        assert_ne!(point_back(moved, turn, drop(1.0, 0.25, s), Some(p)), p);
     }
 
     #[test]

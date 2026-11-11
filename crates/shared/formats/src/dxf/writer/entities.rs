@@ -1526,19 +1526,16 @@ impl Writer<'_> {
         let share = self.styles.share(&style);
         self.begin("TEXT", base);
         self.out.str(100, "AcDbText");
-        let vertical = self.out.text(
-            &value,
-            &value,
-            &Justified {
-                p: t.p,
-                height: t.height,
-                rotation: t.rotation,
-                align: t.align,
-                width_factor: t.width_factor,
-                fit,
-                share,
-            },
-        );
+        let justified = Justified {
+            p: t.p,
+            height: t.height,
+            rotation: t.rotation,
+            align: t.align,
+            width_factor: t.width_factor,
+            fit,
+            share,
+        };
+        let vertical = self.out.text(&value, &value, &justified);
         if style != "Standard" {
             self.out.str(7, &style);
         }
@@ -1556,6 +1553,8 @@ impl Writer<'_> {
         // capitals' does not give it back exactly (§3).
         meta.fit = fit;
         meta.height = super::super::capitals::kept(t.height, share);
+        // Its own point when the file's, lowered so its baseline stays (§3), does not give it back exactly.
+        meta.at = super::kept_point(&justified);
         // Its fields in its KENTOS data (docs/adr/0325 §1); TEXT holds their letters.
         if !t.paragraph.fields.is_empty() {
             meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
@@ -2365,11 +2364,14 @@ impl Writer<'_> {
     ) {
         self.block_head("MTEXT", record);
         let (s, c) = sin_cos_deg(rotation);
-        // Its capitals' height in its style's face (docs/adr/8046 §3).
+        // Its capitals' height in its style's face, its point lowered so its baseline stays (docs/adr/8046 §3).
         let share = self.styles.share(style);
+        let drop =
+            super::super::capitals::drop(super::super::capitals::attach_up(attach), height, share);
+        let (fx, fy) = super::super::capitals::lowered((middle.x, middle.y), (s, c), drop);
         let o = &mut *self.blocks;
         o.str(100, "AcDbMText");
-        o.xyz(10, middle);
+        o.xyz(10, v(fx, fy));
         o.real(40, super::super::capitals::written(height, share));
         o.real(41, 0.0);
         // Where it hangs from its point, left to right.

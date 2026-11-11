@@ -2516,9 +2516,23 @@ impl<'l> Emitter<'l> {
             });
         }
         let align = justify::align_of(t.halign, t.valign);
-        // AutoCAD writes a justified text's start (10) as it draws it; where the text stands is 11.
+        // AutoCAD writes a justified text's start (10) as it draws it; where the text stands is 11. Another program
+        // finds its baseline a share of the file's height (the capitals') under 11, KentOS a share of its em: KentOS's
+        // point is that much higher (docs/adr/8046 §3), its own exactly while the file has it where KentOS put it.
         let anchor = match align {
-            Some(_) => second.unwrap_or(start),
+            Some(a) => {
+                let at = second.unwrap_or(start);
+                let up = crate::blocks::core_align(a).map_or(0.0, |c| c.up());
+                let drop = super::capitals::drop(up, height, share);
+                let kept_at = e.meta.as_ref().and_then(|m| m.at);
+                let (x, y) = super::capitals::point_back(
+                    (at.x, at.y),
+                    crate::math::sin_cos_deg(t.rotation),
+                    drop,
+                    kept_at,
+                );
+                v(x, y)
+            }
             None => start,
         };
         Ok(Frame {
@@ -2733,12 +2747,22 @@ impl<'l> Emitter<'l> {
             _ => v(1.0, 0.0),
         };
         let angle = deg(atan2(dir.y, dir.x));
+        // Its attachment point is a share of the file's height (the capitals') over its first baseline in another
+        // program, of KentOS's em in KentOS: KentOS's point is that much higher (docs/adr/8046 §3), its own exactly
+        // while the file has it where KentOS put it.
+        let drop = super::capitals::drop(super::capitals::attach_up(attach), height, share);
+        let (ax, ay) = super::capitals::point_back(
+            (p[0], p[1]),
+            (dir.y, dir.x),
+            drop,
+            kept.and_then(|m| m.at),
+        );
         // One multi-line text (docs/adr/0182 §5): its attachment point is its
         // box's (the first line's top, the box's middle or bottom; left,
         // centre or right), its width the box's, 44 its line spacing.
         let frame = Frame {
             m: ctx.tf,
-            anchor: v(p[0], p[1]),
+            anchor: v(ax, ay),
             rotation: angle,
             height,
             align: Some(justify::attachment(attach)),

@@ -1238,7 +1238,8 @@ fn fnv64(bytes: &[u8]) -> u64 {
 /// the elevations existed (without the NURBS curves, which came later, docs/adr/0259), with two changes since: a
 /// polyline's 70 carries PLINEGEN (128; docs/adr/0313 §5), two bytes more in each of its six polylines' groups; a
 /// text in KentOS's own face carries its Arial fit in its 41 and its KENTOS data (docs/adr/8046 §2), 134 bytes more; a
-/// TrueType text's 40 is its capitals' height (§3), 11 bytes more; so is a dimension's DIMTXT, 140 bytes more.
+/// TrueType text's 40 is its capitals' height (§3), 11 bytes more; so is a dimension's DIMTXT, 140 bytes more; an
+/// aligned text's point is lowered so its baseline stays, its own point kept, 1 bytes more.
 #[test]
 fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
     let old: Vec<Entity> = objects()
@@ -1246,7 +1247,7 @@ fn a_drawing_without_elevations_is_written_byte_for_byte_as_before() {
         .filter(|e| !matches!(e, Entity::Nurbs(_)))
         .collect();
     let (bytes, report) = dxf::write(&input(old));
-    assert_eq!((bytes.len(), fnv64(&bytes)), (38311, 0xa860_7edc_f4cc_481d));
+    assert_eq!((bytes.len(), fnv64(&bytes)), (38312, 0x5058_7580_d227_52b9));
     // And it says nothing of elevations.
     assert!(
         report

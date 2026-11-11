@@ -1,11 +1,11 @@
 # ADR 8046: DWG/DXF katman profili — dış programda aynı katmanlar ve yazılar
 
-- **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M46. 1. bölüm yapıldı: mahalin yazısı ve
+- **Durum:** bitti (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M46. 1. bölüm yapıldı: mahalin yazısı ve
   boşluğun çaprazı DXF'te ekrandaki gibi (§1). 2. bölüm yapıldı: KentOS'un yazı tipiyle yazılan yazının genişlik
   çarpanı, Arial'da KentOS'taki genişliği verecek biçimde (§2). 3. bölümün ilk adımı yapıldı: TrueType yazının
   yüksekliği DXF'te büyük harf yüksekliği — TEXT, öznitelik, tablo hücresi, eğri yazı ve stilin sabit yüksekliği (§3a);
-  MTEXT (satır aralığı ve girintiler dahil) ve kılavuz (§3b); ölçü yazısı, tablo stili ve MULTILEADER (§3c). Bölümün
-  geri kalanı: dikey hizalı yazının taban çizgisi (aşağıda, bilinen sınır).
+  MTEXT (satır aralığı ve girintiler dahil) ve kılavuz (§3b); ölçü yazısı, tablo stili ve MULTILEADER (§3c); dikey
+  hizalı yazının taban çizgisi (§3d).
 - **Bağlam belgesi:** ADR 8008 (EK-4 katman anahtarı), ADR 0342 (mahal), ADR 0708 (boşluk mahal), ADR 0344 (etiket ve
   27 Ekim eki: etiketli mahalin yazısı etiketidir), ADR 8039 §4 (tadilat durumunun katmanları), ADR 0586 (DWG kodeği).
 
@@ -133,13 +133,31 @@ kalır (ADR 0914); dönüşüm yalnız DXF/DWG sınırında (`formats::dxf::capi
   oranıyla bölünür: yabancı ölçünün yüksekliği ve görünüşünün oranları KentOS'un em'ine göre (stil bu yüzden içe
   alınmaz). Tablo stili (TABLESTYLE) hücre yükseklikleri hücrenin yazı stilinin oranıyla; MULTILEADER'ın notu MTEXT
   yolundan zaten çevriliyor, ok oranı artık notun em'ine göre. KentOS'un kendi ölçüsü ve tablo stili verisinden aynen.
-- **Bilinen sınır:** yazının yeri KentOS'un hiza kuralıyla yazılır (11). Orta ve üst hizalı yazıda başka program taban
-  çizgisini 40'ın payıyla bulduğu için yazı, yüksekliğin (1 − oran) × payı kadar kayar (Arial'da orta %14, üst %28);
-  taban hizalı yazı (tablo hücreleri dahil) aynı yerde. Ölçülüp ayrı adımda ele alınacak.
+- **3d (yapıldı): taban çizgisi.** Başka program taban çizgisini hiza noktasının, KentOS em'inin değil dosyanın 40'ının
+  payı kadar altında bulur (0 taban, −0,2 alt, ½ orta, 1 üst; MTEXT'in iliştirme noktası da öyle: 1–3 üst, 4–6 orta, 7–9
+  alt). Hiza noktası dosyaya `pay × (1 − oran) × em` aşağıda yazılır (`capitals::drop`, `lowered`): TEXT ve ATTRIB/ATTDEF'in
+  11'i, MTEXT'in ve blok MTEXT'in (ölçü değeri) 10'u, kılavuz notunun 10'u. Satırların aralığı iki tarafta aynı olduğu
+  için (3b) çok satırda da yalnız bu fark kalır. Okuyucu noktayı aynı kadar yükseltir; yabancı Arial yazının taban
+  çizgisi de böylece AutoCAD'deki yerinde. KentOS'un kesin noktası verisinde `at` öğesiyle (TEXT ve ATTDEF'te bölme tam
+  vermediğinde; MTEXT'te her zaman, çünkü okuyucunun dönüşü 11'in doğrultusundan gelir); dosyadaki nokta bir nanometreden
+  çok oynamışsa dosya kazanır. Taban hizalı yazı (tablo hücreleri, sola yaslı etiketler) ve SHX değişmez.
+  Bilinen sınır: AutoCAD'in TrueType'ta "alt" hizayı (inen harfler) tam nereden ölçtüğü yayımlanmamış; KentOS'un −0,2'si
+  büyük harf yüksekliğine uygulandı.
 - **Bilinen sınır:** KentOS'ta olmayan TrueType yüz için Barlow'un oranı alınır; projenin yazı tipi başka (ör. Courier
   Prime) olduğunda o projenin yabancı yazısı biraz farklı boyda okunur.
 
 ## Doğrulama
+
+### 3. bölüm, dördüncü adım (taban çizgisi)
+
+- 2+1 dairenin DXF'i ezdxf'le: ortalı etiketlerin (K/P kodları, mahal damgaları) taban çizgisi 3c'de yüksekliğin %14'ü
+  kadar yukarıdaydı; şimdi KentOS'taki yerinde (`.run/gui-evidence/mimari-m46/3-yukseklik/m46-3d-yakin.png`).
+- `an_aligned_text_s_baseline_is_where_another_program_draws_it`: Arial, 40 = 2.5, 11 = (0, 0): ortalının KentOS taban
+  çizgisi −1.25 (AutoCAD'deki), üst hizalının −2.5; taban hizalı ve SHX yazı yerinde. `capitals` birim testi: ½ × (1 −
+  0,7158) × 2.5 aşağı, saklı nokta aynen geri, oynatılmış nokta kazanır.
+- Bağımsız başvuru: TEXT/ATTRIB/ATTDEF'in 11'i indirilmiş noktada (1e-9), 10'un 11'in altında dosyanın 40'ının payı kadar
+  olduğu (1e-8), MTEXT'in 10'u ve `at` öğesi, kılavuz notunun 10'u; 11 dosyada tutarlı. Testler: DXF yazma 59 (taban dosyası
+  38311 → 38312 bayt), biçim DXF/ölçü/CAD G/Ç 62, birim 50, headless 19, uygulama 7, masaüstü `layer_keys`.
 
 ### 3. bölüm, üçüncü adım (ölçü, tablo stili, MULTILEADER) ve dış çizim
 

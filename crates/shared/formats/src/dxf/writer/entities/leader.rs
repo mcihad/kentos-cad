@@ -350,9 +350,13 @@ impl Writer<'_> {
     ) {
         self.head("MTEXT", &l.base, h, &[leader]);
         self.out.str(100, "AcDbMText");
-        self.out.xyz(10, at);
-        // Its capitals' height in Standard's Arial (docs/adr/8046 §3); its own in its KENTOS data when needed.
+        // The middle of its left or right lowered so its baseline stays; its capitals' height in Standard's Arial
+        // (docs/adr/8046 §3); its own height in its KENTOS data when needed.
         let share = self.styles.share("Standard");
+        let drop = crate::dxf::capitals::drop(0.5, l.height, share);
+        let (fx, fy) =
+            crate::dxf::capitals::lowered((at.x, at.y), crate::math::sin_cos_deg(l.rotation), drop);
+        self.out.xyz(10, Vec2 { x: fx, y: fy });
         self.out
             .real(40, crate::dxf::capitals::written(l.height, share));
         self.out.real(41, 0.0);

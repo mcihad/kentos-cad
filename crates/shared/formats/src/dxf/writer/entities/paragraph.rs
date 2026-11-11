@@ -268,9 +268,15 @@ impl Writer<'_> {
         // The mask is the MTEXT's own background (90), not KentOS's data.
         meta.mask = false;
         meta.note_turn = (turn_read_back(t.rotation) != t.rotation).then_some(t.rotation);
+        // Its attachment point lowered so another program's first baseline is KentOS's (docs/adr/8046 §3); KentOS's own
+        // in its data (the reader's turn comes from 11, not exactly this one).
+        let drop =
+            crate::dxf::capitals::drop(crate::dxf::capitals::attach_up(attach), t.height, share);
+        let (fx, fy) = crate::dxf::capitals::lowered((p.x, p.y), sin_cos_deg(t.rotation), drop);
+        meta.at = (drop != 0.0).then_some((p.x, p.y));
         self.begin("MTEXT", &t.base);
         self.out.str(100, "AcDbMText");
-        self.out.xyz(10, p);
+        self.out.xyz(10, v(fx, fy));
         self.out
             .real(40, crate::dxf::capitals::written(t.height, share));
         self.out.real(41, t.paragraph.box_width.unwrap_or(0.0));

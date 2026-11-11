@@ -663,17 +663,29 @@ def check_paragraph(o: list[tuple[int, str]], e: dict, where: str, styled: tuple
     """A multi-line text's MTEXT (docs/adr/0182 §5); its 40 and 44 in its capitals' height (docs/adr/8046 §3)."""
     r = math.radians(e["rotation"])
     h = e["height"]
+    share = text_share(e, styled, spec)
+    # Its attachment point lowered by its share over the first baseline (1 top, ½ middle, −0.2 bottom) of its em less
+    # its capitals' height, so another program's baseline is KentOS's (docs/adr/8046 §3); KentOS's own in its data.
+    def lowered(at: tuple[float, float], up: float) -> tuple[tuple[float, float], float]:
+        d = 0.0 if share is None else up * (1.0 - share) * h
+        return (at[0] + math.sin(r) * d, at[1] - math.cos(r) * d), d
+    kept = kentos(o).get("at")
     if e.get("align") in ATTACH:
-        ensure(group(o, 71) == str(ATTACH[e["align"]]), f"{where}: attached as aligned")
-        ensure(point(o, 10) == xy(e["p"]), f"{where}: at its point")
+        n = ATTACH[e["align"]]
+        ensure(group(o, 71) == str(n), f"{where}: attached as aligned")
+        want, d = lowered(xy(e["p"]), 1.0 if n <= 3 else (0.5 if n <= 6 else -0.2))
+        got = point(o, 10)
+        ensure(abs(got[0] - want[0]) <= 1e-9 and abs(got[1] - want[1]) <= 1e-9, f"{where}: at its point lowered by {d}, {want}")
+        ensure((kept is None) if d == 0.0 else (kept is not None and [float(x) for x in kept] == list(xy(e["p"]))), f"{where}: KentOS's own point in its data")
     else:
         ensure(group(o, 71) == str(BASELINE_TOP[e.get("align")]), f"{where}: a baseline's as the top of its side")
         if e.get("align") is None:
             # The box's top is a height over the first baseline.
             top = (e["p"]["x"] - math.sin(r) * h, e["p"]["y"] + math.cos(r) * h)
+            want, d = lowered(top, 1.0)
             got = point(o, 10)
-            ensure(abs(got[0] - top[0]) <= 1e-9 and abs(got[1] - top[1]) <= 1e-9, f"{where}: at its box's top left {top}, not {got}")
-    share = text_share(e, styled, spec)
+            ensure(abs(got[0] - want[0]) <= 1e-9 and abs(got[1] - want[1]) <= 1e-9, f"{where}: at its box's top left {top} lowered by {d}, not {got}")
+            ensure((kept is None) if d == 0.0 else (kept is not None and abs(float(kept[0]) - top[0]) <= 1e-9 and abs(float(kept[1]) - top[1]) <= 1e-9), f"{where}: KentOS's own point in its data")
     ensure(float(group(o, 40)) == capitals(h, share), f"{where}: its capitals' height")
     keep = kept_height(h, share)
     got = kentos(o).get("height")
@@ -1061,7 +1073,10 @@ def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: d
     ensure(owners == [group(o, 5), group(o, 330)], f"{where}: the MTEXT's owner is the LEADER's")
     ensure(group(m, 8) == group(o, 8), f"{where}: the MTEXT on the LEADER's layer")
     at = along(2.5)
-    ensure(abs(float(group(m, 10)) - at[0]) <= 1e-8 and abs(float(group(m, 20)) - at[1]) <= 1e-8, f"{where}: the note 2.5 heights past the last vertex ({at})")
+    # Its middle lowered by half its em less half its capitals' height (docs/adr/8046 §3).
+    d = 0.5 * (1.0 - arial) * h
+    at = (at[0] + math.sin(r) * d, at[1] - math.cos(r) * d)
+    ensure(abs(float(group(m, 10)) - at[0]) <= 1e-8 and abs(float(group(m, 20)) - at[1]) <= 1e-8, f"{where}: the note 2.5 heights past the last vertex, lowered ({at})")
     ensure(float(group(m, 40)) == capitals(h, arial), f"{where}: the note as high as the leader, its capitals'")
     got = kentos(m).get("height")
     ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{where}: the note's own height {keep} in KentOS's data")
@@ -1137,10 +1152,17 @@ def check_place(o: list[tuple[int, str]], p: tuple[float, float], exact: bool, t
         return
     h, v = JUSTIFY[align]
     x11, y11 = float(group(o, 11)), float(group(o, 21))
-    if exact:
+    # Lowered so another program's baseline is KentOS's (docs/adr/8046 §3): its row's share of its em less its
+    # capitals' height (the file's 40).
+    row_up = ROWS[next(r for r in ROWS if align.startswith(r))]
+    share = t.get("share")
+    d = 0.0 if share is None else row_up * (1.0 - share) * float(t["height"])
+    turn = math.radians(float(t["rotation"]))
+    want = (p[0] + math.sin(turn) * d, p[1] - math.cos(turn) * d)
+    if exact and d == 0.0:
         ensure(x11 == p[0] and y11 == p[1], f"{where}: stands on its point (11) exactly")
     else:
-        ensure(close(x11, p[0]) and close(y11, p[1]), f"{where}: stands where its insert places it (11)")
+        ensure(close(x11, want[0]) and close(y11, want[1]), f"{where}: stands at its point lowered by {d} (11), {want}")
     ensure(group(head, 11) is not None and group(tail, 11) is None, f"{where}: 11 before the {marker} marker")
     ensure((group(o, 72) is None) if h == 0 else (group(head, 72) == str(h)), f"{where}: 72 {h}")
     ensure(all(c != vertical for c, _ in head), f"{where}: {vertical} after the {marker} marker")
@@ -1152,7 +1174,8 @@ def check_place(o: list[tuple[int, str]], p: tuple[float, float], exact: bool, t
     across = -dx * math.sin(a) + dy * math.cos(a)
     run = dx * math.cos(a) + dy * math.sin(a)
     height = float(t["height"])
-    ensure(abs(across - ROWS[row] * height) <= 1e-8, f"{where}: starts {ROWS[row]} of its height under 11, not {across / height}")
+    file_height = capitals(height, share)
+    ensure(abs(across - ROWS[row] * file_height) <= 1e-8, f"{where}: starts {ROWS[row]} of the file's height under 11, not {across / file_height}")
     if COLUMNS[column] == 0.0:
         ensure(abs(run) <= 1e-8, f"{where}: starts on 11's side")
     else:
@@ -1239,7 +1262,8 @@ def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: st
         ensure(close(got, turn) or (turn == 0.0 and group(r, 50) is None), f"{w}: turned {turn}°, not {got}°")
         # An attribute names no style: Standard, fitted to Arial (docs/adr/8046 §2).
         wf = fitted(a.get("widthFactor"), value, False)
-        shown_at = {**a, "height": a["height"] * float(e["scale"]), "rotation": got, "align": align, "widthFactor": wf}
+        shown_at = {**a, "height": a["height"] * float(e["scale"]), "rotation": got, "align": align, "widthFactor": wf,
+                    "share": 1466 / 2048}
         if align is None:
             ensure(close(float(group(r, 10)), x) and close(float(group(r, 20)), y), f"{w}: placed at {x}, {y}")
             ensure(group(r, 11) is None, f"{w}: not justified")
@@ -1891,7 +1915,9 @@ def check(name: str) -> list[str]:
             keep = kept_height(a["height"], arial)
             got = kentos(d).get("height")
             ensure((got is None) if keep is None else (got is not None and float(got[0]) == keep), f"{w}: its own height {keep} in KentOS's data")
-            check_place(d, (a["p"]["x"], a["p"]["y"]), True, a, "AcDbAttributeDefinition", 74, tag, widths, w)
+            check_place(d, (a["p"]["x"], a["p"]["y"]), True, {**a, "share": arial}, "AcDbAttributeDefinition", 74, tag, widths, w)
+            got = kentos(d).get("at")
+            ensure(got is None or [float(x) for x in got] == [a["p"]["x"], a["p"]["y"]], f"{w}: KentOS's point is its own")
             ensure(group(d, 1) == (a.get("value") or ""), f"{w}: its default")
             ensure(group(d, 3) == (a.get("prompt") or ""), f"{w}: its prompt")
             ensure(group(d, 2) == tag and group(d, 70) == "0", f"{w}: tag {tag!r}, visible")
@@ -1996,7 +2022,10 @@ def check(name: str) -> list[str]:
         ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == e["rotation"], f"{where}: its turn")
         fit = arial_fit(e["text"], bool(e.get("bold"))) if standard(e, styled) else None
         shown = {**e, "widthFactor": fitted(e.get("widthFactor"), e["text"], bool(e.get("bold")))} if fit else e
+        shown = {**shown, "share": text_share(e, styled, spec)}
         check_place(o, (e["p"]["x"], e["p"]["y"]), True, shown, "AcDbText", 73, e["text"], widths, where)
+        got = kentos(o).get("at")
+        ensure(got is None or [float(x) for x in got] == [e["p"]["x"], e["p"]["y"]], f"{where}: KentOS's point is its own")
         ensure(("mask" in kentos(o)) == bool(e.get("mask")), f"{where}: KentOS's mask item exactly when masked")
         got = kentos(o).get("fit")
         ensure((got is None) if fit is None else (got is not None and float(got[0]) == fit), f"{where}: Arial's fit {fit} in KentOS's data")

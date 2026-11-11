@@ -168,9 +168,30 @@ impl Out {
         if h != 0 {
             self.int(72, h);
         }
-        self.xyz(11, t.p);
+        // Where it stands, lowered so another program's baseline is KentOS's (docs/adr/8046 §3).
+        self.xyz(11, file_point(t).unwrap_or(t.p));
         v
     }
+}
+
+/// An aligned text's point in the file (docs/adr/8046 §3): `t.p` lowered by its alignment's share of its em less its
+/// capitals' height; none for a text without an alignment.
+pub(crate) fn file_point(t: &Justified) -> Option<Vec2> {
+    let a = crate::blocks::core_align(t.align?)?;
+    let drop = super::capitals::drop(a.up(), t.height, t.share);
+    let (x, y) =
+        super::capitals::lowered((t.p.x, t.p.y), crate::math::sin_cos_deg(t.rotation), drop);
+    Some(Vec2 { x, y })
+}
+
+/// The point KentOS's data keeps for `t` (docs/adr/8046 §3): when the file's point raised back as the reader raises it
+/// (its turn from 50, its height its em) does not give `t.p` exactly.
+pub(crate) fn kept_point(t: &Justified) -> Option<(f64, f64)> {
+    let at = file_point(t)?;
+    let a = crate::blocks::core_align(t.align?)?;
+    let drop = super::capitals::drop(a.up(), t.height, t.share);
+    let back = super::capitals::raised((at.x, at.y), crate::math::sin_cos_deg(t.rotation), drop);
+    (back != (t.p.x, t.p.y)).then_some((t.p.x, t.p.y))
 }
 
 /// Where a text stands and how (docs/adr/0145 §7), as `Out::text` writes it.

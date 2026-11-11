@@ -252,20 +252,17 @@ pub(super) fn block(
         out.str(8, "0");
         out.str(100, "AcDbText");
         // A block's definition shows its attributes' tags.
-        let vertical = out.text(
-            &value,
-            tag,
-            &Justified {
-                p: a.p,
-                height: a.height,
-                rotation: a.rotation,
-                align: a.align,
-                width_factor: a.width_factor,
-                fit: None,
-                // Standard's face, Arial: its 40 its capitals' height (docs/adr/8046 §3).
-                share: Some(super::super::capitals::ARIAL),
-            },
-        );
+        let justified = Justified {
+            p: a.p,
+            height: a.height,
+            rotation: a.rotation,
+            align: a.align,
+            width_factor: a.width_factor,
+            fit: None,
+            // Standard's face, Arial: its 40 its capitals' height (docs/adr/8046 §3).
+            share: Some(super::super::capitals::ARIAL),
+        };
+        let vertical = out.text(&value, tag, &justified);
         out.str(100, "AcDbAttributeDefinition");
         out.str(3, &prompt);
         out.str(2, tag);
@@ -274,13 +271,14 @@ pub(super) fn block(
         if vertical != 0 {
             out.int(74, vertical);
         }
-        // Its own height in KentOS's data when the capitals' does not give it back exactly.
-        if let Some(h) = super::super::capitals::kept(a.height, Some(super::super::capitals::ARIAL))
-        {
-            out.xdata(&super::super::xdata::groups(&super::super::xdata::Meta {
-                height: Some(h),
-                ..Default::default()
-            }));
+        // Its own height and point in KentOS's data when the file's do not give them back exactly.
+        let kept = super::super::xdata::Meta {
+            height: super::super::capitals::kept(a.height, Some(super::super::capitals::ARIAL)),
+            at: super::kept_point(&justified),
+            ..Default::default()
+        };
+        if kept.height.is_some() || kept.at.is_some() {
+            out.xdata(&super::super::xdata::groups(&kept));
         }
     }
     let h = handles.take();
