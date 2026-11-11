@@ -15517,7 +15517,7 @@
       "id": "cad.profiles.import",
       "version": 1,
       "title": "Veri profili içe aktar",
-      "summary": "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). store: folder (varsayılan) ise profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. store: drawing ise aynı metin çizimin kendi dosyasına, projenin ayarlarındaki profileFiles'a konur (en çok 256 profil ve eşleme, her biri en çok 4 MiB): çizim nereye giderse, bulut projesi de, onunla gider; çizimin dosyası gerekmez. Bu ayarın düzenlemesidir, geri alma adımı değildir. Aynı ad ve tür hem çizimde hem klasörde varsa komutlar çizimin içindekini okur (profile_shadowed). KentOS'un kendi profilinin adı alınamaz (profile_name_taken). Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse klasörde file_exists, çizimde profile_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır.",
+      "summary": "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar Türkçe katlanmış olarak çakışmamalı; names, yani ad biçimi lowerCamelCase ya da upperSnakeCase, eşlemenin yazmadığı alan adlarını yazar, onunla sınıfsız eşleme de geçerlidir, biçimin yazamadığı ad eşlemeyi geçersiz kılar). store: folder (varsayılan) ise profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. store: drawing ise aynı metin çizimin kendi dosyasına, projenin ayarlarındaki profileFiles'a konur (en çok 256 profil ve eşleme, her biri en çok 4 MiB): çizim nereye giderse, bulut projesi de, onunla gider; çizimin dosyası gerekmez. Bu ayarın düzenlemesidir, geri alma adımı değildir. Aynı ad ve tür hem çizimde hem klasörde varsa komutlar çizimin içindekini okur (profile_shadowed). KentOS'un kendi profilinin adı alınamaz (profile_name_taken). Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse klasörde file_exists, çizimde profile_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır.",
       "aliases": [
         "profilal",
         "profiliceaktar"
@@ -16513,6 +16513,254 @@
           "input": {
             "kind": "profile",
             "name": "kurum-profili"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.profiles.names",
+      "version": 1,
+      "title": "Kurumdaki alan adları",
+      "summary": "Bir veri profilinin her alanının kurumdaki adını, adın nereden geldiğini ve sorununu söyler; hiçbir şey yazmaz. Ad önce eşlemenin kendi yazdığıdır (fields, source mapping), yoksa eşlemenin ad biçimidir (names, source form), yoksa profilin adıdır (source profile). Ad biçimi: case lowerCamelCase (ilk sözcük küçük, sonrakilerin ilk harfi büyük, boşluk yok; yalnız büyük harfli iki ve daha çok harfli sözcük kısaltmadır, ilk sözcük değilse olduğu gibi kalır) ya da upperSnakeCase (her sözcük büyük harfle, “_” ile); letters keep (Türkçe harfler korunur, i/İ ve ı/I Türkçe büyük küçük harfle) ya da ascii (ç ğ ı İ ö ş ü â î û → c g i I o s u a i u; başka harf yazılamaz). Sözcükler harf ve rakam dizileridir; küçük harften ya da rakamdan sonra gelen büyük harf, bir de ardından küçük harf gelen büyük harf yeni sözcük başlatır (TUCBSNo: TUCBS, No); rakam önceki sözcükte kalır. names verilirse eşlemenin kendi biçiminin yerine okunur (eşleme yoksa yalnız biçim). Satır sorunları: unfit (biçim adı yazamıyor: harf ya da rakam yok, ASCII karşılığı olmayan harf), clash (sınıfın iki alanı aynı ada düşüyor; ikisi de söylenir). holds, eşlemenin bu biçimle tuttuğunu söyler; tutmayan eşleme Veri profilini uygula ve denetle'de invalid_profile_mapping ile reddedilir. Profil adıyla (name) ya da kendisiyle (profile), eşleme kendisiyle (mapping) ya da projenin adıyla (mappingName, drawing ile) verilir. Ret: unknown_profile, invalid_profile, unknown_mapping, invalid_profile_mapping (eşlemenin biçimi; adlar satırlarda söylenir). Biçimler kurumun verisinin uygunluğunu kanıtlamaz: kurumun kod listesindeki ad eşlemede yazılır.",
+      "aliases": [
+        "kurumadlari",
+        "adbicimi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.names` v1 (“Kurumdaki alan adları”): every field of the profile with its name in the\ninstitution, where it comes from (the profile, the mapping's form, the mapping itself) and what is wrong with it; it\nwrites nothing. `names` previews another form than the mapping's own (without a mapping, the form alone). Refusals:\nthe profile's (`unknown_profile`, `invalid_profile`) and the mapping's (`unknown_mapping`, `invalid_profile_mapping`\nfor anything but its names: those are said row by row).",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path: the project's `profiller` folder is beside it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileMapping"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mappingName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "names": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MappingNames"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The form to read the names with instead of the mapping's own."
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProfilesNames",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Output of `cad.profiles.names`.",
+        "properties": {
+          "clashes": {
+            "description": "Fields that fall on another field's name.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "holds": {
+            "description": "Whether every field has a name of its own: the mapping with this form holds.",
+            "type": "boolean"
+          },
+          "mapping": {
+            "description": "The mapping's name, when one is read.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "names": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MappingNames"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The form the names were read with, when there is one."
+          },
+          "profile": {
+            "description": "The profile's name.",
+            "type": "string"
+          },
+          "renamed": {
+            "description": "Fields whose name in the institution is not the profile's, and that have no problem.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ProfileNameRow"
+            },
+            "type": "array"
+          },
+          "unfit": {
+            "description": "Fields the form cannot spell.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "profile",
+          "rows",
+          "renamed",
+          "unfit",
+          "clashes",
+          "holds"
+        ],
+        "title": "ProfileNames",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Output of `cad.profiles.names`.",
+        "properties": {
+          "clashes": {
+            "description": "Fields that fall on another field's name.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "holds": {
+            "description": "Whether every field has a name of its own: the mapping with this form holds.",
+            "type": "boolean"
+          },
+          "mapping": {
+            "description": "The mapping's name, when one is read.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "names": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MappingNames"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The form the names were read with, when there is one."
+          },
+          "profile": {
+            "description": "The profile's name.",
+            "type": "string"
+          },
+          "renamed": {
+            "description": "Fields whose name in the institution is not the profile's, and that have no problem.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ProfileNameRow"
+            },
+            "type": "array"
+          },
+          "unfit": {
+            "description": "Fields the form cannot spell.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "profile",
+          "rows",
+          "renamed",
+          "unfit",
+          "clashes",
+          "holds"
+        ],
+        "title": "ProfileNames",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_profile",
+          "invalid_profile",
+          "unknown_mapping",
+          "invalid_profile_mapping"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Profilin alan adlarını BÜYÜK_HARF ve ASCII ile göster",
+          "input": {
+            "name": "tucbs-temel",
+            "names": {
+              "case": "upperSnakeCase",
+              "letters": "ascii"
+            }
+          }
+        },
+        {
+          "title": "Projenin eşlemesinin kendi biçimiyle",
+          "input": {
+            "drawing": "/projeler/belediye/imar.kcad",
+            "mappingName": "belediye-adlari",
+            "name": "tucbs-temel"
           }
         }
       ]
@@ -160271,6 +160519,23 @@
       ],
       "type": "object"
     },
+    "MappingNames": {
+      "additionalProperties": false,
+      "description": "A mapping's form for the names it does not write itself.",
+      "properties": {
+        "case": {
+          "$ref": "#/$defs/NameCase"
+        },
+        "letters": {
+          "$ref": "#/$defs/NameLetters",
+          "default": "keep"
+        }
+      },
+      "required": [
+        "case"
+      ],
+      "type": "object"
+    },
     "MarkReference": {
       "description": "A mark as `cad.viewmarks.references` lists it.",
       "properties": {
@@ -163333,6 +163598,71 @@
         "dst"
       ],
       "type": "object"
+    },
+    "NameCase": {
+      "description": "How the words of a name are joined and cased.",
+      "oneOf": [
+        {
+          "const": "lowerCamelCase",
+          "description": "`kapiNo`: the first word small, every later word with a capital first letter; a word of capitals only (two\nletters or more) is an abbreviation and stays as it is, except as the first word.",
+          "type": "string"
+        },
+        {
+          "const": "upperSnakeCase",
+          "description": "`KAPI_NO`: every word in capitals, joined by `_`.",
+          "type": "string"
+        }
+      ]
+    },
+    "NameLetters": {
+      "description": "What becomes of the Turkish letters.",
+      "oneOf": [
+        {
+          "const": "keep",
+          "description": "Kept, cased the Turkish way (i ↔ İ, ı ↔ I).",
+          "type": "string"
+        },
+        {
+          "const": "ascii",
+          "description": "ç, ğ, ı, İ, ö, ş, ü (and â, î, û) written c, g, i, I, o, s, u; any other letter beyond ASCII cannot be spelled.",
+          "type": "string"
+        }
+      ]
+    },
+    "NameProblem": {
+      "description": "What is wrong with a field's name in the institution.",
+      "oneOf": [
+        {
+          "const": "unfit",
+          "description": "The form cannot spell the name: the mapping must write it.",
+          "type": "string"
+        },
+        {
+          "const": "clash",
+          "description": "Another field of the class falls on the same name.",
+          "type": "string"
+        }
+      ]
+    },
+    "NameSource": {
+      "description": "Where a field's name in the institution comes from.",
+      "oneOf": [
+        {
+          "const": "profile",
+          "description": "The profile's own name: no mapping names it and no form is given.",
+          "type": "string"
+        },
+        {
+          "const": "form",
+          "description": "The mapping's form spelled it.",
+          "type": "string"
+        },
+        {
+          "const": "mapping",
+          "description": "The mapping writes it itself (`fields`).",
+          "type": "string"
+        }
+      ]
     },
     "NamedFont": {
       "description": "A name given, resolved.",
@@ -185045,6 +185375,7 @@
       "description": "An institution's mapping file: its own layer, field and code names for a profile's.",
       "properties": {
         "classes": {
+          "description": "Empty only with `names`: the form alone, every class at the profile's layer path.",
           "items": {
             "$ref": "#/$defs/MappingClass"
           },
@@ -185060,6 +185391,17 @@
         "name": {
           "description": "Small letters, digits and `-`; the file's name.",
           "type": "string"
+        },
+        "names": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MappingNames"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The form of the names of the fields the mapping does not write itself (docs/adr/5180); none: the profile's."
         },
         "profile": {
           "description": "The name of the profile it is for.",
@@ -185116,6 +185458,55 @@
         "to",
         "title",
         "steps"
+      ],
+      "type": "object"
+    },
+    "ProfileNameRow": {
+      "additionalProperties": false,
+      "description": "A profile field and its name in the institution.",
+      "properties": {
+        "class": {
+          "description": "The profile's class id and title.",
+          "type": "string"
+        },
+        "classTitle": {
+          "type": "string"
+        },
+        "field": {
+          "description": "The profile's field name.",
+          "type": "string"
+        },
+        "message": {
+          "description": "The problem in words, with what to do.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The field's name in the institution; empty when the form cannot spell it.",
+          "type": "string"
+        },
+        "problem": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NameProblem"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/NameSource"
+        }
+      },
+      "required": [
+        "class",
+        "classTitle",
+        "field",
+        "name",
+        "source"
       ],
       "type": "object"
     },

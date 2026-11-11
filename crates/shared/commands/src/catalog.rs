@@ -3136,7 +3136,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_PROFILES_IMPORT_VERSION,
             title: "Veri profili içe aktar".into(),
             summary: "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. \
-                      Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). \
+                      Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar Türkçe katlanmış olarak çakışmamalı; names, yani ad biçimi lowerCamelCase ya da upperSnakeCase, eşlemenin yazmadığı alan adlarını yazar, onunla sınıfsız eşleme de geçerlidir, biçimin yazamadığı ad eşlemeyi geçersiz kılar). \
                       store: folder (varsayılan) ise profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. \
                       store: drawing ise aynı metin çizimin kendi dosyasına, projenin ayarlarındaki profileFiles'a konur (en çok 256 profil ve eşleme, her biri en çok 4 MiB): çizim nereye giderse, bulut projesi de, onunla gider; çizimin dosyası gerekmez. Bu ayarın düzenlemesidir, geri alma adımı değildir. Aynı ad ve tür hem çizimde hem klasörde varsa komutlar çizimin içindekini okur (profile_shadowed). KentOS'un kendi profilinin adı alınamaz (profile_name_taken). \
                       Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse klasörde file_exists, çizimde profile_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
@@ -3281,6 +3281,41 @@ pub fn catalog() -> CommandCatalog {
                 input: json!({ "kind": "profile", "name": "kurum-profili" }),
                 output: None,
             }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_NAMES.into(),
+            version: crate::CAD_PROFILES_NAMES_VERSION,
+            title: "Kurumdaki alan adları".into(),
+            summary: "Bir veri profilinin her alanının kurumdaki adını, adın nereden geldiğini ve sorununu söyler; hiçbir şey yazmaz. \
+                      Ad önce eşlemenin kendi yazdığıdır (fields, source mapping), yoksa eşlemenin ad biçimidir (names, source form), yoksa profilin adıdır (source profile). \
+                      Ad biçimi: case lowerCamelCase (ilk sözcük küçük, sonrakilerin ilk harfi büyük, boşluk yok; yalnız büyük harfli iki ve daha çok harfli sözcük kısaltmadır, ilk sözcük değilse olduğu gibi kalır) ya da upperSnakeCase (her sözcük büyük harfle, “_” ile); letters keep (Türkçe harfler korunur, i/İ ve ı/I Türkçe büyük küçük harfle) ya da ascii (ç ğ ı İ ö ş ü â î û → c g i I o s u a i u; başka harf yazılamaz). Sözcükler harf ve rakam dizileridir; küçük harften ya da rakamdan sonra gelen büyük harf, bir de ardından küçük harf gelen büyük harf yeni sözcük başlatır (TUCBSNo: TUCBS, No); rakam önceki sözcükte kalır. \
+                      names verilirse eşlemenin kendi biçiminin yerine okunur (eşleme yoksa yalnız biçim). Satır sorunları: unfit (biçim adı yazamıyor: harf ya da rakam yok, ASCII karşılığı olmayan harf), clash (sınıfın iki alanı aynı ada düşüyor; ikisi de söylenir). holds, eşlemenin bu biçimle tuttuğunu söyler; tutmayan eşleme Veri profilini uygula ve denetle'de invalid_profile_mapping ile reddedilir. \
+                      Profil adıyla (name) ya da kendisiyle (profile), eşleme kendisiyle (mapping) ya da projenin adıyla (mappingName, drawing ile) verilir. Ret: unknown_profile, invalid_profile, unknown_mapping, invalid_profile_mapping (eşlemenin biçimi; adlar satırlarda söylenir). Biçimler kurumun verisinin uygunluğunu kanıtlamaz: kurumun kod listesindeki ad eşlemede yazılır."
+                .into(),
+            aliases: vec!["kurumadlari".into(), "adbicimi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesNames>(),
+            output: schema::<crate::ProfileNames>(),
+            plan: Some(schema::<crate::ProfileNames>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Profilin alan adlarını BÜYÜK_HARF ve ASCII ile göster".into(),
+                    input: json!({ "name": "tucbs-temel", "names": { "case": "upperSnakeCase", "letters": "ascii" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Projenin eşlemesinin kendi biçimiyle".into(),
+                    input: json!({ "name": "tucbs-temel", "mappingName": "belediye-adlari", "drawing": "/projeler/belediye/imar.kcad" }),
+                    output: None,
+                },
+            ],
         },
         CommandDescriptor {
             id: crate::CAD_SHEETS_SET.into(),
@@ -16680,6 +16715,9 @@ mod tests {
                     }
                     crate::CAD_PROFILES_REMOVE => {
                         serde_json::from_value::<crate::ProfilesRemove>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_NAMES => {
+                        serde_json::from_value::<crate::ProfilesNames>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())

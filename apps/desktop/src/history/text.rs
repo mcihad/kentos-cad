@@ -84,6 +84,7 @@ pub(crate) const TITLES: [(&str, &str); 473] = [
     ("cad.profiles.migrate", "Veri profili göçü"),
     ("cad.profiles.compare", "Katalog geçiş raporu"),
     ("cad.profiles.remove", "Veri profilini çizimden kaldır"),
+    ("cad.profiles.names", "Kurumdaki alan adları"),
     ("cad.sheets.set", "Pafta seti"),
     ("cad.navigator.read", "Proje gezgini"),
     ("cad.xrefs.edit", "Dış başvuru"),

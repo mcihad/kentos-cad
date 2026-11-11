@@ -620,6 +620,11 @@
 - **Atlas sayfasının görünüşü (10 Kasım 2026; MAP-18, [ADR 4820](../../docs/adr/4820-atlas-page-look.md)).**
   `file.export.atlas` sayfalar yapılınca her sayfanın `look`'u (çizdiğinin SHA-256'sı, yayının damgaları dışarıda) ve
   değişen sayfanın `changes[].look`'u (same: yalnız çizmediği değişti); kayıtta da. CAD + CBS.
+- **Kurum eşlemesinde ad dönüşümünün biçimi (11 Kasım 2026; MAP-17, [ADR 5180](../../docs/adr/5180-institution-name-form.md)).**
+  Eşlemenin `names`'i (`lowerCamelCase`: TUCBS VTS §5.2.3; `upperSnakeCase`: BÖHHBÜY Ek-1'in yazımı, kural değil;
+  `letters` keep ya da ascii) eşlemenin yazmadığı alan adlarını yazar; eşlemenin kendi adları önce. Yazılamayan ya da
+  katlanmış adla çakışan ad eşlemeyi geçersiz kılar. `cad.profiles.names` salt okunur tablo; Veri profili › Kurum adları,
+  Biçimi eşlemeye yaz. Ek-1 kodları türetilmez, eşlemede yazılır. CAD + CBS.
 - **Tanımlı özniteliğin boşluklu etiketinin geri adı (10 Kasım 2026; MAP-17, [ADR 4800](../../docs/adr/4800-dxf-defined-attribute-name-back.md)).**
   Etiketi adından başka yazılan ATTDEF'in KentOS verisinde `tagname`; geri okumada tanım ve eklemelerin değerleri adı alır,
   dosya kazanır (büyük harfli etiket uyar, değişen etiket ad olur ve söylenir). İstem ad kaynağı değil. CAD + CBS.

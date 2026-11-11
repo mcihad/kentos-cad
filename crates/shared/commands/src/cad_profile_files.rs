@@ -377,6 +377,11 @@ pub struct ProfileMapping {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
     pub description: String,
+    /// The form of the names of the fields the mapping does not write itself (docs/adr/5180); none: the profile's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub names: Option<crate::MappingNames>,
+    /// Empty only with `names`: the form alone, every class at the profile's layer path.
     pub classes: Vec<MappingClass>,
 }
 
@@ -387,11 +392,17 @@ fn field_with_values(c: &crate::ProfileClass, p: &DataProfile, name: &str) -> Op
     fields.into_iter().next()
 }
 
-/// What is wrong with a mapping for `p`; none when it holds: its format and version, a plain name, the profile it is for,
-/// classes of the profile (none twice) each with a layer path of names, fields of the class (none twice) given names that
-/// are plain and do not meet another field's name in the class, codes of a field that has a list of values (each a code of
-/// it, none twice, the institution's codes filled and distinct).
+/// What is wrong with a mapping for `p`; none when it holds: its shape (`mapping_shape_problem`), then the names it gives
+/// the fields (`names_problem`: none the form cannot spell, none on another field's name in the class).
 pub fn mapping_problem(m: &ProfileMapping, p: &DataProfile) -> Option<String> {
+    mapping_shape_problem(m, p).or_else(|| crate::names_problem(m, p))
+}
+
+/// What is wrong with a mapping's shape for `p`: its format and version, a plain name, the profile it is for, classes of
+/// the profile (none twice; none at all only with a form of names) each with a layer path of names, fields of the class
+/// (none twice) given names that are plain, codes of a field that has a list of values (each a code of it, none twice,
+/// the institution's codes filled and distinct).
+pub fn mapping_shape_problem(m: &ProfileMapping, p: &DataProfile) -> Option<String> {
     if m.format != MAPPING_FORMAT || m.version != 1 {
         return Some(format!(
             "Eşlemenin biçimi “{MAPPING_FORMAT}”, sürümü 1 olmalı."
@@ -412,7 +423,7 @@ pub fn mapping_problem(m: &ProfileMapping, p: &DataProfile) -> Option<String> {
             m.profile, p.name
         ));
     }
-    if m.classes.is_empty() || m.classes.len() > MAX_MAPPING_ITEMS {
+    if (m.classes.is_empty() && m.names.is_none()) || m.classes.len() > MAX_MAPPING_ITEMS {
         return Some(format!(
             "Eşlemede 1 ile {MAX_MAPPING_ITEMS} arası sınıf olur."
         ));
@@ -433,12 +444,6 @@ pub fn mapping_problem(m: &ProfileMapping, p: &DataProfile) -> Option<String> {
         if mc.fields.len() > MAX_MAPPING_ITEMS || mc.codes.len() > MAX_MAPPING_ITEMS {
             return Some(format!("“{}” sınıfının eşlemesi çok uzun.", c.title));
         }
-        let mut finals: Vec<String> = c
-            .fields
-            .iter()
-            .filter(|f| !mc.fields.iter().any(|x| x.profile == f.name))
-            .map(|f| f.name.clone())
-            .collect();
         for (j, f) in mc.fields.iter().enumerate() {
             if !c.fields.iter().any(|x| x.name == f.profile) {
                 return Some(format!(
@@ -455,13 +460,6 @@ pub fn mapping_problem(m: &ProfileMapping, p: &DataProfile) -> Option<String> {
                     f.profile
                 ));
             }
-            if finals.contains(&f.name) {
-                return Some(format!(
-                    "“{}” adı “{}” sınıfında başka bir alanın adı olurdu.",
-                    f.name, c.title
-                ));
-            }
-            finals.push(f.name.clone());
         }
         for (j, mcs) in mc.codes.iter().enumerate() {
             let Some(f) = field_with_values(c, p, &mcs.field) else {
@@ -523,24 +521,23 @@ pub fn mapping_problem(m: &ProfileMapping, p: &DataProfile) -> Option<String> {
 /// does not name stays as the profile has it. The mapping must hold for the profile (`mapping_problem`).
 pub fn through(p: &DataProfile, m: &ProfileMapping) -> DataProfile {
     let mut out = p.clone();
-    let field_name = |class: &str, name: &str| -> String {
-        m.classes
-            .iter()
-            .find(|c| c.class == class)
-            .and_then(|c| c.fields.iter().find(|f| f.profile == name))
-            .map_or_else(|| name.to_owned(), |f| f.name.clone())
-    };
+    let field_name =
+        |class: &str, name: &str| -> String { crate::institution_name(p, m, class, name) };
     for c in &mut out.classes {
-        let Some(mc) = m.classes.iter().find(|x| x.class == c.id) else {
+        let mc = m.classes.iter().find(|x| x.class == c.id);
+        // A class the mapping does not name keeps all but its fields' names, which the form spells.
+        if mc.is_none() && m.names.is_none() {
             continue;
-        };
-        if !mc.layer.is_empty() {
+        }
+        if let Some(mc) = mc
+            && !mc.layer.is_empty()
+        {
             c.layer = mc.layer.clone();
         }
         let (followed, _) = follow_domains(&c.fields, &p.domains);
         let mut fields = Vec::with_capacity(c.fields.len());
         for (f, own) in followed.into_iter().zip(&c.fields) {
-            let codes = mc.codes.iter().find(|x| x.field == own.name);
+            let codes = mc.and_then(|mc| mc.codes.iter().find(|x| x.field == own.name));
             let mut f = match codes {
                 // The field's codes are the institution's: the list's copy, mapped, no longer linked.
                 Some(codes) => {
@@ -562,9 +559,11 @@ pub fn through(p: &DataProfile, m: &ProfileMapping) -> DataProfile {
                 }
                 None => own.clone(),
             };
-            if let Some(x) = mc.fields.iter().find(|x| x.profile == own.name) {
+            let written = mc.is_some_and(|mc| mc.fields.iter().any(|x| x.profile == own.name));
+            let name = field_name(&c.id, &own.name);
+            if written || name != own.name {
                 f.id = Some(own.name.clone());
-                f.name = x.name.clone();
+                f.name = name;
             }
             fields.push(f);
         }

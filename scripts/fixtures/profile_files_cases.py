@@ -203,7 +203,7 @@ def mapping_shape(m):
         return f"“{m['name']}” eşleme adı olamaz: küçük harf, rakam ve tire, en çok 64."
     if not m["title"].strip():
         return "Eşlemenin başlığı boş olamaz."
-    if not m["classes"] or len(m["classes"]) > 256:
+    if (not m["classes"] and "names" not in m) or len(m["classes"]) > 256:  # a form of names alone (docs/adr/5180)
         return "Eşlemede 1 ile 256 arası sınıf olur."
     return None
 

@@ -48,7 +48,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760, 5140 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi); Brükner diyagramı | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780, 5160 | yol kaplamasının (yüzey kaplaması) profilde gösterimi; uç çizgisi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
-| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800, 5180 | kodların ve katman adlarının kurum biçimi (TUCBS GKM §9.5.2.5, VTS katman adı) | DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu); Ek-1 ve havuz.xml'in hazır eşlemesi (resmî dosya bekler) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820, 5200 | paftada kalite tablosu (dengeleme kaydından); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440, 4860 | katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi; adıyla bulunan katmana tarifin eksik alanlarını ekleme seçeneği | bütçe (gerçek veriyle ölçüm) |
@@ -2383,6 +2383,18 @@ etiket de uyar, başka programda değişen etiket ad olur ve söylenir, kaydı s
 alınmaz; istem ad kaynağı değil; yazıcı ve okuyucu testleri (blocks.dxf'e yalnız kayıt eklendi), bağımsız denetçi (ADR
 3980'den beri eskimiş ATTRIB denetimi de düzeltildi; 11 dosya geçer), ezdxf ile bağımsız okuma ve düzenleme, MCP;
 masaüstünde DXF gidiş-dönüşünde öznitelik ve blok kaybı yok. Açık: kurum profilinde ad dönüşümünün biçimi, DXF'te TABLE.
+
+**11 Kasım 2026, onuncu tur — kurum eşlemesinde ad dönüşümünün biçimi ([ADR 5180](../docs/adr/5180-institution-name-form.md)).**
+Kapsam: **CAD + CBS**; maddenin sıradaki işinin bütünü. Dayanak: TUCBS VTS §5.2.3 (öznitelik adı lowerCamelCase,
+kısaltmalar kalır) ve GKM §9.5.2.5, tema dokümanlarının örnekleri (`tucbsNo`, `araziKullanimiDurumu5000`); BÖHHBÜY Ek-1
+öznitelik kodları (büyük harf, ASCII, “_”; yazım, kural değil; koddan türetilemez) ve Ek-2 UVDF §4.4.1.2 (kolon adı veri
+tabanının kabulüne bırakılır); QGIS Refactor fields ve FME BulkAttributeRenamer; 10–11 Kasım 2026'da okundu. Kanıtlanan:
+kurum eşlemesine isteğe bağlı `names` (`lowerCamelCase` ya da `upperSnakeCase`; `letters` keep ya da ascii): eşlemenin
+yazmadığı alan adları biçimle yazılır, eşlemenin kendi adları önce; yalnız biçimden oluşan sınıfsız eşleme; yazılamayan ad
+ve Türkçe katlanmış adla çakışan ad eşlemeyi geçersiz kılar (içe aktarma, uygula, denetle reddeder); `cad.profiles.names`
+salt okunur tablo (profil, biçim, eşleme; unfit, clash, holds); Veri profili › Kurum adları, Biçimi eşlemeye yaz; KentOS
+kodu olmadan yazılmış 32 ortak durum (VTS ve Ek-1 örnekleri dahil), Python, MCP, masaüstü testleri ve resimleri. Açık:
+kodların ve katman adlarının biçimi, DXF etiketinin kurum biçimi, Ek-1'in hazır eşlemesi, DXF'te TABLE.
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 

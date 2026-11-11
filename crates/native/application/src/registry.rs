@@ -84,6 +84,7 @@ use crate::pointcloud_overlap;
 use crate::pointcloud_network;
 use crate::pointcloud_place;
 use crate::profiles_compare;
+use crate::profiles_names;
 use crate::pointcloud_register;
 use crate::addresses_compare;
 use crate::addresses_normalize;
@@ -1009,6 +1010,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_PROFILES_REMOVE => {
                 $then!(profiles_remove, kentos_commands::ProfilesRemove)
+            }
+            kentos_commands::CAD_PROFILES_NAMES => {
+                $then!(profiles_names, kentos_commands::ProfilesNames)
             }
             kentos_commands::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
             kentos_commands::CAD_HATCH_PATTERNS_EDIT => {
