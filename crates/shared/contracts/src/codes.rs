@@ -2792,7 +2792,11 @@ codes! {
     PAIY_STAIR_LANDING_SHORT = "paiy_stair_landing_short", Warning, false, "Merdivenin ara sahanlığı Planlı Alanlar İmar Yönetmeliği 31/1-a'nın (ya da yerel yönetmeliğin) en azından kısa.";
     PAIY_STAIR_RISER_HIGH = "paiy_stair_riser_high", Warning, false, "Merdivenin rıhtı Planlı Alanlar İmar Yönetmeliği 31/2-a'nın en çoğundan yüksek (asansörsüz binada 0,16, asansörlüde 0,18 metre).";
     PAIY_STAIR_STEP = "paiy_stair_step", Warning, false, "Merdivenin basamağı Planlı Alanlar İmar Yönetmeliği 31/2-b, c'ye uymuyor (2a+b 60–64 cm, basamak en az 0,27, döner merdivende dar uçta 0,10 metre).";
-    PAIY_RAILING_MISSING = "paiy_railing_missing", Warning, false, "Merdivende ya da rampada Planlı Alanlar İmar Yönetmeliği 31/1-ç, 38/1'in istediği korkuluk yok.";
+    PAIY_RAILING_MISSING = "paiy_railing_missing", Warning, false, "Merdivende, rampada, galeri boşluğunun ya da balkonun, terasın serbest kenarında Planlı Alanlar İmar Yönetmeliği 31/1-ç, 38/1'in istediği korkuluk yok.";
+    /// A railing lower than PAİY 38/1's 1.10 m (docs/adr/8045 §4).
+    PAIY_RAILING_LOW = "paiy_railing_low", Warning, false, "Korkuluk Planlı Alanlar İmar Yönetmeliği 38/1'in 1,10 metresinden alçak.";
+    /// A balustered railing's gap wider than PAİY 38/4's 0.10 m (docs/adr/8045 §4).
+    PAIY_RAILING_GAP = "paiy_railing_gap", Warning, false, "Korkuluğun çubuk aralığı Planlı Alanlar İmar Yönetmeliği 38/4'ün 0,10 metresinden geniş.";
     PAIY_RAMP_STEEP = "paiy_ramp_steep", Warning, false, "Rampanın eğimi Planlı Alanlar İmar Yönetmeliği 30/12'nin kot farkına göre en çoğunu aşıyor.";
     PAIY_WINDOW_RAILING = "paiy_window_railing", Warning, false, "Denizliği 0,90 metreden alçak pencere: Planlı Alanlar İmar Yönetmeliği 38/1'e göre 1,10 metre korkuluk gerekir.";
     PAIY_LIGHTWELL_SMALL = "paiy_lightwell_small", Warning, false, "Işıklığın dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/2'nin en azından küçük.";

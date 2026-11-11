@@ -1,0 +1,45 @@
+# M45 2. bölüm (docs/adr/8045 §4), on fixtures/arch/v1/facade-building.kcad (--modul mimari): 1. kat; Denetim ›
+# Mevzuat says the stair void's 4.47 m without a railing (PAİY 38/1); Korkuluk Boşluktan in the void; Denetle again: the
+# finding is gone.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+click 1162 111
+wait 2500
+click 195 712
+wait 1200
+type mevzuat
+wait 1200
+click 188 779
+wait 1200
+click 65 712
+wait 3000
+move 1400 120
+wait 800
+shot d2-mevzuat
+key alt+q
+wait 600
+type Korkuluk
+wait 1500
+key Return
+wait 1500
+move 1300 500
+wait 800
+type S
+wait 800
+move 766 452
+wait 1500
+shot d3-onizleme
+click 766 452
+wait 2500
+key Escape
+wait 800
+click 65 712
+wait 3000
+move 1400 120
+wait 800
+shot d4-sonra

@@ -14,7 +14,6 @@
 
 use kentos_commands::{
     Entity, NewRailing, RAILING_GAP, RAILING_HEIGHT, RAILING_WIDTH, RailingInfill, RailingsCreate,
-    SlabFields, SpacePart,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, railings_create};
@@ -83,134 +82,7 @@ impl Default for RailingTool {
 }
 
 /// A railing's line and whether it closes.
-type Piece = (Vec<Vec2>, bool);
-
-/// How close a stair's top riser runs to a void's side to leave it open, metres.
-const ARRIVAL: f64 = 0.02;
-
-/// The top riser's line of every straight-ended stair on the storey under Etkin kat: where it arrives on Etkin kat's
-/// floor, the band's end across its walking line's last point.
-fn arrivals(cx: &Context<'_>) -> Vec<(Vec2, Vec2)> {
-    let Some(active) = cx.level else {
-        return Vec::new();
-    };
-    let levels = cx
-        .doc
-        .settings()
-        .arch
-        .as_ref()
-        .map(|a| a.levels.clone())
-        .unwrap_or_default();
-    let Some(me) = levels.iter().find(|l| l.id == active) else {
-        return Vec::new();
-    };
-    let Some(below) = levels
-        .iter()
-        .filter(|l| l.elevation < me.elevation)
-        .max_by(|a, b| a.elevation.total_cmp(&b.elevation))
-    else {
-        return Vec::new();
-    };
-    cx.doc
-        .entities()
-        .filter_map(|e| match e {
-            Entity::Stair(s)
-                if s.stair.arch.level.as_deref() == Some(below.id.as_str())
-                    && s.stair
-                        .bulges
-                        .as_ref()
-                        .is_none_or(|b| b.iter().all(|x| *x == 0.0)) =>
-            {
-                let p = &s.stair.pts;
-                let (a, b) = (p.get(p.len().checked_sub(2)?)?, p.last()?);
-                let l = (b.x - a.x).hypot(b.y - a.y);
-                (l > 0.0).then(|| {
-                    let (nx, ny) = (-(b.y - a.y) / l, (b.x - a.x) / l);
-                    let h = s.stair.width / 2.0;
-                    (
-                        Vec2::new(b.x - nx * h, b.y - ny * h),
-                        Vec2::new(b.x + nx * h, b.y + ny * h),
-                    )
-                })
-            }
-            _ => None,
-        })
-        .collect()
-}
-
-/// `run` (`closed`: round to its first point) without the stretches along any of `cuts` (within [`ARRIVAL`] of them,
-/// both ways): the pieces left, of two points or more; a closed run cut is open pieces.
-fn cut_run(run: &[Vec2], closed: bool, cuts: &[(Vec2, Vec2)]) -> Vec<Piece> {
-    let n = run.len();
-    let count = if closed { n } else { n.saturating_sub(1) };
-    // Each segment's stretches cut away, along it from its start.
-    let removed: Vec<Vec<(f64, f64)>> = (0..count)
-        .map(|i| {
-            let (a, b) = (run[i], run[(i + 1) % n]);
-            let l = (b.x - a.x).hypot(b.y - a.y);
-            if l <= 0.0 {
-                return Vec::new();
-            }
-            let (ux, uy) = ((b.x - a.x) / l, (b.y - a.y) / l);
-            let along = |p: Vec2| (p.x - a.x) * ux + (p.y - a.y) * uy;
-            let off = |p: Vec2| ((p.x - a.x) * uy - (p.y - a.y) * ux).abs();
-            let mut out: Vec<(f64, f64)> = cuts
-                .iter()
-                .filter(|(p, q)| off(*p) <= ARRIVAL && off(*q) <= ARRIVAL)
-                .filter_map(|(p, q)| {
-                    let (s0, s1) = (
-                        along(*p).min(along(*q)).max(0.0),
-                        along(*p).max(along(*q)).min(l),
-                    );
-                    (s1 - s0 > ARRIVAL).then_some((s0, s1))
-                })
-                .collect();
-            out.sort_by(|x, y| x.0.total_cmp(&y.0));
-            out
-        })
-        .collect();
-    if removed.iter().all(Vec::is_empty) {
-        return vec![(run.to_vec(), closed)];
-    }
-    // Walk it, a closed one from the start of a segment with a cut so no piece wraps unseen.
-    let start = if closed {
-        removed.iter().position(|r| !r.is_empty()).unwrap_or(0)
-    } else {
-        0
-    };
-    let mut pieces: Vec<Vec<Vec2>> = Vec::new();
-    let mut now: Vec<Vec2> = Vec::new();
-    for k in 0..count {
-        let i = (start + k) % count.max(1);
-        let (a, b) = (run[i], run[(i + 1) % n]);
-        let l = (b.x - a.x).hypot(b.y - a.y);
-        let at = |t: f64| Vec2::new(a.x + (b.x - a.x) * t / l, a.y + (b.y - a.y) * t / l);
-        let mut from = 0.0;
-        for &(s0, s1) in &removed[i] {
-            if s0 > from {
-                if now.is_empty() {
-                    now.push(at(from));
-                }
-                now.push(at(s0));
-            }
-            if now.len() >= 2 {
-                pieces.push(std::mem::take(&mut now));
-            }
-            now.clear();
-            from = from.max(s1);
-        }
-        if from < l {
-            if now.is_empty() {
-                now.push(at(from));
-            }
-            now.push(b);
-        }
-    }
-    if now.len() >= 2 {
-        pieces.push(now);
-    }
-    pieces.into_iter().map(|p| (p, false)).collect()
-}
+type Piece = kentos_native_application::railing_voids::Piece;
 
 impl RailingTool {
     pub fn new() -> Self {
@@ -276,41 +148,11 @@ impl RailingTool {
                             .into(),
                     );
                 }
-                // Its free sides as a balcony's (docs/adr/0722 §4), the void read as a slab of its own: counter-clockwise,
-                // the void to the left of every run.
-                let probe = SlabFields {
-                    parts: vec![SpacePart {
-                        outer: hole.clone(),
-                        holes: Vec::new(),
-                    }],
-                    arch: s.slab.arch.clone(),
-                    ..Default::default()
-                };
-                let cuts = arrivals(cx);
-                let half = self.width / 2.0;
-                let mut out: Vec<Piece> = Vec::new();
-                for run in cx.doc.slab_runs(&probe) {
-                    let mut pts: Vec<Vec2> = run.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
-                    let closed = pts.len() > 3 && pts.first() == pts.last();
-                    if closed {
-                        pts.pop();
-                    }
-                    // Onto the slab: right of the run's travel.
-                    for (piece, shut) in cut_run(&pts, closed, &cuts) {
-                        let long: f64 = piece
-                            .windows(2)
-                            .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
-                            .sum();
-                        if !shut && long < RAILING_GAP {
-                            continue;
-                        }
-                        let line =
-                            kentos_geometry_core::geom::offset::offset_path(&piece, -half, shut);
-                        if line.len() >= if shut { 3 } else { 2 } {
-                            out.push((line, shut));
-                        }
-                    }
-                }
+                // Its free sides, open where a stair arrives, no stretch under 0.10 m (docs/adr/8045 §3): Denetim's
+                // own reading of the void.
+                let out = kentos_native_application::railing_voids::void_railings(
+                    cx.doc, &s.slab, hole, cx.level, self.width,
+                );
                 if out.is_empty() {
                     return Err(
                         "Bu boşluğun bütün kenarları duvar ya da merdiven çıkışı: korkuluk gereken kenarı yok.".into(),

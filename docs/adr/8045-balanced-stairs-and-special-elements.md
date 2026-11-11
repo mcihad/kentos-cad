@@ -3,8 +3,8 @@
 - **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölüm yapıldı: balansmanlı
   (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c denetimi (§1),
   kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). 2. bölümde bağımsız korkuluk — model, `.kcad` 242, komut,
-  plan, Korkuluk aracı (Boşluktan ile galeri boşluğu), Öznitelikler, kesit ve görünüş (§3). Sırada PAİY 38 denetimi,
-  sonra asansör ve otopark yeri.
+  plan, Korkuluk aracı (Boşluktan ile galeri boşluğu), Öznitelikler, kesit ve görünüş (§3) ve Denetim › Mevzuat'ta
+  PAİY 38 (§4). Sırada asansör ve otopark yeri.
 - **Bağlam belgesi:** ADR 0343 (merdivenin yürüme çizgisi, sahanlıklar, basamak çizgileri), ADR 0704 (yükseklikten
   merdiven), ADR 0709 (döner merdiven), ADR 0724 (kata bağlı merdiven, üst kat planı), ADR 8034 (PAİY 31 denetimi).
 
@@ -144,9 +144,29 @@ için çizilebilen bir korkuluk yoktu.
   duvar yüzündeki çizgileri gibi (ADR 8043). İlk sürüm korkuluğu 1,10 m'lik opak bir bant yaptı; A-A'da merdiven
   holünün penceresi korkuluğun arkasında yarım kaldı (denizliği +3,90'da, küpeştenin altı görünmüyordu). Dolu
   korkuluk tam yüksekliğinde katıdır, küpeştenin altı iki yüzünde çizgi.
-- **Sonraya:** Denetim › Mevzuat'ta PAİY 38 (korkuluksuz galeri boşluğu ve balkon kenarı, alçak korkuluk, geniş
-  aralık; düzeltmeleriyle), metrajda korkuluk boyu, yay kenarlı boşluk, döşemeye bağlı (döşeme değişince izleyen)
-  korkuluk, dikme ve tutamak ayrıntısı.
+- **Sonraya:** metrajda korkuluk boyu, yay kenarlı boşluk, döşemeye bağlı (döşeme değişince izleyen) korkuluk, dikme
+  ve tutamak ayrıntısı.
+
+### 4. Korkuluğun mevzuat denetimi (2. bölüm, son adım)
+
+`railing_audit` Denetim › Mevzuat'ta, bulgusu maddeyi ve Resmî Gazete'yi taşır:
+
+- **Alçak korkuluk (`paiy_railing_low`, 38/1):** “Korkuluk 0.90 m < 1.10 m — PAİY 38/1”; düzeltmesi “Yüksekliği 1,10 m
+  yap” (`cad.arch.edit`).
+- **Geniş aralık (`paiy_railing_gap`, 38/4):** dikey çubuklu korkulukta “Korkuluğun çubuk aralığı 0.12 m > 0.10 m —
+  PAİY 38/4”; düzeltmesi “Aralığı 0,10 m yap” (aralık alanı kalkar, PAİY'nin 0,10'u okunur).
+- **Korkuluksuz döşeme boşluğu (`paiy_railing_missing`, 38/1 “galeri boşluğu”):** boşluğun korkuluk isteyen kenarları
+  (duvarsız, alt kattan gelen merdivenin çıkışı dışında, 0,10 m'den kısa parça yok) Boşluktan'ın kendi hesabıdır
+  (`railing_voids`, araç ve denetim aynı fonksiyonu okur). Kenar 5 cm'de bir yürünür; katının bir korkuluğunun çizgisi
+  küpeştenin yarısı ve 5 cm içindeyse o nokta tutulmuştur. Tutulmayan boy 0,10 m ve fazlaysa “Döşeme boşluğunun 4.47
+  m'lik kenarında korkuluk yok — PAİY 38/1”. Kendiliğinden düzeltmesi yok: düzeltme tek komut adımıdır ve korkuluğun
+  EK-4 katmanını (MM-KORK-CUBUK) açmak aracın işidir; onarım metni Boşluktan'ı söyler.
+- **Korkuluksuz balkon ve teras (`paiy_railing_missing`, 38/1 “balkon, teras”):** kenarı (korkuluk ya da parapet)
+  olmayan balkonun, terasın serbest kenarlarında tutulmayan boy; düzeltmesi “Serbest kenarlarına korkuluk koy”: döşemenin
+  kenarı korkuluk (`cad.slabs.edit`). Bunun için bulgunun düzeltmesi artık komutunu taşır (`Fix.command`; yoksa
+  `cad.arch.edit`).
+- Döşemenin kendi kenarı (korkuluk ya da parapet) bütün serbest kenarlarını, boşluklarınınkileri de tutar: o döşemede
+  bulgu aranmaz.
 
 ## Doğrulama
 
@@ -194,3 +214,10 @@ için çizilebilen bir korkuluk yoktu.
   `korkuluk-kesit-a.txt`): görünüş binasında Boşluktan'dan sonra B-B'de iki korkuluğun küpeştesi kesilen küçük birer
   kare, çubukları +3,00'e inen tek çizgi; A-A'da merdiven holünde küpeşte bandı ve 0,12 m'de bir çubuk, arkadaki
   pencere bütün. Önceki ikilide (korkuluk var, kesitte yok) iki kesitte de korkuluk görünmüyor.
+- Korkuluk denetimi (§4): bölüm binasında (`railing_audit` testi) merdiven boşluğu “Döşeme boşluğunun 4.47 m'lik
+  kenarında korkuluk yok” (2,850 + 1,625 m; boşluğun kendi hesabı 4,475 m), Boşluktan'ın iki korkuluğuyla düştü;
+  0,90 m'ye alçaltılıp aralığı 0,12 m yapılan korkuluğun iki bulgusu `cad.arch.edit` düzeltmeleriyle düştü; duvarın
+  önündeki 3,00 × 1,50 m kenarsız balkon “Balkonun 6.00 m'lik serbest kenarında korkuluk yok”, düzeltmesi
+  `cad.slabs.edit` ile düştü. Mevzuat ortak durumları değişmedi. Gerçek pencere (`korkuluk-denetim.txt`): görünüş
+  binasının 1. katında Mevzuat 10 bulgu, 8.'si boşluk; Boşluktan'dan sonra Denetle 9 bulgu, boşluğunki yok. Önceki
+  ikilide aynı çizimde bu bulgu yoktu.

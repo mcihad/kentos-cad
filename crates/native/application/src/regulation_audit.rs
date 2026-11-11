@@ -203,7 +203,7 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/8035).
-pub const CODES: [&str; 42] = [
+pub const CODES: [&str; 44] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -219,6 +219,8 @@ pub const CODES: [&str; 42] = [
     codes::PAIY_RAILING_MISSING,
     codes::PAIY_RAMP_STEEP,
     codes::PAIY_WINDOW_RAILING,
+    codes::PAIY_RAILING_LOW,
+    codes::PAIY_RAILING_GAP,
     codes::PAIY_LIGHTWELL_SMALL,
     codes::PAIY_AIR_SHAFT_SMALL,
     codes::PAIY_ELEVATOR_MISSING,
@@ -254,6 +256,9 @@ pub const CODES: [&str; 42] = [
 pub struct Fix {
     pub label: String,
     pub operation: serde_json::Value,
+    /// The command that applies it on the finding's first object; none: `cad.arch.edit` (a slab's edge is
+    /// `cad.slabs.edit`'s, docs/adr/8045 §4).
+    pub command: Option<&'static str>,
 }
 
 use kentos_domain::room_names::{HeightClass, height_class};
@@ -1180,6 +1185,7 @@ pub fn findings(
                 let fix = s.binding.map(|b| Fix {
                     label: format!("Genişliği {} m yap", m2(b.value)),
                     operation: json!({"kind": "set", "width": b.value}),
+                    command: None,
                 });
                 push(s, vec![slot], at, fix);
             }
@@ -1202,6 +1208,7 @@ pub fn findings(
                 let fix = s.binding.map(|b| Fix {
                     label: format!("Sahanlığı {} m yap", m2(b.value)),
                     operation: json!({"kind": "set", "landing": b.value}),
+                    command: None,
                 });
                 push(s, vec![slot], walk.point((a + b) / 2.0).0, fix);
             }
@@ -1307,6 +1314,7 @@ pub fn findings(
             let fix = arch::winders_for(pts, stair, 0.10).map(|n| Fix {
                 label: format!("Balansmanı {} basamak yap", n as u32),
                 operation: json!({"kind": "set", "winders": n as u32}),
+                command: None,
             });
             push(s, vec![slot], at, fix);
         }
@@ -1314,6 +1322,7 @@ pub fn findings(
         let both = Fix {
             label: "İki yana korkuluk koy".into(),
             operation: json!({"kind": "set", "railings": "both"}),
+            command: None,
         };
         let common = place == StairIn::Common;
         let railing = if common && x.railings != Some(Railings::Both) {
@@ -1417,6 +1426,7 @@ pub fn findings(
                 Some(Fix {
                     label: "İki yana korkuluk koy".into(),
                     operation: json!({"kind": "set", "railings": "both"}),
+                    command: None,
                 }),
             );
         }
@@ -1773,6 +1783,8 @@ pub fn findings(
     crate::joinery_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     // Çatılar (docs/adr/8044 §9): PAİY 40 ve 42, BYKHY 58/2, yerel yönetmelik.
     crate::roof_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
+    // Korkuluklar (docs/adr/8045 §4): PAİY 38; galeri boşlukları, balkonlar ve teraslar.
+    crate::railing_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
     out
 }
 

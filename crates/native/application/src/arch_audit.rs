@@ -1924,11 +1924,13 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             // Mevzuat (docs/adr/8033): each finding naming its article.
             ArchAuditCheck::Regulation => crate::regulation_audit::findings(doc, |code, message, repair, slots, at, rule, offer| {
                 let uids = slots.iter().map(|s| audit.uid(*s)).collect();
-                // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer.
+                // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer; a slab's edge
+                // cad.slabs.edit (docs/adr/8045 §4).
                 let fix = offer.zip(slots.first()).and_then(|(o, s)| {
                     let e = doc.get(*s)?;
                     (!audit.locked(e)).then(|| {
-                        fix(o.label, "cad.arch.edit", json!({"uids": [audit.uid(*s)], "operation": o.operation}))
+                        let command = o.command.unwrap_or("cad.arch.edit");
+                        fix(o.label, command, json!({"uids": [audit.uid(*s)], "operation": o.operation}))
                     })
                 });
                 let mut f = finding(ArchAuditCheck::Regulation, code, message, repair, uids, at, fix);

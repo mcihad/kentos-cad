@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod beam_quantities;
+mod railing_audit;
 mod roof_sections;
 mod sections;
 mod facades;

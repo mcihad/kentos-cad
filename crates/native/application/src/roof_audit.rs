@@ -189,6 +189,7 @@ fn roof_rules(
             Some(Fix {
                 label: "Eğimi %40'a indir".into(),
                 operation: json!({"kind": "set", "slopes": slopes}),
+                command: None,
             }),
         );
     }
@@ -210,6 +211,7 @@ fn roof_rules(
             Some(Fix {
                 label: "Kar siperliği ver (saçaktan 30 cm)".into(),
                 operation: json!({"kind": "set", "snowGuard": kentos_commands::DEFAULT_SNOW_GUARD}),
+                command: None,
             }),
         );
     }
@@ -251,6 +253,7 @@ fn part_rules(
                 let fix = Fix {
                     label: "Hava bacasını 0,60 m'ye indir".into(),
                     operation: raised(i, VENT_MAX),
+                    command: None,
                 };
                 (s, Some(fix))
             }),
@@ -272,6 +275,7 @@ fn part_rules(
                 let fix = Fix {
                     label: "Bacayı mahyanın 0,80 m üstüne çıkar".into(),
                     operation: raised(i, CHIMNEY_MIN),
+                    command: None,
                 };
                 (s, Some(fix))
             }),

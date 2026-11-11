@@ -409,7 +409,10 @@
     boşluğunun serbest kenarları (`Document::slab_runs`), alt kattan gelen merdivenin son rıht çizgisi açık, 0,10 m'den
     kısa parça yok; katman MM-KORK-CUBUK/CAM/DOLU. Kesitte (`sections::railing`) çubuklu ve camlı korkulukta yalnız
     küpeşte katı (5 cm), çubuklar (aralık + 2 cm) ve cam kenarları ayak izsiz katının çizgileri: arkasını gizlemez;
-    dolu korkuluk tam yükseklikte katı.
+    dolu korkuluk tam yükseklikte katı. Mevzuat'ta (ADR 8045 §4, `railing_audit`) 1,10 m'den alçak `paiy_railing_low`,
+    0,10 m'den geniş aralık `paiy_railing_gap` (düzeltmeleri `cad.arch.edit`), boşluğun ve kenarsız balkonun, terasın
+    tutulmayan kenarı `paiy_railing_missing` (boşluk `railing_voids` ile aracın hesabı; balkonun düzeltmesi
+    `cad.slabs.edit` kenar korkuluk — `Fix.command`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
