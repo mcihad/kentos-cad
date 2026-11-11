@@ -44,7 +44,13 @@ fn the_crowded_numbers_over_mcp_are_the_case_s() {
             assert!((g["at"][k].as_f64().unwrap() - w["at"][k].as_f64().unwrap()).abs() < 1e-6, "{g}");
         }
     }
-    assert_eq!(r.to_string().matches("number_crowded").count(), 2, "{r}");
+    let warned: Vec<&str> = r["structuredContent"]["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|w| w["code"].as_str())
+        .collect();
+    assert_eq!(warned, ["number_crowded", "number_crowded"], "{r}");
 }
 
 #[test]

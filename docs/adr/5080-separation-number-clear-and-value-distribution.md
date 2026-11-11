@@ -111,7 +111,18 @@ Tarih: 2026-11-11. plan/map-cad.md MAP-11, onuncu tur. Durum: taslak. ADR 4680'i
   - `scripts/fixtures/readjustment_cases.py` (44 durum, 14 yeni): değer oranında kütle (4/7, 3/7), artık ilk en çok
     eksik kalana, alanla aynı oranda değerde alan esaslıyla aynı net, değeri sıfır parsel, `reject`, bütün retler.
     Python `fractions`'la.
-- Rust koşucusu, Python, MCP ve masaüstü testleri ile resimler: plan notunda.
+- **Rust koşucusu** (`every_command_case capabilities`, iki komut, 96 durum) geçer; bozma denemesi: iki beklenen değer
+  (strip durumunda kuzeydeki numaranın yeri, değer esasında 101/1'in payı) değiştirilince koşucu tam o ikisini yakalar.
+- **Python** (`maturin build` ile): `test_separation_number_clear.py` (testin kendi okuması: fontTools ilerlemeleri,
+  ADR 0145/0146 kutusu, kendi kesişme sınaması; notlar ve kılavuzlar hiçbir alan kenarına değmez, yol halkasında ikisi
+  de yalnız ona değer ve söylenir), `test_readjustment_value_basis.py` (kesirlerle kütle, paylar, korunum, uyarı,
+  retler), güncellenen `test_separation_number_leader.py` ve ortak durumlar geçer.
+- **MCP** (`crates/native/mcp/tests/separation_number_clear.rs`): kalabalık numaralar durumunki ve iki `number_crowded`;
+  değer esaslı dağıtım durumunki, uyarı ve kaynaksız ret.
+- **Masaüstü** (`readjustment_window_tests`): 4680'in testi güncel (güneydeki doğuda, kuzeydeki batıda, uyarı yok); yol
+  halkasında iki uyarı; Dağıtım esası Değer ile 4/7, 3/7 ve CSV, kaynaksız ve alan esasında değerli ret. Çapraz
+  denetimler (module_tests, ribbon_tests, history::text, catalog, settings) geçer. Resimler
+  `.run/gui-evidence/map-11-10/` (değer esaslı pencere, Ayırma çapı penceresi, çakışmasız model; açık geniş ve koyu dar).
 
 ## Sonra
 
