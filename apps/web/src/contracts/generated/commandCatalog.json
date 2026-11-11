@@ -63967,7 +63967,7 @@
       "id": "cad.parcels.record",
       "version": 1,
       "title": "Parsel kaydı",
-      "summary": "Çizimin parsel kayıtlarına bir belge yazar: belgenin adı (çizimde tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; kayıtların sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i]).",
+      "summary": "Çizimin parsel kayıtlarına bir belge yazar: belgenin adı (çizimde, taslaklarla birlikte tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır. Belgenin yeni köşeleri güncel bir komşunun düz ya da yaylı sınırının üstüne (1 µm) düşüp parçalar belgenin sınırlarıysa sınır bölünür, komşu parçaları alır. Belge kenarların ölçülerini yazar (create[i].lengths: halka, kenar, metre olarak düz ondalık; yoksa alanın Kenar ölçüleri (m) özniteliği, dış halkanın kenarları sırayla, ; ile ayrılmış): ölçü belgenindir, sınırın boyu değişince değişmez. draft ile belge taslak olarak yazılır: güncel hiçbir şey değişmez, cevap onayın bugün yazacağıdır; taslağı cad.parcels.approve yazar. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; olmayan ya da iki kez verilen kenar, sıfırdan büyük düz ondalık olmayan kenar ölçüsü; kayıtların sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i]).",
       "aliases": [
         "parselkaydi",
         "parselbelgesi",
@@ -63987,7 +63987,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.parcels.record` v1: the document, the parcels it makes (`create`) and the recorded parcels it closes\n(`close`, their numbers); at least one of the two.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (the document's name empty, too\nlong or with a control character, its kind, date or note too long; nothing to make or close); `document_name_taken`\n(`document.name`); for `close[i]`: `invalid_input` (given twice), `unknown_parcel_record`, `parcel_closed`; for\n`create[i]`: `invalid_uid`, `entity_not_found`, `not_a_parcel` (not an area), `no_parcel_identity` (no Ada or\nParsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a\nstated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not\nclose), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);\n`invalid_input` (the register would pass its limits: 10 000 documents, 100 000 parcels, 1 000 000 boundaries).",
+        "description": "Input of `cad.parcels.record` v1: the document, the parcels it makes (`create`) and the recorded parcels it closes\n(`close`, their numbers); at least one of the two.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (the document's name empty, too\nlong or with a control character, its kind, date or note too long; nothing to make or close); `document_name_taken`\n(`document.name`); for `close[i]`: `invalid_input` (given twice), `unknown_parcel_record`, `parcel_closed`; for\n`create[i]`: `invalid_uid`, `entity_not_found`, `not_a_parcel` (not an area), `no_parcel_identity` (no Ada or\nParsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a\nstated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not\nclose), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);\n`invalid_input` for `create[i].lengths[j]` (the ring or edge not the area's, an edge given twice, not a plain decimal\nabove zero; or the area's `Kenar ölçüleri (m)` so, at `create[i].lengths`); `invalid_input` (the register would pass\nits limits: 10 000 documents and drafts, 100 000 parcels, 1 000 000 boundaries). `document_name_taken` covers the\ndrafts' names too. With `draft` the same checks run and the answer is what approving would write today; only the\ndraft is written, numbered among the drafts.",
         "properties": {
           "close": {
             "items": {
@@ -64006,6 +64006,9 @@
           },
           "document": {
             "$ref": "#/$defs/ParcelDocumentInput"
+          },
+          "draft": {
+            "type": "boolean"
           },
           "expectedRevision": {
             "type": [
@@ -64073,6 +64076,17 @@
             "type": "integer",
             "x-unit": "id"
           },
+          "draft": {
+            "description": "Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would\nwrite today.",
+            "type": "boolean"
+          },
+          "lengths": {
+            "description": "Docs/adr/5020: the boundaries' lengths the document states.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "neighbours": {
             "items": {
               "format": "uint32",
@@ -64151,6 +64165,17 @@
             "type": "integer",
             "x-unit": "id"
           },
+          "draft": {
+            "description": "Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would\nwrite today.",
+            "type": "boolean"
+          },
+          "lengths": {
+            "description": "Docs/adr/5020: the boundaries' lengths the document states.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "neighbours": {
             "items": {
               "format": "uint32",
@@ -64215,6 +64240,288 @@
               "name": "2026/145 ifraz"
             }
           }
+        },
+        {
+          "title": "Taslak: kenar ölçüleriyle, onaylanınca yazılır",
+          "input": {
+            "close": [
+              1
+            ],
+            "create": [
+              {
+                "lengths": [
+                  {
+                    "edge": 0,
+                    "length": "20,00"
+                  },
+                  {
+                    "edge": 1,
+                    "length": "10,00"
+                  }
+                ],
+                "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+              }
+            ],
+            "document": {
+              "kind": "Değişiklik",
+              "name": "2026/146 ifraz"
+            },
+            "draft": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.parcels.approve",
+      "version": 1,
+      "title": "Belgenin onayı",
+      "summary": "Parsel kayıtlarındaki bir belgenin dışarıda verilen onayını yazar: onay sayısı (boş olmaz), tarihi ve onaylayan, yazıldığı gibi. KentOS onay vermez; onayı kaydeder. draft: belge taslağı taslaktaki gibi (alanlarının taslaktaki şekli, kimliği, belgedeki alanı ve kenar ölçüleri, kapatacağı parseller) sıradaki numarayla belge olarak yazılır ve taslak kalkar; cevap cad.parcels.record'unkini taşır. document: kayıtlı bir belgenin onayı yazılır, belge değişmez. Onay bir kez yazılır. Tek geri alma adımı “Belge onayı”. Retler: invalid_revision, revision_conflict, invalid_input (draft ile document'tan biri verilmeli; onay sayısı boş ya da 64 karakteri aşıyor; tarih ya da onaylayan çok uzun), unknown_parcel_draft, unknown_parcel_document, document_approved; taslak bugün yazılamıyorsa cad.parcels.record'un retleri (parcel_closed: kapatacağı parsel o arada kapanmış; parcel_recorded; parcel_identity_taken; invalid_input) draft yolunda.",
+      "aliases": [
+        "belgeonayi",
+        "taslagionayla",
+        "parcelapprove"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.approve` v1: the draft (`draft`, its number) or the document (`document`) the approval is of,\none of the two; the approval.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (neither or both of `draft` and\n`document`; the approval's number empty, past 64 characters or with a control character, its date or approver too\nlong); `unknown_parcel_draft` (`draft`), `unknown_parcel_document` (`document`); `document_approved` (the document has\nits approval); for a draft, what `cad.parcels.record` refuses when it writes the draft today, at `draft`:\n`parcel_closed` (a parcel it closes was closed since), `parcel_recorded`, `parcel_identity_taken`, `invalid_input`\n(the register's limits).",
+        "properties": {
+          "approval": {
+            "$ref": "#/$defs/ParcelApprovalInput"
+          },
+          "document": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "draft": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "id"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "approval"
+        ],
+        "title": "ParcelsApprove",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.approve` v1: the approved document's number and, for a draft, what writing it did (as\n`cad.parcels.record` answers; none for a document already recorded); the revision after.",
+        "properties": {
+          "document": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "recorded": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ParcelsRecorded"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "document",
+          "revision"
+        ],
+        "title": "ParcelsApproved",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.approve` v1: the approved document's number and, for a draft, what writing it did (as\n`cad.parcels.record` answers; none for a document already recorded); the revision after.",
+        "properties": {
+          "document": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "recorded": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ParcelsRecorded"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "document",
+          "revision"
+        ],
+        "title": "ParcelsApproved",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "unknown_parcel_draft",
+          "unknown_parcel_document",
+          "document_approved",
+          "parcel_closed",
+          "parcel_recorded",
+          "parcel_identity_taken"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Taslağı onay sayısıyla yaz",
+          "input": {
+            "approval": {
+              "by": "Kadastro Müdürlüğü",
+              "date": "2026-03-20",
+              "reference": "2026/145-K"
+            },
+            "draft": 1
+          }
+        },
+        {
+          "title": "Kayıtlı belgenin onayını yaz",
+          "input": {
+            "approval": {
+              "reference": "2026/77"
+            },
+            "document": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.parcels.withdraw",
+      "version": 1,
+      "title": "Taslağı geri çek",
+      "summary": "Parsel kayıtlarındaki bir belge taslağını kaldırır; güncel parseller, sınırlar ve belgeler değişmez, taslağın adı yeniden kullanılabilir. Tek geri alma adımı “Taslağı geri çek”. Retler: invalid_revision, revision_conflict, unknown_parcel_draft.",
+      "aliases": [
+        "taslagigericek",
+        "parcelwithdraw"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.withdraw` v1: the draft to remove. Refusals: `invalid_revision`, `revision_conflict`,\n`unknown_parcel_draft` (`draft`).",
+        "properties": {
+          "draft": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "draft"
+        ],
+        "title": "ParcelsWithdraw",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.withdraw` v1: the removed draft's name; the revision after.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "revision"
+        ],
+        "title": "ParcelsWithdrawn",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.withdraw` v1: the removed draft's name; the revision after.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "revision"
+        ],
+        "title": "ParcelsWithdrawn",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_parcel_draft"
+        ]
+      },
+      "examples": [
+        {
+          "title": "1. taslağı geri çek",
+          "input": {
+            "draft": 1
+          }
         }
       ]
     },
@@ -64222,7 +64529,7 @@
       "id": "cad.parcels.records",
       "version": 1,
       "title": "Parsel kayıtları",
-      "summary": "Çizimin parsel kayıtlarını çizimle birlikte okur: belgeler (oluşturdukları ve kapattıkları parseller), parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki yerinde hâlâ çizili mi). history ile kapanan parseller ve sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne yazılmaz. Ret yok: kaydı olmayan çizim boş listeler verir.",
+      "summary": "Çizimin parsel kayıtlarını çizimle birlikte okur: belgeler (onayı yazıldığı gibi, oluşturdukları ve kapattıkları parseller), taslaklar (oluşturacakları kimlikler, kapatacakları, kenar ölçüsü sayısı), parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki yerinde hâlâ çizili mi; belgelerin yazdığı ölçüler, kayıttaki boyla farkı ve cephe denetiminin sınırı d = 0,05 + 0,001·S m, S belgedeki ölçü, BÖHHBÜY m. 48(1); overLimit sınırı aşan güncel sınır sayısı). history ile kapanan parseller ve sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne yazılmaz. Ret yok: kaydı olmayan çizim boş listeler verir.",
       "aliases": [
         "parselkayitlari",
         "parselgecmisi",
@@ -64253,7 +64560,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with\n`history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,\ncurrent boundaries no longer drawn as recorded.",
+        "description": "Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with\n`history`), the drafts, and the counts: current and closed parcels, current parcels drawn otherwise and without their\narea, current boundaries no longer drawn as recorded, current boundaries with a stated length past its limit.",
         "properties": {
           "boundaries": {
             "items": {
@@ -64285,6 +64592,12 @@
             },
             "type": "array"
           },
+          "drafts": {
+            "items": {
+              "$ref": "#/$defs/ParcelDraftRow"
+            },
+            "type": "array"
+          },
           "missing": {
             "format": "uint32",
             "minimum": 0,
@@ -64292,6 +64605,12 @@
             "x-unit": "count"
           },
           "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "overLimit": {
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -64319,7 +64638,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with\n`history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,\ncurrent boundaries no longer drawn as recorded.",
+        "description": "Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with\n`history`), the drafts, and the counts: current and closed parcels, current parcels drawn otherwise and without their\narea, current boundaries no longer drawn as recorded, current boundaries with a stated length past its limit.",
         "properties": {
           "boundaries": {
             "items": {
@@ -64351,6 +64670,12 @@
             },
             "type": "array"
           },
+          "drafts": {
+            "items": {
+              "$ref": "#/$defs/ParcelDraftRow"
+            },
+            "type": "array"
+          },
           "missing": {
             "format": "uint32",
             "minimum": 0,
@@ -64358,6 +64683,12 @@
             "x-unit": "count"
           },
           "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "overLimit": {
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -110836,6 +111167,24 @@
       "meaning": "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı."
     },
     {
+      "code": "unknown_parcel_draft",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parsel kayıtlarında bu numarada belge taslağı yok."
+    },
+    {
+      "code": "unknown_parcel_document",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parsel kayıtlarında bu numarada belge yok."
+    },
+    {
+      "code": "document_approved",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Belgenin onayı yazılmış; onay bir kez yazılır, değişirse yeni bir belgeyle kaydedin."
+    },
+    {
       "code": "nothing_to_compare",
       "kind": "failed",
       "retryable": false,
@@ -123147,6 +123496,41 @@
           "type": "string"
         }
       ]
+    },
+    "BoundaryLengthRow": {
+      "description": "A length a document states for a boundary against the boundary's length now (docs/adr/5020): the document, the\nlength as written, the boundary's length less it, and the frontage check's limit d = 0,05 + 0,001·S m (S the stated\nlength in metres); `within` when the difference's size is no more than the limit.",
+      "properties": {
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "document": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "length": {
+          "type": "string"
+        },
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "within": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "document",
+        "length",
+        "difference",
+        "limit",
+        "within"
+      ],
+      "type": "object"
     },
     "BoundaryProblem": {
       "description": "What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap`, `arcChord` or `approxArc`;\nwhere; the parcels.",
@@ -137134,6 +137518,86 @@
         "layer",
         "street",
         "door"
+      ],
+      "type": "object"
+    },
+    "DraftParcel": {
+      "additionalProperties": false,
+      "description": "A parcel a draft would make: its area, identity and stated area as read when drafted, its rings as drawn then and the\nlengths the document states.",
+      "properties": {
+        "ada": {
+          "type": "string"
+        },
+        "il": {
+          "type": "string"
+        },
+        "ilce": {
+          "type": "string"
+        },
+        "lengths": {
+          "items": {
+            "$ref": "#/$defs/StatedLength"
+          },
+          "type": "array"
+        },
+        "mahalle": {
+          "type": "string"
+        },
+        "parsel": {
+          "type": "string"
+        },
+        "rings": {
+          "items": {
+            "$ref": "#/$defs/DraftRing"
+          },
+          "type": "array"
+        },
+        "statedArea": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "ada",
+        "parsel",
+        "rings"
+      ],
+      "type": "object"
+    },
+    "DraftRing": {
+      "additionalProperties": false,
+      "description": "A draft's ring as its area was when drafted: its part, whether a hole, its vertices and each edge's bulge (none: all\nstraight).",
+      "properties": {
+        "bulges": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "1"
+        },
+        "hole": {
+          "type": "boolean"
+        },
+        "part": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "pts": {
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "pts"
       ],
       "type": "object"
     },
@@ -177258,6 +177722,50 @@
         }
       ]
     },
+    "ParcelApproval": {
+      "additionalProperties": false,
+      "description": "An approval written outside KentOS, as written (docs/adr/5020): its number (never empty), its date and who approved.",
+      "properties": {
+        "by": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference"
+      ],
+      "type": "object"
+    },
+    "ParcelApprovalInput": {
+      "additionalProperties": false,
+      "description": "An approval as given (docs/adr/5020): its number (at most 64 characters), date (64) and who approved (120), as\nwritten outside KentOS.",
+      "properties": {
+        "by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference"
+      ],
+      "type": "object"
+    },
     "ParcelAreaCheck": {
       "description": "A parcel as checked: its identity's parts as written (empty when missing), its geometric area (square metres),\nits recorded area's text as written and its value when it reads, the difference (geometric − recorded), the\ntolerance from the geometric area, and the status: `within`, `outside`, `noRecord` or `invalidRecord`;\n`duplicate` when another parcel has the same identity, `noIdentity` when Ada or Parsel is missing.",
       "properties": {
@@ -177410,8 +177918,18 @@
     },
     "ParcelDocument": {
       "additionalProperties": false,
-      "description": "A document that made or closed parcels (ArcGIS's record): its name, unique in the drawing; its kind as the user\nwrites it (a plan, a deed …); the date it gives, as written; a note.",
+      "description": "A document that made or closed parcels: its name, unique in the drawing; its kind as the user\nwrites it (a plan, a deed …); the date it gives, as written; a note.",
       "properties": {
+        "approval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParcelApproval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "date": {
           "type": "string"
         },
@@ -177469,8 +177987,18 @@
       "type": "object"
     },
     "ParcelDocumentRow": {
-      "description": "A document as listed: its fields and the parcels it made and closed.",
+      "description": "A document as listed: its fields, its approval as written (docs/adr/5020) and the parcels it made and closed.",
       "properties": {
+        "approval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParcelApproval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "closed": {
           "items": {
             "format": "uint32",
@@ -177516,6 +178044,99 @@
       ],
       "type": "object"
     },
+    "ParcelDraft": {
+      "additionalProperties": false,
+      "description": "A document not yet approved (docs/adr/5020): its fields as a document's, the parcels it would make and the recorded\nparcels it would close. Approving it writes it as a document with the next number; nothing current changes before.",
+      "properties": {
+        "close": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "create": {
+          "items": {
+            "$ref": "#/$defs/DraftParcel"
+          },
+          "type": "array"
+        },
+        "date": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        }
+      },
+      "required": [
+        "number",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ParcelDraftRow": {
+      "description": "A draft as listed (docs/adr/5020): its number among the drafts, its fields, the identities (`Ada/Parsel`) of the\nparcels it would make, the recorded parcels it would close, how many lengths it states.",
+      "properties": {
+        "close": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "create": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "date": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "lengths": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "name": {
+          "type": "string"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        }
+      },
+      "required": [
+        "number",
+        "name",
+        "create",
+        "close",
+        "lengths"
+      ],
+      "type": "object"
+    },
     "ParcelInGraph": {
       "description": "A parcel in the graph: its id, its identity as written (İl/İlçe/Mahalle/Ada/Parsel, the empty ones left out), its\ngeometric area, its boundaries in ring order (the outer ring's, then its holes' and parts'), its neighbours.",
       "properties": {
@@ -177554,7 +178175,7 @@
     },
     "ParcelRegister": {
       "additionalProperties": false,
-      "description": "The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made.",
+      "description": "The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made; the lengths\nthe documents state; the drafts, numbered apart (docs/adr/5020).",
       "properties": {
         "boundaries": {
           "items": {
@@ -177565,6 +178186,18 @@
         "documents": {
           "items": {
             "$ref": "#/$defs/ParcelDocument"
+          },
+          "type": "array"
+        },
+        "drafts": {
+          "items": {
+            "$ref": "#/$defs/ParcelDraft"
+          },
+          "type": "array"
+        },
+        "lengths": {
+          "items": {
+            "$ref": "#/$defs/RecordedLength"
           },
           "type": "array"
         },
@@ -177584,8 +178217,17 @@
     },
     "ParcelToRecord": {
       "additionalProperties": false,
-      "description": "A parcel the document makes: the area that draws it, and the area the document states, a plain decimal in square\nmetres as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none).",
+      "description": "A parcel the document makes: the area that draws it, the area the document states, a plain decimal in square metres\nas written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none), and the lengths it\nstates for the area's edges (none: the area's `Kenar ölçüleri (m)`, the outline's edges' lengths in order, separated\nby `;`, an empty or `-` one unstated; empty: none).",
       "properties": {
+        "lengths": {
+          "items": {
+            "$ref": "#/$defs/StatedLength"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "statedArea": {
           "type": [
             "string",
@@ -177598,6 +178240,93 @@
       },
       "required": [
         "uid"
+      ],
+      "type": "object"
+    },
+    "ParcelsRecorded": {
+      "description": "Output of `cad.parcels.record` v1: the document's number, the parcels it made and closed (numbers), the boundaries\nit made, the current boundaries its parcels share with earlier ones, and those it closed; the revision after.",
+      "properties": {
+        "boundariesClosed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "boundariesCreated": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "boundariesShared": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "boundariesSplit": {
+          "description": "Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings\ntook the pieces (not closed: their identity, document and stated area stay).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "closed": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "created": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "document": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "draft": {
+          "description": "Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would\nwrite today.",
+          "type": "boolean"
+        },
+        "lengths": {
+          "description": "Docs/adr/5020: the boundaries' lengths the document states.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "neighbours": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "document",
+        "created",
+        "closed",
+        "boundariesCreated",
+        "boundariesShared",
+        "boundariesClosed",
+        "revision"
       ],
       "type": "object"
     },
@@ -188218,6 +188947,12 @@
           "type": "number",
           "x-unit": "length"
         },
+        "lengths": {
+          "items": {
+            "$ref": "#/$defs/BoundaryLengthRow"
+          },
+          "type": "array"
+        },
         "number": {
           "format": "uint32",
           "minimum": 0,
@@ -188252,6 +188987,33 @@
         "createdBy",
         "parcels",
         "drawn"
+      ],
+      "type": "object"
+    },
+    "RecordedLength": {
+      "additionalProperties": false,
+      "description": "The length a document states for a boundary (docs/adr/5020): a plain decimal in metres as written, an arc's length\non an arc. One per boundary and document.",
+      "properties": {
+        "boundary": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "document": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "length": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "boundary",
+        "document",
+        "length"
       ],
       "type": "object"
     },
@@ -202307,6 +203069,32 @@
       "required": [
         "name",
         "font"
+      ],
+      "type": "object"
+    },
+    "StatedLength": {
+      "additionalProperties": false,
+      "description": "A length stated for one edge of an area's ring (docs/adr/5020): the ring in the area's order (the outline, its holes,\nthen each further part's outline and holes; 0 first), the edge from the ring's vertex `edge` to the next, the length a\nplain decimal in metres as written.",
+      "properties": {
+        "edge": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "length": {
+          "type": "string"
+        },
+        "ring": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "edge",
+        "length"
       ],
       "type": "object"
     },

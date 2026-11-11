@@ -4260,6 +4260,16 @@ impl Input for kentos_commands::ZoningSymbolize {
         None
     }
 }
+impl Input for kentos_commands::ParcelsApprove {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ParcelsWithdraw {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::ParcelsRecords {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -6022,6 +6032,14 @@ fn run_op(
             use kentos_native_application::parcel_register::list_cmd as parcel_register_list;
             run!(parcel_register_list, kentos_commands::ParcelsRecords)
         }
+        kentos_commands::CAD_PARCELS_APPROVE => {
+            use kentos_native_application::parcel_drafts as parcel_approve;
+            run!(parcel_approve, kentos_commands::ParcelsApprove)
+        }
+        kentos_commands::CAD_PARCELS_WITHDRAW => {
+            use kentos_native_application::parcel_drafts::withdraw as parcel_withdraw;
+            run!(parcel_withdraw, kentos_commands::ParcelsWithdraw)
+        }
         kentos_commands::CAD_PIPES_CHECK => {
             run!(pipes_check, kentos_commands::PipesCheck)
         }
@@ -6658,7 +6676,7 @@ fn run_step(
                 .ok_or(format!("{at}: {index}. mutfak dizisi yok"))?;
             state.uids.insert(name.to_owned(), Uuid::from_bytes(run.id.0));
         }
-        // A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538): a
+        // A file changed by someone else between two steps (another program's edit of a bound table, docs/adr/0538): a
         // fixture's bytes over a `$tmp:` file.
         "copyFile" => {
             let from = with_fixtures(step["from"].as_str().ok_or(format!("{at}: “from” yok"))?);

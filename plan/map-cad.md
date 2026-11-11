@@ -39,7 +39,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580, 4980 | dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot; Paralel kaydır'da çok parçalı nesne | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600, 5000 | tutamaçla birden çok nesne; gidiş okunun anahtarı ve ilk/son köşe rengi | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620, 5020 | semt ve yarıçap ölçüleri, ölçülerden alan ve kapanma; kenar ölçülerinin pencerede girilmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -1251,6 +1251,17 @@ komşunun halkası parçaları sırayla (ters yürüyende ters ve eksi) alır, e
 `neighbours`. 38 + 23 bağımsız durum (3 yeni, eski ifraz durumu bölmeyle değişti), Python, MCP, masaüstü (planın sözü)
 ve resimler. Açık: yaylı sınırın bölünmesi, kenarın belgedeki ölçüleri, belge taslağı ile onaylı kayıt, erişim
 denetimli hak/pay.
+
+**11 Kasım 2026, onuncu tur — belge taslağı ve onayı, belgedeki kenar ölçüleri, yaylı sınırın bölünmesi ([ADR 5020](../docs/adr/5020-parcel-document-drafts-lengths-and-arc-split.md)).**
+Kapsam: **Harita + CBS**. Dayanak: BÖHHBÜY m. 48(1) (cephe farkı d = 0,05 + 0,001·S m, metinden okundu), PAİY m. 4(1)(a)
+(aplikasyon krokisinde kenar ölçüleri), Tapu Plânları Tüzüğü m. 5(2), 10, 11 ve Genelge 2025/4 (kontrol ve onay kurumda;
+KentOS onay vermez); ArcGIS Pro'nun COGO ölçü planı (ölçü kenarın, belgenin değeri). Kanıtlanan: `cad.parcels.record`'un
+`lengths`'i (ya da alanın Kenar ölçüleri (m)'si) ve `draft`'ı; `cad.parcels.records`'un ölçü satırları (fark, m. 48(1)
+sınırı, `overLimit`) ve taslakları; yeni `cad.parcels.approve` (dışarıda verilen onay yazıldığı gibi; taslak sıradaki
+numarayla belge olur) ve `cad.parcels.withdraw`; yeni köşe komşunun yaylı sınırının çemberine düşerse yay bölünür;
+`.kcad` şema 241. 54 + 26 + 25 + 21 bağımsız durum, bağımsız `.kcad` okuyucusu, Python, MCP, masaüstü (Taslak olarak yaz,
+Seçili belge, Sınırlar'da Belgede ve Fark (sınır)) ve resimler. Açık: semt ve yarıçap ölçüleri, ölçülerden alan ve
+kapanma, kenar ölçülerinin pencerede girilmesi, erişim denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

@@ -10249,9 +10249,11 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_PARCELS_RECORD.into(),
             version: crate::CAD_PARCELS_RECORD_VERSION,
             title: "Parsel kaydı".into(),
-            summary: "Çizimin parsel kayıtlarına bir belge yazar: belgenin adı (çizimde tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). \
-                      Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. \
-                      Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; kayıtların sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i])."
+            summary: "Çizimin parsel kayıtlarına bir belge yazar: belgenin adı (çizimde, taslaklarla birlikte tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). \
+                      Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır. Belgenin yeni köşeleri güncel bir komşunun düz ya da yaylı sınırının üstüne (1 µm) düşüp parçalar belgenin sınırlarıysa sınır bölünür, komşu parçaları alır. \
+                      Belge kenarların ölçülerini yazar (create[i].lengths: halka, kenar, metre olarak düz ondalık; yoksa alanın Kenar ölçüleri (m) özniteliği, dış halkanın kenarları sırayla, ; ile ayrılmış): ölçü belgenindir, sınırın boyu değişince değişmez. draft ile belge taslak olarak yazılır: güncel hiçbir şey değişmez, cevap onayın bugün yazacağıdır; taslağı cad.parcels.approve yazar. \
+                      Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. \
+                      Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; olmayan ya da iki kez verilen kenar, sıfırdan büyük düz ondalık olmayan kenar ölçüsü; kayıtların sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i])."
                 .into(),
             aliases: vec!["parselkaydi".into(), "parselbelgesi".into(), "parcelrecord".into()],
             effect: CommandEffect::Document,
@@ -10278,14 +10280,82 @@ pub fn catalog() -> CommandCatalog {
                     }),
                     output: None,
                 },
+                CommandExample {
+                    title: "Taslak: kenar ölçüleriyle, onaylanınca yazılır".into(),
+                    input: json!({
+                        "document": { "name": "2026/146 ifraz", "kind": "Değişiklik" },
+                        "create": [{
+                            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+                            "lengths": [{ "edge": 0, "length": "20,00" }, { "edge": 1, "length": "10,00" }]
+                        }],
+                        "close": [1],
+                        "draft": true
+                    }),
+                    output: None,
+                },
             ],
+        },
+        // Belgenin onayı (plan/map-cad.md MAP-08, docs/adr/5020).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_APPROVE.into(),
+            version: crate::CAD_PARCELS_APPROVE_VERSION,
+            title: "Belgenin onayı".into(),
+            summary: "Parsel kayıtlarındaki bir belgenin dışarıda verilen onayını yazar: onay sayısı (boş olmaz), tarihi ve onaylayan, yazıldığı gibi. KentOS onay vermez; onayı kaydeder. \
+                      draft: belge taslağı taslaktaki gibi (alanlarının taslaktaki şekli, kimliği, belgedeki alanı ve kenar ölçüleri, kapatacağı parseller) sıradaki numarayla belge olarak yazılır ve taslak kalkar; cevap cad.parcels.record'unkini taşır. document: kayıtlı bir belgenin onayı yazılır, belge değişmez. Onay bir kez yazılır. Tek geri alma adımı “Belge onayı”. \
+                      Retler: invalid_revision, revision_conflict, invalid_input (draft ile document'tan biri verilmeli; onay sayısı boş ya da 64 karakteri aşıyor; tarih ya da onaylayan çok uzun), unknown_parcel_draft, unknown_parcel_document, document_approved; taslak bugün yazılamıyorsa cad.parcels.record'un retleri (parcel_closed: kapatacağı parsel o arada kapanmış; parcel_recorded; parcel_identity_taken; invalid_input) draft yolunda."
+                .into(),
+            aliases: vec!["belgeonayi".into(), "taslagionayla".into(), "parcelapprove".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsApprove>(),
+            output: schema::<crate::ParcelsApproved>(),
+            plan: Some(schema::<crate::ParcelsApproved>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Taslağı onay sayısıyla yaz".into(),
+                    input: json!({ "draft": 1, "approval": { "reference": "2026/145-K", "date": "2026-03-20", "by": "Kadastro Müdürlüğü" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kayıtlı belgenin onayını yaz".into(),
+                    input: json!({ "document": 2, "approval": { "reference": "2026/77" } }),
+                    output: None,
+                },
+            ],
+        },
+        // Taslağı geri çek (plan/map-cad.md MAP-08, docs/adr/5020).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_WITHDRAW.into(),
+            version: crate::CAD_PARCELS_WITHDRAW_VERSION,
+            title: "Taslağı geri çek".into(),
+            summary: "Parsel kayıtlarındaki bir belge taslağını kaldırır; güncel parseller, sınırlar ve belgeler değişmez, taslağın adı yeniden kullanılabilir. Tek geri alma adımı “Taslağı geri çek”. Retler: invalid_revision, revision_conflict, unknown_parcel_draft."
+                .into(),
+            aliases: vec!["taslagigericek".into(), "parcelwithdraw".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsWithdraw>(),
+            output: schema::<crate::ParcelsWithdrawn>(),
+            plan: Some(schema::<crate::ParcelsWithdrawn>()),
+            capabilities: None,
+            examples: vec![CommandExample { title: "1. taslağı geri çek".into(), input: json!({ "draft": 1 }), output: None }],
         },
         // Parsel kayıtları (plan/map-cad.md MAP-08, docs/adr/4220).
         CommandDescriptor {
             id: crate::CAD_PARCELS_RECORDS.into(),
             version: crate::CAD_PARCELS_RECORDS_VERSION,
             title: "Parsel kayıtları".into(),
-            summary: "Çizimin parsel kayıtlarını çizimle birlikte okur: belgeler (oluşturdukları ve kapattıkları parseller), parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki yerinde hâlâ çizili mi). \
+            summary: "Çizimin parsel kayıtlarını çizimle birlikte okur: belgeler (onayı yazıldığı gibi, oluşturdukları ve kapattıkları parseller), taslaklar (oluşturacakları kimlikler, kapatacakları, kenar ölçüsü sayısı), parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki yerinde hâlâ çizili mi; belgelerin yazdığı ölçüler, kayıttaki boyla farkı ve cephe denetiminin sınırı d = 0,05 + 0,001·S m, S belgedeki ölçü, BÖHHBÜY m. 48(1); overLimit sınırı aşan güncel sınır sayısı). \
                       history ile kapanan parseller ve sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne yazılmaz. Ret yok: kaydı olmayan çizim boş listeler verir."
                 .into(),
             aliases: vec!["parselkayitlari".into(), "parselgecmisi".into(), "parcelrecords".into()],
@@ -17044,6 +17114,8 @@ mod tests {
                     crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBoundaries>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecord>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecords>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PARCELS_APPROVE => serde_json::from_value::<crate::ParcelsApprove>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PARCELS_WITHDRAW => serde_json::from_value::<crate::ParcelsWithdraw>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfile>(e.input.clone()).map(|_| ()),
                     crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
@@ -18027,6 +18099,8 @@ mod tests {
                         crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBounded>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecorded>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecordsListed>(output.clone()).map(|_| ()),
+                        crate::CAD_PARCELS_APPROVE => serde_json::from_value::<crate::ParcelsApproved>(output.clone()).map(|_| ()),
+                        crate::CAD_PARCELS_WITHDRAW => serde_json::from_value::<crate::ParcelsWithdrawn>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),
                         crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),

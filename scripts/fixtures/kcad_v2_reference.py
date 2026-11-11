@@ -2797,6 +2797,10 @@ def document(d):
     if "parcelRegister" in d["settings"]:
         # The parcel register (docs/adr/4220).
         schema = max(schema, 216)
+        register = d["settings"]["parcelRegister"]
+        if register.get("lengths") or register.get("drafts") or any("approval" in x for x in register["documents"]):
+            # Its stated lengths, drafts, a document's approval (docs/adr/5020).
+            schema = max(schema, 241)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3653,7 +3657,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-241.kcad"] = container(root(cmap(parts), version=uint(241)))
+    files["schema-version-242.kcad"] = container(root(cmap(parts), version=uint(242)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6024,6 +6028,34 @@ def build():
     one_area = copy.deepcopy(registered)
     one_area["settings"]["parcelRegister"]["parcels"][2]["uid"] = "0192f5c0-4220-7000-8000-000000000101"
     out["broken/parcel-register-one-area.kcad"] = container(document(one_area))
+    # Schema 241 (docs/adr/5020): the same register with the lengths 2026/145 ifraz states for its boundaries 5–9, its
+    # approval as written outside, and a draft (2026/160 tevhit) that would close 101/8 and 101/9 and make 101/10 from
+    # one 20 × 10 m area, stating its south edge. Schema 240 refuses them; a length of 0 and a draft named as a document
+    # are refused.
+    drafted = copy.deepcopy(registered)
+    drafted["name"] = "Parsel taslakları"
+    reg_ = drafted["settings"]["parcelRegister"]
+    reg_["documents"][1]["approval"] = {"reference": "2026/145-K", "date": "2026-03-20", "by": "Kadastro Müdürlüğü"}
+    reg_["lengths"] = [{"boundary": b, "document": 2, "length": text_}
+                       for b, text_ in ((5, "10,00"), (6, "10.00"), (7, "10,01"), (8, "10,00"), (9, "9,99"))]
+    reg_["drafts"] = [{
+        "number": 1, "name": "2026/160 tevhit", "kind": "Değişiklik", "close": [2, 3],
+        "create": [{"uid": "0192f5c0-4220-7000-8000-000000000103", "il": "Ankara", "ilce": "Çankaya",
+                    "mahalle": "Kızılay", "ada": "101", "parsel": "10", "statedArea": "200,01",
+                    "rings": [{"pts": [corner(0, 0), corner(20, 0), corner(20, 10), corner(0, 10)]}],
+                    "lengths": [{"edge": 0, "length": "20,00"}]}]}]
+    out["parcel-drafts.json"] = json_text(drafted).encode("utf-8")
+    drafted_data = document(drafted)
+    assert drafted_data.count(b"\x67version\x18\xf1") == 1, "a parcel draft is schema 241"
+    out["parcel-drafts.kcad"] = container(drafted_data)
+    out["broken/parcel-drafts-in-schema-240.kcad"] = container(
+        drafted_data.replace(b"\x67version\x18\xf1", b"\x67version\x18\xf0"))
+    zero = copy.deepcopy(drafted)
+    zero["settings"]["parcelRegister"]["lengths"][0]["length"] = "0,00"
+    out["broken/parcel-drafts-length-zero.kcad"] = container(document(zero))
+    named_ = copy.deepcopy(drafted)
+    named_["settings"]["parcelRegister"]["drafts"][0]["name"] = "Kadastro 1985"
+    out["broken/parcel-drafts-name-taken.kcad"] = container(document(named_))
     # Schema 189 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
     # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
     # reason and an unknown decision are refused.

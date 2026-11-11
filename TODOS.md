@@ -230,6 +230,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve web İmar planı denetiminde Sembol uyuşmazlığı; web İşlem'inde hata katmanının GeoPackage'a yazılması.
 - MAP-08 / ADR 4620: web'in `cad.parcels.record` işleyicisinde komşunun sınırının bölünmesi (`boundariesSplit`,
   `neighbours`; cad.parcels.record.json'un yeni ve değişen durumları) ve web Parsel kayıtları'nda planın sözü.
+- MAP-08 / ADR 5020: web'in `cad.parcels.record` işleyicisinde `lengths`, `draft` ve yaylı sınırın bölünmesi; web'de
+  `cad.parcels.approve` ve `cad.parcels.withdraw` işleyicileri; `cad.parcels.records`'un ölçü satırları, `drafts`,
+  `overLimit`; web `.kcad` okuyucusunda şema 241 (parsel kayıtlarının `lengths`, `drafts`, `approval`'ı); web Parsel
+  kayıtları'nda taslak, Seçili belge bölümü ve Sınırlar'ın Belgede, Fark (sınır) sütunları.
 - MAP-07 / ADR 5000: web'in `cad.entities.vertex` işleyicisinde `joinArcs` (aynı dairenin iki yayı tek yay,
   `arcs_not_joined`; cad.entities.vertex.json'un 8 yeni durumu), web topolojik düzenlemesinde `Change::Join` ve web
   tutamaç menüsünün Köşeyi sil'inde Topolojik temizlik'in toleransı; web Köşe tablosu açıkken kenarlarda gidiş oku ve Sil'de silinen dizinin yaylarının birleşmesi.

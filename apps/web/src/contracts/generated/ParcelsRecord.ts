@@ -13,6 +13,10 @@ import type { ParcelToRecord } from "./ParcelToRecord";
  * Parsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a
  * stated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not
  * close), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);
- * `invalid_input` (the register would pass its limits: 10 000 documents, 100 000 parcels, 1 000 000 boundaries).
+ * `invalid_input` for `create[i].lengths[j]` (the ring or edge not the area's, an edge given twice, not a plain decimal
+ * above zero; or the area's `Kenar ölçüleri (m)` so, at `create[i].lengths`); `invalid_input` (the register would pass
+ * its limits: 10 000 documents and drafts, 100 000 parcels, 1 000 000 boundaries). `document_name_taken` covers the
+ * drafts' names too. With `draft` the same checks run and the answer is what approving would write today; only the
+ * draft is written, numbered among the drafts.
  */
-export type ParcelsRecord = { document: ParcelDocumentInput, create?: Array<ParcelToRecord>, close?: Array<number>, expectedRevision?: string, };
+export type ParcelsRecord = { document: ParcelDocumentInput, create?: Array<ParcelToRecord>, close?: Array<number>, draft?: boolean, expectedRevision?: string, };

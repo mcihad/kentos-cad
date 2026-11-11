@@ -641,6 +641,12 @@
 - **İfrazda komşunun sınırının bölünmesi (10 Kasım 2026; MAP-08, [ADR 4620](../../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
   `cad.parcels.record`: yeni köşe güncel komşunun düz sınırının içindeyse (1 µm) ve parçalar belgenin sınırlarıysa
   sınır bölünür, komşunun halkası parçaları alır, eski sınır kapanır; `boundariesSplit`, `neighbours`. Harita + CBS.
+- **Belge taslağı ve onayı, belgedeki kenar ölçüleri, yaylı sınırın bölünmesi (11 Kasım 2026; MAP-08, [ADR 5020](../../docs/adr/5020-parcel-document-drafts-lengths-and-arc-split.md)).**
+  `cad.parcels.record`'un `lengths`'i (ya da alanın Kenar ölçüleri (m)'si) belgenin kenar ölçülerini yazar; `cad.parcels.records`
+  her ölçüyü sınırın boyuyla BÖHHBÜY m. 48(1)'in d = 0,05 + 0,001·S m sınırına göre okur (`overLimit`). `draft` belgeyi
+  taslak yazar, güncel kayıt değişmez; `cad.parcels.approve` dışarıda verilen onayı yazar (taslak sıradaki numarayla
+  belge olur; KentOS onay vermez), `cad.parcels.withdraw` taslağı kaldırır. Yeni köşe komşunun yaylı sınırının çemberine
+  düşerse yay bölünür. `.kcad` şema 241. Harita + CBS.
 - **Köşe sil'de aynı dairenin iki yayı tek yay (11 Kasım 2026; MAP-07, [ADR 5000](../../docs/adr/5000-vertex-delete-joins-arcs-of-one-circle.md)).**
   `cad.entities.vertex`'in `joinArcs`'ı (uzunluk toleransı, yalnız Köşeyi sil): aynı yöne dönen, merkez ve yarıçapı
   tolerans içinde iki yay süpürmeleri toplanarak tek yay olur; olmazsa kenar düz, `arcs_not_joined` uyarısı. Aynı yayları

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.parcels.record` and `cad.parcels.records` (Parsel kayıtları; plan/map-cad.md MAP-08,
-docs/adr/4220 and 4620), without KentOS code.
+"""The shared cases of `cad.parcels.record`, `cad.parcels.records`, `cad.parcels.approve` and `cad.parcels.withdraw`
+(Parsel kayıtları; plan/map-cad.md MAP-08, docs/adr/4220, 4620 and 5020), without KentOS code.
 
-    python3 scripts/fixtures/parcel_register_cases.py           # writes the two files
+    python3 scripts/fixtures/parcel_register_cases.py           # writes the four files
     python3 scripts/fixtures/parcel_register_cases.py --check   # writes nothing; compares
 
-Writes fixtures/commands/v1/cad.parcels.record.json and cad.parcels.records.json. The rules, by hand (after ArcGIS's
-parcel fabric records: a record creates parcels and retires earlier ones, which stay as history; a line goes historic
-once no current parcel uses it):
+Writes fixtures/commands/v1/cad.parcels.record.json, cad.parcels.records.json, cad.parcels.approve.json and
+cad.parcels.withdraw.json. The rules, by hand (a document creates parcels and closes earlier ones, which stay as history;
+a boundary closes once no current parcel uses it):
 
 - a document (its name unique in the drawing; kind, date, note as written) makes parcels from areas and closes earlier
   ones. A parcel's identity is its area's İl/İlçe/Mahalle/Ada/Parsel; its stated area the text given, else the area's
@@ -17,14 +17,30 @@ once no current parcel uses it):
   with the same two corners (as stored) and a bulge within 1e-9 of a boundary current before the document, or of one
   the document made already, is that boundary, negative in the ring where run the other way; else a new boundary,
   numbered on;
-- ADR 4620 (ArcGIS splits a bounding line shared with a current adjacent parcel): a straight boundary current before
-  the document, used by a parcel current before it that the document does not close, inside which (within 1e-6 m of
-  its line, farther than 1e-6 m from its ends) corners of the document's new parcels lie, and whose pieces between them
-  (from its lesser corner on) are all current straight boundaries, is split: each such parcel's rings take the pieces,
-  in order, each signed by its own direction (backwards and negated where the ring ran the boundary the other way);
+- ADR 4620: a straight boundary current before the document, used by a parcel current before it that the document
+  does not close, inside which (within 1e-6 m of its line, farther than 1e-6 m from its ends) corners of the document's
+  new parcels lie, and whose pieces between them (from its lesser corner on) are all current straight boundaries, is
+  split: each such parcel's rings take the pieces, in order, each signed by its own direction (backwards and negated
+  where the ring ran the boundary the other way);
+- ADR 5020, an arc: the same for an arc boundary, the corners within 1e-6 m of its circle and farther than 1e-6 m along
+  it from its ends, ordered round it from its lesser corner; a piece is a current arc boundary between its two corners
+  whose arc's middle lies on the circle (1e-6 m), on the side of the piece (nearer than the radius to the circle's
+  point midway between the two corners);
+- ADR 5020, lengths: a document states lengths for its areas' edges (ring, edge, a plain decimal above 0 as written; or
+  the area's `Kenar ölçüleri (m)`, the outline's edges in order separated by `;`, an empty or `-` one unstated); each
+  edge's boundary gets the length once per document (two edges giving one boundary two values are refused), kept in
+  the order the parcels and their lengths come;
+- ADR 5020, drafts: with `draft` the document is kept as a draft (numbered apart; its parcels' area, identity, stated
+  area, rings as drawn then and lengths; what it closes), nothing current changes, and the answer is what recording it
+  would do today with `document` the draft's number and `draft`; approving writes the approval (number, date, who, as
+  written) on a document, or writes a draft as the next document with its approval exactly as recording would, once what
+  it closes is still current; withdrawing removes a draft;
 - the closed parcels lose their area; a boundary current before the document that no current parcel uses after it is
   closed by the document;
-- reading: a parcel's recorded area is its rings' (shoelace plus each arc's circular segment, holes less), its area now
+- reading: a document's approval as written; a draft's identities, closings and number of lengths; each boundary's
+  stated lengths with the boundary's length less the stated one and BÖHHBÜY m. 48(1)'s limit 0.05 + 0.001·S m (S the
+  stated length), within when the difference's size is no more than the limit; `overLimit` the current boundaries with
+  one past it; a parcel's recorded area is its rings' (shoelace plus each arc's circular segment, holes less), its area now
   its drawing area's; `current` when that area draws each of its boundaries (either way round) and has no other edge,
   `changed` when it draws otherwise, `missing` without an area, `closed`; its neighbours are the current parcels it
   shares a boundary with; `before` the parcels its document closed, `after` those the document that closed it made; a
@@ -48,6 +64,7 @@ SAME = {"revision": "same", "canUndo": False}
 WITHIN = 1e-6
 TOLERANCE = 1e-9
 FIELD = "Tapu alanı (m²)"
+LENGTHS = "Kenar ölçüleri (m)"
 
 
 def uid(n):
@@ -181,32 +198,49 @@ def empty():
     return {"documents": [], "boundaries": [], "parcels": []}
 
 
-def record(reg, document, create=(), close=(), ents=None):
-    """The register after a document: `create` (object name, stated area or None), `close` (parcel numbers). The
-    answer as `cad.parcels.record` gives it."""
-    ents = ents if ents is not None else ENTS
-    reg = copy.deepcopy(reg) if reg else empty()
-    number = max((d["number"] for d in reg["documents"]), default=0) + 1
-    d = {"number": number, "name": document["name"]}
-    d.update({k: document[k] for k in ("kind", "date", "note") if document.get(k)})
-    reg["documents"].append(d)
+def made_from_area(name, stated, ents):
+    """A parcel the document makes from an area: (identity, stated area, uid, rings, lengths as (ring, edge, text))."""
+    e = ents[SLOT[name] - 1]
+    attrs = e["attrs"]
+    ident = {}
+    for key, attr in (("il", "İl"), ("ilce", "İlçe"), ("mahalle", "Mahalle"), ("ada", "Ada"), ("parsel", "Parsel")):
+        if attrs.get(attr, "").strip():
+            ident[key] = attrs[attr].strip()
+    text = stated if stated is not None else attrs.get(FIELD, "")
+    return {"ident": ident, "stated": text, "uid": U(name), "rings": rings_of(e)}
+
+
+def lengths_from(given, attrs):
+    """The lengths an area states: given as (ring, edge, text), else its `Kenar ölçüleri (m)` for the outline."""
+    if given is not None:
+        return [(r, k, t) for r, k, t in given]
+    out = []
+    for k, t in enumerate(x.strip() for x in attrs.get(LENGTHS, "").split(";")):
+        if t and t not in ("-", "—"):
+            out.append((0, k, t))
+    return out
+
+
+def apply(reg, number, doc_row, made, close):
+    """`reg` after a document numbered `number` (its row `doc_row`) makes `made` and closes `close`; the answer."""
+    reg["documents"].append(doc_row)
     before = [b for b in reg["boundaries"] if "closedBy" not in b]
     earlier = len(reg["boundaries"])
-    made = []
+    fresh = []
     shared = set()
     next_b = max((b["number"] for b in reg["boundaries"]), default=0) + 1
     next_p = max((p["number"] for p in reg["parcels"]), default=0) + 1
     created = []
-    for name, stated in create:
-        e = ents[SLOT[name] - 1]
-        attrs = e["attrs"]
+    stated = []
+    for m in made:
         rings = []
-        for part, hole, places, bulges in rings_of(e):
+        ring_edges = []
+        for part, hole, places, bulges in m["rings"]:
             edges = []
             for k in range(len(places)):
                 p, q, bulge = places[k], places[(k + 1) % len(places)], bulges[k]
                 frm, to, bulge, back = (p, q, bulge, False) if p <= q else (q, p, -bulge, True)
-                hit = next((b for b in before + made if (b["from"]["x"], b["from"]["y"]) == frm
+                hit = next((b for b in before + fresh if (b["from"]["x"], b["from"]["y"]) == frm
                             and (b["to"]["x"], b["to"]["y"]) == to and abs(b.get("bulge", 0.0) - bulge) <= TOLERANCE),
                            None)
                 if hit is None:
@@ -215,7 +249,7 @@ def record(reg, document, create=(), close=(), ents=None):
                     if bulge != 0:
                         hit["bulge"] = bulge
                     next_b += 1
-                    made.append(hit)
+                    fresh.append(hit)
                     reg["boundaries"].append(hit)
                 elif hit in before:
                     shared.add(hit["number"])
@@ -226,19 +260,24 @@ def record(reg, document, create=(), close=(), ents=None):
             if hole:
                 ring["hole"] = True
             rings.append(ring)
-        parcel = {"number": next_p}
-        for key, attr in (("il", "İl"), ("ilce", "İlçe"), ("mahalle", "Mahalle"), ("ada", "Ada"), ("parsel", "Parsel")):
-            if attrs.get(attr, "").strip():
-                parcel[key] = attrs[attr].strip()
-        parcel["createdBy"] = number
-        text = stated if stated is not None else attrs.get(FIELD, "")
-        if text:
-            parcel["statedArea"] = text
-        parcel["uid"] = U(name)
+            ring_edges.append(edges)
+        for r, k, t in m["lengths"]:
+            b = abs(ring_edges[r][k])
+            other = next((x for x in stated if x[0] == b), None)
+            if other is None:
+                stated.append((b, t))
+            elif other[1] != t:
+                raise ValueError("two lengths for one boundary")
+        parcel = {"number": next_p, **m["ident"], "createdBy": number}
+        if m["stated"]:
+            parcel["statedArea"] = m["stated"]
+        parcel["uid"] = m["uid"]
         parcel["rings"] = rings
         created.append(next_p)
         next_p += 1
         reg["parcels"].append(parcel)
+    if stated:
+        reg.setdefault("lengths", []).extend({"boundary": b, "document": number, "length": t} for b, t in stated)
     split, neighbours = split_neighbours(reg, earlier, close, created)
     for p in reg["parcels"]:
         if p["number"] in close:
@@ -252,19 +291,126 @@ def record(reg, document, create=(), close=(), ents=None):
             gone += 1
     out = {"document": number, "created": created, "closed": list(close),
            "boundariesCreated": len(reg["boundaries"]) - earlier, "boundariesShared": len(shared),
-           "boundariesClosed": gone, "revision": "$current"}
+           "boundariesClosed": gone}
     if split:
         out["boundariesSplit"] = split
     if neighbours:
         out["neighbours"] = neighbours
+    if stated:
+        out["lengths"] = len(stated)
+    out["revision"] = "$current"
+    return out
+
+
+def doc_row(number, document):
+    d = {"number": number, "name": document["name"]}
+    d.update({k: document[k] for k in ("kind", "date", "note") if document.get(k)})
+    return d
+
+
+def record(reg, document, create=(), close=(), ents=None, draft=False):
+    """The register after a document: `create` (object name, stated area or None[, lengths as (ring, edge, text) or
+    None for the area's attribute]), `close` (parcel numbers). With `draft` the register keeps the draft and the answer
+    is what recording would do. The answer as `cad.parcels.record` gives it."""
+    ents = ents if ents is not None else ENTS
+    reg = copy.deepcopy(reg) if reg else empty()
+    number = max((d["number"] for d in reg["documents"]), default=0) + 1
+    made = []
+    for item in create:
+        name, stated = item[0], item[1]
+        given = item[2] if len(item) > 2 else None
+        m = made_from_area(name, stated, ents)
+        m["lengths"] = lengths_from(given, ents[SLOT[name] - 1]["attrs"])
+        made.append(m)
+    if not draft:
+        out = apply(reg, number, doc_row(number, document), made, close)
+        return reg, out
+    preview = copy.deepcopy(reg)
+    out = apply(preview, number, doc_row(number, document), made, close)
+    drafts = reg.setdefault("drafts", [])
+    row = {"number": max((d["number"] for d in drafts), default=0) + 1, "name": document["name"]}
+    row.update({k: document[k] for k in ("kind", "date", "note") if document.get(k)})
+    if made:
+        row["create"] = [draft_parcel(m) for m in made]
+    if close:
+        row["close"] = list(close)
+    drafts.append(row)
+    out["document"] = row["number"]
+    del out["revision"]
+    out["draft"] = True
+    out["revision"] = "$current"
     return reg, out
+
+
+def draft_parcel(m):
+    """A parcel as a draft keeps it."""
+    q = {"uid": m["uid"], **m["ident"]}
+    if m["stated"]:
+        q["statedArea"] = m["stated"]
+    rings = []
+    for part, hole, places, bulges in m["rings"]:
+        r = {}
+        if part:
+            r["part"] = part
+        if hole:
+            r["hole"] = True
+        r["pts"] = [{"x": x, "y": y} for x, y in places]
+        if any(bulges):
+            r["bulges"] = bulges
+        rings.append(r)
+    q["rings"] = rings
+    if m["lengths"]:
+        q["lengths"] = [dict(({"ring": r} if r else {}), edge=k, length=t) for r, k, t in m["lengths"]]
+    return q
+
+
+def approve(reg, approval, draft=None, document=None):
+    """The register after an approval and the answer as `cad.parcels.approve` gives it."""
+    reg = copy.deepcopy(reg)
+    if document is not None:
+        d = next(x for x in reg["documents"] if x["number"] == document)
+        d["approval"] = dict(approval)
+        return reg, {"document": document, "revision": "$current"}
+    at = next(i for i, x in enumerate(reg["drafts"]) if x["number"] == draft)
+    row = reg["drafts"].pop(at)
+    if not reg["drafts"]:
+        del reg["drafts"]
+    made = []
+    for q in row.get("create", []):
+        ident = {k: q[k] for k in ("il", "ilce", "mahalle", "ada", "parsel") if q.get(k)}
+        rings = [(r.get("part", 0), r.get("hole", False), [(t["x"], t["y"]) for t in r["pts"]],
+                  r.get("bulges") or [0.0] * len(r["pts"])) for r in q["rings"]]
+        made.append({"ident": ident, "stated": q.get("statedArea", ""), "uid": q["uid"], "rings": rings,
+                     "lengths": [(x.get("ring", 0), x["edge"], x["length"]) for x in q.get("lengths", [])]})
+    number = max((d["number"] for d in reg["documents"]), default=0) + 1
+    d = doc_row(number, row)
+    d["approval"] = dict(approval)
+    out = apply(reg, number, d, made, row.get("close", []))
+    return reg, {"document": number, "recorded": out, "revision": "$current"}
 
 
 INSIDE = 1e-6
 
 
+def circle(b):
+    """An arc boundary's centre, radius, start angle and signed sweep: the centre reached from `from` at the chord's
+    angle turned by ±(π/2 − |θ|/2), θ = 4·atan(bulge)."""
+    a, z = (b["from"]["x"], b["from"]["y"]), (b["to"]["x"], b["to"]["y"])
+    theta = 4 * math.atan(b["bulge"])
+    c = math.hypot(z[0] - a[0], z[1] - a[1])
+    r = c / (2 * math.sin(abs(theta) / 2))
+    towards = math.atan2(z[1] - a[1], z[0] - a[0]) + math.copysign(math.pi / 2 - abs(theta) / 2, theta)
+    centre = (a[0] + r * math.cos(towards), a[1] + r * math.sin(towards))
+    return centre, r, math.atan2(a[1] - centre[1], a[0] - centre[0]), theta
+
+
+def round_of(centre, start, theta, q):
+    return (math.copysign(1, theta) * (math.atan2(q[1] - centre[1], q[0] - centre[0]) - start)) % (2 * math.pi)
+
+
 def split_neighbours(reg, earlier, close, created):
-    """ADR 4620's split, on `reg` in place: how many boundaries were split and the parcels whose rings took pieces."""
+    """ADR 4620's and 5020's split, on `reg` in place: how many boundaries were split and the parcels whose rings took
+    pieces."""
     by_number = {b["number"]: b for b in reg["boundaries"]}
     corners = []
     for p in reg["parcels"]:
@@ -284,28 +430,50 @@ def split_neighbours(reg, earlier, close, created):
                 holders_of.setdefault(abs(e), [])
                 if p not in holders_of[abs(e)]:
                     holders_of[abs(e)].append(p)
-    current = [b for b in reg["boundaries"] if "closedBy" not in b and not b.get("bulge")]
+    current = [b for b in reg["boundaries"] if "closedBy" not in b]
     splits = []
     for b in reg["boundaries"][:earlier]:
-        if "closedBy" in b or b.get("bulge") or b["number"] not in holders_of:
+        if "closedBy" in b or b["number"] not in holders_of:
             continue
         a, z = (b["from"]["x"], b["from"]["y"]), (b["to"]["x"], b["to"]["y"])
-        dx, dy = z[0] - a[0], z[1] - a[1]
-        length_ = math.hypot(dx, dy)
         inside = []
-        for c in corners:
-            along = ((c[0] - a[0]) * dx + (c[1] - a[1]) * dy) / length_
-            off = abs((c[0] - a[0]) * dy - (c[1] - a[1]) * dx) / length_
-            if off <= INSIDE and along > INSIDE and length_ - along > INSIDE:
-                inside.append((along, c))
+        if not b.get("bulge"):
+            dx, dy = z[0] - a[0], z[1] - a[1]
+            length_ = math.hypot(dx, dy)
+            for c in corners:
+                along = ((c[0] - a[0]) * dx + (c[1] - a[1]) * dy) / length_
+                off = abs((c[0] - a[0]) * dy - (c[1] - a[1]) * dx) / length_
+                if off <= INSIDE and along > INSIDE and length_ - along > INSIDE:
+                    inside.append((along, c))
+        else:
+            centre, r, start, theta = circle(b)
+            for c in corners:
+                off = abs(math.hypot(c[0] - centre[0], c[1] - centre[1]) - r)
+                t = round_of(centre, start, theta, c)
+                if off <= INSIDE and t * r > INSIDE and (abs(theta) - t) * r > INSIDE:
+                    inside.append((t, c))
         if not inside:
             continue
-        chain = [a] + [c for _, c in sorted(inside)] + [z]
+        inside.sort()
+        chain = [(0.0, a)] + inside + [(abs(theta) if b.get("bulge") else math.inf, z)]
         pieces = []
-        for p, q in zip(chain, chain[1:]):
+        for (t0, p), (t1, q) in zip(chain, chain[1:]):
             frm, to, back = (p, q, False) if p <= q else (q, p, True)
-            hit = next((x for x in current if (x["from"]["x"], x["from"]["y"]) == frm
-                        and (x["to"]["x"], x["to"]["y"]) == to), None)
+            def fits(x):
+                if (x["from"]["x"], x["from"]["y"]) != frm or (x["to"]["x"], x["to"]["y"]) != to:
+                    return False
+                if not b.get("bulge"):
+                    return not x.get("bulge")
+                if not x.get("bulge"):
+                    return False
+                # The piece's arc middle: its own circle's point midway round it.
+                cx, rx, sx, tx = circle(x)
+                mid = (cx[0] + rx * math.cos(sx + tx / 2), cx[1] + rx * math.sin(sx + tx / 2))
+                want_angle = start + math.copysign(1, theta) * (t0 + t1) / 2
+                want = (centre[0] + r * math.cos(want_angle), centre[1] + r * math.sin(want_angle))
+                return (abs(math.hypot(mid[0] - centre[0], mid[1] - centre[1]) - r) <= INSIDE
+                        and math.hypot(mid[0] - want[0], mid[1] - want[1]) < r)
+            hit = next((x for x in current if fits(x)), None)
             if hit is None:
                 pieces = None
                 break
@@ -421,6 +589,17 @@ def listed(reg, ents, history=False):
             line["closedBy"] = b["closedBy"]
         line["parcels"] = parcels
         line["drawn"] = current and all(n in now and draws(now[n], b) for n in parcels)
+        rows_ = []
+        for x in reg.get("lengths", []):
+            if x["boundary"] != b["number"]:
+                continue
+            given = float(x["length"].replace(",", "."))
+            difference = length(b) - given
+            limit = 0.05 + 0.001 * given
+            rows_.append({"document": x["document"], "length": x["length"], "difference": difference, "limit": limit,
+                          "within": abs(difference) <= limit})
+        if rows_:
+            line["lengths"] = rows_
         lines.append(line)
     documents = []
     for d in reg["documents"]:
@@ -428,7 +607,21 @@ def listed(reg, ents, history=False):
         row["created"] = [p["number"] for p in reg["parcels"] if p["createdBy"] == d["number"]]
         row["closed"] = [p["number"] for p in reg["parcels"] if p.get("closedBy") == d["number"]]
         documents.append(row)
-    return {
+    drafts = []
+    for d in reg.get("drafts", []):
+        row = {"number": d["number"], "name": d["name"]}
+        row.update({k: d[k] for k in ("kind", "date") if d.get(k)})
+        row["create"] = [f"{q['ada']}/{q['parsel']}" for q in d.get("create", [])]
+        row["close"] = list(d.get("close", []))
+        row["lengths"] = sum(len(q.get("lengths", [])) for q in d.get("create", []))
+        drafts.append(row)
+    over = sum(1 for b in lines if "closedBy" not in b and any(not x["within"] for x in b.get("lengths", [])))
+    extra = {}
+    if drafts:
+        extra["drafts"] = drafts
+    if over:
+        extra["overLimit"] = over
+    return {**extra, 
         "documents": documents,
         "parcels": [r for r in rows if history or "closedBy" not in r],
         "boundaries": [b for b in lines if history or "closedBy" not in b],
@@ -452,21 +645,26 @@ def doc_input(document):
 
 def wanted(create):
     out = []
-    for name, stated in create:
-        item = {"uid": U(name)}
+    for item in create:
+        name, stated = item[0], item[1]
+        entry = {"uid": U(name)}
         if stated is not None:
-            item["statedArea"] = stated
-        out.append(item)
+            entry["statedArea"] = stated
+        if len(item) > 2 and item[2] is not None:
+            entry["lengths"] = [dict(({"ring": r} if r else {}), edge=k, length=t) for r, k, t in item[2]]
+        out.append(entry)
     return out
 
 
-def record_case(name, document, create=(), close=(), reg=None, op="execute", note=None, ents=None):
-    after, out = record(reg, document, create, close, ents=ents)
+def record_case(name, document, create=(), close=(), reg=None, op="execute", note=None, ents=None, draft=False):
+    after, out = record(reg, document, create, close, ents=ents, draft=draft)
     input_ = {"document": doc_input(document)}
     if create:
         input_["create"] = wanted(create)
     if close:
         input_["close"] = list(close)
+    if draft:
+        input_["draft"] = True
     case = {"name": name}
     if note:
         case["note"] = note
@@ -481,6 +679,20 @@ def record_case(name, document, create=(), close=(), reg=None, op="execute", not
          "expect": {"revision": "changed", "canUndo": True, "settings": {"parcelRegister": after}}},
         {"op": "undo", "returns": STEP, "expect": {"settings": {"parcelRegister": reg}}},
     ]
+    return case
+
+
+def middle():
+    """The number 2026/145 ifraz gives the boundary between 101/13 and 101/14."""
+    after, _ = record(first(), IFRAZ, [("A11", None), ("A12", None)], [1])
+    return next(b["number"] for b in after["boundaries"]
+                if (b["from"]["x"], b["from"]["y"], b["to"]["x"], b["to"]["y"]) == (X0 + 10, Y0, X0 + 10, Y0 + 10))
+
+
+def refused_in(name, input_, code, message, path_, ents, reg=None):
+    """`refused` over another drawing."""
+    case = refused(name, input_, code, message, path_, reg=reg)
+    case["setup"] = setup(reg, ents)
     return case
 
 
@@ -501,6 +713,44 @@ SPLIT_ENTS = copy.deepcopy(ENTS) + [
     dict(area(who(parsel="18", tapu="50"), [(25, 10), (35, 10), (35, 15), (25, 15)]), id=len(ENTS) + 3),
 ]
 SLOT.update({"A15": len(ENTS) + 1, "A16": len(ENTS) + 2, "A17": len(ENTS) + 3})
+
+
+# ADR 5020's own areas: 101/19 north of 101/9 shares its arc; 101/20 and 101/21 divide it at the arc's middle (10, 22),
+# each taking half the arc; 101/22 and 101/23 the same with the corner 2 µm off the circle; 104/1–3 state their edge
+# lengths in their attribute (well, with a 0, with five lengths for four edges).
+HALF = math.tan(math.atan(0.2) / 2)
+MORE_ENTS = copy.deepcopy(SPLIT_ENTS) + [
+    dict(area(who(parsel="19", tapu="219,7"), [(0, 20), (20, 20), (20, 30), (0, 30)], bulges=[-0.2, 0, 0, 0]),
+         id=len(SPLIT_ENTS) + 1),
+    dict(area(who(parsel="20", tapu="109,9"), [(0, 20), (10, 22), (10, 30), (0, 30)], bulges=[-HALF, 0, 0, 0]),
+         id=len(SPLIT_ENTS) + 2),
+    dict(area(who(parsel="21", tapu="109,8"), [(10, 22), (20, 20), (20, 30), (10, 30)], bulges=[-HALF, 0, 0, 0]),
+         id=len(SPLIT_ENTS) + 3),
+    dict(area(who(parsel="22"), [(0, 20), (10, 22.000002), (10, 30), (0, 30)], bulges=[-HALF, 0, 0, 0]),
+         id=len(SPLIT_ENTS) + 4),
+    dict(area(who(parsel="23"), [(10, 22.000002), (20, 20), (20, 30), (10, 30)], bulges=[-HALF, 0, 0, 0]),
+         id=len(SPLIT_ENTS) + 5),
+    dict(area(who(ada="104", parsel="1", **{LENGTHS: "20,00; 10,01; ; 10,00"}), [(160, 0), (180, 0), (180, 10), (160, 10)]),
+         id=len(SPLIT_ENTS) + 6),
+    dict(area(who(ada="104", parsel="2", **{LENGTHS: "20,00; 0; 20,00"}), [(190, 0), (210, 0), (210, 10), (190, 10)]),
+         id=len(SPLIT_ENTS) + 7),
+    dict(area(who(ada="104", parsel="3", **{LENGTHS: "1;2;3;4;5"}), [(220, 0), (240, 0), (240, 10), (220, 10)]),
+         id=len(SPLIT_ENTS) + 8),
+    # Another area that says it is 101/13.
+    dict(area(who(parsel="13"), [(250, 0), (260, 0), (260, 10), (250, 10)]), id=len(SPLIT_ENTS) + 9),
+]
+SLOT.update({f"A{18 + k}": len(SPLIT_ENTS) + 1 + k for k in range(9)})
+APPROVAL = {"reference": "2026/145-K", "date": "2026-03-20", "by": "Kadastro Müdürlüğü"}
+
+
+def arced():
+    """Kadastro 1985 with 101/19 north of 101/9 (parcels 1–4), the arc between them one boundary."""
+    return record(None, KADASTRO, [("A1", None), ("A2", None), ("A3", None), ("A18", None)], ents=MORE_ENTS)[0]
+
+
+def drafted():
+    """Kadastro 1985, then 2026/145 ifraz kept as a draft with the middle boundary's length."""
+    return record(first(), IFRAZ, [("A11", None, [(0, 1, "10,00")]), ("A12", None)], [1], draft=True)[0]
 
 
 def first():
@@ -566,8 +816,11 @@ def record_cases():
                 "Belge ne parsel oluşturuyor ne kapatıyor: oluşturacağı alanları (create) ya da kapatacağı parselleri "
                 "(close) verin.", "create"),
         refused("Belgenin adı çizimde var", {"document": {"name": "Kadastro 1985"}, "create": [{"uid": U("A2")}]},
-                "document_name_taken", "Parsel kayıtlarında “Kadastro 1985” adlı bir belge var; belgenin adı çizimde "
-                "tektir, başka bir ad verin.", "document.name", reg=one),
+                "document_name_taken", "Parsel kayıtlarında “Kadastro 1985” adlı bir belge ya da taslak var; belgenin "
+                "adı çizimde tektir, başka bir ad verin.", "document.name", reg=one),
+        refused("Belgenin adı bir taslağın", {"document": {"name": "2026/145 ifraz"}, "create": [{"uid": U("A4")}]},
+                "document_name_taken", "Parsel kayıtlarında “2026/145 ifraz” adlı bir belge ya da taslak var; belgenin "
+                "adı çizimde tektir, başka bir ad verin.", "document.name", reg=drafted()),
         refused("Aynı parsel iki kez kapatılıyor", {"document": brief, "close": [1, 1]}, "invalid_input",
                 "1 numaralı parsel iki kez verildi.", "close[1]", reg=one),
         refused("Kayıtlarda olmayan parsel", {"document": brief, "close": [9]}, "unknown_parcel_record",
@@ -608,6 +861,53 @@ def record_cases():
         refused("Aynı kimlik bu belgede iki alanda", {"document": brief, "create": [{"uid": U("A1")},
                                                                                      {"uid": U("A10")}]},
                 "parcel_identity_taken", "Ankara/Çankaya/Kızılay/101/7 kimliği bu belgede iki alanda var.", "create[1].uid"),
+        # ADR 5020.
+        record_case("Yaylı komşu sınırı yeni köşede bölünür: 101/19 kapanır, 101/20 ile 101/21 yayın yarılarını alır; "
+                    "101/9 parçaları alır", {"name": "2026/150 ifraz"}, [("A19", None), ("A20", None)], [4],
+                    reg=arced(), ents=MORE_ENTS,
+                    note="ADR 5020: (10, 22) köşesi 101/9 ile 101/19'un ortak yayının ortası; yarı yayların kabarıklığı "
+                         "tan(atan(0,2)/2)."),
+        record_case("Köşe yayın 2 µm dışında: yay bölünmez, yeni yaylar ayrı sınır", {"name": "2026/151 ifraz"},
+                    [("A21", None), ("A22", None)], [4], reg=arced(), ents=MORE_ENTS),
+        record_case("Kenar ölçüleri verilir: belgenindir, sınıra bir kez", brief,
+                    [("A1", None, [(0, 0, "20,00"), (0, 1, "10.00")])]),
+        record_case("Kenar ölçüleri alanın Kenar ölçüleri özniteliğinden; boş olan yazılmaz", brief, [("A23", None)],
+                    ents=MORE_ENTS),
+        record_case("İfrazda iki parsel ortak sınıra aynı ölçüyü yazar: bir kez", IFRAZ,
+                    [("A11", None, [(0, 1, "10,00")]), ("A12", None, [(0, 3, "10,00")])], [1], reg=first()),
+        record_case("Taslak: güncel hiçbir şey değişmez; cevap onayın bugün yazacağı, numara taslağın", IFRAZ,
+                    [("A11", None, [(0, 1, "10,00")]), ("A12", None)], [1], reg=first(), draft=True),
+        record_case("Taslak, kenar ölçüsüz: pencereden yazılan", IFRAZ, [("A11", None), ("A12", None)], [1],
+                    reg=first(), draft=True),
+        record_case("Taslağın planı yazmaz", IFRAZ, [("A11", None), ("A12", None)], [1], reg=first(), draft=True,
+                    op="plan"),
+        refused("Kenar ölçüsünün halkası yok", {"document": brief, "create": [
+            {"uid": U("A1"), "lengths": [{"ring": 1, "edge": 0, "length": "5"}]}]}, "invalid_input",
+                "Alanın 1 numaralı halkası yok; alanın 1 halkası var, 0'dan numaralıdır (0 dış halka).",
+                "create[0].lengths[0]"),
+        refused("Kenar ölçüsünün kenarı yok", {"document": brief, "create": [
+            {"uid": U("A1"), "lengths": [{"edge": 4, "length": "5"}]}]}, "invalid_input",
+                "0 numaralı halkanın 4 numaralı kenarı yok; halkanın 4 kenarı var, 0'dan numaralıdır.",
+                "create[0].lengths[0]"),
+        refused("Aynı kenarın ölçüsü iki kez", {"document": brief, "create": [
+            {"uid": U("A1"), "lengths": [{"edge": 0, "length": "5"}, {"edge": 0, "length": "6"}]}]}, "invalid_input",
+                "0 numaralı halkanın 0 numaralı kenarının ölçüsü iki kez verildi.", "create[0].lengths[1]"),
+        refused("Kenar ölçüsü sıfır", {"document": brief, "create": [
+            {"uid": U("A1"), "lengths": [{"edge": 0, "length": "0,00"}]}]}, "invalid_input",
+                "Kenar ölçüsü “0,00” sıfırdan büyük düz bir ondalık sayı değil: rakamlar, en çok bir nokta ya da virgül "
+                "(20,00 gibi).", "create[0].lengths[0]"),
+        refused_in("Kenar ölçüleri özniteliğinde sıfır", {"document": brief, "create": [{"uid": U("A24")}]},
+                   "invalid_input", "Alanın “Kenar ölçüleri (m)” özniteliğinin 2. ölçüsü “0” sıfırdan büyük düz bir "
+                   "ondalık sayı değil; ölçüleri 20,00 gibi yazın, yazılmayanı boş bırakın.", "create[0].lengths",
+                   MORE_ENTS),
+        refused_in("Kenar ölçüleri özniteliği kenarlardan çok", {"document": brief, "create": [{"uid": U("A25")}]},
+                   "invalid_input", "Alanın “Kenar ölçüleri (m)” özniteliği 5 ölçü yazıyor; dış halkanın 4 kenarı var. "
+                   "Ölçüleri dış halkanın kenarları sırasıyla ; ile ayırarak yazın.", "create[0].lengths", MORE_ENTS),
+        refused("İki parsel ortak sınıra iki ayrı ölçü yazıyor", {"document": IFRAZ, "create": [
+            {"uid": U("A11"), "lengths": [{"edge": 1, "length": "10,00"}]},
+            {"uid": U("A12"), "lengths": [{"edge": 3, "length": "10,02"}]}], "close": [1]}, "invalid_input",
+                f"İki kenar aynı sınıra ({middle()}) iki ayrı ölçü yazıyor: “10,00” ve “10,02”; bir belge bir sınıra bir "
+                "ölçü yazar.", "create[1].lengths[0]", reg=first()),
     ]
 
 
@@ -694,6 +994,210 @@ def records_cases():
         records_case("Plan aynı cevabı verir", three, op="plan"),
         records_case("Doğrulama", three, op="validate"),
         records_case("İfraz sonrası köşe taşınmış: sayılar", divided, moved(ENTS, "A12", (20, 10), (20.2, 10))),
+        # ADR 5020.
+        records_case("Belgenin kenar ölçüleri: kayıttaki boyla farkı ve cephe sınırı; güney kenarı sınırı aşar",
+                     record(None, KADASTRO, [("A1", None, [(0, 0, "20,08"), (0, 1, "10,01")])])[0],
+                     note="Güney kenarı 20 m, belgede 20,08: fark −0,08, sınır 0,05 + 0,001·20,08 = 0,07008 m; doğu "
+                          "kenarı 10 m, belgede 10,01: fark −0,01, sınır 0,06001 m."),
+        records_case("Taslak ve onay listelenir; taslak güncel parselleri değiştirmez",
+                     approve(drafted(), APPROVAL, document=1)[0], history=True),
+        records_case("Taslak onaylanınca: yeni belge onayıyla, ortak sınırın ölçüsü", approve(drafted(), APPROVAL, draft=1)[0],
+                     history=True),
+    ]
+
+
+def step_case(name, command_reg, input_, out, after, step, note=None, op="execute", ents=None):
+    """A writing command's case: execute and undo, or plan/validate writing nothing."""
+    case = {"name": name}
+    if note:
+        case["note"] = note
+    case["setup"] = setup(command_reg, ents)
+    if op != "execute":
+        result = {"status": "completed", "output": None if op == "validate" else out, "warnings": []}
+        case["steps"] = [{"op": op, "input": input_, "result": result, "expect": SAME}]
+        return case
+    case["steps"] = [
+        {"op": "execute", "input": input_, "result": {"status": "completed", "output": out, "warnings": []},
+         "expect": {"revision": "changed", "canUndo": True, "settings": {"parcelRegister": after}}},
+        {"op": "undo", "returns": step, "expect": {"settings": {"parcelRegister": command_reg}}},
+    ]
+    return case
+
+
+def conflict(name, input_, reg):
+    """A command prepared against an older revision: nothing written."""
+    return {"name": name, "setup": setup(reg), "steps": [{"op": "execute", "input": dict(input_, expectedRevision="7"),
+            "result": {"status": "conflict", "error": {
+                "code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey "
+                "yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision",
+                "revision": "$current"}}, "expect": SAME}]}
+
+
+def plain_draft():
+    """Kadastro 1985, then 2026/145 ifraz kept as a draft without lengths (as the window writes it)."""
+    return record(first(), IFRAZ, [("A11", None), ("A12", None)], [1], draft=True)[0]
+
+
+def two_drafts():
+    """Kadastro 1985 with two drafts: 2026/145 ifraz (1) and 2026/9 terkin of 101/8 (2)."""
+    return record(drafted(), {"name": "2026/9 terkin", "kind": "Terkin"}, (), [2], draft=True)[0]
+
+
+def approve_cases():
+    three = first()
+    draft = drafted()
+    approved_one, _ = approve(three, {"reference": "1985/12"}, document=1)
+    after_draft, out_draft = approve(draft, APPROVAL, draft=1)
+    after_doc, out_doc = approve(three, {"reference": "1985/12"}, document=1)
+    terminated, _ = record(draft, {"name": "2026/9 terkin"}, (), [1])
+    taken, _ = record(draft, {"name": "2026/12 tescil"}, [("A11", None)])
+    named, _ = record(draft, {"name": "2026/12 tescil"}, [("A26", None)], ents=MORE_ENTS)
+    closing_only, _ = record(first(), {"name": "2026/9 terkin", "kind": "Terkin"}, (), [2], draft=True)
+    arc_draft, _ = record(arced(), {"name": "2026/150 ifraz"}, [("A19", None), ("A20", None)], [4], ents=MORE_ENTS,
+                          draft=True)
+    attr_draft, _ = record(None, KADASTRO, [("A23", None)], ents=MORE_ENTS, draft=True)
+    both = two_drafts()
+    later, _ = record(three, {"name": "2026/12 tescil"}, [("A4", None)])
+    step = "Belge onayı"
+    cases = []
+    for name_, reg_, input_ in (
+            ("Yalnız kapatan taslak onaylanır: 101/8 kapanır, yalnız onun sınırları", closing_only,
+             {"draft": 1, "approval": {"reference": "2026/9"}}),
+            ("Yaylı taslak onaylanır: komşunun yayı onayda bölünür", arc_draft,
+             {"draft": 1, "approval": {"reference": "2026/150", "by": "Kadastro Müdürlüğü"}}),
+            ("Alanın özniteliğinden ölçülü taslak onaylanır: ölçüler belgeye", attr_draft,
+             {"draft": 1, "approval": {"reference": "1985/1"}}),
+            ("İki taslaktan ikincisi onaylanır: birincisi kalır", both, {"draft": 2, "approval": {"reference": "2026/9"}}),
+            ("İki taslaktan birincisi onaylanır: ikincisi kalır", both,
+             {"draft": 1, "approval": {"reference": "2026/145-K", "date": "2026-03-20"}}),
+            ("Sonraki belgenin onayı yazılır", later, {"document": 2, "approval": {"reference": "2026/12"}}),
+            ("Kenar ölçüsüz taslak onaylanır: pencereden", plain_draft(), {"draft": 1, "approval": APPROVAL})):
+        a = input_["approval"]
+        after_, out_ = approve(reg_, a, draft=input_.get("draft"), document=input_.get("document"))
+        cases.append(step_case(name_, reg_, input_, out_, after_, step))
+    return cases + [
+        step_case("Taslak onaylanır: sıradaki numarayla belge, onayıyla; taslak kalkar", draft,
+                  {"draft": 1, "approval": APPROVAL}, out_draft, after_draft, step,
+                  note="Taslak 2026/145 ifraz'ı taslaktaki gibi yazar: 101/7 kapanır, 101/13 ve 101/14 oluşur; ortak "
+                       "sınırın ölçüsü 10,00."),
+        step_case("Kayıtlı belgenin onayı yazılır; belge değişmez", three, {"document": 1,
+                                                                             "approval": {"reference": "1985/12"}},
+                  out_doc, after_doc, step),
+        step_case("Onayın planı yazmaz", draft, {"draft": 1, "approval": APPROVAL}, out_draft, after_draft, step,
+                  op="plan"),
+        step_case("Doğrulama", three, {"document": 1, "approval": {"reference": "1985/12"}}, None, None, step,
+                  op="validate"),
+        refused("Ne taslak ne belge", {"approval": APPROVAL}, "invalid_input",
+                "Onayı yazılacak taslağın (draft) ya da belgenin (document) numarasını verin; ikisinden yalnız biri.",
+                "draft", reg=draft),
+        refused("Hem taslak hem belge", {"draft": 1, "document": 1, "approval": APPROVAL}, "invalid_input",
+                "Onayı yazılacak taslağın (draft) ya da belgenin (document) numarasını verin; ikisinden yalnız biri.",
+                "draft", reg=draft),
+        refused("Onay sayısı boş", {"document": 1, "approval": {"reference": "  "}}, "invalid_input",
+                "Onay sayısı boş olmaz; en çok 64 karakterdir, denetim karakteri taşımaz. Onayı veren yerin yazdığı "
+                "sayıyı yazın.", "approval.reference", reg=three),
+        refused("Onaylayan 120 karakteri aşıyor", {"document": 1, "approval": {"reference": "1", "by": "K" * 121}},
+                "invalid_input", "Onaylayan en çok 120 karakterdir, denetim karakteri taşımaz.", "approval.by",
+                reg=three),
+        refused("Olmayan taslak", {"draft": 9, "approval": APPROVAL}, "unknown_parcel_draft",
+                "Parsel kayıtlarında 9 numaralı belge taslağı yok.", "draft", reg=draft),
+        refused("Olmayan belge", {"document": 9, "approval": APPROVAL}, "unknown_parcel_document",
+                "Parsel kayıtlarında 9 numaralı belge yok.", "document", reg=three),
+        refused("Onayı yazılmış belge", {"document": 1, "approval": APPROVAL}, "document_approved",
+                "“Kadastro 1985” belgesinin onayı yazılmış (1985/12); onay bir kez yazılır, değişirse yeni bir belgeyle "
+                "kaydedin.", "document", reg=approved_one),
+        refused("Taslağın kapatacağı parsel o arada kapanmış", {"draft": 1, "approval": APPROVAL}, "parcel_closed",
+                "Taslağın kapatacağı 1 numaralı parsel (101/7) o arada “2026/9 terkin” belgesiyle kapatılmış; taslak "
+                "bugün yazılamaz. Taslağı geri çekip bugünkü kayıtlara göre yeniden hazırlayın.", "draft",
+                reg=terminated),
+        refused("Taslağın alanı o arada başka bir belgeyle kaydedilmiş", {"draft": 1, "approval": APPROVAL},
+                "parcel_recorded", f"“{U('A11')}” alanı 4 numaralı güncel parseli (101/13) çiziyor; belge önce o "
+                "parseli kapatmalı (close).", "draft", reg=taken),
+        refused("Sürüm yazısı geçersiz", {"document": 1, "approval": APPROVAL, "expectedRevision": "abc"},
+                "invalid_revision", "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı "
+                "yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision", reg=three),
+        conflict("Beklenen sürüm eski: çatışma", {"draft": 1, "approval": APPROVAL}, draft),
+        refused("Taslağın parselinin kimliği o arada başka alanla kaydedilmiş", {"draft": 1, "approval": APPROVAL},
+                "parcel_identity_taken", "Ankara/Çankaya/Kızılay/101/13 kimlikli güncel bir parsel var (4 numaralı); "
+                "belge önce onu kapatmalı (close).", "draft", reg=named),
+        refused("Onay sayısı 64 karakteri aşıyor", {"document": 1, "approval": {"reference": "S" * 65}},
+                "invalid_input", "Onay sayısı boş olmaz; en çok 64 karakterdir, denetim karakteri taşımaz. Onayı veren "
+                "yerin yazdığı sayıyı yazın.", "approval.reference", reg=three),
+        refused("Onay tarihinde denetim karakteri", {"document": 1, "approval": {"reference": "1", "date": "2026\u0007"}},
+                "invalid_input", "Onay tarihi en çok 64 karakterdir, denetim karakteri taşımaz.", "approval.date",
+                reg=three),
+    ]
+
+
+def withdrawn(reg, number):
+    """The register after a draft is withdrawn (none when nothing is left) and the answer."""
+    reg = copy.deepcopy(reg)
+    at = next(i for i, x in enumerate(reg["drafts"]) if x["number"] == number)
+    name = reg["drafts"].pop(at)["name"]
+    if not reg["drafts"]:
+        del reg["drafts"]
+    empty_ = not (reg["documents"] or reg["boundaries"] or reg["parcels"] or reg.get("drafts"))
+    return (None if empty_ else reg), {"name": name, "revision": "$current"}
+
+
+def withdraw_cases():
+    draft = drafted()
+    alone, _ = record(None, KADASTRO, [("A1", None)], draft=True)
+    both = two_drafts()
+    closing_only, _ = record(first(), {"name": "2026/9 terkin", "kind": "Terkin"}, (), [2], draft=True)
+    joined, _ = record(record(None, KADASTRO, [("A1", None), ("A2", None)])[0], {"name": "2026/200 tevhit"},
+                       [("A13", None)], [1, 2], draft=True)
+    arc_draft, _ = record(arced(), {"name": "2026/150 ifraz"}, [("A19", None), ("A20", None)], [4], ents=MORE_ENTS,
+                          draft=True)
+    attr_draft, _ = record(None, KADASTRO, [("A23", None)], ents=MORE_ENTS, draft=True)
+    approved_first, _ = approve(both, APPROVAL, draft=1)
+    with_approval, _ = record(approve(first(), {"reference": "1985/12"}, document=1)[0], IFRAZ,
+                              [("A11", None), ("A12", None)], [1], draft=True)
+    with_lengths, _ = record(record(None, KADASTRO, [("A1", None, [(0, 0, "20,00")]), ("A2", None), ("A3", None)])[0],
+                             IFRAZ, [("A11", None), ("A12", None)], [1], draft=True)
+    overtaken, _ = record(draft, {"name": "2026/9 terkin"}, (), [1])
+    step = "Taslağı geri çek"
+    cases = []
+    for name_, reg_, number in (
+            ("Taslak geri çekilir: güncel kayıtlar değişmez", draft, 1),
+            ("Tek taslak geri çekilince kayıt kalmaz", alone, 1),
+            ("İki taslaktan birincisi geri çekilir", both, 1),
+            ("İki taslaktan ikincisi geri çekilir", both, 2),
+            ("Yalnız kapatan taslak geri çekilir", closing_only, 1),
+            ("Tevhit taslağı geri çekilir: iki parsel güncel kalır", joined, 1),
+            ("Yaylı taslak geri çekilir: komşunun yayı bölünmeden kalır", arc_draft, 1),
+            ("Öznitelikten ölçülü taslak geri çekilir: kayıt kalmaz", attr_draft, 1),
+            ("Biri onaylandıktan sonra öbür taslak geri çekilir: onaylı belge kalır", approved_first, 2),
+            ("Belgenin onayı taslak geri çekilince kalır", with_approval, 1),
+            ("Belgelerin kenar ölçüleri taslak geri çekilince kalır", with_lengths, 1),
+            ("Kapatacağı parsel o arada kapanmış taslak da geri çekilir", overtaken, 1)):
+        after_, out_ = withdrawn(reg_, number)
+        cases.append(step_case(name_, reg_, {"draft": number}, out_, after_, step))
+    after_, out_ = withdrawn(draft, 1)
+    twice = step_case("Geri çekilen taslak ikinci kez çekilmez", draft, {"draft": 1}, out_, after_, step)
+    twice["steps"].insert(1, {"op": "execute", "input": {"draft": 1}, "result": {"status": "failed", "error": {
+        "code": "unknown_parcel_draft", "message": "Parsel kayıtlarında 1 numaralı belge taslağı yok.",
+        "path": "draft"}}, "expect": {"revision": "same", "canUndo": True}})
+    deleted = step_case("Alanı çizimden silinmiş taslak: kayıt çizimden ayrıdır", draft, {"draft": 1}, out_, after_,
+                        step)
+    deleted["setup"]["entities"] = [dict(e, id=i + 1) for i, e in enumerate(
+        e for e in deleted["setup"]["entities"] if e["id"] != SLOT["A11"])]
+    deleted["setup"]["uids"] = [u for i, u in enumerate(deleted["setup"]["uids"]) if i + 1 != SLOT["A11"]]
+    return cases + [
+        twice,
+        deleted,
+        step_case("Plan yazmaz", draft, {"draft": 1}, out_, after_, step, op="plan"),
+        step_case("Doğrulama", draft, {"draft": 1}, None, None, step, op="validate"),
+        refused("Olmayan taslak", {"draft": 2}, "unknown_parcel_draft",
+                "Parsel kayıtlarında 2 numaralı belge taslağı yok.", "draft", reg=draft),
+        refused("Kaydı olmayan çizim", {"draft": 1}, "unknown_parcel_draft",
+                "Parsel kayıtlarında 1 numaralı belge taslağı yok.", "draft"),
+        refused("Taslak numarası sıfır", {"draft": 0}, "unknown_parcel_draft",
+                "Parsel kayıtlarında 0 numaralı belge taslağı yok.", "draft", reg=draft),
+        refused("Sürüm yazısı geçersiz", {"draft": 1, "expectedRevision": "abc"}, "invalid_revision",
+                "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden "
+                "ya da komutun planından alın.", "expectedRevision", reg=draft),
+        conflict("Beklenen sürüm eski: çatışma", {"draft": 1}, draft),
     ]
 
 
@@ -713,10 +1217,14 @@ def write(command, title, note, cases_, check):
 
 def main():
     check = "--check" in sys.argv[1:]
-    note = ("ADR 4220. Bağımsız başvuru scripts/fixtures/parcel_register_cases.py: belgeler, sınırların eşlenmesi ve "
+    note = ("ADR 4220, 4620 ve 5020. Bağımsız başvuru scripts/fixtures/parcel_register_cases.py: belgeler, sınırların eşlenmesi ve "
             "kapanması, alanlar ve yay boyları betikte; KentOS kodu yok.")
     ok = write("cad.parcels.record", "Parsel kaydı", note, record_cases(), check)
     ok = write("cad.parcels.records", "Parsel kayıtları", note, records_cases(), check) and ok
+    note2 = ("ADR 5020. Bağımsız başvuru scripts/fixtures/parcel_register_cases.py: taslak, onay ve kayıt betikte; "
+             "KentOS kodu yok.")
+    ok = write("cad.parcels.approve", "Belgenin onayı", note2, approve_cases(), check) and ok
+    ok = write("cad.parcels.withdraw", "Taslağı geri çek", note2, withdraw_cases(), check) and ok
     return 0 if ok else 1
 
 

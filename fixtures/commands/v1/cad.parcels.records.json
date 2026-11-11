@@ -4,7 +4,7 @@
  "command": "cad.parcels.records",
  "commandVersion": 1,
  "title": "Parsel kayıtları",
- "note": "ADR 4220. Bağımsız başvuru scripts/fixtures/parcel_register_cases.py: belgeler, sınırların eşlenmesi ve kapanması, alanlar ve yay boyları betikte; KentOS kodu yok.",
+ "note": "ADR 4220, 4620 ve 5020. Bağımsız başvuru scripts/fixtures/parcel_register_cases.py: belgeler, sınırların eşlenmesi ve kapanması, alanlar ve yay boyları betikte; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -24436,6 +24436,3249 @@
        "changed": 2,
        "missing": 0,
        "moved": 3
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Belgenin kenar ölçüleri: kayıttaki boyla farkı ve cephe sınırı; güney kenarı sınırı aşar",
+   "note": "Güney kenarı 20 m, belgede 20,08: fark −0,08, sınır 0,05 + 0,001·20,08 = 0,07008 m; doğu kenarı 10 m, belgede 10,01: fark −0,01, sınır 0,06001 m.",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Parsel kayıtları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "parcelRegister": {
+      "documents": [
+       {
+        "number": 1,
+        "name": "Kadastro 1985",
+        "kind": "Tapu planı",
+        "date": "1985-06-12"
+       }
+      ],
+      "boundaries": [
+       {
+        "number": 1,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 2,
+        "from": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 3,
+        "from": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 4,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       }
+      ],
+      "parcels": [
+       {
+        "number": 1,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "7",
+        "createdBy": 1,
+        "statedArea": "200.00",
+        "uid": "0192f5c0-4220-7000-8000-000000000001",
+        "rings": [
+         {
+          "edges": [
+           1,
+           2,
+           -3,
+           -4
+          ]
+         }
+        ]
+       }
+      ],
+      "lengths": [
+       {
+        "boundary": 1,
+        "document": 1,
+        "length": "20,08"
+       },
+       {
+        "boundary": 2,
+        "document": 1,
+        "length": "10,01"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "7",
+       "Tapu alanı (m²)": "200.00"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "8",
+       "Tapu alanı (m²)": "199,98"
+      },
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "9",
+       "Tapu alanı (m²)": "215,3"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400020.0
+       }
+      ],
+      "bulges": [
+       0,
+       0,
+       0.2,
+       0
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "10",
+       "Tapu alanı (m²)": "300"
+      },
+      "pts": [
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400020.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500045.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400015.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400015.0
+         }
+        ]
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "11"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400040.0
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400040.0
+         }
+        ]
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "Parsel": "12"
+      },
+      "pts": [
+       {
+        "x": 500080.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "102",
+       "Parsel": "1",
+       "Tapu alanı (m²)": "1.250,50"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "102",
+       "Parsel": "2"
+      },
+      "pts": [
+       {
+        "x": 500120.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500120.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "line",
+      "layerId": "parsel",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4399990.0
+      },
+      "b": {
+       "x": 500040.0,
+       "y": 4399990.0
+      },
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "7",
+       "Tapu alanı (m²)": "200,50"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.05,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.05,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "13",
+       "Tapu alanı (m²)": "100"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "14",
+       "Tapu alanı (m²)": "100"
+      },
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "15",
+       "Tapu alanı (m²)": "399,98"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 13
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+       "Ada": "103",
+       "Parsel": "1"
+      },
+      "pts": [
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500150.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500150.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-4220-7000-8000-000000000001",
+     "0192f5c0-4220-7000-8000-000000000002",
+     "0192f5c0-4220-7000-8000-000000000003",
+     "0192f5c0-4220-7000-8000-000000000004",
+     "0192f5c0-4220-7000-8000-000000000005",
+     "0192f5c0-4220-7000-8000-000000000006",
+     "0192f5c0-4220-7000-8000-000000000007",
+     "0192f5c0-4220-7000-8000-000000000008",
+     "0192f5c0-4220-7000-8000-000000000009",
+     "0192f5c0-4220-7000-8000-00000000000a",
+     "0192f5c0-4220-7000-8000-00000000000b",
+     "0192f5c0-4220-7000-8000-00000000000c",
+     "0192f5c0-4220-7000-8000-00000000000d",
+     "0192f5c0-4220-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "overLimit": 1,
+       "documents": [
+        {
+         "number": 1,
+         "name": "Kadastro 1985",
+         "kind": "Tapu planı",
+         "date": "1985-06-12",
+         "created": [
+          1
+         ],
+         "closed": []
+        }
+       ],
+       "parcels": [
+        {
+         "number": 1,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "7",
+         "createdBy": 1,
+         "statedArea": "200.00",
+         "recordedArea": 200.0,
+         "uid": "0192f5c0-4220-7000-8000-000000000001",
+         "area": 200.0,
+         "state": "current",
+         "boundaries": [
+          1,
+          2,
+          3,
+          4
+         ],
+         "neighbours": [],
+         "before": [],
+         "after": []
+        }
+       ],
+       "boundaries": [
+        {
+         "number": 1,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400000.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          1
+         ],
+         "drawn": true,
+         "lengths": [
+          {
+           "document": 1,
+           "length": "20,08",
+           "difference": -0.0799999999999983,
+           "limit": 0.07008,
+           "within": false
+          }
+         ]
+        },
+        {
+         "number": 2,
+         "from": [
+          500020.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          1
+         ],
+         "drawn": true,
+         "lengths": [
+          {
+           "document": 1,
+           "length": "10,01",
+           "difference": -0.009999999999999787,
+           "limit": 0.06001,
+           "within": true
+          }
+         ]
+        },
+        {
+         "number": 3,
+         "from": [
+          500000.0,
+          4400010.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          1
+         ],
+         "drawn": true
+        },
+        {
+         "number": 4,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500000.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          1
+         ],
+         "drawn": true
+        }
+       ],
+       "current": 1,
+       "closed": 0,
+       "changed": 0,
+       "missing": 0,
+       "moved": 0
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taslak ve onay listelenir; taslak güncel parselleri değiştirmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Parsel kayıtları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "parcelRegister": {
+      "documents": [
+       {
+        "number": 1,
+        "name": "Kadastro 1985",
+        "kind": "Tapu planı",
+        "date": "1985-06-12",
+        "approval": {
+         "reference": "2026/145-K",
+         "date": "2026-03-20",
+         "by": "Kadastro Müdürlüğü"
+        }
+       }
+      ],
+      "boundaries": [
+       {
+        "number": 1,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 2,
+        "from": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 3,
+        "from": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 4,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 5,
+        "from": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500040.0,
+         "y": 4400000.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 6,
+        "from": {
+         "x": 500040.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500040.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 7,
+        "from": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500040.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 8,
+        "from": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400020.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 9,
+        "from": {
+         "x": 500000.0,
+         "y": 4400020.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400020.0
+        },
+        "createdBy": 1,
+        "bulge": -0.2
+       },
+       {
+        "number": 10,
+        "from": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500000.0,
+         "y": 4400020.0
+        },
+        "createdBy": 1
+       }
+      ],
+      "parcels": [
+       {
+        "number": 1,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "7",
+        "createdBy": 1,
+        "statedArea": "200.00",
+        "uid": "0192f5c0-4220-7000-8000-000000000001",
+        "rings": [
+         {
+          "edges": [
+           1,
+           2,
+           -3,
+           -4
+          ]
+         }
+        ]
+       },
+       {
+        "number": 2,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "8",
+        "createdBy": 1,
+        "statedArea": "199,98",
+        "uid": "0192f5c0-4220-7000-8000-000000000002",
+        "rings": [
+         {
+          "edges": [
+           5,
+           6,
+           -7,
+           -2
+          ]
+         }
+        ]
+       },
+       {
+        "number": 3,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "9",
+        "createdBy": 1,
+        "statedArea": "215,3",
+        "uid": "0192f5c0-4220-7000-8000-000000000003",
+        "rings": [
+         {
+          "edges": [
+           3,
+           8,
+           -9,
+           -10
+          ]
+         }
+        ]
+       }
+      ],
+      "drafts": [
+       {
+        "number": 1,
+        "name": "2026/145 ifraz",
+        "kind": "Değişiklik",
+        "date": "2026-03-14",
+        "note": "Ölçü krokisi 2026/145.",
+        "create": [
+         {
+          "uid": "0192f5c0-4220-7000-8000-00000000000b",
+          "il": "Ankara",
+          "ilce": "Çankaya",
+          "mahalle": "Kızılay",
+          "ada": "101",
+          "parsel": "13",
+          "statedArea": "100",
+          "rings": [
+           {
+            "pts": [
+             {
+              "x": 500000.0,
+              "y": 4400000.0
+             },
+             {
+              "x": 500010.0,
+              "y": 4400000.0
+             },
+             {
+              "x": 500010.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500000.0,
+              "y": 4400010.0
+             }
+            ]
+           }
+          ],
+          "lengths": [
+           {
+            "edge": 1,
+            "length": "10,00"
+           }
+          ]
+         },
+         {
+          "uid": "0192f5c0-4220-7000-8000-00000000000c",
+          "il": "Ankara",
+          "ilce": "Çankaya",
+          "mahalle": "Kızılay",
+          "ada": "101",
+          "parsel": "14",
+          "statedArea": "100",
+          "rings": [
+           {
+            "pts": [
+             {
+              "x": 500010.0,
+              "y": 4400000.0
+             },
+             {
+              "x": 500020.0,
+              "y": 4400000.0
+             },
+             {
+              "x": 500020.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500010.0,
+              "y": 4400010.0
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "close": [
+         1
+        ]
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "7",
+       "Tapu alanı (m²)": "200.00"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "8",
+       "Tapu alanı (m²)": "199,98"
+      },
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "9",
+       "Tapu alanı (m²)": "215,3"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400020.0
+       }
+      ],
+      "bulges": [
+       0,
+       0,
+       0.2,
+       0
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "10",
+       "Tapu alanı (m²)": "300"
+      },
+      "pts": [
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400020.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500045.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400015.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400015.0
+         }
+        ]
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "11"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400040.0
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400040.0
+         }
+        ]
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "Parsel": "12"
+      },
+      "pts": [
+       {
+        "x": 500080.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "102",
+       "Parsel": "1",
+       "Tapu alanı (m²)": "1.250,50"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "102",
+       "Parsel": "2"
+      },
+      "pts": [
+       {
+        "x": 500120.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500120.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "line",
+      "layerId": "parsel",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4399990.0
+      },
+      "b": {
+       "x": 500040.0,
+       "y": 4399990.0
+      },
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "7",
+       "Tapu alanı (m²)": "200,50"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.05,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.05,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "13",
+       "Tapu alanı (m²)": "100"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "14",
+       "Tapu alanı (m²)": "100"
+      },
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "15",
+       "Tapu alanı (m²)": "399,98"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 13
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+       "Ada": "103",
+       "Parsel": "1"
+      },
+      "pts": [
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500150.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500150.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-4220-7000-8000-000000000001",
+     "0192f5c0-4220-7000-8000-000000000002",
+     "0192f5c0-4220-7000-8000-000000000003",
+     "0192f5c0-4220-7000-8000-000000000004",
+     "0192f5c0-4220-7000-8000-000000000005",
+     "0192f5c0-4220-7000-8000-000000000006",
+     "0192f5c0-4220-7000-8000-000000000007",
+     "0192f5c0-4220-7000-8000-000000000008",
+     "0192f5c0-4220-7000-8000-000000000009",
+     "0192f5c0-4220-7000-8000-00000000000a",
+     "0192f5c0-4220-7000-8000-00000000000b",
+     "0192f5c0-4220-7000-8000-00000000000c",
+     "0192f5c0-4220-7000-8000-00000000000d",
+     "0192f5c0-4220-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "history": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "drafts": [
+        {
+         "number": 1,
+         "name": "2026/145 ifraz",
+         "kind": "Değişiklik",
+         "date": "2026-03-14",
+         "create": [
+          "101/13",
+          "101/14"
+         ],
+         "close": [
+          1
+         ],
+         "lengths": 1
+        }
+       ],
+       "documents": [
+        {
+         "number": 1,
+         "name": "Kadastro 1985",
+         "kind": "Tapu planı",
+         "date": "1985-06-12",
+         "approval": {
+          "reference": "2026/145-K",
+          "date": "2026-03-20",
+          "by": "Kadastro Müdürlüğü"
+         },
+         "created": [
+          1,
+          2,
+          3
+         ],
+         "closed": []
+        }
+       ],
+       "parcels": [
+        {
+         "number": 1,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "7",
+         "createdBy": 1,
+         "statedArea": "200.00",
+         "recordedArea": 200.0,
+         "uid": "0192f5c0-4220-7000-8000-000000000001",
+         "area": 200.0,
+         "state": "current",
+         "boundaries": [
+          1,
+          2,
+          3,
+          4
+         ],
+         "neighbours": [
+          2,
+          3
+         ],
+         "before": [],
+         "after": []
+        },
+        {
+         "number": 2,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "8",
+         "createdBy": 1,
+         "statedArea": "199,98",
+         "recordedArea": 200.0,
+         "uid": "0192f5c0-4220-7000-8000-000000000002",
+         "area": 200.0,
+         "state": "current",
+         "boundaries": [
+          5,
+          6,
+          7,
+          2
+         ],
+         "neighbours": [
+          1
+         ],
+         "before": [],
+         "after": []
+        },
+        {
+         "number": 3,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "9",
+         "createdBy": 1,
+         "statedArea": "215,3",
+         "recordedArea": 226.87879691703878,
+         "uid": "0192f5c0-4220-7000-8000-000000000003",
+         "area": 226.87879691703878,
+         "state": "current",
+         "boundaries": [
+          3,
+          8,
+          9,
+          10
+         ],
+         "neighbours": [
+          1
+         ],
+         "before": [],
+         "after": []
+        }
+       ],
+       "boundaries": [
+        {
+         "number": 1,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400000.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          1
+         ],
+         "drawn": true
+        },
+        {
+         "number": 2,
+         "from": [
+          500020.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          1,
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 3,
+         "from": [
+          500000.0,
+          4400010.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          1,
+          3
+         ],
+         "drawn": true
+        },
+        {
+         "number": 4,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500000.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          1
+         ],
+         "drawn": true
+        },
+        {
+         "number": 5,
+         "from": [
+          500020.0,
+          4400000.0
+         ],
+         "to": [
+          500040.0,
+          4400000.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 6,
+         "from": [
+          500040.0,
+          4400000.0
+         ],
+         "to": [
+          500040.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 7,
+         "from": [
+          500020.0,
+          4400010.0
+         ],
+         "to": [
+          500040.0,
+          4400010.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 8,
+         "from": [
+          500020.0,
+          4400010.0
+         ],
+         "to": [
+          500020.0,
+          4400020.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          3
+         ],
+         "drawn": true
+        },
+        {
+         "number": 9,
+         "from": [
+          500000.0,
+          4400020.0
+         ],
+         "to": [
+          500020.0,
+          4400020.0
+         ],
+         "bulge": -0.2,
+         "length": 20.529138224387598,
+         "createdBy": 1,
+         "parcels": [
+          3
+         ],
+         "drawn": true
+        },
+        {
+         "number": 10,
+         "from": [
+          500000.0,
+          4400010.0
+         ],
+         "to": [
+          500000.0,
+          4400020.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          3
+         ],
+         "drawn": true
+        }
+       ],
+       "current": 3,
+       "closed": 0,
+       "changed": 0,
+       "missing": 0,
+       "moved": 0
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taslak onaylanınca: yeni belge onayıyla, ortak sınırın ölçüsü",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Parsel kayıtları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "parcelRegister": {
+      "documents": [
+       {
+        "number": 1,
+        "name": "Kadastro 1985",
+        "kind": "Tapu planı",
+        "date": "1985-06-12"
+       },
+       {
+        "number": 2,
+        "name": "2026/145 ifraz",
+        "kind": "Değişiklik",
+        "date": "2026-03-14",
+        "note": "Ölçü krokisi 2026/145.",
+        "approval": {
+         "reference": "2026/145-K",
+         "date": "2026-03-20",
+         "by": "Kadastro Müdürlüğü"
+        }
+       }
+      ],
+      "boundaries": [
+       {
+        "number": 1,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "createdBy": 1,
+        "closedBy": 2
+       },
+       {
+        "number": 2,
+        "from": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 3,
+        "from": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1,
+        "closedBy": 2
+       },
+       {
+        "number": 4,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 5,
+        "from": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500040.0,
+         "y": 4400000.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 6,
+        "from": {
+         "x": 500040.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500040.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 7,
+        "from": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500040.0,
+         "y": 4400010.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 8,
+        "from": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400020.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 9,
+        "from": {
+         "x": 500000.0,
+         "y": 4400020.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400020.0
+        },
+        "createdBy": 1,
+        "bulge": -0.2
+       },
+       {
+        "number": 10,
+        "from": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500000.0,
+         "y": 4400020.0
+        },
+        "createdBy": 1
+       },
+       {
+        "number": 11,
+        "from": {
+         "x": 500000.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500010.0,
+         "y": 4400000.0
+        },
+        "createdBy": 2
+       },
+       {
+        "number": 12,
+        "from": {
+         "x": 500010.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500010.0,
+         "y": 4400010.0
+        },
+        "createdBy": 2
+       },
+       {
+        "number": 13,
+        "from": {
+         "x": 500000.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500010.0,
+         "y": 4400010.0
+        },
+        "createdBy": 2
+       },
+       {
+        "number": 14,
+        "from": {
+         "x": 500010.0,
+         "y": 4400000.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400000.0
+        },
+        "createdBy": 2
+       },
+       {
+        "number": 15,
+        "from": {
+         "x": 500010.0,
+         "y": 4400010.0
+        },
+        "to": {
+         "x": 500020.0,
+         "y": 4400010.0
+        },
+        "createdBy": 2
+       }
+      ],
+      "parcels": [
+       {
+        "number": 1,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "7",
+        "createdBy": 1,
+        "statedArea": "200.00",
+        "rings": [
+         {
+          "edges": [
+           1,
+           2,
+           -3,
+           -4
+          ]
+         }
+        ],
+        "closedBy": 2
+       },
+       {
+        "number": 2,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "8",
+        "createdBy": 1,
+        "statedArea": "199,98",
+        "uid": "0192f5c0-4220-7000-8000-000000000002",
+        "rings": [
+         {
+          "edges": [
+           5,
+           6,
+           -7,
+           -2
+          ]
+         }
+        ]
+       },
+       {
+        "number": 3,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "9",
+        "createdBy": 1,
+        "statedArea": "215,3",
+        "uid": "0192f5c0-4220-7000-8000-000000000003",
+        "rings": [
+         {
+          "edges": [
+           13,
+           15,
+           8,
+           -9,
+           -10
+          ]
+         }
+        ]
+       },
+       {
+        "number": 4,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "13",
+        "createdBy": 2,
+        "statedArea": "100",
+        "uid": "0192f5c0-4220-7000-8000-00000000000b",
+        "rings": [
+         {
+          "edges": [
+           11,
+           12,
+           -13,
+           -4
+          ]
+         }
+        ]
+       },
+       {
+        "number": 5,
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kızılay",
+        "ada": "101",
+        "parsel": "14",
+        "createdBy": 2,
+        "statedArea": "100",
+        "uid": "0192f5c0-4220-7000-8000-00000000000c",
+        "rings": [
+         {
+          "edges": [
+           14,
+           2,
+           -15,
+           -12
+          ]
+         }
+        ]
+       }
+      ],
+      "lengths": [
+       {
+        "boundary": 12,
+        "document": 2,
+        "length": "10,00"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "7",
+       "Tapu alanı (m²)": "200.00"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "8",
+       "Tapu alanı (m²)": "199,98"
+      },
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "9",
+       "Tapu alanı (m²)": "215,3"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400020.0
+       }
+      ],
+      "bulges": [
+       0,
+       0,
+       0.2,
+       0
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "10",
+       "Tapu alanı (m²)": "300"
+      },
+      "pts": [
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400020.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500045.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500055.0,
+          "y": 4400015.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400015.0
+         }
+        ]
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "11"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400040.0
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400040.0
+         }
+        ]
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "Parsel": "12"
+      },
+      "pts": [
+       {
+        "x": 500080.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "102",
+       "Parsel": "1",
+       "Tapu alanı (m²)": "1.250,50"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "102",
+       "Parsel": "2"
+      },
+      "pts": [
+       {
+        "x": 500120.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500120.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "line",
+      "layerId": "parsel",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4399990.0
+      },
+      "b": {
+       "x": 500040.0,
+       "y": 4399990.0
+      },
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "7",
+       "Tapu alanı (m²)": "200,50"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.05,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.05,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "13",
+       "Tapu alanı (m²)": "100"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 11
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "14",
+       "Tapu alanı (m²)": "100"
+      },
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 12
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "Kızılay",
+       "Ada": "101",
+       "Parsel": "15",
+       "Tapu alanı (m²)": "399,98"
+      },
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 13
+     },
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "İl": "Ankara",
+       "İlçe": "Çankaya",
+       "Mahalle": "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+       "Ada": "103",
+       "Parsel": "1"
+      },
+      "pts": [
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500150.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500150.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 14
+     }
+    ],
+    "uids": [
+     "0192f5c0-4220-7000-8000-000000000001",
+     "0192f5c0-4220-7000-8000-000000000002",
+     "0192f5c0-4220-7000-8000-000000000003",
+     "0192f5c0-4220-7000-8000-000000000004",
+     "0192f5c0-4220-7000-8000-000000000005",
+     "0192f5c0-4220-7000-8000-000000000006",
+     "0192f5c0-4220-7000-8000-000000000007",
+     "0192f5c0-4220-7000-8000-000000000008",
+     "0192f5c0-4220-7000-8000-000000000009",
+     "0192f5c0-4220-7000-8000-00000000000a",
+     "0192f5c0-4220-7000-8000-00000000000b",
+     "0192f5c0-4220-7000-8000-00000000000c",
+     "0192f5c0-4220-7000-8000-00000000000d",
+     "0192f5c0-4220-7000-8000-00000000000e"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "history": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "documents": [
+        {
+         "number": 1,
+         "name": "Kadastro 1985",
+         "kind": "Tapu planı",
+         "date": "1985-06-12",
+         "created": [
+          1,
+          2,
+          3
+         ],
+         "closed": []
+        },
+        {
+         "number": 2,
+         "name": "2026/145 ifraz",
+         "kind": "Değişiklik",
+         "date": "2026-03-14",
+         "note": "Ölçü krokisi 2026/145.",
+         "approval": {
+          "reference": "2026/145-K",
+          "date": "2026-03-20",
+          "by": "Kadastro Müdürlüğü"
+         },
+         "created": [
+          4,
+          5
+         ],
+         "closed": [
+          1
+         ]
+        }
+       ],
+       "parcels": [
+        {
+         "number": 1,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "7",
+         "createdBy": 1,
+         "closedBy": 2,
+         "statedArea": "200.00",
+         "recordedArea": 200.0,
+         "state": "closed",
+         "boundaries": [
+          1,
+          2,
+          3,
+          4
+         ],
+         "neighbours": [],
+         "before": [],
+         "after": [
+          4,
+          5
+         ]
+        },
+        {
+         "number": 2,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "8",
+         "createdBy": 1,
+         "statedArea": "199,98",
+         "recordedArea": 200.0,
+         "uid": "0192f5c0-4220-7000-8000-000000000002",
+         "area": 200.0,
+         "state": "current",
+         "boundaries": [
+          5,
+          6,
+          7,
+          2
+         ],
+         "neighbours": [
+          5
+         ],
+         "before": [],
+         "after": []
+        },
+        {
+         "number": 3,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "9",
+         "createdBy": 1,
+         "statedArea": "215,3",
+         "recordedArea": 226.87879691703878,
+         "uid": "0192f5c0-4220-7000-8000-000000000003",
+         "area": 226.87879691703878,
+         "state": "changed",
+         "boundaries": [
+          13,
+          15,
+          8,
+          9,
+          10
+         ],
+         "neighbours": [
+          4,
+          5
+         ],
+         "before": [],
+         "after": []
+        },
+        {
+         "number": 4,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "13",
+         "createdBy": 2,
+         "statedArea": "100",
+         "recordedArea": 100.0,
+         "uid": "0192f5c0-4220-7000-8000-00000000000b",
+         "area": 100.0,
+         "state": "current",
+         "boundaries": [
+          11,
+          12,
+          13,
+          4
+         ],
+         "neighbours": [
+          3,
+          5
+         ],
+         "before": [
+          1
+         ],
+         "after": []
+        },
+        {
+         "number": 5,
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Kızılay",
+         "ada": "101",
+         "parsel": "14",
+         "createdBy": 2,
+         "statedArea": "100",
+         "recordedArea": 100.0,
+         "uid": "0192f5c0-4220-7000-8000-00000000000c",
+         "area": 100.0,
+         "state": "current",
+         "boundaries": [
+          14,
+          2,
+          15,
+          12
+         ],
+         "neighbours": [
+          2,
+          3,
+          4
+         ],
+         "before": [
+          1
+         ],
+         "after": []
+        }
+       ],
+       "boundaries": [
+        {
+         "number": 1,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400000.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "closedBy": 2,
+         "parcels": [
+          1
+         ],
+         "drawn": false
+        },
+        {
+         "number": 2,
+         "from": [
+          500020.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          2,
+          5
+         ],
+         "drawn": true
+        },
+        {
+         "number": 3,
+         "from": [
+          500000.0,
+          4400010.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "closedBy": 2,
+         "parcels": [
+          1
+         ],
+         "drawn": false
+        },
+        {
+         "number": 4,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500000.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          4
+         ],
+         "drawn": true
+        },
+        {
+         "number": 5,
+         "from": [
+          500020.0,
+          4400000.0
+         ],
+         "to": [
+          500040.0,
+          4400000.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 6,
+         "from": [
+          500040.0,
+          4400000.0
+         ],
+         "to": [
+          500040.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 7,
+         "from": [
+          500020.0,
+          4400010.0
+         ],
+         "to": [
+          500040.0,
+          4400010.0
+         ],
+         "length": 20.0,
+         "createdBy": 1,
+         "parcels": [
+          2
+         ],
+         "drawn": true
+        },
+        {
+         "number": 8,
+         "from": [
+          500020.0,
+          4400010.0
+         ],
+         "to": [
+          500020.0,
+          4400020.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          3
+         ],
+         "drawn": true
+        },
+        {
+         "number": 9,
+         "from": [
+          500000.0,
+          4400020.0
+         ],
+         "to": [
+          500020.0,
+          4400020.0
+         ],
+         "bulge": -0.2,
+         "length": 20.529138224387598,
+         "createdBy": 1,
+         "parcels": [
+          3
+         ],
+         "drawn": true
+        },
+        {
+         "number": 10,
+         "from": [
+          500000.0,
+          4400010.0
+         ],
+         "to": [
+          500000.0,
+          4400020.0
+         ],
+         "length": 10.0,
+         "createdBy": 1,
+         "parcels": [
+          3
+         ],
+         "drawn": true
+        },
+        {
+         "number": 11,
+         "from": [
+          500000.0,
+          4400000.0
+         ],
+         "to": [
+          500010.0,
+          4400000.0
+         ],
+         "length": 10.0,
+         "createdBy": 2,
+         "parcels": [
+          4
+         ],
+         "drawn": true
+        },
+        {
+         "number": 12,
+         "from": [
+          500010.0,
+          4400000.0
+         ],
+         "to": [
+          500010.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 2,
+         "parcels": [
+          4,
+          5
+         ],
+         "drawn": true,
+         "lengths": [
+          {
+           "document": 2,
+           "length": "10,00",
+           "difference": 0.0,
+           "limit": 0.060000000000000005,
+           "within": true
+          }
+         ]
+        },
+        {
+         "number": 13,
+         "from": [
+          500000.0,
+          4400010.0
+         ],
+         "to": [
+          500010.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 2,
+         "parcels": [
+          3,
+          4
+         ],
+         "drawn": false
+        },
+        {
+         "number": 14,
+         "from": [
+          500010.0,
+          4400000.0
+         ],
+         "to": [
+          500020.0,
+          4400000.0
+         ],
+         "length": 10.0,
+         "createdBy": 2,
+         "parcels": [
+          5
+         ],
+         "drawn": true
+        },
+        {
+         "number": 15,
+         "from": [
+          500010.0,
+          4400010.0
+         ],
+         "to": [
+          500020.0,
+          4400010.0
+         ],
+         "length": 10.0,
+         "createdBy": 2,
+         "parcels": [
+          3,
+          5
+         ],
+         "drawn": false
+        }
+       ],
+       "current": 4,
+       "closed": 1,
+       "changed": 1,
+       "missing": 0,
+       "moved": 2
       },
       "warnings": []
      },

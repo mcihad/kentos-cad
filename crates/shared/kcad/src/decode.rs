@@ -1100,6 +1100,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş parsel kayıtları yazılmaz"));
                 }
+                // Schema 241 (docs/adr/5020): stated lengths, drafts, an approval.
+                if !has.parcel_drafts && v.has_drafts() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "parsel kayıtlarında lengths, drafts ya da belgenin approval'ı (şema 241'den önce yok)",
+                    ));
+                }
                 if let Some(problem) = kentos_contracts::parcel_register_problem(&v) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }

@@ -2,18 +2,20 @@
 //! opened from Parsel alan denetimi with the selected areas, Yeni belge says its plan as it is filled and Belgeyi kaydet
 //! writes what the shared case writes (the register compared whole), in one undo step; a parcel pressed in the table
 //! is closed by the document (the ifraz); a corner moved in the drawing is said, the register unchanged; a document's
-//! name already used is refused before anything is written. And its pictures.
+//! name already used is refused before anything is written. Docs/adr/5020: the ifraz kept as a draft and approved from
+//! Belgeler, a document's approval, a draft withdrawn, the stated lengths against the boundaries. And its pictures.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
 use crate::app::{App, Dialog, Message};
-use crate::parcel_register_window::{Event as R, Show, rows};
+use crate::parcel_register_window::{Chosen, Event as R, Show, rows};
 
 fn cases(file: &str) -> Value {
     let text = match file {
         "record" => include_str!("../../../fixtures/commands/v1/cad.parcels.record.json"),
+        "approve" => include_str!("../../../fixtures/commands/v1/cad.parcels.approve.json"),
         _ => include_str!("../../../fixtures/commands/v1/cad.parcels.records.json"),
     };
     serde_json::from_str(text).expect("cases")
@@ -150,9 +152,104 @@ fn a_document_name_already_used_is_refused() {
     register(&mut app, &[11]);
     let _ = app.update(Message::ParcelRegister(R::Name("Kadastro 1985".into())));
     let why = app.parcel_register.plan.clone().expect("a plan").expect_err("refused");
-    assert!(why.contains("“Kadastro 1985” adlı bir belge var"), "{why}");
+    assert!(why.contains("“Kadastro 1985” adlı bir belge ya da taslak var"), "{why}");
     assert!(matches!(app.parcel_register_control(crate::traces::Control::Press(crate::parcel_register_window::SAVE)), Ok(None)));
     assert_eq!(saved_register(&app), before);
+}
+
+const DRAFT: &str = "Taslak, kenar ölçüsüz: pencereden yazılan";
+const APPROVED: &str = "Kenar ölçüsüz taslak onaylanır: pencereden";
+const DOCUMENT_APPROVED: &str = "Kayıtlı belgenin onayı yazılır; belge değişmez";
+const LENGTHS: &str = "Belgenin kenar ölçüleri: kayıttaki boyla farkı ve cephe sınırı; güney kenarı sınırı aşar";
+
+/// The ifraz as a draft (Taslak olarak yaz): the plan says nothing current changes, Belgeyi kaydet writes the shared
+/// case's draft; chosen in Belgeler with the approval's number, Onayı yaz writes it as the shared approval case does.
+#[test]
+fn a_draft_is_written_then_approved_from_belgeler() {
+    let want = case("record", DRAFT);
+    let mut app = opened(want["setup"].clone());
+    draft_step(&mut app);
+    let plan = app.parcel_register.plan.clone().expect("a plan").expect("plans");
+    assert!(plan.draft && plan.document == 1, "{plan:?}");
+    let words = crate::parcel_register_window::plan_words(
+        app.parcel_register.answer.as_ref(),
+        &["101/13".into(), "101/14".into()],
+        &plan,
+        "2026/145 ifraz",
+    );
+    assert!(words.starts_with("Taslak 1 “2026/145 ifraz”: onaylanınca 2 parsel oluşturur") && words.ends_with("Güncel kayıt değişmez."), "{words}");
+    let _ = app.update(Message::ParcelRegister(R::Save));
+    assert_eq!(saved_register(&app), want["steps"][0]["expect"]["settings"]["parcelRegister"]);
+    let approve = case("approve", APPROVED);
+    assert_eq!(saved_register(&app), approve["setup"]["settings"]["parcelRegister"]);
+    approve_step(&mut app);
+    assert_eq!(app.parcel_register.chosen, Some(Chosen::Draft(1)));
+    let words = match &app.parcel_register.approve_plan {
+        Some(Ok(out)) => crate::parcel_register_window::approve_words(
+            app.parcel_register.answer.as_ref().expect("read"),
+            Chosen::Draft(1),
+            out,
+            "2026/145-K",
+        ),
+        other => panic!("{other:?}"),
+    };
+    assert!(words.starts_with("Onay 2026/145-K yazılır; taslak belge olur. Belge 2 “2026/145 ifraz”"), "{words}");
+    let _ = app.update(Message::ParcelRegister(R::Approve));
+    assert_eq!(saved_register(&app), approve["steps"][0]["expect"]["settings"]["parcelRegister"]);
+    let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(log.iter().any(|l| l.contains("Onay 2026/145-K yazılır")), "{log:?}");
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(saved_register(&app), approve["setup"]["settings"]["parcelRegister"]);
+}
+
+/// A recorded document chosen in Belgeler gets its approval; once written, the form says so and asks for none.
+#[test]
+fn a_document_s_approval_is_written_once() {
+    let want = case("approve", DOCUMENT_APPROVED);
+    let mut app = opened(want["setup"].clone());
+    register(&mut app, &[]);
+    let _ = app.update(Message::ParcelRegister(R::Show(Show::Documents)));
+    let _ = app.update(Message::ParcelRegister(R::Toggle(0)));
+    let _ = app.update(Message::ParcelRegister(R::Reference("1985/12".into())));
+    let _ = app.update(Message::ParcelRegister(R::Approve));
+    assert_eq!(saved_register(&app), want["steps"][0]["expect"]["settings"]["parcelRegister"]);
+    let r = app.parcel_register.answer.clone().expect("read");
+    let f = app.format();
+    assert_eq!(rows(&r, Show::Documents, false, &[], &f)[0][4], "Onaylı: 1985/12");
+    assert!(matches!(app.parcel_register_control(crate::traces::Control::Press(crate::parcel_register_window::WITHDRAW)), Ok(None)));
+}
+
+/// A draft withdrawn from Belgeler: gone, the current register unchanged.
+#[test]
+fn a_draft_is_withdrawn() {
+    let mut app = opened(case("approve", APPROVED)["setup"].clone());
+    register(&mut app, &[]);
+    let _ = app.update(Message::ParcelRegister(R::Show(Show::Documents)));
+    let r = app.parcel_register.answer.clone().expect("read");
+    let f = app.format();
+    assert_eq!(rows(&r, Show::Documents, false, &[], &f)[1][..5], ["T1", "2026/145 ifraz", "Değişiklik", "2026-03-14", "Taslak"]);
+    let _ = app.update(Message::ParcelRegister(R::Toggle(1)));
+    let _ = app.update(Message::ParcelRegister(R::Withdraw));
+    let after = saved_register(&app);
+    assert!(after.get("drafts").is_none(), "{after}");
+    assert_eq!(after["documents"].as_array().map(Vec::len), Some(1));
+}
+
+/// The lengths a document states, in Sınırlar: the stated length, the difference and the limit, “aşıyor” past it; the
+/// summary counts them.
+#[test]
+fn stated_lengths_are_checked_against_the_boundaries() {
+    let want = case("records", LENGTHS);
+    let mut app = opened(want["setup"].clone());
+    register(&mut app, &[]);
+    let r = app.parcel_register.answer.clone().expect("read");
+    assert_eq!(r.over_limit, 1);
+    let f = app.format();
+    let shown = rows(&r, Show::Boundaries, false, &[], &f);
+    let south = shown.iter().find(|row| row[7] == "20,08").expect("the south boundary");
+    assert!(south[8].ends_with("aşıyor"), "{south:?}");
+    let east = shown.iter().find(|row| row[7] == "10,01").expect("the east boundary");
+    assert!(!east[8].contains("aşıyor"), "{east:?}");
 }
 
 /// `.run/gui-evidence/parsel-kayitlari-4220/`: Parsel alan denetimi with its new button, the first document being written (Yeni belge filled), the ifraz with
@@ -233,6 +330,79 @@ fn lines_step(app: &mut App) {
 
 fn moved_step(app: &mut App) {
     register(app, &[]);
+}
+
+fn draft_step(app: &mut App) {
+    ifraz_step(app);
+    let _ = app.update(Message::ParcelRegister(R::Note("Ölçü krokisi 2026/145.".into())));
+    let _ = app.update(Message::ParcelRegister(R::Draft(true)));
+}
+
+/// After the draft is written: Belgeler, the draft chosen, the approval filled.
+fn approve_step(app: &mut App) {
+    let _ = app.update(Message::ParcelRegister(R::Show(Show::Documents)));
+    let _ = app.update(Message::ParcelRegister(R::Toggle(1)));
+    for e in [R::Reference("2026/145-K".into()), R::ApprovalDate("2026-03-20".into()), R::Approver("Kadastro Müdürlüğü".into())] {
+        let _ = app.update(Message::ParcelRegister(e));
+    }
+}
+
+fn drafted_step(app: &mut App) {
+    draft_step(app);
+    let _ = app.update(Message::ParcelRegister(R::Save));
+    approve_step(app);
+}
+
+fn approved_step(app: &mut App) {
+    drafted_step(app);
+    let _ = app.update(Message::ParcelRegister(R::Approve));
+    let _ = app.update(Message::ParcelRegister(R::Show(Show::Documents)));
+}
+
+fn lengths_step(app: &mut App) {
+    register(app, &[]);
+    let _ = app.update(Message::ParcelRegister(R::Show(Show::Boundaries)));
+}
+
+/// Docs/adr/5020, `.run/gui-evidence/belge-taslagi-onay-5020/`: the ifraz with Taslak olarak yaz on; the draft chosen in
+/// Belgeler with its approval filled; the documents after the approval; the stated lengths in Sınırlar, one past its
+/// limit.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib parcel_register_window_tests::draft_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn draft_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/belge-taslagi-onay-5020");
+    std::fs::create_dir_all(&out).expect("a folder");
+    type Step = fn(&mut App);
+    let (draft, drafted, approved, lengths): (Step, Step, Step, Step) = (draft_step, drafted_step, approved_step, lengths_step);
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (setup, step, file) in [
+            (case("record", DRAFT)["setup"].clone(), draft, "1-taslak"),
+            (case("record", DRAFT)["setup"].clone(), drafted, "2-taslagi-onayla"),
+            (case("record", DRAFT)["setup"].clone(), approved, "3-onaylanan-belge"),
+            (case("records", LENGTHS)["setup"].clone(), lengths, "4-kenar-olculeri"),
+        ] {
+            let mut app = opened(setup);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            step(&mut app);
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
 }
 
 /// Docs/adr/4620, `.run/gui-evidence/komsu-sinir-bolunmesi-4620/`: the ifraz's plan names the neighbour whose boundary

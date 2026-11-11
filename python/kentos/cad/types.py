@@ -21268,6 +21268,42 @@ class BlocksReplaced(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BoundaryLengthRow(_Model):
+    """A length a document states for a boundary against the boundary's length now (docs/adr/5020): the document, the
+    length as written, the boundary's length less it, and the frontage check's limit d = 0,05 + 0,001·S m (S the stated
+    length in metres); `within` when the difference's size is no more than the limit.
+    Attributes:
+        document: Unit: id.
+        difference: Unit: length.
+        limit: Unit: length.
+    """
+    document: int
+    length: str
+    difference: float
+    limit: float
+    within: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["document"] = self.document
+        out["length"] = self.length
+        out["difference"] = float(self.difference)
+        out["limit"] = float(self.limit)
+        out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoundaryLengthRow:
+        return cls(
+            document=data["document"],
+            length=data["length"],
+            difference=float(data["difference"]),
+            limit=float(data["limit"]),
+            within=data["within"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BoundaryProblem(_Model):
     """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap`, `arcChord` or `approxArc`;
     where; the parcels.
@@ -31983,6 +32019,89 @@ class DoorSource(_Model):
             neighbourhood=data.get("neighbourhood", UNSET),
             postcode=data.get("postcode", UNSET),
             province=data.get("province", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DraftParcel(_Model):
+    """A parcel a draft would make: its area, identity and stated area as read when drafted, its rings as drawn then and the
+    lengths the document states.
+    """
+    uid: str
+    ada: str
+    parsel: str
+    rings: list[DraftRing]
+    il: str | Unset = UNSET
+    ilce: str | Unset = UNSET
+    lengths: list[StatedLength] | Unset = UNSET
+    mahalle: str | Unset = UNSET
+    stated_area: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["rings"] = [e0.to_json() for e0 in self.rings]
+        if self.il is not UNSET:
+            out["il"] = self.il
+        if self.ilce is not UNSET:
+            out["ilce"] = self.ilce
+        if self.lengths is not UNSET:
+            out["lengths"] = [e0.to_json() for e0 in self.lengths]
+        if self.mahalle is not UNSET:
+            out["mahalle"] = self.mahalle
+        if self.stated_area is not UNSET:
+            out["statedArea"] = self.stated_area
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DraftParcel:
+        return cls(
+            uid=data["uid"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            rings=[DraftRing.from_json(e0) for e0 in data["rings"]],
+            il=data.get("il", UNSET),
+            ilce=data.get("ilce", UNSET),
+            lengths=[StatedLength.from_json(e0) for e0 in data["lengths"]] if "lengths" in data else UNSET,
+            mahalle=data.get("mahalle", UNSET),
+            stated_area=data.get("statedArea", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DraftRing(_Model):
+    """A draft's ring as its area was when drafted: its part, whether a hole, its vertices and each edge's bulge (none: all
+    straight).
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+        part: Unit: index.
+    """
+    pts: list[Vec2]
+    bulges: list[float] | Unset = UNSET
+    hole: bool | Unset = UNSET
+    part: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = [float(e0) for e0 in self.bulges]
+        if self.hole is not UNSET:
+            out["hole"] = self.hole
+        if self.part is not UNSET:
+            out["part"] = self.part
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DraftRing:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=[float(e0) for e0 in data["bulges"]] if "bulges" in data else UNSET,
+            hole=data.get("hole", UNSET),
+            part=data.get("part", UNSET),
         )
 
 
@@ -68271,6 +68390,58 @@ class ParametersEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelApproval(_Model):
+    """An approval written outside KentOS, as written (docs/adr/5020): its number (never empty), its date and who approved."""
+    reference: str
+    by: str | Unset = UNSET
+    date: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["reference"] = self.reference
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelApproval:
+        return cls(
+            reference=data["reference"],
+            by=data.get("by", UNSET),
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelApprovalInput(_Model):
+    """An approval as given (docs/adr/5020): its number (at most 64 characters), date (64) and who approved (120), as
+    written outside KentOS.
+    """
+    reference: str
+    by: str | None | Unset = UNSET
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["reference"] = self.reference
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelApprovalInput:
+        return cls(
+            reference=data["reference"],
+            by=data.get("by", UNSET),
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelAreaCheck(_Model):
     """A parcel as checked: its identity's parts as written (empty when missing), its geometric area (square metres),
     its recorded area's text as written and its value when it reads, the difference (geometric − recorded), the
@@ -68442,13 +68613,14 @@ class ParcelCreated(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelDocument(_Model):
-    """A document that made or closed parcels (ArcGIS's record): its name, unique in the drawing; its kind as the user
+    """A document that made or closed parcels: its name, unique in the drawing; its kind as the user
     writes it (a plan, a deed …); the date it gives, as written; a note.
     Attributes:
         number: Unit: id.
     """
     number: int
     name: str
+    approval: ParcelApproval | None | Unset = UNSET
     date: str | Unset = UNSET
     kind: str | Unset = UNSET
     note: str | Unset = UNSET
@@ -68457,6 +68629,8 @@ class ParcelDocument(_Model):
         out: dict[str, Any] = {}
         out["number"] = self.number
         out["name"] = self.name
+        if self.approval is not UNSET:
+            out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.date is not UNSET:
             out["date"] = self.date
         if self.kind is not UNSET:
@@ -68470,6 +68644,7 @@ class ParcelDocument(_Model):
         return cls(
             number=data["number"],
             name=data["name"],
+            approval=UNSET if "approval" not in data else None if data["approval"] is None else ParcelApproval.from_json(data["approval"]),
             date=data.get("date", UNSET),
             kind=data.get("kind", UNSET),
             note=data.get("note", UNSET),
@@ -68509,7 +68684,7 @@ class ParcelDocumentInput(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelDocumentRow(_Model):
-    """A document as listed: its fields and the parcels it made and closed.
+    """A document as listed: its fields, its approval as written (docs/adr/5020) and the parcels it made and closed.
     Attributes:
         number: Unit: id.
         created: Unit: id.
@@ -68519,6 +68694,7 @@ class ParcelDocumentRow(_Model):
     name: str
     created: list[int]
     closed: list[int]
+    approval: ParcelApproval | None | Unset = UNSET
     date: str | Unset = UNSET
     kind: str | Unset = UNSET
     note: str | Unset = UNSET
@@ -68529,6 +68705,8 @@ class ParcelDocumentRow(_Model):
         out["name"] = self.name
         out["created"] = list(self.created)
         out["closed"] = list(self.closed)
+        if self.approval is not UNSET:
+            out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.date is not UNSET:
             out["date"] = self.date
         if self.kind is not UNSET:
@@ -68544,9 +68722,98 @@ class ParcelDocumentRow(_Model):
             name=data["name"],
             created=list(data["created"]),
             closed=list(data["closed"]),
+            approval=UNSET if "approval" not in data else None if data["approval"] is None else ParcelApproval.from_json(data["approval"]),
             date=data.get("date", UNSET),
             kind=data.get("kind", UNSET),
             note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelDraft(_Model):
+    """A document not yet approved (docs/adr/5020): its fields as a document's, the parcels it would make and the recorded
+    parcels it would close. Approving it writes it as a document with the next number; nothing current changes before.
+    Attributes:
+        number: Unit: id.
+        close: Unit: id.
+    """
+    number: int
+    name: str
+    close: list[int] | Unset = UNSET
+    create: list[DraftParcel] | Unset = UNSET
+    date: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    note: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["name"] = self.name
+        if self.close is not UNSET:
+            out["close"] = list(self.close)
+        if self.create is not UNSET:
+            out["create"] = [e0.to_json() for e0 in self.create]
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDraft:
+        return cls(
+            number=data["number"],
+            name=data["name"],
+            close=list(data["close"]) if "close" in data else UNSET,
+            create=[DraftParcel.from_json(e0) for e0 in data["create"]] if "create" in data else UNSET,
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelDraftRow(_Model):
+    """A draft as listed (docs/adr/5020): its number among the drafts, its fields, the identities (`Ada/Parsel`) of the
+    parcels it would make, the recorded parcels it would close, how many lengths it states.
+    Attributes:
+        number: Unit: id.
+        close: Unit: id.
+        lengths: Unit: count.
+    """
+    number: int
+    name: str
+    create: list[str]
+    close: list[int]
+    lengths: int
+    date: str | Unset = UNSET
+    kind: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["name"] = self.name
+        out["create"] = list(self.create)
+        out["close"] = list(self.close)
+        out["lengths"] = self.lengths
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDraftRow:
+        return cls(
+            number=data["number"],
+            name=data["name"],
+            create=list(data["create"]),
+            close=list(data["close"]),
+            lengths=data["lengths"],
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
         )
 
 
@@ -68613,16 +68880,24 @@ class ParcelPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelRegister(_Model):
-    """The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made."""
+    """The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made; the lengths
+    the documents state; the drafts, numbered apart (docs/adr/5020).
+    """
     documents: list[ParcelDocument]
     boundaries: list[RecordedBoundary]
     parcels: list[RecordedParcel]
+    drafts: list[ParcelDraft] | Unset = UNSET
+    lengths: list[RecordedLength] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["documents"] = [e0.to_json() for e0 in self.documents]
         out["boundaries"] = [e0.to_json() for e0 in self.boundaries]
         out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        if self.drafts is not UNSET:
+            out["drafts"] = [e0.to_json() for e0 in self.drafts]
+        if self.lengths is not UNSET:
+            out["lengths"] = [e0.to_json() for e0 in self.lengths]
         return out
 
     @classmethod
@@ -68631,20 +68906,27 @@ class ParcelRegister(_Model):
             documents=[ParcelDocument.from_json(e0) for e0 in data["documents"]],
             boundaries=[RecordedBoundary.from_json(e0) for e0 in data["boundaries"]],
             parcels=[RecordedParcel.from_json(e0) for e0 in data["parcels"]],
+            drafts=[ParcelDraft.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
+            lengths=[RecordedLength.from_json(e0) for e0 in data["lengths"]] if "lengths" in data else UNSET,
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class ParcelToRecord(_Model):
-    """A parcel the document makes: the area that draws it, and the area the document states, a plain decimal in square
-    metres as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none).
+    """A parcel the document makes: the area that draws it, the area the document states, a plain decimal in square metres
+    as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none), and the lengths it
+    states for the area's edges (none: the area's `Kenar ölçüleri (m)`, the outline's edges' lengths in order, separated
+    by `;`, an empty or `-` one unstated; empty: none).
     """
     uid: str
+    lengths: list[StatedLength] | None | Unset = UNSET
     stated_area: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uid"] = self.uid
+        if self.lengths is not UNSET:
+            out["lengths"] = None if self.lengths is None else [e0.to_json() for e0 in self.lengths]
         if self.stated_area is not UNSET:
             out["statedArea"] = self.stated_area
         return out
@@ -68653,7 +68935,77 @@ class ParcelToRecord(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ParcelToRecord:
         return cls(
             uid=data["uid"],
+            lengths=UNSET if "lengths" not in data else None if data["lengths"] is None else [StatedLength.from_json(e0) for e0 in data["lengths"]],
             stated_area=data.get("statedArea", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsApprove(_Model):
+    """Input of `cad.parcels.approve` v1: the draft (`draft`, its number) or the document (`document`) the approval is of,
+    one of the two; the approval.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (neither or both of `draft` and
+    `document`; the approval's number empty, past 64 characters or with a control character, its date or approver too
+    long); `unknown_parcel_draft` (`draft`), `unknown_parcel_document` (`document`); `document_approved` (the document has
+    its approval); for a draft, what `cad.parcels.record` refuses when it writes the draft today, at `draft`:
+    `parcel_closed` (a parcel it closes was closed since), `parcel_recorded`, `parcel_identity_taken`, `invalid_input`
+    (the register's limits).
+    Attributes:
+        document: Unit: id.
+        draft: Unit: id.
+    """
+    approval: ParcelApprovalInput
+    document: int | None | Unset = UNSET
+    draft: int | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["approval"] = self.approval.to_json()
+        if self.document is not UNSET:
+            out["document"] = self.document
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsApprove:
+        return cls(
+            approval=ParcelApprovalInput.from_json(data["approval"]),
+            document=data.get("document", UNSET),
+            draft=data.get("draft", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsApproved(_Model):
+    """Output of `cad.parcels.approve` v1: the approved document's number and, for a draft, what writing it did (as
+    `cad.parcels.record` answers; none for a document already recorded); the revision after.
+    Attributes:
+        document: Unit: id.
+    """
+    document: int
+    revision: str
+    recorded: ParcelsRecorded | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["document"] = self.document
+        out["revision"] = self.revision
+        if self.recorded is not UNSET:
+            out["recorded"] = None if self.recorded is None else self.recorded.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsApproved:
+        return cls(
+            document=data["document"],
+            revision=data["revision"],
+            recorded=UNSET if "recorded" not in data else None if data["recorded"] is None else ParcelsRecorded.from_json(data["recorded"]),
         )
 
 
@@ -68876,13 +69228,18 @@ class ParcelsRecord(_Model):
     Parsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a
     stated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not
     close), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);
-    `invalid_input` (the register would pass its limits: 10 000 documents, 100 000 parcels, 1 000 000 boundaries).
+    `invalid_input` for `create[i].lengths[j]` (the ring or edge not the area's, an edge given twice, not a plain decimal
+    above zero; or the area's `Kenar ölçüleri (m)` so, at `create[i].lengths`); `invalid_input` (the register would pass
+    its limits: 10 000 documents and drafts, 100 000 parcels, 1 000 000 boundaries). `document_name_taken` covers the
+    drafts' names too. With `draft` the same checks run and the answer is what approving would write today; only the
+    draft is written, numbered among the drafts.
     Attributes:
         close: Unit: id.
     """
     document: ParcelDocumentInput
     close: list[int] | Unset = UNSET
     create: list[ParcelToRecord] | Unset = UNSET
+    draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68892,6 +69249,8 @@ class ParcelsRecord(_Model):
             out["close"] = list(self.close)
         if self.create is not UNSET:
             out["create"] = [e0.to_json() for e0 in self.create]
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -68902,6 +69261,7 @@ class ParcelsRecord(_Model):
             document=ParcelDocumentInput.from_json(data["document"]),
             close=list(data["close"]) if "close" in data else UNSET,
             create=[ParcelToRecord.from_json(e0) for e0 in data["create"]] if "create" in data else UNSET,
+            draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -68919,6 +69279,9 @@ class ParcelsRecorded(_Model):
         boundaries_closed: Unit: count.
         boundaries_split: Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
             took the pieces (not closed: their identity, document and stated area stay). Unit: count.
+        draft: Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would
+            write today.
+        lengths: Docs/adr/5020: the boundaries' lengths the document states. Unit: count.
         neighbours: Unit: id.
     """
     document: int
@@ -68929,6 +69292,8 @@ class ParcelsRecorded(_Model):
     boundaries_closed: int
     revision: str
     boundaries_split: int | Unset = UNSET
+    draft: bool | Unset = UNSET
+    lengths: int | Unset = UNSET
     neighbours: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68942,6 +69307,10 @@ class ParcelsRecorded(_Model):
         out["revision"] = self.revision
         if self.boundaries_split is not UNSET:
             out["boundariesSplit"] = self.boundaries_split
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.lengths is not UNSET:
+            out["lengths"] = self.lengths
         if self.neighbours is not UNSET:
             out["neighbours"] = list(self.neighbours)
         return out
@@ -68957,6 +69326,8 @@ class ParcelsRecorded(_Model):
             boundaries_closed=data["boundariesClosed"],
             revision=data["revision"],
             boundaries_split=data.get("boundariesSplit", UNSET),
+            draft=data.get("draft", UNSET),
+            lengths=data.get("lengths", UNSET),
             neighbours=list(data["neighbours"]) if "neighbours" in data else UNSET,
         )
 
@@ -68984,14 +69355,15 @@ class ParcelsRecords(_Model):
 @dataclass(kw_only=True, slots=True)
 class ParcelsRecordsListed(_Model):
     """Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with
-    `history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,
-    current boundaries no longer drawn as recorded.
+    `history`), the drafts, and the counts: current and closed parcels, current parcels drawn otherwise and without their
+    area, current boundaries no longer drawn as recorded, current boundaries with a stated length past its limit.
     Attributes:
         current: Unit: count.
         closed: Unit: count.
         changed: Unit: count.
         missing: Unit: count.
         moved: Unit: count.
+        over_limit: Unit: count.
     """
     documents: list[ParcelDocumentRow]
     parcels: list[RecordedParcelRow]
@@ -69001,6 +69373,8 @@ class ParcelsRecordsListed(_Model):
     changed: int
     missing: int
     moved: int
+    drafts: list[ParcelDraftRow] | Unset = UNSET
+    over_limit: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69012,6 +69386,10 @@ class ParcelsRecordsListed(_Model):
         out["changed"] = self.changed
         out["missing"] = self.missing
         out["moved"] = self.moved
+        if self.drafts is not UNSET:
+            out["drafts"] = [e0.to_json() for e0 in self.drafts]
+        if self.over_limit is not UNSET:
+            out["overLimit"] = self.over_limit
         return out
 
     @classmethod
@@ -69025,6 +69403,53 @@ class ParcelsRecordsListed(_Model):
             changed=data["changed"],
             missing=data["missing"],
             moved=data["moved"],
+            drafts=[ParcelDraftRow.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
+            over_limit=data.get("overLimit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsWithdraw(_Model):
+    """Input of `cad.parcels.withdraw` v1: the draft to remove. Refusals: `invalid_revision`, `revision_conflict`,
+    `unknown_parcel_draft` (`draft`).
+    Attributes:
+        draft: Unit: id.
+    """
+    draft: int
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsWithdraw:
+        return cls(
+            draft=data["draft"],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsWithdrawn(_Model):
+    """Output of `cad.parcels.withdraw` v1: the removed draft's name; the revision after."""
+    name: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsWithdrawn:
+        return cls(
+            name=data["name"],
+            revision=data["revision"],
         )
 
 
@@ -82798,6 +83223,7 @@ class RecordedBoundaryRow(_Model):
     drawn: bool
     bulge: float | Unset = UNSET
     closed_by: int | None | Unset = UNSET
+    lengths: list[BoundaryLengthRow] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82812,6 +83238,8 @@ class RecordedBoundaryRow(_Model):
             out["bulge"] = float(self.bulge)
         if self.closed_by is not UNSET:
             out["closedBy"] = self.closed_by
+        if self.lengths is not UNSET:
+            out["lengths"] = [e0.to_json() for e0 in self.lengths]
         return out
 
     @classmethod
@@ -82826,6 +83254,35 @@ class RecordedBoundaryRow(_Model):
             drawn=data["drawn"],
             bulge=float(data["bulge"]) if "bulge" in data else UNSET,
             closed_by=data.get("closedBy", UNSET),
+            lengths=[BoundaryLengthRow.from_json(e0) for e0 in data["lengths"]] if "lengths" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedLength(_Model):
+    """The length a document states for a boundary (docs/adr/5020): a plain decimal in metres as written, an arc's length
+    on an arc. One per boundary and document.
+    Attributes:
+        boundary: Unit: id.
+        document: Unit: id.
+    """
+    boundary: int
+    document: int
+    length: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["boundary"] = self.boundary
+        out["document"] = self.document
+        out["length"] = self.length
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedLength:
+        return cls(
+            boundary=data["boundary"],
+            document=data["document"],
+            length=data["length"],
         )
 
 
@@ -98097,6 +98554,36 @@ class StandardsResolved(_Model):
             sources=list(data["sources"]),
             provenance=StandardProvenance.from_json(data["provenance"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StatedLength(_Model):
+    """A length stated for one edge of an area's ring (docs/adr/5020): the ring in the area's order (the outline, its holes,
+    then each further part's outline and holes; 0 first), the edge from the ring's vertex `edge` to the next, the length a
+    plain decimal in metres as written.
+    Attributes:
+        edge: Unit: index.
+        ring: Unit: index.
+    """
+    edge: int
+    length: str
+    ring: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edge"] = self.edge
+        out["length"] = self.length
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StatedLength:
+        return cls(
+            edge=data["edge"],
+            length=data["length"],
+            ring=data.get("ring", UNSET),
         )
 
 
@@ -137152,6 +137639,7 @@ __all__ = [
     "BoundaryCadElement",
     "BoundaryForm",
     "BoundaryFormName",
+    "BoundaryLengthRow",
     "BoundaryProblem",
     "Bounds",
     "BoxCorner",
@@ -137670,6 +138158,8 @@ __all__ = [
     "DomainsPackage",
     "DonutCreate",
     "DoorSource",
+    "DraftParcel",
+    "DraftRing",
     "DrainageCapacity",
     "DrainageCatchment",
     "DrainageCatchmentAsk",
@@ -139198,6 +139688,8 @@ __all__ = [
     "ParametersEdited",
     "ParametersOperation",
     "ParametersOperationName",
+    "ParcelApproval",
+    "ParcelApprovalInput",
     "ParcelAreaCheck",
     "ParcelBoundary",
     "ParcelCorner",
@@ -139205,10 +139697,14 @@ __all__ = [
     "ParcelDocument",
     "ParcelDocumentInput",
     "ParcelDocumentRow",
+    "ParcelDraft",
+    "ParcelDraftRow",
     "ParcelInGraph",
     "ParcelPlan",
     "ParcelRegister",
     "ParcelToRecord",
+    "ParcelsApprove",
+    "ParcelsApproved",
     "ParcelsBoundaries",
     "ParcelsBounded",
     "ParcelsCheck",
@@ -139218,6 +139714,8 @@ __all__ = [
     "ParcelsRecorded",
     "ParcelsRecords",
     "ParcelsRecordsListed",
+    "ParcelsWithdraw",
+    "ParcelsWithdrawn",
     "ParkedInfo",
     "ParkedPin",
     "ParkingTableSource",
@@ -139676,6 +140174,7 @@ __all__ = [
     "RecordTotal",
     "RecordedBoundary",
     "RecordedBoundaryRow",
+    "RecordedLength",
     "RecordedParcel",
     "RecordedParcelRow",
     "RecordedRing",
@@ -140369,6 +140868,7 @@ __all__ = [
     "StandardsResolve",
     "StandardsResolved",
     "StartSubPlace",
+    "StatedLength",
     "StationEquationDef",
     "StationMapRow",
     "StationOwner",

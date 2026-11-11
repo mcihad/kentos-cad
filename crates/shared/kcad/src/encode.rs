@@ -2265,7 +2265,7 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// (docs/adr/0207), 30 when the project has
 /// annotation heights or a dimension style lines, or a dimension of it or of
 /// a block definition has lines or a leader an arrowhead size or one of
-/// AutoCAD's arrowheads (docs/adr/0205), 29 when it has a raster
+/// the DXF arrowheads (docs/adr/0205), 29 when it has a raster
 /// (docs/adr/0204 §2), 28 when its survey settings
 /// name an a priori standard deviation (docs/adr/0203 §1), 27 when the
 /// project has topology settings (docs/adr/0202 §7), 26 when a layer has fields
@@ -2291,6 +2291,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 241 (docs/adr/5020): the parcel register's stated lengths, drafts or an approval.
+    if doc.settings.parcel_register.as_ref().is_some_and(kentos_contracts::ParcelRegister::has_drafts) {
+        return crate::SCHEMA_WITH_PARCEL_DRAFTS;
+    }
     // Schema 240 (docs/adr/4920): a GNSS archive's baseline sessions, kept limits, a network point's velocity.
     if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_sessions) {
         return crate::SCHEMA_WITH_GNSS_SESSIONS;
@@ -3847,7 +3851,7 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return SCHEMA_WITH_POINT_CLOUDS;
     }
     // Schema 30 (docs/adr/0205): annotation heights, a dimension's lines, a
-    // leader's arrowhead size or one of AutoCAD's arrowheads.
+    // leader's arrowhead size or one of the DXF arrowheads.
     let annotated = |list: Objs<'_>| {
         list.iter().any(|e| match e {
             Entity::Dimension(d) => d.look.has_lines(),

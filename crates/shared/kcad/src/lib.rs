@@ -276,7 +276,7 @@ pub const SCHEMA_WITH_RASTERS: u32 = 29;
 /// project's annotation heights, the settings' `annotation`; a dimension's
 /// and a dimension style's line fields (`dimLineColor`, `lineWeight`,
 /// `lineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
-/// leader's `arrowSize` and the arrowheads AutoCAD has beside the first three
+/// leader's `arrowSize` and the arrowheads DXF names beside the first three
 /// (docs/adr/0205). A writer writes it only when a drawing has one of these:
 /// any other drawing stays 29 or older, byte for byte; a reader of those
 /// refuses them rather than draw another look.
@@ -946,11 +946,14 @@ pub const SCHEMA_WITH_WORK_PROFILES: u32 = 239;
 /// an adjustment's sessions, the known points' place limits kept with their source (`tolerance`) and a network point's
 /// velocity read from a grid (`velocity`).
 pub const SCHEMA_WITH_GNSS_SESSIONS: u32 = 240;
+/// Schema 241 (docs/adr/5020): the parcel register's stated lengths (`lengths`), drafts (`drafts`) and a document's
+/// approval as written outside (`approval`).
+pub const SCHEMA_WITH_PARCEL_DRAFTS: u32 = 241;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 238] = [
+pub const SCHEMAS: [u32; 239] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1189,6 +1192,7 @@ pub const SCHEMAS: [u32; 238] = [
     SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
     SCHEMA_WITH_WORK_PROFILES,
     SCHEMA_WITH_GNSS_SESSIONS,
+    SCHEMA_WITH_PARCEL_DRAFTS,
 ];
 
 /// The file a drawing is saved as.

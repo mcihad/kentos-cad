@@ -411,6 +411,8 @@ pub(super) struct Features {
     pub(super) known_velocities: bool,
     /// Schema 240: a GNSS archive's baseline sessions, kept limits, a network point's velocity (docs/adr/4920).
     pub(super) gnss_sessions: bool,
+    /// Schema 241: the parcel register's stated lengths, drafts and approvals (docs/adr/5020).
+    pub(super) parcel_drafts: bool,
     /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
     pub(super) drawing_provenance: bool,
     /// Schema 210: a map work approval's objects' digests (docs/adr/2880).
@@ -572,7 +574,7 @@ pub(super) struct Features {
     /// Schema 50: the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
     pub(super) imperial: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
-    /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
+    /// dimension style's line fields, a leader's `arrowSize` and the DXF
     /// arrowheads (docs/adr/0205).
     pub(super) annotation: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
@@ -757,6 +759,7 @@ impl Features {
             work_stamps: schema >= crate::SCHEMA_WITH_WORK_STAMPS,
             known_velocities: schema >= crate::SCHEMA_WITH_KNOWN_VELOCITIES,
             gnss_sessions: schema >= crate::SCHEMA_WITH_GNSS_SESSIONS,
+            parcel_drafts: schema >= crate::SCHEMA_WITH_PARCEL_DRAFTS,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
@@ -4377,7 +4380,7 @@ fn text_run(r: &mut Reader<'_>, stacks: bool) -> Result<TextRun, KcadError> {
 
 /// A text's alignment by its name (§6.6); an unknown name is `bad_value`.
 /// A leader's arrowhead (§6.6, docs/adr/0146): its name; the filled arrow
-/// has none. AutoCAD's arrowheads beside the first three come with schema 30
+/// has none. The DXF arrowheads beside the first three come with schema 30
 /// (docs/adr/0205 §7): an older payload naming one is `bad_value`.
 fn leader_arrow(r: &mut Reader<'_>, has: Features) -> Result<LeaderArrow, KcadError> {
     let names: Vec<(&str, LeaderArrow)> = LeaderArrow::ALL
