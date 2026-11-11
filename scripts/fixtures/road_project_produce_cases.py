@@ -160,6 +160,22 @@ SUBTYPES = {"field": "Tür", "types": [{"code": "K", "label": "Kazı sınırı",
 K20 = dict(sdef("k-20", "Kazı sınırı", style=PLAIN, line_type=None), fields=copy.deepcopy(FIELDS),
            domains=[copy.deepcopy(SINIR_TURU)], subtypes=copy.deepcopy(SUBTYPES))
 K21 = dict(K20, id="k-7", name="Sıfır hattı")
+# Docs/adr/5240: the layer's value combination (the kind and a ground field with its own values), record rule, index
+# and form (a draft bound to the name and the kind by their keys); the same under the zero line's name.
+ZEMIN = {"name": "Zemin", "kind": "text", "values": [{"code": "T", "label": "Toprak"}, {"code": "Y", "label": "Kaya"}]}
+SHAPED_FIELDS = copy.deepcopy(FIELDS) + [copy.deepcopy(ZEMIN)]
+GROUP = {"name": "Tür ve zemin", "fields": ["Tür", "Zemin"], "restrictive": True,
+         "rows": [{"cells": [{"kind": "code", "code": "K"}, {"kind": "any"}]},
+                  {"cells": [{"kind": "code", "code": "D"}, {"kind": "code", "code": "T"}]}]}
+RULE = {"id": "derinlik-arti", "name": "Derinlik artı", "rule": "Derinlik boş veya Derinlik > 0",
+        "message": "Derinlik sıfırdan büyük olmalı.", "fields": ["Derinlik"]}
+INDEX = {"name": "Ad", "fields": ["Ad"], "unique": True}
+FORM = {"id": "sinir-formu", "name": "Sınır formu",
+        "draft": {"revision": 1, "items": [{"type": "field", "id": "ad", "field": "Ad", "required": True},
+                                           {"type": "field", "id": "tur", "field": "Tür"}]}}
+K22 = dict(K20, fields=copy.deepcopy(SHAPED_FIELDS), contingents=[copy.deepcopy(GROUP)], rules=[copy.deepcopy(RULE)],
+           indexes=[copy.deepcopy(INDEX)], forms=[copy.deepcopy(FORM)])
+K23 = dict(K22, id="k-7", name="Sıfır hattı")
 
 
 def on_layer(drawings, layer):
@@ -257,6 +273,17 @@ FILES = {
         {"code": "K", "label": "Kazı"}]), FIELDS[2]]))),
     "alt-turu-tutmayan.json": recipe(on_layer(TWO[:1], dict(K20, subtypes=dict(SUBTYPES, field="Yok")))),
     "iki-ad-alanli.json": recipe(on_layer(TWO[:1], dict(K20, fields=[FIELDS[0]] + FIELDS))),
+    # Docs/adr/5240: recipes keeping their layers' value combinations, record rules, indexes and forms.
+    "tanimli-katmanli.json": recipe(on_layer(TWO, K22)),
+    "tanimli-adli.json": recipe(on_layer(TWO, K23)),
+    "tanimli-eksik.json": recipe(TWO_K + [drawing("cz-3", {"base": "a-1", "comparison": "a-5", "layerId": "k-20"},
+                                                  layer=K22)], sources=SOURCES + [("a-1", "Ova")]),
+    "bilesimi-tutmayan.json": recipe(on_layer(TWO[:1], dict(K22, contingents=[dict(GROUP, fields=["Tür", "Yok"])]))),
+    "kurali-tutmayan.json": recipe(on_layer(TWO[:1], dict(K22, rules=[RULE, RULE]))),
+    "dizini-tutmayan.json": recipe(on_layer(TWO[:1], dict(K22, indexes=[dict(INDEX, fields=[])]))),
+    "formu-tutmayan.json": recipe(on_layer(TWO[:1], dict(K22, forms=[dict(FORM, draft={"revision": 1, "items": [
+        {"type": "field", "id": "yok", "field": "Yok"}]})]))),
+    "iki-formlu.json": recipe(on_layer(TWO[:1], dict(K22, forms=[FORM, dict(FORM, name="İkinci")]))),
 }
 
 
@@ -414,6 +441,7 @@ def cases():
     out += group_cases()
     out += look_cases()
     out += fields_cases()
+    out += shaped_cases()
     # The file and the recipe.
     out.append(case("Tarifte olmayan çizim", step({"path": path, "drawings": ["cz-9"]},
                                                  failed("unknown_drawing", "Tarifte “cz-9” kimlikli çizim yok.",
@@ -845,6 +873,140 @@ def fields_cases():
     return out
 
 
+def shaped_said(lists, forms=("Sınır formu",)):
+    """What a layer added from K22 took (docs/adr/5240): its four fields and subtypes, its value combination, rule and
+    index, its form as a draft, then each list as it went."""
+    out = " Alanları (4) ve alt türleri tarifteki gibi. 1 değer bileşimi, 1 kayıt kuralı ve 1 dizin de tarifteki gibi."
+    names = [f"“{n}”" for n in forms]
+    out += f" {names[0]} formu taslak olarak eklendi; yayımlamak bu projenindir."
+    return out + fields_said(lists)[len(" Alanları (3) ve alt türleri tarifteki gibi."):]
+
+
+def shaped_here(domain):
+    out = copy.deepcopy(SHAPED_FIELDS)
+    out[1]["domain"] = domain
+    return out
+
+
+def with_form(form_id):
+    """The road project with a form of the drainage layer under `form_id` (a note only)."""
+    s = zc.setup(work="road")
+    s["settings"]["forms"] = [{"id": form_id, "name": "Drenaj formu", "layer": "drenaj",
+                               "draft": {"revision": 1, "items": [{"type": "note", "id": "not", "text": "Drenaj"}]}}]
+    return s
+
+
+def shaped_cases():
+    """Docs/adr/5240: a recipe layer's value combinations, record rules, indexes and forms; `addFields`."""
+    out = []
+    path = fx("tanimli-katmanli.json")
+    created = "Tarifin “Kazı sınırı” katmanı bu projede yoktu; tarifteki stiliyle eklendi."
+    went_t = dict(went("k-20", ANY, "created", "Kazı sınırı", to_name="Kazı sınırı"), domainsAdded=["Sınır türü"],
+                  formsAdded=["Sınır formu"])
+    said_t = {"code": "recipe_layer_created", "message": created + shaped_said([("Sınır türü", "added", None)]),
+              "path": "layers"}
+    added = dict(node("Kazı sınırı", PLAIN), fields=shaped_here("sinir-turu"), subtypes=copy.deepcopy(SUBTYPES),
+                 contingents=[copy.deepcopy(GROUP)], rules=[copy.deepcopy(RULE)], indexes=[copy.deepcopy(INDEX)])
+    form_here = lambda id_: {"id": id_, "name": FORM["name"], "layer": ANY, "draft": copy.deepcopy(FORM["draft"])}  # noqa: E731
+    out.append(case("Değer bileşimi, kayıt kuralı, dizin ve form da tarifteki gibi eklenir; form taslak olarak",
+                    step({"path": path}, done({"produced": both(), "layers": [went_t], "revision": "$current"},
+                                              [said_t]),
+                         expect=dict(STEPPED, layers=tree_with(added),
+                                     settings={"domains": [SINIR_TURU], "forms": [form_here("sinir-formu")]})),
+                    note="yayım tarifin projesinin kararıdır; burada yeniden yayımlanır"))
+    out.append(case("Plan eklenecek bileşimi, kuralı, dizini ve formu söyler, yazmaz",
+                    step({"path": path}, done({"produced": both(False), "layers": [went_t], "revision": "$current"},
+                                              [said_t]), op="plan")))
+    drenaj = with_form("sinir-formu")["settings"]["forms"][0]
+    out.append(case("Formun kimliği bu projede başka formunsa -2 ile eklenir",
+                    step({"path": path}, done({"produced": both(), "layers": [went_t], "revision": "$current"},
+                                              [said_t]),
+                         expect=dict(STEPPED, layers=tree_with(added, setup=with_form("sinir-formu")),
+                                     settings={"domains": [SINIR_TURU],
+                                               "forms": [drenaj, form_here("sinir-formu-2")]})),
+                    setup="$formlu"))
+    ova = "“Ova” kimlikli ya da adlı yüzey projede yok."
+    out.append(case("Çizimi gitmeyen eklenen katman formuyla ve listesiyle geri alınır",
+                    step({"path": fx("tanimli-eksik.json")},
+                         done({"produced": both(), "left": [{"drawing": "cz-3", "why": "refused", "message": ova}],
+                               "layers": [went("k-7", "sifir", "name", "Sıfır hattı")], "revision": "$current"}),
+                         expect=dict(STEPPED, layers=zc.setup(work="road")["layers"],
+                                     settings={"domains": None, "forms": None}))))
+    # addFields: the zero line's layer here holds a name and a depth written as text.
+    kind_only = ("“Sıfır hattı” katmanı bu projede bulundu ve kendi alanlarını korur: “Derinlik” onda "
+                 f"{KIND_LABELS['text']}, tarifte {KIND_LABELS['decimal']}. Alanları Katman özellikleri › Alanlar'da "
+                 "düzenleyin ya da çizimin katmanını layers ile verin.")
+    took = ("Tarifin “Tür” ve “Zemin” alanları “Sıfır hattı” katmanının alanlarının sonuna eklendi; katmanın kendi "
+            "alanları ve öbür tanımları değişmedi.")
+    here_after = with_fields()
+    sifir = next(n for n in here_after["layers"] if n["id"] == "sifir")
+    sifir["fields"] += [dict(copy.deepcopy(FIELDS[1]), domain="sinir-turu"), copy.deepcopy(ZEMIN)]
+    went_a = dict(went("k-7", "sifir", "name", "Sıfır hattı"), domainsAdded=["Sınır türü"], fieldsAdded=["Tür", "Zemin"])
+    out.append(case("Eksik alanları ekle: adıyla bulunan katmana tarifin onda olmayan alanları listesiyle eklenir",
+                    step({"path": fx("tanimli-adli.json"), "addFields": True},
+                         done({"produced": both(), "layers": [went_a], "revision": "$current"},
+                              [{"code": "recipe_layer_fields_added",
+                                "message": took + " “Sınır türü” değer listesi de tarifteki tanımıyla eklendi.",
+                                "path": "layers"},
+                               {"code": "recipe_layer_fields", "message": kind_only, "path": "layers"}]),
+                         expect=dict(STEPPED, layers=here_after["layers"],
+                                     settings={"domains": [SINIR_TURU], "forms": None})),
+                    setup="$alanli-sifir",
+                    note="kendi alanları, türü başka Derinlik de, değişmez; bileşim, kural, dizin ve form verilmez"))
+    out.append(case("Eksik alanları ekle: planı yazmaz",
+                    step({"path": fx("tanimli-adli.json"), "addFields": True},
+                         done({"produced": both(False), "layers": [went_a], "revision": "$current"},
+                              [{"code": "recipe_layer_fields_added",
+                                "message": took + " “Sınır türü” değer listesi de tarifteki tanımıyla eklendi.",
+                                "path": "layers"},
+                               {"code": "recipe_layer_fields", "message": kind_only, "path": "layers"}]), op="plan"),
+                    setup="$alanli-sifir"))
+    rid = list_id("Sınır türü_1", {OTHER_LIST["id"]})
+    here_r = with_fields()
+    here_r["settings"]["domains"] = [copy.deepcopy(OTHER_LIST)]
+    sifir_r = next(n for n in here_r["layers"] if n["id"] == "sifir")
+    sifir_r["fields"] += [dict(copy.deepcopy(FIELDS[1]), domain=rid), copy.deepcopy(ZEMIN)]
+    went_ar = dict(went_a, domainsAdded=["Sınır türü_1"])
+    out.append(case("Eksik alanları ekle: aynı adlı başka değerli liste değişmez, tarifinki _1 ile",
+                    step({"path": fx("tanimli-adli.json"), "addFields": True},
+                         done({"produced": both(), "layers": [went_ar], "revision": "$current"},
+                              [{"code": "recipe_layer_fields_added",
+                                "message": took + " Bu projenin “Sınır türü” listesi başka değerler taşıyor, değişmedi; "
+                                           "tarifinki “Sınır türü_1” adıyla eklendi.", "path": "layers"},
+                               {"code": "recipe_layer_fields", "message": kind_only, "path": "layers"}]),
+                         expect=dict(STEPPED, layers=here_r["layers"],
+                                     settings={"domains": [OTHER_LIST, dict(SINIR_TURU, id=rid, name="Sınır türü_1")]})),
+                    setup="$alanli-baska-liste"))
+    differs = ("“Sıfır hattı” katmanı bu projede bulundu ve kendi alanlarını korur: tarifin “Tür”, “Zemin” alanları "
+               f"onda yok; “Derinlik” onda {KIND_LABELS['text']}, tarifte {KIND_LABELS['decimal']}. Alanları Katman "
+               "özellikleri › Alanlar'da düzenleyin ya da çizimin katmanını layers ile verin.")
+    out.append(case("Eksik alanları eklemeden: bulunan katman değişmez, eksikleri söylenir",
+                    step({"path": fx("tanimli-adli.json")},
+                         done({"produced": both(), "layers": [went("k-7", "sifir", "name", "Sıfır hattı")],
+                               "revision": "$current"},
+                              [{"code": "recipe_layer_fields", "message": differs, "path": "layers"}]),
+                         expect=dict(STEPPED, layers=with_fields()["layers"], settings={"domains": None})),
+                    setup="$alanli-sifir"))
+    out.append(case("Eksik alanları ekle: eklenen katmanda değişiklik yok",
+                    step({"path": path, "addFields": True},
+                         done({"produced": both(), "layers": [went_t], "revision": "$current"}, [said_t]),
+                         expect=dict(STEPPED, layers=tree_with(added),
+                                     settings={"domains": [SINIR_TURU], "forms": [form_here("sinir-formu")]}))))
+    bad = "Tarifteki “cz-1” çiziminin katman tanımı (k-20) tutarsız: "
+    for name, file_, why in [
+        ("Bileşimin alanı katmanda yok", "bilesimi-tutmayan.json", "değer bileşimlerinde: Katmanda “Yok” alanı yok."),
+        ("Aynı kural iki kez", "kurali-tutmayan.json", "kayıt kurallarında: “derinlik-arti” kuralı iki kez var."),
+        ("Dizinin alanı yok", "dizini-tutmayan.json", ANY),
+        ("Form katmanda olmayan alana bağlı", "formu-tutmayan.json",
+         "“Sınır formu” formu katmanın alanlarında olmayan “Yok” alanına bağlı."),
+        ("İki formun kimliği aynı", "iki-formlu.json", "iki formun kimliği aynı."),
+    ]:
+        out.append(case(f"Tarifin katman tanımı tutarsız: {name.lower()}",
+                        step({"path": fx(file_)}, failed("invalid_project_recipe", why if why == ANY else bad + why,
+                                                          "path"))))
+    return out
+
+
 def main():
     found = cases()
     for c in found:
@@ -864,9 +1026,15 @@ def main():
             c["setup"] = with_lists(OTHER_LIST)
         elif c.get("setup") == "$alanli-sifir":
             c["setup"] = with_fields()
+        elif c.get("setup") == "$formlu":
+            c["setup"] = with_form("sinir-formu")
+        elif c.get("setup") == "$alanli-baska-liste":
+            s_ = with_fields()
+            s_["settings"]["domains"] = [copy.deepcopy(OTHER_LIST)]
+            c["setup"] = s_
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.project.produce", "commandVersion": 1,
            "title": "Tariften üret",
-           "note": "ADR 3240, 3640, 4040, 4440, 4860. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
+           "note": "ADR 3240, 3640, 4040, 4440, 4860, 5240. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
                    "graf biçimi) fixtures/recipes/v1 altında elle yazılır; sıfır hatlarının çizgi sayısı "
                    "road_terrain_zeroline_cases.py'den; KentOS kodu yok.",
            "setup": zc.setup(work="road"), "cases": found}

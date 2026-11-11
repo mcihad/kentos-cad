@@ -222,6 +222,15 @@ def layer_def(st, lid):
         out["domains"] = domains
     if n.get("subtypes") is not None:
         out["subtypes"] = copy.deepcopy(n["subtypes"])
+    # Docs/adr/5240: its value combinations, record rules and indexes, and the drafts of the project's forms that edit
+    # it (id, name, draft; no release).
+    for key in ("contingents", "rules", "indexes"):
+        if n.get(key):
+            out[key] = copy.deepcopy(n[key])
+    forms = [{"id": f["id"], "name": f["name"], "draft": copy.deepcopy(f["draft"])}
+             for f in st.setup["settings"].get("forms", []) if f["layer"] == lid]
+    if forms:
+        out["forms"] = forms
     return out
 
 
@@ -396,6 +405,28 @@ def fields_setup():
     return s
 
 
+def shaped_setup():
+    """Docs/adr/5240: fields_setup's project with a ground field, the zero line's layer's value combination, record
+    rule and index, its form (published, enforced: the recipe keeps its draft only) and another layer's form."""
+    s = fields_setup()
+    layer = next(n for n in s["layers"] if n["id"] == "sifir")
+    layer["fields"].append({"name": "Zemin", "kind": "text", "values": [{"code": "T", "label": "Toprak"},
+                                                                       {"code": "Y", "label": "Kaya"}]})
+    layer["contingents"] = [{"name": "Tür ve zemin", "fields": ["Tür", "Zemin"], "restrictive": True,
+                             "rows": [{"cells": [{"kind": "code", "code": "K"}, {"kind": "any"}]},
+                                      {"cells": [{"kind": "code", "code": "D"}, {"kind": "code", "code": "T"}]}]}]
+    layer["rules"] = [{"id": "derinlik-arti", "name": "Derinlik artı", "rule": "Derinlik boş veya Derinlik > 0",
+                       "message": "Derinlik sıfırdan büyük olmalı.", "fields": ["Derinlik"]}]
+    layer["indexes"] = [{"name": "Ad", "fields": ["Ad"], "unique": True}]
+    body = {"revision": 1, "items": [{"type": "field", "id": "ad", "field": "Ad", "required": True},
+                                     {"type": "field", "id": "tur", "field": "Tür"}]}
+    s["settings"]["forms"] = [
+        {"id": "sinir-formu", "name": "Sınır formu", "layer": "sifir", "draft": copy.deepcopy(body)},
+        {"id": "baska", "name": "Başka", "layer": "0", "draft": {"revision": 1, "items": [
+            {"type": "note", "id": "not", "text": "Başka katman"}]}}]
+    return s
+
+
 def edit_height(st):
     """The mound's corner set lower by an edit of its surface (road_project_cases.py's): the mound's stamp changes."""
     t = st.find("surface", "t-10")
@@ -478,6 +509,11 @@ def cases():
     a = drawn(st, rp.ZEROLINE)
     add("Katmanın alanları, bağladıkları değer listeleri ve alt türleri de tarifte; bağlı tablonun sütunu ve olmayan "
         "listenin bağı değil", [*a, asked(st, book_=BOOK, boxes=boxes)], sfd)
+    ssh = shaped_setup()
+    st = rp.State(ssh)
+    a = drawn(st, rp.ZEROLINE)
+    add("Katmanın değer bileşimleri, kayıt kuralları, dizinleri ve onu düzenleyen formların taslağı da tarifte",
+        [*a, asked(st, book_=BOOK, boxes=boxes)], ssh)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     add("Derin okuma: kurulamayan yüzey grafikte de", [*a, asked(st, deep=True, book_=BOOK, boxes=boxes)], sm)

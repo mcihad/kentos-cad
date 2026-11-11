@@ -39,6 +39,8 @@ const PRODUCE: &str = "Tariften üret…";
 /// The picked recipe drawn, or dropped (docs/adr/3640).
 const CONFIRM: &str = "Üret";
 const CANCEL: &str = "Vazgeç";
+/// Docs/adr/5240: the found layer's choice.
+const ADD_FIELDS: &str = "tarifin eksik alanlarını ekle";
 /// A recipe layer left to its name: found by it, or added with the recipe's look.
 const AUTO: &str = "";
 
@@ -82,6 +84,8 @@ pub struct Recipe {
     pub warnings: Vec<String>,
     /// What each of its layers takes when it is added, beyond its style (docs/adr/4440, 4860), by its id in the recipe.
     pub looks: BTreeMap<String, Takes>,
+    /// Docs/adr/5240: a layer found here takes the recipe's fields it lacks.
+    pub add_fields: bool,
 }
 
 /// What a recipe layer takes when it is added, beyond its style: its transparency, blending mode, type and Yazdır said
@@ -93,6 +97,8 @@ pub struct Takes {
     pub fields: usize,
     pub subtypes: bool,
     pub lists: Vec<String>,
+    /// Docs/adr/5240: its value combinations, record rules, indexes and forms, said.
+    pub more: Option<String>,
 }
 
 impl Recipe {
@@ -141,11 +147,41 @@ pub fn recipe_looks(path: &std::path::Path) -> BTreeMap<String, Takes> {
                     }
                     names
                 });
-            let takes =
-                Takes { look: road_project_produce::look_said(l), fields: l.fields.len(), subtypes: l.subtypes.is_some(), lists };
+            let takes = Takes {
+                look: road_project_produce::look_said(l),
+                fields: l.fields.len(),
+                subtypes: l.subtypes.is_some(),
+                lists,
+                more: more_words(l),
+            };
             (takes != Takes::default()).then(|| (l.id.clone(), takes))
         })
         .collect()
+}
+
+/// What a recipe layer keeps beyond its fields (docs/adr/5240): “2 değer bileşimi, 1 kayıt kuralı ve 1 dizini de
+/// tarifteki gibi. “Sınır denetimi” formu taslak olarak.”; none when it keeps none.
+pub fn more_words(l: &kentos_commands::RoadRecipeLayer) -> Option<String> {
+    let mut parts = Vec::new();
+    for (n, word) in [(l.contingents.len(), "değer bileşimi"), (l.rules.len(), "kayıt kuralı"), (l.indexes.len(), "dizin")] {
+        if n > 0 {
+            parts.push(format!("{n} {word}"));
+        }
+    }
+    let join = |items: &[String]| match items.split_last() {
+        Some((last, rest)) if !rest.is_empty() => format!("{} ve {last}", rest.join(", ")),
+        Some((last, _)) => last.clone(),
+        None => String::new(),
+    };
+    let mut out = Vec::new();
+    if !parts.is_empty() {
+        out.push(format!("{} de tarifteki gibi.", join(&parts)));
+    }
+    if !l.forms.is_empty() {
+        let names: Vec<String> = l.forms.iter().map(|f| format!("“{}”", f.name)).collect();
+        out.push(format!("{} {} taslak olarak.", join(&names), if names.len() > 1 { "formları" } else { "formu" }));
+    }
+    (!out.is_empty()).then(|| out.join(" "))
 }
 
 /// What a layer added takes of its recipe layer's fields (docs/adr/4860), in the plan or (`done`) after Üret: their
@@ -157,6 +193,10 @@ fn fields_words(l: &RoadProducedLayer, done: bool, t: &Takes) -> Option<String> 
     }
     let verb = if done { "eklendi" } else { "eklenecek" };
     let mut out = format!("Alanları ({}){} tarifteki gibi.", t.fields, if t.subtypes { " ve alt türleri" } else { "" });
+    if let Some(more) = &t.more {
+        out.push(' ');
+        out.push_str(more);
+    }
     for name in &t.lists {
         let renamed = l.domains_added.iter().find(|a| *a != name && a.starts_with(&format!("{name}_")));
         if l.domains_added.contains(name) {
@@ -249,6 +289,8 @@ pub enum Event {
     /// A recipe layer's layer here chosen (docs/adr/3640): its place in the recipe's layers, the layer's id (empty: by
     /// its name, or added).
     Layer(usize, String),
+    /// Docs/adr/5240: a layer found here takes the recipe's fields it lacks.
+    AddFields(bool),
     Confirm,
     Cancel,
     Close,
@@ -281,8 +323,12 @@ pub fn produced_lines(out: &RoadProjectProduced, looks: &BTreeMap<String, Takes>
     for l in &out.layers {
         match l.how {
             RoadLayerMatch::Created => lines.push((Kind::Info, added_words(l, true, looks.get(&l.from)))),
-            RoadLayerMatch::Name => lines.push((Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name))),
-            RoadLayerMatch::Given => lines.push((Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name))),
+            RoadLayerMatch::Name => {
+                lines.push((Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.{}", l.name, l.to_name, fields_added(l))))
+            }
+            RoadLayerMatch::Given => {
+                lines.push((Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.{}", l.name, l.to_name, fields_added(l))))
+            }
             RoadLayerMatch::Id => {}
         }
     }
@@ -290,6 +336,15 @@ pub fn produced_lines(out: &RoadProjectProduced, looks: &BTreeMap<String, Takes>
         lines.push((Kind::Info, format!("Tarifin {} çizimi bırakıldı: {}", l.drawing, l.message)));
     }
     lines
+}
+
+/// The recipe's fields a found layer took (docs/adr/5240), said after it.
+fn fields_added(l: &RoadProducedLayer) -> String {
+    if l.fields_added.is_empty() {
+        return String::new();
+    }
+    let names: Vec<String> = l.fields_added.iter().map(|n| format!("“{n}”")).collect();
+    format!(" Tarifin eksik alanları eklendi: {}.", names.join(", "))
 }
 
 /// A drawing's table row: its name, its sources (each changed or gone source said), its objects, state and sheets.
@@ -381,11 +436,19 @@ impl App {
     fn project_graph_plan(&mut self) {
         let Some(doc) = self.document.as_mut() else { return };
         let Some(r) = self.project_graph.recipe.as_mut() else { return };
-        let input = RoadProjectProduce { path: r.path.display().to_string(), drawings: None, layers: r.given(), expected_revision: None };
+        let input = RoadProjectProduce { path: r.path.display().to_string(), drawings: None, layers: r.given(), add_fields: r.add_fields, expected_revision: None };
         (r.plan, r.warnings) = match road_project_produce::plan(&ExecutionContext::new(&mut doc.model), &input) {
             CommandResult::Completed { output, warnings } => {
                 // The added layers are said by the plan's own line.
-                let said = warnings.into_iter().filter(|w| w.code != "recipe_layer_created").map(|w| w.message).collect();
+                // Docs/adr/5240: the found layer's fields said as what Üret will do.
+                let said = warnings
+                    .into_iter()
+                    .filter(|w| w.code != "recipe_layer_created")
+                    .map(|w| match w.code.as_str() {
+                        "recipe_layer_fields_added" => w.message.replace("eklendi", "eklenecek").replace("değişmedi", "değişmeyecek"),
+                        _ => w.message,
+                    })
+                    .collect();
                 (Ok(output), said)
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } => (Err(error.message), Vec::new()),
@@ -397,7 +460,8 @@ impl App {
     pub(crate) fn project_graph_preview(&mut self, path: PathBuf) {
         let layers = recipe_layers(&path).into_iter().map(|(id, name)| (id, name, AUTO.to_owned())).collect();
         let looks = recipe_looks(&path);
-        self.project_graph.recipe = Some(Recipe { path, layers, plan: Err(String::new()), warnings: Vec::new(), looks });
+        self.project_graph.recipe =
+            Some(Recipe { path, layers, plan: Err(String::new()), warnings: Vec::new(), looks, add_fields: false });
         self.project_graph_plan();
     }
 
@@ -407,7 +471,7 @@ impl App {
         let Some(r) = self.project_graph.recipe.take() else { return };
         let Some(doc) = self.document.as_mut() else { return };
         let path = r.path.clone();
-        let input = RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: r.given(), expected_revision: None };
+        let input = RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: r.given(), add_fields: r.add_fields, expected_revision: None };
         let result = road_project_produce::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             let left = if out.left.is_empty() { String::new() } else { format!("; {} çizim bırakıldı", out.left.len()) };
@@ -459,6 +523,12 @@ impl App {
             Event::Layer(k, to) => {
                 if let Some((_, _, chosen)) = self.project_graph.recipe.as_mut().and_then(|r| r.layers.get_mut(k)) {
                     *chosen = to;
+                }
+                self.project_graph_plan();
+            }
+            Event::AddFields(on) => {
+                if let Some(r) = self.project_graph.recipe.as_mut() {
+                    r.add_fields = on;
                 }
                 self.project_graph_plan();
             }
@@ -541,7 +611,16 @@ impl App {
                 );
             }
             if !r.layers.is_empty() {
-                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili, grupları, saydamlığı, türü, Yazdır'ı ve alanlarıyla eklenir. Başka bir katmana çizmek için seçin.");
+                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili, grupları, saydamlığı, türü, Yazdır'ı, alanları, değer bileşimleri, kayıt kuralları, dizinleri ve formlarıyla eklenir. Başka bir katmana çizmek için seçin.");
+            }
+            // Docs/adr/5240: a layer found here may take the recipe's fields it lacks.
+            if r.looks.values().any(|t| t.fields > 0) {
+                form = form
+                    .field(
+                        "Bulunan katman",
+                        words::check(r.add_fields, ADD_FIELDS, Some(msg(Event::AddFields(!r.add_fields)))),
+                    )
+                    .help("Seçilirse bu projede bulunan katmana tarifin onda olmayan alanları, kendi alanlarının sonuna eklenir; kendi alanları, kuralları ve formları değişmez.");
             }
             // What it would do, read before Üret.
             let ready = matches!(&r.plan, Ok(out) if !out.produced.is_empty());

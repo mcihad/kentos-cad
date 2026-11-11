@@ -54,6 +54,8 @@ struct Asked {
     named: bool,
     /// The layers given: a recipe layer's id → this project's (docs/adr/3640).
     given: BTreeMap<String, String>,
+    /// Docs/adr/5240: a layer found here takes the recipe's fields it lacks.
+    add_fields: bool,
     warnings: Vec<CommandWarning>,
 }
 
@@ -267,7 +269,7 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
             path: Some("path".into()),
         });
     }
-    Ok(Asked { wanted, named: input.drawings.is_some(), given: input.layers.clone(), warnings })
+    Ok(Asked { wanted, named: input.drawings.is_some(), given: input.layers.clone(), add_fields: input.add_fields, warnings })
 }
 
 /// What does not hold in a recipe layer's definition (docs/adr/4040): a group without a name; a style whose colour,
@@ -584,7 +586,7 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                 }
                 if let Some((id, how)) = found {
                     let made = added.iter_mut().find(|a| a.id == id);
-                    let (group, groups_added, line_type_added, domains_added) = match made {
+                    let (group, groups_added, line_type_added, mut domains_added, forms_added) = match made {
                         Some(a) => {
                             a.used = true;
                             (
@@ -592,12 +594,41 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                                 a.groups_added.iter().map(|g| g.1.clone()).collect(),
                                 a.line_type_added.clone(),
                                 a.given.added(),
+                                a.given.forms.iter().map(|f| f.1.clone()).collect(),
                             )
                         }
-                        None => (Vec::new(), Vec::new(), None, Vec::new()),
+                        None => (Vec::new(), Vec::new(), None, Vec::new(), Vec::new()),
                     };
                     let from = w.layer_from.clone().unwrap_or_default();
+                    let mut fields_added = Vec::new();
                     if !layers.iter().any(|l| l.from == from) {
+                        // Docs/adr/5240: asked, a layer found here takes the recipe's fields it lacks.
+                        if how != RoadLayerMatch::Created
+                            && asked.add_fields
+                            && let Some(def) = &w.layer
+                        {
+                            match crate::road_recipe_fields::add_missing(cx.doc, &id, def, STEP) {
+                                Ok((names, lists)) if !names.is_empty() => {
+                                    let to_name = cx.doc.layers().get(&id).map(|n| n.name.clone()).unwrap_or_default();
+                                    warnings.push(CommandWarning {
+                                        code: codes::RECIPE_LAYER_FIELDS_ADDED.into(),
+                                        message: crate::road_recipe_fields::added_said(&to_name, &names, &lists),
+                                        path: Some("layers".into()),
+                                    });
+                                    domains_added = lists
+                                        .iter()
+                                        .filter_map(|l| match &l.went {
+                                            crate::road_recipe_fields::Went::Linked => None,
+                                            crate::road_recipe_fields::Went::Added => Some(l.name.clone()),
+                                            crate::road_recipe_fields::Went::Renamed { here } => Some(here.clone()),
+                                        })
+                                        .collect();
+                                    fields_added = names;
+                                }
+                                Ok(_) => {}
+                                Err(stop) => return stop.into(),
+                            }
+                        }
                         // Docs/adr/4860: a layer found here keeps its own fields; the recipe's it lacks are said.
                         if how != RoadLayerMatch::Created
                             && let Some(def) = &w.layer
@@ -622,6 +653,8 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                             groups_added,
                             line_type_added,
                             domains_added,
+                            forms_added,
+                            fields_added,
                         });
                     }
                 }
@@ -662,6 +695,9 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             continue;
         }
         let _ = cx.doc.remove_layer(&a.id);
+        // Docs/adr/5240: the forms added with it.
+        let forms: Vec<String> = a.given.forms.iter().map(|f| f.0.clone()).collect();
+        crate::road_recipe_fields::remove_forms(cx.doc, &forms);
         for (g, _) in a.groups_added.iter().rev() {
             if cx.doc.layers().get(g).is_some_and(|n| n.children.is_empty()) {
                 let _ = cx.doc.remove_layer(g);
@@ -740,7 +776,7 @@ mod tests {
         let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = Document::from_snapshot_v2(snapshot).expect("opens");
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/recipes/v1/sifir-hatlari.json");
-        (doc, RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: Default::default(), expected_revision: None })
+        (doc, RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: Default::default(), add_fields: false, expected_revision: None })
     }
 
     /// docs/adr/2440: a stop asked before the first drawing is heard: cancelled, nothing written.

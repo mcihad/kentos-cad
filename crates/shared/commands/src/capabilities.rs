@@ -2465,7 +2465,7 @@ const ENTRIES: &[Entry] = &[
             &["unknown_recipe_layer", "ambiguous_recipe_layer"],
             REVISION,
         ],
-        warnings: &["recipe_other_system", "layer_hidden", "recipe_layer_created", "recipe_layer_fields"],
+        warnings: &["recipe_other_system", "layer_hidden", "recipe_layer_created", "recipe_layer_fields", "recipe_layer_fields_added"],
         targets: none,
     },
     Entry {

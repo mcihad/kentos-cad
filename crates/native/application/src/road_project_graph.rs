@@ -149,6 +149,17 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
         fields,
         domains,
         subtypes: node.subtypes.clone(),
+        // Docs/adr/5240: its value combinations, record rules, indexes and the drafts of the forms that edit it.
+        contingents: node.contingents.clone(),
+        rules: node.rules.clone(),
+        indexes: node.indexes.clone(),
+        forms: doc
+            .settings()
+            .forms
+            .iter()
+            .filter(|f| f.layer == id)
+            .map(|f| kentos_commands::RoadRecipeForm { id: f.id.clone(), name: f.name.clone(), draft: f.draft.clone() })
+            .collect(),
     })
 }
 

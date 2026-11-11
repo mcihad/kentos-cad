@@ -289,6 +289,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çekirdek `volume_sections::along_axis` WASM'den) ve `road.terrains.cutfill`'de `sections`, `materials` (compare.sections'ın
   15, cutfill'in 14 yeni durumu); web Yüzey analizi › Fark › Kesit'te Eksen, genişlikler, Eksen noktalarında da,
   Başlangıç km.
+- MAP-20 / ADR 5240: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin `contingents`,
+  `rules`, `indexes`, `forms`'u ve `addFields` (`formsAdded`, `fieldsAdded`, `recipe_layer_fields_added`; 15 yeni durum);
+  web İş grafiği'nde Bulunan katman kutusu.
 - MAP-19 / ADR 5220: web'in `cad.asbuilt.review` işleyicisi (30 durum); web `.kcad` okuyucusunda şema 245
   (`monitoringReviews`); web Uygulama kontrolü › İzleme'de Eşiklerin kaynağı, İnceleme ve Grafik.
 - MAP-18 / ADR 5200: web'in `cad.survey.adjust` işleyicisinde `keep`; web `.kcad` okuyucusunda şema 244

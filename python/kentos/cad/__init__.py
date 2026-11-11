@@ -3316,6 +3316,7 @@ __all__ = [
     "RoadProjectRebuild",
     "RoadProjectRebuilt",
     "RoadProjectTree",
+    "RoadRecipeForm",
     "RoadRecipeLayer",
     "RoadSettings",
     "RoadSheetDef",

@@ -3,8 +3,9 @@
 /**
  * Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
  * `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;
- * `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the
- * Layer Translator); a layer not given goes by its name (Map Same) or is added.
+ * `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (a layer mapping); a
+ * layer not given goes by its name or is added; `addFields` (docs/adr/5240), a layer found here takes the recipe's fields
+ * it lacks.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
  * `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
@@ -15,4 +16,9 @@
  * source not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is
  * written.
  */
-export type RoadProjectProduce = { path: string, drawings?: Array<string>, layers?: { [key in string]: string }, expectedRevision?: string, };
+export type RoadProjectProduce = { path: string, drawings?: Array<string>, layers?: { [key in string]: string }, 
+/**
+ * Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the
+ * lists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.
+ */
+addFields?: boolean, expectedRevision?: string, };

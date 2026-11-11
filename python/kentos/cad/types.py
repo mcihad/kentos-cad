@@ -87263,6 +87263,8 @@ class RoadProducedLayer(_Model):
     Attributes:
         domains_added: A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
             here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
+        fields_added: A layer found here with `addFields` (docs/adr/5240): the recipe's fields it took, by their names.
+        forms_added: A layer added (docs/adr/5240): the forms added with it, by their names; empty: none.
         group: A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
             name, its name here); empty: at the top.
         groups_added: A layer added: those of its groups added with it (none of their names was here), from the top.
@@ -87274,6 +87276,8 @@ class RoadProducedLayer(_Model):
     to_name: str
     how: RoadLayerMatch | RoadLayerMatchName
     domains_added: list[str] | Unset = UNSET
+    fields_added: list[str] | Unset = UNSET
+    forms_added: list[str] | Unset = UNSET
     group: list[str] | Unset = UNSET
     groups_added: list[str] | Unset = UNSET
     line_type_added: str | None | Unset = UNSET
@@ -87287,6 +87291,10 @@ class RoadProducedLayer(_Model):
         out["how"] = _enum_out(self.how)
         if self.domains_added is not UNSET:
             out["domainsAdded"] = list(self.domains_added)
+        if self.fields_added is not UNSET:
+            out["fieldsAdded"] = list(self.fields_added)
+        if self.forms_added is not UNSET:
+            out["formsAdded"] = list(self.forms_added)
         if self.group is not UNSET:
             out["group"] = list(self.group)
         if self.groups_added is not UNSET:
@@ -87304,6 +87312,8 @@ class RoadProducedLayer(_Model):
             to_name=data["toName"],
             how=_enum_in(RoadLayerMatch, data["how"]),
             domains_added=list(data["domainsAdded"]) if "domainsAdded" in data else UNSET,
+            fields_added=list(data["fieldsAdded"]) if "fieldsAdded" in data else UNSET,
+            forms_added=list(data["formsAdded"]) if "formsAdded" in data else UNSET,
             group=list(data["group"]) if "group" in data else UNSET,
             groups_added=list(data["groupsAdded"]) if "groupsAdded" in data else UNSET,
             line_type_added=data.get("lineTypeAdded", UNSET),
@@ -87717,8 +87727,9 @@ class RoadProjectGraphQuery(_Model):
 class RoadProjectProduce(_Model):
     """Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
     `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;
-    `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the
-    Layer Translator); a layer not given goes by its name (Map Same) or is added.
+    `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (a layer mapping); a
+    layer not given goes by its name or is added; `addFields` (docs/adr/5240), a layer found here takes the recipe's fields
+    it lacks.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
     `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
@@ -87728,8 +87739,12 @@ class RoadProjectProduce(_Model):
     (at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a
     source not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is
     written.
+    Attributes:
+        add_fields: Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the
+            lists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.
     """
     path: str
+    add_fields: bool | Unset = UNSET
     drawings: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
@@ -87737,6 +87752,8 @@ class RoadProjectProduce(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.add_fields is not UNSET:
+            out["addFields"] = self.add_fields
         if self.drawings is not UNSET:
             out["drawings"] = None if self.drawings is None else list(self.drawings)
         if self.expected_revision is not UNSET:
@@ -87749,6 +87766,7 @@ class RoadProjectProduce(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProjectProduce:
         return cls(
             path=data["path"],
+            add_fields=data.get("addFields", UNSET),
             drawings=UNSET if "drawings" not in data else None if data["drawings"] is None else list(data["drawings"]),
             expected_revision=data.get("expectedRevision", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
@@ -87929,6 +87947,31 @@ class RoadProjectTree(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadRecipeForm(_Model):
+    """A form a recipe layer keeps (docs/adr/5240): its id and name in its project and its draft, bound to the layer's
+    fields by their keys.
+    """
+    id: str
+    name: str
+    draft: FormBody
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["draft"] = self.draft.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadRecipeForm:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            draft=FormBody.from_json(data["draft"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadRecipeLayer(_Model):
     """A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it
     takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
@@ -87941,15 +87984,20 @@ class RoadRecipeLayer(_Model):
         line_weight: Unit: paper-mm.
         compose: How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask
             (a mask cuts into its project's other layers by their ids); none: opaque and normal.
+        contingents: Its value combinations (Değer bileşimleri, docs/adr/0423, 5240): the groups of fields whose values go together.
         domains: The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.
         fields: Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's
             column (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;
             the list is in `domains`. Empty: no fields.
+        forms: Its project's forms that edit it (Formlar, docs/adr/0401, 5240), each its id, name and draft; a release is its
+            project's decision and is not kept (the project it goes to publishes again).
         geometry: What it held (Katman türü): points, lines, areas or annotation; none: any kind.
         group: The names of the groups it was in, from the top of the tree; empty: at the top.
+        indexes: Its indexes (Dizinler, docs/adr/0758, 5240).
         line_type_def: The project line type its style names (`style.linePattern`), as its project defines it; none when the style
             names none or its project has no such line type.
         plot: Yazdır: `false`, it was drawn on screen but not printed; none: printed. Only `false` is written.
+        rules: Its record rules (Kayıt kuralları, docs/adr/0438, 5240).
         style: Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the
             fields above.
         subtypes: Its subtypes (Alt türler, docs/adr/0422, 4860): its field that sorts the records and what each kind narrows.
@@ -87960,12 +88008,16 @@ class RoadRecipeLayer(_Model):
     line_type: LineType | LineTypeName
     line_weight: float
     compose: LayerCompose | None | Unset = UNSET
+    contingents: list[FieldGroup] | Unset = UNSET
     domains: list[FieldDomain] | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
+    forms: list[RoadRecipeForm] | Unset = UNSET
     geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     group: list[str] | Unset = UNSET
+    indexes: list[LayerIndex] | Unset = UNSET
     line_type_def: LineTypeDef | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
+    rules: list[LayerRule] | Unset = UNSET
     style: LayerStyle | None | Unset = UNSET
     subtypes: LayerSubtypes | None | Unset = UNSET
 
@@ -87978,18 +88030,26 @@ class RoadRecipeLayer(_Model):
         out["lineWeight"] = float(self.line_weight)
         if self.compose is not UNSET:
             out["compose"] = None if self.compose is None else self.compose.to_json()
+        if self.contingents is not UNSET:
+            out["contingents"] = [e0.to_json() for e0 in self.contingents]
         if self.domains is not UNSET:
             out["domains"] = [e0.to_json() for e0 in self.domains]
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.forms is not UNSET:
+            out["forms"] = [e0.to_json() for e0 in self.forms]
         if self.geometry is not UNSET:
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.group is not UNSET:
             out["group"] = list(self.group)
+        if self.indexes is not UNSET:
+            out["indexes"] = [e0.to_json() for e0 in self.indexes]
         if self.line_type_def is not UNSET:
             out["lineTypeDef"] = None if self.line_type_def is None else self.line_type_def.to_json()
         if self.plot is not UNSET:
             out["plot"] = self.plot
+        if self.rules is not UNSET:
+            out["rules"] = [e0.to_json() for e0 in self.rules]
         if self.style is not UNSET:
             out["style"] = None if self.style is None else self.style.to_json()
         if self.subtypes is not UNSET:
@@ -88005,12 +88065,16 @@ class RoadRecipeLayer(_Model):
             line_type=_enum_in(LineType, data["lineType"]),
             line_weight=float(data["lineWeight"]),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
+            contingents=[FieldGroup.from_json(e0) for e0 in data["contingents"]] if "contingents" in data else UNSET,
             domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            forms=[RoadRecipeForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             group=list(data["group"]) if "group" in data else UNSET,
+            indexes=[LayerIndex.from_json(e0) for e0 in data["indexes"]] if "indexes" in data else UNSET,
             line_type_def=UNSET if "lineTypeDef" not in data else None if data["lineTypeDef"] is None else LineTypeDef.from_json(data["lineTypeDef"]),
             plot=data.get("plot", UNSET),
+            rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
             style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
             subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
         )
@@ -142308,6 +142372,7 @@ __all__ = [
     "RoadProjectRebuild",
     "RoadProjectRebuilt",
     "RoadProjectTree",
+    "RoadRecipeForm",
     "RoadRecipeLayer",
     "RoadSettings",
     "RoadSheetDef",

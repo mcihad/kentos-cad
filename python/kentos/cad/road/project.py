@@ -300,14 +300,21 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
     verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun
     sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları,
     nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim
-    çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif
-    başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created
-    (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler:
-    invalid_revision, revision_conflict, not_a_road_project, invalid_file_path,
-    file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
-    ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
-    service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa
-    layer_geometry_mismatch (plan da) ve çizim komutlarının retleri.
+    çizimdir, durdurma çizimler arasında duyulur. Eklenen katman tarifin değer
+    bileşimlerini, kayıt kurallarını, dizinlerini ve onu düzenleyen formların taslağını
+    da alır (form kimliği burada doluysa -2, -3 …; yayımlamak bu projenindir). addFields
+    ile adıyla bulunan ya da verilen katman tarifin onda olmayan alanlarını kendi
+    alanlarının sonuna alır (listeleri eklenen katmanınki gibi); kendi alanları ve öbür
+    tanımları değişmez; cevapta fieldsAdded, eklenen katmanda formsAdded. Uyarılar:
+    recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen
+    alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi),
+    recipe_layer_fields_added (bulunan katmana tarifin eksik alanları eklendi) ve çizim
+    komutlarının uyarıları. Retler: invalid_revision, revision_conflict,
+    not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe,
+    unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen
+    katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin
+    yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da) ve
+    çizim komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.produce"
@@ -324,6 +331,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         /,
         *,
         path: str,
+        add_fields: bool | Unset = UNSET,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
@@ -350,18 +358,27 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun
         sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları,
         nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim
-        çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif
-        başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created
-        (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler:
-        invalid_revision, revision_conflict, not_a_road_project, invalid_file_path,
-        file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
-        ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
-        service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa
-        layer_geometry_mismatch (plan da) ve çizim komutlarının retleri.
+        çizimdir, durdurma çizimler arasında duyulur. Eklenen katman tarifin değer
+        bileşimlerini, kayıt kurallarını, dizinlerini ve onu düzenleyen formların taslağını
+        da alır (form kimliği burada doluysa -2, -3 …; yayımlamak bu projenindir). addFields
+        ile adıyla bulunan ya da verilen katman tarifin onda olmayan alanlarını kendi
+        alanlarının sonuna alır (listeleri eklenen katmanınki gibi); kendi alanları ve öbür
+        tanımları değişmez; cevapta fieldsAdded, eklenen katmanda formsAdded. Uyarılar:
+        recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen
+        alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi),
+        recipe_layer_fields_added (bulunan katmana tarifin eksik alanları eklendi) ve çizim
+        komutlarının uyarıları. Retler: invalid_revision, revision_conflict,
+        not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe,
+        unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen
+        katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin
+        yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da) ve
+        çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.
             path:
+            add_fields: Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the
+                lists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.
             drawings:
             expected_revision:
             layers:
@@ -379,6 +396,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         """
         return self.execute_input(doc, RoadProjectProduce(
             path=path,
+            add_fields=add_fields,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
             layers=_opt(layers, lambda x: dict(x)),
@@ -390,6 +408,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         /,
         *,
         path: str,
+        add_fields: bool | Unset = UNSET,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
@@ -399,6 +418,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         """
         return self.plan_input(doc, RoadProjectProduce(
             path=path,
+            add_fields=add_fields,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
             layers=_opt(layers, lambda x: dict(x)),
@@ -410,6 +430,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         /,
         *,
         path: str,
+        add_fields: bool | Unset = UNSET,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
@@ -419,6 +440,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         """
         return self.validate_input(doc, RoadProjectProduce(
             path=path,
+            add_fields=add_fields,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
             layers=_opt(layers, lambda x: dict(x)),
@@ -430,6 +452,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         /,
         *,
         path: str,
+        add_fields: bool | Unset = UNSET,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layers: Mapping[str, str] | Unset = UNSET,
@@ -444,6 +467,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         """
         return self.answer_input(doc, RoadProjectProduce(
             path=path,
+            add_fields=add_fields,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
             layers=_opt(layers, lambda x: dict(x)),

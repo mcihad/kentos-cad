@@ -51,7 +51,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800, 5180 | kodların ve katman adlarının kurum biçimi (TUCBS GKM §9.5.2.5, VTS katman adı) | DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu); Ek-1 ve havuz.xml'in hazır eşlemesi (resmî dosya bekler) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820, 5200 | paftada kalite tablosu (dengeleme kaydından); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840, 5220 | kayıttaki eşiklerin forma alınması; incelemenin raporu ve paftaya yazılması; grafikte Δ3D ve birden çok nokta | canlı cihaz; cihaz biçimleri; onay evreleri ve e-imzanın doğrulanması (kurum altyapısı) |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440, 4860 | katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi; adıyla bulunan katmana tarifin eksik alanlarını ekleme seçeneği | bütçe (gerçek veriyle ölçüm) |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440, 4860, 5240 | bulunan katmana tarifin bileşimlerini, kurallarını, dizinlerini ve formlarını ekleme seçeneği; formun yayımının taşınması | bütçe (gerçek veriyle ölçüm) |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -2795,6 +2795,16 @@ aynı adlı ve aynı değerli listeye bağlar, başka değerli listeyi değişti
 adıyla ekler; adıyla bulunan katmanın eksik ve başka türlü alanlarını söyler; beş ret. Grafikte 1 (24), üretimde 11 yeni
 bağımsız durum (75), Python, MCP, masaüstü. Açık: formlar, değer bileşimleri, kayıt kuralları ve dizinler; bütçe
 (gerçek veriyle ölçüm; bekliyor).
+
+**11 Kasım 2026, onuncu tur — tarifin katmanının değer bileşimleri, kayıt kuralları, dizinleri ve formları; bulunan katmana eksik alanlar ([ADR 5240](../docs/adr/5240-recipe-layer-rules-forms-and-missing-fields.md)).**
+Kapsam: **Harita + Yol**. Dayanak: ArcGIS Pro Copy (alan listeleri, alt türler, dizinler sınıfla birlikte) ve Export
+Attribute Rules (kurallar ayrı araçla, alanlara adla bağlı); Netcad wiki giriş istiyor, okunmadı. Kanıtlanan: tarif
+katmanın değer bileşimlerini, kayıt kurallarını, dizinlerini ve onu düzenleyen formların taslağını taşır (yayım
+taşınmaz); Tariften üret eklediği katmana verir, form kimliği doluysa `-2`, geri alınan katmanla formu da gider
+(`formsAdded`); yeni `addFields` bulunan katmana tarifin eksik alanlarını sonuna ekler, listeleri eklenen katmanınki gibi,
+öbür tanımları değişmez (`fieldsAdded`, `recipe_layer_fields_added`); beş yeni ret; grafik 1, üretim 14 yeni bağımsız
+durum, Python, MCP; masaüstünde Bulunan katman kutusu ve planın sözleri. Açık: bulunan katmana öbür tanımları ekleme,
+formun yayımı, bütçe. Madde `[ ]` kalır.
 
 ## Uygulama sırası ve sahiplik
 

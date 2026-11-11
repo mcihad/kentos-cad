@@ -975,6 +975,8 @@ codes! {
     /// A warning: a recipe layer found here (by its name or given) keeps its own fields, and they are not the recipe's
     /// (docs/adr/4860): the recipe's fields it lacks and those of another kind are said.
     RECIPE_LAYER_FIELDS = "recipe_layer_fields", Warning, false, "Bulunan katmanın alanları tarifinkinden başka; katman kendi alanlarını korur.";
+    /// Tariften üret (docs/adr/5240): a layer found here took the recipe's fields it lacked (`addFields`).
+    RECIPE_LAYER_FIELDS_ADDED = "recipe_layer_fields_added", Warning, false, "Bulunan katmana tarifin onda olmayan alanları eklendi; kendi alanları değişmedi.";
     /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
     /// warning (docs/adr/0911 §3).
     DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";

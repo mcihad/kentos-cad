@@ -734,6 +734,10 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Tarifin katmanının değer bileşimleri, kuralları, dizinleri ve formları; eksik alanlar (11 Kasım 2026; MAP-20, [ADR 5240](../../docs/adr/5240-recipe-layer-rules-forms-and-missing-fields.md)).**
+  `road.project.graph`'ın tarifi katmanın `contingents`, `rules`, `indexes` ve formlarının taslağını (`forms`) taşır;
+  `road.project.produce` eklediği katmana verir (form taslak, kimliği doluysa `-2`; `formsAdded`); `addFields` bulunan
+  katmana tarifin eksik alanlarını ekler (`fieldsAdded`, `recipe_layer_fields_added`). İş grafiği › Bulunan katman. Harita + Yol.
 - **İzleme incelemesinin kaydı, eşiklerin kaynağı, zaman grafiği (11 Kasım 2026; MAP-19, [ADR 5220](../../docs/adr/5220-monitoring-review-record-and-time-chart.md)).**
   Yeni `cad.asbuilt.review`: izleme işi eşikleri ve kaynağıyla, noktaların durumu, okunan noktaların özeti ve inceleyenin
   beyanıyla (rol, unvan, ad, gün, ibare, imza) `settings.monitoringReviews`'a; `current` özetten; `.kcad` şema 245.

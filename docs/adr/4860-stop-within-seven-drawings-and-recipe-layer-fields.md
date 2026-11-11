@@ -133,6 +133,6 @@ CPU bütçesi gerçek veriyle ölçüm ister; sahibin kararıyla bekleyen işler
 ## Sonra
 
 - Bellek ve CPU bütçesi, gerçek veriyle ölçümle (sahibin beklediği).
-- Katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi.
-- Adıyla bulunan katmana tarifin eksik alanlarını ekleme seçeneği (sorarak).
+- Katmanın formları, değer bileşimleri, kayıt kuralları ve dizinlerinin tarife girmesi; adıyla bulunan katmana eksik
+  alanları ekleme seçeneği: [ADR 5240](5240-recipe-layer-rules-forms-and-missing-fields.md).
 - Web (TODOS §0.2).

@@ -57915,7 +57915,7 @@
       "id": "road.project.produce",
       "version": 1,
       "title": "Tariften üret",
-      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur. Çizimin katmanı: layers'ın tarifin katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen katman tarifteki gruplarına, bütün stiliyle ve proje çizgi türüyle, saydamlığı, karışım kipi, türü ve Yazdır'ıyla eklenir; adıyla bulunan ya da verilen katman kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da) ve çizim komutlarının retleri.",
+      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur. Çizimin katmanı: layers'ın tarifin katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen katman tarifteki gruplarına, bütün stiliyle ve proje çizgi türüyle, saydamlığı, karışım kipi, türü ve Yazdır'ıyla eklenir; adıyla bulunan ya da verilen katman kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Eklenen katman tarifin değer bileşimlerini, kayıt kurallarını, dizinlerini ve onu düzenleyen formların taslağını da alır (form kimliği burada doluysa -2, -3 …; yayımlamak bu projenindir). addFields ile adıyla bulunan ya da verilen katman tarifin onda olmayan alanlarını kendi alanlarının sonuna alır (listeleri eklenen katmanınki gibi); kendi alanları ve öbür tanımları değişmez; cevapta fieldsAdded, eklenen katmanda formsAdded. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi), recipe_layer_fields_added (bulunan katmana tarifin eksik alanları eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da) ve çizim komutlarının retleri.",
       "aliases": [
         "tariftenuret"
       ],
@@ -57933,8 +57933,12 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);\n`drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;\n`layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the\nLayer Translator); a layer not given goes by its name (Map Same) or is added.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,\n`file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one\nthat draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the\nrecipe's); `unknown_recipe_layer` (at `layers`: a key not a layer of the recipe's drawings), `layer_not_found`,\n`not_a_layer`, `service_layer`, `layer_locked` (at `layers.<id>`: the layer given here); `ambiguous_recipe_layer`\n(at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a\nsource not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is\nwritten.",
+        "description": "Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);\n`drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;\n`layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (a layer mapping); a\nlayer not given goes by its name or is added; `addFields` (docs/adr/5240), a layer found here takes the recipe's fields\nit lacks.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,\n`file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one\nthat draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the\nrecipe's); `unknown_recipe_layer` (at `layers`: a key not a layer of the recipe's drawings), `layer_not_found`,\n`not_a_layer`, `service_layer`, `layer_locked` (at `layers.<id>`: the layer given here); `ambiguous_recipe_layer`\n(at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a\nsource not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is\nwritten.",
         "properties": {
+          "addFields": {
+            "description": "Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the\nlists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.",
+            "type": "boolean"
+          },
           "drawings": {
             "items": {
               "type": "string"
@@ -58054,7 +58058,8 @@
           "recipe_other_system",
           "layer_hidden",
           "recipe_layer_created",
-          "recipe_layer_fields"
+          "recipe_layer_fields",
+          "recipe_layer_fields_added"
         ]
       },
       "examples": [
@@ -109625,6 +109630,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bulunan katmanın alanları tarifinkinden başka; katman kendi alanlarını korur."
+    },
+    {
+      "code": "recipe_layer_fields_added",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bulunan katmana tarifin onda olmayan alanları eklendi; kendi alanları değişmedi."
     },
     {
       "code": "drawing_edited",
@@ -194889,6 +194900,20 @@
           },
           "type": "array"
         },
+        "fieldsAdded": {
+          "description": "A layer found here with `addFields` (docs/adr/5240): the recipe's fields it took, by their names.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "formsAdded": {
+          "description": "A layer added (docs/adr/5240): the forms added with it, by their names; empty: none.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "from": {
           "type": "string"
         },
@@ -194986,6 +195011,27 @@
       ],
       "type": "object"
     },
+    "RoadRecipeForm": {
+      "additionalProperties": false,
+      "description": "A form a recipe layer keeps (docs/adr/5240): its id and name in its project and its draft, bound to the layer's\nfields by their keys.",
+      "properties": {
+        "draft": {
+          "$ref": "#/$defs/FormBody"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "draft"
+      ],
+      "type": "object"
+    },
     "RoadRecipeLayer": {
       "description": "A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it\ntakes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).\n`road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the\ngroups it was in, its whole style and the project line type that style names, as its project defines it; a layer\nadded from it goes into those groups with that style. Docs/adr/4440: how it was composed into the drawing (its\nopacity and blending mode), what it held and whether it was printed; a layer added from it takes them too. A recipe\nfrom before has none of them.",
       "properties": {
@@ -195003,6 +195049,13 @@
           ],
           "description": "How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask\n(a mask cuts into its project's other layers by their ids); none: opaque and normal."
         },
+        "contingents": {
+          "description": "Its value combinations (Değer bileşimleri, docs/adr/0423, 5240): the groups of fields whose values go together.",
+          "items": {
+            "$ref": "#/$defs/FieldGroup"
+          },
+          "type": "array"
+        },
         "domains": {
           "description": "The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.",
           "items": {
@@ -195014,6 +195067,13 @@
           "description": "Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's\ncolumn (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;\nthe list is in `domains`. Empty: no fields.",
           "items": {
             "$ref": "#/$defs/LayerField"
+          },
+          "type": "array"
+        },
+        "forms": {
+          "description": "Its project's forms that edit it (Formlar, docs/adr/0401, 5240), each its id, name and draft; a release is its\nproject's decision and is not kept (the project it goes to publishes again).",
+          "items": {
+            "$ref": "#/$defs/RoadRecipeForm"
           },
           "type": "array"
         },
@@ -195037,6 +195097,13 @@
         },
         "id": {
           "type": "string"
+        },
+        "indexes": {
+          "description": "Its indexes (Dizinler, docs/adr/0758, 5240).",
+          "items": {
+            "$ref": "#/$defs/LayerIndex"
+          },
+          "type": "array"
         },
         "lineType": {
           "$ref": "#/$defs/LineType"
@@ -195066,6 +195133,13 @@
             "boolean",
             "null"
           ]
+        },
+        "rules": {
+          "description": "Its record rules (Kayıt kuralları, docs/adr/0438, 5240).",
+          "items": {
+            "$ref": "#/$defs/LayerRule"
+          },
+          "type": "array"
         },
         "style": {
           "anyOf": [
