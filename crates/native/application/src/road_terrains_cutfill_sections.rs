@@ -48,7 +48,8 @@ pub(crate) fn section_labels(sections: &[CutFillSection]) -> Vec<CutFillSectionL
 
 /// The section volume table's cells (kübaj cetveli, as Netcad's Enkesitlerden Hacim Hesabı writes it): the heading,
 /// then each section: its kilometre, the distance from the section before, its cut and fill areas, the cut and fill
-/// volumes from the section before and their running sums (none of the four for the first); numbers to two decimals.
+/// volumes from the section before and their running sums and the Brückner value (docs/adr/5140; none of the five for
+/// the first); numbers to two decimals.
 pub(crate) fn section_table(sections: &[CutFillSection]) -> Vec<Vec<String>> {
     let two = |v: f64| format!("{v:.2}");
     let mut rows = vec![
@@ -61,6 +62,7 @@ pub(crate) fn section_table(sections: &[CutFillSection]) -> Vec<Vec<String>> {
             "Dolgu hacmi (m³)",
             "Kümülatif kazı (m³)",
             "Kümülatif dolgu (m³)",
+            "Brükner (m³)",
         ]
         .map(String::from)
         .to_vec(),
@@ -80,6 +82,7 @@ pub(crate) fn section_table(sections: &[CutFillSection]) -> Vec<Vec<String>> {
             s.fill_volume.map(two).unwrap_or_default(),
             if first { String::new() } else { two(cut) },
             if first { String::new() } else { two(fill) },
+            s.mass.map(two).unwrap_or_default(),
         ]);
     }
     rows

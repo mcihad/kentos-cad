@@ -6986,12 +6986,17 @@ SchemaKindName = Literal["layers", "forms", "domains", "relations"]
 class SectionFormula(_StrEnum):
     """The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
     `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
+
+    - ``endArea``
+    - ``prismoidal``
+    - ``frustum``: Docs/adr/5140: the frustum's `L/3·(A₀ + A₁ + √(A₀·A₁))`.
     """
     END_AREA = "endArea"
     PRISMOIDAL = "prismoidal"
+    FRUSTUM = "frustum"
 
 
-SectionFormulaName = Literal["endArea", "prismoidal"]
+SectionFormulaName = Literal["endArea", "prismoidal", "frustum"]
 """The names of :class:`SectionFormula`, for a plain string."""
 
 
@@ -28629,6 +28634,8 @@ class CutFillSection(_Model):
         fill_area: Unit: area.
         cut_volume: Unit: volume.
         fill_volume: Unit: volume.
+        mass: Docs/adr/5140: the Brückner value at the section, the running cut times its factor less the running fill times
+            its (m³; none for the first). Unit: volume.
     """
     station: float
     km: str
@@ -28638,6 +28645,7 @@ class CutFillSection(_Model):
     fill_area: float
     cut_volume: float | None | Unset = UNSET
     fill_volume: float | None | Unset = UNSET
+    mass: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -28651,6 +28659,8 @@ class CutFillSection(_Model):
             out["cutVolume"] = None if self.cut_volume is None else float(self.cut_volume)
         if self.fill_volume is not UNSET:
             out["fillVolume"] = None if self.fill_volume is None else float(self.fill_volume)
+        if self.mass is not UNSET:
+            out["mass"] = None if self.mass is None else float(self.mass)
         return out
 
     @classmethod
@@ -28664,6 +28674,7 @@ class CutFillSection(_Model):
             fill_area=float(data["fillArea"]),
             cut_volume=UNSET if "cutVolume" not in data else None if data["cutVolume"] is None else float(data["cutVolume"]),
             fill_volume=UNSET if "fillVolume" not in data else None if data["fillVolume"] is None else float(data["fillVolume"]),
+            mass=UNSET if "mass" not in data else None if data["mass"] is None else float(data["mass"]),
         )
 
 
@@ -28704,12 +28715,15 @@ class CutFillSections(_Model):
     """The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
     polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
     take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
-    end area) and the kilometre of the axis's start (m; Netcad's “Güzergah Başlangıç Km”; none: 0), which the sections'
-    kilometres count from.
+    end area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'
+    kilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,
+    at most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.
     Attributes:
         interval: Unit: m.
         left: Unit: m.
         right: Unit: m.
+        cut_factor: Unit: 1.
+        fill_factor: Unit: 1.
         start: Unit: m.
     """
     axis: str
@@ -28717,6 +28731,8 @@ class CutFillSections(_Model):
     left: float
     right: float
     corners: bool | None | Unset = UNSET
+    cut_factor: float | None | Unset = UNSET
+    fill_factor: float | None | Unset = UNSET
     formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
     start: float | None | Unset = UNSET
 
@@ -28728,6 +28744,10 @@ class CutFillSections(_Model):
         out["right"] = float(self.right)
         if self.corners is not UNSET:
             out["corners"] = self.corners
+        if self.cut_factor is not UNSET:
+            out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
+        if self.fill_factor is not UNSET:
+            out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
         if self.formula is not UNSET:
             out["formula"] = None if self.formula is None else _enum_out(self.formula)
         if self.start is not UNSET:
@@ -28742,6 +28762,8 @@ class CutFillSections(_Model):
             left=float(data["left"]),
             right=float(data["right"]),
             corners=data.get("corners", UNSET),
+            cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
+            fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
             formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )

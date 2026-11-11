@@ -10512,12 +10512,13 @@
    "title": "Pafta eğrileri…",
    "level": "semantic",
    "via": [
-    "road.terrains.sheetcontours"
+    "road.terrains.sheetcontours",
+    "road.terrains.sectioncheck"
    ],
    "operation": null,
-   "python": "Connection: road.terrains.sheetcontours",
-   "mcp": "road.terrains.sheetcontours",
-   "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820).",
+   "python": "Connection: road.terrains.sheetcontours, Connection: road.terrains.sectioncheck",
+   "mcp": "road.terrains.sheetcontours, road.terrains.sectioncheck",
+   "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820). Kesit kontrolü… seçili noktalarla road.terrains.sectioncheck'i gösterir (m. 93(1); ADR 5120).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

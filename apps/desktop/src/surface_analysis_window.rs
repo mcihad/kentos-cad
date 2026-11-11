@@ -154,9 +154,10 @@ pub struct Window {
     pub(crate) roughness: bool,
     /// Fark by a grid's cells (docs/adr/1600), else the exact TIN–TIN prisms.
     pub(crate) volume_grid: bool,
-    /// Fark by parallel sections (docs/adr/4340), the prismoidal formula instead of the average end area.
+    /// Fark by parallel sections (docs/adr/4340) and their formula: the average end area, the prismoidal or (docs/adr/5140)
+    /// the frustum's.
     pub(crate) volume_sections: bool,
-    pub(crate) prismoidal: bool,
+    pub(crate) formula: kentos_commands::SectionFormula,
     /// Fark by sections along a drawn axis (docs/adr/4760): a line's or an open polyline's uid; none, the azimuth's.
     pub(crate) axis: Option<String>,
     /// Sections at the axis's corners too (Netcad's “Eksen Çizgisi Noktalarında”).
@@ -194,8 +195,8 @@ pub enum Event {
     Roughness(bool),
     /// Fark's method by its place in TIN–TIN | Izgara | Kesit (docs/adr/1600, 4340).
     VolumeMethod(usize),
-    /// Fark by sections: the prismoidal formula (true) or the average end area.
-    Prismoidal(bool),
+    /// Fark by sections: the formula (docs/adr/5140).
+    Formula(kentos_commands::SectionFormula),
     /// Fark by sections along a drawn axis (docs/adr/4760), none the azimuth's; and sections at its corners too.
     Axis(Option<String>),
     Corners(bool),
@@ -317,7 +318,7 @@ impl Window {
             // Docs/adr/4340: the sections' spacing (none typed: one every 10 m), the axis's azimuth and the formula.
             interval: if self.volume_sections { Some(number(&self.fields[17], FIELDS[17])?.unwrap_or(SECTION_INTERVAL)) } else { None },
             azimuth: if self.volume_sections && self.axis.is_none() { number(&self.fields[18], FIELDS[18])? } else { None },
-            formula: (self.volume_sections && self.prismoidal).then_some(kentos_commands::SectionFormula::Prismoidal),
+            formula: (self.volume_sections && self.formula != kentos_commands::SectionFormula::EndArea).then_some(self.formula),
             // Docs/adr/4760: along a drawn axis, its widths (none typed: 25 m each side) and its corners.
             axis: self.axis.clone().filter(|_| self.volume_sections),
             left: self.along().then(|| self.width(19)).transpose()?,
@@ -345,8 +346,11 @@ impl Window {
             left: self.width(19)?,
             right: self.width(20)?,
             corners: self.corners.then_some(true),
-            formula: self.prismoidal.then_some(kentos_commands::SectionFormula::Prismoidal),
+            formula: (self.formula != kentos_commands::SectionFormula::EndArea).then_some(self.formula),
             start: number(&self.fields[21], FIELDS[21])?,
+            // Docs/adr/5140: the Brückner value with the comparison's cut and fill factors.
+            cut_factor: number(&self.fields[14], FIELDS[14])?,
+            fill_factor: number(&self.fields[15], FIELDS[15])?,
         }))
     }
 
@@ -436,7 +440,7 @@ impl App {
             roughness: false,
             volume_grid: false,
             volume_sections: false,
-            prismoidal: false,
+            formula: kentos_commands::SectionFormula::EndArea,
             // A single selected line or open polyline is the sections' axis (docs/adr/4760).
             axis: self.selected_axis(),
             corners: false,
@@ -520,7 +524,7 @@ impl App {
                 w.volume_grid = i == 1;
                 w.volume_sections = i == 2;
             }
-            Event::Prismoidal(on) => w.prismoidal = on,
+            Event::Formula(f) => w.formula = f,
             Event::Axis(a) => w.axis = a,
             Event::Corners(on) => w.corners = on,
             Event::Materials(layer) => w.materials = layer,
@@ -797,8 +801,12 @@ impl App {
                 form = form.section("Hacim").field("Yöntem", method);
                 form = if w.volume_sections {
                     // Docs/adr/4340: parallel sections across an axis; Civil 3D's Average End Area and Prismoidal.
-                    let formula = container(Select::new(["Ortalama alan", "Prizmoidal"].into_iter().map(Choice::new), Some(usize::from(w.prismoidal)), |i| {
-                        msg(Event::Prismoidal(i == 1))
+                    // Docs/adr/5140: the frustum's (A₁ + A₂ + √(A₁·A₂))·L/3 too.
+                    use kentos_commands::SectionFormula as F;
+                    let formulas = [F::EndArea, F::Prismoidal, F::Frustum];
+                    let at = formulas.iter().position(|f| *f == w.formula);
+                    let formula = container(Select::new(["Ortalama alan", "Prizmoidal", "Kesik koni"].into_iter().map(Choice::new), at, move |i| {
+                        msg(Event::Formula(formulas[i]))
                     }))
                     .width(BOX);
                     // Docs/adr/4760: a drawn axis (a line or an open polyline of the drawing) or the azimuth's.
@@ -1122,7 +1130,11 @@ fn content<'a>(w: &'a Window, read: &'a Read) -> (Vec<(String, String)>, Vec<(&'
                     "Kesit, {} m arayla, eksenin semti {}° ({})",
                     format!("{interval}").replace('.', ","),
                     format!("{}", c.azimuth.unwrap_or(0.0)).replace('.', ","),
-                    if c.formula == Some(kentos_commands::SectionFormula::Prismoidal) { "prizmoidal" } else { "ortalama alan" }
+                    match c.formula {
+                        Some(kentos_commands::SectionFormula::Prismoidal) => "prizmoidal",
+                        Some(kentos_commands::SectionFormula::Frustum) => "kesik koni",
+                        _ => "ortalama alan",
+                    }
                 ),
                 (None, None) => "TIN–TIN, kesin prizmalar".to_owned(),
             };

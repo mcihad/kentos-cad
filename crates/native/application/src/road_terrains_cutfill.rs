@@ -25,7 +25,7 @@ use std::collections::BTreeMap;
 
 use kentos_commands::{
     AnnotationKind, CommandResult, CommandWarning, CreateOperation, CutFillKind, CutFillLabel, CutFillSection, EntitiesCreate,
-    MOST_COMPARE_SECTIONS, SectionFormula,
+    MOST_COMPARE_SECTIONS,
     EntityBase, EntityGeometry, HatchPattern, HatchPatternType, MOST_CUTFILL_BANDS, NewObject, RingGeometry, TableAlign,
     TableEntity, TerrainCutFillZone, TerrainsCutFill, TerrainsCutFilled, TextAlign, Vec2,
 };
@@ -87,6 +87,16 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
         if !(s.left.is_finite() && s.right.is_finite() && s.left >= 0.0 && s.right >= 0.0 && s.left + s.right > 0.0) {
             return Err(fail(codes::INVALID_ANALYSIS, compare::WIDTHS.into(), "sections.left"));
         }
+        // Docs/adr/5140: the Brückner value's factors.
+        for (v, at) in [(s.cut_factor, "sections.cutFactor"), (s.fill_factor, "sections.fillFactor")] {
+            if v.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 10.0)) {
+                return Err(fail(
+                    codes::INVALID_ANALYSIS,
+                    "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).".into(),
+                    at,
+                ));
+            }
+        }
         if s.start.is_some_and(|v| !(v.is_finite() && v >= 0.0)) {
             return Err(fail(
                 codes::INVALID_ANALYSIS,
@@ -136,7 +146,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
                 s.left,
                 s.right,
                 s.corners.unwrap_or(false),
-                s.formula == Some(SectionFormula::Prismoidal),
+                compare::section_formula(s.formula.unwrap_or_default()),
                 MOST_COMPARE_SECTIONS,
             )
             .map_err(|e| compare::sections_refused(e, "sections."))?,
@@ -161,6 +171,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
     let material_labels: Vec<CutFillLabel> =
         materials.iter().zip(&regions).filter_map(|(m, r)| sections_draw::material_label(m, r)).collect();
     let start = input.sections.as_ref().and_then(|s| s.start).unwrap_or(0.0);
+    // Docs/adr/5140: the Brückner value, the running cut times its swell less the running fill times its factor.
+    let (kc, kf) = input.sections.as_ref().map_or((1.0, 1.0), |s| (s.cut_factor.unwrap_or(1.0), s.fill_factor.unwrap_or(1.0)));
+    let (mut run_cut, mut run_fill) = (0.0, 0.0);
     let sections: Vec<CutFillSection> = sectioned.as_ref().map_or_else(Vec::new, |s| {
         s.rows
             .iter()
@@ -174,6 +187,11 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
                 fill_area: r.fill,
                 cut_volume: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| b[0]),
                 fill_volume: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| b[1]),
+                mass: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| {
+                    run_cut += b[0];
+                    run_fill += b[1];
+                    run_cut * kc - run_fill * kf
+                }),
             })
             .collect()
     });

@@ -6,7 +6,8 @@
 //! planes triangle by triangle, so the difference `d = z_comparison − z_base` is linear between the places where the
 //! section crosses an edge of either: each piece where both are is integrated exactly, split where `d` is zero, the
 //! fill where `d > 0`, the cut where `d < 0` (m²). Between two consecutive sections the volume is the average end area
-//! `L·(A₀ + A₁)/2` or the prismoidal `L/6·(A₀ + 4·Aₘ + A₁)` with a section at the middle (`volume::prismoidal`).
+//! `L·(A₀ + A₁)/2`, the prismoidal `L/6·(A₀ + 4·Aₘ + A₁)` with a section at the middle (`volume::prismoidal`) or
+//! (docs/adr/5140) the frustum's `L/3·(A₀ + A₁ + √(A₀·A₁))`, cut and fill each on its own.
 //!
 //! The places are measured from the comparison's first corner, so large map coordinates keep their digits; the four
 //! quarters' axes are exact (0°, 90°, 180°, 270°).
@@ -34,6 +35,19 @@ pub enum SectionsError {
     Width,
     /// The axis has no length, or a bulge is not finite.
     Axis,
+}
+
+/// How the volume between two sections is reckoned (docs/adr/4340, 5140).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Formula {
+    EndArea,
+    Prismoidal,
+    Frustum,
+}
+
+/// The frustum's volume between two sections of areas `a0` and `a1`, `l` apart: `l/3·(a0 + a1 + √(a0·a1))`.
+pub fn frustum(a0: f64, a1: f64, l: f64) -> f64 {
+    l / 3.0 * (a0 + a1 + (a0 * a1).sqrt())
 }
 
 /// A drawn axis (docs/adr/4760): its corners in order and each segment's bulge (none: all straight).
@@ -326,9 +340,10 @@ pub fn measure(
     base: &[Triangle],
     azimuth: f64,
     interval: f64,
-    prismoidal: bool,
+    formula: Formula,
     most: f64,
 ) -> Result<Sections, SectionsError> {
+    let prismoidal = formula == Formula::Prismoidal;
     if !(interval.is_finite() && interval > 0.0) {
         return Err(SectionsError::Interval);
     }
@@ -382,6 +397,12 @@ pub fn measure(
             let l = w[1].station - w[0].station;
             cut += volume::prismoidal(w[0].cut, mc, w[1].cut, l);
             fill += volume::prismoidal(w[0].fill, mf, w[1].fill, l);
+        }
+    } else if formula == Formula::Frustum {
+        for w in rows.windows(2) {
+            let l = w[1].station - w[0].station;
+            cut += frustum(w[0].cut, w[1].cut, l);
+            fill += frustum(w[0].fill, w[1].fill, l);
         }
     } else {
         let sections: Vec<SectionAreas> =
@@ -439,7 +460,7 @@ pub fn along_axis(
     left: f64,
     right: f64,
     corners: bool,
-    prismoidal: bool,
+    formula: Formula,
     most: f64,
 ) -> Result<AxisSections, SectionsError> {
     if !(interval.is_finite() && interval > 0.0) {
@@ -482,7 +503,12 @@ pub fn along_axis(
     };
     let rows: Vec<AxisRow> = stations.iter().map(|s| section(*s)).collect();
     let mut between: Vec<[f64; 2]> = Vec::with_capacity(rows.len().saturating_sub(1));
-    if prismoidal {
+    if formula == Formula::Frustum {
+        for w in rows.windows(2) {
+            let l = w[1].station - w[0].station;
+            between.push([frustum(w[0].cut, w[1].cut, l), frustum(w[0].fill, w[1].fill, l)]);
+        }
+    } else if formula == Formula::Prismoidal {
         for w in rows.windows(2) {
             let m = section((w[0].station + w[1].station) / 2.0);
             let l = w[1].station - w[0].station;
@@ -520,11 +546,11 @@ mod tests {
         let base = rect(-5.0, -5.0, 45.0, 35.0, |_, _| 100.0);
         let comparison = rect(0.0, 0.0, 40.0, 30.0, |x, _| 101.0 + 0.05 * x);
         for az in [0.0, 90.0, 180.0, 270.0] {
-            let s = measure(&comparison, &base, az, 10.0, false, 1e4).expect("measured");
+            let s = measure(&comparison, &base, az, 10.0, Formula::EndArea, 1e4).expect("measured");
             assert!((s.fill - 2400.0).abs() < 1e-9, "{az}: {}", s.fill);
             assert_eq!(s.cut, 0.0);
         }
-        let s = measure(&comparison, &base, 90.0, 10.0, false, 1e4).expect("measured");
+        let s = measure(&comparison, &base, 90.0, 10.0, Formula::EndArea, 1e4).expect("measured");
         let stations: Vec<f64> = s.rows.iter().map(|r| r.station).collect();
         assert_eq!(stations, [0.0, 10.0, 20.0, 30.0, 40.0]);
         assert!((s.rows[0].fill - 30.0).abs() < 1e-12 && (s.rows[4].fill - 90.0).abs() < 1e-12);
@@ -539,10 +565,10 @@ mod tests {
         let p = |x: f64, y: f64| [x, y, 1.0 + 0.05 * x];
         let comparison = vec![[p(0.0, 0.0), p(40.0, 0.0), p(0.0, 30.0)]];
         let exact = 1000.0;
-        let s = measure(&comparison, &base, 90.0, 10.0, true, 1e4).expect("measured");
+        let s = measure(&comparison, &base, 90.0, 10.0, Formula::Prismoidal, 1e4).expect("measured");
         assert!((s.fill - exact).abs() < 1e-9, "{}", s.fill);
         // A(x) = 30(1 − x/40)(1 + 0.05x): A″ = −2·30·0.05/40 = −0.075; four stretches of 10 m: 4·10³/12·0.075 = 25.
-        let e = measure(&comparison, &base, 90.0, 10.0, false, 1e4).expect("measured");
+        let e = measure(&comparison, &base, 90.0, 10.0, Formula::EndArea, 1e4).expect("measured");
         assert!((e.fill - (exact - 25.0)).abs() < 1e-9, "{}", e.fill);
     }
 
@@ -551,7 +577,7 @@ mod tests {
     fn a_section_is_split_where_the_difference_is_zero() {
         let base = rect(0.0, 0.0, 10.0, 10.0, |_, _| 100.0);
         let comparison = rect(0.0, 0.0, 10.0, 10.0, |x, _| 99.0 + 0.2 * x);
-        let s = measure(&comparison, &base, 0.0, 5.0, false, 1e4).expect("measured");
+        let s = measure(&comparison, &base, 0.0, 5.0, Formula::EndArea, 1e4).expect("measured");
         // Along y the area is constant: the cut 2.5 m² (x 0..5), the fill 2.5 m²; volumes 25 and 25.
         for r in &s.rows {
             assert!((r.cut - 2.5).abs() < 1e-12 && (r.fill - 2.5).abs() < 1e-12, "{r:?}");
@@ -566,14 +592,14 @@ mod tests {
         let base = rect(-5.0, -5.0, 45.0, 35.0, |_, _| 100.0);
         let comparison = rect(0.0, 0.0, 40.0, 30.0, |x, _| 101.0 + 0.05 * x);
         let axis = Axis { pts: vec![[0.0, 15.0], [40.0, 15.0]], bulges: Vec::new() };
-        let s = along_axis(&comparison, &base, &axis, 10.0, 20.0, 20.0, false, false, 1e4).expect("measured");
+        let s = along_axis(&comparison, &base, &axis, 10.0, 20.0, 20.0, false, Formula::EndArea, 1e4).expect("measured");
         assert!((s.fill - 2400.0).abs() < 1e-9, "{}", s.fill);
         assert_eq!(s.rows.iter().map(|r| r.station).collect::<Vec<_>>(), [0.0, 10.0, 20.0, 30.0, 40.0]);
         assert!((s.rows[2].fill - 60.0).abs() < 1e-12, "{:?}", s.rows[2]);
         // Square to an eastward axis: the left end north, the right end south.
         assert_eq!((s.rows[1].left, s.rows[1].right), ([10.0, 35.0], [10.0, -5.0]));
         // Narrower than the surfaces: only the width counts, 10 m each side.
-        let n = along_axis(&comparison, &base, &axis, 10.0, 10.0, 10.0, false, false, 1e4).expect("measured");
+        let n = along_axis(&comparison, &base, &axis, 10.0, 10.0, 10.0, false, Formula::EndArea, 1e4).expect("measured");
         assert!((n.fill - 2400.0 * 20.0 / 30.0).abs() < 1e-9, "{}", n.fill);
     }
 
@@ -594,7 +620,7 @@ mod tests {
         }
         let base = rect(-40.0, -15.0, 40.0, 40.0, |_, _| 0.0);
         let axis = Axis { pts: vec![[20.0, 0.0], [-20.0, 0.0]], bulges: vec![1.0] };
-        let s = along_axis(&comparison, &base, &axis, 5.0, 10.0, 10.0, false, false, 1e5).expect("measured");
+        let s = along_axis(&comparison, &base, &axis, 5.0, 10.0, 10.0, false, Formula::EndArea, 1e5).expect("measured");
         assert!((s.length - 20.0 * std::f64::consts::PI).abs() < 1e-9, "{}", s.length);
         for r in &s.rows {
             // The polygonal ring's chords leave a sliver at its edges: within 0.002 m².
@@ -613,7 +639,7 @@ mod tests {
         let base = rect(-50.0, -50.0, 50.0, 50.0, |_, _| 0.0);
         let comparison = rect(-50.0, -50.0, 50.0, 50.0, |_, _| 1.0);
         let axis = Axis { pts: vec![[-30.0, 0.0], [0.0, 0.0], [0.0, 30.0]], bulges: Vec::new() };
-        let s = along_axis(&comparison, &base, &axis, 100.0, 5.0, 5.0, true, false, 1e4).expect("measured");
+        let s = along_axis(&comparison, &base, &axis, 100.0, 5.0, 5.0, true, Formula::EndArea, 1e4).expect("measured");
         assert_eq!(s.rows.iter().map(|r| r.station).collect::<Vec<_>>(), [0.0, 30.0, 60.0]);
         let c = s.rows[1];
         let h = 5.0 / 2f64.sqrt();
@@ -624,14 +650,24 @@ mod tests {
     #[test]
     fn the_refusals() {
         let t = rect(0.0, 0.0, 10.0, 10.0, |_, _| 1.0);
-        assert_eq!(measure(&t, &t, 0.0, 0.0, false, 1e4), Err(SectionsError::Interval));
-        assert_eq!(measure(&t, &t, 360.0, 1.0, false, 1e4), Err(SectionsError::Azimuth));
-        assert_eq!(measure(&t, &t, 0.0, 0.001, false, 1e4), Err(SectionsError::TooMany));
+        assert_eq!(measure(&t, &t, 0.0, 0.0, Formula::EndArea, 1e4), Err(SectionsError::Interval));
+        assert_eq!(measure(&t, &t, 360.0, 1.0, Formula::EndArea, 1e4), Err(SectionsError::Azimuth));
+        assert_eq!(measure(&t, &t, 0.0, 0.001, Formula::EndArea, 1e4), Err(SectionsError::TooMany));
         let a = Axis { pts: vec![[0.0, 0.0], [10.0, 0.0]], bulges: Vec::new() };
-        assert_eq!(along_axis(&t, &t, &a, 1.0, 0.0, 0.0, false, false, 1e4), Err(SectionsError::Width));
-        assert_eq!(along_axis(&t, &t, &a, 1.0, -1.0, 2.0, false, false, 1e4), Err(SectionsError::Width));
+        assert_eq!(along_axis(&t, &t, &a, 1.0, 0.0, 0.0, false, Formula::EndArea, 1e4), Err(SectionsError::Width));
+        assert_eq!(along_axis(&t, &t, &a, 1.0, -1.0, 2.0, false, Formula::EndArea, 1e4), Err(SectionsError::Width));
         let dot = Axis { pts: vec![[1.0, 1.0], [1.0, 1.0]], bulges: Vec::new() };
-        assert_eq!(along_axis(&t, &t, &dot, 1.0, 1.0, 1.0, false, false, 1e4), Err(SectionsError::Axis));
-        assert_eq!(along_axis(&t, &t, &a, 0.0001, 1.0, 1.0, false, false, 1e4), Err(SectionsError::TooMany));
+        assert_eq!(along_axis(&t, &t, &dot, 1.0, 1.0, 1.0, false, Formula::EndArea, 1e4), Err(SectionsError::Axis));
+        assert_eq!(along_axis(&t, &t, &a, 0.0001, 1.0, 1.0, false, Formula::EndArea, 1e4), Err(SectionsError::TooMany));
+    }
+
+    /// The frustum's formula is exact for a pyramid's frustum (areas a² and b², height h: h/3·(a² + b² + ab)) and is
+    /// the end area for equal areas.
+    #[test]
+    fn the_frustum_is_a_pyramid_s_frustum() {
+        let (a, b, h) = (2.0_f64, 5.0_f64, 7.0_f64);
+        assert!((frustum(a * a, b * b, h) - h / 3.0 * (a * a + b * b + a * b)).abs() < 1e-12);
+        assert_eq!(frustum(4.0, 4.0, 3.0), 12.0);
+        assert_eq!(frustum(0.0, 9.0, 3.0), 9.0);
     }
 }

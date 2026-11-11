@@ -5,4 +5,9 @@
  * added, as written: `k+mmm.cc`), the axis's place there, its left and right ends, its cut and fill areas (m²) and the
  * cut and fill volumes between it and the section before (m³; none for the first).
  */
-export type CutFillSection = { station: number, km: string, at: [number, number], ends: [[number, number], [number, number]], cutArea: number, fillArea: number, cutVolume?: number, fillVolume?: number, };
+export type CutFillSection = { station: number, km: string, at: [number, number], ends: [[number, number], [number, number]], cutArea: number, fillArea: number, cutVolume?: number, fillVolume?: number, 
+/**
+ * Docs/adr/5140: the Brückner value at the section, the running cut times its factor less the running fill times
+ * its (m³; none for the first).
+ */
+mass?: number, };

@@ -66,12 +66,19 @@ fn fark_by_sections_is_the_shared_case_s() {
         assert!(close(s.station, &w["station"]) && close(s.cut_area, &w["cutArea"]) && close(s.fill_area, &w["fillArea"]), "{s:?}");
     }
     // Prizmoidal: the middle sections.
-    send(&mut app, W::Prismoidal(true));
+    send(&mut app, W::Formula(kentos_commands::SectionFormula::Prismoidal));
     send(&mut app, W::Preview);
     let Read::Compare(p) = read(&app) else { panic!("a difference") };
     let want = case("Prizmoidal: ortadaki kesitle");
     assert!(close(p.cut, &want["cut"]), "{} ≠ {}", p.cut, want["cut"]);
     assert_eq!(p.formula, Some(kentos_commands::SectionFormula::Prismoidal));
+    // Docs/adr/5140: the frustum's formula.
+    send(&mut app, W::Formula(kentos_commands::SectionFormula::Frustum));
+    send(&mut app, W::Preview);
+    let Read::Compare(k) = read(&app) else { panic!("a difference") };
+    let want = case("Kesik koni: (A₀ + A₁ + √(A₀·A₁))·L/3");
+    assert!(close(k.cut, &want["cut"]) && close(k.fill, &want["fill"]), "{} ≠ {}", k.cut, want["cut"]);
+    assert_eq!(k.formula, Some(kentos_commands::SectionFormula::Frustum));
     // A spacing typed as nothing is 10 m; an azimuth of 400° is said, nothing read.
     send(&mut app, W::Field(17, String::new()));
     send(&mut app, W::Preview);
@@ -189,5 +196,48 @@ fn axis_screens() {
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
             println!("{}", file.display());
         }
+    }
+}
+
+/// Docs/adr/5140, `.run/gui-evidence/kesik-koni-brukner-5140/`: Fark by sections along the axis with the frustum's
+/// formula and the factors 1,25 / 0,9 (the window's table), then the sections written with the volume table whose last
+/// column is the Brückner value; light wide and dark narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib compare_sections_tests::frustum_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn frustum_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesik-koni-brukner-5140");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Compare));
+        send(&mut app, W::Surface("t-6".into()));
+        send(&mut app, W::Comparison("t-9".into()));
+        send(&mut app, W::VolumeMethod(2));
+        send(&mut app, W::Formula(kentos_commands::SectionFormula::Frustum));
+        let axis = case("Yaylı eksen: kurpta kesitler yarıçap doğrultusunda")["axis"].as_str().expect("the axis").to_owned();
+        send(&mut app, W::Axis(Some(axis)));
+        for (k, v) in [(14, "1,25"), (15, "0,9"), (17, "1,5"), (19, "1,5"), (20, "1,5")] {
+            send(&mut app, W::Field(k, v.into()));
+        }
+        send(&mut app, W::Preview);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        send(&mut app, W::Tab(Tab::Content));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-kesik-koni-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
     }
 }

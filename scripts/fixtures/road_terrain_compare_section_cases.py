@@ -156,7 +156,7 @@ def segment_at(seg, length):
     return (c[0] + r * math.cos(angle), c[1] + r * math.sin(angle)), (-turn * math.sin(angle), turn * math.cos(angle))
 
 
-def axis_sections(comparison, base, pts, bulges, interval, left, right, corners=False, prismoidal=False):
+def axis_sections(comparison, base, pts, bulges, interval, left, right, corners=False, formula="endArea"):
     """The sections along a drawn axis (the module's note): rows (station, at, left end, right end, cut, fill), each
     window's (cut, fill) volume, the sums and the axis's length."""
     segs, starts, s = [], [], 0.0
@@ -198,12 +198,20 @@ def axis_sections(comparison, base, pts, bulges, interval, left, right, corners=
     between = []
     for r0, r1 in zip(rows, rows[1:]):
         length_ = r1[0] - r0[0]
-        if prismoidal:
+        if formula == "prismoidal":
             m = row((r0[0] + r1[0]) / 2)
             between.append((length_ / 6 * (r0[4] + 4 * m[4] + r1[4]), length_ / 6 * (r0[5] + 4 * m[5] + r1[5])))
+        elif formula == "frustum":
+            # ADR 5140: the frustum's L/3·(A₀ + A₁ + √(A₀·A₁)), cut and fill each.
+            between.append((frustum(r0[4], r1[4], length_), frustum(r0[5], r1[5], length_)))
         else:
             between.append((length_ * (r0[4] + r1[4]) / 2, length_ * (r0[5] + r1[5]) / 2))
     return rows, between, sum(b[0] for b in between), sum(b[1] for b in between), length
+
+
+def frustum(a0, a1, length):
+    """ADR 5140: a frustum's volume between two sections: L/3·(A₀ + A₁ + √(A₀·A₁))."""
+    return length / 3 * (a0 + a1 + math.sqrt(a0 * a1))
 
 
 def by_sections(inp):
@@ -232,6 +240,9 @@ def by_sections(inp):
             cm, fm = at((r0 + r1) / 2)
             cut += length / 6 * (c0 + 4 * cm + c1)
             fill += length / 6 * (f0 + 4 * fm + f1)
+        elif inp.get("formula") == "frustum":
+            cut += frustum(c0, c1, length)
+            fill += frustum(f0, f1, length)
         else:
             cut += length * (c0 + c1) / 2
             fill += length * (f0 + f1) / 2
@@ -308,7 +319,7 @@ def axis_answer(inp, out, warns):
     _, pts, bulges = AXES[key]
     rows, _, cut, fill, length = axis_sections(comparison, base, pts, bulges, inp["interval"], inp["left"],
                                                inp["right"], inp.get("corners", False),
-                                               inp.get("formula") == "prismoidal")
+                                               inp.get("formula", "endArea"))
     out["exact"] = {"cut": out["cut"], "fill": out["fill"], "net": out["net"]}
     out["cut"], out["fill"], out["net"] = cut, fill, fill - cut
     out["interval"] = inp["interval"]
@@ -360,6 +371,10 @@ def cases():
     q("Prizmoidal: ortadaki kesitle", {**kd, "interval": 2.5, "azimuth": 90.0, "formula": "prismoidal"})
     q("Prizmoidal, 3 m", {**kd, "interval": 3.0, "formula": "prismoidal"})
     q("Ortalama alan açıkça", {**kd, "interval": 2.5, "formula": "endArea"})
+    # ADR 5140: the frustum's formula.
+    q("Kesik koni: (A₀ + A₁ + √(A₀·A₁))·L/3", {**kd, "interval": 2.5, "azimuth": 90.0, "formula": "frustum"})
+    q("Kesik koni, 3 m, katsayılarla", {**kd, "interval": 3.0, "formula": "frustum", "cutFactor": 1.25,
+                                        "fillFactor": 0.9})
     q("Set terasın üstünde, her metre kafeste", {**st, "interval": 1.0, "azimuth": 90.0},
       note="kazı ve dolgu aynı kesitte, fark sıfırında bölünür")
     q("Set terasın üstünde, 4 m: kaba kesit, yöntem farkı büyür", {**st, "interval": 4.0, "azimuth": 90.0})
@@ -397,6 +412,8 @@ def cases():
       note="kurbun dışındaki sağ uç kafesin dışına taşar: yalnız iki yüzeyin örttüğü kısım sayılır")
     q("Yaylı eksen, prizmoidal", {**st, "interval": 1.5, "axis": axis_uid("yay"), "left": 1.5, "right": 1.5,
                                   "formula": "prismoidal"})
+    q("Yaylı eksen, kesik koni", {**st, "interval": 1.5, "axis": axis_uid("yay"), "left": 1.5, "right": 1.5,
+                                  "formula": "frustum"})
     q("Köşeli eksen: eksen noktasında açıortaya dik kesit", {**st, "interval": 3.0, "axis": axis_uid("kose"),
                                                              "left": 1.0, "right": 2.0, "corners": True})
     q("Köşeli eksen, eksen noktası istenmeden", {**st, "interval": 3.0, "axis": axis_uid("kose"), "left": 1.0,

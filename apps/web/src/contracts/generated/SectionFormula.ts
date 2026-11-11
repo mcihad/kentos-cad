@@ -4,4 +4,4 @@
  * The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
  * `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
  */
-export type SectionFormula = "endArea" | "prismoidal";
+export type SectionFormula = "endArea" | "prismoidal" | "frustum";

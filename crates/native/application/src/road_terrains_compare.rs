@@ -95,6 +95,15 @@ pub(crate) const WIDTHS: &str = "Kesitin sol ve sağ genişliği 0 ya da daha b�
 
 /// A drawn axis (docs/adr/4760): a line or a single-part open polyline by its persistent id, each segment's bulge kept
 /// (an arc's). Refused at `path`: the object missing, or not such a line.
+/// The core's formula for the command's (docs/adr/4340, 5140).
+pub(crate) fn section_formula(f: SectionFormula) -> volume_sections::Formula {
+    match f {
+        SectionFormula::EndArea => volume_sections::Formula::EndArea,
+        SectionFormula::Prismoidal => volume_sections::Formula::Prismoidal,
+        SectionFormula::Frustum => volume_sections::Formula::Frustum,
+    }
+}
+
 pub(crate) fn axis_of(doc: &Document, uid: &str, path: &str) -> Result<volume_sections::Axis, Stop> {
     let entity = doc
         .entities_with_uids()
@@ -316,7 +325,7 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
     // The sections (docs/adr/4340), on the two surfaces' triangles.
     let azimuth = input.azimuth.unwrap_or(0.0);
     let formula = input.formula.unwrap_or_default();
-    let prismoidal = formula == SectionFormula::Prismoidal;
+    let prismoidal = section_formula(formula);
     // Each section's row, and the axis's length along a drawn axis (docs/adr/4760).
     let by_sections: Option<(Vec<TerrainSection>, f64, f64, Option<f64>)> = match (sections, input.interval, &axis) {
         (true, Some(interval), Some(a)) => {

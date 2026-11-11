@@ -174,7 +174,7 @@ def section_words(sections):
 def section_table(sections):
     """The section volume table's cells (Netcad's columns)."""
     rows = [["Km", "Ara uzaklık (m)", "Kazı alanı (m²)", "Dolgu alanı (m²)", "Kazı hacmi (m³)", "Dolgu hacmi (m³)",
-             "Kümülatif kazı (m³)", "Kümülatif dolgu (m³)"]]
+             "Kümülatif kazı (m³)", "Kümülatif dolgu (m³)", "Brükner (m³)"]]
     cut = fill = 0.0
     for k, s in enumerate(sections):
         first = k == 0
@@ -183,7 +183,8 @@ def section_table(sections):
         rows.append([s["km"], "" if first else f"{s['station'] - sections[k - 1]['station']:.2f}",
                      f"{s['cutArea']:.2f}", f"{s['fillArea']:.2f}",
                      "" if first else f"{s['cutVolume']:.2f}", "" if first else f"{s['fillVolume']:.2f}",
-                     "" if first else f"{cut:.2f}", "" if first else f"{fill:.2f}"])
+                     "" if first else f"{cut:.2f}", "" if first else f"{fill:.2f}",
+                     "" if first else f"{s['mass']:.2f}"])
     return rows
 
 
@@ -456,14 +457,20 @@ def answer(inp):
         pts, bulges = (AXIS, AXIS_BULGES) if s["axis"] == extra_uid(0) else (STRAIGHT_AXIS, [])
         rows, between, cut, fill, length = sec.axis_sections(LATTICES[cid], LATTICES[bid], pts, bulges, s["interval"],
                                                              s["left"], s["right"], s.get("corners", False),
-                                                             s.get("formula") == "prismoidal")
+                                                             s.get("formula", "endArea"))
         start = s.get("start", 0.0)
+        # ADR 5140: the Brückner value, the running cut times its swell less the running fill times its factor.
+        kc, kf = s.get("cutFactor", 1.0), s.get("fillFactor", 1.0)
+        run_cut = run_fill = 0.0
         sections = []
         for k, (st, p, a, b, c, f) in enumerate(rows):
             row = {"station": st, "km": km_text(start + st), "at": list(p), "ends": [list(a), list(b)], "cutArea": c,
                    "fillArea": f}
             if k > 0:
                 row["cutVolume"], row["fillVolume"] = between[k - 1]
+                run_cut += between[k - 1][0]
+                run_fill += between[k - 1][1]
+                row["mass"] = run_cut * kc - run_fill * kf
             sections.append(row)
         out.update({"sections": sections, "sectionCut": cut, "sectionFill": fill, "length": length,
                     "sectionLabels": section_words(sections)})
@@ -637,6 +644,11 @@ def cases():
            note="Netcad'in Enkesit Çiz'i ve kübaj cetveli gibi: kesit çizgisi, solda km, sağda alanlar; büyük koordinat")
     assert o["sections"] and o["sectionTable"] and o["sectionLabels"], o.keys()
     ok("Eksen noktalarında da ve prizmoidal", {**far, "sections": {**along, "corners": True, "formula": "prismoidal"}})
+    # ADR 5140: the frustum's formula; the Brückner value with the cut's swell and the fill's factor.
+    ok("Kesik koni formülü, kübaj cetveli Brükner sütunuyla", {**far, "sections": {**along, "formula": "frustum"},
+                                                              "table": True})
+    ok("Brükner: kazı 1,25 kabarma, dolgu 0,9", {**far, "sections": {**along, "cutFactor": 1.25, "fillFactor": 0.9},
+                                                "table": True})
     ok("Düz eksen: kesitler kuzey–güney", {**far, "sections": {"axis": extra_uid(1), "interval": 1.5, "left": 4.0,
                                                                "right": 4.0}})
     ok("Malzeme bölgeleri: adları ve hacimleri içlerinde, malzeme tablosu",
@@ -650,6 +662,12 @@ def cases():
     no("Kesit aralığı 0", {**far, "sections": {**along, "interval": 0.0}},
        failed("invalid_analysis", "Kesit aralığı 0'dan büyük bir uzunluk olmalı.", "sections.interval"))
     no("Eksi genişlik", {**far, "sections": {**along, "left": -1.0}}, failed("invalid_analysis", widths, "sections.left"))
+    no("Brükner kazı katsayısı 0", {**far, "sections": {**along, "cutFactor": 0.0}},
+       failed("invalid_analysis", "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).",
+              "sections.cutFactor"))
+    no("Brükner dolgu katsayısı 11", {**far, "sections": {**along, "fillFactor": 11.0}},
+       failed("invalid_analysis", "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).",
+              "sections.fillFactor"))
     no("Eksi başlangıç km", {**far, "sections": {**along, "start": -5.0}},
        failed("invalid_analysis", "Eksenin başlangıç kilometresi 0 ya da daha büyük bir uzunluk olmalı (m).",
               "sections.start"))

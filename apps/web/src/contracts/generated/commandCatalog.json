@@ -133799,6 +133799,15 @@
         "km": {
           "type": "string"
         },
+        "mass": {
+          "description": "Docs/adr/5140: the Brückner value at the section, the running cut times its factor less the running fill times\nits (m³; none for the first).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "volume"
+        },
         "station": {
           "format": "double",
           "type": "number",
@@ -133850,7 +133859,7 @@
     },
     "CutFillSections": {
       "additionalProperties": false,
-      "description": "The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open\npolyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners\ntake sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average\nend area) and the kilometre of the axis's start (m; Netcad's “Güzergah Başlangıç Km”; none: 0), which the sections'\nkilometres count from.",
+      "description": "The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open\npolyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners\ntake sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average\nend area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'\nkilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,\nat most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.",
       "properties": {
         "axis": {
           "type": "string"
@@ -133860,6 +133869,22 @@
             "boolean",
             "null"
           ]
+        },
+        "cutFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "fillFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
         },
         "formula": {
           "anyOf": [
@@ -195188,11 +195213,20 @@
     },
     "SectionFormula": {
       "description": "The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or\n`L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.",
-      "enum": [
-        "endArea",
-        "prismoidal"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "endArea",
+            "prismoidal"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "frustum",
+          "description": "Docs/adr/5140: the frustum's `L/3·(A₀ + A₁ + √(A₀·A₁))`.",
+          "type": "string"
+        }
+      ]
     },
     "SectionGap": {
       "description": "Two neighbouring places of the section farther apart than the package's spacing: how far along each is, and the gap.",

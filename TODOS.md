@@ -284,6 +284,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çekirdek `volume_sections::along_axis` WASM'den) ve `road.terrains.cutfill`'de `sections`, `materials` (compare.sections'ın
   15, cutfill'in 14 yeni durumu); web Yüzey analizi › Fark › Kesit'te Eksen, genişlikler, Eksen noktalarında da,
   Başlangıç km.
+- MAP-15 / ADR 5140: web'in `road.terrains.compare` ve `road.terrains.cutfill` işleyicilerinde `formula: frustum`;
+  kazı-dolgu kesitlerinin `mass`'ı, `sections.cutFactor`/`fillFactor`'ı ve cetvelin Brükner sütunu; web Fark'ında
+  Kesik koni.
 - MAP-14 / ADR 5120: web'de `road.terrains.sectioncheck` işleyicisi (road.terrains.sectioncheck.json'un 35 durumu),
   `builtUp.origin` ve `rotation`, paket sürüm 5'in `sectionCheck.spacing`'i; web Pafta eğrileri'nde Izgara (63/2)
   satırı ve Kesit kontrolü penceresi.

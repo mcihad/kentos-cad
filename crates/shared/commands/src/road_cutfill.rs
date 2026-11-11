@@ -76,8 +76,9 @@ pub struct TerrainsCutFill {
 /// The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
 /// polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
 /// take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
-/// end area) and the kilometre of the axis's start (m; Netcad's “Güzergah Başlangıç Km”; none: 0), which the sections'
-/// kilometres count from.
+/// end area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'
+/// kilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,
+/// at most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -101,6 +102,14 @@ pub struct CutFillSections {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub start: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill_factor: Option<f64>,
 }
 
 /// A section as written (docs/adr/4760): its station (from the axis's start) and its kilometre (the start's kilometre
@@ -131,6 +140,12 @@ pub struct CutFillSection {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub fill_volume: Option<f64>,
+    /// Docs/adr/5140: the Brückner value at the section, the running cut times its factor less the running fill times
+    /// its (m³; none for the first).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub mass: Option<f64>,
 }
 
 /// A section's words as written (docs/adr/4760): its place (the section's end it stands beyond, half a text's height

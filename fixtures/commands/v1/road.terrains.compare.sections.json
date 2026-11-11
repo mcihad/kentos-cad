@@ -12104,6 +12104,188 @@
    ]
   },
   {
+   "name": "Kesik koni: (A₀ + A₁ + √(A₀·A₁))·L/3",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Düz",
+      "comparison": "Kazı",
+      "method": "sections",
+      "interval": 2.5,
+      "azimuth": 90.0,
+      "formula": "frustum"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-5",
+       "comparison": "t-8",
+       "cut": 29.50474512535043,
+       "fill": 0.0,
+       "net": -29.50474512535043,
+       "cutArea": 75.0,
+       "fillArea": 0.0,
+       "covered": 75.0,
+       "uncovered": 25.0,
+       "least": {
+        "difference": -0.7749999999999915,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": -0.09999999999999432,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 28.124999999999755,
+        "fill": 0.0,
+        "net": -28.124999999999755
+       },
+       "interval": 2.5,
+       "azimuth": 90.0,
+       "formula": "frustum",
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 2.4999999999999574,
+         "fillArea": 0.0
+        },
+        {
+         "station": 2.5,
+         "cutArea": 2.4999999999999574,
+         "fillArea": 0.0
+        },
+        {
+         "station": 5.0,
+         "cutArea": 6.249999999999957,
+         "fillArea": 0.0
+        },
+        {
+         "station": 7.5,
+         "cutArea": 2.4999999999999574,
+         "fillArea": 0.0
+        },
+        {
+         "station": 10.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "compare_uncovered",
+        "message": "Karşılaştırma yüzeyinin 25.00 m²'si tabanın dışında; o kısım hacme girmedi.",
+        "path": "comparison"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kesik koni, 3 m, katsayılarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Düz",
+      "comparison": "Kazı",
+      "method": "sections",
+      "interval": 3.0,
+      "formula": "frustum",
+      "cutFactor": 1.25,
+      "fillFactor": 0.9
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-5",
+       "comparison": "t-8",
+       "cut": 28.058031139581356,
+       "fill": 0.0,
+       "net": -28.058031139581356,
+       "cutArea": 75.0,
+       "fillArea": 0.0,
+       "covered": 75.0,
+       "uncovered": 25.0,
+       "least": {
+        "difference": -0.7749999999999915,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": -0.09999999999999432,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 28.124999999999755,
+        "fill": 0.0,
+        "net": -28.124999999999755
+       },
+       "interval": 3.0,
+       "azimuth": 0.0,
+       "formula": "frustum",
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 1.6874999999999645,
+         "fillArea": 0.0
+        },
+        {
+         "station": 3.0,
+         "cutArea": 2.36249999999999,
+         "fillArea": 0.0
+        },
+        {
+         "station": 6.0,
+         "cutArea": 3.0375000000000156,
+         "fillArea": 0.0
+        },
+        {
+         "station": 9.0,
+         "cutArea": 3.712500000000041,
+         "fillArea": 0.0
+        },
+        {
+         "station": 10.0,
+         "cutArea": 3.937499999999943,
+         "fillArea": 0.0
+        }
+       ],
+       "adjusted": {
+        "cutFactor": 1.25,
+        "fillFactor": 0.9,
+        "cut": 35.072538924476696,
+        "fill": 0.0,
+        "net": -35.072538924476696
+       }
+      },
+      "warnings": [
+       {
+        "code": "compare_uncovered",
+        "message": "Karşılaştırma yüzeyinin 25.00 m²'si tabanın dışında; o kısım hacme girmedi.",
+        "path": "comparison"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "Set terasın üstünde, her metre kafeste",
    "note": "kazı ve dolgu aynı kesitte, fark sıfırında bölünür",
    "steps": [
@@ -24612,6 +24794,274 @@
        },
        "interval": 1.5,
        "formula": "prismoidal",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+       "length": 13.783185307179586,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8001.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8001.0,
+           3.5
+          ],
+          [
+           8001.0,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 1.5,
+         "cutArea": 0.0,
+         "fillArea": 0.22499999999999787,
+         "at": [
+          8002.5,
+          2.0
+         ],
+         "ends": [
+          [
+           8002.5,
+           3.5
+          ],
+          [
+           8002.5,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 3.0,
+         "cutArea": 0.0,
+         "fillArea": 0.44999999999999574,
+         "at": [
+          8004.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           3.5
+          ],
+          [
+           8004.0,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 4.5,
+         "cutArea": 0.0,
+         "fillArea": 0.525195159968803,
+         "at": [
+          8005.498698933541,
+          2.031209331082684
+         ],
+         "ends": [
+          [
+           8005.311686833464,
+           3.5195058319266774
+          ],
+          [
+           8005.685711033619,
+           0.5429128302386905
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 0.3123446768375255,
+         "at": [
+          8006.9177021544165,
+          2.4896697524385094
+         ],
+         "ends": [
+          [
+           8006.19856384651,
+           3.806043595274068
+          ],
+          [
+           8007.636840462323,
+           1.1732959096029505
+          ]
+         ]
+        },
+        {
+         "station": 7.5,
+         "cutArea": 0.001597873383419136,
+         "fillArea": 0.14107177204175542,
+         "at": [
+          8008.070174008944,
+          3.4360125673466997
+         ],
+         "ends": [
+          [
+           8006.91885875559,
+           4.397507854591687
+          ],
+          [
+           8009.221489262299,
+           2.474517280101712
+          ]
+         ]
+        },
+        {
+         "station": 9.0,
+         "cutArea": 0.0263439464561362,
+         "fillArea": 0.0697819900724979,
+         "at": [
+          8008.795938477422,
+          4.738710550418926
+         ],
+         "ends": [
+          [
+           8007.372461548389,
+           5.211694094011829
+          ],
+          [
+           8010.2194154064555,
+           4.2657270068260225
+          ]
+         ]
+        },
+        {
+         "station": 10.5,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          6.216814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           6.216814692820414
+          ],
+          [
+           8010.5,
+           6.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 12.0,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          7.716814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           7.716814692820414
+          ],
+          [
+           8010.5,
+           7.716814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.5,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          9.216814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           9.216814692820414
+          ],
+          [
+           8010.5,
+           9.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.783185307179586,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          9.5
+         ],
+         "ends": [
+          [
+           8007.5,
+           9.5
+          ],
+          [
+           8010.5,
+           9.5
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yaylı eksen, kesik koni",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 1.5,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+      "left": 1.5,
+      "right": 1.5,
+      "formula": "frustum"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 0.13859704675253326,
+       "fill": 2.7267711444781164,
+       "net": 2.588174097725583,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 1.5,
+       "formula": "frustum",
        "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
        "length": 13.783185307179586,
        "sections": [

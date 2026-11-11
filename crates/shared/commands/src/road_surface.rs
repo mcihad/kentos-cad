@@ -271,6 +271,8 @@ pub enum SectionFormula {
     #[default]
     EndArea,
     Prismoidal,
+    /// Docs/adr/5140: the frustum's `L/3·(A₀ + A₁ + √(A₀·A₁))`.
+    Frustum,
 }
 
 /// The most sections a section comparison measures.

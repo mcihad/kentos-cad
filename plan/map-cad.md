@@ -46,7 +46,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740, 5120 | kesitin çizimde gösterilmesi ve projede saklanması | gerçek veri ölçümü (karolu hesap) |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; kesik koni formülü ve Brükner sütunu; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi) | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760, 5140 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi); Brükner diyagramı | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
@@ -2120,6 +2120,14 @@ sınıfları; Netcad'in Enkesit Çiz penceresi ve Enkesitlerden Hacim Hesabı ce
 taşan malzeme uyarılır); aks ve sınır katmanları çizimin kaynağı; 43 + 58 bağımsız durum, Python, MCP, masaüstünde
 Eksen, Sola/Sağa genişlik, Eksen noktalarında da, Başlangıç km. Açık: kesit sayfaları, kesik koni formülü ve Brükner,
 Netcad'in ek kesitleri.
+
+**11 Kasım 2026, onuncu tur — kesik koni formülü ve Brükner değeri ([ADR 5140](../docs/adr/5140-frustum-formula-and-bruckner-value.md)).**
+Kapsam: **Harita + Yol**. Dayanak: KGM 2019 şartnamesi (yarma kabarma ya da sıkışma katsayısıyla, Brükner); Netcad'in
+Enkesitlerden Hacim Hesabı (yöntemler ve Brükner Değeri sütunu, resim yeniden incelendi). Kanıtlanan: `formula: frustum`
+(L/3·(A₀ + A₁ + √(A₀·A₁))) karşılaştırmada ve kazı-dolgu kesitlerinde; kazı-dolgu kesitlerinde `mass` (birikimli kazı ×
+kabarma − birikimli dolgu × katsayı) ve cetvelin Brükner sütunu; 46 + 62 bağımsız durum, çekirdek testi, Python katmanı,
+masaüstünde Formül › Kesik koni ve resim. Açık: kesit sayfaları ve UVDF §6.4, ek kesitler, Brükner diyagramı; KGM ve
+DSİ yöntemleri (formül açık kaynakta yok).
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 
