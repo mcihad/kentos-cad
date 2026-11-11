@@ -28,7 +28,7 @@ Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da ye
 dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
 yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Turlar her satırın ilk işini MAP-01'den
 sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), dokuzuncu tur MAP-01'le başladı
-(ADR 4480–4860), onuncu tur MAP-01'le başlar (ADR 4880).
+(ADR 4480–4860), onuncu tur 11 Kasım'da MAP-12 ile bitti (ADR 4880–5260).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
