@@ -1,5 +1,6 @@
 //! Adding and removing path vertices (`apps/web/src/model/ops/vertex.ts`). An arc
-//! segment split by a new vertex keeps its circle.
+//! segment split by a new vertex keeps its circle; Köşeyi sil may join two arcs of
+//! one circle into one (docs/adr/5000).
 
 use crate::api::Op;
 use crate::entity::{
@@ -9,7 +10,7 @@ use crate::geom::bulge::{
     bulge_arc, bulge_at, bulge_of_sweep, bulge_path_edges, clean_bulge_path, is_arc_bulge,
 };
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::js_min;
+use crate::jsmath::{js_hypot, js_min};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::edges::entity_edges;
@@ -198,12 +199,64 @@ pub fn insert_vertex(e: &Shape, seg: usize, p: Vec2) -> Result<Geometry, String>
 
 /// Removes vertex `index`; its two segments merge into one straight segment.
 pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
+    remove_vertex_joining(e, index, None).0
+}
+
+/// How Köşeyi sil joins the two arcs at the removed vertex (docs/adr/5000).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ArcJoin {
+    /// No tolerance given, the removed vertex an open path's end, or a side straight: the joined edge is straight.
+    Straight,
+    /// One arc of the two arcs' circle, its bulge.
+    Joined(f64),
+    /// Two arcs, not of one circle within the tolerance: their centres' and radii's distance, metres.
+    Apart { centres: f64, radii: f64 },
+    /// Two arcs turning opposite ways.
+    Opposite,
+    /// Two arcs of one circle making a whole turn or more together.
+    Whole,
+}
+
+/// The arcs p → v (bulge `b1`) and v → q (`b2`) as one arc p → q: when both are arcs turning the same way, their
+/// centres and radii within `tol` of each other and their sweeps less than a whole turn together. The joined bulge is
+/// tan((θ₁ + θ₂)/4) by the tangent's sum, (b₁ + b₂)/(1 − b₁b₂): the arc keeps both ends and the sweeps' sum.
+pub fn arc_join(p: Vec2, v: Vec2, q: Vec2, b1: f64, b2: f64, tol: f64) -> ArcJoin {
+    let (Some(one), Some(two)) = (bulge_arc(p, v, b1), bulge_arc(v, q, b2)) else {
+        return ArcJoin::Straight;
+    };
+    if (b1 > 0.0) != (b2 > 0.0) {
+        return ArcJoin::Opposite;
+    }
+    let centres = js_hypot(one.c.x - two.c.x, one.c.y - two.c.y);
+    let radii = (one.r - two.r).abs();
+    if !(centres <= tol && radii <= tol) {
+        return ArcJoin::Apart { centres, radii };
+    }
+    let rest = 1.0 - b1 * b2;
+    if rest <= 0.0 {
+        return ArcJoin::Whole;
+    }
+    let joined = (b1 + b2) / rest;
+    if joined.is_finite() {
+        ArcJoin::Joined(joined)
+    } else {
+        ArcJoin::Whole
+    }
+}
+
+/// Köşeyi sil with the arcs at the vertex joined into one arc when `join` (a tolerance, metres) is given and they
+/// are of one circle within it (`arc_join`); otherwise the joined edge is straight. The join says which.
+pub fn remove_vertex_joining(e: &Shape, index: usize, join: Option<f64>) -> (Geometry, ArcJoin) {
     // `index` counts every part's outer vertices, part after part.
     if is_multi_part(e) {
-        return in_part(e, index, outer_count, |part, local| {
-            Ok(remove_vertex(part, local))
+        let mut how = ArcJoin::Straight;
+        let done = in_part(e, index, outer_count, |part, local| {
+            let (g, h) = remove_vertex_joining(part, local, join);
+            how = h;
+            Ok(g)
         })
         .unwrap_or_else(Geometry::Error);
+        return (done, how);
     }
     let (pts, bulges, closed) = match e {
         Shape::Polyline {
@@ -214,20 +267,22 @@ pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
         } => (pts, bulges.as_deref(), *closed),
         Shape::Polygon { pts, bulges, .. } => (pts, bulges.as_deref(), true),
         _ => {
-            return Geometry::Error(
-                "Köşe yalnızca çoklu çizgi ve kapalı alandan silinebilir.".into(),
+            return (
+                Geometry::Error("Köşe yalnızca çoklu çizgi ve kapalı alandan silinebilir.".into()),
+                ArcJoin::Straight,
             );
         }
     };
     let n = pts.len();
     if n < if closed { 4 } else { 3 } {
-        return Geometry::Error(if matches!(e, Shape::Polyline { .. }) && closed {
+        let why = if matches!(e, Shape::Polyline { .. }) && closed {
             "Kapalı çoklu çizgide en az üç köşe kalmalı.".into()
         } else if closed {
             "Kapalı alanda en az üç köşe kalmalı.".into()
         } else {
             "Çoklu çizgide en az iki köşe kalmalı.".into()
-        });
+        };
+        return (Geometry::Error(why), ArcJoin::Straight);
     }
     let out_p: Vec<Vec2> = pts
         .iter()
@@ -236,21 +291,38 @@ pub fn remove_vertex(e: &Shape, index: usize) -> Geometry {
         .map(|(_, &p)| p)
         .collect();
     let mut out_b: Vec<f64> = (0..n).map(|i| bulge_at(bulges, i)).collect();
+    let mut how = ArcJoin::Straight;
     if !closed && index == 0 {
         out_b.remove(0);
     } else if !closed && index == n - 1 {
         out_b.remove(n - 1);
         out_b[n - 2] = 0.0;
     } else {
-        // Segments (index−1 → index) and (index → index+1) become one straight segment.
+        // Segments (index−1 → index) and (index → index+1) become one segment: straight, or one arc of their circle.
         let prev = (index % n + n - 1) % n;
-        out_b[prev] = 0.0;
+        if let Some(tol) = join {
+            how = arc_join(
+                pts[prev],
+                pts[index],
+                pts[(index + 1) % n],
+                out_b[prev],
+                out_b[index],
+                tol,
+            );
+        }
+        out_b[prev] = match how {
+            ArcJoin::Joined(b) => b,
+            _ => 0.0,
+        };
         if index < out_b.len() {
             out_b.remove(index);
         }
     }
     let clean = clean_bulge_path(&out_p, Some(&out_b), closed, 1e-9);
-    Geometry::Ok(Entity::new(path_like(e, clean.pts, clean.bulges)))
+    (
+        Geometry::Ok(Entity::new(path_like(e, clean.pts, clean.bulges))),
+        how,
+    )
 }
 
 pub(crate) static OPS: &[Op] = &[
@@ -265,3 +337,43 @@ pub(crate) static OPS: &[Op] = &[
     )),
     op!("nearHole", |e: Entity, p: Vec2| near_hole(&e.shape, p)),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// docs/adr/5000: two quarter arcs of the unit circle join into a half (bulge tan 45° = 1); opposite turns and a
+    /// straight side do not join.
+    #[test]
+    fn two_arcs_of_one_circle_join_into_one() {
+        let (p, v, q) = (
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 1.0),
+            Vec2::new(-1.0, 0.0),
+        );
+        let quarter = bulge_of_sweep(std::f64::consts::FRAC_PI_2);
+        match arc_join(p, v, q, quarter, quarter, 1e-6) {
+            ArcJoin::Joined(b) => assert!((b - 1.0).abs() < 1e-12, "{b}"),
+            other => panic!("{other:?}"),
+        }
+        assert_eq!(arc_join(p, v, q, quarter, -quarter, 1.0), ArcJoin::Opposite);
+        assert_eq!(arc_join(p, v, q, 0.0, quarter, 1.0), ArcJoin::Straight);
+        let shape = Shape::Polyline {
+            pts: vec![p, v, q],
+            bulges: Some(vec![quarter, quarter]),
+            holes: None,
+            parts: None,
+            closed: false,
+            widths: None,
+        };
+        let (Geometry::Ok(done), ArcJoin::Joined(_)) = remove_vertex_joining(&shape, 1, Some(1e-6))
+        else {
+            panic!("not joined");
+        };
+        let Shape::Polyline { pts, bulges, .. } = done.shape else {
+            panic!("not a polyline");
+        };
+        assert_eq!(pts, vec![p, q]);
+        assert!((bulges.expect("an arc")[0] - 1.0).abs() < 1e-12);
+    }
+}

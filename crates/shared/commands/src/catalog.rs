@@ -14833,7 +14833,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::CAD_ENTITIES_VERTEX_VERSION,
             title: "Köşe ve kenar".into(),
             summary: "Bir yolun köşesini ya da kenarını düzenler: Köşeyi sil (köşe yeri), Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür (kenarın ortasının yeri); nesne kalıcı kimliğiyle, yer cad.snap.find ya da cad.entities.pick'in verdiği gibi. \
-                      Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder (shared_boundary_locked). Tek geri alma adımı."
+                      Yay kenara eklenen köşe yayı çemberinde ikiye böler; Yaya dönüştür kenarı kirişin dörtte biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Köşeyi sil iki kenarı düz bir kenar yapar; joinArcs (uzunluk toleransı) ile iki yanı aynı yöne dönen ve merkezleri ile yarıçapları tolerans içinde aynı olan iki yay tek yay olur (süpürmeleri toplanır), olmazsa kenar düz kalır ve arcs_not_joined uyarısı nedenini söyler; aynı yayları paylaşan komşu topology ile tek yayı alır. Alanın delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder (shared_boundary_locked). Tek geri alma adımı."
                 .into(),
             aliases: vec!["kose".into(), "vertex".into()],
             effect: CommandEffect::Document,
@@ -14851,6 +14851,11 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 title: "Bir alanın üçüncü köşesini sil".into(),
                 input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "action": "remove",
                                "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 2 } }),
+                output: None,
+            }, CommandExample {
+                title: "İki yayın ortak köşesini sil, aynı dairedeyse (1 mm içinde) tek yay olsun".into(),
+                input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002", "action": "remove", "joinArcs": 0.001,
+                               "place": { "kind": "vertex", "part": 0, "ring": 0, "index": 1 } }),
                 output: None,
             }, CommandExample {
                 title: "Çoklu çizginin ikinci kenarını 25 m yarıçaplı yaya dönüştür".into(),

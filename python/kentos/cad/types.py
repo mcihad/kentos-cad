@@ -36975,7 +36975,8 @@ class EntitiesVertex(_Model):
     not an edge's middle),
     `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
     with fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the
-    object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not
+    object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, docs/adr/5000's `joinArcs` with
+    another action, below zero or not finite, `through` and `radius` together, a radius not
     finite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without
     them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
     `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
@@ -36984,6 +36985,10 @@ class EntitiesVertex(_Model):
         place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
             `along` place too (a point inside the edge, docs/adr/0263 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
+        join_arcs: Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex
+            are arcs turning the same way whose centres and radii are within it of each other, they become one arc of
+            both sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a
+            warning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil. Unit: length.
         radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
             the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
             chord; not with `through`. Unit: length.
@@ -36997,6 +37002,7 @@ class EntitiesVertex(_Model):
     action: VertexAction | VertexActionName
     place: SubPlace
     expected_revision: str | None | Unset = UNSET
+    join_arcs: float | None | Unset = UNSET
     radius: float | None | Unset = UNSET
     through: Vec2 | None | Unset = UNSET
     topology: StretchTopology | None | Unset = UNSET
@@ -37009,6 +37015,8 @@ class EntitiesVertex(_Model):
         out["place"] = self.place.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.join_arcs is not UNSET:
+            out["joinArcs"] = None if self.join_arcs is None else float(self.join_arcs)
         if self.radius is not UNSET:
             out["radius"] = None if self.radius is None else float(self.radius)
         if self.through is not UNSET:
@@ -37026,6 +37034,7 @@ class EntitiesVertex(_Model):
             action=_enum_in(VertexAction, data["action"]),
             place=SubPlace.from_json(data["place"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            join_arcs=UNSET if "joinArcs" not in data else None if data["joinArcs"] is None else float(data["joinArcs"]),
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
             through=UNSET if "through" not in data else None if data["through"] is None else Vec2.from_json(data["through"]),
             topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),

@@ -2,7 +2,8 @@
 //! docs/adr/0074, 0279): a right click on a grip of a selected object offers
 //! what that grip can take, by the object:
 //!
-//! - a path's vertex: Köşeyi sil (its two edges merge into one straight edge);
+//! - a path's vertex: Köşeyi sil (its two edges merge into one straight edge,
+//!   or one arc when both are arcs of one circle, docs/adr/5000);
 //! - a path's edge middle: Ortasına köşe ekle (an arc edge is split in two,
 //!   keeping its circle), then Düz kenar yap on an arc edge or Yaya dönüştür
 //!   on a straight one: a gentle arc, its sagitta a quarter of the chord,
@@ -285,6 +286,8 @@ pub fn request(menu: GripMenu, action: GripAction, cx: &Context<'_>) -> Option<E
         through: None,
         radius: None,
         widths: None,
+        // Two arcs of one circle stay one arc within Topolojik temizlik's tolerance (docs/adr/5000).
+        join_arcs: (action == VertexAction::Remove).then_some(cx.memory.topology_tolerance),
         topology: cx.draft.topology.then_some(StretchTopology {
             points: cx.draft.topology_points,
             stop_on_locked: cx.draft.topology_stop_on_locked,

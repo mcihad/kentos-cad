@@ -5857,7 +5857,11 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
     yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla
     (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar
     genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir;
-    çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır;
+    çizgiye köşe eklenince çoklu çizgi olur. Köşeyi sil iki kenarı düz bir kenar yapar;
+    joinArcs (uzunluk toleransı) ile iki yanı aynı yöne dönen ve merkezleri ile
+    yarıçapları tolerans içinde aynı olan iki yay tek yay olur (süpürmeleri toplanır),
+    olmazsa kenar düz kalır ve arcs_not_joined uyarısı nedenini söyler; aynı yayları
+    paylaşan komşu topology ile tek yayı alır. Alanın delikleri ve öbür parçaları kalır;
     topology ile ortak köşe ve kenarları olan komşular aynı adımda izler;
     topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder
     (shared_boundary_locked). Tek geri alma adımı.
@@ -5880,6 +5884,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5894,7 +5899,11 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen
         noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay
         kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına
-        başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın
+        başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Köşeyi
+        sil iki kenarı düz bir kenar yapar; joinArcs (uzunluk toleransı) ile iki yanı aynı
+        yöne dönen ve merkezleri ile yarıçapları tolerans içinde aynı olan iki yay tek yay
+        olur (süpürmeleri toplanır), olmazsa kenar düz kalır ve arcs_not_joined uyarısı
+        nedenini söyler; aynı yayları paylaşan komşu topology ile tek yayı alır. Alanın
         delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan
         komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi
         reddeder (shared_boundary_locked). Tek geri alma adımı.
@@ -5906,6 +5915,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
                 `along` place too (a point inside the edge, docs/adr/0263 §1).
             expected_revision: The document revision the input was prepared against, as decimal text.
+            join_arcs: Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex
+                are arcs turning the same way whose centres and radii are within it of each other, they become one arc of
+                both sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a
+                warning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil. Unit: length.
             radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
                 the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
                 chord; not with `through`. Unit: length.
@@ -5931,6 +5944,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
@@ -5946,6 +5960,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5959,6 +5974,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
@@ -5974,6 +5990,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5987,6 +6004,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
@@ -6002,6 +6020,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -6020,6 +6039,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,

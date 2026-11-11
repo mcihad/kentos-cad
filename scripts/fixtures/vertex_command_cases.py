@@ -99,6 +99,16 @@ ALONG = [(0, 0), (10, 0), (10, 10), (0, 10)]
 QUAD = [(0, 70), (10, 70), (5, 80), (-5, 80)]
 WIDE = [(0, 90), (10, 90), (20, 90)]
 ONE_WIDE = [(0, 100), (10, 100), (20, 100)]
+# docs/adr/5000: arcs of the circle about (20000, 0) of radius 7225 from 0°: P → V by bulge 1/2, V → Q by 1/4. The points
+# are R·(1 + i·b)⁴/(1 + b²)² turned from P (a bulge's quarter-angle rotation, four times): integers.
+JOIN_C = (20000, 0)
+JOIN = [(JOIN_C[0] + 7225, 0), (JOIN_C[0] - 2023, 6936), (JOIN_C[0] - 6887, 2184)]
+APART = [(x, y + 20000) for x, y in JOIN]
+OPPOSITE = [(x, y + 40000) for x, y in JOIN]
+# Bulge 2 twice about (40000, 0), radius 625: more than a whole turn together.
+WHOLE = [(40625, 0), (40000 - 175, -600), (40000 - 527, 336)]
+# The neighbour above the arcs, along them the other way: Q → V → P, then up to the top and back.
+JOIN_NEIGHBOUR = [JOIN[2], JOIN[1], JOIN[0], (JOIN_C[0], 9000)]
 TRIANGLE = [(0, 70), (10, 70), (5, 80)]
 
 ENTITIES = [
@@ -120,6 +130,11 @@ ENTITIES = [
     path("polygon", 16, TRIANGLE),
     {**path("polyline", 17, WIDE), "widths": [[1, 1], [1, 1], [0, 0]]},
     {**path("polyline", 18, ONE_WIDE), "widths": [[F(1, 2), F(1, 2)], [0, 0], [0, 0]]},
+    path("polyline", 19, JOIN, bulges=[F(1, 2), F(1, 4), 0]),
+    path("polyline", 20, APART, bulges=[F(1, 2), F(3, 8), 0]),
+    path("polyline", 21, OPPOSITE, bulges=[F(1, 2), F(-1, 4), 0]),
+    path("polyline", 22, WHOLE, bulges=[2, 2, 0]),
+    path("polygon", 23, JOIN_NEIGHBOUR, bulges=[F(-1, 4), F(-1, 2), 0, 0]),
 ]
 for _e in ENTITIES:
     if "widths" in _e:
@@ -468,6 +483,118 @@ def width_case(name, i, index, pair, undo=False):
     return {"name": name, "steps": steps}
 
 
+# ── docs/adr/5000: Köşeyi sil joins two arcs of one circle ───────────────────────────────────────────────────────
+
+JOIN_TOL = 0.001
+APART_MSG = "İki yay aynı dairenin değil: merkezler {} ayrık, yarıçaplar {} farklı; tolerans {}. Birleşen kenar düz oldu."
+OPPOSITE_MSG = "İki yay ters yönlere dönüyor; tek yay olamaz. Birleşen kenar düz oldu."
+WHOLE_MSG = "İki yay birlikte tam daire ya da fazlası ediyor; tek yay olamaz. Birleşen kenar düz oldu."
+JOIN_ONLY = "Yayları birleştirme toleransı (joinArcs) yalnız Köşeyi sil'de (remove) verilir."
+JOIN_BAD = "Yayları birleştirme toleransı sıfır ya da büyük bir uzunluk olmalı."
+
+
+def circle_of(a, b, bulge):
+    """The circle of an arc edge through its ends and its middle (`edge_mid`): the circumcentre, exactly; the radius
+    squared."""
+    m = edge_mid(a, b, bulge)
+    (ax, ay), (bx, by), (mx, my) = [tuple(F(v) for v in q) for q in (a, b, m)]
+    d = 2 * (ax * (my - by) + mx * (by - ay) + bx * (ay - my))
+    ux = ((ax * ax + ay * ay) * (my - by) + (mx * mx + my * my) * (by - ay) + (bx * bx + by * by) * (ay - my)) / d
+    uy = ((ax * ax + ay * ay) * (bx - mx) + (mx * mx + my * my) * (ax - bx) + (bx * bx + by * by) * (mx - ax)) / d
+    return (ux, uy), (ax - ux) ** 2 + (ay - uy) ** 2
+
+
+def dsqrt(q):
+    return Decimal(q.numerator).sqrt() / Decimal(q.denominator).sqrt()
+
+
+def text(d):
+    t = format(Decimal(d).quantize(Decimal("0.0001")), "f")
+    return t.rstrip("0").rstrip(".")
+
+
+def joined(p, k):
+    """Köşeyi sil of vertex k with the arcs joined: the joined edge's bulge, or why not (a warning's message). The
+    joined bulge is the tangent of the sum of the quarter-angles, the two rotations (1 + i·b) composed: Im / Re of
+    (1 + i·b₁)(1 + i·b₂); a whole turn or more when the real part is not positive."""
+    n = len(p.pts)
+    a, v, b = p.pts[(k - 1) % n], p.pts[k], p.pts[(k + 1) % n]
+    b1, b2 = F(p.bulges[(k - 1) % n]), F(p.bulges[k])
+    if (b1 > 0) != (b2 > 0):
+        return None, OPPOSITE_MSG
+    (c1, r1), (c2, r2) = circle_of(a, v, b1), circle_of(v, b, b2)
+    centres = dsqrt((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2)
+    radii = abs(dsqrt(r1) - dsqrt(r2))
+    if centres > Decimal(JOIN_TOL) or radii > Decimal(JOIN_TOL):
+        return None, APART_MSG.format(text(centres), text(radii), text(Decimal("0.001")))
+    re, im = 1 - b1 * b2, b1 + b2
+    if re <= 0:
+        return None, WHOLE_MSG
+    bulge = im / re
+    # The joined arc is the arcs' circle: its centre from the ends and the new bulge is theirs.
+    assert circle_of(a, b, bulge)[0] == c1, "the joined arc left the circle"
+    return bulge, None
+
+
+def join_case(name, i, index, topology=False, tol=JOIN_TOL, undo=False):
+    p = path_of(BY_ID[i])
+    inp = {"uid": UID(i), "action": "remove", "place": vertex(index)}
+    if tol is not None:
+        inp["joinArcs"] = tol
+    if topology:
+        inp["topology"] = {}
+    bulge, why = joined(p, index) if tol is not None else (None, None)
+    new = removed(p, index)
+    if bulge is not None:
+        new.bulges[(index - 1) % len(new.pts)] = float(bulge)
+    changed = [new.entity(BY_ID[i])]
+    if topology:
+        prev, nxt, at = p.pts[index - 1], p.pts[index + 1], p.pts[index]
+        for e in ENTITIES:
+            if e["id"] == i or e["kind"] not in ("polyline", "polygon"):
+                continue
+            q = path_of(e)
+            m = len(q.pts)
+            for k in range(m):
+                if q.pts[k] != at or (not q.closed and k in (0, m - 1)):
+                    continue
+                around = (q.pts[(k - 1) % m], q.pts[(k + 1) % m])
+                if around not in ((prev, nxt), (nxt, prev)):
+                    continue
+                arcs = q.bulges[(k - 1) % m] != 0 and q.bulges[k] != 0
+                follow_ = removed(q, k)
+                if bulge is not None and arcs:
+                    follow_.bulges[(k - 1) % (m - 1)] = float(bulge if around[0] == prev else -bulge)
+                changed.append(follow_.entity(e, per_edge=True))
+                break
+    warnings = [{**warning("arcs_not_joined", why), "path": "joinArcs"}] if why else []
+    ids = [c["id"] for c in changed]
+    steps = [{"op": "execute", "input": inp,
+              "result": completed({"changed": [UID(k) for k in ids], "ids": ids, "revision": "$current"}, warnings),
+              "expect": {"ids": IDS, "entities": {str(c["id"]): c for c in changed}, "revision": "changed",
+                         "canUndo": True, "canRedo": False, "dirty": True}}]
+    if undo:
+        steps.append({"op": "undo", "returns": LABELS["remove"],
+                      "expect": {"ids": IDS, "entities": {str(k): BY_ID[k] for k in ids}, "canUndo": False, "canRedo": True}})
+    return {"name": name, "steps": steps}
+
+
+def adr_5000_cases():
+    one = {"uid": UID(19), "action": "remove", "place": vertex(1)}
+    return [
+        join_case("Yayları birleştir: aynı dairenin iki yayı tek yay olur, süpürmeleri toplanır (1/2 ve 1/4 → 6/7); tek geri alma",
+                  19, 1, undo=True),
+        join_case("Yayları birleştir verilmezse eskisi gibi: birleşen kenar düz", 19, 1, tol=None),
+        join_case("Yayları birleştir: merkezleri ayrık yaylar birleşmez, kenar düz; arcs_not_joined uyarısı ayrımı söyler", 20, 1),
+        join_case("Yayları birleştir: ters yönlere dönen yaylar birleşmez", 21, 1),
+        join_case("Yayları birleştir: birlikte tam daireyi aşan yaylar birleşmez", 22, 1),
+        join_case("Topoloji: aynı iki yayı ters yönde paylaşan komşu da tek yay alır (−6/7); ortak sınır bozulmaz", 19, 1, topology=True),
+        refused("Yayları birleştirme toleransı yalnız Köşeyi sil'de", {"uid": UID(19), "action": "insert", "place": mid(0), "joinArcs": 0.001},
+                "invalid_arc_edge", JOIN_ONLY, "joinArcs"),
+        refused("Yayları birleştirme toleransı eksi olamaz", {**one, "joinArcs": -0.001}, "invalid_arc_edge", JOIN_BAD, "joinArcs"),
+    ]
+
+
 def adr_0288_cases():
     """Yaya dönüştür through a point and with a radius, Kenar genişliği, and their refusals (docs/adr/0288)."""
     arc = {"uid": UID(1), "action": "arc", "place": mid(0)}
@@ -625,6 +752,7 @@ def cases():
                 "Çoklu çizgide en az iki köşe kalmalı.", "place"),
     ]
     out += adr_0288_cases()
+    out += adr_5000_cases()
     out.append({"name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz", "steps": [
         {"op": "captureRevision", "as": "old"},
         {"op": "execute", "input": {"uid": UID(3), "action": "remove", "place": vertex(1)},
@@ -638,7 +766,7 @@ def build():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "cad.entities.vertex", "commandVersion": 1,
         "title": "Köşe ve kenar",
-        "note": "Written by scripts/fixtures/vertex_command_cases.py from the operations' definitions (docs/adr/0047, 0160, 0279, 0288); do not edit by hand.",
+        "note": "Written by scripts/fixtures/vertex_command_cases.py from the operations' definitions (docs/adr/0047, 0160, 0279, 0288, 5000); do not edit by hand.",
         "setup": SETUP, "cases": cases(),
     }
 

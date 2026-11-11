@@ -379,6 +379,34 @@ pub fn removed(
     paths: &[Elevated],
     at: &[[usize; 2]],
 ) -> Result<Vec<Elevated>, Refusal> {
+    removed_joining(kind, paths, at, None)
+}
+
+/// The bulge of the arcs `bulges` from a kept vertex over removed ones to the next kept, as one arc (docs/adr/5000
+/// §8): every edge an arc turning the same way, each joining the first by `arc_join` (its circle within `tol`), the
+/// sweeps less than a whole turn together; none otherwise.
+fn joined_run(p: &Elevated, from: usize, bulges: &[f64], tol: f64) -> Option<f64> {
+    let (first, rest) = bulges.split_first()?;
+    let (mut end, mut acc) = (next_of(p, from)?, *first);
+    for &b in rest {
+        let q = next_of(p, end)?;
+        acc = match crate::ops::vertex::arc_join(p.pts[from], p.pts[end], p.pts[q], acc, b, tol) {
+            crate::ops::vertex::ArcJoin::Joined(joined) => joined,
+            _ => return None,
+        };
+        end = q;
+    }
+    (acc.abs() > 1e-12).then_some(acc)
+}
+
+/// [`removed`] with the arcs over each removed run joined into one arc when they are of one circle within `join`
+/// (a tolerance, metres; docs/adr/5000 §8); otherwise the joined edge is straight, as ever.
+pub fn removed_joining(
+    kind: Kind,
+    paths: &[Elevated],
+    at: &[[usize; 2]],
+    join: Option<f64>,
+) -> Result<Vec<Elevated>, Refusal> {
     let mut gone: Vec<Vec<bool>> = paths.iter().map(|p| vec![false; p.pts.len()]).collect();
     for &[path, index] in at {
         vertex(paths, path, index)?;
@@ -412,7 +440,21 @@ pub fn removed(
             kept.pts.push(p.pts[i]);
             kept.zs.push(zs[i]);
             let far_stays = next_of(p, i).is_some_and(|j| !off[j]);
-            kept_bulges.push(if far_stays { bulges[i] } else { 0.0 });
+            let joined = || {
+                // The run of edges from i over the removed vertices to the next kept one.
+                let tol = join?;
+                let mut run = vec![bulges[i]];
+                let mut j = next_of(p, i)?;
+                while off[j] {
+                    run.push(bulges[j]);
+                    j = next_of(p, j)?;
+                    if j == i {
+                        return None;
+                    }
+                }
+                joined_run(p, i, &run, tol)
+            };
+            kept_bulges.push(if far_stays { bulges[i] } else { joined().unwrap_or(0.0) });
         }
         kept.bulges = tidy(kept_bulges, p.closed);
         out[k] = kept;
@@ -463,3 +505,31 @@ pub(crate) static OPS: &[Op] = &[
         }
     ),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// docs/adr/5000 §8: the arcs over a removed run of one circle become one arc; without a tolerance, straight.
+    #[test]
+    fn a_removed_run_of_arcs_of_one_circle_is_one_arc() {
+        // Radius 25 about (20, 0), from 0° to 180° in three arcs of 60°: bulge tan 15° each.
+        let at = |deg: f64| {
+            let a = deg.to_radians();
+            Vec2::new(20.0 + 25.0 * a.cos(), 25.0 * a.sin())
+        };
+        let b = (15f64).to_radians().tan();
+        let path = Elevated {
+            pts: vec![at(0.0), at(60.0), at(120.0), at(180.0)],
+            bulges: Some(vec![b, b, b, 0.0]),
+            closed: false,
+            zs: vec![None; 4],
+        };
+        let out = removed_joining(Kind::Polyline, &[path.clone()], &[[0, 1], [0, 2]], Some(1e-6)).expect("removed");
+        assert_eq!(out[0].pts.len(), 2);
+        let joined = out[0].bulges.as_ref().expect("an arc")[0];
+        assert!((joined - 1.0).abs() < 1e-12, "{joined}");
+        let straight = removed(Kind::Polyline, &[path], &[[0, 1], [0, 2]]).expect("removed");
+        assert!(straight[0].bulges.is_none());
+    }
+}

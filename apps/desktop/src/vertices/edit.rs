@@ -13,7 +13,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::elevation::Elevated;
 use kentos_geometry_core::ops::vertex_table::{
-    self, Edited, Kind, Refusal, Row, inserted, moved, removed, with_radius, with_z,
+    self, Edited, Kind, Refusal, Row, inserted, moved, removed_joining, with_radius, with_z,
 };
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_interaction::neighbours::{lines as neighbour_lines, neighbours_in};
@@ -661,12 +661,14 @@ pub fn write_draft(
 }
 
 /// The vertices `at` removed in one write (docs/adr/0172 §5; the web's
-/// `removeVertices`), as Köşe sil writes (“Köşe sil”).
+/// `removeVertices`), as Köşe sil writes (“Köşe sil”); the arcs over a removed run of one circle within `join`
+/// become one arc (docs/adr/5000 §8).
 pub fn remove(
     doc: &mut Document,
     slot: Slot,
     at: &[At],
     topology: Option<Topology<'_>>,
+    join: Option<f64>,
 ) -> Outcome {
     let Some(e) = doc.get(slot).cloned() else {
         return Outcome::default();
@@ -675,7 +677,7 @@ pub fn remove(
         return Outcome::default();
     };
     let at: Vec<[usize; 2]> = at.iter().map(|a| [a.path, a.index]).collect();
-    let answer = removed(kind, &elevated_paths(&e), &at).map(|paths| Edited { kind, paths });
+    let answer = removed_joining(kind, &elevated_paths(&e), &at, join).map(|paths| Edited { kind, paths });
     // Nothing to keep open: a removal has no cell.
     Outcome {
         stay: false,

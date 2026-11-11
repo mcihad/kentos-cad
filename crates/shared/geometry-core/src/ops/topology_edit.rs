@@ -55,6 +55,15 @@ pub enum Change {
     },
     /// The vertex at `at` removed, its path neighbours `prev` and `next`.
     Remove { at: Vec2, prev: Vec2, next: Vec2 },
+    /// The vertex at `at` removed and its two arcs joined into one, of `bulge` from `prev` to `next` (Köşeyi sil,
+    /// docs/adr/5000): a neighbour whose two edges there are arcs takes the arc; one with a straight edge there
+    /// joins them straight, as a removal.
+    Join {
+        at: Vec2,
+        prev: Vec2,
+        next: Vec2,
+        bulge: f64,
+    },
 }
 
 crate::json_tagged!(Change, "kind",
@@ -62,6 +71,7 @@ crate::json_tagged!(Change, "kind",
     Insert => "insert" { a, b, p },
     Bulge => "bulge" { a, b, from, to },
     Remove => "remove" { at, prev, next },
+    Join => "join" { at, prev, next, bulge },
 );
 
 /// The neighbours put right (their indices and shapes), how many would have
@@ -462,7 +472,11 @@ pub fn apply(neighbours: &[Neighbour], changes: &[Change], points: bool) -> Answ
                             }
                         }
                     }
-                    Change::Remove { at, prev, next } => {
+                    Change::Remove { at, prev, next } | Change::Join { at, prev, next, .. } => {
+                        let joined = match *c {
+                            Change::Join { bulge, .. } => bulge,
+                            _ => 0.0,
+                        };
                         for k in 0..len {
                             if !same(path.pts[k], at) {
                                 continue;
@@ -488,7 +502,16 @@ pub fn apply(neighbours: &[Neighbour], changes: &[Change], points: bool) -> Answ
                             } else {
                                 k - 1
                             };
-                            path.bulges[prev_edge] = 0.0;
+                            // Joined arcs (docs/adr/5000): the arc when this neighbour's two edges there are arcs,
+                            // its sign by the way the neighbour runs; straight otherwise.
+                            let arcs = path.bulges[prev_edge].abs() > STRAIGHT && path.bulges[k].abs() > STRAIGHT;
+                            path.bulges[prev_edge] = if joined == 0.0 || !arcs {
+                                0.0
+                            } else if same(before, prev) {
+                                joined
+                            } else {
+                                -joined
+                            };
                             path.pts.remove(k);
                             let gone = if k < path.bulges.len() {
                                 k
@@ -581,18 +604,29 @@ pub fn changes(before: &Shape, after: &Shape) -> Vec<Change> {
             }
         } else if m + 1 == n {
             let j = (0..m).find(|&k| b.pts[k] != a.pts[k]).unwrap_or(m);
+            let removal = |at: Vec2, prev: Vec2, next: Vec2, edge: usize| {
+                // The joined edge an arc: its two arcs became one (docs/adr/5000).
+                let bulge = a.bulges.get(edge).copied().unwrap_or(0.0);
+                if bulge.abs() > STRAIGHT {
+                    Change::Join {
+                        at,
+                        prev,
+                        next,
+                        bulge,
+                    }
+                } else {
+                    Change::Remove { at, prev, next }
+                }
+            };
             if b.closed {
-                others.push(Change::Remove {
-                    at: b.pts[j],
-                    prev: b.pts[(j + n - 1) % n],
-                    next: b.pts[(j + 1) % n],
-                });
+                others.push(removal(
+                    b.pts[j],
+                    b.pts[(j + n - 1) % n],
+                    b.pts[(j + 1) % n],
+                    (j + m - 1) % m,
+                ));
             } else if j > 0 && j + 1 < n {
-                others.push(Change::Remove {
-                    at: b.pts[j],
-                    prev: b.pts[j - 1],
-                    next: b.pts[j + 1],
-                });
+                others.push(removal(b.pts[j], b.pts[j - 1], b.pts[j + 1], j - 1));
             }
         }
     }
@@ -637,7 +671,7 @@ pub fn changed_edges(before: &Shape, after: &Shape) -> Vec<(Span, Span)> {
     out
 }
 
-/// Köşe sil's joined edge (docs/adr/4200; ArcGIS Pro's “stretch topology proportionately”, the relative lengths kept):
+/// Köşe sil's joined edge (docs/adr/4200; the relative lengths kept):
 /// the path `b` lost the one vertex V between P and Q, `a` joins P and Q by a straight edge, and both old edges were
 /// straight. The old edges P–V and V–Q as the parts P–X and X–Q of the joined edge, X at the share of P–V's length in
 /// the two: what lay inside them goes to the same share of the joined edge. None for anything else (an end vertex of an
@@ -716,7 +750,7 @@ fn part_bulge(edge: Span, t1: f64, t2: f64) -> f64 {
     }
 }
 
-/// What the edges an edit changed carry (docs/adr/3400; ArcGIS Pro's “stretch topology proportionately”: the relative
+/// What the edges an edit changed carry (docs/adr/3400: the relative
 /// lengths of the connected edges kept). The neighbours' vertices strictly inside an edge as it was (a third object's
 /// corner on it, a T junction; a neighbour's own vertex along it; a point only with `points`) go to the same fraction
 /// of the edge as it is: moves. Where the edge's bulge changed, a neighbour's edge along it between two such places (or

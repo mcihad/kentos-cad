@@ -1,6 +1,6 @@
 //! `cad.entities.vertex` v1 (docs/adr/0279): Köşeyi sil, Ortasına köşe ekle, Düz kenar yap and Yaya dönüştür on an
 //! object named by its persistent id and a place on it. The geometry is the shared core's (`ops::vertex`'s
-//! `remove_vertex`, `insert_vertex`; the bulges set here as the grip menu always set them); an area's holes and a
+//! `remove_vertex_joining`, `insert_vertex`; the bulges set here as the grip menu always set them); an area's holes and a
 //! multi-part area's other parts stay; with Topolojik düzenleme the neighbours follow (`topology_follow`, as Esnet);
 //! the write is `cad.entities.edit`'s operation of the action, one undo step. The shared cases are
 //! `fixtures/commands/v1/cad.entities.vertex.json` (`scripts/fixtures/vertex_command_cases.py`).
@@ -21,7 +21,7 @@ use kentos_geometry_core::geom::bulge::{
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::offset::path_like;
 use kentos_geometry_core::ops::subref::point;
-use kentos_geometry_core::ops::vertex::{insert_vertex, remove_vertex};
+use kentos_geometry_core::ops::vertex::{ArcJoin, insert_vertex, remove_vertex_joining};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::vec2::Vec2;
 
@@ -279,6 +279,8 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         ),
         _ => None,
     };
+    // Köşeyi sil's two arcs: joined into one, or why not (docs/adr/5000).
+    let mut joined = None;
     let edited = if line {
         let Shape::Line { a, b } = s else {
             return Err(no_place());
@@ -297,7 +299,9 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
                 if index >= n {
                     return Err(no_place());
                 }
-                match remove_vertex(&s, index) {
+                let (done, how) = remove_vertex_joining(&s, index, input.join_arcs);
+                joined = Some(how);
+                match done {
                     Geometry::Ok(e) => e.shape,
                     Geometry::Error(why) => {
                         let code = if closed {
@@ -428,6 +432,15 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         geometry,
     }];
     let mut warnings = Vec::new();
+    if let (Some(tol), Some(how)) = (input.join_arcs, joined)
+        && let Some(why) = not_joined(how, tol)
+    {
+        warnings.push(CommandWarning {
+            code: codes::ARCS_NOT_JOINED.into(),
+            message: why,
+            path: Some("joinArcs".into()),
+        });
+    }
     if let Some(n) = follow {
         changes.extend(n.changes);
         if n.locked > 0 {
@@ -472,6 +485,30 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
     })
 }
 
+/// Why Köşeyi sil's two arcs did not become one (docs/adr/5000); none when they did or a side is straight.
+fn not_joined(how: ArcJoin, tol: f64) -> Option<String> {
+    // The message's numbers, the drawing's length to 0.1 mm; the decision is the core's, unrounded.
+    let n = |v: f64| {
+        let t = format!("{v:.4}");
+        t.trim_end_matches('0').trim_end_matches('.').to_string()
+    };
+    match how {
+        ArcJoin::Straight | ArcJoin::Joined(_) => None,
+        ArcJoin::Apart { centres, radii } => Some(format!(
+            "İki yay aynı dairenin değil: merkezler {} ayrık, yarıçaplar {} farklı; tolerans {}. Birleşen kenar düz oldu.",
+            n(centres),
+            n(radii),
+            n(tol)
+        )),
+        ArcJoin::Opposite => Some(
+            "İki yay ters yönlere dönüyor; tek yay olamaz. Birleşen kenar düz oldu.".into(),
+        ),
+        ArcJoin::Whole => Some(
+            "İki yay birlikte tam daire ya da fazlası ediyor; tek yay olamaz. Birleşen kenar düz oldu.".into(),
+        ),
+    }
+}
+
 /// docs/adr/0288's options, before the object is looked up: Yaya dönüştür's point or radius only with it and not
 /// together, finite, a radius not zero; Kenar genişliği's widths only with it, given, zero or more and finite.
 fn options(input: &EntitiesVertex) -> Result<(), Stop> {
@@ -487,6 +524,21 @@ fn options(input: &EntitiesVertex) -> Result<(), Stop> {
         }
         if input.radius.is_some() {
             return arc("Yarıçap yalnız Yaya dönüştür'de (arc) verilir.", "radius");
+        }
+    }
+    // Köşeyi sil's arc tolerance (docs/adr/5000).
+    if let Some(t) = input.join_arcs {
+        if input.action != VertexAction::Remove {
+            return arc(
+                "Yayları birleştirme toleransı (joinArcs) yalnız Köşeyi sil'de (remove) verilir.",
+                "joinArcs",
+            );
+        }
+        if !(t.is_finite() && t >= 0.0) {
+            return arc(
+                "Yayları birleştirme toleransı sıfır ya da büyük bir uzunluk olmalı.",
+                "joinArcs",
+            );
         }
     }
     if input.through.is_some() && input.radius.is_some() {
