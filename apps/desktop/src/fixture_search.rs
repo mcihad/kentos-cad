@@ -1,10 +1,10 @@
-//! Donatı araması (docs/adr/8024; ADV-12): KentOS's library's furniture and fixtures (Islak hacim, Mobilya, Mutfak)
-//! and its elevator (Asansör, docs/adr/8045 §5) found in Komut ara by their names, tags and categories, and by the
-//! words people say for them (karyola, tuvalet, eviye, duşakabin …; the Bloklar panel's search knows the words too).
-//! Enter on one takes that one block in, unless the drawing has it, and starts Blok ekle with it: in KentOS Mimari
-//! Duvara hizala is on (docs/adr/0702), so a click by a wall stands its back on the wall's face. Before, Komut ara
-//! found only the Kitaplık command, which took all of the library's blocks in and left the user to find the one in the
-//! Bloklar panel.
+//! Donatı araması (docs/adr/8024; ADV-12): KentOS's library's furniture and fixtures (Islak hacim, Mobilya, Mutfak),
+//! its elevator and its parking place (Asansör, Otopark; docs/adr/8045 §5, §6) found in Komut ara by their names, tags
+//! and categories, and by the words people say for them (karyola, tuvalet, eviye, duşakabin …; the Bloklar panel's
+//! search knows the words too). Enter on one takes that one block in, unless the drawing has it, and starts Blok ekle
+//! with it: in KentOS Mimari Duvara hizala is on (docs/adr/0702), so a click by a wall stands its back on the wall's
+//! face. Before, Komut ara found only the Kitaplık command, which took all of the library's blocks in and left the user
+//! to find the one in the Bloklar panel.
 
 use std::sync::OnceLock;
 
@@ -16,7 +16,7 @@ use crate::app::App;
 use crate::exchange::apply::fold_turkish;
 
 /// The library's categories that furnish a plan (the doors, windows and symbols have their own tools).
-const KINDS: [&str; 4] = ["Asansör", "Islak hacim", "Mobilya", "Mutfak"];
+const KINDS: [&str; 5] = ["Asansör", "Islak hacim", "Mobilya", "Mutfak", "Otopark"];
 
 /// Words people say for what the library names otherwise, folded: each with the library's word it means.
 const WORDS: &[(&str, &str)] = &[
@@ -235,6 +235,9 @@ mod tests {
         // The elevator (docs/adr/8045 §5), by its name and its tag.
         assert_eq!(names("asansör"), ["Asansör"]);
         assert_eq!(names("lift"), ["Asansör"]);
+        // The parking place (§6), by its name and its tags.
+        assert_eq!(names("otopark"), ["Otopark yeri"]);
+        assert_eq!(names("park yeri"), ["Otopark yeri"]);
         // The doors, windows and symbols are not fixtures: their own tools place them.
         assert!(names("kapı").is_empty());
         assert!(names("kuzey").is_empty());

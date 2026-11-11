@@ -4307,6 +4307,321 @@
      }
     ]
    }
+  },
+  {
+   "id": "0192f5b0-0000-7000-8000-000000000028",
+   "name": "Otopark yeri",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "polyline",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.4,
+       "y": 0.0
+      },
+      {
+       "x": 2.4,
+       "y": 4.9
+      },
+      {
+       "x": 0.0,
+       "y": 4.9
+      }
+     ],
+     "closed": true
+    },
+    {
+     "kind": "circle",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 1.7,
+      "y": 3.35
+     },
+     "r": 0.12
+    },
+    {
+     "kind": "polyline",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 1.67,
+       "y": 3.17
+      },
+      {
+       "x": 1.61,
+       "y": 2.7
+      },
+      {
+       "x": 2.06,
+       "y": 2.7
+      },
+      {
+       "x": 2.21,
+       "y": 2.25
+      },
+      {
+       "x": 2.39,
+       "y": 2.25
+      }
+     ]
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 1.66,
+      "y": 3.02
+     },
+     "b": {
+      "x": 1.97,
+      "y": 3.02
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 1.58,
+      "y": 2.4
+     },
+     "r": 0.45,
+     "a0": 0.5235987755982988,
+     "a1": 5.759586531581287
+    },
+    {
+     "kind": "polyline",
+     "id": 6,
+     "layerId": "",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 1.32,
+       "y": 3.3
+      },
+      {
+       "x": 0.92,
+       "y": 2.49
+      },
+      {
+       "x": 1.17,
+       "y": 2.49
+      },
+      {
+       "x": 0.97,
+       "y": 1.8
+      },
+      {
+       "x": 1.5,
+       "y": 2.69
+      },
+      {
+       "x": 1.22,
+       "y": 2.69
+      },
+      {
+       "x": 1.47,
+       "y": 3.3
+      }
+     ],
+     "closed": true
+    }
+   ],
+   "description": "Otopark yeri 2,40 × 4,90 m (Otopark Yönetmeliği 5/1-h-8, manevra alanı hariç); taban noktası koridor tarafındaki sol köşe, yer +y yönünde. Tür: Binek, Engelli (en az 3,50 m), Şarjlı, Kamyonet (3,00 × 6,00).",
+   "units": "m",
+   "card": {
+    "category": "Otopark/Park yeri",
+    "tags": [
+     "otopark",
+     "park yeri",
+     "garaj",
+     "araç",
+     "engelli",
+     "şarj"
+    ],
+    "version": 1
+   },
+   "attributes": [
+    {
+     "tag": "NO",
+     "prompt": "Park yeri numarası",
+     "p": {
+      "x": 1.2,
+      "y": 0.6
+     },
+     "height": 0.3,
+     "rotation": 0.0,
+     "movable": true,
+     "align": "middleCenter"
+    }
+   ],
+   "dynamic": {
+    "parameters": [
+     {
+      "kind": "linear",
+      "name": "En",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 2.4,
+       "y": 0.0
+      },
+      "rule": {
+       "min": 2.0,
+       "max": 4.0,
+       "step": 0.05
+      }
+     },
+     {
+      "kind": "linear",
+      "name": "Boy",
+      "from": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "to": {
+       "x": 0.0,
+       "y": 4.9
+      },
+      "rule": {
+       "min": 4.0,
+       "max": 7.0,
+       "step": 0.05
+      }
+     },
+     {
+      "kind": "lookup",
+      "name": "Ölçü",
+      "rows": [
+       {
+        "label": "Binek 240 × 490",
+        "values": {
+         "En": 2.4,
+         "Boy": 4.9,
+         "Tür": "Binek"
+        }
+       },
+       {
+        "label": "Engelli 350 × 490",
+        "values": {
+         "En": 3.5,
+         "Boy": 4.9,
+         "Tür": "Engelli"
+        }
+       },
+       {
+        "label": "Şarjlı 240 × 490",
+        "values": {
+         "En": 2.4,
+         "Boy": 4.9,
+         "Tür": "Şarjlı"
+        }
+       },
+       {
+        "label": "Kamyonet 300 × 600",
+        "values": {
+         "En": 3.0,
+         "Boy": 6.0,
+         "Tür": "Kamyonet"
+        }
+       }
+      ]
+     },
+     {
+      "kind": "visibility",
+      "name": "Tür",
+      "states": [
+       {
+        "name": "Binek",
+        "hidden": [
+         2,
+         3,
+         4,
+         5,
+         6
+        ]
+       },
+       {
+        "name": "Engelli",
+        "hidden": [
+         6
+        ]
+       },
+       {
+        "name": "Şarjlı",
+        "hidden": [
+         2,
+         3,
+         4,
+         5
+        ]
+       },
+       {
+        "name": "Kamyonet",
+        "hidden": [
+         2,
+         3,
+         4,
+         5,
+         6
+        ]
+       }
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "kind": "stretch",
+      "parameter": "En",
+      "pieces": [
+       1
+      ],
+      "min": {
+       "x": 1.2,
+       "y": -0.5
+      },
+      "max": {
+       "x": 5.0,
+       "y": 8.0
+      }
+     },
+     {
+      "kind": "stretch",
+      "parameter": "Boy",
+      "pieces": [
+       1
+      ],
+      "min": {
+       "x": -0.5,
+       "y": 2.45
+      },
+      "max": {
+       "x": 5.0,
+       "y": 8.0
+      }
+     }
+    ]
+   }
   }
  ]
 }

@@ -206,7 +206,7 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/8035).
-pub const CODES: [&str; 45] = [
+pub const CODES: [&str; 49] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -241,6 +241,10 @@ pub const CODES: [&str; 45] = [
     codes::BYKHY_CORRIDOR_NARROW,
     codes::BYKHY_STAIR_COUNT_BELOW,
     codes::PARKING_SHORT,
+    codes::PARKING_SPACE_SMALL,
+    codes::PARKING_AREA_SHORT,
+    codes::PARKING_DISABLED_SHORT,
+    codes::PARKING_CHARGING_SHORT,
     codes::SHELTER_SHORT,
     codes::SHELTER_EXIT_COUNT,
     codes::SHELTER_HEIGHT_LOW,
@@ -1933,6 +1937,8 @@ pub fn findings(
     crate::roof_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
     // Korkuluklar (docs/adr/8045 §4): PAİY 38; galeri boşlukları, balkonlar ve teraslar.
     crate::railing_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
+    // Otopark yerleri (docs/adr/8045 §6): Otopark Yönetmeliği 4/1-ç, ı, 5/1-h, j.
+    crate::parking_audit::findings(doc, &mut |s, slots, at, fix| push(s, slots, at, fix));
     out
 }
 

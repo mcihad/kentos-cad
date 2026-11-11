@@ -1,0 +1,109 @@
+# M45 4. bölüm (docs/adr/8045 §6), on fixtures/arch/v1/parking-building.kcad (--modul mimari): ten flats and a shop
+# ask seven places, the 10 × 10 m Otopark holds five. Denetim › Mevzuat (the list's end by its scroll bar); Komut ara
+# "otopark yeri" takes the library's place in and starts Blok ekle (MM-TEFR-OTOPARK); six places typed and numbered;
+# Denetle: seven asked, six drawn, and six in a garage for five (4/1-ç); P6 made Engelli in Öznitelikler: its 2.40 m
+# said by 5/1-h-9 and Düzelt gives it 3.50 m.
+fit KentOS Mimari — Otopark binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+click 1162 111
+wait 2500
+click 195 712
+wait 1200
+type mevzuat
+wait 1200
+click 188 779
+wait 1200
+click 65 712
+wait 3000
+drag 1527 800 1527 1010
+wait 1000
+move 1400 120
+wait 800
+shot n1-once
+key alt+q
+wait 600
+type otopark yeri
+wait 1500
+shot n2-arama
+key Return
+wait 2500
+move 1300 300
+wait 800
+shot n3-blok-ekle
+type 0.2,-6.9
+key Return
+wait 1500
+type P1
+wait 400
+key Return
+wait 1500
+type 2.6,-6.9
+key Return
+wait 1500
+type P2
+wait 400
+key Return
+wait 1500
+type 5.0,-6.9
+key Return
+wait 1500
+type P3
+wait 400
+key Return
+wait 1500
+type 7.4,-6.9
+key Return
+wait 1500
+type P4
+wait 400
+key Return
+wait 1500
+type 0.2,-11.9
+key Return
+wait 1500
+type P5
+wait 400
+key Return
+wait 1500
+type 2.6,-11.9
+key Return
+wait 1500
+type P6
+wait 400
+key Return
+wait 1500
+key Escape
+wait 800
+click 65 712
+wait 3000
+drag 1527 800 1527 1010
+wait 1000
+move 1400 120
+wait 800
+shot n4-sonra
+click 115 502
+wait 1500
+wheel 1720 900 -15
+wait 1200
+click 1800 803
+wait 1200
+shot n5-tur
+click 1789 866
+wait 1500
+click 65 712
+wait 3000
+drag 1527 800 1527 1010
+wait 1000
+move 1400 120
+wait 800
+shot n6-bulgu
+click 500 943
+wait 1500
+click 1480 712
+wait 3000
+move 1400 120
+wait 800
+shot n7-duzeltildi

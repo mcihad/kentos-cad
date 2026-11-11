@@ -7,6 +7,10 @@
 //!   (RG 16.6.2022/31868); an office one for each 50 m². A unit of another nature is listed as not read. The sum is
 //!   rounded up (8/4). The drawing's places: the rooms named Otopark or Garaj, their net area over a car's 20 m², its
 //!   manoeuvre in (4/1-ç). With twenty places or more, 5 % of them (one at least) for electric cars (5/1-j).
+//! - **Otopark yerleri (docs/adr/8045 §6):** where the library's Otopark yeri blocks are drawn, they are the drawing's
+//!   places (4/1-ç: "Park yerleri … vaziyet ya da kat planında gösterilir"), each of its Tür: Binek, Engelli, Şarjlı,
+//!   Kamyonet. In a public building (PAİY 4/jjjj: büro, iş hanı, çarşı …; read as units of an office's or a shop's use
+//!   and no dwelling) one in every twenty, one at least, for the disabled (4/1-ı; a fraction rounded up, as 8/4).
 //! - **Sığınak (Sığınak Yönetmeliği 7, 8 as amended RG 7.11.2025/33070):** a dwelling's people by its rooms (its living
 //!   rooms and bedrooms): one room two, two rooms three, three or more four; another unit's its gross area over 20. A
 //!   net square metre for each (8/a). Not asked in a building of only dwellings with fewer than ten units (7/a), in a
@@ -28,6 +32,89 @@ use crate::zoning::{OVER_COLOR, ZoningTable};
 
 /// Otopark Yönetmeliği 4/1-ç: a car's parking unit, its manoeuvre in, m².
 pub const PARKING_UNIT: f64 = 20.0;
+
+/// A parking place's kind (docs/adr/8045 §6): the Otopark yeri block's Tür.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StallKind {
+    Car,
+    Disabled,
+    Charging,
+    Van,
+}
+
+impl StallKind {
+    /// Its least short and long sides, m: Otopark Yönetmeliği 5/1-h-8 (a van 3.00 × 6.00) and 5/1-h-9 (the long side
+    /// 4.90, the short 3.50 for the disabled, else 2.40).
+    pub fn least(self) -> (f64, f64) {
+        match self {
+            StallKind::Car | StallKind::Charging => (2.40, 4.90),
+            StallKind::Disabled => (3.50, 4.90),
+            StallKind::Van => (3.00, 6.00),
+        }
+    }
+
+    /// The kind by its block's Tür state (Turkish case folded); a car's for another.
+    pub fn of(state: &str) -> Self {
+        let w = words(Some(state), None);
+        if has(&w, "ENGELLI") {
+            StallKind::Disabled
+        } else if has(&w, "SARJ") {
+            StallKind::Charging
+        } else if has(&w, "KAMYONET") || has(&w, "PANELVAN") {
+            StallKind::Van
+        } else {
+            StallKind::Car
+        }
+    }
+}
+
+/// A parking place drawn: an Otopark yeri block's insert, its sizes in metres.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Stall {
+    pub slot: Slot,
+    pub level: Option<String>,
+    /// Its middle in the drawing.
+    pub at: kentos_contracts::Vec2,
+    pub kind: StallKind,
+    /// En, along the block's x.
+    pub width: f64,
+    /// Boy, along its y.
+    pub length: f64,
+    /// The insert's factors along x and y.
+    pub scale: (f64, f64),
+    /// Where the insert puts its block's points: the place's outline is its block's (0, 0)–(En, Boy).
+    pub placement: kentos_geometry_core::geom::affine::Affine,
+}
+
+impl Stall {
+    /// Its outline in the drawing were its En and Boy `width` and `length` metres: its block's (0, 0)–(En, Boy) as the
+    /// insert places it, counter-clockwise from its front left corner.
+    pub fn outline(&self, width: f64, length: f64) -> [kentos_geometry_core::Vec2; 4] {
+        use kentos_geometry_core::Vec2 as V;
+        let (w, l) = (
+            width / self.scale.0.max(1e-12),
+            length / self.scale.1.max(1e-12),
+        );
+        let at = |x: f64, y: f64| {
+            kentos_geometry_core::geom::affine::apply(&self.placement, V::new(x, y))
+        };
+        [at(0.0, 0.0), at(w, 0.0), at(w, l), at(0.0, l)]
+    }
+}
+
+/// The Otopark yeri block's parameters (docs/adr/8045 §6).
+pub const STALL_WIDTH: &str = "En";
+pub const STALL_LENGTH: &str = "Boy";
+pub const STALL_KIND: &str = "Tür";
+
+/// Whether a block is a parking place's: its card's category under Otopark.
+pub fn is_stall(def: &kentos_contracts::BlockDefinition) -> bool {
+    def.card
+        .as_ref()
+        .and_then(|c| c.category.as_deref())
+        .and_then(|c| c.split('/').next())
+        .is_some_and(|c| c.trim() == "Otopark")
+}
 
 /// An independent unit's Ek-1 row.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -61,15 +148,26 @@ pub struct ParkingReport {
     /// The rooms named Otopark or Garaj, their net area, m².
     pub area: f64,
     pub places: Vec<Slot>,
-    /// Their places: the area over 20 m².
+    /// The drawing's places: the parking places drawn (docs/adr/8045 §6), else the rooms' area over 20 m².
     pub available: u32,
     /// The places for electric cars 5/1-j asks.
     pub charging: u32,
+    /// The parking places drawn: the Otopark yeri blocks.
+    pub stalls: Vec<Stall>,
+    /// A public building's (PAİY 4/jjjj): its units of an office's or a shop's use, none a dwelling.
+    pub public: bool,
+    /// The places 4/1-ı keeps for the disabled in a public building's drawn places: one in twenty, one at least.
+    pub disabled: u32,
 }
 
 impl ParkingReport {
     pub fn short(&self) -> bool {
         self.required > self.available
+    }
+
+    /// The drawn places of a kind.
+    pub fn drawn(&self, kind: StallKind) -> u32 {
+        self.stalls.iter().filter(|s| s.kind == kind).count() as u32
     }
 }
 
@@ -181,6 +279,87 @@ impl Document {
             .collect()
     }
 
+    /// The parking places drawn (docs/adr/8045 §6): every insert of a block of the Otopark category, its En and Boy (the
+    /// insert's values, else their defaults) times its factors, its Tür its kind.
+    pub fn parking_stalls(&self) -> Vec<Stall> {
+        use kentos_contracts::block_dynamic::ParamValue;
+        self.entities()
+            .filter_map(|e| {
+                let Entity::Insert(i) = e else { return None };
+                let def = self.blocks().iter().find(|b| b.id == i.block)?;
+                if !is_stall(def) {
+                    return None;
+                }
+                let d = def.dynamic.as_ref()?;
+                let value = |name: &str| {
+                    let p = d.parameters.iter().find(|p| p.name() == name)?;
+                    i.parameters
+                        .get(name)
+                        .cloned()
+                        .or_else(|| d.type_values.get(name).cloned())
+                        .or_else(|| p.default_value())
+                };
+                let number = |name: &str| match value(name) {
+                    Some(ParamValue::Number(x)) if x.is_finite() => Some(x),
+                    _ => None,
+                };
+                let (sx, sy) = (i.scale.abs(), i.y_scale.unwrap_or(i.scale).abs());
+                let placement = kentos_geometry_core::block::insert_matrix_xy(
+                    kentos_geometry_core::Vec2::new(def.base.x, def.base.y),
+                    kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
+                    (i.scale, i.y_scale.unwrap_or(i.scale)),
+                    i.rotation,
+                    i.mirror,
+                );
+                let kind = match value(STALL_KIND) {
+                    Some(ParamValue::Text(t)) => StallKind::of(&t),
+                    _ => StallKind::Car,
+                };
+                Some(Stall {
+                    slot: Slot(i.base.id),
+                    level: i.arch.level.clone(),
+                    at: self.fixture_middle(i),
+                    kind,
+                    width: number(STALL_WIDTH)? * sx,
+                    length: number(STALL_LENGTH)? * sy,
+                    scale: (sx, sy),
+                    placement,
+                })
+            })
+            .collect()
+    }
+
+    /// The rooms named Otopark or Garaj (docs/adr/8036): each with its net area and the parking places drawn in it
+    /// (on its storey, their middles inside it).
+    pub fn parking_rooms(&self) -> Vec<(Slot, f64, Vec<Slot>)> {
+        let stalls = self.parking_stalls();
+        self.rooms_named(&["OTOPARK", "GARAJ"])
+            .into_iter()
+            .map(|(slot, area)| {
+                let inside = match self.get(slot) {
+                    Some(Entity::Space(s)) => {
+                        let areas = crate::arch_values::core_areas(&s.space.parts);
+                        stalls
+                            .iter()
+                            .filter(|t| {
+                                t.level == s.space.arch.level
+                                    && areas.iter().any(|a| {
+                                        kentos_geometry_core::geom::region::inside_area(
+                                            a,
+                                            kentos_geometry_core::Vec2::new(t.at.x, t.at.y),
+                                        )
+                                    })
+                            })
+                            .map(|t| t.slot)
+                            .collect()
+                    }
+                    _ => Vec::new(),
+                };
+                (slot, area, inside)
+            })
+            .collect()
+    }
+
     /// Otopark hesabı (docs/adr/8036): the units' need by Ek-1 against the drawing's places.
     pub fn parking_report(&self) -> ParkingReport {
         let program = self.program();
@@ -218,9 +397,25 @@ impl Document {
         let rooms = self.rooms_named(&["OTOPARK", "GARAJ"]);
         // An empty sum is −0 in floating point: written as 0.
         let area: f64 = rooms.iter().map(|(_, a)| a).sum::<f64>() + 0.0;
-        let available = (area / PARKING_UNIT + 1e-9).floor() as u32;
+        let stalls = self.parking_stalls();
+        // The places drawn are the drawing's places (docs/adr/8045 §6); without them the rooms' area tells.
+        let available = if stalls.is_empty() {
+            (area / PARKING_UNIT + 1e-9).floor() as u32
+        } else {
+            stalls.len() as u32
+        };
         let charging = if required >= 20 {
             ((required as f64 * 0.05) - 1e-9).ceil().max(1.0) as u32
+        } else {
+            0
+        };
+        let public = !rows.is_empty()
+            && rows.iter().all(|r| r.use_ != Some(ParkingUse::Dwelling))
+            && rows
+                .iter()
+                .any(|r| matches!(r.use_, Some(ParkingUse::Shop | ParkingUse::Office)));
+        let disabled = if public && !stalls.is_empty() {
+            stalls.len().div_ceil(20).max(1) as u32
         } else {
             0
         };
@@ -232,6 +427,9 @@ impl Document {
             places: rooms.into_iter().map(|(s, _)| s).collect(),
             available,
             charging,
+            stalls,
+            public,
+            disabled,
         }
     }
 
@@ -349,22 +547,56 @@ impl Document {
             r.required.to_string(),
         ]);
         styles.push(style(rows.len() - 1, 0, 4, true, false));
-        rows.push(vec![
-            "Çizimdeki otopark".into(),
-            area(r.area),
-            "20 m²'ye 1 (4/1-ç)".into(),
-            r.available.to_string(),
-        ]);
+        // The places drawn (docs/adr/8045 §6), else the rooms' area over 20 m².
+        if r.stalls.is_empty() {
+            rows.push(vec![
+                "Çizimdeki otopark".into(),
+                area(r.area),
+                "20 m²'ye 1 (4/1-ç)".into(),
+                r.available.to_string(),
+            ]);
+        } else {
+            rows.push(vec![
+                "Çizilen otopark yeri".into(),
+                if r.area > 0.0 {
+                    area(r.area)
+                } else {
+                    String::new()
+                },
+                "Otopark yeri blokları (4/1-ç)".into(),
+                r.available.to_string(),
+            ]);
+        }
         if r.short() {
             styles.push(style(rows.len() - 1, 3, 1, false, true));
         }
-        if r.charging > 0 {
+        if r.disabled > 0 {
+            let drawn = r.drawn(StallKind::Disabled);
             rows.push(vec![
-                "Elektrikli araç şarj yeri".into(),
+                format!("Engelli park yeri (çizimde {drawn})"),
+                String::new(),
+                "20 yerde 1, en az 1 (4/1-ı)".into(),
+                r.disabled.to_string(),
+            ]);
+            if drawn < r.disabled {
+                styles.push(style(rows.len() - 1, 0, 4, false, true));
+            }
+        }
+        if r.charging > 0 {
+            let drawn = r.drawn(StallKind::Charging);
+            rows.push(vec![
+                if r.stalls.is_empty() {
+                    "Elektrikli araç şarj yeri".into()
+                } else {
+                    format!("Elektrikli araç şarj yeri (çizimde {drawn})")
+                },
                 String::new(),
                 "%5, en az 1 (5/1-j)".into(),
                 r.charging.to_string(),
             ]);
+            if !r.stalls.is_empty() && drawn < r.charging {
+                styles.push(style(rows.len() - 1, 0, 4, false, true));
+            }
         }
         ZoningTable {
             rows,

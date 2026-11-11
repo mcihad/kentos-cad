@@ -1,11 +1,12 @@
 # ADR 8045: Merdiven ve özel elemanlar — balansmanlı merdiven, korkuluk, asansör, otopark yeri
 
-- **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölüm yapıldı: balansmanlı
+- **Durum:** bitti (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölüm yapıldı: balansmanlı
   (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c denetimi (§1),
   kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). 2. bölümde bağımsız korkuluk — model, `.kcad` 242, komut,
   plan, Korkuluk aracı (Boşluktan ile galeri boşluğu), Öznitelikler, kesit ve görünüş (§3) ve Denetim › Mevzuat'ta
   PAİY 38 (§4). 3. bölümde asansör: kitaplığın değiştirilebilir Asansör bloğu ve Denetim › Mevzuat'ta PAİY 34/2, 34/5
-  (§5). Sırada otopark yeri.
+  (§5). 4. bölümde otopark yeri: kitaplığın Otopark yeri bloğu, Otopark hesabı'nda sayımı ve Otopark Yönetmeliği 4/1-ç,
+  4/1-ı, 5/1-h, 5/1-j denetimi (§6).
 - **Bağlam belgesi:** ADR 0343 (merdivenin yürüme çizgisi, sahanlıklar, basamak çizgileri), ADR 0704 (yükseklikten
   merdiven), ADR 0709 (döner merdiven), ADR 0724 (kata bağlı merdiven, üst kat planı), ADR 8034 (PAİY 31 denetimi).
 
@@ -44,6 +45,15 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
   binada en az iki asansör. (5) "10 kat ve üzeri binalarda asansörlerden en az bir tanesi yük, eşya ve sedye taşıma
   amacına uygun olarak dar kenarı 1.20 metre ve alanı 2.52 m2'den, kapı genişliği ise net 1.10 metreden az olmayacak
   şekilde yapılır." TS EN 81-70'in Tip 2 kabini 1,10 × 1,40 m (kapı 0,90 m), PAİY'nin dar kenarından küçüktür.
+- **Otopark Yönetmeliği** (RG 22.2.2018/30340, resmî metin): 4/1-ç "Binek otoları için birim park alanı, manevra
+  alanı dâhil en az 20 m²'dir … Manevra alanı ve şekli dâhil park yerlerinin vaziyet veya kat planında gösterilmesi
+  zorunludur."; 4/1-ı umumi bina, bölge ve genel otoparklarda "giriş-çıkış ve asansörlerine en yakın yerlerinde birden
+  az olmamak şartıyla, her 20 park yerinden birinin" engellilere ayrılması; 5/1-h-8 "manevra alanı hariç, binek
+  otoları için en az 2,40x4,90 metre, kamyonet ve panelvan için 3,00x6,00 metre"; 5/1-h-9 "uzun kenarı en az 4,90
+  metre, kısa kenarı ise engelliler için en az 3,50 metre diğerleri için en az 2,40 metre"; 5/1-j (RG 25.3.2021/31434)
+  zorunlu otoparkı 20 ve üzeri yeni yapılarda "1 adetten az olmamak üzere en az %5'inin" şarj ünitesi dahil elektrikli
+  araçlara uygun düzenlenmesi. PAİY 4/jjjj: umumi bina "… otel, yurt, iş hanı, büro, pasaj, çarşı, alışveriş merkezi
+  gibi ticari yapılar …".
 
 ### Başka programlar (yalnız görünüş ve kurgu için)
 
@@ -65,6 +75,10 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
   on Floor Plan): planda kabin çift çizgi, arkasında karşı ağırlık, önünde teleskopik kapı kanatları ve açılma oku;
   kuyu duvarları ayrı çizilir (`.run/gui-evidence/mimari-m45/referans/archicad-elevator-*.png`). Revit'te de asansör
   bir aile, yani kitaplık nesnesidir.
+- **Otopark yeri:** Archicad'in otopark nesneleri (Parking Place, Parking Stall, Parking Places Polyline) yer ölçüsü,
+  numara ve isteğe bağlı engelli yeri taşır; Revit'te otopark yeri “Parking Space” ailesi, kendi kategorisinde
+  (Parkplatz). Bimpedia'nın plan görüntüsü: dik sıralanan yerler, engelli yeri daha geniş ve tekerlekli sandalye
+  işaretli (`.run/gui-evidence/mimari-m45/otopark/`).
 
 ## Karar
 
@@ -215,6 +229,34 @@ blok; Archicad'de ve Revit'te de kitaplık nesnesi). Kuyu duvarlarla ve “Asans
 - Kalanlar: 34/4'ün iki asansörü (umumi bina, 10 kat, 20 konut), bloğun kesit ve görünüşte kabini, kapı açıklığının
   duvarı kendiliğinden kesmesi.
 
+### 6. Otopark yeri (4. bölüm)
+
+Otopark yeri de kitaplığın değiştirilebilir bloğudur (40.): bir yer, önündeki manevra alanı ayrı (5/1-h-8 “manevra
+alanı hariç”). Taban noktası koridor tarafındaki sol köşe, yer +y yönünde.
+
+- **Ölçü ve tür:** En (2,00–4,00 m) ve Boy (4,00–7,00 m), 5 cm adımla; Tür görünürlük durumu: Binek, Engelli
+  (tekerlekli sandalye işareti), Şarjlı (şimşek), Kamyonet. Ölçü tablosu türü ve en az ölçüsünü birlikte verir (Binek
+  240 × 490, Engelli 350 × 490, Şarjlı 240 × 490, Kamyonet 300 × 600) ve ilk listedir: Blok ekle'nin Varyant'ı (V) onu
+  çevirir. Numara özniteliği NO. İşaretler En ile kaymaz (tutamak yalnız kendi parametresinin nesnelerini taşır):
+  engelli işareti 3,50 m'lik yerin, şimşek 2,40 m'lik yerin ortasındadır.
+- **Katman:** yönetmeliğin kendi sözü “otoparkların tefrişi”: MM-TEFR-OTOPARK. Donatı araması “otopark”, “park yeri”.
+- **Otopark hesabı:** çizilen yerler çizimin yerleridir (4/1-ç gösterilmesini ister); hiç yer çizilmemişse eskisi gibi
+  Otopark ya da Garaj mahallerinin net alanı ÷ 20 m². Çizelgede “Çizilen otopark yeri”, umumi binada “Engelli park yeri
+  (çizimde n)”, 20 ve üstünde “Elektrikli araç şarj yeri (çizimde n)”; eksik satır uyarı renginde. Yer çizilmemiş
+  çizimin çizelgesi ve bulguları değişmedi.
+- **Umumi bina:** programda konut bölümü yok ve büro ya da dükkân bölümü var. Konutlu karma bina umumi sayılmaz:
+  dükkânlı apartmanı umumi saymak yanlış uyarı verirdi; idare başka okursa engelli yeri elle eklenir.
+- **Denetim › Mevzuat (`parking_audit`):** kısa kenar 2,40 m'den (engellide 3,50, kamyonette 3,00), uzun kenar
+  4,90 m'den (kamyonette 6,00) küçükse `parking_space_small` (5/1-h-9, kamyonette h-8), düzeltmesi “Yeri 2,40 × 4,90 m
+  yap” (`cad.blocks.parameters`). Otopark ya da Garaj adlı mahalde, katında ve ortası içinde kalan yer sayısı net alan
+  ÷ 20 m²'yi aşarsa `parking_area_short` (4/1-ç). Umumi binada engelli yeri her 20 yerde 1 ve en az 1 değilse
+  `parking_disabled_short` (4/1-ı; kesir bir üste, 8/4 gibi); düzeltmesi yok, geniş yer sırayı kaydırır. Zorunlu yer 20
+  ve üstündeyse şarjlı yer %5 ve en az 1 değilse `parking_charging_short` (5/1-j), düzeltmesi “Bu yeri şarjlı yap”
+  (bir binek yerinin Tür'ü). `parking_short`'un iletisi yer çizildiyse “çizimde 19 otopark yeri” der.
+- `block_values`: bir düzeltmenin blok parametresi için kuralın verdiği en küçük değer, asansör ve otopark ortak.
+- Kalanlar: bir sıra yeri tek seferde çizen araç, manevra yolu genişliği (5/1-h-7: 6,00/6,50 m, 15 araçtan azda tek
+  yönlü 4,90 m), rampa (5/1-h-5, 6), engelli yerinin girişe ve asansöre yakınlığı.
+
 ## Doğrulama
 
 - Bağımsız başvuru (`scripts/fixtures/arch_cases.py`, kesirlerle tam): 6 balansman durumu (sola dönen 1,00 m L, sağa
@@ -285,3 +327,25 @@ blok; Archicad'de ve Revit'te de kitaplık nesnesi). Kuyu duvarlarla ve “Asans
   donatıya çarpıyor” (mutfak kapısı asansörün köşesini süpürüyor; başsız denetimle aynı). Öznitelikler › Katalog ›
   Tip: TSE Tip 2 110 × 140 → 28 bulgu, 8. ve 9. “Asansör kabininin dar kenarı 1.10 m < 1.20 m — PAİY 34/2”, “…alanı
   1.54 m² < 1.80 m² — PAİY 34/2”; Düzelt “Düzeltildi: Kabini 1,20 × 1,50 m yap”, 26 bulgu, Tip yine Konut 120 × 150.
+- Otopark yeri (§6): kitaplık 39 → 40 blok; dört türün çizimi `.run/gui-evidence/mimari-m45/otopark/kentos-otopark-
+  turleri.png`. `parking_audit` testi: iki 100 m²'lik büro (Ek-1: 4 yer, umumi bina) ve 15 × 10 m otopark (alanla 7);
+  yer çizilmeden bulgu yok. Dört yer (biri 2,30 m): “Otopark yerinin kısa kenarı 2.30 m < 2.40 m — Otopark Yön.
+  5/1-h-9” (düzeltmesi `{"En": 2.4}`) ve “Engelli otopark yeri 0 < 1 (4 yerde her 20'de 1, en az 1; umumi bina)”;
+  Ölçü › Engelli 350 × 490 ile bulgu kalmaz, 3,00'e daraltılan engelli yer söylenir ve düzelir; sekiz yer “Otopark:
+  8 otopark yeri, 150.00 m² ancak 7 yere yeter”; sıranın ortasındaki yer Engelli yapılınca 2,40 m söylenir ama
+  düzeltmesi yok (komşusuna binerdi); çizelgede “Çizilen otopark yeri 8”, “Engelli park yeri (çizimde 2)”. Yirmi
+  150 m²'lik dairede 20 yer: “Elektrikli araç şarj yeri 0 < 1 (20 zorunlu yerin %5'i, en az 1) — Otopark Yön. 5/1-j
+  (25.3.2021)”, “Bu yeri şarjlı yap” ile düşer; bir yer silinince “gereken 20 yer, çizimde 19 otopark yeri”.
+- Gerçek pencere (`fixtures/interaction/real/otopark-yeri.txt`; çizim `fixtures/arch/v1/parking-building.kcad`,
+  `scripts/fixtures/parking_building.py` ile bağımsız yazıcıdan: 10 daire, 1 dükkân, 10 × 10 m otopark): önceki ikilide
+  arama “otopark yeri menülerde yok”, Mevzuat'ın 11.'si “Otopark: gereken 7 yer, çizimde 5 (100.00 m² ÷ 20 m²)”.
+  Yeni ikilide arama “Otopark yeri — Donatı › Otopark › Park yeri” (“otopark” tek başına önce Otopark hesabı'nı
+  verir), Blok ekle katmanı MM-TEFR-OTOPARK, her yer numarasını sorar; altı yer yazılınca “gereken 7 yer, çizimde 6
+  otopark yeri” ve “6 otopark yeri, 100.00 m² ancak 5 yere yeter (araç başına manevra dahil 20 m²) — Otopark Yön.
+  4/1-ç”; P6'nın Tür'ü Engelli: planda işaret, Ölçü “—”, “Engelli otopark yerinin kısa kenarı 2.40 m < 3.50 m”;
+  Düzelt “Yeri 3,50 × 4,90 m yap”, Ölçü Engelli 350 × 490, bulgu yok. M36'nın eski deneme çizimi şema 211 ile
+  kaydedilmiş (Mimari şemaları 217–237'ye taşınmadan önce; bina programı bugün 221'den sonra) ve bugünkü ikili onu
+  açmıyor; bu yüzden çizim depoya bağımsız yazıcıyla yeniden yazıldı (şema 223).
+- Ortak komut durumu `cad.blocks.edit` › “Blokları al: KentOS'un temel kitaplığı adıyla” kitaplığın bütün kimliklerini
+  bekler (`scripts/fixtures/blocks_command_cases.py` kitaplık dosyasından üretir): asansör adımında 38'de kalmıştı, 40
+  kimlikle yeniden üretildi; blok, revizyon ve denetim durumları (349) geçiyor.

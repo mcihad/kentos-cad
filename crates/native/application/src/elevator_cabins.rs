@@ -3,18 +3,16 @@
 //! and depth (Kabin eni, Kabin derinliği) and the door's net clear width (Kapı genişliği). Each is the insert's value,
 //! else its parameter's default, times the insert's factor along it; the block's geometry is in metres (its unit).
 //!
-//! A fix sets a parameter (`cad.blocks.parameters`) to the least value its rule allows that meets the limit.
+//! A fix sets a parameter (`cad.blocks.parameters`) to the least value its rule allows that meets the limit
+//! (`block_values`).
 
-use kentos_commands::block_dynamic::number_problem;
 use kentos_commands::{BlockDefinition, BlockParameter, Entity, InsertEntity, ParamValue};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as V;
 use serde_json::{Map, Value, json};
 
+use crate::block_values::{PARAMETERS, button_metres};
 use crate::regulation_audit::Fix;
-
-/// The command a cabin's fix runs: its parameters set on the insert.
-pub const PARAMETERS: &str = "cad.blocks.parameters";
 
 /// The cabin's inner width, along the definition's x.
 pub const WIDTH: &str = "Kabin eni";
@@ -161,39 +159,13 @@ pub fn cabins(doc: &Document) -> Vec<Cabin> {
         .collect()
 }
 
-/// The value of `name` on `cabin`'s block that makes its side at least `real` metres: the least its rule allows, on
-/// its step from its least; none past its most, or when the block has no such parameter.
+/// The value of `name` on `cabin`'s block that makes its side at least `real` metres (`block_values::least_value`).
 pub fn value_for(doc: &Document, cabin: &Cabin, name: &str, real: f64) -> Option<f64> {
-    let Some(Entity::Insert(i)) = doc.get(cabin.slot) else {
-        return None;
-    };
-    let def = doc.block(i.block)?;
-    let p = def
-        .dynamic
-        .as_ref()?
-        .parameters
-        .iter()
-        .find(|p| p.name() == name)?;
-    let rule = p.rule()?;
     let (_, factor) = cabin.side(name);
     if factor <= 0.0 {
         return None;
     }
-    let want = real / factor;
-    let v = match (rule.min, rule.step) {
-        (min, Some(step)) if step > 0.0 => {
-            let from = min.unwrap_or(0.0);
-            from + ((want - from) / step - 1e-6).ceil().max(0.0) * step
-        }
-        _ => want,
-    };
-    let v = (v * 1e6).round() / 1e6;
-    number_problem(rule, v).is_none().then_some(v)
-}
-
-/// A length as a button says it: 1,20.
-fn tr(v: f64) -> String {
-    format!("{v:.2}").replace('.', ",")
+    crate::block_values::least_value(doc, cabin.slot, name, real / factor)
 }
 
 /// The fix that makes `cabin` at least `narrow` on its narrow side, `area` m² and (given) its door `door` wide: its
@@ -239,12 +211,16 @@ pub fn fix(
     let label = match (cabin_changed, door_real) {
         (true, Some(d)) => format!(
             "Kabini {} × {} m, kapıyı {} m yap",
-            tr(sides.0),
-            tr(sides.1),
-            tr(d)
+            button_metres(sides.0),
+            button_metres(sides.1),
+            button_metres(d)
         ),
-        (true, None) => format!("Kabini {} × {} m yap", tr(sides.0), tr(sides.1)),
-        (false, Some(d)) => format!("Kapıyı {} m yap", tr(d)),
+        (true, None) => format!(
+            "Kabini {} × {} m yap",
+            button_metres(sides.0),
+            button_metres(sides.1)
+        ),
+        (false, Some(d)) => format!("Kapıyı {} m yap", button_metres(d)),
         (false, None) => return None,
     };
     Some(Fix {

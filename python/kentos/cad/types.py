@@ -16155,7 +16155,8 @@ class ArchAuditFinding(_Model):
             `local_snow_guard_missing`, `local_roof_window_large`, `local_roof_window_close` (docs/adr/8044 §9); the railings'
             `paiy_railing_low`, `paiy_railing_gap` and `paiy_railing_missing` for a slab's void's or a balcony's or terrace's
             free sides (docs/adr/8045 §4); an elevator block's cabin or door `paiy_elevator_small` and ten storeys' missing
-            stretcher elevator `paiy_elevator_stretcher` (docs/adr/8045 §5).
+            stretcher elevator `paiy_elevator_stretcher` (docs/adr/8045 §5); the parking places' `parking_space_small`,
+            `parking_area_short`, `parking_disabled_short`, `parking_charging_short` (docs/adr/8045 §6).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.

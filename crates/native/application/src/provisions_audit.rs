@@ -57,27 +57,48 @@ fn room(doc: &Document, slot: Slot) -> (String, V) {
 pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V)) {
     let parking = doc.parking_report();
     if parking.required > 0 && parking.short() {
-        let at = parking
-            .places
-            .first()
-            .map_or(V::new(0.0, 0.0), |s| room(doc, *s).1);
+        // The places drawn are the drawing's (docs/adr/8045 §6); without them the rooms' area over 20 m².
+        let drawn = !parking.stalls.is_empty();
+        let at = match (parking.places.first(), parking.stalls.first()) {
+            (Some(s), _) => room(doc, *s).1,
+            (None, Some(t)) => V::new(t.at.x, t.at.y),
+            (None, None) => V::new(0.0, 0.0),
+        };
         push(
             Said {
                 code: codes::PARKING_SHORT,
-                message: format!(
-                    "Otopark: gereken {} yer, çizimde {} ({} m² ÷ 20 m²) — {}",
-                    parking.required,
-                    parking.available,
-                    m2(parking.area),
-                    PARKING_ARTICLE.short()
-                ),
-                repair: "Otopark mahalini büyütün (adı Otopark ya da Garaj) ya da ihtiyacı Otopark Yönetmeliği 4/1-e, f'ye \
-                         göre başka yerde karşılayın; ayrıntı Metraj ▾ › Otopark hesabı'nda."
-                    .into(),
+                message: if drawn {
+                    format!(
+                        "Otopark: gereken {} yer, çizimde {} otopark yeri — {}",
+                        parking.required,
+                        parking.available,
+                        PARKING_ARTICLE.short()
+                    )
+                } else {
+                    format!(
+                        "Otopark: gereken {} yer, çizimde {} ({} m² ÷ 20 m²) — {}",
+                        parking.required,
+                        parking.available,
+                        m2(parking.area),
+                        PARKING_ARTICLE.short()
+                    )
+                },
+                repair: if drawn {
+                    "Otopark yeri ekleyin ya da ihtiyacı Otopark Yönetmeliği 4/1-e, f'ye göre başka yerde karşılayın; \
+                     ayrıntı Metraj ▾ › Otopark hesabı'nda."
+                } else {
+                    "Otopark mahalini büyütün (adı Otopark ya da Garaj) ya da ihtiyacı Otopark Yönetmeliği 4/1-e, f'ye \
+                     göre başka yerde karşılayın; ayrıntı Metraj ▾ › Otopark hesabı'nda."
+                }
+                .into(),
                 rule: PARKING_ARTICLE.named(),
                 binding: None,
             },
-            parking.places.clone(),
+            if parking.places.is_empty() {
+                parking.stalls.iter().map(|t| t.slot).collect()
+            } else {
+                parking.places.clone()
+            },
             at,
         );
     }

@@ -422,6 +422,14 @@
     asansördür (34/1, rıht 0,18), kuyu net ölçüsüyle ve içindeki blok kabini ve kapısıyla ölçülür
     (`paiy_elevator_small`, düzeltme `cad.blocks.parameters` — arch_audit girdisini `values` ile kurar); ±0,00'dan
     10 ve daha fazla katta sedye asansörü yoksa `paiy_elevator_stretcher` (34/5).
+  - **Otopark yeri (M45 4. bölüm, ADR 8045 §6; Otopark Yön. 4/1-ç, ı, 5/1-h, j):** kitaplığın değiştirilebilir bloğu
+    (`Otopark yeri`, kategori Otopark; kitaplık 40): En, Boy, Ölçü tablosu (Binek 240 × 490, Engelli 350 × 490, Şarjlı,
+    Kamyonet 300 × 600; ilk liste, Varyant V), Tür görünürlüğü (engelli işareti, şimşek), NO; katman MM-TEFR-OTOPARK.
+    `Document::parking_stalls` blokları okur; Otopark hesabı çizilen yerleri sayar (yoksa mahal alanı ÷ 20 m²), umumi
+    binada (konutsuz, büro ya da dükkân) engelli satırı, 20 ve üstünde şarj satırı çizimdekiyle. `parking_audit`:
+    `parking_space_small` (5/1-h-8, 9; düzeltme En/Boy), `parking_area_short` (4/1-ç: mahaldeki yer > alan ÷ 20),
+    `parking_disabled_short` (4/1-ı: 20'de 1, en az 1, kesir üste), `parking_charging_short` (5/1-j; düzeltme Tür
+    Şarjlı). Ortak düzeltme değeri `block_values::least_value`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

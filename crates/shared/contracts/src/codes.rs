@@ -2832,7 +2832,11 @@ codes! {
     BYKHY_STAIR_COUNT_BELOW = "bykhy_stair_count_below", Warning, false, "Yapı yüksekliğine göre Binaların Yangından Korunması Hakkında Yönetmelik 48/5'in istediği kaçış merdiveni sayısı yok.";
     /// A chimney not standing the 0.80 m over the ridge BYKHY 58/2 asks (docs/adr/8044 §9).
     BYKHY_CHIMNEY_LOW = "bykhy_chimney_low", Warning, false, "Duman bacası Binaların Yangından Korunması Hakkında Yönetmelik 58/2'nin istediği gibi mahyanın en az 0,80 metre üstüne çıkmıyor.";
-    PARKING_SHORT = "parking_short", Warning, false, "Çizimdeki otopark yeri (Otopark ya da Garaj mahallerinin net alanı ÷ 20 m²) Otopark Yönetmeliği Ek-1'in istediğinden az.";
+    PARKING_SHORT = "parking_short", Warning, false, "Çizimdeki otopark yeri (çizilen otopark yerleri, yoksa Otopark ya da Garaj mahallerinin net alanı ÷ 20 m²) Otopark Yönetmeliği Ek-1'in istediğinden az.";
+    PARKING_SPACE_SMALL = "parking_space_small", Warning, false, "Otopark yeri Otopark Yönetmeliği 5/1-h'nin ölçüsünden küçük (binek 2,40 × 4,90, engelli kısa kenarı 3,50, kamyonet 3,00 × 6,00 metre).";
+    PARKING_AREA_SHORT = "parking_area_short", Warning, false, "Otopark mahalinin net alanı içindeki yerlere yetmiyor: Otopark Yönetmeliği 4/1-ç binek başına manevra dahil 20 m² ister.";
+    PARKING_DISABLED_SHORT = "parking_disabled_short", Warning, false, "Umumi binanın otoparkında Otopark Yönetmeliği 4/1-ı'nın engelli yeri (her 20 yerde 1, en az 1) eksik.";
+    PARKING_CHARGING_SHORT = "parking_charging_short", Warning, false, "Zorunlu otoparkı 20 ve üstü olan yapıda Otopark Yönetmeliği 5/1-j'nin elektrikli araç şarj yeri (en az %5, en az 1) eksik.";
     SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
     SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";
     SHELTER_HEIGHT_LOW = "shelter_height_low", Warning, false, "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az.";

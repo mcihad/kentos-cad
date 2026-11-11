@@ -459,6 +459,41 @@ lift.dynamic(
       "min": P(1.05, -0.1), "max": P(1.2, 0.1)}])
 blocks.append(lift)
 
+# ── A parking place (docs/adr/8045 §6): Otopark Yönetmeliği 5/1-h-8, 9's stall, the manoeuvring room in front of
+# it apart. The insertion point is its front left corner on the aisle, its width along x, its length +y. Ölçü sets
+# a kind and its least size at once, and comes first so that Blok ekle's Varyant (V) steps it; Tür is the kind (a
+# visibility state: Binek, Engelli with the access symbol, Şarjlı with a bolt, Kamyonet). Denetim › Mevzuat and
+# Otopark hesabı read En, Boy and Tür. ──
+stall = Block(40, "Otopark yeri", "Otopark/Park yeri", ["otopark", "park yeri", "garaj", "araç", "engelli", "şarj"],
+              "Otopark yeri 2,40 × 4,90 m (Otopark Yönetmeliği 5/1-h-8, manevra alanı hariç); taban noktası koridor "
+              "tarafındaki sol köşe, yer +y yönünde. Tür: Binek, Engelli (en az 3,50 m), Şarjlı, Kamyonet (3,00 × 6,00).")
+outline = stall.rect(0, 0, 2.4, 4.9)
+# The access symbol stands in the middle of an Engelli place's 3,50 m, the bolt in a Binek place's 2,40 m: they do not
+# move with En (a grip's objects move by their own parameter only).
+wheel_head = stall.circle((1.7, 3.35), 0.12)
+wheel_body = stall.path([(1.67, 3.17), (1.61, 2.7), (2.06, 2.7), (2.21, 2.25), (2.39, 2.25)])
+wheel_arm = stall.line((1.66, 3.02), (1.97, 3.02))
+wheel = stall.arc((1.58, 2.4), 0.45, math.radians(30), math.radians(330))
+access = [wheel_head, wheel_body, wheel_arm, wheel]
+bolt = stall.path([(1.32, 3.3), (0.92, 2.49), (1.17, 2.49), (0.97, 1.8), (1.5, 2.69), (1.22, 2.69), (1.47, 3.3)],
+                  closed=True)
+stall.attribute("NO", (1.2, 0.6), 0.3, prompt="Park yeri numarası", movable=True, align="middleCenter")
+stall.dynamic(
+    [{"kind": "linear", "name": "En", "from": P(0, 0), "to": P(2.4, 0), "rule": {"min": 2.0, "max": 4.0, "step": 0.05}},
+     {"kind": "linear", "name": "Boy", "from": P(0, 0), "to": P(0, 4.9), "rule": {"min": 4.0, "max": 7.0, "step": 0.05}},
+     {"kind": "lookup", "name": "Ölçü", "rows": [
+         {"label": "Binek 240 × 490", "values": {"En": 2.4, "Boy": 4.9, "Tür": "Binek"}},
+         {"label": "Engelli 350 × 490", "values": {"En": 3.5, "Boy": 4.9, "Tür": "Engelli"}},
+         {"label": "Şarjlı 240 × 490", "values": {"En": 2.4, "Boy": 4.9, "Tür": "Şarjlı"}},
+         {"label": "Kamyonet 300 × 600", "values": {"En": 3.0, "Boy": 6.0, "Tür": "Kamyonet"}}]},
+     {"kind": "visibility", "name": "Tür", "states": [{"name": "Binek", "hidden": access + [bolt]},
+                                                     {"name": "Engelli", "hidden": [bolt]},
+                                                     {"name": "Şarjlı", "hidden": access},
+                                                     {"name": "Kamyonet", "hidden": access + [bolt]}]}],
+    [{"kind": "stretch", "parameter": "En", "pieces": [outline], "min": P(1.2, -0.5), "max": P(5.0, 8.0)},
+     {"kind": "stretch", "parameter": "Boy", "pieces": [outline], "min": P(-0.5, 2.45), "max": P(5.0, 8.0)}])
+blocks.append(stall)
+
 LIBRARY = {"format": "kentos.blocks", "version": 1, "blocks": [b.data for b in blocks]}
 TEXT = json.dumps(LIBRARY, ensure_ascii=False, indent=1) + "\n"
 

@@ -5,6 +5,7 @@
 mod beam_quantities;
 mod railing_audit;
 mod elevator_audit;
+mod parking_audit;
 mod roof_sections;
 mod sections;
 mod facades;
