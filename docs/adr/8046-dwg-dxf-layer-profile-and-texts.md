@@ -86,7 +86,10 @@ KentOS'un kendi yazı tipiyle (stil yok, yazı tipi seçilmemiş) yazılan yazı
   ölçü ikizi Arimo'nun **düz** ilerlemeleri (`text::shaping::advance_em`, harf aralığı yok: DXF okuyan programın glifleri
   art arda dizdiği gibi). Payda hep düz Arial: Standard'ın tek dosyası `arial.ttf`'tir; kalın yazı orada düz çizilir,
   kalınlığı değil genişliği korunur. Arimo'da glifi olmayan harfli satır çarpansız kalır.
-- Başlangıç noktası (10) KentOS'un yerleşiminden: hizalı yazının 11'i aynı, sağa ve ortaya yaslı yazı aynı yerde biter.
+- Hizalı yazının 11'i aynı. Başlangıç (10), hizayı bilmeyen programlar için, Arial (Arimo) genişliğinin dosyanın 41'iyle
+  çarpımı kadar geride: uyumlu yazıda bu KentOS'taki satırın genişliğidir, yazı 10'dan çizilip 11'de biter. İlk yazımda
+  10 çarpansız Arial genişliğiyle hesaplanıyordu (başvuru yalnız tutarlılığa bakıyordu); başvuru artık bu genişliği
+  kesin denetliyor (1e-8 m).
 - Uygulanan yerler: TEXT, ATTRIB (öznitelik hep düz çizilir), tablo hücresi (kalınlığı KentOS'un çizdiği gibi: hücre
   stili, yoksa başlık satırı ya da yazı yüzü), eğri boyunca yazının harfleri. Görünmez ATTRIB (tanımı olmayan öznitelik,
   ADR 3980) KentOS'ta çizilmediği için çarpansızdır. Kendi stili ya da yazı tipi olan yazıya dokunulmaz.

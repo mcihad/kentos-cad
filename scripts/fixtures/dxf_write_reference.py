@@ -51,7 +51,9 @@ library and no KentOS code:
   its height under 11 across its baseline (within 1e-8 m) and its share of
   its width back along it, the width every text of the same words, height
   and width factor implies being one (within 1e-8 m) and an average letter
-  of 0.3 to 0.9 of its height; its width factor is 41 (none for 1); a
+  of 0.3 to 0.9 of its height; that width is its line's in Arial (Arimo's
+  advances) at its height times its 41 (within 1e-8 m): a program that does
+  not justify draws it from 10 and ends at 11; its width factor is 41 (none for 1); a
   masked TEXT has KentOS's "mask" item, no other has;
 - a TEXT, an ATTRIB, a table's cell and a curved text's letter in KentOS's
   own face (Standard, which other programs draw as Arial) have their 41
@@ -1055,6 +1057,13 @@ def check_place(o: list[tuple[int, str]], p: tuple[float, float], exact: bool, t
         ensure(abs(run) <= 1e-8, f"{where}: starts on 11's side")
     else:
         widths.setdefault((shown, height, wf or 1.0), []).append((run / COLUMNS[column], where))
+        # Its width as a program that does not justify draws it from 10: Arial's (Arimo's advances) at its height,
+        # widened by the file's 41 — a fitted text's is KentOS's line (docs/adr/8046 §2).
+        import text_along_cases as along
+
+        arial = sum(along.advance("arimo", c, False) for c in shown) / 1000.0 * height * (wf or 1.0)
+        ensure(abs(run / COLUMNS[column] - arial) <= 1e-8 * max(1.0, arial),
+               f"{where}: starts its Arial width {arial} back, not {run / COLUMNS[column]}")
 
 
 def check_widths(widths: dict) -> None:

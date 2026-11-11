@@ -142,19 +142,23 @@ impl Out {
     /// where it stands. Its vertical justification is returned: it follows the
     /// next subclass marker (a TEXT's 73, an attribute's 74; none at 0).
     pub fn text(&mut self, value: &str, shown: &str, t: &Justified) -> i64 {
-        // Where it starts as KentOS lays it out: its own face's width (a fitted face's is the same, docs/adr/8046 §2).
-        let start = justify::start(t.p, shown, t.height, t.rotation, t.align, t.width_factor);
+        // Its 41: a fitted text's (docs/adr/8046 §2) to six places, what a reader divides back by the fit (its KENTOS
+        // data) to its own width factor.
+        let factor = match (t.width_factor, t.fit) {
+            (f, Some(fit)) => Some((f.unwrap_or(1.0) * fit * 1e6).round() / 1e6),
+            (f, None) => f,
+        };
+        // Where it starts, its width measured in Arial (Arimo) as the file's 41 widens it: a program that does not
+        // justify draws it from here to its alignment point, as wide as KentOS's line (docs/adr/8046 §2).
+        let start = justify::start(t.p, shown, t.height, t.rotation, t.align, factor);
         self.xyz(10, start);
         self.real(40, t.height);
         self.str(1, value);
         if t.rotation != 0.0 {
             self.real(50, t.rotation);
         }
-        match (t.width_factor, t.fit) {
-            // Six places: what a reader divides back by the fit (its KENTOS data) to its own width factor.
-            (f, Some(fit)) => self.real(41, (f.unwrap_or(1.0) * fit * 1e6).round() / 1e6),
-            (Some(f), None) => self.real(41, f),
-            (None, None) => {}
+        if let Some(f) = factor {
+            self.real(41, f);
         }
         let Some(a) = t.align else {
             return 0;
