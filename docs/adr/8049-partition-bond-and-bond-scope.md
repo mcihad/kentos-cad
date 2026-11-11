@@ -1,8 +1,9 @@
 # ADR 8049: Ölçülü bölmede kalıcı bağ ve bağların kapsamı
 
-- **Durum:** 1.–3. bölüm yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme
-  mesafesini "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2); kolon yanı bağı (§3). Açık: yay kenar ve
-  döşeme kenarı bağı (§4).
+- **Durum:** 1.–4. bölüm yapıldı (11–12 Kasım 2026); `plan/architecture-advanced.md` ADV-01, M49. Ölçülü bölme
+  mesafesini "Bu ölçüyü koru" ile kalıcı bağ olarak yazar (§1); aks bağı (§2); kolon yanı bağı (§3); yay kenarın
+  Kaydır'ı (§4, yay kenar bağının temeli). Açık: yay kenarın geçici ölçüsü ve yay kenar bağı (§5); döşeme kenarı bağı
+  yazılmadı (§5).
 - **Bağlam belgesi:** ADR 0770 (bağlantılı odalar ve kalıcı mimari bağlar), ADR 0657 ve 0734 (ölçülü bölme, yay kenar),
   ADR 0710 (duvarın mesafesi, Kaydır), ADR 0780 ve 0790 (yoldaki bağlar), ADR 0334–0338 (kısıtlar).
 
@@ -96,9 +97,38 @@ kalıcı ölçü yoktur.
 - **Dosya:** `.kcad` şema 244 (`SCHEMA_WITH_COLUMN_SIDE_BONDS`); örnek `arch-column-bond.json/.kcad`, bozuklar
   `arch-column-bond-in-schema-243`, `-side-4`, `-coincident`; en yeni olmayan şema örneği `schema-version-245.kcad`.
 
-### 4. Bağların kalan kapsamı (açık)
+### 4. Yay kenarın Kaydır'ı
 
-Yay kenar (eş merkezli yayların radyal mesafesi; yayın Kaydır'ı gerekir) ve döşeme kenarıyla duvar yüzü.
+Yay kenar bağı (eş merkezli iki yay arasındaki radyal mesafe, ör. eğri koridorun 1,20 m'si) yayın kendisinin
+kaydırılabilmesini ister; Kaydır yay kenarı reddediyordu ("geçici ölçü ve kaydırma düz kenardadır"), yayın yanındaki
+düz kenarı da.
+
+- **Yay kenar:** çemberi merkezinde büyür ya da küçülür; `by` yayın soluna (sola dönen, bükümü artı yayda merkeze
+  doğru; sağa dönende dışa). Yay kendi çemberinde kalır, bükümü yeni açıklığının (`tan(açıklık/4)`).
+- **Uçlar düz kenardaki gibi, doğrusu boyunca yeni çembere** (eski köşeye yakın kesişim): düz komşunun doğrusu, uçtaki
+  tek duvarın doğrusu (o duvarın ucu izler), aynı doğrultudaki iki duvarın doğrusu, saplandığı duvarın doğrusu;
+  serbest uç ve `none` birleşim yarıçap boyunca.
+- **Yaya saplanan duvarlar** kendi son kenarları boyunca, uçlarının durduğu çemberin aynı kadar büyüyen/küçülen
+  hâline kayar (duvarın içindeki yerleri korunur).
+- **Yayın yanındaki düz kenar** kayınca köşe, kayan doğrunun yayın çemberiyle buluştuğu yere gider; yay çemberini ve
+  uzak ucunu korur, bükümü yeni açıklığının (eskiden reddediliyordu).
+- **Reddedilir, hiçbir şey kımıldamaz:** komşusu da yay olan yay; yaya teğet düz komşu (yuvarlatılmış köşe: merkezin
+  kayması gerekirdi); yayla birleşen köşede başka duvar ucu; merkezine çöken yay; yeni çemberle buluşmayan doğru;
+  ters dönen yay (yeni açıklık eskisinden yarım turdan çok uzak).
+- **Araç:** Duvarı kaydır yay kenarı çemberinden seçer (açıklığı içinde, değilse yakın ucundan); imlecin çembere
+  uzaklığı kaydırmadır; seçilen yay kısa kirişlerle işaretlenir.
+- Mesafe, Boy ve geçici ölçü yay kenarda henüz yoktur; ileti "Duvarın bu kenarı yay; geçici ölçü, Mesafe ve Boy düz
+  kenarda çalışır." oldu (Kaydır'ı artık söylemiyor).
+- Birleşim uyarıları: bağımsız birleşim çözücüsü (`wall_command_cases.join_warnings`) yalnız düz duvar aldığından yay
+  içeren yazımların ortak durumları uyarıyı açık bırakır (`$any`); geometri birebir denetlenir.
+
+### 5. Bağların kalan kapsamı
+
+- **Yay kenar (açık):** yay kenarın geçici ölçüsü ve Mesafe'si (eş merkezli en yakın yaya radyal mesafe) ve bağı
+  (çözücüde çember öğesi; eş merkezli yaylar arasında uzaklık, eş merkezlilik, sabit).
+- **Döşeme kenarı bağı yazılmadı:** "Kaynağa bağlı sınır"lı döşeme (ADR 0771 §4) sınırını duvarların dış ya da iç
+  yüzlerinden payıyla her adımda yeniden buluyor; duvar kayınca döşeme kenarı zaten izliyor. Ayrı bir kenar bağı aynı
+  ilişkiye ikinci bir yetke olurdu (ADR 0338 §2'nin tek yetke kuralı).
 
 ## Doğrulama
 
@@ -126,6 +156,14 @@ Yay kenar (eş merkezli yayların radyal mesafesi; yayın Kaydır'ı gerekir) ve
   kolon ve duvar tek "Taşı" adımı. Etkileşim: seçili kolonun dört yanında kilit; güney kilidi d1 = 1.2 yazar (büyük
   koordinatlarda 1.199999999814 çıkıyordu; kilit değeri nanometreye yuvarlar), duvar 0,5 m dışa → kolon izler; kilit
   yeniden bağı kaldırır. `.kcad` 244 test, bağımsız okuyucu 1800 dosya.
+- Yay Kaydır'ı (§4): `cad.walls.edit.shift` 53 durum (12'si yayın; bağımsız model `wall_shift_cases.py`, yayın
+  merkezi ve yarıçapı bükümden): tek yay 0,3 m dışa → r 2,9 → 3,2, uçlar yarıçap boyunca (−0,207; 219,783), büküm
+  0,4 kalır; düz-yay-düz yolda yay 0,3 m → köşeler y = 230 doğrusu boyunca (2,618 ve 5,382), saplanan duvar 0,3 m
+  izler, büküm 0,3 → 0,217; uçtaki köşe duvarı x = 4 boyunca (249,646); kapalı odanın yay kenarı 0,25 m dışa; doğu
+  kenarı 0,3 m dışa → yay köşesi çember boyunca (5,3; 260,173), büküm 0,25 → 0,267; teğet komşu, yuvarlatılmış köşe ve
+  merkeze çöken yay reddedilir; eski "yay duvar reddedilir" durumu artık yayı küçültür. Rust ve Python'da aynı; 748
+  duvar ve bağ durumu geçer. Etkileşim: yay çemberinden seçilir, −0,3 yazılınca uçlar 3,2/2,9 oranında, büküm aynı,
+  tek geri alma.
 - Gerçek pencere (§3; `fixtures/interaction/real/kolon-bagi.txt`): eski sürümde seçili kolonun ölçülerinde kilit yok;
   yeni sürümde dört yanda kilit, güney kilidi "d1 = 0.8 m" yazıyor (kolon kımıldamıyor), duvarın güney kenarı A aksına
   1,40'tan 0,90'a alınınca kolon da 0,5 m güneye gidiyor, Ctrl+Z ("Geri alındı: Duvarı…") ikisini birlikte geri alıyor.

@@ -55,7 +55,7 @@ fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
 }
 
 /// The sine of [`INLINE_DEGREES`]: two ends this near one line meet inline.
-fn inline() -> f64 {
+pub(crate) fn inline() -> f64 {
     sin(INLINE_DEGREES * PI / 180.0)
 }
 
@@ -77,7 +77,7 @@ pub fn edge_count(w: &WallIn<'_>) -> usize {
     }
 }
 
-fn bulge(w: &WallIn<'_>, i: usize) -> f64 {
+pub(crate) fn bulge(w: &WallIn<'_>, i: usize) -> f64 {
     w.bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0)
 }
 
@@ -88,6 +88,22 @@ pub(crate) fn edge(w: &WallIn<'_>, k: usize) -> Option<(Vec2, Vec2)> {
     }
     let (a, b) = (w.pts[k], w.pts[(k + 1) % w.pts.len()]);
     (dist(a, b) > 0.0).then_some((a, b))
+}
+
+/// Why wall `w` has no edge `k`, in Turkish; none when it has (straight or an arc).
+pub fn edge_problem(walls: &[WallIn<'_>], w: usize, k: usize) -> Option<String> {
+    let Some(me) = walls.get(w) else {
+        return Some("Duvar yok.".to_owned());
+    };
+    let count = edge_count(me);
+    (k >= count).then(|| match count {
+        0 => "Duvarın kenarı yok.".to_owned(),
+        1 => format!("Duvarın {k}. kenarı yok; tek kenarı 0."),
+        _ => format!(
+            "Duvarın {k}. kenarı yok; kenarları 0 ile {} arasında.",
+            count - 1
+        ),
+    })
 }
 
 /// The straight edge `k` of wall `w` and its frame: its start, its direction, its left, its length.
@@ -105,7 +121,7 @@ fn frame(walls: &[WallIn<'_>], w: usize, k: usize) -> Result<(Vec2, Vec2, Vec2, 
         });
     }
     let (a, b) = edge(me, k).ok_or_else(|| {
-        "Duvarın bu kenarı yay; geçici ölçü ve kaydırma düz kenardadır.".to_owned()
+        "Duvarın bu kenarı yay; geçici ölçü, Mesafe ve Boy düz kenarda çalışır.".to_owned()
     })?;
     let l = dist(a, b);
     let u = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
@@ -216,17 +232,20 @@ pub fn gaps(walls: &[WallIn<'_>], w: usize, k: usize) -> Result<[Option<Gap>; 2]
 pub struct Moved {
     pub wall: usize,
     pub pts: Vec<Vec2>,
+    /// Its bulges when an arc of it changed (docs/adr/8049 §4: an arc edge moved, or an arc next to a moved edge);
+    /// none: as they were.
+    pub bulges: Option<Vec<f64>>,
 }
 
 /// An end of another open wall: its wall, its vertex and its last edge's direction (from the end inward).
-struct EndAt {
-    wall: usize,
-    vertex: usize,
-    dir: Vec2,
+pub(crate) struct EndAt {
+    pub(crate) wall: usize,
+    pub(crate) vertex: usize,
+    pub(crate) dir: Vec2,
 }
 
 /// The ends of the open walls other than `w` on its level within the joins' tolerance of `p`, their joins not `none`.
-fn ends_at(walls: &[WallIn<'_>], w: usize, p: Vec2) -> Result<Vec<EndAt>, String> {
+pub(crate) fn ends_at(walls: &[WallIn<'_>], w: usize, p: Vec2) -> Result<Vec<EndAt>, String> {
     let lvl = level(&walls[w]);
     let mut out = Vec::new();
     for (j, other) in walls.iter().enumerate() {
@@ -265,7 +284,7 @@ fn ends_at(walls: &[WallIn<'_>], w: usize, p: Vec2) -> Result<Vec<EndAt>, String
 }
 
 /// The direction of a straight edge of another wall on `w`'s level whose body `p` stands in: the wall an end tees into.
-fn host_at(walls: &[WallIn<'_>], w: usize, p: Vec2) -> Option<Vec2> {
+pub(crate) fn host_at(walls: &[WallIn<'_>], w: usize, p: Vec2) -> Option<Vec2> {
     let lvl = level(&walls[w]);
     for (j, other) in walls.iter().enumerate() {
         if j == w || level(other) != lvl {
@@ -347,6 +366,13 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
     if !by.is_finite() {
         return Err("Kaydırma sonlu bir uzunluk olmalı.".into());
     }
+    // An arc edge: its circle grown or shrunk about its centre (docs/adr/8049 §4).
+    if let Some(me) = walls.get(w)
+        && k < edge_count(me)
+        && bulge(me, k) != 0.0
+    {
+        return super::wall_shift_arcs::shift_arc(walls, w, k, by);
+    }
     let (a, u, n, l) = frame(walls, w, k)?;
     let me = &walls[w];
     let np = me.pts.len();
@@ -354,6 +380,7 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
     let mut moved: Vec<Moved> = vec![Moved {
         wall: w,
         pts: me.pts.to_vec(),
+        bulges: None,
     }];
     let set = |moved: &mut Vec<Moved>, wall: usize, vertex: usize, p: Vec2| match moved
         .iter_mut()
@@ -363,10 +390,16 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
         None => {
             let mut pts = walls[wall].pts.to_vec();
             pts[vertex] = p;
-            moved.push(Moved { wall, pts });
+            moved.push(Moved {
+                wall,
+                pts,
+                bulges: None,
+            });
         }
     };
     let b = me.pts[(k + 1) % np];
+    // The arcs next to the moved edge, with their new bulges.
+    let mut arcs: Vec<(usize, f64)> = Vec::new();
     for (vertex, first) in [(k, true), ((k + 1) % np, false)] {
         let p = me.pts[vertex];
         let path_end = !me.spec.closed && (vertex == 0 || vertex == np - 1);
@@ -383,6 +416,19 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
         } else {
             (k + 1) % count
         };
+        // An arc next to the corner (docs/adr/8049 §4): the corner where the moved line meets its circle.
+        if bulge(me, side) != 0.0 {
+            if !ends_at(walls, w, p)?.is_empty() {
+                return Err(
+                    "Kaydırılan kenarın yayla birleştiği köşeye başka bir duvarın ucu bağlı; kaydırılamıyor."
+                        .into(),
+                );
+            }
+            let (q, b) = super::wall_shift_arcs::arc_corner(me, side, first, p, u, n, by)?;
+            set(&mut moved, w, vertex, q);
+            arcs.push((side, b));
+            continue;
+        }
         let (c, d) = edge(me, side).ok_or_else(|| {
             "Kaydırılan kenarın bitişiğindeki kenar yay; yalnız düz kenarlar arasında kaydırılır.".to_owned()
         })?;
@@ -450,6 +496,13 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
                 set(&mut moved, j, vertex, q);
             }
         }
+    }
+    if !arcs.is_empty() {
+        let mut bulges = super::wall_shift_arcs::bulges_of(me);
+        for (side, b) in arcs {
+            bulges[side] = b;
+        }
+        moved[0].bulges = Some(bulges);
     }
     // Every edge keeps a length and its way.
     for m in &moved {
@@ -550,7 +603,11 @@ fn end_moved(
     let alone = |q: Vec2| {
         let mut pts = walls[w].pts.to_vec();
         pts[vertex] = q;
-        vec![Moved { wall: w, pts }]
+        vec![Moved {
+            wall: w,
+            pts,
+            bulges: None,
+        }]
     };
     if walls[w].spec.joins[end] == JoinMode::None {
         return Ok(alone(q));
@@ -571,6 +628,7 @@ fn end_moved(
             out.push(Moved {
                 wall: one.wall,
                 pts,
+                bulges: None,
             });
             Ok(out)
         }
@@ -627,6 +685,7 @@ pub fn lengthen(
     let mut merged: Vec<Moved> = vec![Moved {
         wall: w,
         pts: me.pts.to_vec(),
+        bulges: None,
     }];
     for (which, vertex, by) in moves {
         if !free[which] {
@@ -644,6 +703,7 @@ pub fn lengthen(
                     merged.push(Moved {
                         wall: m.wall,
                         pts: old.to_vec(),
+                        bulges: None,
                     });
                     merged.len() - 1
                 }
@@ -660,6 +720,10 @@ pub fn lengthen(
                     );
                 }
                 into.pts[i] = *p;
+            }
+            // An arc next to the corner the other wall's edge moved (docs/adr/8049 §4).
+            if let Some(b) = m.bulges {
+                into.bulges = Some(b);
             }
         }
     }

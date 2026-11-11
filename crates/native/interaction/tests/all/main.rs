@@ -171,3 +171,5 @@ mod nurbs_constraints;
 mod insert_constraints;
 
 mod arc_edge_constraints;
+
+mod wall_shift_arc;

@@ -1,5 +1,5 @@
-//! Duvarı kaydır (docs/adr/0790 §1; Kaydır of docs/adr/0710, 0770): a wall's straight edge is clicked, then follows the
-//! pointer square to itself; the preview is `cad.walls.edit`'s plan of `shift { edge, by }` (its effects card: the two
+//! Duvarı kaydır (docs/adr/0790 §1; Kaydır of docs/adr/0710, 0770): a wall's edge is clicked, then follows the pointer
+//! square to itself (an arc edge about its centre, docs/adr/8049 §4: the pointer's distance from its circle); the preview is `cad.walls.edit`'s plan of `shift { edge, by }` (its effects card: the two
 //! sides' clear distances, the rooms' areas, what follows), or the architectural bonds' refusal with the bonds marked
 //! where they stand while the pointer moves (thick lines, ringed jambs, “× d1 — kaldırılınca geçer”). A click there or a
 //! typed distance (to the edge's left, negative to its right) writes it in one undo step; the tool waits for the next
@@ -20,11 +20,12 @@ use crate::{Format, Level, Vec2};
 /// The tool's id: its command is `tool.wallShift`.
 pub const ID: &str = "wallShift";
 pub const LABEL: &str = "Duvarı kaydır";
-/// A click where no wall's straight edge is.
+/// A click where no wall's edge is.
 pub const NO_WALL_HERE: &str =
-    "Tıklanan yerde kaydırılacak duvar kenarı yok; kilitsiz bir duvarın düz kenarına tıklayın.";
+    "Tıklanan yerde kaydırılacak duvar kenarı yok; kilitsiz bir duvarın kenarına tıklayın.";
 
-/// The edge picked: its wall, the edge's index and two points, and its left (where a positive shift goes).
+/// The edge picked: its wall, the edge's index and two points, and its left (where a positive shift goes); an arc's
+/// centre, radius and signed sweep (its left is towards its centre when it turns left, a positive sweep).
 #[derive(Clone, Debug, PartialEq)]
 struct Picked {
     uid: Uuid,
@@ -32,6 +33,7 @@ struct Picked {
     a: Vec2,
     b: Vec2,
     left: Vec2,
+    arc: Option<(Vec2, f64, f64)>,
 }
 
 /// What the shift where the pointer is would do: its distance, the walls as they would be, and the card.
@@ -58,18 +60,29 @@ impl WallShift {
     }
 }
 
-/// The nearest straight edge of the wall at `slot` to `p` (its index and points), within `reach`.
-fn nearest_edge(e: &Entity, p: Vec2, reach: f64) -> Option<(u32, Vec2, Vec2)> {
+/// An edge found: its index, its two points, and an arc's centre, radius and signed sweep.
+type Found = (u32, Vec2, Vec2, Option<(Vec2, f64, f64)>);
+
+/// The nearest edge of the wall at `slot` to `p`, within `reach`: a straight one by its segment, an arc by its circle
+/// within its sweep (else its nearer end).
+fn nearest_edge(e: &Entity, p: Vec2, reach: f64) -> Option<Found> {
     let Entity::Wall(w) = e else { return None };
     let pts = &w.wall.pts;
     let n = pts.len();
-    let count = if w.wall.closed { n } else { n.saturating_sub(1) };
-    let mut best: Option<(f64, u32, Vec2, Vec2)> = None;
+    let count = if w.wall.closed {
+        n
+    } else {
+        n.saturating_sub(1)
+    };
+    let mut best: Option<(f64, Found)> = None;
     for k in 0..count {
-        let bulge = w.wall.bulges.as_ref().and_then(|b| b.get(k)).copied().unwrap_or(0.0);
-        if bulge != 0.0 {
-            continue;
-        }
+        let bulge = w
+            .wall
+            .bulges
+            .as_ref()
+            .and_then(|b| b.get(k))
+            .copied()
+            .unwrap_or(0.0);
         let (a, b) = (pts[k], pts[(k + 1) % n]);
         let (a, b) = (Vec2::new(a.x, a.y), Vec2::new(b.x, b.y));
         let (dx, dy) = (b.x - a.x, b.y - a.y);
@@ -77,15 +90,35 @@ fn nearest_edge(e: &Entity, p: Vec2, reach: f64) -> Option<(u32, Vec2, Vec2)> {
         if l2 <= 0.0 {
             continue;
         }
-        let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0);
-        let d = (p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t));
-        if best.is_none_or(|(bd, ..)| d < bd) {
-            best = Some((d, k as u32, a, b));
+        let (d, arc) = match kentos_geometry_core::geom::bulge::bulge_arc(a, b, bulge) {
+            Some(arc) => {
+                let (ux, uy) = (a.x - arc.c.x, a.y - arc.c.y);
+                let (vx, vy) = (p.x - arc.c.x, p.y - arc.c.y);
+                let mut t = (ux * vy - uy * vx).atan2(ux * vx + uy * vy) * arc.sweep.signum();
+                if t < 0.0 {
+                    t += std::f64::consts::TAU;
+                }
+                let d = if t <= arc.sweep.abs() {
+                    ((vx * vx + vy * vy).sqrt() - arc.r).abs()
+                } else {
+                    (p.x - a.x)
+                        .hypot(p.y - a.y)
+                        .min((p.x - b.x).hypot(p.y - b.y))
+                };
+                (d, Some((arc.c, arc.r, arc.sweep)))
+            }
+            None => {
+                let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0);
+                ((p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t)), None)
+            }
+        };
+        if best.as_ref().is_none_or(|(bd, ..)| d < *bd) {
+            best = Some((d, (k as u32, a, b, arc)));
         }
     }
     // The wall's body is the pick's reach: half its width beyond the path.
     let reach = reach + w.wall.width;
-    best.filter(|(d, ..)| *d <= reach).map(|(_, k, a, b)| (k, a, b))
+    best.filter(|(d, _)| *d <= reach).map(|(_, found)| found)
 }
 
 impl WallShift {
@@ -104,7 +137,7 @@ impl WallShift {
                 nearest_edge(e, p.raw, reach).map(|edge| (s, edge))
             })
             .next();
-        let Some((slot, (edge, a, b))) = found else {
+        let Some((slot, (edge, a, b, arc))) = found else {
             cx.say(Level::Warn, NO_WALL_HERE);
             return;
         };
@@ -116,6 +149,7 @@ impl WallShift {
             a,
             b,
             left: Vec2::new(-(b.y - a.y) / l, (b.x - a.x) / l),
+            arc,
         });
         cx.selection.set_hover(None);
     }
@@ -132,9 +166,13 @@ impl WallShift {
         })
     }
 
-    /// The pointer's distance from the picked edge to its left.
+    /// The pointer's distance from the picked edge to its left: an arc's, from its circle (towards its centre when it
+    /// turns left).
     fn by_at(&self, p: Vec2) -> Option<f64> {
         let k = self.picked.as_ref()?;
+        if let Some((c, r, sweep)) = k.arc {
+            return Some((r - (p.x - c.x).hypot(p.y - c.y)) * sweep.signum());
+        }
         Some((p.x - k.a.x) * k.left.x + (p.y - k.a.y) * k.left.y)
     }
 
@@ -303,7 +341,22 @@ impl Tool for WallShift {
             return out;
         };
         // The edge as it is, then the walls as the shift leaves them, dashed.
-        out.strokes.push(Stroke::solid(vec![k.a, k.b], false).width(2.0).tone(Tone::Snap));
+        // The picked edge marked: an arc in short chords along its circle.
+        let marked = match k.arc {
+            Some((c, r, sweep)) => {
+                let a0 = (k.a.y - c.y).atan2(k.a.x - c.x);
+                let n = ((sweep.abs() / 0.05).ceil() as usize).clamp(4, 256);
+                (0..=n)
+                    .map(|i| {
+                        let t = a0 + sweep * i as f64 / n as f64;
+                        Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())
+                    })
+                    .collect()
+            }
+            None => vec![k.a, k.b],
+        };
+        out.strokes
+            .push(Stroke::solid(marked, false).width(2.0).tone(Tone::Snap));
         let Some(seen) = &self.seen else {
             return out;
         };

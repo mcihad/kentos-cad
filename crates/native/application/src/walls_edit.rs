@@ -842,11 +842,14 @@ fn shifted(
     let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
     let ins = walls.ins();
     let k = edge.unwrap_or(0) as usize;
-    let gaps = wall_shift::gaps(&ins, 0, k)
-        .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+    if let Some(why) = wall_shift::edge_problem(&ins, 0, k) {
+        return Err(fail(codes::INVALID_WALL, why, "operation.edge"));
+    }
     let by = match target {
         None => by,
         Some((side, distance, to)) => {
+            let gaps = wall_shift::gaps(&ins, 0, k)
+                .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
             let left = side == kentos_commands::DimensionSetFace::Left;
             let gap = match to {
                 kentos_commands::DistanceTo::Face => gaps[usize::from(!left)].map(|g| g.distance),
@@ -916,6 +919,10 @@ fn shifted(
         }
         let mut out = w.clone();
         out.wall.pts = m.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
+        // An arc moved or next to the moved edge (docs/adr/8049 §4).
+        if let Some(b) = &m.bulges {
+            out.wall.bulges = Some(b.clone());
+        }
         let path = format!("uids[{at}]");
         walls::valid(&out.wall, &path)?;
         walls::drawable(&out.wall, &path)?;
@@ -984,6 +991,10 @@ fn lengthened(
         }
         let mut out = w.clone();
         out.wall.pts = m.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
+        // An arc moved or next to the moved edge (docs/adr/8049 §4).
+        if let Some(b) = &m.bulges {
+            out.wall.bulges = Some(b.clone());
+        }
         let path = format!("uids[{at}]");
         walls::valid(&out.wall, &path)?;
         walls::drawable(&out.wall, &path)?;

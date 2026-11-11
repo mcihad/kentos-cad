@@ -1125,6 +1125,9 @@ fn shift(view: &mut View<'_>, slot: Slot, edge: usize, by: f64) -> Result<Vec<Sl
             .iter()
             .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
             .collect();
+        if let Some(b) = &m.bulges {
+            w.wall.bulges = Some(b.clone());
+        }
         view.walls.insert(s, w);
         out.push(s);
     }

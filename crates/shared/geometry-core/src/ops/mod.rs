@@ -94,3 +94,6 @@ pub mod wall_edit;
 pub mod wall_shift;
 pub mod warp;
 pub mod widths;
+
+// Kaydır on a wall's arc (docs/adr/8049 §4).
+pub(crate) mod wall_shift_arcs;

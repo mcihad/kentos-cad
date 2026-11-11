@@ -496,6 +496,10 @@
     Serbest kolon bağlı yanına dik kayar; akslara bağlı kolonun yanı paralel aksının kaymasıdır (bağ aksı kaydırır,
     kolon kesişime oturur). `cad.arch.edit` Mesafe `keep` bağı yazar (aksa olanda reddedilir); kolonun geçici ölçüsünde
     kilit. Aks yazımla kayınca bağlar kolonu yeni kesişimde ölçer (`implied_parts`).
+  - **Yay kenarın Kaydır'ı (M49 4. bölüm, ADR 8049 §4):** `cad.walls.edit` shift yay kenarda: çember merkezinde
+    büyür/küçülür (`by` yayın soluna), uçlar komşu doğrular/bağlı duvarlar boyunca yeni çembere, saplanan duvarlar
+    izler; yayın yanındaki düz kenar kayınca köşe yayın çemberinde kayar. Teğet komşu (yuvarlatılmış köşe), yay komşu,
+    çöken yay reddedilir. Döşeme kenarı bağı yazılmadı: Kaynağa bağlı sınır (ADR 0771 §4) zaten izliyor.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

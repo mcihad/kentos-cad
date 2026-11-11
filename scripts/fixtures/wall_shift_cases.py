@@ -21,6 +21,17 @@ The rules, as ADR 0710 gives them:
   length above 1 mm and its way, else refused. The walls that changed: the one moved, then those that followed in
   that order (its start's, its end's, then the drawing's order);
 - Mesafe: Kaydır by the gap on that side less the distance (left), or the distance less the gap (right);
+- an arc edge (ADR 8049 §4): Kaydır grows or shrinks its circle about its centre by `by` (to its left: towards the
+  centre when it turns left, a positive bulge), its bulge the new sweep's (tan of a quarter of it). Its ends go as a
+  straight edge's do, along the line they slide on to where it meets the new circle (the nearer point): a straight
+  neighbour's line (refused when that neighbour is an arc, or tangent to the arc within 1°), the one other wall's end
+  there (that end following; refused when it runs along the arc's way there), two in one line, the wall it tees into;
+  a free end or a `none` join along the radius. Other walls' ends standing in the arc's band (between its faces,
+  within its sweep) slide along their own last edge to their circle grown or shrunk the same. Refused: the circle
+  shrinking to nothing, a line missing the circle, the arc turning round (its new sweep more than half a turn from
+  the old). A straight edge next to an arc: its corner goes where the moved line meets the arc's circle (the nearer
+  point), the arc keeping its far end, its bulge the new sweep's; refused when the arc is tangent to the edge there
+  or another wall's end is at that corner;
 - openings stay where they are: one on a wall whose path changed has its `at` read back from its jambs (the start
   moving along the wall shifts it), and its jambs written from its wall again.
 
@@ -162,6 +173,16 @@ ENTITIES = [
     wall(56, [(4, 200), (7, 200), (7, 203)]),
     wall(57, [(0, 210), (4, 210), (4, 213), (0, 213)], closed=True),
     wall(58, [(4, 213), (4, 216)]),
+    # Arcs (ADR 8049 §4): an arc wall alone; straight, arc, straight in one path with a wall standing in the arc; an
+    # arc wall with a corner at its end; a closed room whose south side is an arc; a rounded corner (a quarter circle
+    # tangent to both its neighbours).
+    wall(59, [(0, 220), (4, 220)], bulges=[0.4, 0.0]),
+    wall(60, [(0, 230), (2, 230), (6, 230), (8, 230)], bulges=[0.0, 0.3, 0.0, 0.0]),
+    wall(61, [(4, 233), (4, 230 + 4 * (1 - 0.09) / 1.2 - 4 * 1.09 / 1.2)]),
+    wall(62, [(0, 250), (4, 250)], bulges=[0.3, 0.0]),
+    wall(63, [(4, 250), (4, 254)]),
+    wall(64, [(0, 260), (5, 260), (5, 264), (0, 264)], bulges=[0.25, 0.0, 0.0, 0.0], closed=True),
+    wall(65, [(0, 270), (3, 270), (4, 271), (4, 274)], bulges=[0.0, math.tan(math.pi / 8), 0.0, 0.0]),
 ]
 SETUP = {
     "format": "kentos.document", "version": 2, "name": "Duvar kaydırma", "settings": SETTINGS, "origin": P(0, 0),
@@ -245,10 +266,72 @@ def frame(w, k):
                       f"Duvarın {k}. kenarı yok; kenarları 0 ile {n - 1} arasında.")
     e = edge(w, k)
     if e is None:
-        raise Refused("operation.edge", "Duvarın bu kenarı yay; geçici ölçü ve kaydırma düz kenardadır.")
+        raise Refused("operation.edge", "Duvarın bu kenarı yay; geçici ölçü, Mesafe ve Boy düz kenarda çalışır.")
     a, b = e
     u = unit(a, b)
     return a, u, left(u), dist(a, b)
+
+
+def arc_of(w, k):
+    """(centre, radius, sweep) of wall w's arc edge k: the circle its bulge (tan of a quarter of the sweep) makes with
+    its chord, the centre on the chord's left for a positive bulge."""
+    pts = w["pts"]
+    a, b = xy(pts[k]), xy(pts[(k + 1) % len(pts)])
+    beta = bulge(w, k)
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    chord = math.hypot(dx, dy)
+    kk = (1 - beta * beta) / (4 * beta)
+    c = ((a[0] + b[0]) / 2 - dy * kk, (a[1] + b[1]) / 2 + dx * kk)
+    return c, chord * (1 + beta * beta) / (4 * abs(beta)), 4 * math.atan(beta)
+
+
+def meet_line(p, d, c, r, near):
+    """Where the line through p along the unit d meets the circle (c, r), the point nearer `near`; none: it misses."""
+    w = sub(p, c)
+    b = dot(d, w)
+    disc = b * b - (dot(w, w) - r * r)
+    if not disc >= 0:
+        return None
+    s = math.sqrt(disc)
+    q1, q2 = along(p, d, -b - s), along(p, d, -b + s)
+    return q1 if dist(q1, near) <= dist(q2, near) else q2
+
+
+def sweep_to(c, p, q, sweep):
+    """The sweep from p to q about c turning as `sweep` turns, in (0, 2π) that way; none when it is gone or more than
+    half a turn from `sweep` (the arc turned round)."""
+    u, v = sub(p, c), sub(q, c)
+    a = math.atan2(cross(u, v), dot(u, v))
+    tau = 2 * math.pi
+    if sweep > 0 and a <= 0:
+        a += tau
+    elif sweep < 0 and a >= 0:
+        a -= tau
+    return a if (a != 0 and abs(a) < tau and abs(a - sweep) < math.pi) else None
+
+
+def tangent(c, p, turn):
+    d = sub(p, c)
+    l = math.hypot(*d)
+    return (-d[1] * turn / l, d[0] * turn / l)
+
+
+def within(c, a, sweep, r, e):
+    """Whether e is within the arc from a turning `sweep` about c, to 1 mm along it."""
+    u, v = sub(a, c), sub(e, c)
+    t = math.atan2(cross(u, v), dot(u, v)) * (1 if sweep > 0 else -1)
+    if t < 0:
+        t += 2 * math.pi
+    slack = JOIN / r
+    return t <= abs(sweep) + slack or t >= 2 * math.pi - slack
+
+
+class Moved(dict):
+    """{wall id: its new points}, in order; `bulges`: {wall id: its new bulges} for the walls an arc of which changed."""
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.bulges = {}
 
 
 class Refused(Exception):
@@ -383,14 +466,17 @@ def end_goes(state, order, first, end, p, u, n, by):
 
 
 def shift(state, first, k, by):
-    """The walls that change, as {id: new points}, in order: the one moved first."""
-    order = walls_of(state, first)
+    """The walls that change, as {id: new points}, in order: the one moved first (an arc's new bulges in `.bulges`)."""
     me = state[first]
+    if k < edges(me) and bulge(me, k) != 0.0:
+        return shift_arc(state, first, k, by)
+    order = walls_of(state, first)
     a, u, n, l = frame(me, k)
     pts = [xy(p) for p in me["pts"]]
     np_ = len(pts)
     count = edges(me)
-    moved = {first: list(pts)}
+    moved = Moved({first: list(pts)})
+    arcs = []
 
     def put(j, vertex, q):
         if j not in moved:
@@ -406,6 +492,14 @@ def shift(state, first, k, by):
                 put(other[0], other[1], q)
             continue
         side = (k + count - 1) % count if is_first else (k + 1) % count
+        if bulge(me, side) != 0.0:
+            # An arc next to the corner: the corner where the moved line meets its circle (ADR 8049 §4).
+            if ends_at(state, order, first, p):
+                raise Refused("operation", "Kaydırılan kenarın yayla birleştiği köşeye başka bir duvarın ucu bağlı; kaydırılamıyor.")
+            q, nb = arc_corner(me, side, is_first, p, u, n, by)
+            put(first, vertex, q)
+            arcs.append((side, nb))
+            continue
         ed = edge(me, side)
         if ed is None:
             raise Refused("operation", "Kaydırılan kenarın bitişiğindeki kenar yay; yalnız düz kenarlar arasında kaydırılır.")
@@ -441,6 +535,149 @@ def shift(state, first, k, by):
             q = slide(e, unit(*inward), n, by)
             if q is not None:
                 put(j, vertex, q)
+    if arcs:
+        bulges = bulges_of(me)
+        for side, nb in arcs:
+            bulges[side] = nb
+        moved.bulges[first] = bulges
+    kept_ways(state, moved, by)
+    return moved
+
+
+def bulges_of(w):
+    """A wall's bulges to change, one per point as a wall keeps them."""
+    out = list(w.get("bulges") or [])
+    return out + [0.0] * (len(w["pts"]) - len(out))
+
+
+MISSED = "Yayın ucu kaydığı doğruyla yeni çemberde buluşmuyor; daha küçük bir değer yazın."
+
+
+def arc_corner(me, side, is_first, p, u, n, by):
+    """A straight edge's corner p next to the arc `side`: where the edge's line moved `by` along n meets the arc's
+    circle (the nearer point), and the arc's new bulge (its far end kept)."""
+    pts = [xy(q) for q in me["pts"]]
+    s0, s1 = pts[side], pts[(side + 1) % len(pts)]
+    c, r, sweep = arc_of(me, side)
+    if abs(cross(tangent(c, p, 1.0 if sweep > 0 else -1.0), u)) <= INLINE:
+        raise Refused("operation", "Kaydırılan kenarın bitişiğindeki yay ona teğet (yuvarlatılmış köşe); böyle bir kenar kaydırılamaz.")
+    q = meet_line(along(p, n, by), u, c, r, p)
+    if q is None:
+        raise Refused("operation", "Kaydırılan kenar bitişiğindeki yayla buluşmuyor; daha küçük bir değer yazın.")
+    s = sweep_to(c, *((s0, q) if is_first else (q, s1)), sweep)
+    if s is None:
+        raise Refused("operation", f"Bu kaydırma bitişiğindeki yayı ters çeviriyor ({abs(by):.3f} m); daha küçük bir değer yazın.")
+    return q, math.tan(s / 4)
+
+
+def shift_arc(state, first, k, by):
+    """Kaydır on an arc edge (ADR 8049 §4): as `shift`, the arc's circle grown or shrunk about its centre."""
+    order = walls_of(state, first)
+    me = state[first]
+    pts = [xy(p) for p in me["pts"]]
+    np_ = len(pts)
+    count = edges(me)
+    a, b = pts[k], pts[(k + 1) % np_]
+    c, r, sweep = arc_of(me, k)
+    turn = 1.0 if sweep > 0 else -1.0
+    r1 = r - turn * by
+    if not r1 > TIE:
+        raise Refused("operation", f"Yay bu kaydırmada merkezine çöküyor ({abs(by):.3f} m); daha küçük bir değer yazın.")
+
+    def on_line(p, d):
+        q = meet_line(p, d, c, r1, p)
+        if q is None:
+            raise Refused("operation", MISSED)
+        return q
+
+    def radial(p):
+        return (c[0] + (p[0] - c[0]) * r1 / r, c[1] + (p[1] - c[1]) * r1 / r)
+    moved = Moved({first: list(pts)})
+
+    def put(j, vertex, q):
+        if j not in moved:
+            moved[j] = [xy(p) for p in state[j]["pts"]]
+        moved[j][vertex] = q
+    for vertex, is_first in ((k, True), ((k + 1) % np_, False)):
+        p = pts[vertex]
+        if not me.get("closed") and vertex in (0, np_ - 1):
+            end = 0 if vertex == 0 else 1
+            other = None
+            if joins(me, end) == "none":
+                q = radial(p)
+            else:
+                meeting = ends_at(state, order, first, p)
+                if not meeting:
+                    h = host_at(state, order, first, p)
+                    q = radial(p) if h is None else on_line(p, h)
+                elif len(meeting) == 1:
+                    j, vtx, d = meeting[0]
+                    if abs(cross(tangent(c, p, turn), d)) <= INLINE:
+                        raise Refused("operation", "Kaydırılan yay ucunda ona teğet bir duvara bağlı; önce ikisini ayırın ya da birlikte taşıyın.")
+                    q = on_line(p, d)
+                    other = (j, vtx)
+                else:
+                    line = None
+                    for i, x in enumerate(meeting):
+                        for y in meeting[i + 1:]:
+                            if abs(cross(x[2], y[2])) <= INLINE and dot(x[2], y[2]) < 0:
+                                line = x[2]
+                    if line is None:
+                        raise Refused("operation", "Kaydırılan yayın ucunda birden çok duvar birleşiyor; uç kaydırılamıyor.")
+                    q = on_line(p, line)
+            put(first, vertex, q)
+            if other is not None:
+                put(other[0], other[1], q)
+            continue
+        side = (k + count - 1) % count if is_first else (k + 1) % count
+        ed = edge(me, side)
+        if ed is None:
+            raise Refused("operation", "Kaydırılan yayın bitişiğindeki kenar da yay; yalnız düz komşuları olan yay kaydırılır.")
+        v = unit(*ed)
+        if abs(cross(tangent(c, p, turn), v)) <= INLINE:
+            raise Refused("operation", "Yayın bitişiğindeki kenar ona teğet (yuvarlatılmış köşe); böyle bir yay kaydırılamaz.")
+        others = ends_at(state, order, first, p)
+        if any(abs(cross(v, d)) > INLINE for (_, _, d) in others):
+            raise Refused("operation", "Kaydırılan yayın köşesine başka bir duvarın ucu bağlı; kaydırılamıyor.")
+        q = on_line(p, v)
+        put(first, vertex, q)
+        for (j, vtx, _) in others:
+            put(j, vtx, q)
+    lf = left_face(me)
+    rf = lf - me["width"]
+    for j in order[1:]:
+        o = state[j]
+        on = len(o["pts"])
+        if level(o) != level(me) or o.get("closed"):
+            continue
+        for end, vertex, seg in ((0, 0, 0), (1, on - 1, on - 2)):
+            e = xy(o["pts"][vertex])
+            if joins(o, end) == "none" or dist(e, a) <= JOIN or dist(e, b) <= JOIN:
+                continue
+            rho = dist(e, c)
+            off = (r - rho) * turn
+            if off < rf - JOIN or off > lf + JOIN or not within(c, a, sweep, r, e):
+                continue
+            if bulge(o, seg) != 0.0:
+                raise Refused("operation", "Kaydırılan yaya saplanan bir duvarın ucu yay; o duvarı düz kenarla bitirin.")
+            inward = (xy(o["pts"][0]), xy(o["pts"][1])) if end == 0 else (xy(o["pts"][on - 1]), xy(o["pts"][on - 2]))
+            to = rho - turn * by
+            q = meet_line(e, unit(*inward), c, to, e) if to > TIE else None
+            if q is None:
+                raise Refused("operation", "Yaya saplanan bir duvar yeni yaya ulaşamıyor; daha küçük bir değer yazın.")
+            put(j, vertex, q)
+    s = sweep_to(c, moved[first][k], moved[first][(k + 1) % np_], sweep)
+    if s is None:
+        raise Refused("operation", f"Bu kaydırma yayı ters çeviriyor ({abs(by):.3f} m); daha küçük bir değer yazın.")
+    bulges = bulges_of(me)
+    bulges[k] = math.tan(s / 4)
+    moved.bulges[first] = bulges
+    kept_ways(state, moved, by)
+    return moved
+
+
+def kept_ways(state, moved, by):
+    """Every edge that changed keeps a length above 1 mm and its chord's way."""
     for j, new in moved.items():
         old = [xy(p) for p in state[j]["pts"]]
         for s in range(edges(state[j])):
@@ -449,7 +686,6 @@ def shift(state, first, k, by):
                 continue
             if dist(new[i], new[i2]) <= JOIN or dot(sub(new[i2], new[i]), sub(old[i2], old[i])) <= 0:
                 raise Refused("operation", f"Bu kaydırma bir duvar kenarını yok ediyor ya da ters çeviriyor ({abs(by):.3f} m); daha küçük bir değer yazın.")
-    return moved
 
 
 # ── Grids and length (ADR 0728) ───────────────────────────────────────────────────────────────────────────────────
@@ -716,10 +952,10 @@ def edit(state, inp):
                 return refusal("nothing_to_set", "Kenar zaten bu boyda; değişecek bir şey yok.", "operation.length"), None
             moved = lengthen(state, first, k, op["length"], op.get("anchor", "start"))
         else:
-            g = gaps(state, first, k)
             if kind == "shift":
                 by = op["by"]
             else:
+                g = gaps(state, first, k)
                 side = 0 if op["side"] == "left" else 1
                 to = op.get("to", "face")
                 if to == "grid":
@@ -741,11 +977,15 @@ def edit(state, inp):
     if blocked is not None:
         what = "Boyun değişmesi" if kind == "length" else "Kaydırma"
         return refusal("layer_locked", f"{what} “Kilitli katman” katmanındaki bağlı bir duvarı da değiştirir ve o katman kilitli. Kilidi Katmanlar panelinden açın.", "operation"), None
-    changed = {j: dict(state[j], pts=[P(*p) for p in pts]) for j, pts in moved.items()}
+    changed = {j: dict(state[j], pts=[P(*p) for p in pts],
+                       **({"bulges": moved.bulges[j]} if j in getattr(moved, "bulges", {}) else {}))
+               for j, pts in moved.items()}
     order = list(moved)
     walls_out = [changed[order[0]]]
     joined = [changed[j] for j in order[1:]]
-    warn = wc.join_warnings(state, [(j, changed[j]) for j in order])
+    # The joins' exact reference takes straight walls only: what an arc's move leaves unjoined is not said here.
+    arcs = any(any(b != 0.0 for b in (w.get("bulges") or [])) for w in changed.values())
+    warn = "$any" if arcs else wc.join_warnings(state, [(j, changed[j]) for j in order])
     output = {"walls": walls_out, "revision": "$current"}
     if joined:
         output["joined"] = joined
@@ -770,7 +1010,13 @@ def effects(state, first, k, changed):
     openings that change (by more than 1e-9 m), in the drawing's order. This drawing has no spaces, dimensions,
     kitchen runs or bonds."""
     after = {**state, **changed}
-    gb, ga = gaps(state, first, k), gaps(after, first, k)
+
+    def gaps_of(s):
+        try:
+            return gaps(s, first, k)
+        except Refused:
+            return [None, None]
+    gb, ga = gaps_of(state), gaps_of(after)
     out = {}
     for side, name in ((0, "left"), (1, "right")):
         if gb[side] is not None and ga[side] is not None:
@@ -868,6 +1114,15 @@ def edit_cases():
         ("eksende bitişik oda: ortak kenar 40 cm doğuya, köşedeki komşu duvarın ucu kendi kenarı boyunca izler",
          shift_in(55, -0.4, edge=1)),
         ("eksende bitişik oda: ortak kenar 40 cm batıya, komşu duvar uzar", shift_in(55, 0.4, edge=1)),
+        ("yay duvar 30 cm dışa: yay kendi merkezinde büyür, iki ucu yarıçap boyunca", shift_in(59, -0.3)),
+        ("yay duvar 30 cm içe", shift_in(59, 0.3)),
+        ("düz-yay-düz duvarın yayı 30 cm: köşeler düz komşular boyunca, yaya saplanan duvar izler",
+         shift_in(60, 0.3, edge=1)),
+        ("düz-yay-düz duvarın yayı 30 cm öbür yana", shift_in(60, -0.3, edge=1)),
+        ("yay duvarın ucundaki köşe duvarı kendi doğrultusunda izler", shift_in(62, -0.3)),
+        ("kapalı duvarın yay kenarı 25 cm dışa: köşeler yan kenarlar boyunca", shift_in(64, -0.25, edge=0)),
+        ("kapalı duvarın doğu kenarı 30 cm dışa: yay köşesi yayın çemberi boyunca, yay uzar", shift_in(64, -0.3, edge=1)),
+        ("kapalı duvarın batı kenarı 20 cm içe: yay köşesi çember boyunca, yay kısalır", shift_in(64, 0.2, edge=3)),
     ]:
         s, _ = step("execute", inp)
         add(name, [s])
@@ -879,7 +1134,10 @@ def edit_cases():
         ("köşesine dik bir duvarın ucu bağlı kenar reddedilir", shift_in(57, 0.3, edge=1), None),
         ("uç uca aynı doğrultudaki duvara bağlı duvar reddedilir", shift_in(12, 0.3), None),
         ("ucunda iki duvar birleşen duvar reddedilir", shift_in(14, 0.3), None),
-        ("yay duvar reddedilir", shift_in(20, 0.3), None),
+        ("yay duvar 30 cm (eskiden reddedilirdi): yay kendi merkezinde küçülür, uçları yarıçap boyunca", shift_in(20, 0.3), None),
+        ("teğet komşulu yay (yuvarlatılmış köşe) kaydırılmaz", shift_in(65, 0.2, edge=1), None),
+        ("yuvarlatılmış köşenin düz komşusu kaydırılmaz", shift_in(65, 0.2, edge=0), None),
+        ("yay merkezine çöküyor: reddedilir", shift_in(59, 5.0), None),
         ("komşu kenarı ters çeviren kaydırma reddedilir", shift_in(2, 6.0), None),
         ("izleyen duvar kilitli katmanda: hiçbiri yazılmaz", shift_in(22, -0.3), None),
         ("iki duvar birden reddedilir", {"uids": [u(2), u(4)], "operation": {"kind": "shift", "by": 0.2}}, None),

@@ -19,7 +19,7 @@ use super::edge_shift::{NO_AREA, NO_EDGE, PARALLEL, PASSED};
 const PARALLEL_SINE: f64 = 1e-12;
 
 #[derive(Clone, Copy, Debug)]
-enum Curve {
+pub(crate) enum Curve {
     Line { p: Vec2, dir: Vec2 },
     Circle { c: Vec2, r: f64 },
 }
@@ -41,7 +41,7 @@ fn dist(p: Vec2, q: Vec2) -> f64 {
 }
 
 /// The curve of the segment `a → b` with `bulge`: its circle, else its line.
-fn curve_of(a: Vec2, b: Vec2, bulge: f64) -> Option<Curve> {
+pub(crate) fn curve_of(a: Vec2, b: Vec2, bulge: f64) -> Option<Curve> {
     if let Some(arc) = bulge_arc(a, b, bulge) {
         return Some(Curve::Circle { c: arc.c, r: arc.r });
     }
@@ -52,7 +52,7 @@ fn curve_of(a: Vec2, b: Vec2, bulge: f64) -> Option<Curve> {
 
 /// Where `u` meets `v`, the point nearer `near`; none when they do not meet (parallel lines, a line missing a
 /// circle, circles apart or one inside the other, a tangent counts as meeting).
-fn meet(u: Curve, v: Curve, near: Vec2) -> Option<Vec2> {
+pub(crate) fn meet(u: Curve, v: Curve, near: Vec2) -> Option<Vec2> {
     let nearer = |p: Vec2, q: Vec2| if dist(p, near) <= dist(q, near) { p } else { q };
     match (u, v) {
         (Curve::Line { p, dir: d }, Curve::Line { p: q, dir: e }) => {
@@ -91,7 +91,7 @@ fn meet(u: Curve, v: Curve, near: Vec2) -> Option<Vec2> {
 
 /// The sweep from `p` to `q` about `c` turning as `sweep` turns (its sign), in (0, 2π) that way; none when it is
 /// gone (the two points one) or jumped more than half a turn from `sweep` (the arc turned round).
-fn sweep_to(c: Vec2, p: Vec2, q: Vec2, sweep: f64) -> Option<f64> {
+pub(crate) fn sweep_to(c: Vec2, p: Vec2, q: Vec2, sweep: f64) -> Option<f64> {
     let (u, v) = (sub(p, c), sub(q, c));
     let mut a = atan2(cross(u, v), dot(u, v));
     let tau = 2.0 * std::f64::consts::PI;
