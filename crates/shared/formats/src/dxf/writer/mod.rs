@@ -853,6 +853,15 @@ fn plain_walls(
         .filter_map(|(id, u)| by_id.get(id).map(|e| (u.to_text(), *e)))
         .collect();
     let state_of = |e: &kentos_contracts::Entity| e.phase(|u| by_uid.get(u).copied());
+    // The spaces a tag names: their tag is their label (docs/adr/0344's 27 October addendum).
+    let tagged: std::collections::HashSet<String> = input
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            kentos_contracts::Entity::Tag(t) => Some(t.tag.of.clone()),
+            _ => None,
+        })
+        .collect();
     let mut stated = 0u32;
     let keep = input.annotations.metadata;
     let mut wholes = entities::Wholes::new();
@@ -901,28 +910,14 @@ fn plain_walls(
                 );
                 put(&mut out, e, pieces);
             }
-            // A space's rings, each a closed polyline (docs/adr/0342).
+            // A space as the drawing shows it (docs/adr/0342, 8046 §1): its rings, a void's cross and its label's text
+            // (number, name, area), a tagged space's label its tag.
             (kentos_contracts::Entity::Space(s), _) => {
-                let mut pieces = Vec::new();
-                for p in &s.space.parts {
-                    for r in std::iter::once(&p.outer).chain(&p.holes) {
-                        let mut base = s.base.clone();
-                        base.attachments.clear();
-                        base.label_pins.clear();
-                        pieces.push(kentos_contracts::Entity::Polyline(kentos_contracts::PathEntity {
-                            space_separator: None,
-                            base,
-                            pts: r.pts.clone(),
-                            bulges: r.bulges.clone(),
-                            holes: None,
-                            zs: None,
-                            ms: None,
-                            parts: None,
-                            closed: true,
-                            widths: None,
-                        }));
-                    }
-                }
+                let label = input
+                    .uids
+                    .get(&s.base.id)
+                    .is_none_or(|u| !tagged.contains(&u.to_text()));
+                let pieces = crate::spaces::space_pieces_in(s, view, label);
                 let state = state_of(e);
                 stated += u32::from(state.is_some());
                 let pieces = renovation_aside(&mut out, state, e, pieces);
@@ -982,7 +977,7 @@ fn plain_walls(
     if spaces > 0 {
         report.note_n(
             "Mahal",
-            "DXF'te KentOS'un mahali yoktur: mahaller sınırlarının kapalı çoklu çizgileri olarak yazıldı; numaraları, adları, ölçme yöntemleri ve kaplamaları taşınmaz, mahal olarak geri okunmaz",
+            "DXF'te KentOS'un mahali yoktur: mahaller sınırlarının kapalı çoklu çizgileri, boşluğun çaprazı ve etiketsiz mahalin yazısı (numara, ad, alan) olarak yazıldı; ölçme yöntemleri ve kaplamaları taşınmaz, mahal olarak geri okunmaz",
             0,
             u32::try_from(spaces).unwrap_or(u32::MAX),
         );

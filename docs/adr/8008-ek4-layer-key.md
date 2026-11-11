@@ -141,4 +141,4 @@ Tarih: 2026-11-07. Durum: kabul (M9, ADV-14; plan S5, G4).
   tablosu kullanılıyor ve oturum ayarı dosyaya yazılmıyor.
 - Var olan nesneleri anahtara göre taşıyan bir komut ("Katmanlara dağıt").
 - Kolon malzemesi (M41), donatı ve blok katmanları (M24).
-- Mahal adı ve alanının DXF'e yazı olarak gitmesi (S5'in ikinci yarısı, ADR 0708 §2).
+- ~~Mahal adı ve alanının DXF'e yazı olarak gitmesi (S5'in ikinci yarısı, ADR 0708 §2).~~ Yapıldı: ADR 8046 §1.

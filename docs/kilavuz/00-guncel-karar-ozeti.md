@@ -430,6 +430,11 @@
     `parking_space_small` (5/1-h-8, 9; düzeltme En/Boy), `parking_area_short` (4/1-ç: mahaldeki yer > alan ÷ 20),
     `parking_disabled_short` (4/1-ı: 20'de 1, en az 1, kesir üste), `parking_charging_short` (5/1-j; düzeltme Tür
     Şarjlı). Ortak düzeltme değeri `block_values::least_value`.
+  - **DXF'te mahal (M46 1. bölüm, ADR 8046 §1):** `formats::spaces::space_pieces_in` ekranın
+    `geom::space::pieces_with_view`'ını yazar: halkalar, boşluğun çaprazı, etiketsiz mahalin yazısı (numara, ad, alan;
+    MTEXT) mahalin katmanında; etiketli mahalin (bir etiketin `of`'u) yazısı etiketidir. KentOS verisi saklansa da
+    saklanmasa da aynı parçalar; DWG aynı DXF'ten. Açık: yazı genişliği — DXF Standard `arial.ttf`, KentOS Barlow
+    (Arial %7,1 geniş).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

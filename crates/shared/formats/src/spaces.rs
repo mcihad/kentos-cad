@@ -129,12 +129,35 @@ fn slab_pieces_of(
         Some(view) => kentos_geometry_core::geom::slab::pieces_in(&parts, &look, view),
         None => kentos_geometry_core::geom::slab::pieces(&parts, &look),
     };
+    plain_of(&s.base, shapes)
+}
+
+/// A space as plain objects at `view` (docs/adr/8046 §1): what the drawing shows of it, its rings, a void's cross and,
+/// when `label`, its label's text (number, name, area; 2.5 mm on paper, centred on the pole), each on the space's
+/// layer with its look. A tagged space's tag is its label: it writes none of its own. What DXF writes.
+pub fn space_pieces_in(
+    s: &kentos_contracts::SpaceEntity,
+    view: kentos_geometry_core::geom::wall::View,
+    label: bool,
+) -> Vec<kentos_contracts::Entity> {
+    let parts: Vec<Area> = s.space.parts.iter().map(area).collect();
+    plain_of(
+        &s.base,
+        kentos_geometry_core::geom::space::pieces_with_view(&parts, &spec(&s.space), view, label),
+    )
+}
+
+/// Pieces as the object's plain objects: on its layer with its look, none of its own ties.
+fn plain_of(
+    of: &kentos_contracts::EntityBase,
+    shapes: Vec<kentos_geometry_core::entity::Shape>,
+) -> Vec<kentos_contracts::Entity> {
     let mut out = Vec::new();
     for piece in shapes {
         let Some(mut plain) = crate::blocks::piece_entity(&piece) else {
             continue;
         };
-        let mut base = s.base.clone();
+        let mut base = of.clone();
         base.id = 0;
         base.attachments.clear();
         base.label_pins.clear();

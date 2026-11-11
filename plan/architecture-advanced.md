@@ -766,7 +766,7 @@ _Durum (7 Kasım 2026):_ Katman anahtarı yapıldı (M9, [ADR 8008](../docs/adr/
   - ofis ve proje profili;
   - var olan nesneleri dağıtan komut;
   - donatı ve blok katmanları (M24'te yapıldı: MM-TEFR-MOBILYA, MM-TEFR-VITRIFIYE, MM-TEFR-MUTFAK);
-  - mahal yazısının DXF'e gitmesi.
+  - ~~mahal yazısının DXF'e gitmesi~~ (M46'da yapıldı, ADR 8046 §1).
 
 **Kullanıcı sonucu:** Çizim bir ofis çizimi gibi katmanlıdır. Paftada kesilen duvar kalın, görünen ince, üstteki kesikli
 çizilir. Dayanak S4, S5.
@@ -1204,7 +1204,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M46 | DWG/DXF katman profili | ADV-25 | Dış programda aynı katmanlar ve yazılar |
+| M46 | DWG/DXF katman profili | ADV-25 | Dış programda aynı katmanlar ve yazılar **(1. bölüm yapıldı, ADR 8046 §1: mahal DXF'te ekrandaki gibi — sınırı, boşluğun çaprazı ve etiketsiz mahalin yazısı (numara, ad, alan) MM-XXXX-MAHAL'de, etiketli mahalin yazısı etiketinden; DWG aynı DXF'ten. Dış okuyucu ezdxf: önce 5 çizgi 0 yazı, sonra 8 yazı ve çapraz. Sırada: yazıların dış programda KentOS'taki genişliği — varsayılan Barlow, DXF Arial der, Arial ortalama %7,1 geniş, çizelge hücreleri taşıyor)** |
 | M47 | IFC4 mimari dışa aktarma | ADV-25 | Bağımsız okuyucuda sayılar eşit |
 | M48 | Eski DWG planından tanıma | ADV-25 | Patlatılmış plandan duvar ve açıklık |
 | M49 | Ölçülü bölmede kalıcı bağ; bağ kapsamı | ADV-01 | Yay kenar, kolon, aks bağı |
