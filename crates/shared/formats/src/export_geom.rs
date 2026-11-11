@@ -551,6 +551,7 @@ pub(crate) fn geometry(
         | Entity::Ramp(_)
         | Entity::Beam(_)
         | Entity::Roof(_)
+        | Entity::Railing(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) => {
             return geometry(&crate::arch_elements::simple(e)?, blocks, rep, w);

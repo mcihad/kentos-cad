@@ -2650,6 +2650,8 @@ codes! {
     INVALID_BEAM = "invalid_beam", Failed, false, "Kirişin alanları bir kiriş tanımlamıyor: en az iki noktalı eksen, sıfırdan büyük genişlik ve yükseklik, sınırları içinde kot farkı.";
     /// A roof's fields that make none (docs/adr/8044 §1).
     INVALID_ROOF = "invalid_roof", Failed, false, "Çatının alanları bir çatı tanımlamıyor: en az üç noktalı saçak çizgisi, her kenara bir eğim ya da kalkan, sınırları içinde kalınlık, saçak ve kot farkı.";
+    /// A railing's fields that make none (docs/adr/8045 §3).
+    INVALID_RAILING = "invalid_railing", Failed, false, "Korkuluğun alanları bir korkuluk tanımlamıyor: açıkken en az iki, kapalıyken üç noktalı çizgi, sıfırdan büyük yükseklik ve küpeşte eni, sınırları içinde çubuk aralığı ve kot farkı.";
     /// An object that is no grid where a grid is asked.
     NOT_A_GRID = "not_a_grid", Failed, false, "Nesne aks değil.";
     /// An object that is no column where a column is asked (docs/adr/0712).
@@ -2659,7 +2661,7 @@ codes! {
     /// Two grids that do not cross.
     GRIDS_PARALLEL = "grids_parallel", Failed, false, "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz.";
     /// An object no architectural element command takes.
-    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil.";
+    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil.";
     /// A field the object's kind does not have.
     FIELD_NOT_FOR_KIND = "field_not_for_kind", Failed, false, "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı).";
     /// Objects of more than one kind where one is asked.

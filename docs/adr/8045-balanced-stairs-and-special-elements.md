@@ -2,7 +2,9 @@
 
 - **Durum:** sürüyor (11 Kasım 2026); `plan/architecture-advanced.md` ADV-21, M45. 1. bölüm yapıldı: balansmanlı
   (dengelenmiş) merdiven — çekirdek geometri, plan, model, Merdiven aracı, Öznitelikler ve PAİY 31/2-c denetimi (§1),
-  kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). Sırada korkuluk, asansör ve otopark yeri.
+  kesit ve görünüşte tek tek dengelenmiş basamaklar (§2). 2. bölümün ilk adımı yapıldı: bağımsız korkuluk — model,
+  `.kcad` 242, komut, plan, Korkuluk aracı (Boşluktan ile galeri boşluğu) ve Öznitelikler (§3). Sırada korkuluğun kesit
+  ve görünüşü, PAİY 38 denetimi, sonra asansör ve otopark yeri.
 - **Bağlam belgesi:** ADR 0343 (merdivenin yürüme çizgisi, sahanlıklar, basamak çizgileri), ADR 0704 (yükseklikten
   merdiven), ADR 0709 (döner merdiven), ADR 0724 (kata bağlı merdiven, üst kat planı), ADR 8034 (PAİY 31 denetimi).
 
@@ -22,6 +24,14 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
   ortasında 0.27 metreden az olamaz."; (ç) basamak uçları damlalıksız.
 - **PAİY Md. 31/1-a:** ortak merdiven kolu ve sahanlık konutta 1.20 m, diğer yapılarda 1.50 m, bağımsız bölüm içinde
   1.00 m (genişlik denetimi ADR 8034'te var; balansmanlı merdiven kolunu aynı ölçüyle okur).
+- **PAİY Md. 38** (resmî metin): (1) "Binalarda; balkon, teras, galeri boşluğu, sahanlıkların boş kenarları 1'den
+  fazla basamağı bulunan açık merdivenlerde ve rampalarda, istinat duvarı üstünde, … bulunduğu katın taban
+  döşemesinden itibaren kotu 0.90 metreden az olan pencere boşluklarında, döşeme kotundan itibaren en az 1.10 metre
+  yüksekliğe kadar teknik gereklere ve standartlara uygun olarak korkuluk yapılması mecburidir." (2) Son kat açık
+  teraslarındaki korkuluğun ve parapetin 1.10 m'si bina yüksekliğinden sayılmaz. (3) Kırılmaz ya da kırıldığında
+  dağılmayan malzeme, insan çarpması dahil tasarım yükleri. (4) "Boşluklarda, yük altındaki deformasyonlar da dâhil,
+  en fazla 0.10 metre çapında geçişe izin verilir." Md. 40/6: kullanılan teras çatıda 1.10 m parapet ya da korkuluk.
+  Sivas İmar Yönetmeliği 38/1 PAİY ile aynıdır (ADR 8034).
 
 ### Başka programlar (yalnız görünüş ve kurgu için)
 
@@ -32,6 +42,13 @@ kenarda köşeye doğru daralır. PAİY bu merdiveni adıyla düzenler; KentOS o
   (`.run/gui-evidence/mimari-m45/referans/archicad-winder-equal-goings.png`).
 - Revit'in winder kolları da "number of straight treads" ile dönen bölgenin uzunluğunu verir; KentOS aynı kurguyu
   tek sayıyla alır: dönüşün iki yanında dengelenen basamak.
+- **Archicad, Railing Tool** (help.graphisoft.com, Archicad 29–30): "Railing input is similar to polyline input";
+  merdivene, döşemeye, duvara, çatıya bağlanabilir; segment altında küpeşte (toprail), en çok iki tutamak, dikmeler,
+  çubuklar (balusters) ve paneller ayrı bileşen; planda küpeştenin sembolü çift çizgi (eksenli ya da eksensiz) ya da
+  yalnız eksen (`.run/gui-evidence/mimari-m45/referans/archicad-railing-*.png`).
+- **Revit, Railings:** yol çizilerek kurulur, yükseklik ve çubuk yerleşimi korkuluk türünde
+  (`revit-railing-sketch-path.png`). KentOS planı balkon korkuluğunun çift çizgisini (ADR 0722 §4) sürdürür; dikme ve
+  çubuk ayrıntısı planda yok, kesit ve görünüşte gelecek.
 
 ## Karar
 
@@ -81,6 +98,49 @@ plandaki dengelenmiş basamakların kesitte karşılığı yoktu.
 - Görünüşler aynı katı modelden çıkarıldığı için dengelenmiş basamaklar görünüşte de görünür; kesit düzleminin
   ardında kalan basamakların rıhtları görünüş çizgisiyle çizilir.
 
+### 3. Bağımsız korkuluk (2. bölüm, ilk adım)
+
+Korkuluk yalnız merdivenin ve rampanın yanında (ADR 0705) ve balkon ile terasın serbest kenarında (döşeme kenarı,
+ADR 0722 §4) vardı. PAİY 38/1'in saydığı galeri boşluğu, sahanlığın boş kenarı, istinat duvarı ya da asma kat kenarı
+için çizilebilen bir korkuluk yoktu.
+
+- **Model (`RailingFields`, `Entity::Railing`, `.kcad` 242):** çizgisi (küpeştenin ortası; açıkken en az 2, kapalıyken
+  3 nokta, art arda aynı nokta ve kapalıda sonda yinelenen ilk nokta yok), `closed`, yükseklik (döşemesinden
+  küpeştenin üstüne; komut verilmezse 1,10 m, PAİY 38/1), küpeşte eni (verilmezse 0,05 m, balkon korkuluğununki),
+  dolgu (`balusters` dikey çubuk — yoksa —, `glass` cam, `solid` dolu), çubuk aralığı (`gap`: çubuklar arası net
+  boşluk; yoksa PAİY 38/4'ün 0,10 m'si, yalnız dikey çubukta okunur), kot farkı (döşemesinin katın döşemesinden farkı).
+  Sınırlar: yükseklik 3 m, küpeşte 0,5 m, aralık 1 m, kot farkı ±10 m. Blok tanımında olmaz (kata oturur). Şema 241
+  türü tanımaz (`unknown_kind`); sunucu `feature` tablosu `railing` türünü alır (0040).
+- **Plan (`geom::railing`):** küpeştenin iki yüzü, orta çizginin iki yanında enin yarısı kadar (iç köşeler gönye),
+  açık korkuluğun uçları kapalı — balkon korkuluğunun iki ince çizgisi; 1/200 sadeleştirilmiş görünüşte yalnız orta
+  çizgi. Seçim ve sınır için açık korkuluk bant, kapalı korkuluk delikli halka.
+- **Komut:** `cad.railings.create` v1 (“Korkuluk”, tek geri alma adımı; ret sırası `no_objects`, `not_finite`,
+  `invalid_railing`, `level_not_found`, katman ve öznitelik retleri). `cad.arch.edit` korkuluğun `height`, `width`,
+  `infill`, `gap` (null: 0,10 m) ve `offset` alanlarını değiştirir. Kat ver, Denetim'in katsız nesnesi, seçim süzgeci
+  (Korkuluk, son sırada; kayıtlı süzgeçler bitlerini korur), CBS türevi (çizgi), DXF, GeoJSON korkuluğu tanır.
+- **Korkuluk aracı (Mimari › Merdiven ▾ › Korkuluk, KO; Revit'in dolaşım paneli gibi merdiven ve rampanın yanında):**
+  Çizgi (S) Çiz — noktalar, Enter yazar, Kapat (K) ya da ilk noktaya tıklamak kapalı yazar; Boşluktan — Etkin kattaki
+  döşemenin boşluğunun içine tek tıklama. Yükseklik (Y), Dolgu (D), Aralık (A, yalnız dikey çubukta), Küpeşte (E),
+  Kot farkı (F). Katmanı dolgusuna göre MM-KORK-CUBUK, MM-KORK-CAM, MM-KORK-DOLU (EK-2 Korkuluk, KORK). 1,10 m'den
+  alçak ya da aralığı 0,10 m'den geniş korkuluk yazılır; önizleme etiketi ve ileti kırmızıyla PAİY 38'i söyler.
+- **Boşluktan'ın kararları:**
+  - Yalnız serbest kenarlar: duvar yüzünün boyunca uzandığı kenara korkuluk konmaz (balkon korkuluğunun
+    `free_runs` kuralı, boşluk kendi döşemesi gibi okunur). İlk denemede boşluğun bütün çevresi kapalı yazılıyordu;
+    görünüş binasının merdiven boşluğunda batı ve doğu kenarlar duvarın yüzündeydi ve korkuluk duvarın içine
+    giriyordu.
+  - Merdivenin çıkışı açık: alt kattaki düz bitişli merdivenin son rıht çizgisi (yürüme çizgisinin son noktasında
+    bandın eni) boşluğun kenarından 2 cm içindeyse o parça kesilir; yoksa korkuluk merdivenin çıkışını kapatırdı.
+  - 0,10 m'den kısa parça yazılmaz: PAİY 38/4'ün 0,10 m'lik cismi o aralıktan geçmez. Görünüş binasında merdiven bandı
+    boşluktan 2,5 cm dar kalıyordu; 2,5 cm'lik bir korkuluk parçası çıkıyordu.
+  - Bütün çevresi serbest boşluk tek kapalı korkuluk; parçalar ayrı korkuluk, hepsi tek geri alma adımı. Yay kenarlı
+    boşluk reddedilir (noktalarla çizilir).
+- **Öznitelikler:** Yükseklik, Dolgu, Çubuk aralığı (dikey çubukta), Küpeşte eni, Kot farkı (düzenlenebilir), Çizgisi
+  (Açık/Kapalı), Uzunluk, Kat, Tadilat durumu ve Denetim: Uyuyor ya da “1,10 m'den alçak” (PAİY 38/1), “Aralık 0,10
+  m'den geniş” (PAİY 38/4).
+- **Sonraya:** kesit ve görünüşte korkuluk (dikme, çubuk, cam), Denetim › Mevzuat'ta PAİY 38 (korkuluksuz galeri
+  boşluğu ve balkon kenarı, alçak korkuluk, geniş aralık; düzeltmeleriyle), metrajda korkuluk boyu, yay kenarlı
+  boşluk, döşemeye bağlı (döşeme değişince izleyen) korkuluk.
+
 ## Doğrulama
 
 - Bağımsız başvuru (`scripts/fixtures/arch_cases.py`, kesirlerle tam): 6 balansman durumu (sola dönen 1,00 m L, sağa
@@ -108,3 +168,16 @@ plandaki dengelenmiş basamakların kesitte karşılığı yoktu.
   yürüme çizgisinin köşesinde (x = 17,00) bitiyor, dönüşün dış 0,60 m'si boş, ikinci kol +1,50'de havada. Yeni ikili:
   gövde merdivenin dış kenarına (17,60) kadar dolu, dengelenmiş basamaklar tek tek kesiliyor, ardındakilerin rıhtları
   görünüyor; ±0,00'dan son basamağın +2,83'üne kesintisiz.
+- Korkuluk (§3): sözleşme testi (uzunluk, aralık, alan retleri, varsayılanların yazılmadığı JSON); çekirdek testi
+  (açık korkuluğun iki yüzü ±0,025 m, 1/200'de tek çizgi, kapalı korkuluğun delikli halkası); KCAD şema 242 örneği
+  (`railing-objects.kcad`: açık dikey çubuklu ve kapalı cam), şema 241'de `unknown_kind`, şema 243'ün reddi; KCAD
+  testleri 250, başvuru `--check` 1792 dosya. Ortak komut durumları: `cad.railings.create` 35 (bağımsız başvuru
+  `scripts/fixtures/arch_command_cases.py`), `cad.arch.edit` 75 → 83 (korkuluğun alanları, null aralık, retler,
+  türünde olmayan alan). Etkileşim: Korkuluk aracı 4 test (Çiz ve kapatma, katmanlar MM-KORK-CUBUK/CAM, Boşluktan
+  serbest çevre, duvarlı kenarlar ve merdiven çıkışı: üç parça tek adım, alçak korkuluğun uyarısı).
+- Gerçek pencere (`fixtures/interaction/real/korkuluk-galeri.txt`): görünüş binasının 1. katında merdiven boşluğu
+  (2,85 × 3,94 m), Boşluktan ile tek tıklama: batı ve doğu kenar duvar yüzünde, korkuluk yok; kuzey kenarı duvardan
+  duvara 2,850 m; güney kenarı batı duvarından merdivenin çıktığı yere (6,20 m'de biter, merdivenin 1,20 m'lik çıkışı
+  açık; üstüne gelince kart “Uzunluk 1.625 m”, “Alan 0.08 m²”), 2,5 cm'lik artık yazılmadı. Öznitelikler: Yükseklik 1.100, Dolgu Dikey çubuk, Çubuk aralığı 0.100,
+  Küpeşte eni 0.050, Çizgisi Açık, Uzunluk 2.850, Denetim Uyuyor. Eski ikilide menü araması “Korkuluk menülerde yok”
+  diyor.

@@ -92,6 +92,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Ramp(_) => "Rampa",
         Entity::Beam(_) => "Kiriş",
         Entity::Roof(_) => "Çatı",
+        Entity::Railing(_) => "Korkuluk",
         Entity::Tag(_) => "Etiket",
         Entity::ViewMark(_) => "Görünüm işareti",
     }
@@ -214,7 +215,13 @@ fn finite(e: &Entity) -> bool {
         Entity::Ramp(r) => all_ok(&r.ramp.pts) && nums_ok(&[r.ramp.width, r.ramp.rise]),
         Entity::Beam(b) => all_ok(&b.beam.pts) && nums_ok(&[b.beam.width, b.beam.height, b.beam.offset]),
         Entity::Roof(r) => {
-            all_ok(&r.roof.pts) && r.roof.slopes.iter().flatten().all(|s| s.is_finite()) && r.roof.offset.is_finite()
+            all_ok(&r.roof.pts)
+                && r.roof.slopes.iter().flatten().all(|s| s.is_finite())
+                && r.roof.offset.is_finite()
+        }
+        Entity::Railing(r) => {
+            all_ok(&r.railing.pts)
+                && nums_ok(&[r.railing.height, r.railing.width, r.railing.offset])
         }
         Entity::Tag(t) => ok(t.tag.at),
         Entity::ViewMark(m) => m.mark.points.iter().all(|p| ok(*p)),
@@ -744,6 +751,7 @@ impl Writer<'_> {
             | Entity::Ramp(_)
             | Entity::Beam(_)
             | Entity::Roof(_)
+            | Entity::Railing(_)
             | Entity::Tag(_)
             | Entity::ViewMark(_)
                 if self.wholes.contains_key(&e.base().id) =>
@@ -766,8 +774,17 @@ impl Writer<'_> {
                 false
             }
             // Nor a grid, column, stair or ramp: its pieces (`writer::plain_walls`, docs/adr/0343 §5).
-            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
-                self.report.skip("Mimari nesne", "parçalarına açılmadan yazılamaz", 0);
+            Entity::Grid(_)
+            | Entity::Column(_)
+            | Entity::Stair(_)
+            | Entity::Ramp(_)
+            | Entity::Beam(_)
+            | Entity::Roof(_)
+            | Entity::Railing(_)
+            | Entity::Tag(_)
+            | Entity::ViewMark(_) => {
+                self.report
+                    .skip("Mimari nesne", "parçalarına açılmadan yazılamaz", 0);
                 false
             }
             // Nor an opening: its symbol's pieces (docs/adr/0341 §2).

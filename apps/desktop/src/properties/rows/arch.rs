@@ -651,6 +651,69 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
         }
+        // A railing (docs/adr/8045 §3): its height, infill, gap, top rail and offset, how its line runs and how long it
+        // is, its storey; what PAİY 38 says of its height (38/1) and gap (38/4).
+        Entity::Railing(r) => {
+            let x = &r.railing;
+            out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
+            let infills = kentos_commands::RailingInfill::ALL
+                .iter()
+                .map(|&i| {
+                    pick(
+                        i.label().to_owned(),
+                        i == x.infill,
+                        set(
+                            slot,
+                            ArchChange {
+                                infill: Some(i),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(
+                Row::text("Dolgu", x.infill.label())
+                    .editor(edit(select(x.infill.label().to_owned(), infills))),
+            );
+            if let Some(gap) = x.baluster_gap() {
+                out.push(length("Çubuk aralığı", gap, ArchField::RailingGap));
+            }
+            out.push(length("Küpeşte eni", x.width, ArchField::Width));
+            out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
+            out.push(Row::text(
+                "Çizgisi",
+                if x.closed { "Kapalı" } else { "Açık" },
+            ));
+            out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
+            out.extend(arch_rows(doc, slot, &x.arch, &edit));
+            let mut rules = Vec::new();
+            if x.height < kentos_commands::RAILING_HEIGHT - 1e-9 {
+                rules.push((
+                    "1,10 m'den alçak",
+                    "PAİY 38/1: korkuluk döşemeden en az 1,10 m yükselir.",
+                ));
+            }
+            if x.baluster_gap()
+                .is_some_and(|g| g > kentos_commands::RAILING_GAP + 1e-9)
+            {
+                rules.push((
+                    "Aralık 0,10 m'den geniş",
+                    "PAİY 38/4: boşluklardan en çok 0,10 m çaplı geçiş olur.",
+                ));
+            }
+            if rules.is_empty() {
+                out.push(Row::text("Denetim", "Uyuyor"));
+            }
+            for (short, long) in rules {
+                out.push(Row {
+                    warn: true,
+                    ..Row::text("Denetim", short)
+                });
+                out.push(Row::note(long));
+            }
+        }
         Entity::Tag(t) => {
             let x = &t.tag;
             let tag = |c: TagChange| Message::Properties(Event::Tag(slot, c));

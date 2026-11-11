@@ -1103,6 +1103,7 @@ fn shape_snaps(
         | Shape::Ramp { .. }
         | Shape::Beam { .. }
         | Shape::Roof { .. }
+        | Shape::Railing { .. }
         | Shape::Tag { .. }
         | Shape::ViewMark { .. } => {}
         // The part shown's corners and its sides' middles (docs/adr/0192 §4); a raster's frame's

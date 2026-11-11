@@ -71,6 +71,17 @@ pub fn core_beam(b: &BeamFields) -> Shape {
     }
 }
 
+/// The railing as the core's shape (docs/adr/8045 §3): its line, its top rail's width and whether it closes.
+pub fn core_railing(r: &kentos_contracts::RailingFields) -> Shape {
+    Shape::Railing {
+        pts: core(&r.pts),
+        railing: kentos_geometry_core::geom::railing::RailingSpec {
+            width: r.width,
+            closed: r.closed,
+        },
+    }
+}
+
 /// The roof as the core's shape (docs/adr/8044 §1): its eaves line and slopes; its eaves at its offset (a block or a file
 /// without its storeys; the document stands it on its storey).
 /// A roof's part as the core takes it (docs/adr/8044 §6): its rise its kind's when none is given.
@@ -206,6 +217,7 @@ pub fn core_of(e: &Entity) -> Option<Shape> {
         Entity::Ramp(r) => core_ramp(&r.ramp),
         Entity::Beam(b) => core_beam(&b.beam),
         Entity::Roof(r) => core_roof(&r.roof),
+        Entity::Railing(r) => core_railing(&r.railing),
         Entity::Tag(t) => core_tag(&t.tag),
         Entity::ViewMark(m) => core_viewmark(&m.mark),
         _ => return None,
@@ -280,19 +292,21 @@ fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Opti
 
 /// One of the four as one simple object, for formats without it (GeoJSON, KML, GPX, the server's projection): a
 /// grid's path an open polyline, a round column a circle, a rectangular column, a stair, a ramp or a beam's band
-/// (docs/adr/8041 §1) an area; none for another object.
+/// (docs/adr/8041 §1) an area, a railing's line a polyline (docs/adr/8045 §3); none for another object.
 pub fn simple(e: &Entity) -> Option<Entity> {
-    let path = |base: &kentos_contracts::EntityBase, pts: Vec<Vec2>, bulges: Option<Vec<f64>>| kentos_contracts::PathEntity {
-        space_separator: None,
-        base: base.clone(),
-        pts,
-        bulges,
-        holes: None,
-        zs: None,
-        ms: None,
-        parts: None,
-        closed: false,
-        widths: None,
+    let path = |base: &kentos_contracts::EntityBase, pts: Vec<Vec2>, bulges: Option<Vec<f64>>| {
+        kentos_contracts::PathEntity {
+            space_separator: None,
+            base: base.clone(),
+            pts,
+            bulges,
+            holes: None,
+            zs: None,
+            ms: None,
+            parts: None,
+            closed: false,
+            widths: None,
+        }
     };
     Some(match e {
         Entity::Grid(g) => Entity::Polyline(path(&g.base, g.grid.pts.clone(), g.grid.bulges.clone())),
@@ -308,8 +322,20 @@ pub fn simple(e: &Entity) -> Option<Entity> {
                 r: c.column.width / 2.0,
             })
         }
-        Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) => {
-            Entity::Polygon(path(e.base(), outline_points(e)?, None))
+        Entity::Column(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_)
+        | Entity::Beam(_)
+        | Entity::Roof(_) => Entity::Polygon(path(e.base(), outline_points(e)?, None)),
+        // A railing its line (docs/adr/8045 §3): a closed one round its void.
+        Entity::Railing(r) => {
+            let mut pts = r.railing.pts.clone();
+            if r.railing.closed
+                && let Some(&first) = pts.first()
+            {
+                pts.push(first);
+            }
+            Entity::Polyline(path(e.base(), pts, None))
         }
         // A view mark a point at its first point, its words its label (docs/adr/0345 §1).
         Entity::ViewMark(m) => {

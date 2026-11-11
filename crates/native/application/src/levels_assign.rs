@@ -18,7 +18,8 @@ use crate::codes;
 pub const STEP: &str = "Kat ver";
 
 /// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a beam (docs/adr/8041 §1),
-/// a roof (docs/adr/8044 §1), a stair, a ramp, a room separator or a block insert (a fixture, docs/adr/0733 §1).
+/// a roof (docs/adr/8044 §1), a railing (docs/adr/8045 §3), a stair, a ramp, a room separator or a block insert (a
+/// fixture, docs/adr/0733 §1).
 pub fn levelled(e: &Entity) -> bool {
     match e {
         Entity::Insert(_)
@@ -30,7 +31,8 @@ pub fn levelled(e: &Entity) -> bool {
         | Entity::Stair(_)
         | Entity::Ramp(_)
         | Entity::Beam(_)
-        | Entity::Roof(_) => true,
+        | Entity::Roof(_)
+        | Entity::Railing(_) => true,
         Entity::Polyline(p) => p.space_separator.is_some(),
         _ => false,
     }
@@ -59,6 +61,7 @@ fn level_mut(e: &mut Entity) -> Option<&mut Option<String>> {
         Entity::Ramp(x) => Some(&mut x.ramp.arch.level),
         Entity::Beam(x) => Some(&mut x.beam.arch.level),
         Entity::Roof(x) => Some(&mut x.roof.arch.level),
+        Entity::Railing(x) => Some(&mut x.railing.arch.level),
         Entity::Polyline(p) => p.space_separator.as_mut().map(|a| &mut a.level),
         Entity::Insert(x) => Some(&mut x.arch.level),
         _ => None,

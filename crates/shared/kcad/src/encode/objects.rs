@@ -594,6 +594,21 @@ impl<'d> Encoder<'d> {
                     Val::Json(serde_json::to_value(&e.roof).unwrap_or_default()),
                 ));
             }
+            // A railing (docs/adr/8045 §3): its fields as one map; only the drawing's.
+            Entity::Railing(e) => {
+                if uid.is_none() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, "blok tanımında korkuluk olamaz"));
+                }
+                if let Some((_, problem)) = e.railing.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push((
+                    "railing",
+                    Val::Json(serde_json::to_value(&e.railing).unwrap_or_default()),
+                ));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;

@@ -448,6 +448,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/8045 §3); the drawing's only.
+        Railing(x) => {
+            if in_block {
+                return Err("Blok tanımında korkuluk olamaz".into());
+            }
+            if let Some((_, why)) = x.railing.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0344 §1); the drawing's only.
         Tag(x) => {
             if in_block {
@@ -804,6 +813,7 @@ fn projection_of(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         | Entity::Ramp(_)
         | Entity::Beam(_)
         | Entity::Roof(_)
+        | Entity::Railing(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) => {
             return projection(&kentos_formats::arch_elements::simple(e)?, blocks);

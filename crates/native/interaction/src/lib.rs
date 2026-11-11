@@ -291,6 +291,7 @@ mod space_level;
 mod space_sources;
 pub mod arch_tools;
 pub mod beam_tools;
+pub mod railing_tools;
 pub mod roof_part_tools;
 pub mod roof_tools;
 pub mod casework;

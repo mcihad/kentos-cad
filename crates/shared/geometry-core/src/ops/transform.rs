@@ -819,6 +819,14 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 beam: spec,
             }
         }
+        // Its line maps, its top rail's width scales (docs/adr/8045 §3); a mirror keeps it on its line.
+        Shape::Railing { pts, railing } => Shape::Railing {
+            pts: pts.iter().map(|q| apply(m, *q)).collect(),
+            railing: crate::geom::railing::RailingSpec {
+                width: railing.width * s,
+                closed: railing.closed,
+            },
+        },
         // Its eaves map; its slopes are ratios and its heights stay (docs/adr/8044 §1).
         Shape::Roof { pts, roof } => Shape::Roof {
             pts: pts.iter().map(|q| apply(m, *q)).collect(),

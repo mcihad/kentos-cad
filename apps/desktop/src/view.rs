@@ -2535,6 +2535,7 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
         "column" => "kolon",
         "beam" => "kiriş",
         "roof" => "çatı",
+        "railing" => "korkuluk",
         "stair" => "merdiven",
         "ramp" => "rampa",
         "tag" => "etiket",

@@ -485,6 +485,25 @@ impl crate::api::json::Flat for crate::geom::beam::BeamSpec {
 }
 to_json_flat!(crate::geom::beam::BeamSpec);
 
+impl crate::api::json::Flat for crate::geom::railing::RailingSpec {
+    const NAMES: &'static [&'static str] = &["width", "closed"];
+
+    fn read_flat(v: &Json) -> Result<Self, String> {
+        Ok(crate::geom::railing::RailingSpec {
+            width: number(v, "width")?.unwrap_or(0.0),
+            closed: matches!(v.get("closed"), Json::Bool(true)),
+        })
+    }
+
+    fn write_flat(&self, out: &mut String, first: &mut bool) {
+        field(out, first, "width", &self.width);
+        if self.closed {
+            field(out, first, "closed", &true);
+        }
+    }
+}
+to_json_flat!(crate::geom::railing::RailingSpec);
+
 impl crate::api::json::Flat for crate::geom::roof::RoofSpec {
     const NAMES: &'static [&'static str] = &["slopes", "base", "parts", "gutter", "snowGuard"];
 
@@ -2419,6 +2438,8 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
         Shape::Beam { pts, beam } => crate::geom::beam::outline(pts, beam),
         // A roof's eaves (docs/adr/8044 §1).
         Shape::Roof { pts, .. } => crate::geom::roof::outline(pts),
+        // A railing's top rail (docs/adr/8045 §3).
+        Shape::Railing { pts, railing } => crate::geom::railing::outline(pts, railing),
         // A tag's middle: its frame is sized on paper (docs/adr/0344 §1).
         Shape::Tag { at, .. } => Shape::Point {
             p: *at,
@@ -2459,6 +2480,7 @@ pub fn pieces_in(shape: &Shape, view: crate::geom::wall::View) -> Vec<Piece> {
         Shape::Ramp { pts, ramp } => ramp_pieces_at(pts, ramp, scale, level),
         Shape::Beam { pts, beam } => crate::geom::beam::pieces_at(pts, beam, scale, level),
         Shape::Roof { pts, roof } => crate::geom::roof::pieces_at(pts, roof, scale, level),
+        Shape::Railing { pts, railing } => crate::geom::railing::pieces_at(pts, railing, level),
         _ => pieces(shape, scale),
     }
 }
@@ -2472,6 +2494,7 @@ pub fn pieces(shape: &Shape, scale: f64) -> Vec<Piece> {
         Shape::Ramp { pts, ramp } => ramp_pieces(pts, ramp, scale),
         Shape::Beam { pts, beam } => crate::geom::beam::pieces_at(pts, beam, scale, Level::Whole),
         Shape::Roof { pts, roof } => crate::geom::roof::pieces_at(pts, roof, scale, Level::Whole),
+        Shape::Railing { pts, railing } => crate::geom::railing::pieces_at(pts, railing, Level::Whole),
         Shape::Tag { at, tag } => crate::geom::tag::pieces(*at, tag, scale),
         Shape::ViewMark { points, mark } => crate::geom::viewmark::pieces(points, mark, scale),
         _ => Vec::new(),
@@ -2485,7 +2508,8 @@ pub fn path_pts(shape: &Shape) -> Option<&[Vec2]> {
         | Shape::Stair { pts, .. }
         | Shape::Ramp { pts, .. }
         | Shape::Beam { pts, .. }
-        | Shape::Roof { pts, .. } => Some(pts),
+        | Shape::Roof { pts, .. }
+        | Shape::Railing { pts, .. } => Some(pts),
         _ => None,
     }
 }
@@ -2513,6 +2537,10 @@ pub fn with_pts(shape: &Shape, pts: Vec<Vec2>) -> Option<Shape> {
         Shape::Roof { roof, .. } => Shape::Roof {
             pts,
             roof: roof.clone(),
+        },
+        Shape::Railing { railing, .. } => Shape::Railing {
+            pts,
+            railing: railing.clone(),
         },
         _ => return None,
     })

@@ -1010,6 +1010,7 @@ fn building_first(e: &Entity, sections: &mut Vec<Section>) {
             | Entity::Stair(_)
             | Entity::Ramp(_)
             | Entity::Beam(_)
+            | Entity::Railing(_)
             | Entity::Column(_)
             | Entity::Grid(_)
     ) {
@@ -1579,6 +1580,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
         | Entity::Stair(_)
         | Entity::Ramp(_)
         | Entity::Beam(_)
+        | Entity::Railing(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) => {
             geo.extend(arch::rows(doc, slot, e, locked, &f));

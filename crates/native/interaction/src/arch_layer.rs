@@ -39,6 +39,8 @@ pub enum Kind {
     Beam(kentos_commands::BeamRole),
     /// A roof (docs/adr/8044 §1), by its covering (Kiremit): EK-2 Tablo 2.3's Çatı (CATI).
     Roof(Option<String>),
+    /// A free-standing railing (docs/adr/8045 §3), by its infill: EK-2 Tablo 2.3's Korkuluk (KORK), MM-KORK-CUBUK.
+    Railing(kentos_commands::RailingInfill),
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -74,6 +76,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::Lintel) => "LENT",
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "HATL",
             Kind::Roof(_) => "CATI",
+            Kind::Railing(_) => "KORK",
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -104,6 +107,7 @@ impl Kind {
             Kind::Schedule => word("CIZELGE"),
             Kind::Beam(kentos_commands::BeamRole::Beam) => word("KIRIS"),
             Kind::Beam(_) => String::new(),
+            Kind::Railing(infill) => word(infill.layer_word()),
             Kind::Door
             | Kind::Window
             | Kind::Flue
@@ -152,6 +156,7 @@ impl Kind {
             Kind::Ramp => "Rampa",
             Kind::Beam(role) => role.label(),
             Kind::Roof(_) => "Çatı",
+            Kind::Railing(_) => "Korkuluk",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -181,6 +186,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::Lintel) => "lento",
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "hatıl",
             Kind::Roof(_) => "çatı",
+            Kind::Railing(_) => "korkuluk",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -210,6 +216,7 @@ impl Kind {
             | Kind::Flue
             | Kind::Stair
             | Kind::Ramp
+            | Kind::Railing(_)
             | Kind::Beam(_) => look("ink", 0.25),
             Kind::Grid => LayerStyle {
                 line_type: LineType::Dashdot,
@@ -407,6 +414,9 @@ mod tests {
             Kind::Beam(kentos_commands::BeamRole::BondBeam),
             Kind::Roof(Some("Kiremit".into())),
             Kind::Roof(None),
+            Kind::Railing(kentos_commands::RailingInfill::Balusters),
+            Kind::Railing(kentos_commands::RailingInfill::Glass),
+            Kind::Railing(kentos_commands::RailingInfill::Solid),
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -424,9 +434,20 @@ mod tests {
         assert_eq!(names[15], "MM-XXXX-OLCU");
         assert_eq!(names[20], "MM-TASI-KIRIS");
         // A lintel and a bond beam (docs/adr/8041 §3): EK-2's own elements.
-        assert_eq!((names[21].as_str(), names[22].as_str()), ("MM-LENT-GENEL", "MM-HATL-GENEL"));
+        assert_eq!(
+            (names[21].as_str(), names[22].as_str()),
+            ("MM-LENT-GENEL", "MM-HATL-GENEL")
+        );
         // A roof (docs/adr/8044 §1): EK-2's Çatı, by its covering.
-        assert_eq!((names[23].as_str(), names[24].as_str()), ("MM-CATI-KIREMIT", "MM-CATI-GENEL"));
+        assert_eq!(
+            (names[23].as_str(), names[24].as_str()),
+            ("MM-CATI-KIREMIT", "MM-CATI-GENEL")
+        );
+        // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill.
+        assert_eq!(
+            &names[25..],
+            ["MM-KORK-CUBUK", "MM-KORK-CAM", "MM-KORK-DOLU"]
+        );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }
 

@@ -2,13 +2,13 @@
 import type { ArchOperation } from "./ArchOperation";
 
 /**
- * Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as
- * one undo step “Mimari nesneyi düzenle”, all or none.
+ * Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids
+ * changed as one undo step “Mimari nesneyi düzenle”, all or none.
  *
  * Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
  * `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
- * `invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,
- * `revision_conflict`, `layer_locked`.
+ * `invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,
+ * `invalid_revision`, `revision_conflict`, `layer_locked`.
  * Warnings: those of the stairs and ramps written.
  */
 export type ArchEdit = { uids: Array<string>, operation: ArchOperation, expectedRevision?: string, };

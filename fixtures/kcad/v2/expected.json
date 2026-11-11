@@ -99,6 +99,8 @@
     {"file": "broken/roof-downpipes-in-schema-239.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "stair-winders.kcad", "sniff": "kcad", "content": "stair-winders.json"},
     {"file": "broken/stair-winders-in-schema-240.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "railing-objects.kcad", "sniff": "kcad", "content": "railing-objects.json"},
+    {"file": "broken/railing-objects-in-schema-241.kcad", "sniff": "kcad", "error": "unknown_kind"},
     {"file": "road-work-percent.kcad", "sniff": "kcad", "content": "road-work.json", "rewrite": false},
     {"file": "road-pavement-percent.kcad", "sniff": "kcad", "content": "road-pavement.json", "rewrite": false},
     {"file": "road-pivot-percent.kcad", "sniff": "kcad", "content": "road-pivot.json", "rewrite": false},
@@ -616,7 +618,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-242.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-243.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

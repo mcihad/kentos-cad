@@ -663,6 +663,11 @@ pub enum Shape {
         pts: Vec<Vec2>,
         roof: crate::geom::roof::RoofSpec,
     },
+    /// A railing (docs/adr/8045 §3): its line, the middle of its top rail; its plan its top rail's two faces.
+    Railing {
+        pts: Vec<Vec2>,
+        railing: crate::geom::railing::RailingSpec,
+    },
     /// A stair (docs/adr/0343): its walking line and its flights.
     Stair {
         pts: Vec<Vec2>,
@@ -719,6 +724,7 @@ crate::json_tagged!(Shape, "kind",
     Ramp => "ramp" { pts & ramp: crate::geom::arch::RampSpec },
     Beam => "beam" { pts & beam: crate::geom::beam::BeamSpec },
     Roof => "roof" { pts & roof: crate::geom::roof::RoofSpec },
+    Railing => "railing" { pts & railing: crate::geom::railing::RailingSpec },
     Tag => "tag" { at & tag: crate::geom::tag::Spec },
     ViewMark => "viewmark" { points & mark: crate::geom::viewmark::Spec },
 );
@@ -934,7 +940,7 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         // Its rings' (docs/adr/0342 §2).
         Shape::Space { parts, .. } => entity_vertices(&crate::geom::space::as_polygon(parts)),
         // A grid's path's, a column's outline's, a stair's or ramp's band's (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
+        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Railing { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
             crate::geom::arch::outline(e).map(|o| entity_vertices(&o)).unwrap_or_default()
         }
         Shape::Polygon { pts, holes, .. } => match holes {
@@ -1026,7 +1032,7 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
         // Its largest part's outer ring (docs/adr/0342 §2).
         Shape::Space { parts, .. } => entity_outline(&crate::geom::space::as_polygon(parts), segments),
         // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
+        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Railing { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
             crate::geom::arch::outline(e).map(|o| entity_outline(&o, segments)).unwrap_or_default()
         }
         // Its body's outer ring (docs/adr/0339 §1); one that cannot be drawn its path.
@@ -2097,6 +2103,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } | Shape::Beam { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
+        // A railing's middle point along its line (docs/adr/8045 §3).
+        Shape::Railing { pts, .. } => return pts.get(pts.len() / 2).copied(),
         // A roof's eaves' middle (docs/adr/8044 §1).
         Shape::Roof { pts, .. } => {
             let n = pts.len() as f64;
@@ -2137,6 +2145,8 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
         Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } | Shape::Beam { pts, .. } => Some(path_length(pts, false)),
         // Round its eaves (docs/adr/8044 §1).
         Shape::Roof { pts, .. } => Some(path_length(pts, true)),
+        // Along its line, round to its first point when closed (docs/adr/8045 §3).
+        Shape::Railing { pts, railing } => Some(path_length(pts, railing.closed)),
         // Along its path, its base line (docs/adr/0339 §1).
         Shape::Wall { pts, bulges, wall } => Some(crate::geom::bulge::bulge_path_length(
             pts,
@@ -2203,9 +2213,12 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
 pub fn entity_area(e: &Shape) -> Option<f64> {
     match e {
         // A column's, a stair's or ramp's band's (docs/adr/0343 §2).
-        Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } => {
-            crate::geom::arch::outline(e).and_then(|o| entity_area(&o))
-        }
+        Shape::Column { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. }
+        | Shape::Beam { .. }
+        | Shape::Roof { .. }
+        | Shape::Railing { .. } => crate::geom::arch::outline(e).and_then(|o| entity_area(&o)),
         // Its body's, net of a closed wall's inside (docs/adr/0339 §1).
         Shape::Wall { pts, bulges, wall } => crate::geom::wall::area(pts, bulges.as_deref(), wall),
         // A multi-part area's area is its parts' (docs/adr/0143).

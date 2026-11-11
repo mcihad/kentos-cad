@@ -27,6 +27,7 @@ fn kind_name(e: &Entity) -> &'static str {
         Entity::Ramp(_) => "rampa",
         Entity::Beam(_) => "kiriş",
         Entity::Roof(_) => "çatı",
+        Entity::Railing(_) => "korkuluk",
         _ => "nesne",
     }
 }
@@ -45,15 +46,18 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const COLUMN: &[&str] = &["column"];
     const STAIR: &[&str] = &["stair"];
     const RAMP: &[&str] = &["ramp"];
-    const WIDE: &[&str] = &["column", "stair", "ramp", "beam"];
+    // A railing's width its top rail's (docs/adr/8045 §3).
+    const WIDE: &[&str] = &["column", "stair", "ramp", "beam", "railing"];
     const FLIGHT: &[&str] = &["stair", "ramp"];
     const BEAM: &[&str] = &["beam"];
     const RAMP_BEAM: &[&str] = &["ramp", "beam"];
     const TAGGED: &[&str] = &["column", "beam"];
-    const BEAM_ROOF: &[&str] = &["beam", "roof"];
+    const BEAM_ROOF: &[&str] = &["beam", "roof", "railing"];
+    const TALL: &[&str] = &["beam", "railing"];
+    const RAILING: &[&str] = &["railing"];
     const MADE_OF: &[&str] = &["column", "beam", "roof"];
     const ROOF: &[&str] = &["roof"];
-    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam", "roof"];
+    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam", "roof", "railing"];
     let mut out = Vec::new();
     let mut add = |on: bool, name: &'static str, kinds: &'static [&'static str]| {
         if on {
@@ -88,9 +92,11 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.base.is_some(), "base", RAMP);
     // A ramp's base over its level (docs/adr/0723 §2), a beam's underside over its storey's floor (docs/adr/8041 §3).
     add(c.base_offset.is_some(), "baseOffset", RAMP_BEAM);
-    add(c.height.is_some(), "height", BEAM);
+    // A railing's height its top over its floor (docs/adr/8045 §3).
+    add(c.height.is_some(), "height", TALL);
     add(c.justify.is_some(), "justify", BEAM);
-    // A roof's offset is its eaves over its storey's top, its material its covering (docs/adr/8044 §1).
+    // A roof's offset is its eaves over its storey's top, its material its covering (docs/adr/8044 §1); a railing's its
+    // floor over its storey's (docs/adr/8045 §3).
     add(c.offset.is_some(), "offset", BEAM_ROOF);
     add(c.role.is_some(), "role", BEAM);
     add(c.material.is_some(), "material", MADE_OF);
@@ -100,6 +106,8 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.gutter.is_some(), "gutter", ROOF);
     add(c.snow_guard.is_some(), "snowGuard", ROOF);
     add(c.parts.is_some(), "parts", ROOF);
+    add(c.infill.is_some(), "infill", RAILING);
+    add(c.gap.is_some(), "gap", RAILING);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
     out
@@ -113,6 +121,7 @@ fn tag_of(e: &Entity) -> &'static str {
         Entity::Ramp(_) => "ramp",
         Entity::Beam(_) => "beam",
         Entity::Roof(_) => "roof",
+        Entity::Railing(_) => "railing",
         _ => "",
     }
 }
@@ -141,6 +150,7 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (flat(c.overhang), "overhang", "Saçak"),
         (flat(c.gutter), "gutter", "Oluk"),
         (flat(c.snow_guard), "snowGuard", "Kar siperliği"),
+        (flat(c.gap), "gap", "Çubuk aralığı"),
     ] {
         if let Some(x) = v {
             checks::finite(
@@ -349,6 +359,25 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
                 f.parts.clone_from(v);
             }
         }
+        // A railing's (docs/adr/8045 §3); null gap: PAİY 38/4's 0.10 m.
+        Entity::Railing(r) => {
+            let f = &mut r.railing;
+            if let Some(v) = c.width {
+                f.width = v;
+            }
+            if let Some(v) = c.height {
+                f.height = v;
+            }
+            if let Some(v) = c.offset {
+                f.offset = v;
+            }
+            if let Some(v) = c.infill {
+                f.infill = v;
+            }
+            if let Some(v) = c.gap {
+                f.gap = v;
+            }
+        }
         _ => {}
     }
     if let Some(arch) = arch_mut(&mut e) {
@@ -370,6 +399,7 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Ramp(r) => Some(&mut r.ramp.arch),
         Entity::Beam(b) => Some(&mut b.beam.arch),
         Entity::Roof(r) => Some(&mut r.roof.arch),
+        Entity::Railing(r) => Some(&mut r.railing.arch),
         _ => None,
     }
 }
@@ -412,6 +442,16 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
             arch_elements::roof_valid(&r.roof, path)?;
             Entity::Roof(r)
         }
+        Entity::Railing(r) => {
+            if let Some((field, words)) = r.railing.problem() {
+                return Err(fail(
+                    codes::INVALID_RAILING,
+                    words,
+                    &format!("{path}.{field}"),
+                ));
+            }
+            Entity::Railing(r)
+        }
         other => other,
     };
     if let Some(arch) = arch_elements::arch_of(&e) {
@@ -448,14 +488,14 @@ type Work = (Vec<CommandWarning>, Vec<(Slot, Entity)>);
 fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
     checks::uids(
         &input.uids,
-        "Düzenlenecek aks, kolon, kiriş, merdiven, rampa ya da çatı verilmedi.",
+        "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk verilmedi.",
     )?;
     let found = checks::named(doc, &input.uids)?;
     for (at, _, e, _) in &found {
         if arch_elements::arch_of(e).is_none() {
             return Err(fail(
                 codes::NOT_ARCH_ELEMENT,
-                "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
+                "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir."
                     .into(),
                 &format!("uids[{at}]"),
             ));

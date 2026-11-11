@@ -1,0 +1,59 @@
+# M45 2. bölüm (docs/adr/8045 §3), on fixtures/arch/v1/facade-building.kcad (--modul mimari): 1. kat active (Ctrl+Up);
+# Korkuluk from the menu search; Çizgi Boşluktan (S, taken as typed); the pointer inside the stair's void in 1. kat's
+# floor slab: the preview along its free sides; a click writes them; Escape; a click on the north side and Korkuluk
+# from the overlapping objects' list: Öznitelikler; a close view; the whole view, then a close view of the south side
+# (the railing stops where the stair from Zemin kat arrives).
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Korkuluk
+wait 1500
+shot r0-arama
+key Return
+wait 1500
+move 1300 650
+wait 800
+type S
+wait 800
+move 766 622
+wait 1800
+shot r1-onizleme
+click 766 622
+wait 2500
+shot r2-yazildi
+key Escape
+wait 800
+move 1400 120
+wait 800
+shot r2b-temiz
+click 766 532
+wait 1500
+click 797 551
+wait 1200
+shot r3a-secenekler
+click 890 635
+wait 1500
+move 1400 120
+wait 800
+shot r3-oznitelikler
+key Escape
+wait 800
+wheel 766 600 4
+wait 1500
+move 1400 120
+wait 800
+shot r4-yakin
+click 800 500 middle
+click 800 500 middle
+wait 2000
+wheel 740 712 5
+wait 1500
+move 1400 120
+wait 800
+shot r5-guney

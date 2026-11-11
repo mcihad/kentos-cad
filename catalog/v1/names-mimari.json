@@ -18,6 +18,7 @@
     { "name": "RM", "command": "tool.ramp" },
     { "name": "KR", "command": "tool.beam" },
     { "name": "CT", "command": "tool.roof" },
+    { "name": "KO", "command": "tool.railing" },
     { "name": "CB", "command": "tool.roofChimney" },
     { "name": "IB", "command": "tool.roofDownpipe" },
     { "name": "CPN", "command": "tool.roofWindow", "why": "CP Kopyala'nın (COPY) adıdır; Ç komut adlarında C okunur. PN Pencere'nin adı, önüne Çatı'nın C'si." },

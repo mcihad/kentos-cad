@@ -6066,6 +6066,22 @@ QueryScopeName = Literal["loaded", "source"]
 """The names of :class:`QueryScope`, for a plain string."""
 
 
+class RailingInfill(_StrEnum):
+    """What fills a railing under its top rail (docs/adr/8045 §3).
+
+    - ``balusters``: Dikey çubuk: upright balusters, their clear gap `gap`.
+    - ``glass``: Cam: a glass panel.
+    - ``solid``: Dolu: a solid panel (sheet, board).
+    """
+    BALUSTERS = "balusters"
+    GLASS = "glass"
+    SOLID = "solid"
+
+
+RailingInfillName = Literal["balusters", "glass", "solid"]
+"""The names of :class:`RailingInfill`, for a plain string."""
+
+
 class Railings(_StrEnum):
     """Which sides of a stair or a ramp carry a railing, left and right as one walks up it from its first point
     (docs/adr/0705 §2). Absent on the object: none.
@@ -6898,6 +6914,7 @@ class SelectKind(_StrEnum):
     - ``slab``: Döşeme, balkon, teras, şaft (docs/adr/0722); last, so a saved filter keeps its bits.
     - ``beam``: Kiriş (docs/adr/8041 §1); after it for the same reason.
     - ``roof``: Çatı (docs/adr/8044 §1); after it for the same reason.
+    - ``railing``: Korkuluk (docs/adr/8045 §3); after it for the same reason.
     """
     POINT = "point"
     LINE = "line"
@@ -6928,9 +6945,10 @@ class SelectKind(_StrEnum):
     SLAB = "slab"
     BEAM = "beam"
     ROOF = "roof"
+    RAILING = "railing"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab", "beam", "roof"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark", "slab", "beam", "roof", "railing"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -9924,6 +9942,7 @@ class Entity(_Union):
     - :class:`ColumnEntity` (``kind: column``)
     - :class:`BeamEntity` (``kind: beam``)
     - :class:`RoofEntity` (``kind: roof``)
+    - :class:`RailingEntity` (``kind: railing``)
     - :class:`StairEntity` (``kind: stair``)
     - :class:`RampEntity` (``kind: ramp``)
     - :class:`TagEntity` (``kind: tag``)
@@ -16292,13 +16311,13 @@ class ArchAudited(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ArchEdit(_Model):
-    """Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as
-    one undo step “Mimari nesneyi düzenle”, all or none.
+    """Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids
+    changed as one undo step “Mimari nesneyi düzenle”, all or none.
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
     `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-    `invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,
-    `revision_conflict`, `layer_locked`.
+    `invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,
+    `invalid_revision`, `revision_conflict`, `layer_locked`.
     Warnings: those of the stairs and ramps written.
     """
     uids: list[str]
@@ -59957,6 +59976,64 @@ class NewOpening(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewRailing(_Model):
+    """One railing to draw (docs/adr/8045 §3): its fields, and its attributes.
+    Attributes:
+        pts: Its line, the middle of its top rail: straight stretches from point to point. Unit: length.
+        closed: Its line runs on from its last point back to its first (round a gallery's void); absent: open.
+        gap: The clear gap between its balusters; absent: 0.10 m (PAİY 38/4). Unit: length.
+        height: Its top over its floor; absent: 1.10 m (PAİY 38/1). Unit: length.
+        infill: What fills it under its top rail; absent: upright balusters.
+        offset: Its floor over its storey's; absent: 0. Unit: elevation.
+        width: Its top rail's width (küpeşte); absent: 0.05 m. Unit: length.
+    """
+    pts: list[Vec2]
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    closed: bool | None | Unset = UNSET
+    gap: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    infill: RailingInfill | RailingInfillName | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.infill is not UNSET:
+            out["infill"] = None if self.infill is None else _enum_out(self.infill)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewRailing:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            closed=data.get("closed", UNSET),
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            infill=UNSET if "infill" not in data else None if data["infill"] is None else _enum_in(RailingInfill, data["infill"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewRamp(_Model):
     """One ramp to draw.
     Attributes:
@@ -78134,6 +78211,230 @@ class RadialGridSystem(_Model):
             radial_start=data.get("radialStart", UNSET),
             rings=[float(e0) for e0 in data["rings"]] if "rings" in data else list(),
             turns=[float(e0) for e0 in data["turns"]] if "turns" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RailingEntity(Entity):
+    """A railing (docs/adr/8045 §3).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Its line, the middle of its top rail: straight stretches from point to point, at least two points (three when
+            closed). Unit: length.
+        height: Its top over its floor, metres (PAİY 38/1: at least 1.10). Unit: length.
+        width: Its top rail's width (küpeşte), metres. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        closed: Its line runs on from its last point back to its first: round a gallery's void.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        gap: The clear gap between its balusters, metres; absent: 0.10 (PAİY 38/4's most). Read with balusters alone. Unit: length.
+        infill: What fills it under its top rail: upright balusters (absent), glass or a solid panel.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        offset: Its floor over its storey's, metres; absent: 0. Unit: elevation.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "railing"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    height: float
+    width: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    closed: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    gap: float | None | Unset = UNSET
+    infill: RailingInfill | RailingInfillName | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    order: int | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "railing"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["height"] = float(self.height)
+        out["width"] = float(self.width)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
+        if self.infill is not UNSET:
+            out["infill"] = _enum_out(self.infill)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RailingEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            height=float(data["height"]),
+            width=float(data["width"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            closed=data.get("closed", UNSET),
+            color=data.get("color", UNSET),
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
+            infill=_enum_in(RailingInfill, data["infill"]) if "infill" in data else UNSET,
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            order=data.get("order", UNSET),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RailingsCreate(_Model):
+    """Input of `cad.railings.create` v1 (“Korkuluk”, docs/adr/8045 §3): railings on a named layer, as one undo step.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_railing`, `level_not_found`, `invalid_line_weight`,
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
+    `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    railings: list[NewRailing]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["railings"] = [e0.to_json() for e0 in self.railings]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RailingsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            railings=[NewRailing.from_json(e0) for e0 in data["railings"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RailingsCreated(_Model):
+    """Output of `cad.railings.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RailingsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RailingsPlan(_Model):
+    """What `cad.railings.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    railings: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["railings"] = [e0.to_json() for e0 in self.railings]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RailingsPlan:
+        return cls(
+            railings=[Entity.from_json(e0) for e0 in data["railings"]],
+            revision=data["revision"],
         )
 
 
@@ -113769,10 +114070,12 @@ class SetArchOperation(ArchOperation):
         depth: A column's; null: its width. Unit: length.
         ends: A grid's gapped end segments, millimetres on paper (docs/adr/0725 §5); null: the whole grid. Unit: paper-mm.
         fill: A column's.
+        gap: A railing's balusters' clear gap (docs/adr/8045 §3); null: PAİY 38/4's 0.10 m. Unit: length.
         gutter: A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none. Unit: length.
-        height: A beam's height (docs/adr/8041 §1). Unit: length.
+        height: A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3). Unit: length.
         height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
             risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+        infill: A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel.
         justify: A beam's justification on its axis.
         label: A grid's.
         landing: A stair's or a ramp's; null: the width. Unit: length.
@@ -113780,7 +114083,8 @@ class SetArchOperation(ArchOperation):
         level: Any kind's.
         material: A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
         numbering: A stair's.
-        offset: A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1). Unit: elevation.
+        offset: A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1); a railing's floor over
+            its storey's (docs/adr/8045 §3). Unit: elevation.
         overhang: How far a roof's eaves stand past the walls' outer faces (saçak); null: not said. Unit: length.
         parts: A roof's chimneys, vents and roof windows, all of them (docs/adr/8044 §6): Çatı bacası and Çatı penceresi write
             the ones it has with theirs; empty: none.
@@ -113800,7 +114104,7 @@ class SetArchOperation(ArchOperation):
         thickness: A roof's build-up, measured upright; null: 0.25 m. Unit: length.
         tread: A stair's. Unit: length.
         type: A column's type.
-        width: A column's, a stair's, a ramp's or a beam's. Unit: length.
+        width: A column's, a stair's, a ramp's or a beam's; a railing's top rail's (docs/adr/8045 §3). Unit: length.
         winders: A stair's balancing (docs/adr/8045 §1): this many treads balanced either side of each turn instead of a
             landing; null: a landing at each turn. Unit: count.
     """
@@ -113814,9 +114118,11 @@ class SetArchOperation(ArchOperation):
     depth: float | None | Unset = UNSET
     ends: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
+    gap: float | None | Unset = UNSET
     gutter: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     height_from_level: bool | None | Unset = UNSET
+    infill: RailingInfill | RailingInfillName | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     landing: float | None | Unset = UNSET
@@ -113866,12 +114172,16 @@ class SetArchOperation(ArchOperation):
             out["ends"] = None if self.ends is None else float(self.ends)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
         if self.gutter is not UNSET:
             out["gutter"] = None if self.gutter is None else float(self.gutter)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.height_from_level is not UNSET:
             out["heightFromLevel"] = self.height_from_level
+        if self.infill is not UNSET:
+            out["infill"] = None if self.infill is None else _enum_out(self.infill)
         if self.justify is not UNSET:
             out["justify"] = None if self.justify is None else _enum_out(self.justify)
         if self.label is not UNSET:
@@ -113942,9 +114252,11 @@ class SetArchOperation(ArchOperation):
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             ends=UNSET if "ends" not in data else None if data["ends"] is None else float(data["ends"]),
             fill=data.get("fill", UNSET),
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
             gutter=UNSET if "gutter" not in data else None if data["gutter"] is None else float(data["gutter"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             height_from_level=data.get("heightFromLevel", UNSET),
+            infill=UNSET if "infill" not in data else None if data["infill"] is None else _enum_in(RailingInfill, data["infill"]),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             label=data.get("label", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
@@ -134090,7 +134402,7 @@ _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField
 _ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveElevationsOperation, "refresh": RefreshElevationsOperation, "release": ReleaseElevationsOperation}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "roof": RoofEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "beam": BeamEntity, "roof": RoofEntity, "railing": RailingEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"ellipseAxis": EllipseAxisEntityEdit, "update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -136479,6 +136791,7 @@ __all__ = [
     "NewGrid",
     "NewObject",
     "NewOpening",
+    "NewRailing",
     "NewRamp",
     "NewRoof",
     "NewSlab",
@@ -137230,8 +137543,14 @@ __all__ = [
     "RadialGridSystem",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
+    "RailingEntity",
+    "RailingInfill",
+    "RailingInfillName",
     "Railings",
+    "RailingsCreate",
+    "RailingsCreated",
     "RailingsName",
+    "RailingsPlan",
     "RaiseReference",
     "RaiseShapeElevation",
     "RampEntity",

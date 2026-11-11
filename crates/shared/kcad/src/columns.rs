@@ -180,7 +180,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 33] = [
+pub const KINDS: [&str; 34] = [
     "point",
     "line",
     "polyline",
@@ -214,6 +214,7 @@ pub const KINDS: [&str; 33] = [
     "slab",
     "beam",
     "roof",
+    "railing",
 ];
 
 const COLOR: u32 = 1;
@@ -439,6 +440,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Slab(_) => 30,
         Entity::Beam(_) => 31,
         Entity::Roof(_) => 32,
+        Entity::Railing(_) => 33,
     }
 }
 
@@ -1562,6 +1564,12 @@ impl Packer {
             // A roof (docs/adr/8044 §1): its fields as one JSON text.
             Entity::Roof(e) => self.text(
                 &serde_json::to_value(&e.roof)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
+            // A railing (docs/adr/8045 §3): its fields as one JSON text.
+            Entity::Railing(e) => self.text(
+                &serde_json::to_value(&e.railing)
                     .unwrap_or_default()
                     .to_string(),
             ),
@@ -3534,6 +3542,15 @@ fn geometry(
                 return Err(broken(&problem));
             }
             Entity::Roof(kentos_contracts::RoofEntity { base, roof })
+        }
+        33 => {
+            let text = c.text(|| "korkuluğun alanları".into())?;
+            let railing: kentos_contracts::RailingFields =
+                serde_json::from_str(&text).map_err(|_| broken("korkuluğun alanları"))?;
+            if let Some((_, problem)) = railing.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Railing(kentos_contracts::RailingEntity { base, railing })
         }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;

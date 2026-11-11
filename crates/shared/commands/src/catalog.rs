@@ -2797,11 +2797,42 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_RAILINGS_CREATE.into(),
+            version: crate::CAD_RAILINGS_CREATE_VERSION,
+            title: "Korkuluk".into(),
+            summary: "Bağımsız korkuluklar ekler (docs/adr/8045 §3); tek geri alma adımı “Korkuluk”. Her biri küpeştesinin orta çizgisi (pts: açıkken en az 2, kapalıyken 3, en çok 1000 nokta; art arda aynı nokta yok; closed: son noktadan ilkine döner — galeri boşluğunun çevresi, ilk nokta sonda yinelenmez), yükseklik (height: döşemesinden küpeştenin üstüne; yoksa 1,10 m, PAİY 38/1 “döşeme kotundan itibaren en az 1.10 metre”; en çok 3 m), küpeşte eni (width: yoksa 0,05 m; en çok 0,5 m), dolgu (infill: balusters dikey çubuk — yoksa —, glass cam, solid dolu panel), çubuk aralığı (gap: çubuklar arasındaki net boşluk, yoksa 0,10 m, PAİY 38/4 “en fazla 0.10 metre çapında geçişe izin verilir”; en çok 1 m; yalnız dikey çubukta okunur), kot farkı (offset: döşemesinin katının döşemesinden farkı, yoksa 0; en çok ±10 m), kat ve tadilat durumu (arch). Planda küpeşte, eni kadar aralıklı iki ince çizgi (açık korkuluğun uçları kapalı); 1/200 sadeleştirilmiş görünüşte yalnız orta çizgi. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RailingsCreate>(),
+            output: schema::<crate::RailingsCreated>(),
+            plan: Some(schema::<crate::RailingsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Sahanlığın boş kenarına 1,10 m dikey çubuklu korkuluk".into(),
+                    input: json!({ "layerId": "korkuluk", "railings": [{ "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 3.0, "y": 0.0 }, { "x": 3.0, "y": 1.2 }], "arch": { "level": "k1" } }] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Galeri boşluğunun çevresine cam korkuluk".into(),
+                    input: json!({ "layerId": "korkuluk", "railings": [{ "pts": [{ "x": 5.0, "y": 2.0 }, { "x": 9.0, "y": 2.0 }, { "x": 9.0, "y": 5.0 }, { "x": 5.0, "y": 5.0 }], "closed": true, "infill": "glass", "arch": { "level": "k1" } }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ARCH_EDIT.into(),
             version: crate::CAD_ARCH_EDIT_VERSION,
             title: "Mimari nesneyi düzenle".into(),
-            summary: "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (docs/adr/8045 §1: dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). \
+            summary: "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven, rampa, çatı ve korkulukları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. \
+                      operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (docs/adr/8045 §1: dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si), offset (docs/adr/8045 §3; hatalı korkuluk invalid_railing); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). \
                       Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir."
                 .into(),
             aliases: vec![],
@@ -16312,6 +16343,9 @@ mod tests {
                     }
                     crate::CAD_ROOFS_CREATE => {
                         serde_json::from_value::<crate::RoofsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RAILINGS_CREATE => {
+                        serde_json::from_value::<crate::RailingsCreate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ARCH_EDIT => {
                         serde_json::from_value::<crate::ArchEdit>(e.input.clone()).map(|_| ())

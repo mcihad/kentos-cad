@@ -521,7 +521,9 @@ mod standards_install_library;
 pub mod standard_libraries;
 pub mod appearance_origin;
 pub mod revisions;
-pub use arch_elements::{beams_create, columns_create, grids_create, ramps_create, roofs_create, stairs_create};
+pub use arch_elements::{
+    beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create, stairs_create,
+};
 pub mod tags;
 pub mod schedules;
 pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edit};
@@ -902,6 +904,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ROOFS_CREATE,
         kentos_commands::CAD_ROOFS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_RAILINGS_CREATE,
+        kentos_commands::CAD_RAILINGS_CREATE_VERSION,
     ),
     (
         kentos_commands::CAD_ARCH_EDIT,

@@ -107,7 +107,7 @@ use kentos_native_application::{
     walls_joins, walls_partition, walls_rectangle,
 };
 use kentos_native_application::{
-    arch_edit, beams_create, columns_create, grids_create, ramps_create, roofs_create, stairs_create,
+    arch_edit, beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create, stairs_create,
 };
 use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
@@ -1264,6 +1264,24 @@ impl Input for kentos_commands::BeamsCreate {
     }
 }
 
+impl Input for kentos_commands::RailingsCreate {
+    /// `railings[0].height`, `.width`, `.gap`, `.offset`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/8045 §3).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("railings[")?.split_once("].")?;
+        let r = self.railings.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "height" => r.height.as_mut(),
+            "width" => r.width.as_mut(),
+            "gap" => r.gap.as_mut(),
+            "offset" => r.offset.as_mut(),
+            _ => named_point(&mut r.pts, "pts", rest),
+        }
+    }
+}
+
 /// A roof's part's `parts[k].at.x` and `.y`, `.width`, `.depth`, `.rotation`, `.rise` (docs/adr/8044 §6).
 fn roof_part_number<'a>(
     parts: Option<&'a mut Vec<kentos_commands::RoofPart>>,
@@ -1638,6 +1656,8 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.overhang" => c.overhang.as_mut().and_then(Option::as_mut),
                 "operation.gutter" => c.gutter.as_mut().and_then(Option::as_mut),
                 "operation.snowGuard" => c.snow_guard.as_mut().and_then(Option::as_mut),
+                // A railing's (docs/adr/8045 §3).
+                "operation.gap" => c.gap.as_mut().and_then(Option::as_mut),
                 _ => {
                     let rest = path.strip_prefix("operation.")?;
                     if rest.starts_with("parts[") {
@@ -5570,6 +5590,9 @@ fn run_op(
         }
         kentos_commands::CAD_ROOFS_CREATE => {
             run!(roofs_create, kentos_commands::RoofsCreate)
+        }
+        kentos_commands::CAD_RAILINGS_CREATE => {
+            run!(railings_create, kentos_commands::RailingsCreate)
         }
         kentos_commands::CAD_ARCH_EDIT => {
             run!(arch_edit, kentos_commands::ArchEdit)

@@ -4,6 +4,7 @@ import type { BeamRole } from "./BeamRole";
 import type { ColumnAnchor } from "./ColumnAnchor";
 import type { ColumnShape } from "./ColumnShape";
 import type { GridBubbles } from "./GridBubbles";
+import type { RailingInfill } from "./RailingInfill";
 import type { Railings } from "./Railings";
 import type { RoofPart } from "./RoofPart";
 import type { WallJustify } from "./WallJustify";
@@ -34,7 +35,7 @@ ends?: number | null,
  */
 shape?: ColumnShape, 
 /**
- * A column's, a stair's, a ramp's or a beam's.
+ * A column's, a stair's, a ramp's or a beam's; a railing's top rail's (docs/adr/8045 §3).
  */
 width?: number, 
 /**
@@ -126,7 +127,7 @@ base?: number | null,
  */
 baseOffset?: number | null, 
 /**
- * A beam's height (docs/adr/8041 §1).
+ * A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3).
  */
 height?: number, 
 /**
@@ -134,7 +135,8 @@ height?: number,
  */
 justify?: WallJustify, 
 /**
- * A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1).
+ * A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1); a railing's floor over
+ * its storey's (docs/adr/8045 §3).
  */
 offset?: number, 
 /**
@@ -170,6 +172,14 @@ snowGuard?: number | null,
  * the ones it has with theirs; empty: none.
  */
 parts?: Array<RoofPart>, 
+/**
+ * A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel.
+ */
+infill?: RailingInfill, 
+/**
+ * A railing's balusters' clear gap (docs/adr/8045 §3); null: PAİY 38/4's 0.10 m.
+ */
+gap?: number | null, 
 /**
  * Any kind's.
  */

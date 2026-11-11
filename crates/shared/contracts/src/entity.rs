@@ -1864,6 +1864,9 @@ pub enum Entity {
     Beam(crate::BeamEntity),
     /// A roof (docs/adr/8044 §1): its eaves line and each edge's slope; drawn by its faces' lines in a plan.
     Roof(crate::RoofEntity),
+    /// A railing (docs/adr/8045 §3): its line, its height, its top rail's width and its infill; its top rail drawn as two
+    /// thin lines in a plan.
+    Railing(crate::RailingEntity),
     /// A stair (docs/adr/0343): its walking line and its risers, treads and landings.
     Stair(crate::StairEntity),
     /// A ramp (docs/adr/0343): its centre line, width, rise and landings.
@@ -1931,6 +1934,7 @@ impl Entity {
             Entity::Column(e) => &e.base,
             Entity::Beam(e) => &e.base,
             Entity::Roof(e) => &e.base,
+            Entity::Railing(e) => &e.base,
             Entity::Stair(e) => &e.base,
             Entity::Ramp(e) => &e.base,
             Entity::Tag(e) => &e.base,
@@ -1969,6 +1973,7 @@ impl Entity {
             Entity::Column(e) => &mut e.base,
             Entity::Beam(e) => &mut e.base,
             Entity::Roof(e) => &mut e.base,
+            Entity::Railing(e) => &mut e.base,
             Entity::Stair(e) => &mut e.base,
             Entity::Ramp(e) => &mut e.base,
             Entity::Tag(e) => &mut e.base,
@@ -1999,6 +2004,7 @@ impl Entity {
             Entity::Column(x) => x.column.arch.phase,
             Entity::Beam(x) => x.beam.arch.phase,
             Entity::Roof(x) => x.roof.arch.phase,
+            Entity::Railing(x) => x.railing.arch.phase,
             Entity::Stair(x) => x.stair.arch.phase,
             Entity::Ramp(x) => x.ramp.arch.phase,
             Entity::Insert(x) => x.arch.phase,
@@ -2088,6 +2094,7 @@ impl Entity {
             Entity::Column(x) => x.column.arch.level.as_deref(),
             Entity::Beam(x) => x.beam.arch.level.as_deref(),
             Entity::Roof(x) => x.roof.arch.level.as_deref(),
+            Entity::Railing(x) => x.railing.arch.level.as_deref(),
             Entity::Stair(x) => x.stair.arch.level.as_deref(),
             Entity::Ramp(x) => x.ramp.arch.level.as_deref(),
             Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.level.as_deref()),
@@ -2145,6 +2152,7 @@ impl Entity {
             Entity::Column(_) => "column",
             Entity::Beam(_) => "beam",
             Entity::Roof(_) => "roof",
+            Entity::Railing(_) => "railing",
             Entity::Stair(_) => "stair",
             Entity::Ramp(_) => "ramp",
             Entity::Tag(_) => "tag",

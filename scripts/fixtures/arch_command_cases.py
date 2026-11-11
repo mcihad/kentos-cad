@@ -67,6 +67,7 @@ OUT = ROOT / "fixtures/commands/v1"
 GRIDS, COLUMNS, STAIRS, RAMPS, EDIT = "cad.grids.create", "cad.columns.create", "cad.stairs.create", "cad.ramps.create", "cad.arch.edit"
 BEAMS = "cad.beams.create"
 ROOFS = "cad.roofs.create"
+RAILINGS = "cad.railings.create"
 
 
 def refusal(code, message, path, status="failed"):
@@ -1731,9 +1732,70 @@ def roofs_create(d, inp, conflict=False):
     return finish(inp, conflict, made, [])
 
 
+def railing_fields(n):
+    """A railing as the document keeps it (docs/adr/8045 §3): its line, its height (1.10 m unless given, PAİY 38/1) and
+    top rail's width (0.05 m unless given); whether it closes, its infill, gap, offset and level only when not their
+    defaults (a gap given is kept even at PAİY 38/4's 0.10 m)."""
+    f = {"pts": n["pts"]}
+    if n.get("closed"):
+        f["closed"] = True
+    f["height"] = n["height"] if n.get("height") is not None else 1.1
+    f["width"] = n["width"] if n.get("width") is not None else 0.05
+    if n.get("infill", "balusters") != "balusters":
+        f["infill"] = n["infill"]
+    if n.get("gap") is not None:
+        f["gap"] = n["gap"]
+    if n.get("offset") is not None and n["offset"] != 0.0:
+        f["offset"] = n["offset"]
+    if n.get("arch"):
+        f["arch"] = n["arch"]
+    return f
+
+
+def railing_problem(f, path):
+    """RailingFields::problem's rule and words, in its order."""
+    pts, closed = f["pts"], f.get("closed", False)
+    least = 3 if closed else 2
+    if not least <= len(pts) <= 1000:
+        return refusal("invalid_railing", f"Korkuluğun çizgisi {'kapalıyken' if closed else 'açıkken'} en az {least}, en çok 1000 noktadır; {len(pts)} verildi.", f"{path}.pts")
+    if any(a == b for a, b in zip(pts, pts[1:])) or (closed and pts[0] == pts[-1]):
+        return refusal("invalid_railing", "Korkuluğun çizgisinde art arda iki aynı nokta var; birini kaldırın (kapalı korkuluğun ilk noktası sonda yinelenmez).", f"{path}.pts")
+    h, w, o = f["height"], f["width"], f.get("offset", 0.0)
+    if not (math.isfinite(h) and 0 < h <= 3.0):
+        return refusal("invalid_railing", f"Korkuluğun yüksekliği {num(h)}; sıfırdan büyük, en çok 3 m olmalı.", f"{path}.height")
+    if not (math.isfinite(w) and 0 < w <= 0.5):
+        return refusal("invalid_railing", f"Korkuluğun küpeşte eni {num(w)}; sıfırdan büyük, en çok 0.5 m olmalı.", f"{path}.width")
+    g = f.get("gap")
+    if g is not None and not (math.isfinite(g) and 0 < g <= 1.0):
+        return refusal("invalid_railing", f"Korkuluğun çubuk aralığı {num(g)}; sıfırdan büyük, en çok 1 m olmalı.", f"{path}.gap")
+    if not (math.isfinite(o) and abs(o) <= 10.0):
+        return refusal("invalid_railing", f"Korkuluğun kot farkı {num(o)}; en çok ±10 m olmalı.", f"{path}.offset")
+    return None
+
+
+def railings_create(d, inp, conflict=False):
+    if not inp["railings"]:
+        return refusal("no_objects", "Yazılacak korkuluk verilmedi. En az bir korkuluğun çizgisini verin.", "railings"), None
+    made = []
+    for i, n in enumerate(inp["railings"]):
+        at = f"railings[{i}]"
+        r = points_not_finite(n["pts"], at) or finite_each(
+            [(n.get("height"), "height", "Yükseklik"), (n.get("width"), "width", "Küpeşte eni"), (n.get("gap"), "gap", "Çubuk aralığı"),
+             (n.get("offset"), "offset", "Kot farkı")], at)
+        if r:
+            return r, None
+        f = railing_fields(n)
+        r = railing_problem(f, at) or level_check(f.get("arch"), f"{at}.arch.level")
+        if r:
+            return r, None
+        made.append(f)
+    return finish(inp, conflict, made, [])
+
+
 CREATES = {GRIDS: ("grid", "grids", grids_create, "Aks"), COLUMNS: ("column", "columns", columns_create, "Kolon"),
            STAIRS: ("stair", "stairs", stairs_create, "Merdiven"), RAMPS: ("ramp", "ramps", ramps_create, "Rampa"),
-           BEAMS: ("beam", "beams", beams_create, "Kiriş"), ROOFS: ("roof", "roofs", roofs_create, "Çatı")}
+           BEAMS: ("beam", "beams", beams_create, "Kiriş"), ROOFS: ("roof", "roofs", roofs_create, "Çatı"),
+           RAILINGS: ("railing", "railings", railings_create, "Korkuluk")}
 
 
 def extra_of(inp):
@@ -2451,6 +2513,52 @@ def beam_cases():
     return c.cases
 
 
+def railing(**kw):
+    r = {"pts": [P(0, 50), P(3, 50), P(3, 51.2)]}
+    r.update(kw)
+    return {"layerId": "cizim", "railings": [r]}
+
+
+def railing_cases():
+    """docs/adr/8045 §3: railings written with PAİY 38's 1.10 m and the top rail's 5 cm unless given, their other
+    defaults left out; their refusals."""
+    c = Cases()
+    life(c, RAILINGS, railing(arch={"level": "kat-1"}), "Sahanlığın boş kenarına korkuluk")
+    void = [P(5, 52), P(9, 52), P(9, 55), P(5, 55)]
+    for name, inp in [
+        ("galeri boşluğunun çevresine kapalı cam korkuluk", railing(pts=void, closed=True, infill="glass", width=0.06)),
+        ("dikey çubuk aralığı ve kot farkıyla", railing(gap=0.09, offset=-0.05, height=1.2)),
+        ("PAİY'nin 0,10 m aralığı verilince yazılır", railing(gap=0.1)),
+        ("açık, varsayılan dolgu ve sıfır kot farkı yazılmaz", railing(closed=False, infill="balusters", offset=0.0)),
+        ("1,10 m'den alçak korkuluk da yazılır (denetim söyler)", railing(height=0.9, infill="solid")),
+        ("tadilatta ilave korkuluk", railing(arch={"level": "kat-1", "phase": "new"})),
+        ("iki korkuluk tek adımda", {"layerId": "cizim", "railings": [railing()["railings"][0], railing(pts=void, closed=True)["railings"][0]]}),
+        ("renkli ve kalın korkuluk", {**railing(), "color": "#cc3300", "lineWeight": 0.35}),
+    ]:
+        c.add(name, [create_step(Drawing(), RAILINGS, "execute", inp)])
+    refusals(c, RAILINGS, [
+        ("korkuluk verilmezse reddedilir", {"layerId": "cizim", "railings": []}, {}),
+        ("sonsuz yükseklik reddedilir", railing(height=1.1), {"non_finite": {"railings[0].height": "NaN"}}),
+        ("sonsuz köşe reddedilir", railing(), {"non_finite": {"railings[0].pts[1].x": "Infinity"}}),
+        ("sonsuz çubuk aralığı reddedilir", railing(gap=0.1), {"non_finite": {"railings[0].gap": "Infinity"}}),
+        ("sonsuz kot farkı reddedilir", railing(offset=0.1), {"non_finite": {"railings[0].offset": "-Infinity"}}),
+        ("tek noktalı açık çizgi reddedilir", railing(pts=[P(0, 50)]), {}),
+        ("iki noktalı kapalı çizgi reddedilir", railing(pts=[P(0, 50), P(3, 50)], closed=True), {}),
+        ("art arda aynı nokta reddedilir", railing(pts=[P(0, 50), P(0, 50), P(3, 50)]), {}),
+        ("kapalı çizginin ilk noktası sonda yinelenince reddedilir", railing(pts=void + [P(5, 52)], closed=True), {}),
+        ("sıfır yükseklik reddedilir", railing(height=0.0), {}),
+        ("3 m'den yüksek korkuluk reddedilir", railing(height=3.5), {}),
+        ("sıfır küpeşte reddedilir", railing(width=0.0), {}),
+        ("0,5 m'den geniş küpeşte reddedilir", railing(width=0.6), {}),
+        ("sıfır çubuk aralığı reddedilir", railing(gap=0.0), {}),
+        ("1 m'den geniş çubuk aralığı reddedilir", railing(gap=1.5), {}),
+        ("12 m kot farkı reddedilir", railing(offset=12.0), {}),
+        ("olmayan kat reddedilir", railing(arch={"level": "yok"}), {}),
+    ])
+    common_refusals(c, RAILINGS, railing())
+    return c.cases
+
+
 CHIMNEY = {"kind": "chimney", "at": {"x": 9.0, "y": 56.0}, "width": 0.4, "depth": 0.4}
 VENT = {"kind": "vent", "at": {"x": 3.0, "y": 52.0}, "width": 0.6, "depth": 0.6}
 WINDOW = {"kind": "window", "at": {"x": 6.0, "y": 51.5}, "width": 0.78, "depth": 1.18}
@@ -2720,7 +2828,7 @@ def stair_level_cases():
 
 FIELDS = [  # wire name, kinds, nullable
     ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True), ("ends", ("grid",), True),
-    ("shape", ("column",), False), ("width", ("column", "stair", "ramp", "beam"), False), ("depth", ("column",), True),
+    ("shape", ("column",), False), ("width", ("column", "stair", "ramp", "beam", "railing"), False), ("depth", ("column",), True),
     ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column", "beam"), True), ("fill", ("column",), False),
     ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair",), False),
     ("post", ("stair",), True), ("tread", ("stair",), False),
@@ -2730,24 +2838,28 @@ FIELDS = [  # wire name, kinds, nullable
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
     # A beam's (docs/adr/8041 §1).
     # A beam's (docs/adr/8041 §1); a roof's offset its eaves over its storey's top (docs/adr/8044 §1).
-    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam", "roof"), False), ("role", ("beam",), False),
+    # A railing's height its top over its floor, its offset its floor over its storey's (docs/adr/8045 §3).
+    ("height", ("beam", "railing"), False), ("justify", ("beam",), False), ("offset", ("beam", "roof", "railing"), False), ("role", ("beam",), False),
     # A column's, a beam's (docs/adr/8041 §2) or a roof's.
     ("material", ("column", "beam", "roof"), True),
     # A roof's (docs/adr/8044 §1, §6).
     ("slopes", ("roof",), False), ("thickness", ("roof",), True), ("overhang", ("roof",), True),
     ("gutter", ("roof",), True), ("snowGuard", ("roof",), True), ("parts", ("roof",), False),
-    ("level", ("grid", "column", "stair", "ramp", "beam", "roof"), True),
-    ("phase", ("grid", "column", "stair", "ramp", "beam", "roof"), True),
+    # A railing's (docs/adr/8045 §3); null gap: PAİY 38/4's 0.10 m.
+    ("infill", ("railing",), False), ("gap", ("railing",), True),
+    ("level", ("grid", "column", "stair", "ramp", "beam", "roof", "railing"), True),
+    ("phase", ("grid", "column", "stair", "ramp", "beam", "roof", "railing"), True),
 ]
-KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş", "roof": "çatı"}
+KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş", "roof": "çatı",
+             "railing": "korkuluk"}
 DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False,
-            "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam", "parts": []}
+            "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam", "parts": [], "infill": "balusters"}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width", "Genişlik"), ("depth", "Boy"),
            ("legs[0]", "L kolonun kolu"), ("legs[1]", "L kolonun kolu"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
            ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu"),
            ("height", "Yükseklik"), ("offset", "Kot farkı"), ("thickness", "Kalınlık"), ("overhang", "Saçak"),
-           ("gutter", "Oluk"), ("snowGuard", "Kar siperliği")]
+           ("gutter", "Oluk"), ("snowGuard", "Kar siperliği"), ("gap", "Çubuk aralığı")]
 
 
 def set_field(f, name, value):
@@ -2784,13 +2896,13 @@ def set_field(f, name, value):
 
 def problem_of(kind, f, path):
     return {"grid": grid_problem, "column": column_problem, "stair": stair_problem, "ramp": ramp_problem,
-            "beam": beam_problem, "roof": roof_problem}[kind](f, path)
+            "beam": beam_problem, "roof": roof_problem, "railing": railing_problem}[kind](f, path)
 
 
 def edit(d, inp, conflict=False):
     uids = inp["uids"]
     if not uids:
-        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven, rampa ya da çatı verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
+        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
     for i, u in enumerate(uids):
         if not is_uid(u):
             return refusal("invalid_uid", f"“{u}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", f"uids[{i}]"), None
@@ -2805,7 +2917,7 @@ def edit(d, inp, conflict=False):
         found.append((i, oid))
     for i, oid in found:
         if d.objs[oid][0] not in KIND_NAME:
-            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
+            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
     op = inp["operation"]
     out, warnings = [], []
     if op["kind"] == "set":
@@ -3056,6 +3168,32 @@ def edit_cases():
     d, made, k = with_roof()
     c.add("Değiştir: sonsuz oluk reddedilir",
           [made, one(d, [uid_of(k)], {"kind": "set", "gutter": 0.15}, non_finite={"operation.gutter": "NaN"})])
+
+    # A railing's fields (docs/adr/8045 §3).
+    def with_railing(**kw):
+        d = Drawing()
+        made = create_step(d, RAILINGS, "execute", railing(**kw), with_command=True)
+        return d, made, d.next - 1
+
+    d, made, k = with_railing()
+    c.add("Değiştir: korkuluğun yüksekliği, küpeştesi, dolgusu ve kot farkı",
+          [made, one(d, [uid_of(k)], {"kind": "set", "height": 1.2, "width": 0.06, "infill": "glass", "offset": 0.05})])
+    d, made, k = with_railing(gap=0.09, infill="solid", offset=0.1)
+    c.add("Değiştir: null çubuk aralığını kaldırır, varsayılan dolgu ve sıfır kot farkı yazılmaz",
+          [made, one(d, [uid_of(k)], {"kind": "set", "gap": None, "infill": "balusters", "offset": 0.0})])
+    d, made, k = with_railing()
+    c.add("Değiştir: korkuluğun katı ve tadilat durumu", [made, one(d, [uid_of(k)], {"kind": "set", "level": "zemin", "phase": "existing"})])
+    d, made, k = with_railing()
+    c.add("Değiştir: sıfır yükseklikli korkuluk reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "height": 0.0})])
+    d, made, k = with_railing()
+    c.add("Değiştir: 1 m'den geniş çubuk aralığı reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "gap": 1.5})])
+    d, made, k = with_railing()
+    c.add("Değiştir: sonsuz çubuk aralığı reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "gap": 0.1}, non_finite={"operation.gap": "NaN"})])
+    d, made, k = with_railing()
+    c.add("Değiştir: korkuluğa merdivenin basamağı reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "tread": 0.3})])
+    d = Drawing()
+    c.add("Değiştir: merdivene korkuluğun dolgusu reddedilir", [one(d, [uid_of(8)], {"kind": "set", "infill": "glass"})])
     d = Drawing()
     c.add("Değiştir: null rampanın eğimini kaldırır, başlangıç kotu", [one(d, [uid_of(9)], {"kind": "set", "slope": None, "base": 0.45})])
     d = Drawing()
@@ -3151,6 +3289,7 @@ def files():
         "cad.stairs.create.curved.json": document(STAIRS, "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)", curved_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.beams.create.json": document(BEAMS, "Kiriş: eksen, genişlik, yükseklik, hiza, kot farkı, numara, malzeme; doğrulama, plan, yazma, geri alma; retler (ADR 8041 §1)", beam_cases()),
+        "cad.railings.create.json": document(RAILINGS, "Korkuluk: çizgi, kapalı, yükseklik (PAİY 38/1 1,10 m), küpeşte, dolgu, çubuk aralığı (PAİY 38/4 0,10 m), kot farkı; doğrulama, plan, yazma, geri alma; retler (ADR 8045 §3)", railing_cases()),
         "cad.roofs.create.json": document(ROOFS, "Çatı: saçak çizgisi, kenarların eğimi ya da kalkanı, kot farkı, kalınlık, saçak, kaplama; doğrulama, plan, yazma, geri alma; retler (ADR 8044 §1)", roof_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),

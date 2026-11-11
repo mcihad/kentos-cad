@@ -39,6 +39,7 @@ pub mod space;
 pub mod space_index;
 pub mod arch;
 pub mod beam;
+pub mod railing;
 pub mod roof;
 pub mod column_join;
 pub mod casework;

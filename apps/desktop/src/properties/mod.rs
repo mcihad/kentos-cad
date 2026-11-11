@@ -233,6 +233,8 @@ pub enum ArchField {
     BeamHeight,
     BeamOffset,
     BeamBase,
+    /// A railing's balusters' clear gap (docs/adr/8045 §3); empty: PAİY 38/4's 0.10 m.
+    RailingGap,
     /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2).
     Material,
 }
@@ -2121,6 +2123,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     | ArchField::BeamHeight
                     | ArchField::BeamOffset
                     | ArchField::BeamBase
+                    | ArchField::RailingGap
             );
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
@@ -2167,6 +2170,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 ArchField::BeamBase => ArchChange {
                     base_offset: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::RailingGap => ArchChange {
+                    gap: Some(words.map(|_| n)),
                     ..Default::default()
                 },
                 ArchField::BubbleSize => ArchChange {

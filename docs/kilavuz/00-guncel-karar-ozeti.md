@@ -402,6 +402,12 @@
     Merdiven aracı A, Öznitelikler Dönüş/Balansman basamağı/En dar iç basamak, Mevzuat `paiy_stair_step` düzeltmesiyle.
     Kesitte (ADR 8045 §2) kollar dönüş bölgesinde sahanlıktaki gibi durur, her dengelenmiş basamak `tread_ring`
     tabanlı ayrı prizma (rıht uçları + sardığı band köşeleri); alt yüz basamaklı yaklaşım, burulmuş yüzey sonraya.
+  - **Bağımsız korkuluk (M45 2. bölüm, ADR 8045 §3; PAİY 38/1, 38/4):** `Entity::Railing` (`.kcad` 242, `railing`):
+    küpeştenin orta çizgisi, `closed`, yükseklik (1,10 m), küpeşte eni (0,05 m), dolgu (dikey çubuk/cam/dolu), çubuk
+    aralığı (0,10 m), kot farkı; `cad.railings.create`, `cad.arch.edit` alanları; planda iki ince çizgi
+    (`geom::railing`), 1/200'de orta çizgi. Merdiven ▾ › Korkuluk (KO): Çiz ya da Boşluktan — Etkin kattaki döşeme
+    boşluğunun serbest kenarları (`Document::slab_runs`), alt kattan gelen merdivenin son rıht çizgisi açık, 0,10 m'den
+    kısa parça yok; katman MM-KORK-CUBUK/CAM/DOLU.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

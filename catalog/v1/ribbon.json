@@ -1754,7 +1754,8 @@
            "edit.selectFilter.tag",
            "edit.selectFilter.viewmark",
            "edit.selectFilter.slab",
-           "edit.selectFilter.roof"
+           "edit.selectFilter.roof",
+           "edit.selectFilter.railing"
           ],
           "works": [
            "architecture"
@@ -2081,6 +2082,11 @@
           "command": "tool.ramp",
           "title": "Merdiven",
           "label": "Rampa"
+         },
+         {
+          "command": "tool.railing",
+          "title": "Merdiven",
+          "label": "Korkuluk"
          }
         ]
        }

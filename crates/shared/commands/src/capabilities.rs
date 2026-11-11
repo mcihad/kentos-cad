@@ -13,7 +13,7 @@
 use crate::{CommandCapabilities, CommandTarget};
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 32] = [
+pub const KINDS: [&str; 33] = [
     "point",
     "line",
     "polyline",
@@ -42,6 +42,7 @@ pub const KINDS: [&str; 32] = [
     "column",
     "beam",
     "roof",
+    "railing",
     "stair",
     "ramp",
     "tag",
@@ -3854,8 +3855,8 @@ const ENTRIES: &[Entry] = &[
             vec![target(
                 None,
                 &[
-                    "wall", "space", "grid", "column", "beam", "roof", "stair", "ramp", "slab",
-                    "polyline", "insert",
+                    "wall", "space", "grid", "column", "beam", "roof", "railing", "stair", "ramp",
+                    "slab", "polyline", "insert",
                 ],
                 &[],
                 Some("not_levelled"),
@@ -4110,6 +4111,23 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.railings.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_railing",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.arch.edit",
         refusals: &[
             OBJECTS,
@@ -4125,6 +4143,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_ramp",
                 "invalid_beam",
                 "invalid_roof",
+                "invalid_railing",
                 "not_a_grid",
                 "grids_parallel",
                 "level_not_found",
@@ -4144,7 +4163,7 @@ const ENTRIES: &[Entry] = &[
         targets: || {
             vec![target(
                 None,
-                &["grid", "column", "stair", "ramp", "beam", "roof"],
+                &["grid", "column", "stair", "ramp", "beam", "roof", "railing"],
                 &[],
                 Some("not_arch_element"),
                 None,
@@ -7022,6 +7041,7 @@ const ENTRIES: &[Entry] = &[
                         "column",
                         "beam",
                         "roof",
+                        "railing",
                         "stair",
                         "ramp",
                         "slab",

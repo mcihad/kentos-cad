@@ -5504,6 +5504,1070 @@
       ]
     },
     {
+      "name": "Değiştir: korkuluğun yüksekliği, küpeştesi, dolgusu ve kot farkı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 1.2,
+              "width": 0.06,
+              "infill": "glass",
+              "offset": 0.05
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "railing",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 51.2
+                    }
+                  ],
+                  "height": 1.2,
+                  "width": 0.06,
+                  "offset": 0.05,
+                  "infill": "glass"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.2,
+                "width": 0.06,
+                "offset": 0.05,
+                "infill": "glass"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: null çubuk aralığını kaldırır, varsayılan dolgu ve sıfır kot farkı yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "gap": 0.09,
+                "infill": "solid",
+                "offset": 0.1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05,
+                "infill": "solid",
+                "gap": 0.09,
+                "offset": 0.1
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "gap": null,
+              "infill": "balusters",
+              "offset": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "railing",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 51.2
+                    }
+                  ],
+                  "height": 1.1,
+                  "width": 0.05
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: korkuluğun katı ve tadilat durumu",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "zemin",
+              "phase": "existing"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "railing",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 50.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 51.2
+                    }
+                  ],
+                  "height": 1.1,
+                  "width": 0.05,
+                  "arch": {
+                    "level": "zemin",
+                    "phase": "existing"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05,
+                "arch": {
+                  "level": "zemin",
+                  "phase": "existing"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sıfır yükseklikli korkuluk reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_railing",
+              "message": "Korkuluğun yüksekliği 0; sıfırdan büyük, en çok 3 m olmalı.",
+              "path": "uids[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: 1 m'den geniş çubuk aralığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "gap": 1.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_railing",
+              "message": "Korkuluğun çubuk aralığı 1.5; sıfırdan büyük, en çok 1 m olmalı.",
+              "path": "uids[0].gap"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sonsuz çubuk aralığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "gap": 0.1
+            }
+          },
+          "nonFinite": {
+            "operation.gap": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Çubuk aralığı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.gap"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: korkuluğa merdivenin basamağı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.railings.create",
+          "input": {
+            "layerId": "cizim",
+            "railings": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "railing",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 51.2
+                  }
+                ],
+                "height": 1.1,
+                "width": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "tread": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“tread” alanı korkuluk nesnesinde yok.",
+              "path": "operation.tread"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: merdivene korkuluğun dolgusu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "infill": "glass"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“infill” alanı merdiven nesnesinde yok.",
+              "path": "operation.infill"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: null rampanın eğimini kaldırır, başlangıç kotu",
       "steps": [
         {
@@ -7885,7 +8949,7 @@
             "status": "failed",
             "error": {
               "code": "no_entities",
-              "message": "Düzenlenecek aks, kolon, kiriş, merdiven, rampa ya da çatı verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
+              "message": "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
               "path": "uids"
             }
           },
@@ -8003,7 +9067,7 @@
             "status": "failed",
             "error": {
               "code": "not_arch_element",
-              "message": "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
+              "message": "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
               "path": "uids[0]"
             }
           },

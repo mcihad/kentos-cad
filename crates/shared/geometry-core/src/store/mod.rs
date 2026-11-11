@@ -811,6 +811,7 @@ impl Store {
             | Shape::Column { .. }
             | Shape::Beam { .. }
             | Shape::Roof { .. }
+            | Shape::Railing { .. }
             | Shape::Stair { .. }
             | Shape::Ramp { .. }
             | Shape::Tag { .. }
@@ -869,6 +870,7 @@ impl Store {
             | Shape::Column { .. }
             | Shape::Beam { .. }
             | Shape::Roof { .. }
+            | Shape::Railing { .. }
             | Shape::Stair { .. }
             | Shape::Ramp { .. }
             | Shape::Tag { .. }
@@ -931,6 +933,7 @@ impl Store {
             | Shape::Column { .. }
             | Shape::Beam { .. }
             | Shape::Roof { .. }
+            | Shape::Railing { .. }
             | Shape::Stair { .. }
             | Shape::Ramp { .. } => true,
             Shape::Space { space, .. } => space.slab.is_some(),

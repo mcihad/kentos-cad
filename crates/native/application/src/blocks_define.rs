@@ -301,6 +301,7 @@ pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Ramp(x) => &mut x.base,
         Entity::Beam(x) => &mut x.base,
         Entity::Roof(x) => &mut x.base,
+        Entity::Railing(x) => &mut x.base,
         Entity::Tag(x) => &mut x.base,
         Entity::ViewMark(x) => &mut x.base,
     }

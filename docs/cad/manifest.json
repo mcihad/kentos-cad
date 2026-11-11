@@ -3386,6 +3386,20 @@
    "tests": 0
   },
   {
+   "id": "edit.selectFilter.railing",
+   "kind": "command",
+   "title": "Seçim süzgecinde Korkuluk",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.ramp",
    "kind": "command",
    "title": "Seçim süzgecinde Rampa",
@@ -13512,6 +13526,22 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.railing",
+   "kind": "command",
+   "title": "Korkuluk",
+   "level": "semantic",
+   "via": [
+    "cad.railings.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.railings.create",
+   "mcp": "cad.railings.create",
+   "note": "Küpeştenin orta çizgisi, kapalı olup olmadığı, yükseklik, küpeşte eni, dolgu, çubuk aralığı, kot farkı ve kat komuta verilir. Boşluktan'da çizgiyi aracın kendisi bulur: Etkin kattaki döşemenin tıklanan boşluğunun kenarı, küpeşte eninin yarısı kadar döşemenin üstüne kaydırılmış (ADR 8045 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.ramp",

@@ -736,6 +736,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
         Entity::Ramp(r) => crate::arch_elements::core_ramp(&r.ramp),
         Entity::Beam(b) => crate::arch_elements::core_beam(&b.beam),
         Entity::Roof(r) => crate::arch_elements::core_roof(&r.roof),
+        Entity::Railing(r) => crate::arch_elements::core_railing(&r.railing),
         Entity::Tag(t) => crate::arch_elements::core_tag(&t.tag),
         Entity::ViewMark(m) => crate::arch_elements::core_viewmark(&m.mark),
         // A raster is no block's piece either (docs/adr/0204 §2); its frame for what it covers.
@@ -1084,6 +1085,7 @@ fn entity(s: &Shape) -> Option<Entity> {
         | Shape::Ramp { .. }
         | Shape::Beam { .. }
         | Shape::Roof { .. }
+        | Shape::Railing { .. }
         | Shape::Tag { .. }
         | Shape::ViewMark { .. } => return None,
     })

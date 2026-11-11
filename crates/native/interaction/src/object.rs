@@ -264,6 +264,7 @@ impl ObjectAction {
             Shape::Ramp { .. } => "rampa",
             Shape::Beam { .. } => "kiriş",
             Shape::Roof { .. } => "çatı",
+            Shape::Railing { .. } => "korkuluk",
             Shape::Tag { .. } => "etiket",
             Shape::ViewMark { .. } => "görünüm işareti",
             Shape::Xline { .. } => "yardımcı çizgi",

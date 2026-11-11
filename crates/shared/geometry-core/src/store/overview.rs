@@ -423,6 +423,7 @@ impl Canvas {
             | Shape::Ramp { .. }
             | Shape::Beam { .. }
             | Shape::Roof { .. }
+            | Shape::Railing { .. }
             | Shape::Tag { .. }
             | Shape::ViewMark { .. } => {
                 if let Some(o) = crate::geom::arch::outline(s) {

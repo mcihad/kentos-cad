@@ -885,6 +885,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Beam(b) => kentos_formats::arch_elements::core_beam(&b.beam),
         // Its eaves at its offset here; the store stands it on its storey ([`roof_shape`]).
         Entity::Roof(r) => kentos_formats::arch_elements::core_roof(&r.roof),
+        Entity::Railing(r) => kentos_formats::arch_elements::core_railing(&r.railing),
         Entity::Tag(t) => kentos_formats::arch_elements::core_tag(&t.tag),
         Entity::ViewMark(m) => kentos_formats::arch_elements::core_viewmark(&m.mark),
         Entity::Arc(a) => Shape::Arc {
@@ -1503,6 +1504,11 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         // Its eaves; its slopes stay with their edges (docs/adr/8044 §1).
         (Entity::Roof(e), Shape::Roof { pts, .. }) => {
             e.roof.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+        }
+        // Its line and its top rail's width (docs/adr/8045 §3); its height, infill and gap stay.
+        (Entity::Railing(e), Shape::Railing { pts, railing }) => {
+            e.railing.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+            e.railing.width = railing.width;
         }
         (
             Entity::Opening(e),
@@ -2225,6 +2231,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         | Shape::Ramp { .. }
         | Shape::Beam { .. }
         | Shape::Roof { .. }
+        | Shape::Railing { .. }
         | Shape::Tag { .. }
         | Shape::ViewMark { .. } => return None,
     })

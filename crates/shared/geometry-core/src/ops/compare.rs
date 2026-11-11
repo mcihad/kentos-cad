@@ -564,6 +564,14 @@ fn defs(shape: &Shape) -> Defs {
             ]);
             others.push(Other::Num(ramp.slope.unwrap_or(-1.0)));
         }
+        // Its line, its top rail's width and whether it closes (docs/adr/8045 §3).
+        Shape::Railing { pts, railing } => {
+            comps.push(path(pts, None));
+            lengths.push(railing.width);
+            others.push(Other::Text(
+                if railing.closed { "closed" } else { "open" }.into(),
+            ));
+        }
         // Its axis, its sizes, where its middle lies and its number (docs/adr/8041 §1).
         Shape::Beam { pts, beam } => {
             comps.push(path(pts, None));

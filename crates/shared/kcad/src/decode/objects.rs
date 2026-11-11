@@ -87,6 +87,7 @@ enum Kind {
     Slab,
     Beam,
     Roof,
+    Railing,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -126,6 +127,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("slab", Kind::Slab),
     ("beam", Kind::Beam),
     ("roof", Kind::Roof),
+    ("railing", Kind::Railing),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -482,6 +484,8 @@ pub(super) struct Features {
     pub(super) roof_downpipes: bool,
     /// Schema 241 (docs/adr/8045 §1): a balanced stair's winders.
     pub(super) stair_winders: bool,
+    /// Schema 242 (docs/adr/8045 §3): free-standing railings.
+    pub(super) railing_objects: bool,
     /// Schema 235 (docs/adr/8041 §2): a column's material.
     pub(super) column_material: bool,
     /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
@@ -800,6 +804,7 @@ impl Features {
             roof_edges: schema >= crate::SCHEMA_WITH_ROOF_EDGES,
             roof_downpipes: schema >= crate::SCHEMA_WITH_ROOF_DOWNPIPES,
             stair_winders: schema >= crate::SCHEMA_WITH_STAIR_WINDERS,
+            railing_objects: schema >= crate::SCHEMA_WITH_RAILING_OBJECTS,
             column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
             beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
@@ -895,6 +900,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Slab => key == "slab",
             Kind::Beam => key == "beam",
             Kind::Roof => key == "roof",
+            Kind::Railing => key == "railing",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -1110,6 +1116,7 @@ struct Fields {
     slab: Option<kentos_contracts::SlabFields>,
     beam: Option<kentos_contracts::BeamFields>,
     roof: Option<kentos_contracts::RoofFields>,
+    railing: Option<kentos_contracts::RailingFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -1398,6 +1405,7 @@ pub(super) fn object(
             && (has.slabs || *kind != Kind::Slab)
             && (has.beams || *kind != Kind::Beam)
             && (has.roofs || *kind != Kind::Roof)
+            && (has.railing_objects || *kind != Kind::Railing)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -1453,6 +1461,10 @@ pub(super) fn object(
     // Nor a roof: it stands on the drawing's storeys (docs/adr/8044 §1).
     if kind == Kind::Roof && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında çatı olamaz"));
+    }
+    // Nor a railing: it stands on the drawing's storeys (docs/adr/8045 §3).
+    if kind == Kind::Railing && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında korkuluk olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1732,6 +1744,7 @@ pub(super) fn object(
             "slab" if kind == Kind::Slab => f.slab = Some(json_part(r, "döşemenin alanları")?.0),
             "beam" if kind == Kind::Beam => f.beam = Some(json_part(r, "kirişin alanları")?.0),
             "roof" if kind == Kind::Roof => f.roof = Some(json_part(r, "çatının alanları")?.0),
+            "railing" if kind == Kind::Railing => f.railing = Some(json_part(r, "korkuluğun alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) =
@@ -3010,6 +3023,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Roof(kentos_contracts::RoofEntity { base, roof })
+        }
+        Kind::Railing => {
+            let railing = required(r, f.railing.take(), "railing")?;
+            if let Some((_, problem)) = railing.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Railing(kentos_contracts::RailingEntity { base, railing })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

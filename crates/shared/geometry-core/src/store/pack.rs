@@ -204,7 +204,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 40.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 41.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -740,9 +740,9 @@ impl Reader<'_> {
                     opening: <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
                 }
             }
-            // docs/adr/0343, 0344, 0345, 3041: a grid, a column, a stair, a ramp, a tag, a view mark or a beam as its JSON
-            // text.
-            31..=36 | 39 | 40 => {
+            // docs/adr/0343, 0344, 0345, 3041, 8044, 8045: a grid, a column, a stair, a ramp, a tag, a view mark, a beam,
+            // a roof or a railing as its JSON text.
+            31..=36 | 39..=41 => {
                 let text = self.string()?.unwrap_or_default();
                 let v = Json::parse(&text).map_err(|e| format!("mimari nesne okunamadı: {e}"))?;
                 let shape = <Shape as crate::api::json::FromJson>::from_json(&v)?;
@@ -754,6 +754,7 @@ impl Reader<'_> {
                     35 => matches!(shape, Shape::Tag { .. }),
                     39 => matches!(shape, Shape::Beam { .. }),
                     40 => matches!(shape, Shape::Roof { .. }),
+                    41 => matches!(shape, Shape::Railing { .. }),
                     _ => matches!(shape, Shape::ViewMark { .. }),
                 };
                 if !want {
@@ -1412,6 +1413,7 @@ impl Packer {
             | Shape::Ramp { .. }
             | Shape::Beam { .. }
             | Shape::Roof { .. }
+            | Shape::Railing { .. }
             | Shape::Tag { .. }
             | Shape::ViewMark { .. } => {
                 let kind = match shape {
@@ -1422,6 +1424,7 @@ impl Packer {
                     Shape::Tag { .. } => 35.0,
                     Shape::Beam { .. } => 39.0,
                     Shape::Roof { .. } => 40.0,
+                    Shape::Railing { .. } => 41.0,
                     _ => 36.0,
                 };
                 self.put(&[kind]);

@@ -2291,6 +2291,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 242 (docs/adr/8045 §3): a railing.
+    if objs.iter().any(|e| matches!(e, Entity::Railing(_))) {
+        return crate::SCHEMA_WITH_RAILING_OBJECTS;
+    }
     // Schema 241 (docs/adr/8045 §1): a balanced stair's winders.
     if objs.iter().any(kentos_contracts::needs_stair_winders) {
         return crate::SCHEMA_WITH_STAIR_WINDERS;

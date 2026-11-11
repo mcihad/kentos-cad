@@ -945,11 +945,13 @@ pub const SCHEMA_WITH_ROOF_EDGES: u32 = 239;
 pub const SCHEMA_WITH_ROOF_DOWNPIPES: u32 = 240;
 /// Schema 241 (docs/adr/8045 §1): a balanced stair's winders (`winders` of a stair).
 pub const SCHEMA_WITH_STAIR_WINDERS: u32 = 241;
+/// Schema 242 (docs/adr/8045 §3): free-standing railings (`railing`), the drawing's only.
+pub const SCHEMA_WITH_RAILING_OBJECTS: u32 = 242;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 239] = [
+pub const SCHEMAS: [u32; 240] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1189,6 +1191,7 @@ pub const SCHEMAS: [u32; 239] = [
     SCHEMA_WITH_ROOF_EDGES,
     SCHEMA_WITH_ROOF_DOWNPIPES,
     SCHEMA_WITH_STAIR_WINDERS,
+    SCHEMA_WITH_RAILING_OBJECTS,
 ];
 
 /// The file a drawing is saved as.

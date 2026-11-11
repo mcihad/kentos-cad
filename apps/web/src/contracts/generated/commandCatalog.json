@@ -13582,10 +13582,10 @@
       ]
     },
     {
-      "id": "cad.arch.edit",
+      "id": "cad.railings.create",
       "version": 1,
-      "title": "Mimari nesneyi düzenle",
-      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (docs/adr/8045 §1: dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "title": "Korkuluk",
+      "summary": "Bağımsız korkuluklar ekler (docs/adr/8045 §3); tek geri alma adımı “Korkuluk”. Her biri küpeştesinin orta çizgisi (pts: açıkken en az 2, kapalıyken 3, en çok 1000 nokta; art arda aynı nokta yok; closed: son noktadan ilkine döner — galeri boşluğunun çevresi, ilk nokta sonda yinelenmez), yükseklik (height: döşemesinden küpeştenin üstüne; yoksa 1,10 m, PAİY 38/1 “döşeme kotundan itibaren en az 1.10 metre”; en çok 3 m), küpeşte eni (width: yoksa 0,05 m; en çok 0,5 m), dolgu (infill: balusters dikey çubuk — yoksa —, glass cam, solid dolu panel), çubuk aralığı (gap: çubuklar arasındaki net boşluk, yoksa 0,10 m, PAİY 38/4 “en fazla 0.10 metre çapında geçişe izin verilir”; en çok 1 m; yalnız dikey çubukta okunur), kot farkı (offset: döşemesinin katının döşemesinden farkı, yoksa 0; en çok ±10 m), kat ve tadilat durumu (arch). Planda küpeşte, eni kadar aralıklı iki ince çizgi (açık korkuluğun uçları kapalı); 1/200 sadeleştirilmiş görünüşte yalnız orta çizgi. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -13601,7 +13601,205 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as\none undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,\n`revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
+        "description": "Input of `cad.railings.create` v1 (“Korkuluk”, docs/adr/8045 §3): railings on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_railing`, `level_not_found`, `invalid_line_weight`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,\n`attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "properties": {
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "lineWeight": {
+            "format": "double",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "railings": {
+            "items": {
+              "$ref": "#/$defs/NewRailing"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layerId",
+          "railings"
+        ],
+        "title": "RailingsCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.railings.create` v1.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "ids",
+          "revision"
+        ],
+        "title": "RailingsCreated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.railings.create` would write (plan mode): the objects as they would be stored, their `id` 0.",
+        "properties": {
+          "railings": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "railings",
+          "revision"
+        ],
+        "title": "RailingsPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_objects",
+          "not_finite",
+          "invalid_railing",
+          "level_not_found",
+          "invalid_line_weight",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Sahanlığın boş kenarına 1,10 m dikey çubuklu korkuluk",
+          "input": {
+            "layerId": "korkuluk",
+            "railings": [
+              {
+                "arch": {
+                  "level": "k1"
+                },
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 1.2
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Galeri boşluğunun çevresine cam korkuluk",
+          "input": {
+            "layerId": "korkuluk",
+            "railings": [
+              {
+                "arch": {
+                  "level": "k1"
+                },
+                "closed": true,
+                "infill": "glass",
+                "pts": [
+                  {
+                    "x": 5.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 5.0
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.arch.edit",
+      "version": 1,
+      "title": "Mimari nesneyi düzenle",
+      "summary": "Kalıcı kimlikleri verilen aks, kolon, kiriş, merdiven, rampa, çatı ve korkulukları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation, type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width, risers, riserHeight, tread, landing, cut, winders (docs/adr/8045 §1: dönüşün iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3; hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si), offset (docs/adr/8045 §3; hatalı korkuluk invalid_railing); hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids\nchanged as one undo step “Mimari nesneyi düzenle”, all or none.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,\n`field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,\n`invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.\nWarnings: those of the stairs and ramps written.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -13683,7 +13881,8 @@
               "stair",
               "ramp",
               "beam",
-              "roof"
+              "roof",
+              "railing"
             ],
             "refusedWith": "not_arch_element"
           }
@@ -13704,6 +13903,7 @@
           "invalid_ramp",
           "invalid_beam",
           "invalid_roof",
+          "invalid_railing",
           "not_a_grid",
           "grids_parallel",
           "level_not_found",
@@ -26783,6 +26983,7 @@
               "column",
               "beam",
               "roof",
+              "railing",
               "stair",
               "ramp",
               "slab",
@@ -94683,6 +94884,7 @@
               "column",
               "beam",
               "roof",
+              "railing",
               "stair",
               "ramp",
               "slab",
@@ -111151,6 +111353,12 @@
       "meaning": "Çatının alanları bir çatı tanımlamıyor: en az üç noktalı saçak çizgisi, her kenara bir eğim ya da kalkan, sınırları içinde kalınlık, saçak ve kot farkı."
     },
     {
+      "code": "invalid_railing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Korkuluğun alanları bir korkuluk tanımlamıyor: açıkken en az iki, kapalıyken üç noktalı çizgi, sıfırdan büyük yükseklik ve küpeşte eni, sınırları içinde çubuk aralığı ve kot farkı."
+    },
+    {
       "code": "not_a_grid",
       "kind": "failed",
       "retryable": false,
@@ -111178,7 +111386,7 @@
       "code": "not_arch_element",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Nesne aks, kolon, kiriş, merdiven, rampa ya da çatı değil."
+      "meaning": "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil."
     },
     {
       "code": "field_not_for_kind",
@@ -116731,6 +116939,15 @@
                 "null"
               ]
             },
+            "gap": {
+              "description": "A railing's balusters' clear gap (docs/adr/8045 §3); null: PAİY 38/4's 0.10 m.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            },
             "gutter": {
               "description": "A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none.",
               "format": "double",
@@ -116741,7 +116958,7 @@
               "x-unit": "length"
             },
             "height": {
-              "description": "A beam's height (docs/adr/8041 §1).",
+              "description": "A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3).",
               "format": "double",
               "type": [
                 "number",
@@ -116755,6 +116972,17 @@
                 "boolean",
                 "null"
               ]
+            },
+            "infill": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RailingInfill"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel."
             },
             "justify": {
               "anyOf": [
@@ -116823,7 +117051,7 @@
               ]
             },
             "offset": {
-              "description": "A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1).",
+              "description": "A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1); a railing's floor over\nits storey's (docs/adr/8045 §3).",
               "format": "double",
               "type": [
                 "number",
@@ -117006,7 +117234,7 @@
               ]
             },
             "width": {
-              "description": "A column's, a stair's, a ramp's or a beam's.",
+              "description": "A column's, a stair's, a ramp's or a beam's; a railing's top rail's (docs/adr/8045 §3).",
               "format": "double",
               "type": [
                 "number",
@@ -136961,6 +137189,20 @@
           "properties": {
             "kind": {
               "const": "roof",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/RailingEntity",
+          "description": "A railing (docs/adr/8045 §3): its line, its height, its top rail's width and its infill; its top rail drawn as two\nthin lines in a plan.",
+          "properties": {
+            "kind": {
+              "const": "railing",
               "type": "string"
             }
           },
@@ -160971,6 +161213,97 @@
       ],
       "type": "object"
     },
+    "NewRailing": {
+      "additionalProperties": false,
+      "description": "One railing to draw (docs/adr/8045 §3): its fields, and its attributes.",
+      "properties": {
+        "arch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "closed": {
+          "description": "Its line runs on from its last point back to its first (round a gallery's void); absent: open.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gap": {
+          "description": "The clear gap between its balusters; absent: 0.10 m (PAİY 38/4).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "height": {
+          "description": "Its top over its floor; absent: 1.10 m (PAİY 38/1).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "infill": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RailingInfill"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What fills it under its top rail; absent: upright balusters."
+        },
+        "offset": {
+          "description": "Its floor over its storey's; absent: 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "pts": {
+          "description": "Its line, the middle of its top rail: straight stretches from point to point.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "width": {
+          "description": "Its top rail's width (küpeşte); absent: 0.05 m.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "pts"
+      ],
+      "type": "object"
+    },
     "NewRamp": {
       "additionalProperties": false,
       "description": "One ramp to draw.",
@@ -182834,6 +183167,212 @@
       ],
       "type": "object"
     },
+    "RailingEntity": {
+      "description": "A railing (docs/adr/8045 §3).",
+      "properties": {
+        "arch": {
+          "$ref": "#/$defs/ArchInfo"
+        },
+        "attachments": {
+          "description": "The photos and documents it carries, in their order (docs/adr/0225\n§1); none on a block's objects.",
+          "items": {
+            "$ref": "#/$defs/Attachment"
+          },
+          "type": "array"
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+          "type": "object"
+        },
+        "byLayer": {
+          "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
+          "items": {
+            "$ref": "#/$defs/LookPart"
+          },
+          "type": "array"
+        },
+        "closed": {
+          "description": "Its line runs on from its last point back to its first: round a gallery's void.",
+          "type": "boolean"
+        },
+        "color": {
+          "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gap": {
+          "description": "The clear gap between its balusters, metres; absent: 0.10 (PAİY 38/4's most). Read with balusters alone.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "height": {
+          "description": "Its top over its floor, metres (PAİY 38/1: at least 1.10).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "infill": {
+          "$ref": "#/$defs/RailingInfill",
+          "description": "What fills it under its top rail: upright balusters (absent), glass or a solid panel."
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelPins": {
+          "description": "Its labels moved, turned, pinned or hidden by hand (docs/adr/0212\n§3.7), one a class at most.",
+          "items": {
+            "$ref": "#/$defs/LabelPin"
+          },
+          "type": "array"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "linePattern": {
+          "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own line type; absent: its source's (the layer's, or the insert's in a block)."
+        },
+        "lineTypeScale": {
+          "description": "Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "lineWeight": {
+          "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+          "format": "double",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "offset": {
+          "description": "Its floor over its storey's, metres; absent: 0.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "order": {
+          "description": "Its place in its layer's drawing order: lower first, equals in the\ndocument's order; absent: 0; a 32-bit integer. Only a drawing's object has it.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "pts": {
+          "description": "Its line, the middle of its top rail: straight stretches from point to point, at least two points (three when\nclosed).",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "symbol": {
+          "description": "Library symbol overriding the layer's style.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transparency": {
+          "description": "How transparent it is, 0 to 0.9; absent: its source's (none for a layer).",
+          "format": "double",
+          "maximum": 0.9,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "width": {
+          "description": "Its top rail's width (küpeşte), metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "wipeout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Wipeout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+        }
+      },
+      "required": [
+        "id",
+        "layerId",
+        "attrs",
+        "pts",
+        "height",
+        "width"
+      ],
+      "type": "object"
+    },
+    "RailingInfill": {
+      "description": "What fills a railing under its top rail (docs/adr/8045 §3).",
+      "oneOf": [
+        {
+          "const": "balusters",
+          "description": "Dikey çubuk: upright balusters, their clear gap `gap`.",
+          "type": "string"
+        },
+        {
+          "const": "glass",
+          "description": "Cam: a glass panel.",
+          "type": "string"
+        },
+        {
+          "const": "solid",
+          "description": "Dolu: a solid panel (sheet, board).",
+          "type": "string"
+        }
+      ]
+    },
     "Railings": {
       "description": "Which sides of a stair or a ramp carry a railing, left and right as one walks up it from its first point\n(docs/adr/0705 §2). Absent on the object: none.",
       "enum": [
@@ -191049,6 +191588,11 @@
         {
           "const": "roof",
           "description": "Çatı (docs/adr/8044 §1); after it for the same reason.",
+          "type": "string"
+        },
+        {
+          "const": "railing",
+          "description": "Korkuluk (docs/adr/8045 §3); after it for the same reason.",
           "type": "string"
         }
       ]

@@ -1,4 +1,5 @@
-//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create`, `cad.ramps.create` and `cad.beams.create` (docs/adr/8041
+//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create`, `cad.ramps.create`, `cad.railings.create` (docs/adr/8045
+//! §3) and `cad.beams.create` (docs/adr/8041
 //! §1) v1 (docs/adr/0343 §4, plan/cad.md
 //! `CAD-ARCH-31`–`36`): grids, columns, stairs and ramps on a named layer, each call one undo step named for its kind
 //! (“Aks”, “Kolon”, “Merdiven”, “Rampa”). The tools preview the plan's objects and write through `execute`; Python and
@@ -25,7 +26,8 @@ use kentos_commands::{
     ArchInfo, BeamsCreate, BeamsCreated, BeamsPlan, ColumnEntity, ColumnFields, ColumnsCreate,
     ColumnsCreated, ColumnsPlan, CommandResult, CommandWarning, Entity, EntityBase, GridEntity,
     GridFields, GridSystem, GridsCreate, GridsCreated, GridsPlan, RadialGridSystem, RampEntity,
-    RampFields, RampsCreate, RampsCreated, RampsPlan, RoofsCreate, RoofsCreated, RoofsPlan,
+    RailingsCreate, RailingsCreated, RailingsPlan, RampFields, RampsCreate, RampsCreated, RampsPlan, RoofsCreate,
+    RoofsCreated, RoofsPlan,
     SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, SystemColumns,
     Vec2,
 };
@@ -45,6 +47,8 @@ pub const RAMP_STEP: &str = "Rampa";
 pub const BEAM_STEP: &str = "Kiriş";
 /// The undo step's name of `cad.roofs.create` (docs/adr/8044 §1).
 pub const ROOF_STEP: &str = "Çatı";
+/// The undo step's name of `cad.railings.create` (docs/adr/8045 §3).
+pub const RAILING_STEP: &str = "Korkuluk";
 
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
@@ -1470,6 +1474,61 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
     )
 }
 
+/// `cad.railings.create`'s check (docs/adr/8045 §3): each railing's numbers, its fields (PAİY 38's 1.10 m and 0.10 m when
+/// none are given), its level.
+fn railings_check(doc: &Document, input: &RailingsCreate) -> Result<Checked, Stop> {
+    if input.railings.is_empty() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak korkuluk verilmedi. En az bir korkuluğun çizgisini verin.".into(),
+            "railings",
+        ));
+    }
+    too_many(input.railings.len(), codes::INVALID_RAILING, "korkuluk", "railings")?;
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.railings.iter().enumerate() {
+        let at = format!("railings[{i}]");
+        points(&n.pts, &at)?;
+        finite_each(
+            &[
+                (n.height, "height", "Yükseklik"),
+                (n.width, "width", "Küpeşte eni"),
+                (n.gap, "gap", "Çubuk aralığı"),
+                (n.offset, "offset", "Kot farkı"),
+            ],
+            &at,
+        )?;
+        let r = kentos_commands::RailingFields {
+            pts: n.pts.clone(),
+            closed: n.closed.unwrap_or(false),
+            height: n.height.unwrap_or(kentos_commands::RAILING_HEIGHT),
+            width: n.width.unwrap_or(kentos_commands::RAILING_WIDTH),
+            infill: n.infill.unwrap_or_default(),
+            gap: n.gap,
+            offset: n.offset.unwrap_or(0.0),
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        if let Some((field, words)) = r.problem() {
+            return Err(fail(codes::INVALID_RAILING, words, &format!("{at}.{field}")));
+        }
+        crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Railing(kentos_commands::RailingEntity { base, railing: r })),
+        ));
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        Vec::new(),
+    )
+}
+
 /// `cad.roofs.create`'s check (docs/adr/8044 §1): each roof's numbers, its fields, its eaves turning out at every
 /// corner (a line turning in is not drawn yet: its straight skeleton needs split events), its level.
 fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
@@ -1888,6 +1947,17 @@ create_command!(
     CAD_ROOFS_CREATE_VERSION
 );
 create_command!(
+    railings_create,
+    RailingsCreate,
+    RailingsPlan,
+    railings,
+    RailingsCreated,
+    railings_check,
+    RAILING_STEP,
+    CAD_RAILINGS_CREATE,
+    CAD_RAILINGS_CREATE_VERSION
+);
+create_command!(
     beams_create,
     BeamsCreate,
     BeamsPlan,
@@ -1908,6 +1978,7 @@ pub fn arch_of(e: &Entity) -> Option<&ArchInfo> {
         Entity::Ramp(r) => Some(&r.ramp.arch),
         Entity::Beam(b) => Some(&b.beam.arch),
         Entity::Roof(r) => Some(&r.roof.arch),
+        Entity::Railing(r) => Some(&r.railing.arch),
         _ => None,
     }
 }

@@ -561,6 +561,17 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             f.thickness = f.thickness.map(|t| s.apply(t));
             f.overhang = f.overhang.map(|o| s.apply(o));
         }
+        // Its line, height, top rail and gap are lengths, its offset a height (docs/adr/8045 §3).
+        Entity::Railing(e) => {
+            let f = &mut e.railing;
+            s.points(&mut f.pts);
+            f.height = s.apply(f.height);
+            f.width = s.apply(f.width);
+            f.gap = f.gap.map(|g| s.apply(g));
+            let mut offset = Some(f.offset);
+            s.height(&mut offset);
+            f.offset = offset.unwrap_or(f.offset);
+        }
         Entity::Stair(e) => {
             let f = &mut e.stair;
             s.points(&mut f.pts);

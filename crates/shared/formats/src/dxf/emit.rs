@@ -528,7 +528,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Opening(o) => o.opening.place.clone(),
         Entity::Space(s) => s.as_polygon().pts,
         Entity::Slab(s) => s.as_polygon().pts,
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) | Entity::Railing(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             crate::arch_elements::outline_points(e).unwrap_or_default()
         }
     }
@@ -3715,6 +3715,7 @@ fn is_arch(e: &Entity) -> bool {
             | Entity::Ramp(_)
             | Entity::Beam(_)
             | Entity::Roof(_)
+            | Entity::Railing(_)
             | Entity::Tag(_)
             | Entity::ViewMark(_)
     ) || matches!(e, Entity::Polyline(p) if p.space_separator.is_some())

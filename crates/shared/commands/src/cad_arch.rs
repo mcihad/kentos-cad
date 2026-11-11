@@ -31,6 +31,9 @@ pub const CAD_BEAMS_CREATE_VERSION: u32 = 1;
 /// Roofs (docs/adr/8044 §1).
 pub const CAD_ROOFS_CREATE: &str = "cad.roofs.create";
 pub const CAD_ROOFS_CREATE_VERSION: u32 = 1;
+/// Railings (docs/adr/8045 §3).
+pub const CAD_RAILINGS_CREATE: &str = "cad.railings.create";
+pub const CAD_RAILINGS_CREATE_VERSION: u32 = 1;
 pub const CAD_ARCH_EDIT: &str = "cad.arch.edit";
 pub const CAD_ARCH_EDIT_VERSION: u32 = 1;
 /// A column's temporary distances (docs/adr/0712): on each side the clear distance to the nearest parallel face.
@@ -1032,6 +1035,105 @@ pub struct RoofsPlan {
     pub revision: String,
 }
 
+/// One railing to draw (docs/adr/8045 §3): its fields, and its attributes.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NewRailing {
+    /// Its line, the middle of its top rail: straight stretches from point to point.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    /// Its line runs on from its last point back to its first (round a gallery's void); absent: open.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub closed: Option<bool>,
+    /// Its top over its floor; absent: 1.10 m (PAİY 38/1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    /// Its top rail's width (küpeşte); absent: 0.05 m.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: Option<f64>,
+    /// What fills it under its top rail; absent: upright balusters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub infill: Option<crate::RailingInfill>,
+    /// The clear gap between its balusters; absent: 0.10 m (PAİY 38/4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gap: Option<f64>,
+    /// Its floor over its storey's; absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub offset: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+}
+
+/// Input of `cad.railings.create` v1 (“Korkuluk”, docs/adr/8045 §3): railings on a named layer, as one undo step.
+///
+/// Refusals, in this order: `no_objects`, `not_finite`, `invalid_railing`, `level_not_found`, `invalid_line_weight`,
+/// `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,
+/// `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RailingsCreate {
+    pub layer_id: String,
+    pub railings: Vec<NewRailing>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.railings.create` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RailingsCreated {
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub ids: Vec<u32>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.railings.create` would write (plan mode): the objects as they would be stored, their `id` 0.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RailingsPlan {
+    pub railings: Vec<Entity>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
 /// The fields of a grid, column, stair or ramp to change; absent ones stay, a nullable one's null takes it away. A field
 /// the object's kind has not refuses the whole call (`field_not_for_kind`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1072,7 +1174,7 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub shape: Option<ColumnShape>,
-    /// A column's, a stair's, a ramp's or a beam's.
+    /// A column's, a stair's, a ramp's or a beam's; a railing's top rail's (docs/adr/8045 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1235,7 +1337,7 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base_offset: Option<Option<f64>>,
-    /// A beam's height (docs/adr/8041 §1).
+    /// A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1244,7 +1346,8 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub justify: Option<crate::WallJustify>,
-    /// A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1).
+    /// A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1); a railing's floor over
+    /// its storey's (docs/adr/8045 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
@@ -1312,6 +1415,20 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parts: Option<Vec<crate::RoofPart>>,
+    /// A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub infill: Option<crate::RailingInfill>,
+    /// A railing's balusters' clear gap (docs/adr/8045 §3); null: PAİY 38/4's 0.10 m.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gap: Option<Option<f64>>,
     /// Any kind's.
     #[serde(
         default,
@@ -1365,13 +1482,13 @@ pub enum ArchOperation {
     },
 }
 
-/// Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps and roofs named by their persistent ids changed as
-/// one undo step “Mimari nesneyi düzenle”, all or none.
+/// Input of `cad.arch.edit` v1: grids, columns, beams, stairs, ramps, roofs and railings named by their persistent ids
+/// changed as one undo step “Mimari nesneyi düzenle”, all or none.
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
 /// `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
-/// `invalid_beam`, `invalid_roof`, `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`,
-/// `revision_conflict`, `layer_locked`.
+/// `invalid_beam`, `invalid_roof`, `invalid_railing`, `not_a_grid`, `grids_parallel`, `level_not_found`,
+/// `invalid_revision`, `revision_conflict`, `layer_locked`.
 /// Warnings: those of the stairs and ramps written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

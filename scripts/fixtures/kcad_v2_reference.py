@@ -1772,6 +1772,8 @@ KINDS = {
     "beam": {"beam": (opaque, True)},
     # Schema 237 (docs/adr/8044 §1): a roof; its fields as one map.
     "roof": {"roof": (opaque, True)},
+    # Schema 242 (docs/adr/8045 §3): a free-standing railing; its fields as one map.
+    "railing": {"railing": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
         "parts": (opaque, True),
@@ -2124,7 +2126,7 @@ def entity(e, uid, index):
     if kind == "opening":
         assert uid is not None, "blok tanımında açıklık olamaz"
         e = opening_parts(e)
-    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark", "slab", "beam", "roof"):
+    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark", "slab", "beam", "roof", "railing"):
         assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa, etiket, görünüm işareti ya da döşeme olamaz"
         keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern")
@@ -2746,6 +2748,9 @@ def document(d):
     if any(e["kind"] == "stair" and "winders" in e for e in d["entities"]):
         # A balanced stair's winders (docs/adr/8045 §1).
         schema = max(schema, 241)
+    if any(e["kind"] == "railing" for e in d["entities"]):
+        # A free-standing railing (docs/adr/8045 §3).
+        schema = max(schema, 242)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3650,7 +3655,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-242.kcad"] = container(root(cmap(parts), version=uint(242)))
+    files["schema-version-243.kcad"] = container(root(cmap(parts), version=uint(243)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6761,6 +6766,11 @@ def build():
     assert stair_winders.count(b"\x67version\x18\xf1") == 1, "a balanced stair's winders are schema 241"
     out["stair-winders.kcad"] = container(stair_winders)
     out["broken/stair-winders-in-schema-240.kcad"] = container(stair_winders.replace(b"\x67version\x18\xf1", b"\x67version\x18\xf0"))
+    # Schema 242 (docs/adr/8045 §3): free-standing railings; schema 241 does not know the kind.
+    railing_objects = document(load("railing-objects.json"))
+    assert railing_objects.count(b"\x67version\x18\xf2") == 1, "free-standing railings are schema 242"
+    out["railing-objects.kcad"] = container(railing_objects)
+    out["broken/railing-objects-in-schema-241.kcad"] = container(railing_objects.replace(b"\x67version\x18\xf2", b"\x67version\x18\xf1"))
     # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
     assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"
