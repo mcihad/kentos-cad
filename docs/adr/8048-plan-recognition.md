@@ -1,11 +1,11 @@
 # ADR 8048: Planı tanı — patlatılmış DWG/DXF planından duvar ve açıklık
 
-- **Durum:** 1. ve 2. bölüm, 3. bölümün kolon (L dahil), blok, duvar üstü açıklık ve duvar ucundaki kapı adımları
-  yapıldı (11 Kasım 2026); `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
+- **Durum:** bitti (11 Kasım 2026): 1. ve 2. bölüm, 3. bölümün kolon (L dahil), blok, duvar üstü açıklık ve duvar
+  ucundaki kapı adımları; `plan/architecture-advanced.md` ADV-25, M48. Tanıma çekirdekte
   (`kentos_geometry_core::ops::plan_recognition`, §1), komutu `cad.arch.recognize` v1 (§2), masaüstü aracı Mimari ›
   Duvar ▾ › Planı tanı (§4); bölüm binasının ofis planı tanımla birebir okunuyor, gerçek pencerede kabul edildi
-  (Doğrulama); kolon katmanının dikdörtgeni ve dairesi kolon olur (§5); bloklar yerinde okunur (§6). Açık: L ve
-  düzensiz kolon, duvar stilinin genişlikten seçilmesi, yüzleri kesilmeden çizilmiş pencere, eğri
+  (Doğrulama); kolon katmanının dikdörtgeni, dairesi ve L'si kolon olur (§5); bloklar yerinde okunur (§6). Sonraya:
+  duvar stilinin genişlikten seçilmesi (isteğe bağlı), yüzleri kesilmeden çizilmiş pencere, eğri
   duvar, duvar ucundaki kapı, bloklar (BLOCKIFY benzeri) ve gerçek bir ofis DWG'siyle tadilat örneği (§3).
 - **Bağlam belgesi:** ADR 0339 §5 (Çizgiden duvar, `cad.walls.convert`), ADR 0340 §2 (duvar birleşimleri), ADR 0341
   (açıklıklar), ADR 0772 (açıklık türleri), ADR 8039 (tadilat durumu), ADR 8046 (DWG/DXF katman profili), ADR 8047
@@ -172,6 +172,9 @@ katmanda sayılır; açılamayan blok "N blok açılamadı" diye söylenir.
   parçadan 3 kapıya indi; seçilen güney duvarı 0,250 m, 12,000 m, Zemin kat. Aynı çizimde Mahal ▾ › Toplu mahal bul
   tanınan duvarlardan **5 mahal** buldu (5 yeni, 0 çakışan): köşe ve T birleşimleri odaları kapatıyor. Çizim 127
   nesneden 59'a indi (8 duvar, 7 açıklık, 5 mahal, 39 kalan).
+- **Gerçek pencerede bloklu plan** (release ikilisi, kolon ve blok adımlarından sonra): 94 nesne, Ctrl+A, Planı tanı:
+  önizleme "8 duvar, 3 kapı, 4 pencere, 0 boşluk, 8 kolon; 71 nesne silinir; 23 nesne kalır", kolonlar önizlemede;
+  Enter: kolonlar 1:50'de "30/30" ölçüsüyle KentOS kolonu, bloklar gitti, çizim 94 nesneden 46'ya.
 - Masaüstünün simge testi M47'nin bir kaçağını buldu: Model kalite kontrol formu (EK-9) Mimari denetim'in simgesini
   taşıyordu (Mimari'de iki komut bir simgeyi paylaşamaz); forma kendi simgesi verildi (satırlarında onay işaretli bir
   form).
