@@ -33,14 +33,13 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
     verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi
     teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı
     özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle
-    taşır (docs/adr/1320 §2); çizimin geri alması teslim dosyalarını kaldırmaz. previous
-    ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3):
-    sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve
-    kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir;
-    önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya
-    revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın
-    olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir
-    sayfa kopyalanmaz.
+    taşır; çizimin geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir
+    teslimin güncellemesi yeni klasöre yayınlanır: sayfası aynı çizen ve PDF'i teslim
+    edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır (carried),
+    öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır.
+    Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı
+    PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler
+    önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.
     """
     __slots__ = ()
     id = "file.publish.sheets"
@@ -81,14 +80,14 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün
         klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi
         sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her
-        sayfanın kaynak nesnelerini içerik özetleriyle taşır (docs/adr/1320 §2); çizimin
-        geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin
-        güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3): sayfası aynı çizen ve PDF'i
-        teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır
-        (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi
-        kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız
-        ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı
-        resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.
+        sayfanın kaynak nesnelerini içerik özetleriyle taşır; çizimin geri alması teslim
+        dosyalarını kaldırmaz. previous ile önceki bir teslimin güncellemesi yeni klasöre
+        yayınlanır: sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı
+        baytına ve kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden
+        üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya
+        revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın
+        olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir
+        sayfa kopyalanmaz.
 
         Args:
             doc: The drawing it works on.
@@ -284,20 +283,20 @@ sheets = _FilePublishSheets()
 
 class _FilePublishStatus(LocalCommand[PublishStatus, PublishStatusReport, PublishStatusReport]):
     """``file.publish.status`` v1. Yayın durumu: Bir teslim klasörünün son yayınını çizimin
-    şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her
-    paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik
-    özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden
-    yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da
-    değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski
-    yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı
-    verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve
-    file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da
-    başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve
-    kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği. Her sayfanın
-    teslim tarihi (date) ve kaynaklarının teslimden beri değişimi (changes,
-    docs/adr/1320 §2): içeriği değişen, sayfaya giren ve sayfadan çıkan nesneler kalıcı
-    kimlikleriyle, paftanın kendi kaydının değişip değişmediği ve değişen proje
-    parçaları (settings, layers, styles, blocks, book, resources).
+    şimdiki hâliyle sayfa sayfa karşılaştırır; dosya yazmaz. Her paftanın sayfası başlık
+    bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle
+    karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi
+    üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed
+    (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin
+    şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale
+    yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in
+    sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir
+    bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve
+    resume ile devam edilip edilemeyeceği. Her sayfanın teslim tarihi (date) ve
+    kaynaklarının teslimden beri değişimi (changes): içeriği değişen, sayfaya giren ve
+    sayfadan çıkan nesneler kalıcı kimlikleriyle, paftanın kendi kaydının değişip
+    değişmediği ve değişen proje parçaları (settings, layers, styles, blocks, book,
+    resources).
     """
     __slots__ = ()
     id = "file.publish.status"
@@ -319,20 +318,19 @@ class _FilePublishStatus(LocalCommand[PublishStatus, PublishStatusReport, Publis
         expected: Expected | None = None,
     ) -> PublishStatusReport:
         """Yayın durumu: Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa
-        karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı
-        (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle
-        karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi
-        üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed
-        (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin
-        şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale
-        yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in
-        sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir
-        bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve
-        resume ile devam edilip edilemeyeceği. Her sayfanın teslim tarihi (date) ve
-        kaynaklarının teslimden beri değişimi (changes, docs/adr/1320 §2): içeriği değişen,
-        sayfaya giren ve sayfadan çıkan nesneler kalıcı kimlikleriyle, paftanın kendi
-        kaydının değişip değişmediği ve değişen proje parçaları (settings, layers, styles,
-        blocks, book, resources).
+        karşılaştırır; dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih)
+        olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current
+        (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor),
+        fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok),
+        unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini
+        (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek
+        paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu
+        gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için
+        stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip
+        edilemeyeceği. Her sayfanın teslim tarihi (date) ve kaynaklarının teslimden beri
+        değişimi (changes): içeriği değişen, sayfaya giren ve sayfadan çıkan nesneler kalıcı
+        kimlikleriyle, paftanın kendi kaydının değişip değişmediği ve değişen proje
+        parçaları (settings, layers, styles, blocks, book, resources).
 
         Args:
             doc: The drawing it works on.

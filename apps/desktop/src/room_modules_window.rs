@@ -761,8 +761,8 @@ impl App {
         Task::none()
     }
 
-    /// The window (docs/adr/8050 §6): Modüller's list and the chosen module's details side by side (Microsoft's
-    /// list/details pattern, `kentos_ui::widget::ListDetails`), each module's and each instance's actions beside what
+    /// The window (docs/adr/8050 §6): Modüller's list and the chosen module's details side by side (the list/details
+    /// pattern, `kentos_ui::widget::ListDetails`), each module's and each instance's actions beside what
     /// they act on; Katları tekrarla in a part of its own. The footer keeps the window's own: Çizimden seç and Kapat.
     pub(crate) fn room_modules_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.room_modules else {

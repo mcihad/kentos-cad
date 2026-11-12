@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""An office's ground floor plan of the section building (section_building.py) as AutoCAD's EXPLODE leaves it
+"""An office's ground floor plan of the section building (section_building.py) as an explode leaves it
 (plan/architecture-advanced.md M48, docs/adr/8048), drawn in centimetres, without KentOS code:
 
 - DUVAR: the walls' outlines as lines — their faces, cut at the doors and windows with their jambs, stopping at the

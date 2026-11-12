@@ -869,7 +869,7 @@ fn a_dimension_is_a_dxf_dimension_with_a_block_of_its_own() {
             .find(|b| group(b, 2) == Some(name))
             .expect("block");
         assert_eq!(group(block, 70), Some("1"));
-        // AutoCAD's DSTYLE data: the text height is the dimension's, as its capitals' in Standard's Arial
+        // The DSTYLE data: the text height is the dimension's, as its capitals' in Standard's Arial
         // (0.75 × 1466/2048, docs/adr/8046 §3).
         let at = d
             .iter()

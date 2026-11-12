@@ -798,7 +798,7 @@ pub fn gutter_bands(pts: &[Vec2], spec: &RoofSpec) -> Vec<(usize, Vec<Vec2>)> {
 }
 
 /// A downpipe's way down (docs/adr/8044 §8): from its outlet under the gutter back to the wall in a 45° swan neck (kaz
-/// boynu; Archicad's downpipe bends at 45°), then down the wall to the ground.
+/// boynu), then down the wall to the ground.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PipeWay {
     /// Its outlet's middle in plan: the part's.

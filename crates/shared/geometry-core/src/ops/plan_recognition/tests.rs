@@ -1,4 +1,4 @@
-//! An office's plan drawn as lines, as AutoCAD's EXPLODE leaves it, read back.
+//! An office's plan drawn as lines, as an explode leaves it, read back.
 
 use super::*;
 

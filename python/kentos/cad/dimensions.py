@@ -433,24 +433,23 @@ edit = _DimensionsEdit()
 class _DimensionsInterior(LocalCommand[DimensionsInterior, EntitiesCreated, EntitiesCreatePlan]):
     """``cad.dimensions.interior`` v1. İç ölçü zinciri: from'dan to'ya kesen çizginin
     kestiği duvar yüzlerini ve kolonları sırayla ölçen doğrusal ölçü zincirini
-    layerId'ye tek adımda yazar, adı “İç ölçü zinciri” (Archicad'in iç ölçülendirmesi).
-    Duvarlarda faces outer (varsayılan) iki yüzü, skins bileşenler arasındaki her
-    çizgiyi ölçer; kolonda columns ends (varsayılan) dikdörtgenin kesilen kenarlarını,
-    centers merkezini, none hiçbirini (yuvarlak kolon her zaman merkezinden). Yalnız düz
-    yüzler ölçülür: kesilen yay yüz atlanır, arch_curved_face_skipped uyarısıyla
-    sayılır. Başka bir duvarın ya da kolonun gövdesinin içinde kalan kesişim (köşe ve T
-    birleşimi, duvara gömülü kolon) görünmez yüzdür, ölçülmez. Gizli ya da dondurulmuş
-    katmandaki duvar ve kolon kesilmez; level verilirse yalnız o mimari katınkiler
-    (yoksa level_not_found). Noktalar kesen çizgi boyunca sıralanır, ardışık her çift
-    bir ölçüdür (açısı kesen çizginin); en az iki nokta gerekir (no_dimension). Zincirin
-    çizgisi at'den kesen çizgiye paralel geçer (yoksa kesen çizginin üstünde); total
-    toplam ölçüyü bir sıra ötede (kâğıtta 8 mm) at'nin yanına ekler. Her ölçünün iki ucu
-    kestiği yüze bağlıdır, kuralı cross (kesen çizgi): duvar kaydırılınca değer değişir,
-    duvar uzayıp kısalınca ölçü çizgisi yerinde kalır; yüzün doğrusu kesen çizgiye
-    paralel olursa nokta kopar. dimensionStyle, height, mask ve görünüş
-    cad.dimensions.create'inkidir. Çıktı ve plan cad.entities.create'inkidir.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    layerId'ye tek adımda yazar, adı “İç ölçü zinciri”. Duvarlarda faces outer
+    (varsayılan) iki yüzü, skins bileşenler arasındaki her çizgiyi ölçer; kolonda
+    columns ends (varsayılan) dikdörtgenin kesilen kenarlarını, centers merkezini, none
+    hiçbirini (yuvarlak kolon her zaman merkezinden). Yalnız düz yüzler ölçülür: kesilen
+    yay yüz atlanır, arch_curved_face_skipped uyarısıyla sayılır. Başka bir duvarın ya
+    da kolonun gövdesinin içinde kalan kesişim (köşe ve T birleşimi, duvara gömülü
+    kolon) görünmez yüzdür, ölçülmez. Gizli ya da dondurulmuş katmandaki duvar ve kolon
+    kesilmez; level verilirse yalnız o mimari katınkiler (yoksa level_not_found).
+    Noktalar kesen çizgi boyunca sıralanır, ardışık her çift bir ölçüdür (açısı kesen
+    çizginin); en az iki nokta gerekir (no_dimension). Zincirin çizgisi at'den kesen
+    çizgiye paralel geçer (yoksa kesen çizginin üstünde); total toplam ölçüyü bir sıra
+    ötede (kâğıtta 8 mm) at'nin yanına ekler. Her ölçünün iki ucu kestiği yüze bağlıdır,
+    kuralı cross (kesen çizgi): duvar kaydırılınca değer değişir, duvar uzayıp kısalınca
+    ölçü çizgisi yerinde kalır; yüzün doğrusu kesen çizgiye paralel olursa nokta kopar.
+    dimensionStyle, height, mask ve görünüş cad.dimensions.create'inkidir. Çıktı ve plan
+    cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.dimensions.interior"
@@ -488,20 +487,20 @@ class _DimensionsInterior(LocalCommand[DimensionsInterior, EntitiesCreated, Enti
     ) -> EntitiesCreated:
         """İç ölçü zinciri: from'dan to'ya kesen çizginin kestiği duvar yüzlerini ve kolonları
         sırayla ölçen doğrusal ölçü zincirini layerId'ye tek adımda yazar, adı “İç ölçü
-        zinciri” (Archicad'in iç ölçülendirmesi). Duvarlarda faces outer (varsayılan) iki
-        yüzü, skins bileşenler arasındaki her çizgiyi ölçer; kolonda columns ends
-        (varsayılan) dikdörtgenin kesilen kenarlarını, centers merkezini, none hiçbirini
-        (yuvarlak kolon her zaman merkezinden). Yalnız düz yüzler ölçülür: kesilen yay yüz
-        atlanır, arch_curved_face_skipped uyarısıyla sayılır. Başka bir duvarın ya da
-        kolonun gövdesinin içinde kalan kesişim (köşe ve T birleşimi, duvara gömülü kolon)
-        görünmez yüzdür, ölçülmez. Gizli ya da dondurulmuş katmandaki duvar ve kolon
-        kesilmez; level verilirse yalnız o mimari katınkiler (yoksa level_not_found).
-        Noktalar kesen çizgi boyunca sıralanır, ardışık her çift bir ölçüdür (açısı kesen
-        çizginin); en az iki nokta gerekir (no_dimension). Zincirin çizgisi at'den kesen
-        çizgiye paralel geçer (yoksa kesen çizginin üstünde); total toplam ölçüyü bir sıra
-        ötede (kâğıtta 8 mm) at'nin yanına ekler. Her ölçünün iki ucu kestiği yüze bağlıdır,
-        kuralı cross (kesen çizgi): duvar kaydırılınca değer değişir, duvar uzayıp kısalınca
-        ölçü çizgisi yerinde kalır; yüzün doğrusu kesen çizgiye paralel olursa nokta kopar.
+        zinciri”. Duvarlarda faces outer (varsayılan) iki yüzü, skins bileşenler arasındaki
+        her çizgiyi ölçer; kolonda columns ends (varsayılan) dikdörtgenin kesilen
+        kenarlarını, centers merkezini, none hiçbirini (yuvarlak kolon her zaman
+        merkezinden). Yalnız düz yüzler ölçülür: kesilen yay yüz atlanır,
+        arch_curved_face_skipped uyarısıyla sayılır. Başka bir duvarın ya da kolonun
+        gövdesinin içinde kalan kesişim (köşe ve T birleşimi, duvara gömülü kolon) görünmez
+        yüzdür, ölçülmez. Gizli ya da dondurulmuş katmandaki duvar ve kolon kesilmez; level
+        verilirse yalnız o mimari katınkiler (yoksa level_not_found). Noktalar kesen çizgi
+        boyunca sıralanır, ardışık her çift bir ölçüdür (açısı kesen çizginin); en az iki
+        nokta gerekir (no_dimension). Zincirin çizgisi at'den kesen çizgiye paralel geçer
+        (yoksa kesen çizginin üstünde); total toplam ölçüyü bir sıra ötede (kâğıtta 8 mm)
+        at'nin yanına ekler. Her ölçünün iki ucu kestiği yüze bağlıdır, kuralı cross (kesen
+        çizgi): duvar kaydırılınca değer değişir, duvar uzayıp kısalınca ölçü çizgisi
+        yerinde kalır; yüzün doğrusu kesen çizgiye paralel olursa nokta kopar.
         dimensionStyle, height, mask ve görünüş cad.dimensions.create'inkidir. Çıktı ve plan
         cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
         hiçbir şey yazılmaz, sonuç conflict olur.

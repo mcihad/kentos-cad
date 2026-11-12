@@ -1,9 +1,7 @@
 //! A DXF text's height as other programs read it (docs/adr/8046 §3). A TrueType text's height (a TEXT's 40, an
-//! ATTDEF's, a STYLE's fixed height) is its **capital letters' height** there: Trimble Tekla's DWG/DXF export turns its
-//! em into "CAP" so "the font height … is the same when you open the drawing in Autodesk AutoCAD", BricsCAD's Height
-//! is "the height of the uppercase text", QCAD and ezdxf draw the 'A' as tall as the height. KentOS draws a text's
-//! height as its face's **em** (`text::shaping::placed`): the same 40 showed 1 / 0.7158 = 1.397 times as large in
-//! AutoCAD as in KentOS.
+//! ATTDEF's, a STYLE's fixed height) is its **capital letters' height** there (the ADR names them, in their words).
+//! KentOS draws a text's height as its face's **em** (`text::shaping::placed`): the same 40 showed 1 / 0.7158 = 1.397
+//! times as large there as in KentOS.
 //!
 //! So a TrueType text's height goes out as its em times the capital share of the face its STYLE names, and comes back
 //! divided by it. An SHX font's height is its capitals' in both (docs/adr/1125): none.
@@ -27,7 +25,7 @@ fn own(id: &str) -> Option<f64> {
 
 /// The share of a TrueType text's em its capitals take in the face a STYLE names by its `file` (group 3), else by
 /// ACAD's `family` (1000) with its `bold` and `italic` flags (1071); none for an SHX font, a file without a TrueType
-/// extension (AutoCAD's `txt`, `romans`: shape files) or a style that names nothing. Arial, Helvetica: Arial's; Courier
+/// extension (`txt`, `romans`: shape files) or a style that names nothing. Arial, Helvetica: Arial's; Courier
 /// New: its own by weight and slope; KentOS's own faces (and Liberation Sans, Arimo's design): their files'; a face
 /// KentOS has not got (Times, Calibri …) is drawn in KentOS's default face, Barlow: Barlow's, so its capitals stand as
 /// tall in both programs.
@@ -94,9 +92,9 @@ pub fn back(height: f64, share: Option<f64>, kept: Option<f64>) -> f64 {
     }
 }
 
-/// An MTEXT's line spacing factor (44) for KentOS's `spacing` (none: 1). AutoCAD's lines are 5/3 × 40 × 44 apart,
-/// KentOS's 5/3 × em × spacing (`text::paragraph::PITCH`): with a share, 44 is the spacing over it, within AutoCAD's
-/// 0.25 to 4; without one, KentOS's own (none for 1).
+/// An MTEXT's line spacing factor (44) for KentOS's `spacing` (none: 1). Other programs' lines are 5/3 × 40 × 44
+/// apart, KentOS's 5/3 × em × spacing (`text::paragraph::PITCH`): with a share, 44 is the spacing over it, within
+/// DXF's 0.25 to 4; without one, KentOS's own (none for 1).
 pub fn spacing_written(spacing: Option<f64>, share: Option<f64>) -> Option<f64> {
     match share {
         Some(s) => Some((spacing.unwrap_or(1.0) / s).clamp(0.25, 4.0)),
@@ -116,7 +114,7 @@ pub fn spacing_back(spacing: f64, share: Option<f64>, kept: Option<f64>) -> Opti
 }
 
 /// The line spacing to keep in KentOS's data: when the file's 44 does not give it back exactly (a share's division,
-/// AutoCAD's range).
+/// DXF's range).
 pub fn spacing_kept(spacing: Option<f64>, share: Option<f64>) -> Option<f64> {
     let written = spacing_written(spacing, share)?;
     (spacing_back(written, share, None) != spacing).then_some(spacing.unwrap_or(1.0))
@@ -267,10 +265,10 @@ mod tests {
                 "{sp}"
             );
         }
-        // 4 over the share is past AutoCAD's 4: 4 in the file, KentOS's own kept.
+        // 4 over the share is past DXF's 4: 4 in the file, KentOS's own kept.
         assert_eq!(spacing_written(Some(4.0), s), Some(4.0));
         assert_eq!(spacing_kept(Some(4.0), s), Some(4.0));
-        // A file without 44 (AutoCAD's 1) is KentOS's share.
+        // A file without 44 (DXF's 1) is KentOS's share.
         assert_eq!(spacing_back(1.0, s, None), Some(ARIAL));
         assert_eq!(spacing_back(1.0, None, None), None);
     }

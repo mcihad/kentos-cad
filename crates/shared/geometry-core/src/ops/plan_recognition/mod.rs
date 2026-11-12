@@ -1,6 +1,6 @@
 //! Planı tanı (plan/architecture-advanced.md M48, docs/adr/8048 §1): an exploded plan's line work — an office's DWG or
-//! DXF whose walls, doors and windows are plain lines and arcs — read back as walls and their openings, as BricsCAD's
-//! BIMIFY and Chief Architect's Convert CAD to Walls do. A line's role is its layer's (a wall's, a door's, a window's,
+//! DXF whose walls, doors and windows are plain lines and arcs — read back as walls and their openings. A line's role
+//! is its layer's (a wall's, a door's, a window's,
 //! a column's); lengths are metres.
 //!
 //! - **Lines on one line are one line.** Wall lines whose directions are within `angle` of each other and that lie

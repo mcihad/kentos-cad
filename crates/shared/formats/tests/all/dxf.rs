@@ -2720,10 +2720,10 @@ fn long_ltype_patterns_are_kept_whole_or_cut_with_a_note() {
     );
 }
 
-/// A TrueType text's height is its capitals' height in other programs (docs/adr/8046 §3: Tekla's DWG export, BricsCAD,
-/// QCAD, ezdxf), KentOS's is its face's em: a 40 of 2.5 in Arial is an em of 2.5 / (1466 / 2048) — Arial's capital H
+/// A TrueType text's height is its capitals' height in other programs (docs/adr/8046 §3), KentOS's is its face's
+/// em: a 40 of 2.5 in Arial is an em of 2.5 / (1466 / 2048) — Arial's capital H
 /// is 1466 of its 2048 units. A shape file's (romans.shx, txt) is its capitals' in both; a TrueType face KentOS has not
-/// got is drawn in Barlow, its capitals 0.7 of the em; a file without a STYLE table is AutoCAD's txt.
+/// got is drawn in Barlow, its capitals 0.7 of the em; a file without a STYLE table is in txt.
 #[test]
 fn a_truetype_text_s_height_is_its_capitals_height() {
     let style = |name: &'static str, file: &'static str| {
@@ -2792,7 +2792,7 @@ fn a_truetype_text_s_height_is_its_capitals_height() {
             ("COUR".to_owned(), 2.5 / (1213.0 / 2048.0)),
         ]
     );
-    // Without a STYLE table: AutoCAD's Standard, txt.shx.
+    // Without a STYLE table: Standard, txt.shx.
     let bare = dxf::read(
         &dxf_of(&[(
             "ENTITIES",
@@ -2811,10 +2811,11 @@ fn a_truetype_text_s_height_is_its_capitals_height() {
     assert!(matches!(&bare.entities[..], [Entity::Text(t)] if t.height == 2.5));
 }
 
-/// An MTEXT's height, line spacing and indents are in its capitals' height too (docs/adr/8046 §3): AutoCAD's lines are
-/// 5/3 × 40 × 44 apart and its indents and tab stops multiples of 40, KentOS's of its em. An Arial MTEXT of 40 = 2.5 is
-/// an em of 2.5 / (1466/2048) whose lines stand as far apart as AutoCAD draws them: spacing 1466/2048 without a 44, twice
-/// that with 44 = 2; its first-line indent of 2 (5 drawing units) is 2 × 1466/2048 ems. In an SHX style none changes.
+/// An MTEXT's height, line spacing and indents are in its capitals' height too (docs/adr/8046 §3): other programs'
+/// lines are 5/3 × 40 × 44 apart and its indents and tab stops multiples of 40, KentOS's of its em. An Arial MTEXT of
+/// 40 = 2.5 is an em of 2.5 / (1466/2048) whose lines stand as far apart as other programs draw them: spacing 1466/2048
+/// without a 44, twice that with 44 = 2; its first-line indent of 2 (5 drawing units) is 2 × 1466/2048 ems. In an SHX
+/// style none changes.
 #[test]
 fn an_mtext_s_height_spacing_and_indents_are_its_capitals() {
     let arial = 1466.0 / 2048.0;

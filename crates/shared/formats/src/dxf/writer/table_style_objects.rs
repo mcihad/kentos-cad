@@ -1,5 +1,5 @@
 //! The project's table styles as DXF TABLESTYLE objects (docs/adr/1128 §3), in the ACAD_TABLESTYLE dictionary under
-//! their names. The groups follow Autodesk's DXF reference for TABLESTYLE: version, description, flow direction,
+//! their names. The groups follow the DXF reference for TABLESTYLE: version, description, flow direction,
 //! flags, the table's horizontal and vertical cell margins, the title and heading suppressed flags, then a cell
 //! style each for the data, the title and the heading rows (that order: Open Design's specification, as LibreDWG's
 //! `dwg2.spec` reads it): text style name, text height, cell alignment, text colour, fill colour and whether it is

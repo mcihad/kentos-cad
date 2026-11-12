@@ -1,13 +1,13 @@
 //! Kat görünümü (docs/adr/0715): which of the project's levels the plan shows. Bütün katlar draws them all (as before
 //! levels were seen); Yalnız etkin kat draws the active level's objects and those on no level; Etkin kat ve alt kat
-//! draws the level under the active one too, faint: snapped to, never picked (Revit's underlay with Select underlay
-//! elements off, Archicad's Trace Reference). An object's level is `Entity::level`: its own, an opening's its wall's,
+//! draws the level under the active one too, faint: snapped to, never picked (an underlay, docs/adr/0715). An object's
+//! level is `Entity::level`: its own, an opening's its wall's,
 //! a tag's its object's, a room finish's its room's, a dimension's that of the objects it is bound to. One on no level
 //! shows on every level; one on a level the project no longer has shows too (Denetim says so). A stair of the level
 //! under the active one that reaches its cut plane shows on the active level's plan as seen from above: its part past
 //! its cut (docs/adr/0724 §4), drawn as the active level's are, never picked. A slab of the level above the active one
 //! shows on its plan dashed, as what lies between the plan's cut and the ceiling (docs/adr/8012, step 3: Mimarlar
-//! Odası's "Saçak ara kat çıkma vb." drawn "nokta nokta"; Archicad's slab shown one story down with its dashed line):
+//! Odası's "Saçak ara kat çıkma vb." drawn "nokta nokta"):
 //! the balcony over the entrance, the floor above stepping out, never picked. A roof stands on its storey's top, over
 //! that storey's plan's cut: the plan shows its eaves dashed, the same rule (docs/adr/8044 §3), and picks it as the
 //! level's own; the plan of the storey over it, whose floor its eaves stand at, shows it whole: the roof plan.
@@ -104,7 +104,7 @@ pub fn above<'a>(settings: &'a ProjectSettings, active: &str) -> Option<&'a Arch
 
 /// The roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above (none dashed, whatever its storey),
 /// with its chimneys and windows, and the objects on no level; everything else on a level of the project left out.
-/// Revit's and Archicad's roof plan is the plan of the level over the roof; a building's top roof has none, so a sheet
+/// A roof plan is the plan of the level over the roof; a building's top roof has none, so a sheet
 /// asks for this rule by name (`MapLevel::roof`).
 pub fn roof_plan(doc: &Document) -> LevelLooks {
     let mut out = LevelLooks::default();

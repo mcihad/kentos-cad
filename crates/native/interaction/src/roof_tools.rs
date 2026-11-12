@@ -11,7 +11,7 @@
 //!   along every sloping eaves edge (docs/adr/8044 §8); emptied: none. A flat roof has neither.
 //!
 //! The roof's eaves stand at its storey's top and its offset. Without an offset typed (Kot farkı empty) its underside sits
-//! on its storey's top at the walls' outer faces (Revit's Truss: the plate on the wall's outside): the offset is its
+//! on its storey's top at the walls' outer faces (the plate on the wall's outside, docs/adr/8044): the offset is its
 //! thickness less the overhang's rise (25 cm − 50 cm × %33 = 8.5 cm); drawn by its corners, at its eaves line. Its tag
 //! says its ridge's height over ±0.00 and, past PAİY 40's 5.00 m, that it is too high.
 

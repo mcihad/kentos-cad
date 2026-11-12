@@ -739,7 +739,7 @@ pub const SCHEMA_WITH_SLIDE_MORE: u32 = 153;
 /// combination (`recipe.combo`); written only when there is one.
 pub const SCHEMA_WITH_OPTION_COMBOS: u32 = 154;
 /// Schema 155 (docs/adr/0811): a room module instance holding one storey of its module only
-/// (`arch.modules[].instances[].storey`, Archicad's Single Story); written only when an instance has one.
+/// (`arch.modules[].instances[].storey`); written only when an instance has one.
 pub const SCHEMA_WITH_INSTANCE_STOREYS: u32 = 155;
 /// Schema 157 (docs/adr/0837): variable circular path edges in geometric constraints.
 pub const SCHEMA_WITH_ARC_EDGE_BONDS: u32 = 157;

@@ -280,7 +280,7 @@ fn without_an_offset_the_roof_sits_on_the_walls_outer_faces() {
     b.click(6.0, 1.0);
     let r = newest_roof(&b);
     // 25 cm thick, 50 cm out at 40 %: its eaves 5 cm over Zemin kat's top, so its underside meets it at the walls'
-    // outer faces (Revit's Truss); 13 × 10 m: the ridge 2.00 m over the eaves.
+    // outer faces; 13 × 10 m: the ridge 2.00 m over the eaves.
     assert!((r.roof.offset - 0.05).abs() < 1e-12, "{}", r.roof.offset);
     assert_eq!(
         b.last_text(),

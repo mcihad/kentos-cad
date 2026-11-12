@@ -80,14 +80,14 @@ library and no KentOS code:
   note's direction (11), over the drawing's background exactly when masked
   (90 3). Its own changes to Standard (ACAD's DSTYLE data, docs/adr/0205
   §7) give its arrowhead's length (41: its size, else 1, times its height,
-  exactly) and, for an arrowhead but the filled one and none, AutoCAD's
+  exactly) and, for an arrowhead but the filled one and none, its DXF
   arrow block (341: the handle of the block record named _ClosedBlank,
   _Open, _Open30, _Open90, _Dot, _DotSmall, _DotBlank, _Oblique,
   _ArchTick, _BoxFilled, _BoxBlank or _DatumFilled), written once, its
   record and BLOCK where the first leader with it puts them (a block's
   before the block, the drawing's in its order), not anonymous (70 0), its
   objects on 0 in BYBLOCK's colour and weight: the arrowhead one long, its
-  tip at the origin and its line along −x, as AutoCAD's are (a triangle
+  tip at the origin and its line along −x, as DXF's named ones are (a triangle
   of base a third of its length, the open arrow's sides 15° and 45° off
   the line, the dots of radius 1/4 and 1/8, the box 1/2 a side, the tick at
   45° 1/√2 long each way, the architectural tick a band 1/8 wide, the
@@ -128,7 +128,7 @@ library and no KentOS code:
   its origin turned by the pattern and scaled (43, 44), from one line to the
   next its offset turned by its angle and scaled (45, 46), its dashes scaled
   (79, 49), within 1e-9; a gradient is a solid fill (2 SOLID, 70 1) of a
-  gradient (450 1) by AutoCAD's name (470; an inverted linear one LINEAR
+  gradient (450 1) by its DXF name (470; an inverted linear one LINEAR
   turned a half turn), its angle in radians (460), centred (461 0), two
   colours (453 2), the first the hatch's own (its layer's without one), the
   second the gradient's, each an ACI index (63) and its true colour (421:
@@ -159,7 +159,7 @@ library and no KentOS code:
   name taken, case aside, " 2", " 3" …, Standard's taken first, the
   dimension styles sharing the names), its fixed height in drawing units
   (40; 0 without one), width (41) and slant (50), its typeface's file (3:
-  its own, else Arial's and Courier's as AutoCAD names them, KentOS's
+  its own, else Arial's and Courier's as DXF files name them, KentOS's
   others "‹Aile›.ttf"), ACAD's family and flags (34, bold 0x2000000, italic
   0x1000000) and the style itself in KentOS's data ("face"); then a record
   "KENTOS_‹AİLE›[_B][_I]" for each typeface a styleless text or a
@@ -370,8 +370,8 @@ def standard(e: dict, names: tuple) -> bool:
 
 
 # ── Capital heights (docs/adr/8046 §3) ────────────────────────────────
-# Other programs read a TrueType text's height (40) as its capitals' height (Tekla's DWG export "em to CAP", BricsCAD's
-# Height "the height of the uppercase text", QCAD and ezdxf draw the 'A' as tall); KentOS draws it as the em. A text's
+# Other programs read a TrueType text's height (40) as its capitals' height (their sources: docs/adr/8046 §3);
+# KentOS draws it as the em. A text's
 # 40 is its height times the capital share of the face its STYLE's file names: Arial's H, 1466 of 2048 (arial*.ttf,
 # Standard's); Courier New's 1170, 1171 (couri), 1213 (courbd, courbi); KentOS's own faces their files' OS/2 capital
 # height (Barlow 700/1000, Arimo 1409/2048 …); a face KentOS has not got Barlow's; an SHX file, or a name without a
@@ -654,7 +654,7 @@ def expected_runs(e: dict) -> list[dict]:
 
 
 def spacing_written(spacing: float | None, share: float | None) -> float | None:
-    """An MTEXT's 44 (docs/adr/8046 §3): AutoCAD's lines are 5/3 × 40 × 44 apart, KentOS's 5/3 × em × spacing; with a
+    """An MTEXT's 44 (docs/adr/8046 §3): other programs' lines are 5/3 × 40 × 44 apart, KentOS's 5/3 × em × spacing; with a
     share the spacing (1 when none) over it, within 0.25 to 4."""
     if share is None:
         return spacing
@@ -945,7 +945,7 @@ def mtext_notation(s: str) -> str:
     return "".join(" " if control(c) else escape.get(c, c) for c in s)
 
 
-# AutoCAD's arrow block of each arrowhead (docs/adr/0205 §7); the filled one is Standard's, none has none.
+# The DXF arrow block of each arrowhead (docs/adr/0205 §7); the filled one is Standard's, none has none.
 ARROW_BLOCK = {
     "closed": "_ClosedBlank", "open": "_Open", "open30": "_Open30", "open90": "_Open90", "dot": "_Dot",
     "dotSmall": "_DotSmall", "dotBlank": "_DotBlank", "oblique": "_Oblique", "archTick": "_ArchTick",
@@ -954,7 +954,7 @@ ARROW_BLOCK = {
 
 
 def arrow_shape(arrow: str) -> list[tuple]:
-    """An arrow block's objects as AutoCAD draws the arrowhead, one long, its tip at the origin, its line along −x:
+    """An arrow block's objects as other programs draw the arrowhead, one long, its tip at the origin, its line along −x:
     ("solid", corners), ("donut", centre, radius), ("polyline", points, closed), ("circle", centre, radius)."""
     t = 1.0 / 6.0
     w = 1.0 / 16.0 / math.sqrt(2.0)
@@ -1046,12 +1046,12 @@ def check_leader(o: list[tuple[int, str]], m: list[tuple[int, str]] | None, e: d
     ensure(abs(float(group(o, 211)) - u[0]) <= 1e-12 and abs(float(group(o, 221)) - u[1]) <= 1e-12, f"{where}: the note's direction (211)")
     items = kentos(o)
     arrow = e.get("arrow")
-    # Its arrowhead's length and AutoCAD's block of it (docs/adr/0205 §7).
+    # Its arrowhead's length and its DXF arrow block (docs/adr/0205 §7).
     size = e.get("arrowSize")
     own = dstyle(o)
     ensure(41 in own and float(own[41]) == (size if size is not None else 1.0) * h, f"{where}: its arrowhead's length (DSTYLE 41)")
     block = ARROW_BLOCK.get(arrow)
-    ensure(own.get(341) == (arrows[block] if block else None), f"{where}: AutoCAD's arrow block {block} (DSTYLE 341)")
+    ensure(own.get(341) == (arrows[block] if block else None), f"{where}: the arrow block {block} (DSTYLE 341)")
     ensure(set(own) <= {41, 341}, f"{where}: no other change to Standard")
     ensure("arrow" not in items, f"{where}: no arrow item (the block names it)")
     exact_size = size is not None and (size * h) / h != size
@@ -1724,10 +1724,10 @@ def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, 
             ensure(any(near(p, left) and near(q, tip) for p, q in lines) and any(near(p, tip) and near(q, right) for p, q in lines), f"{where}: an open arrowhead at {tip}")
 
 
-# KentOS's library of patterns (docs/adr/0186 §2): AutoCAD's predefined ones of these names.
+# KentOS's library of patterns (docs/adr/0186 §2): the predefined ones of these names other programs know.
 LIBRARY = ({f"ANSI3{k}" for k in range(1, 9)} | {f"ISO{k:02d}W100" for k in range(2, 15)}
            | {"LINE", "NET", "NET3", "DASH", "DOTS", "BRICK", "CROSS"})
-# AutoCAD's gradients by shape and whether inverted; DXF names no inverted linear one.
+# The gradients' DXF names by shape and whether inverted; DXF names no inverted linear one.
 GRADIENT_NAMES = {("linear", False): "LINEAR", ("cylinder", False): "CYLINDER", ("cylinder", True): "INVCYLINDER",
                   ("spherical", False): "SPHERICAL", ("spherical", True): "INVSPHERICAL"}
 
@@ -1802,7 +1802,7 @@ def check_hatch(o: list[tuple[int, str]], e: dict, layer_colours: dict[str, str]
         inverted = bool(g.get("inverted"))
         half = g["shape"] == "linear" and inverted
         ensure(group(h, 76) == "1" and group(h, 450) == "1" and group(h, 453) == "2", f"{where}: a gradient of two colours")
-        ensure(group(h, 470) == GRADIENT_NAMES[(g["shape"], inverted and not half)], f"{where}: AutoCAD's name for {g}")
+        ensure(group(h, 470) == GRADIENT_NAMES[(g["shape"], inverted and not half)], f"{where}: the DXF name for {g}")
         ensure(close(float(group(h, 460)), math.radians((p["angle"] + (180.0 if half else 0.0)) % 360.0)), f"{where}: its angle in radians")
         ensure(float(group(h, 461)) == 0.0, f"{where}: centred")
         at = next(i for i, g2 in enumerate(h) if g2[0] == 453)
@@ -1844,7 +1844,7 @@ def check(name: str) -> list[str]:
     # Each dimension's own anonymous block (*D1, *D2 …): a block's dimensions' before it (blocks it holds), the
     # drawing's after the drawing's blocks (docs/adr/0147 §8).
     want, k = ["*Model_Space", "*Paper_Space"], 0
-    # AutoCAD's arrow blocks (docs/adr/0205 §7): each where the first leader with its arrowhead is written.
+    # The DXF arrow blocks (docs/adr/0205 §7): each where the first leader with its arrowhead is written.
     arrow_of: dict[str, str] = {}
 
     def arrow_block(e: dict) -> None:

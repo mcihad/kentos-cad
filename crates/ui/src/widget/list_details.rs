@@ -1,10 +1,5 @@
-//! Liste ve ayrıntı: solda bir listenin bölmesi, sağda listede seçilen öğenin ayrıntısı, yan yana. Microsoft'un
-//! “List/details” kalıbının yan yana biçimidir: “The list/details pattern has a list pane (usually with a list view)
-//! and a details pane for content. When an item in the list is selected, the details pane is updated.”; “If you have a
-//! lot of separate fields, consider using a Grid layout to arrange elements into a form.”
-//! (<https://learn.microsoft.com/en-us/windows/apps/design/controls/list-details>, 12 Kasım 2026'da okundu). Archicad'in
-//! Hotlink Module Manager'ı da böyledir: solda modüller, sağda seçilenin bilgisi ad–değer olarak ve eylemleri hemen
-//! yanında.
+//! Liste ve ayrıntı: solda bir listenin bölmesi, sağda listede seçilen öğenin ayrıntısı, yan yana; çok alanlı ayrıntı
+//! ad–değer ızgarasıdır, eylemler gösterdikleri şeyin yanındadır (kaynaklar: docs/adr/8050 §6).
 //!
 //! ```text
 //! ┌ liste ───────────┐│┌ ayrıntı ─────────────────────────────┐

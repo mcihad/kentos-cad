@@ -497,7 +497,7 @@ SCHEMA_WITH_SLIDE_MORE = 153
 # combination (`recipe.combo`).
 SCHEMA_WITH_OPTION_COMBOS = 154
 # Schema 155 (docs/adr/0811): a room module instance holding one storey of its module only
-# (`arch.modules[].instances[].storey`, Archicad's Single Story).
+# (`arch.modules[].instances[].storey`).
 SCHEMA_WITH_ARC_EDGE_BONDS = 157  # ADR 0837: variable circular path edges in constraints
 SCHEMA_WITH_BLOCK_PUBLICATIONS = 158  # ADR 0856: component family/type/release
 SCHEMA_WITH_BLOCK_PARAMETER_GROUPS = 159  # ADR 0858: ordered property headings

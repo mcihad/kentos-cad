@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 
 
 class _RailingsCreate(LocalCommand[RailingsCreate, RailingsCreated, RailingsPlan]):
-    """``cad.railings.create`` v1. Korkuluk: Bağımsız korkuluklar ekler (docs/adr/8045 §3);
-    tek geri alma adımı “Korkuluk”. Her biri küpeştesinin orta çizgisi (pts: açıkken en
-    az 2, kapalıyken 3, en çok 1000 nokta; art arda aynı nokta yok; closed: son noktadan
+    """``cad.railings.create`` v1. Korkuluk: Bağımsız korkuluklar ekler; tek geri alma
+    adımı “Korkuluk”. Her biri küpeştesinin orta çizgisi (pts: açıkken en az 2,
+    kapalıyken 3, en çok 1000 nokta; art arda aynı nokta yok; closed: son noktadan
     ilkine döner — galeri boşluğunun çevresi, ilk nokta sonda yinelenmez), yükseklik
     (height: döşemesinden küpeştenin üstüne; yoksa 1,10 m, PAİY 38/1 “döşeme kotundan
     itibaren en az 1.10 metre”; en çok 3 m), küpeşte eni (width: yoksa 0,05 m; en çok
@@ -59,19 +59,19 @@ class _RailingsCreate(LocalCommand[RailingsCreate, RailingsCreated, RailingsPlan
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RailingsCreated:
-        """Korkuluk: Bağımsız korkuluklar ekler (docs/adr/8045 §3); tek geri alma adımı
-        “Korkuluk”. Her biri küpeştesinin orta çizgisi (pts: açıkken en az 2, kapalıyken 3,
-        en çok 1000 nokta; art arda aynı nokta yok; closed: son noktadan ilkine döner —
-        galeri boşluğunun çevresi, ilk nokta sonda yinelenmez), yükseklik (height:
-        döşemesinden küpeştenin üstüne; yoksa 1,10 m, PAİY 38/1 “döşeme kotundan itibaren en
-        az 1.10 metre”; en çok 3 m), küpeşte eni (width: yoksa 0,05 m; en çok 0,5 m), dolgu
-        (infill: balusters dikey çubuk — yoksa —, glass cam, solid dolu panel), çubuk
-        aralığı (gap: çubuklar arasındaki net boşluk, yoksa 0,10 m, PAİY 38/4 “en fazla 0.10
-        metre çapında geçişe izin verilir”; en çok 1 m; yalnız dikey çubukta okunur), kot
-        farkı (offset: döşemesinin katının döşemesinden farkı, yoksa 0; en çok ±10 m), kat
-        ve tadilat durumu (arch). Planda küpeşte, eni kadar aralıklı iki ince çizgi (açık
-        korkuluğun uçları kapalı); 1/200 sadeleştirilmiş görünüşte yalnız orta çizgi. Katman
-        açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        """Korkuluk: Bağımsız korkuluklar ekler; tek geri alma adımı “Korkuluk”. Her biri
+        küpeştesinin orta çizgisi (pts: açıkken en az 2, kapalıyken 3, en çok 1000 nokta;
+        art arda aynı nokta yok; closed: son noktadan ilkine döner — galeri boşluğunun
+        çevresi, ilk nokta sonda yinelenmez), yükseklik (height: döşemesinden küpeştenin
+        üstüne; yoksa 1,10 m, PAİY 38/1 “döşeme kotundan itibaren en az 1.10 metre”; en çok
+        3 m), küpeşte eni (width: yoksa 0,05 m; en çok 0,5 m), dolgu (infill: balusters
+        dikey çubuk — yoksa —, glass cam, solid dolu panel), çubuk aralığı (gap: çubuklar
+        arasındaki net boşluk, yoksa 0,10 m, PAİY 38/4 “en fazla 0.10 metre çapında geçişe
+        izin verilir”; en çok 1 m; yalnız dikey çubukta okunur), kot farkı (offset:
+        döşemesinin katının döşemesinden farkı, yoksa 0; en çok ±10 m), kat ve tadilat
+        durumu (arch). Planda küpeşte, eni kadar aralıklı iki ince çizgi (açık korkuluğun
+        uçları kapalı); 1/200 sadeleştirilmiş görünüşte yalnız orta çizgi. Katman açıkça
+        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

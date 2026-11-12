@@ -3,7 +3,7 @@
 //! BLOCK with its block record, the ones it holds written before it (a
 //! reader that resolves an INSERT as it meets it finds its block). A
 //! definition's objects are owned by its record and keep their layer, which
-//! Patlat and AutoCAD's EXPLODE put them back on (none of its own is layer
+//! Patlat and other programs' explode put them back on (none of its own is layer
 //! 0); BYBLOCK where they have no colour or weight of their own, so an
 //! insert draws them in its own, as KentOS does. A name keeps its letters:
 //! a character DXF refuses becomes "_" (“*” among them: a name starting

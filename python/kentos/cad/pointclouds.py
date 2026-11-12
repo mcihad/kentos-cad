@@ -195,9 +195,9 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
     merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt
     sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri
     boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm
-    sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10,
-    ADR 5100) dış döngüdür: ikinci turdan başlayarak her bağ taramaların bir önceki
-    turdaki yerinden yeniden kaydedilir, bir taramanın kutusunun köşesi tolerance kadar
+    sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10)
+    dış döngüdür: ikinci turdan başlayarak her bağ taramaların bir önceki turdaki
+    yerinden yeniden kaydedilir, bir taramanın kutusunun köşesi tolerance kadar
     kaymayınca durulur; cevabın rounds listesi her turun en büyük kaymasıdır, matrisler
     turların toplamı, bağlar ve döngüler son turunkidir. Salt okunur: taramalar yerinde
     durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]);
@@ -251,8 +251,8 @@ class _PointcloudsNetwork(LocalCommand[PointCloudsNetwork, PointCloudsNetworked,
         Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü,
         ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması
         (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması
-        (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10, ADR 5100) dış döngüdür:
-        ikinci turdan başlayarak her bağ taramaların bir önceki turdaki yerinden yeniden
+        (dönme ve öteleme uzunluğu); ağın RMS kayması. rounds (1–10) dış döngüdür: ikinci
+        turdan başlayarak her bağ taramaların bir önceki turdaki yerinden yeniden
         kaydedilir, bir taramanın kutusunun köşesi tolerance kadar kaymayınca durulur;
         cevabın rounds listesi her turun en büyük kaymasıdır, matrisler turların toplamı,
         bağlar ve döngüler son turunkidir. Salt okunur: taramalar yerinde durur. Retler:

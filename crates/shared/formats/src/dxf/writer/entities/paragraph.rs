@@ -294,8 +294,8 @@ impl Writer<'_> {
         }
         let (s, c) = sin_cos_deg(t.rotation);
         self.out.xyz(11, v(c, s));
-        // At least this spacing (AutoCAD's style 1): AutoCAD's lines are 5/3 × 40 × 44 apart, KentOS's 5/3 × em ×
-        // spacing, so 44 is the spacing over the share (docs/adr/8046 §3), within AutoCAD's 0.25 to 4.
+        // At least this spacing (style 1): other programs' lines are 5/3 × 40 × 44 apart, KentOS's 5/3 × em ×
+        // spacing, so 44 is the spacing over the share (docs/adr/8046 §3), within DXF's 0.25 to 4.
         if let Some(factor) = crate::dxf::capitals::spacing_written(t.paragraph.line_spacing, share)
         {
             self.out.int(73, 1);
