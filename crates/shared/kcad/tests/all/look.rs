@@ -131,6 +131,11 @@ fn the_writer_refuses_what_the_reader_would() {
     l.base.color = Some("#FF0000".into());
     let err = kentos_kcad::encode(&doc).expect_err("own colour and by layer");
     assert!(err.message.contains("Renk"), "{err}");
+    // The rule's sentence and the advice, one full stop between them.
+    assert!(
+        err.message.contains("katmana göre olamaz. Değeri düzeltip"),
+        "{err}"
+    );
 }
 
 #[test]

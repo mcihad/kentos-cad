@@ -894,7 +894,14 @@ mod tests {
 
     #[test]
     fn external_cad_opens_from_the_open_command_without_a_project() {
-        for file in ["dxf-units/mm.dxf", "dwg/mm.dwg", "ncz/01-her-tur.ncz"] {
+        // A block that inserts a dynamic block's anonymous one, BYBLOCK and own colours in it, saves too (docs/adr/8053
+        // §12: Kaydet refused it).
+        for file in [
+            "dxf-units/mm.dxf",
+            "dwg/mm.dwg",
+            "ncz/01-her-tur.ncz",
+            "dxf-import/nested-anonymous-looks.dxf",
+        ] {
             let dir = scratch("external-cad");
             let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("../../fixtures/formats/v1")

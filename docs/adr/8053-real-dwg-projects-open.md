@@ -1,7 +1,8 @@
 # ADR 8053: Gerçek DWG projeleri açılır
 
 - **Durum:** uygulandı (12 Kasım 2026). Sahibin bildirimi: "downloads içerisine bugün yeni dwg dosyaları indirdim gerçek
-  projeler ama hiç birini açamıyoruz, bu ciddi bir sorun … oradaki tüm dwg dosyaları sağlıklı şekilde açılabilir olmalı".
+  projeler ama hiç birini açamıyoruz, bu ciddi bir sorun … oradaki tüm dwg dosyaları sağlıklı şekilde açılabilir olmalı";
+  ardından "bu açtığımız dwg dosyaları da kcad olarak kaydedilemiyor bu durumları da düzeltmen gerek" (§12, §13).
 - **Bağlam belgesi:** ADR 0586 (DWG kodeği, bellekte DXF köprüsü), ADR 0624 (DWG/DXF ayrı CAD çizimi olarak açılır),
   ADR 0726 §2 (birim sorusu), ADR 0258 §1 (kapalı çoklu çizgi), ADR 1001 §4 (çizgi tipleri).
 
@@ -77,6 +78,29 @@ gelen çizgi tipleri). Proje B'nin 463 MB köprüsünün 380 MB'ı bunlar ve sö
     boyutunu söyler. Dosyanın birimi onaylanırsa okunan çizim yeniden okunmadan açılır; başka birim seçilirse o birimle
     okunur ve bir daha sorulmaz. Metrik bildiren dosya ve İçe aktar değişmedi.
 
+12. **Açılan DWG KCAD olarak kaydedilir.** 12 dosyanın 5'i (Proje A–D ve bir küçük proje) Kaydet'te "Renk nesnenin
+    kendi değeri; katmana göre olamaz" ile reddediliyordu. Sebep okuyucudaydı: açılan bir bloğun (dinamik bloğun adsız
+    tanımı her zaman açılır) bütün görünüşü nesnelerinin üstüne yazılıyordu; yerleştirme BYLAYER iken nesneye
+    `byLayer` rengi işleniyor, nesnenin kendi rengi de duruyordu (BYBLOCK, yerleştirmenin rengi olarak yazılmıştı). KCAD
+    sözleşmesi (ADR 0260 §1: değeri olan parça `byLayer`'da olmaz) bunu doğru olarak reddediyordu. Okuyucu artık kendi
+    rengi ya da kalınlığı olan nesneye o parçayı katmana göre işlemez (§13 ile bu yalnız açılan yerleştirmenin
+    öznitelikleri için kalır); kendi değer zaten önce çizildiğinden çizim değişmez. Ret iletisindeki çift nokta
+    ("olamaz.. Değeri") tek noktaya indi.
+13. **Açılan bloğun nesneleri yerleştirmeden yalnız bloğa göre parçalarını alır** (ADR 0315 §2'nin iç içe kuralı).
+    Önce yerleştirmenin bütün görünüşü (çizgi tipi, desen, desen ölçeği, saydamlık, katmana göre parçalar) nesnelerin
+    görünüşünün üstüne yazılıyordu: iç içe bloktaki kesikli çizgi yerleştirmenin çizgi tipini alıyor, BYLAYER nesne
+    yerleştirmenin kendi rengi varken bloğa göre kalıyordu. Şimdi yerleştirmenin görünüşü okuma bağlamıyla iner
+    (`Ctx::byblock_look`), her nesne kendi görünüşünü okunurken kurar:
+    - kendi değeri: kendisinin; BYLAYER: kendi katmanının (0'daysa yerleştirmenin katmanının);
+    - BYBLOCK: yerleştirmenin kendi değeri; yerleştirmeninki katmanına göreyse 0'daki nesne de katmana göre olur (o
+      katmandadır), kendi katmanındaki nesne o katmanın değerini yazılı alır, tanımın 0'ındaki yerleştirmeninkini
+      alamayınca bloğa göre kalır (en dıştaki yerleştirmenin değeri);
+    - tanımın 0'ında BYLAYER ya da tanımın tepesinde BYBLOCK olan yerleştirmenin BYBLOCK nesnesi artık ön plan rengini
+      (`ink`) değil, tanımı çizen yerleştirmenin (ya da katmanının) rengini alır;
+    - desen ölçeği: nesnenin kendisi, yoksa yerleştirmeninki (önceki gibi).
+
+    Yerleştirmenin bütün görünüşü yalnız onun açılmadan sonra çizdiklerine (öznitelikler) yazılır.
+
 ## Ölçüm
 
 Aynı 13 dosya, Aç yolu (`cad_open::read_in`, cm), sürüm derlemesi, 20 çekirdek, 23 GB:
@@ -90,7 +114,29 @@ Aynı 13 dosya, Aç yolu (`cad_open::read_in`, cm), sürüm derlemesi, 20 çekir
 | öbür 8 | 0,1–0,8 s | 0,1–0,8 s | 0,1–0,8 s | |
 | sample1.dwg (JPEG) | anlamsız ileti | "içinde bir JPEG resmi var" | aynı | |
 
-Proje B'nin köprüsü 463 → 78 MB, yazımı 57 → 5,9 s. İlk görünüm (genişlik × yükseklik, çizim birimi): Proje C
+Proje B'nin köprüsü 463 → 78 MB, yazımı 57 → 5,9 s.
+
+Kaydet (KCAD, `encode_verified`: yazılır, geri okunur, karşılaştırılır), aynı 12 DWG:
+
+| | Önce | Sonra | Boyut (DWG → KCAD) | Yazma |
+|---|---|---|---|---|
+| Proje B | ret | kaydedildi | 32,6 → 118,5 MB | 1,6 s |
+| Proje A | ret | kaydedildi | 32,6 → 108,3 MB | 1,4 s |
+| Proje D | ret | kaydedildi | 28,2 → 95,5 MB | 1,2 s |
+| Proje C | ret | kaydedildi | 8,5 → 30,5 MB | 0,4 s |
+| küçük bir statik projesi | ret | kaydedildi | 2,1 MB | 0,0 s |
+| öbür 7 | kaydediliyordu | kaydedildi | 0,6–8,0 MB | 0,0–0,1 s |
+
+Üstüne yazılan görünüş (§13; bir okumada, iç içe her düzey ayrı sayıldı): Proje B'de nesnenin kendi çizgi tipi
+528 040 kez yerleştirmeninkiyle değiştiriliyordu, BYLAYER renk 65 kez bloğa göreye düşüyordu; Proje C'de 513 ve 3.
+Değişimlerin çoğu sürekli çizginin yerine yine sürekli çizgi koyuyordu; görünen fark kesikli, noktalı ya da adlı
+desenli çizilen nesne sayısında:
+
+| Dosya | Çizimde (önce → sonra) | Blok tanımlarında (önce → sonra) |
+|---|---|---|
+| Proje C | 5 046 → **4 673**: 373 BYLAYER nesne yerleştirmenin kesikli çizgisini alıyordu | 261 → 261 |
+| Proje B | 3 647 → 3 647 | 11 739 → **11 779**: 40 nesnenin kendi deseni geri geldi |
+| Proje A, D ve öbür 8 | aynı | aynı | İlk görünüm (genişlik × yükseklik, çizim birimi): Proje C
 693 076 × 225 007 → 160 120 × 9 676, Proje A 1 225 385 × 2 746 062 → 365 829 × 34 050; Proje B'ninki değişmedi.
 
 ## Açık kalanlar
@@ -100,6 +146,9 @@ Proje B'nin köprüsü 463 → 78 MB, yazımı 57 → 5,9 s. İlk görünüm (ge
   nesnelerine geçiş köprüyü kaldırır.
 - Gerçek dosyalar ve adları depoya girmez (kişisel projeler; depo herkese açık): burada Proje A–D. Kabul yerelde,
   İndirilenler'deki dosyalarla yapıldı.
+- KCAD sıkıştırılmıyor: 33 MB'lık DWG 95–119 MB KCAD oluyor (`FILE-10/11`, TODOS).
+- Model alanında açılan yerleştirmenin çizgi tipi BYLAYER ise kendi katmanındaki BYBLOCK nesnesi o katmanın çizgi tipini
+  alır, yerleştirmenin katmanınınkini almaz (tanımın içinde alır).
 
 ## Doğrulama
 
@@ -111,3 +160,10 @@ Proje B'nin köprüsü 463 → 78 MB, yazımı 57 → 5,9 s. İlk görünüm (ge
   bildiren dosya inç seçili sorulur, onaylanınca okunduğu gibi, cm seçilince yeniden okunarak açılır.
 - `cargo test -p kentos-formats --lib import`: birkaç çizim uzaktaki nesneler ilk görünümün dışında kalır ve sayılır;
   düzgün dağılan çizim bütün açılır.
+- `cargo test -p kentos-formats --test all exploded_inserts`: tanımın içinde açılan adsız blokta kendi rengi olan
+  hiçbir parça katmana göre değil, özniteliğin kendi rengi korunur (§12); çizimde ve tanımda açılan yerleştirmenin
+  nesneleri kendi kesikli çizgisini ve BYLAYER'ını korur, yalnız BYBLOCK parçaları yerleştirmeden alır (§13). İkisi de
+  önceki kodda kırmızıydı.
+- `cargo test -p kentos-kcad --test all look`: ret iletisinde tek nokta.
+- `KENTOS_SAVE_KCAD=1 cargo run --release -p kentos-native-application --example open_cad -- DOSYA.dwg`: Aç ve
+  Kaydet'in kodlaması; 12 DWG'nin 12'si kaydedildi.

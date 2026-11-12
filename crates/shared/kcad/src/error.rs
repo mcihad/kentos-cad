@@ -152,6 +152,8 @@ impl KcadError {
         } else {
             format!("{path}: ")
         };
+        // A rule's sentence ends with its own full stop (`look_problem`'s); one is written.
+        let what = what.trim_end_matches('.');
         Self::new(
             code,
             format!(

@@ -33,6 +33,7 @@ use crate::geom::{
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
+use kentos_contracts::LookPart;
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::{HatchCurve as CoreCurve, HatchLoop as CoreLoop};
 use kentos_geometry_core::geom::hatch_boundary;
@@ -123,9 +124,14 @@ pub struct Ctx {
     pub deformed: bool,
     full: Map3,
     pub layer: Option<String>,
-    pub byblock: String,
+    /// The insert's colour, for its BYBLOCK children; none in a definition when it is the definition's insert's (its
+    /// BYBLOCK, or its layer's on the definition's layer 0; docs/adr/8053 §13).
+    pub byblock: Option<String>,
     /// The insert's line weight, for its BYBLOCK children (none: their layer's).
     pub byblock_weight: Option<f64>,
+    /// The rest of the insert's look, for its BYBLOCK children (docs/adr/8053 §13): its own line type, pattern,
+    /// pattern scale and transparency, and in a definition which parts are its layer's.
+    pub byblock_look: kentos_contracts::ObjectLook,
     /// Upper-case names of the blocks being inserted (cycle guard).
     pub chain: Vec<String>,
     /// Inside a dimension's block: its definition points are not drawing content.
@@ -142,8 +148,9 @@ impl Ctx {
             deformed: false,
             full: Map3::IDENTITY,
             layer: None,
-            byblock: "ink".to_string(),
+            byblock: Some("ink".to_string()),
             byblock_weight: None,
+            byblock_look: kentos_contracts::ObjectLook::default(),
             chain: Vec::new(),
             in_dimension: false,
             definition: false,
@@ -584,6 +591,9 @@ pub struct Emitter<'l> {
     /// every object: a search of the table for each one took 45 µs a line in a drawing of 7 346 line types, 22 of a
     /// 32 MB DWG's 25 s (12 November 2026).
     pattern_names: HashMap<String, String>,
+    /// The objects of the object being emitted that took their looks as they were read, up to this place: an
+    /// exploded insert's (docs/adr/8053 §13).
+    looked_upto: usize,
 }
 
 impl<'l> Emitter<'l> {
@@ -594,6 +604,7 @@ impl<'l> Emitter<'l> {
             kept: HashMap::new(),
             explode,
             defining: false,
+            looked_upto: 0,
             pending: notes::Pending::default(),
             project_font: kentos_contracts::DrawingFont::Barlow,
             text_used: Vec::new(),
@@ -1073,15 +1084,16 @@ impl<'l> Emitter<'l> {
         }
     }
 
-    /// Its own line weight (docs/adr/0139): none for BYLAYER and the drawing's
-    /// default, the insert's for BYBLOCK, else the group's millimetres. In a
-    /// definition BYLAYER on a layer other than 0 is that layer's weight, and
-    /// BYBLOCK at its top is none (the insert's, when it is drawn).
+    /// Its own line weight (docs/adr/0139): none for BYLAYER (in a definition
+    /// `byLayer`) and the drawing's default, the insert's for BYBLOCK, else the
+    /// group's millimetres; BYBLOCK at a definition's top none (the insert's,
+    /// when it is drawn), and where the insert's is its layer's on its layer.
     fn weight_of(&self, e: &Parsed, ctx: &Ctx) -> Option<f64> {
         match e.common.weight {
             // In a definition BYLAYER stays its layer's (`byLayer`, docs/adr/0315 §2).
             Weight::ByLayer | Weight::Default => None,
             Weight::ByBlock if ctx.definition && ctx.layer.is_none() => None,
+            Weight::ByBlock if Self::handed_by_layer(e, ctx, LookPart::LineWeight) => None,
             Weight::ByBlock => ctx.byblock_weight,
             Weight::Mm(w) => Some(w),
         }
@@ -1126,7 +1138,8 @@ impl<'l> Emitter<'l> {
     /// in the drawing and in a definition on a layer other than 0 that layer's,
     /// as its colour and weight, docs/adr/0312 §4), a pattern scale other than
     /// 1, a transparency from its alpha in whole percents (BYLAYER and BYBLOCK
-    /// none), at most 90 %.
+    /// none), at most 90 %. Inside an exploded insert a BYBLOCK part is the
+    /// insert's, and a pattern scale it has none of its own (docs/adr/8053 §13).
     fn look_of(&self, e: &Parsed, ctx: &Ctx) -> kentos_contracts::ObjectLook {
         let c = &e.common;
         let up = c
@@ -1134,39 +1147,75 @@ impl<'l> Emitter<'l> {
             .as_deref()
             .map(str::to_uppercase)
             .unwrap_or_default();
+        let handed = ctx.layer.as_ref().map(|_| &ctx.byblock_look);
         // A pattern of the table by its name; in a definition BYLAYER on another layer than 0 its layer's
-        // (docs/adr/0313 §6).
-        let line_pattern = match up.as_str() {
-            "BYBLOCK" | "" | "BYLAYER" => None,
-            _ => self.pattern_names.get(&up).cloned(),
-        };
-        let line_type = match up.as_str() {
-            "BYBLOCK" | "" | "BYLAYER" => None,
-            _ => Some(self.lib.ltypes.get(&up).copied().unwrap_or_else(|| {
-                super::classify_name(c.line_type.as_deref().unwrap_or_default())
-            })),
+        // (docs/adr/0313 §6). BYBLOCK: the insert's own; its layer's, as that layer's when the object is on a layer of
+        // its own (an object on 0 is on the insert's layer, `handed_by_layer`).
+        let (line_type, line_pattern) = match (up.as_str(), handed) {
+            ("BYBLOCK", Some(h)) if h.line_type.is_some() => (h.line_type, h.line_pattern.clone()),
+            ("BYBLOCK", Some(h)) if h.by_layer.contains(&LookPart::LineType) && c.layer != "0" => {
+                let layer = ctx.layer.as_deref().unwrap_or_default().to_uppercase();
+                (
+                    self.lib.layer_line_types.get(&layer).copied(),
+                    self.lib.layer_patterns.get(&layer).cloned(),
+                )
+            }
+            ("BYBLOCK" | "" | "BYLAYER", _) => (None, None),
+            _ => (
+                Some(self.lib.ltypes.get(&up).copied().unwrap_or_else(|| {
+                    super::classify_name(c.line_type.as_deref().unwrap_or_default())
+                })),
+                self.pattern_names.get(&up).cloned(),
+            ),
         };
         let line_type_scale = c
             .ltscale
             .filter(|s| s.is_finite() && *s > 0.0 && *s != 1.0)
-            .map(|s| s.min(kentos_contracts::MAX_LINE_TYPE_SCALE));
-        let transparency = c.transparency.filter(|v| v & 0x0200_0000 != 0).map(|v| {
-            let alpha = (v & 0xFF) as f64;
-            let percent = ((255.0 - alpha) / 255.0 * 100.0).round();
-            (percent / 100.0).min(kentos_contracts::MAX_TRANSPARENCY)
-        });
+            .map(|s| s.min(kentos_contracts::MAX_LINE_TYPE_SCALE))
+            .or_else(|| handed.and_then(|h| h.line_type_scale));
+        let by_block_transparency = c
+            .transparency
+            .is_some_and(|v| v & 0x0300_0000 == 0x0100_0000);
+        let transparency = c
+            .transparency
+            .filter(|v| v & 0x0200_0000 != 0)
+            .map(|v| {
+                let alpha = (v & 0xFF) as f64;
+                let percent = ((255.0 - alpha) / 255.0 * 100.0).round();
+                (percent / 100.0).min(kentos_contracts::MAX_TRANSPARENCY)
+            })
+            .filter(|t| *t > 0.0)
+            .or_else(|| {
+                handed
+                    .filter(|_| by_block_transparency)
+                    .and_then(|h| h.transparency)
+            });
         // A definition's object keeps BYLAYER as such (docs/adr/0315 §2): its layer's, the insert's layer's on 0;
         // BYBLOCK and anything else unset is the insert's.
         let by_layer = if ctx.definition {
-            use kentos_contracts::LookPart;
+            let handed_layers = |part| Self::handed_by_layer(e, ctx, part);
+            let color = match c.color {
+                Color::ByLayer => true,
+                Color::ByBlock => handed_layers(LookPart::Color),
+                _ => false,
+            };
+            let line_type = match up.as_str() {
+                "" | "BYLAYER" => true,
+                "BYBLOCK" => handed_layers(LookPart::LineType),
+                _ => false,
+            };
+            let weight = match c.weight {
+                Weight::ByLayer => true,
+                Weight::ByBlock => handed_layers(LookPart::LineWeight),
+                _ => false,
+            };
+            let transparency = c.transparency.is_none_or(|v| v & 0x0300_0000 == 0)
+                || (by_block_transparency && handed_layers(LookPart::Transparency));
             [
-                (LookPart::Color, matches!(c.color, Color::ByLayer)),
-                (LookPart::LineType, matches!(up.as_str(), "" | "BYLAYER")),
-                (LookPart::LineWeight, matches!(c.weight, Weight::ByLayer)),
-                (
-                    LookPart::Transparency,
-                    c.transparency.is_none_or(|v| v & 0x0300_0000 == 0),
-                ),
+                (LookPart::Color, color),
+                (LookPart::LineType, line_type),
+                (LookPart::LineWeight, weight),
+                (LookPart::Transparency, transparency),
             ]
             .into_iter()
             .filter(|(_, yes)| *yes)
@@ -1179,22 +1228,53 @@ impl<'l> Emitter<'l> {
             line_type,
             line_pattern,
             line_type_scale,
-            transparency: transparency.filter(|t| *t > 0.0),
+            transparency,
             by_layer,
             ..Default::default()
         }
     }
 
-    /// The colour override: none for BYLAYER, the insert's colour for BYBLOCK.
-    /// In a definition BYLAYER on a layer other than 0 is that layer's colour
-    /// (its look kept on layer 0), and BYBLOCK at its top is none (the
-    /// insert's colour, when it is drawn).
+    /// Whether an object's BYBLOCK `part` is its layer's (docs/adr/8053 §13): in a definition, inside an exploded
+    /// insert whose part is its layer's, an object on 0 is on that layer.
+    fn handed_by_layer(e: &Parsed, ctx: &Ctx, part: LookPart) -> bool {
+        ctx.definition
+            && ctx.layer.is_some()
+            && e.common.layer == "0"
+            && ctx.byblock_look.by_layer.contains(&part)
+    }
+
+    /// The colour an insert hands its BYBLOCK children (docs/adr/8053 §13): its own; its layer's; in a definition none
+    /// when it is the definition's insert's (BYBLOCK at the definition's top, or BYLAYER on its layer 0).
+    fn handed_color(&self, e: &Parsed, ctx: &Ctx, layer: &str) -> Option<String> {
+        match e.common.color {
+            Color::ByLayer if ctx.definition && layer.is_empty() => None,
+            Color::ByLayer => Some(
+                self.lib
+                    .layer_colors
+                    .get(&layer.to_uppercase())
+                    .cloned()
+                    .unwrap_or_else(|| "ink".to_string()),
+            ),
+            Color::ByBlock if ctx.definition && ctx.layer.is_none() => None,
+            Color::ByBlock if Self::handed_by_layer(e, ctx, LookPart::Color) => None,
+            Color::ByBlock => ctx.byblock.clone(),
+            Color::Aci(n) => Some(aci::color(n)),
+            Color::True(rgb) => Some(aci::true_color(rgb)),
+        }
+    }
+
+    /// The colour override: none for BYLAYER (in a definition `byLayer`), the
+    /// insert's colour for BYBLOCK; none for BYBLOCK at a definition's top (the
+    /// insert's colour, when it is drawn) and where the insert's is its layer's
+    /// on its layer (`byLayer`, docs/adr/8053 §13).
     fn color_of(&self, e: &Parsed, ctx: &Ctx) -> Option<String> {
         match e.common.color {
             // In a definition BYLAYER stays its layer's (`byLayer`, docs/adr/0315 §2).
             Color::ByLayer => None,
             Color::ByBlock if ctx.definition && ctx.layer.is_none() => None,
-            Color::ByBlock => Some(ctx.byblock.clone()),
+            // The insert's colour is its layer's and the object on 0 is on it (`byLayer`, docs/adr/8053 §13).
+            Color::ByBlock if Self::handed_by_layer(e, ctx, LookPart::Color) => None,
+            Color::ByBlock => ctx.byblock.clone(),
             Color::Aci(n) => Some(aci::color(n)),
             Color::True(rgb) => Some(aci::true_color(rgb)),
         }
@@ -1202,13 +1282,26 @@ impl<'l> Emitter<'l> {
 
     pub fn emit(&mut self, e: &Parsed, ctx: &Ctx) {
         let start = self.out.entities.len();
+        let outer = std::mem::replace(&mut self.looked_upto, start);
         self.emit_kind(e, ctx);
         let end = self.out.entities.len();
+        // An exploded insert's objects took its look part by part as they were read (`looked_upto`, docs/adr/8053
+        // §13); before, its whole look was written over theirs and a dashed line in a nested block came in continuous.
+        let from = std::mem::replace(&mut self.looked_upto, outer).max(start);
         // Its own line type, pattern scale and transparency (docs/adr/0260): BYLAYER and BYBLOCK are its source's.
         let look = self.look_of(e, ctx);
         if !look.is_empty() {
-            for x in &mut self.out.entities[start..end] {
-                x.base_mut().look = look.clone();
+            for x in &mut self.out.entities[from..end] {
+                // A part the object has a value of its own is not its layer's (docs/adr/8053 §12): an exploded
+                // insert's attribute keeps its own colour and weight, and an own value is drawn before `byLayer`.
+                let mut own = look.clone();
+                let base = x.base();
+                own.by_layer.retain(|part| match part {
+                    LookPart::Color => base.color.is_none(),
+                    LookPart::LineWeight => base.line_weight.is_none(),
+                    _ => true,
+                });
+                x.base_mut().look = own;
             }
         }
         if let Some(meta) = &e.meta {
@@ -2935,18 +3028,9 @@ impl<'l> Emitter<'l> {
         if sx == 0.0 || sy == 0.0 {
             return self.skip("Blok (INSERT)", "ölçeği sıfır", e.line);
         }
-        let byblock = match e.common.color {
-            Color::ByLayer => self
-                .lib
-                .layer_colors
-                .get(&layer.to_uppercase())
-                .cloned()
-                .unwrap_or_else(|| "ink".to_string()),
-            Color::ByBlock => ctx.byblock.clone(),
-            Color::Aci(n) => aci::color(n),
-            Color::True(rgb) => aci::true_color(rgb),
-        };
+        let byblock = self.handed_color(e, ctx, layer);
         let byblock_weight = self.insert_weight(e, ctx, layer);
+        let byblock_look = self.look_of(e, ctx);
         let mut chain = ctx.chain.clone();
         chain.push(key);
         // An array insert (MINSERT); a huge one stops at the object limit or at the walk's.
@@ -2978,6 +3062,7 @@ impl<'l> Emitter<'l> {
                 layer: Some(layer.to_string()),
                 byblock: byblock.clone(),
                 byblock_weight,
+                byblock_look: byblock_look.clone(),
                 chain: chain.clone(),
                 in_dimension: ctx.in_dimension,
                 definition: ctx.definition,
@@ -2986,6 +3071,7 @@ impl<'l> Emitter<'l> {
                 self.emit(child_entity, &child);
             }
         }
+        self.looked_upto = self.out.entities.len();
         if ctx.chain.is_empty() && self.explode {
             self.note(
                 "Blok (INSERT)",
@@ -3364,17 +3450,8 @@ impl<'l> Emitter<'l> {
         let Some(o) = Map3::ocs(e.common.extrusion) else {
             return self.skip(what, BAD_EXTRUSION, e.line);
         };
-        let byblock = match e.common.color {
-            Color::ByLayer => self
-                .lib
-                .layer_colors
-                .get(&layer.to_uppercase())
-                .cloned()
-                .unwrap_or_else(|| "ink".to_string()),
-            Color::ByBlock => ctx.byblock.clone(),
-            Color::Aci(n) => aci::color(n),
-            Color::True(rgb) => aci::true_color(rgb),
-        };
+        let byblock = self.handed_color(e, ctx, layer);
+        let byblock_look = self.look_of(e, ctx);
         let mut chain = ctx.chain.clone();
         chain.push(key);
         let full = o.then(ctx.full);
@@ -3385,6 +3462,7 @@ impl<'l> Emitter<'l> {
             layer: Some(layer.to_string()),
             byblock,
             byblock_weight: self.insert_weight(e, ctx, layer),
+            byblock_look,
             chain,
             in_dimension: true,
             ..ctx.clone()
@@ -3392,6 +3470,7 @@ impl<'l> Emitter<'l> {
         for x in &b.entities {
             self.emit(x, &child);
         }
+        self.looked_upto = self.out.entities.len();
         // An ACAD_TABLE is a table, the others dimensions (docs/adr/1128 §4).
         let as_what = if what.starts_with("Tablo") { "tablosu" } else { "ölçüsü" };
         self.note(

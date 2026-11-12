@@ -20,6 +20,9 @@ unset WAYLAND_DISPLAY
 export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json WGPU_BACKEND=vulkan
 HOME_DIR=$(mktemp -d)
 mkdir -p "$HOME_DIR/.config/kentos-cad" "$HOME_DIR/.local/share" "$HOME_DIR/.local/state" "$HOME_DIR/.cache"
+# No session bus: a file dialog asks the desktop portal over it, and the owner's own screen would show it (12 November
+# 2026). Unset, libdbus would find the owner's bus in XDG_RUNTIME_DIR; this address leads nowhere.
+export DBUS_SESSION_BUS_ADDRESS="unix:path=$HOME_DIR/no-session-bus"
 SETTINGS=${KENTOS_REAL_SETTINGS:-$HOME/.config/kentos-cad}
 for f in ayarlar.json yerlesim-mimari.json pencereler.json; do
   [ -f "$SETTINGS/$f" ] && cp "$SETTINGS/$f" "$HOME_DIR/.config/kentos-cad/"

@@ -16,6 +16,10 @@ sınar ([ADR 8000](../../../docs/adr/8000-real-window-acceptance.md)).
   önbellek klasörleri o ev dizinindedir: sahibin `~/.config/kentos-cad`'i, kurtarma kopyaları ve son dosyaları hiç
   yazılmaz. 12 Kasım 2026'ya dek durum klasörü yalıtılmıyordu ve oturumların açtığı dosyalar sahibin Son dosyalar
   listesine yazıldı. Veritabanı bağlantıları kopyalanmaz.
+- **Oturum veriyolu yok:** `DBUS_SESSION_BUS_ADDRESS` hiçbir yere gitmeyen bir adres olur (silinse libdbus sahibinkini
+  `XDG_RUNTIME_DIR`'de bulurdu). Dosya penceresi (Aç, Farklı kaydet) masaüstü portalına bu veriyoluyla sorulur ve sahibin
+  kendi ekranında açılırdı (12 Kasım 2026). Dosya seçen adımlar burada sınanmaz; dosya uygulamaya komut satırından
+  verilir.
 - **Sürücü:** `driver.py` senaryoyu XTEST ile gerçek olay olarak gönderir: imleç aradaki noktalardan geçer, tuşlar
   basılıp bırakılır, Türkçe harfler için boş bir tuş ödünç alınır. Resimleri X ekranından alır.
 - **Sayaç:** `count.py` senaryonun etkileşimlerini sayar ve Keystroke-Level Model süresini verir (kurallar dosyanın

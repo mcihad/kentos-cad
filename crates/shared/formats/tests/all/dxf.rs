@@ -2619,6 +2619,218 @@ fn a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts() {
     );
 }
 
+#[test]
+fn an_exploded_inserts_parts_with_values_of_their_own_are_not_their_layers() {
+    // Docs/adr/8053 §12, §13: an anonymous block (a dynamic block's) is exploded into the definition that inserts it,
+    // on layer 0 and BYLAYER, with an attribute of its own colour. No part with a value of its own is also its
+    // layer's, which KCAD refuses ("Renk nesnenin kendi değeri; katmana göre olamaz").
+    let line = |colour: &'static str, weight: &'static str| {
+        groups(&[
+            (0, "LINE"),
+            (8, "0"),
+            (62, colour),
+            (370, weight),
+            (10, "0"),
+            (20, "0"),
+            (11, "1"),
+            (21, "1"),
+        ])
+    };
+    let mut blocks = groups(&[(0, "BLOCK"), (2, "*U1"), (70, "1"), (10, "0"), (20, "0")]);
+    blocks.extend(line("0", "-2"));
+    blocks.extend(line("3", "50"));
+    blocks.extend(line("256", "-1"));
+    blocks.extend(groups(&[
+        (0, "ENDBLK"),
+        (0, "BLOCK"),
+        (2, "B"),
+        (70, "0"),
+        (10, "0"),
+        (20, "0"),
+    ]));
+    blocks.extend(groups(&[
+        (0, "INSERT"),
+        (8, "0"),
+        (66, "1"),
+        (2, "*U1"),
+        (10, "0"),
+        (20, "0"),
+        (0, "ATTRIB"),
+        (8, "0"),
+        (62, "3"),
+        (10, "0"),
+        (20, "0"),
+        (40, "1"),
+        (1, "P-1"),
+        (2, "NO"),
+        (70, "0"),
+        (0, "SEQEND"),
+    ]));
+    blocks.extend(groups(&[(0, "ENDBLK")]));
+    let entities = groups(&[(0, "INSERT"), (8, "0"), (2, "B"), (10, "0"), (20, "0")]);
+    let r = dxf::read(
+        &dxf_of(&[("BLOCKS", blocks), ("ENTITIES", entities)]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
+    let b = r.blocks.iter().find(|b| b.name == "B").expect("B kept");
+    use kentos_contracts::LookPart::{Color, LineWeight};
+    let parts: Vec<(bool, bool, bool, bool)> = b
+        .entities
+        .iter()
+        .map(|e| {
+            let (base, look) = (e.base(), &e.base().look);
+            assert_eq!(
+                kentos_contracts::look_problem(
+                    look,
+                    base.color.is_some(),
+                    base.line_weight.is_some(),
+                    true
+                ),
+                None,
+                "{e:?}"
+            );
+            (
+                base.color.is_some(),
+                look.by_layer.contains(&Color),
+                base.line_weight.is_some(),
+                look.by_layer.contains(&LineWeight),
+            )
+        })
+        .collect();
+    assert_eq!(
+        parts,
+        [
+            // BYBLOCK: the insert's, whose colour and weight are its layer's; on 0 the line is on that layer.
+            (false, true, false, true),
+            // Its own green and 0,5 mm.
+            (true, false, true, false),
+            // BYLAYER: its layer's (here the outer insert's).
+            (false, true, false, true),
+            // The attribute's own green, the rest of the insert's look written on it.
+            (true, false, false, true),
+        ]
+    );
+}
+
+#[test]
+fn an_exploded_inserts_objects_take_only_their_by_block_parts_from_it() {
+    // Docs/adr/8053 §13: an exploded insert hands its BYBLOCK parts on; an object's own line type, its BYLAYER and
+    // its own transparency stay its own. Before, the insert's whole look was written over its objects': in one real
+    // project 40 nested lines lost their own dashes, in another 373 BYLAYER lines took an insert's.
+    let tables = groups(&[
+        (0, "TABLE"),
+        (2, "LAYER"),
+        (0, "LAYER"),
+        (2, "KAT"),
+        (70, "0"),
+        (62, "5"),
+        (6, "DASHDOT"),
+        (0, "ENDTAB"),
+    ]);
+    let line =
+        |layer: &'static str, ltype: Option<&'static str>, transparency: Option<&'static str>| {
+            let mut g = vec![(0, "LINE"), (8, layer)];
+            if let Some(t) = ltype {
+                g.push((6, t));
+            }
+            if let Some(t) = transparency {
+                g.push((440, t));
+            }
+            g.extend([(10, "0"), (20, "0"), (11, "1"), (21, "1")]);
+            groups(&g)
+        };
+    let mut anonymous = groups(&[(0, "BLOCK"), (2, "*U1"), (70, "1"), (10, "0"), (20, "0")]);
+    anonymous.extend(line("0", Some("DASHED"), None));
+    anonymous.extend(line("0", Some("BYBLOCK"), Some("16777216")));
+    anonymous.extend(line("KAT", None, None));
+    anonymous.extend(line("KAT", Some("BYBLOCK"), None));
+    anonymous.extend(groups(&[(0, "ENDBLK")]));
+    // The insert: its own dotted line type and 50 % transparency (alpha 128).
+    let insert = groups(&[
+        (0, "INSERT"),
+        (8, "KAT"),
+        (6, "DOT"),
+        (440, "33554560"),
+        (2, "*U1"),
+        (10, "0"),
+        (20, "0"),
+    ]);
+    let read = |blocks: Vec<(i32, String)>, entities: Vec<(i32, String)>| {
+        dxf::read(
+            &dxf_of(&[
+                ("TABLES", tables.clone()),
+                ("BLOCKS", blocks),
+                ("ENTITIES", entities),
+            ]),
+            &DxfReadOptions::default(),
+        )
+        .expect("read")
+    };
+    let looks = |entities: &[Entity]| -> Vec<(Option<LineType>, Option<f64>, bool)> {
+        entities
+            .iter()
+            .map(|e| {
+                let look = &e.base().look;
+                (
+                    look.line_type,
+                    look.transparency,
+                    look.by_layer
+                        .contains(&kentos_contracts::LookPart::LineType),
+                )
+            })
+            .collect()
+    };
+    // In the drawing.
+    let r = read(anonymous.clone(), insert.clone());
+    assert_eq!(
+        looks(&r.entities),
+        [
+            // Its own dashes, not the insert's dots.
+            (Some(LineType::Dashed), None, false),
+            // BYBLOCK: the insert's dots and transparency.
+            (Some(LineType::Dotted), Some(0.5), false),
+            // BYLAYER on KAT: its layer's (none in the drawing).
+            (None, None, false),
+            // BYBLOCK on a layer of its own: the insert's.
+            (Some(LineType::Dotted), None, false),
+        ]
+    );
+    // In a kept block's definition, the insert there on 0 and BYLAYER.
+    let mut blocks = anonymous;
+    blocks.extend(groups(&[
+        (0, "BLOCK"),
+        (2, "B"),
+        (70, "0"),
+        (10, "0"),
+        (20, "0"),
+    ]));
+    blocks.extend(groups(&[
+        (0, "INSERT"),
+        (8, "0"),
+        (2, "*U1"),
+        (10, "0"),
+        (20, "0"),
+    ]));
+    blocks.extend(groups(&[(0, "ENDBLK")]));
+    let r = read(
+        blocks,
+        groups(&[(0, "INSERT"), (8, "0"), (2, "B"), (10, "0"), (20, "0")]),
+    );
+    let b = r.blocks.iter().find(|b| b.name == "B").expect("B kept");
+    assert_eq!(
+        looks(&b.entities),
+        [
+            (Some(LineType::Dashed), None, false),
+            // BYBLOCK on 0: on the insert's layer, the line type its layer's.
+            (None, None, true),
+            (None, None, true),
+            // BYBLOCK on KAT: the insert's line type is its layer's, the outer insert's (BYBLOCK).
+            (None, None, false),
+        ]
+    );
+}
+
 /// An associative hatch of model space is tied to the objects its paths name (97, 330s) by their places in the
 /// import, its closed polyline the outer object and its circle an island, the file's seed kept (docs/adr/0333 §2).
 #[test]

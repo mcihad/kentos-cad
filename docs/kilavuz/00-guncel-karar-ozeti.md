@@ -2527,7 +2527,9 @@
   ne olduğunu söyler. DWG açılışta bir kez çözülür. CAD çizimi yoğun kısmında açılır (birkaç uzak nesne çizimi bir
   şeride indirmez; kaç nesnenin dışarıda kaldığı söylenir). İnç/ft/yard/mil bildiren dosyada Aç birimi sorar (dosyanınki
   seçili; sahibin seçimi). Kodek OpenCADStudio'nun kilidindeki `hakanaktt/acadrust` @ `9344922` (eski çatal silindi).
-  4 gerçek proje (8–33 MB) reddediliyordu, 4–21 s'de açılıyor.
+  4 gerçek proje (8–33 MB) reddediliyordu, 4–21 s'de açılıyor. Açılan DWG KCAD olarak kaydedilir (12/12; önce 7/12).
+  Açılan (patlatılan) bloğun nesneleri yerleştirmeden yalnız bloğa göre parçalarını alır; kendi çizgi tipleri, BYLAYER'ları
+  ve saydamlıkları korunur (önce yerleştirmenin bütün görünüşü üstlerine yazılıyordu).
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.
