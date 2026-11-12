@@ -1684,6 +1684,9 @@ mod flatten_scenes;
 #[cfg(test)]
 #[path = "tests/underlay_scenes.rs"]
 mod underlay_scenes;
+#[cfg(test)]
+#[path = "tests/source_size_tests.rs"]
+mod source_size_tests;
 
 use std::ffi::OsString;
 use std::path::PathBuf;

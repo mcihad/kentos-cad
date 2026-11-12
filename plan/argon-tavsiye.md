@@ -245,7 +245,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 07 — Masaüstündeki 4.000–5.500 Satırlık Dev Tekil Arayüz Dosyalarının (`forms/entry.rs`, `properties/rows.rs`, `labels.rs`, `sheets.rs`) Bölünmesi (Öncelik: P1)
+### [x] ADIM 07 — Masaüstündeki 4.000–5.500 Satırlık Dev Tekil Arayüz Dosyalarının (`forms/entry.rs`, `properties/rows.rs`, `labels.rs`, `sheets.rs`) Bölünmesi (Öncelik: P1)
 
 - **Kod İnceleme Bulgusu:**
   - [apps/desktop/src/forms/entry.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/forms/entry.rs) (**5.444 satır**), [forms/designer_view.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/forms/designer_view.rs) (**2.959 satır**), [forms/designer.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/forms/designer.rs) (**2.851 satır**)
@@ -256,6 +256,7 @@ flowchart LR
   2. `properties/rows.rs` → zaten kısmen ayrılmış olan `arch`/`dimension` alt modüllerine ek olarak `rows/{primitives,gis_fields,road_objects,blocks_tables,summary}.rs` olarak bölünecektir.
   3. `labels.rs` ve `sheets.rs` → `labels/{mod,layout,style,view}.rs` ve `sheets/{mod,book,viewport_edit,title_block,export}.rs` alt modüllerine ayrılacaktır.
 - **Tamamlanma Ölçütü:** `apps/desktop` içinde 2.000 satırı aşan hiçbir tekil `.rs` dosyası kalmaz.
+- **12 Kasım 2026 ([ADR 8054 §7](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 2.000 satırı aşan **20** dosyanın (notun saydığı dördü dahil; en büyüğü `tests/form_scenes.rs` 5.600) hepsi konularına göre 77 alt dosyaya bölündü, en büyük dosya artık 1.995 satır. Adlar notun önerilerinden değil kodun kendi konularından (ör. `entry/{opening,steps,view,items,controls,related}`); `entity_sections`'ın duvar, mahal, döşeme ve boşluk kolları kendi dosyalarında. Taşınan kod harfi harfine aynı (yalnız görünürlük ve yollar); 2.313 masaüstü testi geçti, `tests/source_size_tests.rs` sınırı bekler.
 
 ---
 

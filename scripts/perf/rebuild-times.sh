@@ -37,9 +37,9 @@ if [ "$what" = rust ] || [ "$what" = all ]; then
   cargo build -q -p kentos-desktop > /dev/null 2>&1
   step "geometry-core → interaction testleri" crates/shared/geometry-core/src/display.rs cargo test -q -p kentos-interaction --no-run
   step "formats → formats testleri" crates/shared/formats/src/field/write.rs cargo test -q -p kentos-formats --no-run
-  step "interaction → masaüstü testleri" crates/native/interaction/src/gnss.rs cargo test -q -p kentos-desktop --no-run
-  step "masaüstü → masaüstü testleri" apps/desktop/src/exchange/gnss_import.rs cargo test -q -p kentos-desktop --no-run
-  step "masaüstü → masaüstü uygulaması" apps/desktop/src/exchange/gnss_import.rs cargo build -q -p kentos-desktop
+  step "interaction → masaüstü testleri" crates/native/interaction/src/map/gnss.rs cargo test -q -p kentos-desktop --no-run
+  step "masaüstü → masaüstü testleri" apps/desktop/src/shell/exchange/gnss_import.rs cargo test -q -p kentos-desktop --no-run
+  step "masaüstü → masaüstü uygulaması" apps/desktop/src/shell/exchange/gnss_import.rs cargo build -q -p kentos-desktop
 fi
 
 if [ "$what" = wasm ] || [ "$what" = all ]; then
