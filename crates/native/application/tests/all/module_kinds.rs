@@ -161,3 +161,104 @@ fn a_module_instance_s_bound_slab_binds_its_own_walls() {
     );
     assert!(near(outline(&slab(&doc, &s)), [5.075, 0.1, 7.9, 4.9]));
 }
+
+/// The open plan of the module cases (docs/adr/8050 §4; ADR 0679's): a 10 × 8 m room of 20 cm walls (slots 1–4), a
+/// room separator at x = 5 (5), the living room (6) and the kitchen (7) bounded by them.
+fn open_plan() -> Document {
+    let f: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.modules.edit.kinds.json"
+    ))
+    .unwrap();
+    let setup = f["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find_map(|c| c.get("setup"))
+        .expect("the open plan's case")
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).unwrap();
+    Document::from_snapshot_v2(snapshot).unwrap()
+}
+
+/// A space's net area: its outer rings' less their holes'.
+fn area(doc: &Document, uid: &str) -> f64 {
+    let ring = |pts: &[kentos_commands::Vec2]| {
+        let n = pts.len();
+        (0..n)
+            .map(|i| {
+                let (a, b) = (pts[i], pts[(i + 1) % n]);
+                a.x * b.y - b.x * a.y
+            })
+            .sum::<f64>()
+            .abs()
+            / 2.0
+    };
+    let slot = doc.slot_of(Uuid::parse_str(uid).unwrap()).unwrap();
+    match doc.get(slot) {
+        Some(Entity::Space(s)) => s
+            .space
+            .parts
+            .iter()
+            .map(|p| ring(&p.outer.pts) - p.holes.iter().map(|h| ring(&h.pts)).sum::<f64>())
+            .sum(),
+        other => panic!("{other:?}"),
+    }
+}
+
+/// docs/adr/8050 §4: the open plan placed mirrored on 1. kat keeps its two rooms of 38.22 m² each, bounded by its own
+/// walls and separator; the source's separator moved 1 m east, the instance's moves 1 m west and its rooms take
+/// 46.02 and 30.42 m², as the source's do.
+#[test]
+fn a_module_s_room_separator_bounds_its_instance_s_rooms() {
+    let mut doc = open_plan();
+    let uids: Vec<String> = (1..=7).map(|i| uid(&doc, i)).collect();
+    run(
+        &mut doc,
+        "cad.modules.edit",
+        json!({"operation": {"kind": "define", "name": "Açık plan", "uids": uids, "base": {"x": 0.0, "y": 0.0}}}),
+    );
+    let placed = run(
+        &mut doc,
+        "cad.modules.edit",
+        json!({"operation": {"kind": "place", "module": "Açık plan", "at": {"x": 20.0, "y": 0.0}, "mirror": true,
+            "level": "kat1"}}),
+    );
+    let created: Vec<String> = placed["output"]["created"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_owned())
+        .collect();
+    let (living, kitchen) = (&created[5], &created[6]);
+    for u in [living, kitchen] {
+        assert!((area(&doc, u) - 38.22).abs() < 1e-9, "{}", area(&doc, u));
+    }
+    let source = uid(&doc, 5);
+    run(
+        &mut doc,
+        "cad.entities.transform",
+        json!({"uids": [source], "transform": {"kind": "move", "dx": 1.0, "dy": 0.0}}),
+    );
+    let (s_living, s_kitchen) = (uid(&doc, 6), uid(&doc, 7));
+    assert!(
+        (area(&doc, &s_living) - 46.02).abs() < 1e-9,
+        "{}",
+        area(&doc, &s_living)
+    );
+    assert!((area(&doc, &s_kitchen) - 30.42).abs() < 1e-9);
+    run(
+        &mut doc,
+        "cad.modules.edit",
+        json!({"operation": {"kind": "update", "module": "Açık plan", "from": "acik-plan-1"}}),
+    );
+    assert!(
+        (area(&doc, living) - 46.02).abs() < 1e-9,
+        "{}",
+        area(&doc, living)
+    );
+    assert!(
+        (area(&doc, kitchen) - 30.42).abs() < 1e-9,
+        "{}",
+        area(&doc, kitchen)
+    );
+}

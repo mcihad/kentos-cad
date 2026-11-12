@@ -309,6 +309,48 @@ def case(name, steps):
 IDS = [e["id"] for e in setup_entities()]
 
 
+# ── An open plan (docs/adr/8050 §4; ADR 0679's own): a 10 × 8 m room of 20 cm walls, a room separator at x = 5, the
+# living room and the kitchen bounded by the walls and the separator (net 4.9 × 7.8 = 38.22 m² each), and a plain
+# polyline beside it. ──────────────────────────────────────────────────────────────────────────────────────────────
+
+OPEN_WALLS = [((0, 0), (10, 0)), ((10, 0), (10, 8)), ((10, 8), (0, 8)), ((0, 8), (0, 0))]
+OPEN_MEMBERS = [1, 2, 3, 4, 5, 6, 7]
+OPEN_SOURCES = [UID(i) for i in range(1, 6)]
+
+
+def open_entities():
+    ents = [{"kind": "wall", "id": i + 1, "layerId": "duvar", "attrs": {}, "pts": [P(*a), P(*b)], "width": 0.2,
+             "justify": "center", **on("zemin")} for i, (a, b) in enumerate(OPEN_WALLS)]
+    ents.append({"kind": "polyline", "id": 5, "layerId": "mimari", "attrs": {}, "pts": [P(5, 0), P(5, 8)],
+                 "spaceSeparator": {"level": "zemin"}})
+    for i, (x0, x1, name) in ((6, (0.1, 5.0, "Salon")), (7, (5.0, 9.9, "Mutfak"))):
+        ents.append({"kind": "space", "id": i, "layerId": "mimari", "attrs": {}, "sources": OPEN_SOURCES,
+                     "parts": [{"outer": {"pts": [P(x0, 0.1), P(x1, 0.1), P(x1, 7.9), P(x0, 7.9)]}}],
+                     "seed": P((x0 + x1) / 2, 4), "number": f"S{i - 5}", "name": name, **on("zemin")})
+    ents.append({"kind": "polyline", "id": 8, "layerId": "mimari", "attrs": {}, "pts": [P(12, 0), P(12, 8)]})
+    return ents
+
+
+def open_setup():
+    s = setup()
+    ents = open_entities()
+    s["name"] = "Açık plan"
+    s["uids"] = [UID(e["id"]) for e in ents]
+    s["layers"] = [layer("duvar", "Duvar"), layer("mimari", "Mimari")]
+    s["entities"] = ents
+    return s
+
+
+OPEN_NEXT = 9
+OPEN_DEFINE = {"kind": "define", "name": "Açık plan", "uids": [UID(i) for i in OPEN_MEMBERS], "base": P(0, 0)}
+
+
+def open_placed(at, mirror, level):
+    """An open plan's instance: its objects' slots by member and its matrix."""
+    slots = {m: OPEN_NEXT + k for k, m in enumerate(OPEN_MEMBERS)}
+    return slots, matrix(at, 0.0, mirror)
+
+
 def cases():
     out = []
     # ── Tanımla ve yerleştir ────────────────────────────────────────────────────────────────────────────────────
@@ -437,6 +479,43 @@ def cases():
         DEFINE(), PLACE(pa),
         run({"kind": "removeMembers", "module": "Oda", "uids": [UID(6)]}, done("$any"),
             {"ids": [i for i in ids_with(pa) if i != pa.slots[6]]})]))
+    # ── Mahal ayırıcı (docs/adr/8050 §4) ────────────────────────────────────────────────────────────────────────
+    slots, f = open_placed((20, 0), True, "kat1")
+    sep = lambda pts: [P(*f(q)) for q in pts]
+    uid = lambda m: f"$uidOf:{slots[m]}"
+    srcs = [uid(m) for m in range(1, 6)]
+    open_place = {"kind": "place", "module": "Açık plan", "at": P(20, 0), "mirror": True, "level": "kat1"}
+    out.append({"name": "Mahal ayırıcı modül olur: açık planın iki mahali ayırıcısıyla ve duvarlarıyla",
+                "setup": open_setup(), "steps": [
+                    run(OPEN_DEFINE, done("$any"), {"revision": "changed"})]})
+    out.append({"name": "Yerleştir: aynalı, 1. katta; ayırıcı örneğin katında, mahaller örneğin duvarlarına ve "
+                        "ayırıcısına bağlı", "setup": open_setup(), "steps": [
+                    run(OPEN_DEFINE, ANY),
+                    run(open_place, done("$any"), {
+                        "ids": list(range(1, 9)) + sorted(slots.values()),
+                        "fields": {
+                            str(slots[5]): {"pts": sep([(5, 0), (5, 8)]), "spaceSeparator": {"level": "kat1"}},
+                            str(slots[6]): {"sources": srcs, "seed": P(*f((2.55, 4))), "arch": {"level": "kat1"},
+                                            "broken": None},
+                            str(slots[7]): {"sources": srcs, "seed": P(*f((7.45, 4))), "arch": {"level": "kat1"},
+                                            "broken": None}}}, within=1e-9)]})
+    out.append({"name": "Kaynakla aynı: aynalı örneğin mahalleri ve ayırıcısı kaynağına denk", "setup": open_setup(),
+                "steps": [run(OPEN_DEFINE, ANY), run(open_place, ANY),
+                          run({"kind": "update", "module": "Açık plan", "from": "acik-plan-2"},
+                              refusal("nothing_to_set", "“acik-plan-2” örneği kaynakla aynı; güncellenecek bir şey "
+                                                        "yok.", "operation.from"))]})
+    out.append({"name": "Güncelle: ayırıcı kaynakta 1 m doğuya; aynalı örnekte 1 m batıya kayar", "setup": open_setup(),
+                "steps": [run(OPEN_DEFINE, ANY), run(open_place, ANY),
+                          other("cad.entities.transform",
+                                {"uids": [UID(5)], "transform": {"kind": "move", "dx": 1.0, "dy": 0.0}}),
+                          run({"kind": "update", "module": "Açık plan", "from": "acik-plan-1"}, done("$any"),
+                              {"fields": {str(slots[5]): {"pts": sep([(6, 0), (6, 8)]),
+                                                          "spaceSeparator": {"level": "kat1"}}}}, within=1e-9)]})
+    out.append({"name": "Ret: sıradan çoklu çizgi modüle alınmaz, ayırıcı olan alınır", "setup": open_setup(),
+                "steps": [run({"kind": "define", "name": "Çizgi", "uids": [UID(8)], "base": P(0, 0)},
+                              refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, "
+                                                     "kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
+                                      "operation.uids[0]"))]})
     # ── Retler ──────────────────────────────────────────────────────────────────────────────────────────────────
     out.append(case("Ret: akslara bağlı kolon modüle alınmaz", [run(
         {"kind": "define", "name": "Aks kolonu", "uids": [UID(7)], "base": P(0, 0)},
@@ -444,7 +523,7 @@ def cases():
                                "seçin ya da kolonu seçimden çıkarın.", "operation.uids[0]"))]))
     out.append(case("Ret: aks modüle alınmaz", [run(
         {"kind": "define", "name": "Aks", "uids": [UID(8)], "base": P(0, 0)},
-        refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, "
+        refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, "
                                "etiket ve yazı olur.", "operation.uids[0]"))]))
     return out
 

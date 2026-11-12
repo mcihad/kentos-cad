@@ -4129,6 +4129,1829 @@
       ]
     },
     {
+      "name": "Mahal ayırıcı modül olur: açık planın iki mahali ayırıcısıyla ve duvarlarıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açık plan",
+        "uids": [
+          "0192f5a1-8050-7000-8000-000000000001",
+          "0192f5a1-8050-7000-8000-000000000002",
+          "0192f5a1-8050-7000-8000-000000000003",
+          "0192f5a1-8050-7000-8000-000000000004",
+          "0192f5a1-8050-7000-8000-000000000005",
+          "0192f5a1-8050-7000-8000-000000000006",
+          "0192f5a1-8050-7000-8000-000000000007",
+          "0192f5a1-8050-7000-8000-000000000008"
+        ],
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.24
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 0.0
+              },
+              {
+                "x": 5.0,
+                "y": 8.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 2.55,
+              "y": 4.0
+            },
+            "number": "S1",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 7.45,
+              "y": 4.0
+            },
+            "number": "S2",
+            "name": "Mutfak",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 12.0,
+                "y": 8.0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Açık plan",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006",
+                "0192f5a1-8050-7000-8000-000000000007"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerleştir: aynalı, 1. katta; ayırıcı örneğin katında, mahaller örneğin duvarlarına ve ayırıcısına bağlı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açık plan",
+        "uids": [
+          "0192f5a1-8050-7000-8000-000000000001",
+          "0192f5a1-8050-7000-8000-000000000002",
+          "0192f5a1-8050-7000-8000-000000000003",
+          "0192f5a1-8050-7000-8000-000000000004",
+          "0192f5a1-8050-7000-8000-000000000005",
+          "0192f5a1-8050-7000-8000-000000000006",
+          "0192f5a1-8050-7000-8000-000000000007",
+          "0192f5a1-8050-7000-8000-000000000008"
+        ],
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.24
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 0.0
+              },
+              {
+                "x": 5.0,
+                "y": 8.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 2.55,
+              "y": 4.0
+            },
+            "number": "S1",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 7.45,
+              "y": 4.0
+            },
+            "number": "S2",
+            "name": "Mutfak",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 12.0,
+                "y": 8.0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Açık plan",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006",
+                "0192f5a1-8050-7000-8000-000000000007"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Açık plan",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              },
+              "mirror": true,
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "fields": {
+              "13": {
+                "pts": [
+                  {
+                    "x": 15.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 15.0,
+                    "y": 8.0
+                  }
+                ],
+                "spaceSeparator": {
+                  "level": "kat1"
+                }
+              },
+              "14": {
+                "sources": [
+                  "$uidOf:9",
+                  "$uidOf:10",
+                  "$uidOf:11",
+                  "$uidOf:12",
+                  "$uidOf:13"
+                ],
+                "seed": {
+                  "x": 17.45,
+                  "y": 4.0
+                },
+                "arch": {
+                  "level": "kat1"
+                },
+                "broken": null
+              },
+              "15": {
+                "sources": [
+                  "$uidOf:9",
+                  "$uidOf:10",
+                  "$uidOf:11",
+                  "$uidOf:12",
+                  "$uidOf:13"
+                ],
+                "seed": {
+                  "x": 12.55,
+                  "y": 4.0
+                },
+                "arch": {
+                  "level": "kat1"
+                },
+                "broken": null
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kaynakla aynı: aynalı örneğin mahalleri ve ayırıcısı kaynağına denk",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açık plan",
+        "uids": [
+          "0192f5a1-8050-7000-8000-000000000001",
+          "0192f5a1-8050-7000-8000-000000000002",
+          "0192f5a1-8050-7000-8000-000000000003",
+          "0192f5a1-8050-7000-8000-000000000004",
+          "0192f5a1-8050-7000-8000-000000000005",
+          "0192f5a1-8050-7000-8000-000000000006",
+          "0192f5a1-8050-7000-8000-000000000007",
+          "0192f5a1-8050-7000-8000-000000000008"
+        ],
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.24
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 0.0
+              },
+              {
+                "x": 5.0,
+                "y": 8.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 2.55,
+              "y": 4.0
+            },
+            "number": "S1",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 7.45,
+              "y": 4.0
+            },
+            "number": "S2",
+            "name": "Mutfak",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 12.0,
+                "y": 8.0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Açık plan",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006",
+                "0192f5a1-8050-7000-8000-000000000007"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Açık plan",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              },
+              "mirror": true,
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Açık plan",
+              "from": "acik-plan-2"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "“acik-plan-2” örneği kaynakla aynı; güncellenecek bir şey yok.",
+              "path": "operation.from"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güncelle: ayırıcı kaynakta 1 m doğuya; aynalı örnekte 1 m batıya kayar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açık plan",
+        "uids": [
+          "0192f5a1-8050-7000-8000-000000000001",
+          "0192f5a1-8050-7000-8000-000000000002",
+          "0192f5a1-8050-7000-8000-000000000003",
+          "0192f5a1-8050-7000-8000-000000000004",
+          "0192f5a1-8050-7000-8000-000000000005",
+          "0192f5a1-8050-7000-8000-000000000006",
+          "0192f5a1-8050-7000-8000-000000000007",
+          "0192f5a1-8050-7000-8000-000000000008"
+        ],
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.24
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 0.0
+              },
+              {
+                "x": 5.0,
+                "y": 8.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 2.55,
+              "y": 4.0
+            },
+            "number": "S1",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 7.45,
+              "y": 4.0
+            },
+            "number": "S2",
+            "name": "Mutfak",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 12.0,
+                "y": 8.0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Açık plan",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006",
+                "0192f5a1-8050-7000-8000-000000000007"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Açık plan",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              },
+              "mirror": true,
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 1.0,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Açık plan",
+              "from": "acik-plan-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "13": {
+                "pts": [
+                  {
+                    "x": 14.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 8.0
+                  }
+                ],
+                "spaceSeparator": {
+                  "level": "kat1"
+                }
+              }
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Ret: sıradan çoklu çizgi modüle alınmaz, ayırıcı olan alınır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Açık plan",
+        "uids": [
+          "0192f5a1-8050-7000-8000-000000000001",
+          "0192f5a1-8050-7000-8000-000000000002",
+          "0192f5a1-8050-7000-8000-000000000003",
+          "0192f5a1-8050-7000-8000-000000000004",
+          "0192f5a1-8050-7000-8000-000000000005",
+          "0192f5a1-8050-7000-8000-000000000006",
+          "0192f5a1-8050-7000-8000-000000000007",
+          "0192f5a1-8050-7000-8000-000000000008"
+        ],
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              },
+              {
+                "id": "kat1",
+                "name": "1. kat",
+                "elevation": 3.0,
+                "height": 3.24
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 8.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 8.0
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 0.0
+              },
+              {
+                "x": 5.0,
+                "y": 8.0
+              }
+            ],
+            "spaceSeparator": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.1,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 0.1,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 2.55,
+              "y": 4.0
+            },
+            "number": "S1",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "sources": [
+              "0192f5a1-8050-7000-8000-000000000001",
+              "0192f5a1-8050-7000-8000-000000000002",
+              "0192f5a1-8050-7000-8000-000000000003",
+              "0192f5a1-8050-7000-8000-000000000004",
+              "0192f5a1-8050-7000-8000-000000000005"
+            ],
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 5.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.9,
+                      "y": 7.9
+                    },
+                    {
+                      "x": 5.0,
+                      "y": 7.9
+                    }
+                  ]
+                }
+              }
+            ],
+            "seed": {
+              "x": 7.45,
+              "y": 4.0
+            },
+            "number": "S2",
+            "name": "Mutfak",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 12.0,
+                "y": 0.0
+              },
+              {
+                "x": 12.0,
+                "y": 8.0
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Çizgi",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000008"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "module_kind",
+              "message": "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
+              "path": "operation.uids[0]"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Ret: akslara bağlı kolon modüle alınmaz",
       "steps": [
         {
@@ -4179,7 +6002,7 @@
             "status": "failed",
             "error": {
               "code": "module_kind",
-              "message": "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
+              "message": "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
               "path": "operation.uids[0]"
             }
           }

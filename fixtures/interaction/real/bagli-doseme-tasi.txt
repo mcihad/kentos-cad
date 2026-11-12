@@ -1,0 +1,24 @@
+# M50 (docs/adr/8050 §2), on the stair core of modul-kapsami.txt: all selected, Taşı 3.5 m east (direct distance).
+# The old binary leaves the bound slab's seed behind: the slab is broken (red warning triangle); the new one moves
+# the seed with it: no triangle.
+fit Kesit binası — KentOS CAD
+wait 3000
+click 800 600 middle
+click 800 600 middle
+wait 2500
+key ctrl+a
+wait 1000
+click 394 75
+wait 1500
+click 1100 300
+wait 1000
+move 1400 300
+wait 1000
+type 3.5
+key Return
+wait 3000
+key Escape
+wait 800
+move 1300 700
+wait 1500
+shot m50-sonra-tasi

@@ -222,6 +222,10 @@ pub fn module_id_ok(id: &str) -> bool {
 
 /// Whether a member may be one: the kinds a first module takes (docs/adr/0775 §1).
 pub fn module_kind_ok(e: &Entity) -> bool {
+    // docs/adr/8050 §4: a room separator, not a plain polyline.
+    if let Entity::Polyline(p) = e {
+        return p.space_separator.is_some();
+    }
     matches!(
         e,
         Entity::Wall(_)

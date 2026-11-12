@@ -7423,7 +7423,7 @@
             "status": "failed",
             "error": {
               "code": "module_kind",
-              "message": "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
+              "message": "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
               "path": "operation.uids[0]"
             }
           }

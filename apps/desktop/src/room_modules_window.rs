@@ -854,7 +854,7 @@ impl App {
         }
         let name = kentos_ui::widget::text_field("Yeni modülün adı (Banyo)", &w.name)
             .on_input(|t| msg(Event::Name(t)));
-        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahaller, donatı, kolonlar, merdivenler, rampalar, döşemeler, ölçü ve etiketler (bir oda, bir daire, bir dubleks, bir merdiven evi); akslara bağlı kolon girmez. Taban noktası duvarların sol alt köşesi (duvar yoksa nesnelerin), taban katı en alçak kat.".into()));
+        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatı, kolonlar, merdivenler, rampalar, döşemeler, ölçü ve etiketler (bir oda, bir daire, bir dubleks, bir merdiven evi); akslara bağlı kolon girmez. Taban noktası duvarların sol alt köşesi (duvar yoksa nesnelerin), taban katı en alçak kat.".into()));
         let body = Column::new()
             .spacing(14)
             .push(

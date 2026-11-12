@@ -2,7 +2,7 @@
 
 - **Durum:** sürüyor (12 Kasım 2026); `plan/architecture-advanced.md` ADV-05, M50. 1. bölüm yapıldı: modüle kolon,
   merdiven, rampa, döşeme ve eğri duvar girer (§1); bağlı döşemenin iç noktası taşınınca onunla gider (§2); kata göre
-  yazılan değerler örneğin kendi katınındır (§3). Mahal ayırıcı ve mutfak dizisi sonraki bölümler.
+  yazılan değerler örneğin kendi katınındır (§3). 2. bölüm: mahal ayırıcı (§4). Mutfak dizisi sonraki bölüm.
 - **Bağlam belgesi:** ADR 0775 (oda modülleri), ADR 0779 (üye ekleme/çıkarma, elle değişen nesne, daire), ADR 0796 (çok
   katlı modül, katları tekrarla), ADR 0811 (tek katlı örnek), ADR 0725 §2–3 (kolonun aynası), ADR 0709 (eğri merdivenin
   aynası), ADR 0339 §1 (duvar yolunun aynası), ADR 0771 §4 (kaynağa bağlı döşeme), ADR 0723 §2 ve 0724 §1 (kata bağlı
@@ -81,12 +81,26 @@ Modül bir nesneyi "elle değişmiş" sayarken ve kaynakla karşılaştırırken
 (`changedKeys`'te rampa), rampanın eni kaynakta değişince güncelleme "Elle değiştirilmiş 1 örnek nesnesi kaynağın
 değeriyle yazıldı" diye yanlış uyardı. Yeni kuralla ikisi de olmuyor.
 
+### 4. Mahal ayırıcı
+
+Açık plandaki mahal ayırıcı (ADR 0679: `spaceSeparator` rolü taşıyan çoklu çizgi, fiziksel duvar değil) modüle girer;
+rolü olmayan sıradan çoklu çizgi girmez (`module_kind`, metin "… mahal, mahal ayırıcı, donatı …"). Ayırıcının katı
+rolünün `ArchInfo`'sundadır: tanımda kat silinir, örnek kendi katını yazar — yoksa 1. kattaki örneğin mahalleri zemin
+kattaki ayırıcıyı görmez, ayrılmadan tek mahal olurdu. Mahallerin kaynak listesindeki ayırıcı, duvarlar gibi örneğin
+kendi ayırıcısına bağlanır.
+
+Başka programlar: Revit'te odalar modeli grubunda olur (numarası örnekte değişebilir, adı değişmez); oda ayırma çizgileri
+oda sınırlayıcı model çizgileridir ve grup kopyalarında üst üste binen ayırma çizgisi uyarısı verilir (Autodesk "About
+Room Separation Lines", "Groups of Elements"; AUGI forumu "Rooms separation line in groups").
+
+Ölçüm (ADR 0679'un açık planı, 10 × 8 m, ayırıcı x = 5): aynalı 1. kat örneğinde iki mahal 38,22 + 38,22 m²; kaynağın
+ayırıcısı 1 m doğuya kayıp güncellenince örneğinki 1 m batıya kayar, mahaller 46,02 ve 30,42 m² (kaynakla aynı).
+
 ## Sınırlar
 
-- Mahal ayırıcı ve mutfak dizisi modülde değil (sonraki bölümler).
+- Mutfak dizisi modülde değil (sonraki bölüm).
 - Katları tekrarla'nın modülsüz kopyası kolon, merdiven, rampa ve döşemeyi hâlâ kopyalamaz (ADR 0796 `kind`); modül
   örneğinin içindekiler tekrarlanır.
-- Gerçek pencerede elle kabul bu bölümde yapılmadı.
 
 ## Doğrulama
 
@@ -99,5 +113,14 @@ değeriyle yazıldı" diye yanlış uyardı. Yeni kuralla ikisi de olmuyor.
 - `cad.slabs.bound.json` 33 durum (32'den): duvarlarıyla 20 m taşınan bağlı döşemenin iç noktası (27, 2), sınırı taşınan
   oda, kopuk değil.
 - Uygulama testi `module_kinds.rs`: taşınan bağlı döşeme bütün kalır; modül örneğinin döşemesi kendi duvarlarına bağlı,
-  "kaynakla aynı"; örneğin duvarı kayınca yalnız onun döşemesi büyür. Masaüstü `room_modules_tests` 9 test (duvarsız
-  modülün tabanı (0,5; 0,5)).
+  "kaynakla aynı"; örneğin duvarı kayınca yalnız onun döşemesi büyür; açık planın aynalı örneğinde mahaller 38,22 +
+  38,22 m², kaynağın ayırıcısı 1 m kayınca 46,02 / 30,42 m². Masaüstü `room_modules_tests` 9 test (duvarsız modülün
+  tabanı (0,5; 0,5)).
+- Mahal ayırıcı (§4): kinds dosyasında 5 durum daha (29; tanım, aynalı 1. kat yerleşimi — ayırıcının katı ve
+  mahallerin kaynakları örneğin, kaynakla aynı, ayırıcının güncellenmesi, sıradan çoklu çizginin reddi).
+- Gerçek pencere (`fixtures/interaction/real/modul-kapsami.txt`, `bagli-doseme-tasi.txt`; Xvfb 1920×1080, gerçek
+  fare/klavye): eğri duvarlı, kolonlu, merdivenli, bağlı döşemeli 3 × 5 m Merdiven evi. Eski sürüm Seçimden tanımla'da
+  "Eğrisel duvar ilk modül kapsamında değil" dedi; yenisi tanımladı (4 nesne), Modül yerleştir Aynalı açık, taban 8,0:
+  örneğin cumbası batıya, kolonu kuzeydoğu köşesine, merdiveni doğu yanına geçti (8 nesne). Oda döşemesiyle 3,5 m
+  taşınınca eski sürümde kırmızı uyarı üçgeni (kopuk döşeme), yenisinde yok. Görüntüler
+  `.run/gui-evidence/mimari-m50/`.

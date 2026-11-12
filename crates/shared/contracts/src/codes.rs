@@ -2481,7 +2481,7 @@ codes! {
     /// A removed module's definition asked for: placed, updated or restored.
     MODULE_REMOVED = "module_removed", Failed, false, "Modülün kaynak tanımı silinmiş; örnekleri son hâliyle duruyor. Örnekleri bağımsızlaştırın ya da yeniden tanımlayın.";
     /// An object a module does not take (a grid, a column tied to grids, a hatch …).
-    MODULE_KIND = "module_kind", Failed, false, "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur (akslara bağlı kolon olmaz); bu nesneyi seçimden çıkarın.";
+    MODULE_KIND = "module_kind", Failed, false, "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur (akslara bağlı kolon olmaz); bu nesneyi seçimden çıkarın.";
     /// A member leaning on an object outside the module: an opening's wall, a space's sources, a dimension's points,
     /// a tag's object.
     MODULE_OUTSIDE = "module_outside", Failed, false, "Modülün bir nesnesi seçimin dışındaki bir nesneye bağlı; o nesneyi de seçin ya da bağı kaldırın (kapsam dışı).";

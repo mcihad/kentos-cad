@@ -1,0 +1,51 @@
+# M50 (docs/adr/8050 §1–2), on a stair core drawn by the SDK into the section building's project: a 3 x 5 m room of
+# 20 cm walls (one closed wall, its east side a bay, bulge 0.25), a 30 x 30 cm column in its north-west corner, a
+# straight stair up its west side (16 x 17.5/27) and a slab bound to the room's inner faces (cad.slabs.create bound).
+# All selected, Oda modülleri › Merdiven evi › Seçimden tanımla: the old binary says "Eğrisel duvar ilk modül
+# kapsamında değil"; the new one defines it (4 nesne). Modül yerleştir with Aynalı on, its base typed 8,0: the copy's
+# bay faces west, its column in the north-east corner, its stair on the east side; 8 objects, no broken slab.
+fit Kesit binası — KentOS CAD
+wait 3000
+click 800 600 middle
+click 800 600 middle
+wait 2500
+wheel 560 550 -1
+wait 1500
+key ctrl+a
+wait 1000
+click 300 1032
+wait 600
+type ODAMODULU
+key Return
+wait 2500
+click 730 358
+wait 500
+type Merdiven evi
+wait 500
+click 929 1031
+wait 2500
+shot m50-sonra-tanim
+click 1243 1031
+wait 1500
+key Escape
+wait 800
+click 300 1032
+wait 600
+type MODULYERLESTIR
+key Return
+wait 2500
+click 1763 746
+wait 1500
+move 1450 700
+wait 2000
+shot m50-sonra-onizleme
+click 300 1032
+wait 600
+type 8,0
+key Return
+wait 3000
+key Escape
+wait 800
+move 1300 980
+wait 1500
+shot m50-sonra-yerlestir

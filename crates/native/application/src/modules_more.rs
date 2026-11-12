@@ -386,7 +386,7 @@ pub(super) fn add_members(
         if !module_kind_ok(e) {
             return Err(fail(
                 codes::MODULE_KIND,
-                "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
+                "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
                 &path,
             ));
         }

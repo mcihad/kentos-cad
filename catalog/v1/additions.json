@@ -5100,7 +5100,7 @@
       "id": "arch.modules",
       "title": "Oda modülleri",
       "icon": "roomModules",
-      "description": "Bir banyoyu, odayı ya da merdiven evini bir kez çizip bağlı örnekler olarak kullanır: seçilen bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü ve etiketler modül olur ve yerinde ilk örneği kalır; akslara bağlı kolon girmez. Kaynağı bir örnekten günceller (önce hangi örneklerin güncelleneceği, hangilerinin kilitli ya da istisnalı olduğu söylenir), örneği bağımsızlaştırır, kaynağı siler (örnekler son hâliyle kalır).",
+      "description": "Bir banyoyu, odayı ya da merdiven evini bir kez çizip bağlı örnekler olarak kullanır: seçilen bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü ve etiketler modül olur ve yerinde ilk örneği kalır; akslara bağlı kolon girmez. Kaynağı bir örnekten günceller (önce hangi örneklerin güncelleneceği, hangilerinin kilitli ya da istisnalı olduğu söylenir), örneği bağımsızlaştırır, kaynağı siler (örnekler son hâliyle kalır).",
       "aliases": [
         "ODAMODULU",
         "MODULLER",

@@ -346,7 +346,7 @@ def edit_cases():
                 "operation.uids[0]"))]))
     out.append(case("Ret: çizgi modüle alınmaz", [run(
         {"kind": "define", "name": "Çizgi", "uids": [UID(10), UID(12)], "base": P(0, 0)},
-        refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
+        refusal("module_kind", "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.",
                 "operation.uids[1]"))]))
     # A curved wall makes a module since docs/adr/8050 §1 (scripts/fixtures/module_kinds_cases.py); the case once
     # refused it.

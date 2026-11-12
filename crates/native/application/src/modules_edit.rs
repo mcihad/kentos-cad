@@ -207,6 +207,8 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
         Entity::Stair(x) => Some(&mut x.stair.arch),
         Entity::Ramp(x) => Some(&mut x.ramp.arch),
         Entity::Slab(x) => Some(&mut x.slab.arch),
+        // A room separator's level is its role's (docs/adr/8050 §4).
+        Entity::Polyline(x) => x.space_separator.as_mut(),
         _ => None,
     }
 }
@@ -403,6 +405,11 @@ fn kind_words(e: &Entity) -> &'static str {
         Entity::Dimension(_) => "ölçü",
         Entity::Tag(_) => "etiket",
         Entity::Text(_) => "yazı",
+        Entity::Column(_) => "kolon",
+        Entity::Stair(_) => "merdiven",
+        Entity::Ramp(_) => "rampa",
+        Entity::Slab(_) => "döşeme",
+        Entity::Polyline(p) if p.space_separator.is_some() => "mahal ayırıcı",
         _ => "nesne",
     }
 }
@@ -557,7 +564,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 if !module_kind_ok(e) {
                     return Err(fail(
                         codes::MODULE_KIND,
-                        "Oda modülünde duvar, açıklık, mahal, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
+                        "Oda modülünde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
                         &path,
                     ));
                 }
@@ -1125,6 +1132,7 @@ fn arch_of(e: &Entity) -> Option<&kentos_commands::ArchInfo> {
         Entity::Stair(x) => Some(&x.stair.arch),
         Entity::Ramp(x) => Some(&x.ramp.arch),
         Entity::Slab(x) => Some(&x.slab.arch),
+        Entity::Polyline(x) => x.space_separator.as_ref(),
         _ => None,
     }
 }
