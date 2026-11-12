@@ -8,7 +8,8 @@
 //!
 //! `KENTOS_PERF_FLATS` (comma separated) changes the counts, `KENTOS_PERF_REPEAT` the repetitions;
 //! `KENTOS_PERF_SCHEDULES=each` copies the flat's two schedules with it (200 at 100 flats, as `perf::flat` did in ADR 0776)
-//! instead of keeping the building's two.
+//! instead of keeping the building's two. `KENTOS_PERF_SAVE=<dir>` writes each count's drawing there before it is
+//! measured (`flats-<n>.kcad`), for the real window (docs/adr/8051).
 
 use std::collections::BTreeMap;
 use std::time::Instant;
@@ -152,6 +153,12 @@ fn flat_timing() {
         let (mut s, names) = drawn();
         let each = std::env::var("KENTOS_PERF_SCHEDULES").is_ok_and(|v| v == "each");
         copied_with(&mut s, n, each);
+        if let Ok(dir) = std::env::var("KENTOS_PERF_SAVE") {
+            let path = std::path::Path::new(&dir).join(format!("flats-{n}.kcad"));
+            s.save(Some(&path))
+                .unwrap_or_else(|e| panic!("{}: {e:?}", path.display()));
+            println!("SAVED {} (Bölme 3: {})", path.display(), names["p3"]);
+        }
         let p3 = names["p3"].clone();
         let objects = s.document().entities().count();
         let mut rows = serde_json::Map::new();

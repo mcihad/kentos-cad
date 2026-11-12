@@ -16,6 +16,9 @@
 //! again and leaves the others; the GPU skips the parts out of view; the
 //! scene draws the parts' batches in the order of the layer built whole
 //! (`batches::merged_order`), so the same numbers draw in the same order.
+//! A smaller layer whose objects lie close in the document is built in
+//! shorter runs, and a table whose words alone changed leaves its part as it
+//! was: the style engine draws its lines, the labels its words (docs/adr/8051 §4).
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
@@ -43,6 +46,13 @@ static NEXT_LAYER: AtomicU64 = AtomicU64::new(1);
 pub(crate) const PART_PLACES: u64 = 4096;
 /// A layer is built in parts from this many objects, and whole again below half of it.
 pub(crate) const PARTS_FROM: usize = 8192;
+/// Places per part of a smaller layer whose objects lie close (docs/adr/8051 §4): from `SMALL_PARTS_FROM` objects
+/// within `SMALL_SPAN` places, in parts again until below half of them or past twice the span. A design change in a
+/// storey of 4 400 objects built them all again (37 ms at 100 flats); a run of 512 builds about a ninth.
+pub(crate) const SMALL_PART_PLACES: u64 = 512;
+pub(crate) const SMALL_PARTS_FROM: usize = 1024;
+/// At most 32 parts: a layer scattered among others' objects stays whole.
+pub(crate) const SMALL_SPAN: u64 = 32 * SMALL_PART_PLACES;
 
 /// A part of a layer as built.
 struct Part {
@@ -54,11 +64,14 @@ struct Part {
 struct Layer {
     style: LayerStyle,
     name: String,
-    /// Its parts by run of places (`place / PART_PLACES`), in document
+    /// Its parts by run of places (`place / run`), in document
     /// order; a layer built whole has one, at 0.
     parts: BTreeMap<u64, Part>,
     /// Built in parts: large, and nothing of it reads `$sıra`.
     split: bool,
+    /// Its places per part, which its parts' keys count in: [`PART_PLACES`] or, for a smaller layer whose objects lie
+    /// close, [`SMALL_PART_PLACES`] (docs/adr/8051 §4).
+    run: u64,
     /// An expression of it reads `$sıra`: it is built whole, as one run.
     reads_index: bool,
     /// Its objects changed while it was hidden.
@@ -121,6 +134,8 @@ pub struct StyledCache {
     wall_view: Option<kentos_geometry_core::geom::wall::View>,
     /// The view's theme the layers were shown with (docs/adr/0523 §1).
     theme: Option<kentos_commands::LayerState>,
+    /// Each table's [`drawn_print`] when its part was last built (docs/adr/8051 §4).
+    table_prints: SlotMap<u64>,
 }
 
 impl StyledCache {
@@ -403,6 +418,7 @@ impl StyledCache {
         if self.drawing != Some(drawing) {
             self.layers.clear();
             self.slot_part.clear();
+            self.table_prints.clear();
             self.time_hidden.clear();
             self.mark = None;
             self.drawing = Some(drawing);
@@ -421,13 +437,18 @@ impl StyledCache {
                 slots.sort_unstable();
                 slots.dedup();
                 for slot in slots {
+                    // A table whose words alone changed (a schedule's rows written again) draws the same lines: its
+                    // part stays (docs/adr/8051 §4). 100 schedules of 500 rows rebuilt every part of a storey.
+                    if self.drawn_same(doc, slot) {
+                        continue;
+                    }
                     // A layer not built yet is built whole: its objects' parts
                     // need no finding.
                     if let Some(e) = doc.get(slot)
-                        && self.layers.contains_key(e.base().layer_id.as_str())
+                        && let Some(l) = self.layers.get(e.base().layer_id.as_str())
                         && let Some(place) = doc.place(slot)
                     {
-                        dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                        dirty_part(&mut dirty, &e.base().layer_id, place / l.run);
                     }
                     if let Some((layer, part)) = self.slot_part.get(&slot) {
                         dirty_part(&mut dirty, layer, *part);
@@ -443,10 +464,10 @@ impl StyledCache {
             for e in doc.entities() {
                 if let Entity::Insert(i) = e
                     && reached.contains(&i.block)
-                    && self.layers.contains_key(e.base().layer_id.as_str())
+                    && let Some(l) = self.layers.get(e.base().layer_id.as_str())
                     && let Some(place) = doc.place(Slot(e.base().id))
                 {
-                    dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                    dirty_part(&mut dirty, &e.base().layer_id, place / l.run);
                 }
             }
         }
@@ -458,10 +479,10 @@ impl StyledCache {
             if !all && self.wall_view.is_some() {
                 for e in doc.entities() {
                     if let Entity::Wall(_) = e
-                        && self.layers.contains_key(e.base().layer_id.as_str())
+                        && let Some(l) = self.layers.get(e.base().layer_id.as_str())
                         && let Some(place) = doc.place(Slot(e.base().id))
                     {
-                        dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                        dirty_part(&mut dirty, &e.base().layer_id, place / l.run);
                     }
                 }
             }
@@ -477,23 +498,26 @@ impl StyledCache {
                 for e in doc.entities() {
                     if let Entity::Raster(r) = e
                         && r.raster.dataset.as_ref().is_some_and(|d| d.follow_time)
-                        && self.layers.contains_key(e.base().layer_id.as_str())
+                        && let Some(l) = self.layers.get(e.base().layer_id.as_str())
                         && let Some(place) = doc.place(Slot(e.base().id))
                     {
-                        dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                        dirty_part(&mut dirty, &e.base().layer_id, place / l.run);
                     }
                 }
             }
             if !all {
                 for node in doc.layers().leaves() {
-                    if node.time.is_none() || !self.layers.contains_key(node.id.as_str()) {
+                    let Some(run) = self.layers.get(node.id.as_str()).map(|l| l.run) else {
+                        continue;
+                    };
+                    if node.time.is_none() {
                         continue;
                     }
                     // Who is where is enough: the objects themselves are not read. An object
                     // shown now and noted hidden (or the reverse) came or went.
                     let mut last = None;
                     for (place, Slot(id)) in doc.layer_slots(&node.id) {
-                        let key = place / PART_PLACES;
+                        let key = place / run;
                         if last != Some(key)
                             && store.view_shown(f64::from(id)) == self.time_hidden.contains(&id)
                         {
@@ -544,6 +568,7 @@ impl StyledCache {
             node: &'d LayerNode,
             reset: bool,
             split: bool,
+            run: u64,
             parts: Vec<(u64, Vec<&'d Entity>)>,
             ordered: std::collections::BTreeSet<u64>,
         }
@@ -555,13 +580,16 @@ impl StyledCache {
             }
             let cached = self.layers.get(&node.id);
             let count = doc.count(&node.id);
+            // Whether it is large enough to build in parts, and how long its runs are (docs/adr/0121, 8051 §4).
+            let (sized, run) = part_run(doc, &node.id, count, cached.map(|l| (l.split, l.run)));
             // Which parts hold an object drawn in an order of its own: a layer built and still fresh asks only the
-            // parts that changed; one new, stale or of another look asks every object (it is built whole anyway).
+            // parts that changed; one new, stale, of another look or of other runs asks every object (it is built
+            // whole anyway).
             let ordered = match cached {
-                Some(l) if !l.stale => {
+                Some(l) if !l.stale && l.run == run => {
                     let mut set = l.ordered.clone();
                     for &key in dirty.get(&node.id).map(|d| &d.parts).into_iter().flatten() {
-                        let places = key * PART_PLACES..(key + 1) * PART_PLACES;
+                        let places = key * run..(key + 1) * run;
                         if doc
                             .by_layer_placed(&node.id, places)
                             .any(|(_, e)| own_order(e))
@@ -576,7 +604,7 @@ impl StyledCache {
                 _ => doc
                     .by_layer_placed(&node.id, 0..u64::MAX)
                     .filter(|(_, e)| own_order(e))
-                    .map(|(place, _)| place / PART_PLACES)
+                    .map(|(place, _)| place / run)
                     .collect(),
             };
             let reads_index = cached.is_some_and(|l| l.reads_index && l.style == node.style);
@@ -584,10 +612,7 @@ impl StyledCache {
             let needs = kentos_native_style::renderer::needs_of(node.style.renderer.as_ref());
             let split = !reads_index
                 && !needs.whole
-                && match cached {
-                    Some(l) if l.split => count >= PARTS_FROM / 2,
-                    _ => count >= PARTS_FROM,
-                }
+                && sized
                 // A layer with a drawing order of its own is drawn in that order, whole (docs/adr/0260 §5).
                 && ordered.is_empty();
             // A view-dependent one built for another view is built again.
@@ -605,6 +630,7 @@ impl StyledCache {
                         || l.style != node.style
                         || l.name != node.name
                         || l.split != split
+                        || l.run != run
                         || l.time != node.time
                         || l.filter != node.filter
                 });
@@ -635,7 +661,7 @@ impl StyledCache {
                 // Every part: the layer's objects by run of places.
                 let mut parts: Vec<(u64, Vec<&Entity>)> = Vec::new();
                 for (place, e) in doc.by_layer_placed(&node.id, 0..u64::MAX) {
-                    let key = place / PART_PLACES;
+                    let key = place / run;
                     // A part all of whose objects the window leaves out is still a part (an empty one).
                     let shown = keep(&e);
                     match parts.last_mut() {
@@ -654,7 +680,7 @@ impl StyledCache {
                 keys.sort_unstable();
                 keys.into_iter()
                     .map(|key| {
-                        let places = key * PART_PLACES..(key + 1) * PART_PLACES;
+                        let places = key * run..(key + 1) * run;
                         (
                             key,
                             doc.by_layer_placed(&node.id, places)
@@ -669,6 +695,7 @@ impl StyledCache {
                 node,
                 reset,
                 split,
+                run,
                 parts,
                 ordered,
             });
@@ -815,12 +842,14 @@ impl StyledCache {
                 for e in &entities {
                     self.slot_part
                         .insert(Slot(e.base().id), (Arc::clone(&shared), 0));
+                    note_print(&mut self.table_prints, e);
                 }
                 let entry = self.layers.entry(id.clone()).or_insert_with(|| Layer {
                     style: plan.node.style.clone(),
                     name: plan.node.name.clone(),
                     parts: BTreeMap::new(),
                     split: false,
+                    run: plan.run,
                     reads_index: true,
                     stale: false,
                     time: plan.node.time.clone(),
@@ -830,6 +859,7 @@ impl StyledCache {
                 entry.parts.clear();
                 entry.parts.insert(0, new_part(layer, &entities, framed));
                 entry.reads_index = true;
+                entry.run = plan.run;
             }
             let reads_index = results.iter().any(|r| r.3);
             let entry = self.layers.entry(id.clone()).or_insert_with(|| Layer {
@@ -837,6 +867,7 @@ impl StyledCache {
                 name: plan.node.name.clone(),
                 parts: BTreeMap::new(),
                 split,
+                run: plan.run,
                 reads_index,
                 stale: false,
                 time: plan.node.time.clone(),
@@ -848,6 +879,7 @@ impl StyledCache {
                 entry.style = plan.node.style.clone();
                 entry.name = plan.node.name.clone();
                 entry.split = split;
+                entry.run = plan.run;
                 entry.stale = false;
                 entry.time = plan.node.time.clone();
                 entry.filter = plan.node.filter.clone();
@@ -870,6 +902,7 @@ impl StyledCache {
                                 .insert(Slot(e.base().id), (Arc::clone(&shared), key));
                         }
                     }
+                    note_print(&mut self.table_prints, e);
                 }
                 // A part left with no objects goes; a layer built whole keeps its one.
                 if entities.is_empty() && split {
@@ -967,6 +1000,33 @@ impl StyledCache {
 }
 
 impl StyledCache {
+    /// Whether a changed object draws as its part was built (docs/adr/8051 §4): a table whose print stays, in the same
+    /// part of the same layer, on a layer drawn with its simple look (a renderer could read more of it).
+    fn drawn_same(&self, doc: &kentos_domain::Document, slot: Slot) -> bool {
+        let Some(e) = doc.get(slot) else {
+            return false;
+        };
+        let Some(print) = drawn_print(e) else {
+            return false;
+        };
+        let layer_id = e.base().layer_id.as_str();
+        self.table_prints.get(&slot) == Some(&print)
+            && doc
+                .layers()
+                .get(layer_id)
+                .is_some_and(|n| n.style.renderer.is_none())
+            && self.layers.get(layer_id).is_some_and(|l| {
+                let now = if l.split {
+                    doc.place(slot).map(|place| place / l.run)
+                } else {
+                    Some(0)
+                };
+                self.slot_part
+                    .get(&slot)
+                    .is_some_and(|(layer, part)| **layer == *layer_id && Some(*part) == now)
+            })
+    }
+
     /// A service layer's part: one batch the service pass draws its tiles
     /// for, under the key the hub knows the service by; made again only when
     /// the service, its connection or its opacity changes.
@@ -1037,6 +1097,95 @@ impl StyledCache {
 /// An object drawn in an order of its own, or a mask (docs/adr/0260 §5, 0310).
 fn own_order(e: &Entity) -> bool {
     e.base().look.order.is_some() || e.base().look.wipeout.is_some()
+}
+
+/// Whether a layer of `count` objects is built in parts, and its places per part (docs/adr/0121, 8051 §4): a large one
+/// in runs of [`PART_PLACES`] from [`PARTS_FROM`] objects (until below half of them); a smaller one whose objects lie
+/// within [`SMALL_SPAN`] places in runs of [`SMALL_PART_PLACES`] from [`SMALL_PARTS_FROM`] objects (until below half of
+/// them or past twice the span). `built`: whether it is built in parts now, and its run.
+fn part_run(
+    doc: &kentos_domain::Document,
+    layer: &str,
+    count: usize,
+    built: Option<(bool, u64)>,
+) -> (bool, u64) {
+    let was = built.filter(|(split, _)| *split).map(|(_, run)| run);
+    let large = if was == Some(PART_PLACES) {
+        PARTS_FROM / 2
+    } else {
+        PARTS_FROM
+    };
+    if count >= large {
+        return (true, PART_PLACES);
+    }
+    let (from, span) = if was == Some(SMALL_PART_PLACES) {
+        (SMALL_PARTS_FROM / 2, 2 * SMALL_SPAN)
+    } else {
+        (SMALL_PARTS_FROM, SMALL_SPAN)
+    };
+    if count >= from {
+        let mut places = doc.layer_slots(layer).map(|(place, _)| place);
+        if let Some(first) = places.next()
+            && places.last().unwrap_or(first) - first < span
+        {
+            return (true, SMALL_PART_PLACES);
+        }
+    }
+    (false, PART_PLACES)
+}
+
+/// What a table's lines are drawn from (docs/adr/8051 §4): all of it but its words and where they come from (its
+/// cells, its schedule, its formulas and fields). The style engine draws a table's lines and its cell styles' borders;
+/// its words are the labels' (labels.rs). None for another object, and for a table of a table style: the project's
+/// settings draw that one too.
+fn drawn_print(e: &Entity) -> Option<u64> {
+    use std::hash::{Hash, Hasher};
+    let Entity::Table(t) = e else { return None };
+    let kentos_commands::TableEntity {
+        base,
+        p,
+        rotation,
+        height,
+        rows,
+        columns,
+        cells: _,
+        merges,
+        aligns,
+        header,
+        grid,
+        frame,
+        face,
+        source: _,
+        styles,
+        formulas: _,
+        fields: _,
+        breaks,
+        table_style,
+    } = t;
+    if table_style.is_some() {
+        return None;
+    }
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    serde_json::to_vec(base).ok()?.hash(&mut h);
+    (rows.len(), columns.len()).hash(&mut h);
+    for v in [p.x, p.y, *rotation, *height]
+        .into_iter()
+        .chain(rows.iter().copied())
+        .chain(columns.iter().copied())
+    {
+        v.to_bits().hash(&mut h);
+    }
+    serde_json::to_vec(&(merges, aligns, header, grid, frame, face, styles, breaks))
+        .ok()?
+        .hash(&mut h);
+    Some(h.finish())
+}
+
+/// A table's [`drawn_print`] as its part is built.
+fn note_print(prints: &mut SlotMap<u64>, e: &Entity) {
+    if let Some(print) = drawn_print(e) {
+        prints.insert(Slot(e.base().id), print);
+    }
 }
 
 fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {

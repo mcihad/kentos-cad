@@ -21,7 +21,10 @@ use kentos_render_wgpu::scene;
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use serde_json::{Value, json};
 
-use super::scene::{Look, PART_PLACES, PARTS_FROM, StyledCache, construction_clip};
+use super::scene::{
+    Look, PART_PLACES, PARTS_FROM, SMALL_PART_PLACES, SMALL_PARTS_FROM, SMALL_SPAN, StyledCache,
+    construction_clip,
+};
 use crate::document::Document;
 
 fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
@@ -427,8 +430,17 @@ fn a_layer_that_reads_its_objects_places_stays_one_run() {
 
 #[test]
 fn the_parts_draw_what_the_layer_built_whole_draws() {
+    parts_draw_whole(PARTS_FROM + 2000);
+}
+
+/// docs/adr/8051 §4: a smaller layer in runs of 512 draws what it draws whole too.
+#[test]
+fn the_shorter_parts_draw_what_the_layer_built_whole_draws() {
+    parts_draw_whole(4400);
+}
+
+fn parts_draw_whole(n: usize) {
     let library = kentos_native_style::system::library();
-    let n = PARTS_FROM + 2000;
     let doc = drawing(n, None);
     let mut spatial = Spatial::of(&doc.model);
     let mut cache = StyledCache::default();
@@ -716,5 +728,148 @@ fn a_far_zoom_builds_again_only_for_construction_lines() {
             scene_at(&mut cache, &doc, &mut spatial, &zoomed);
             assert!(cache.last_build.is_none());
         }
+    }
+}
+
+/// docs/adr/8051 §4: a storey of 4 400 objects is built in runs of 512 places, and an edit builds its run again; below
+/// half of 1 024 objects it is whole again. A layer of as many objects scattered among another layer's is whole.
+#[test]
+fn a_smaller_layer_whose_objects_lie_close_is_built_in_shorter_runs() {
+    let library = kentos_native_style::system::library();
+    let n = 4400;
+    let mut doc = drawing(n, None);
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let before = scene_of(&mut cache, &doc, &mut spatial, &library);
+    let runs = (n as u64).div_ceil(SMALL_PART_PLACES) as usize;
+    assert_eq!(parcel_parts(&before).len(), runs, "parsel in runs of 512");
+    let slot = Slot(SMALL_PART_PLACES as u32 + 100);
+    let Some(Entity::Polygon(mut p)) = doc.model.get(slot).cloned() else {
+        panic!("a parcel");
+    };
+    for v in &mut p.pts {
+        v.x += 1.0;
+    }
+    assert!(doc.model.update(slot, Entity::Polygon(p)));
+    let after = scene_of(&mut cache, &doc, &mut spatial, &library);
+    for (i, (a, b)) in parcel_parts(&before)
+        .iter()
+        .zip(parcel_parts(&after))
+        .enumerate()
+    {
+        assert_eq!(
+            Arc::ptr_eq(a, b),
+            i != 1,
+            "part {i}: only the moved parcel's is built again"
+        );
+    }
+    assert_eq!(
+        cache.last_build.map(|(_, parts)| parts),
+        Some(1),
+        "one part built"
+    );
+    // Down to 600 objects it stays in runs; below 512 it is whole.
+    let gone: Vec<Slot> = (601..=n as u32).map(Slot).collect();
+    assert_eq!(doc.model.remove(&gone), gone.len());
+    assert_eq!(
+        parcel_parts(&scene_of(&mut cache, &doc, &mut spatial, &library)).len(),
+        2
+    );
+    let gone: Vec<Slot> = (101..=600).map(Slot).collect();
+    assert_eq!(doc.model.remove(&gone), gone.len());
+    assert_eq!(
+        parcel_parts(&scene_of(&mut cache, &doc, &mut spatial, &library)).len(),
+        1,
+        "whole"
+    );
+    // A layer of SMALL_PARTS_FROM objects spread over more than SMALL_SPAN places: whole.
+    let mut doc = drawing(SMALL_SPAN as usize + 2 * SMALL_PARTS_FROM, None);
+    let moved: Vec<(Slot, Entity)> = (1..=SMALL_SPAN as u32 + 2 * SMALL_PARTS_FROM as u32)
+        .filter(|i| i % 16 != 1)
+        .map(|i| {
+            let mut e = doc.model.get(Slot(i)).cloned().expect("a parcel");
+            e.base_mut().layer_id = "yol".into();
+            (Slot(i), e)
+        })
+        .collect();
+    assert_eq!(
+        doc.model.update_many(moved, "Katman"),
+        (SMALL_SPAN as usize + 2 * SMALL_PARTS_FROM) / 16 * 15
+    );
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let scene = scene_of(&mut cache, &doc, &mut spatial, &library);
+    assert!(doc.model.count("parsel") >= SMALL_PARTS_FROM);
+    // yol is large and in runs of 4096; parsel, its objects one in sixteen, whole.
+    assert!(doc.model.count("yol") >= PARTS_FROM);
+    let yol: std::collections::BTreeSet<u64> = doc
+        .model
+        .layer_slots("yol")
+        .map(|(place, _)| place / PART_PLACES)
+        .collect();
+    assert_eq!(
+        scene.layers.len(),
+        yol.len() + 1,
+        "yol in runs, parsel whole"
+    );
+}
+
+/// A table on the layer: 40 rows of five cells, at (486 100, 4 420 400).
+fn with_table(doc: &mut Document) -> Slot {
+    let rows: Vec<Vec<String>> = (0..40)
+        .map(|i| (0..5).map(|j| format!("{i}.{j}")).collect())
+        .collect();
+    let table: Entity = serde_json::from_value(json!({
+        "kind": "table", "id": 0, "layerId": "parsel", "attrs": {},
+        "p": { "x": 486_100.0, "y": 4_420_400.0 }, "rotation": 0.0, "height": 2.5,
+        "rows": vec![6.0; 40], "columns": vec![20.0; 5], "cells": rows
+    }))
+    .expect("a table");
+    doc.model.add(table).expect("placed")
+}
+
+/// docs/adr/8051 §4: a table whose words alone change (a schedule's rows written again) leaves its part as it was;
+/// a row taller builds it again. The style engine draws its lines, the labels its words.
+#[test]
+fn a_table_whose_words_alone_changed_leaves_its_part() {
+    let library = kentos_native_style::system::library();
+    for n in [100, 4400] {
+        let mut doc = drawing(n, None);
+        let slot = with_table(&mut doc);
+        let mut spatial = Spatial::of(&doc.model);
+        let mut cache = StyledCache::default();
+        let before = scene_of(&mut cache, &doc, &mut spatial, &library);
+        let Some(Entity::Table(mut t)) = doc.model.get(slot).cloned() else {
+            panic!("the table");
+        };
+        t.cells[3][2] = "değişti".into();
+        assert!(doc.model.update(slot, Entity::Table(t.clone())));
+        let after = scene_of(&mut cache, &doc, &mut spatial, &library);
+        assert_eq!(after.layers.len(), before.layers.len());
+        for (i, (a, b)) in before.layers.iter().zip(&after.layers).enumerate() {
+            assert!(Arc::ptr_eq(a, b), "{n}: part {i} stays");
+        }
+        // Undone, the words as they were: nothing again.
+        doc.model.undo();
+        let undone = scene_of(&mut cache, &doc, &mut spatial, &library);
+        assert!(
+            before
+                .layers
+                .iter()
+                .zip(&undone.layers)
+                .all(|(a, b)| Arc::ptr_eq(a, b)),
+            "{n}: undone"
+        );
+        // A row taller: its lines move, its part is built again.
+        t.rows[3] = 9.0;
+        assert!(doc.model.update(slot, Entity::Table(t)));
+        let taller = scene_of(&mut cache, &doc, &mut spatial, &library);
+        let rebuilt = before
+            .layers
+            .iter()
+            .zip(&taller.layers)
+            .filter(|(a, b)| !Arc::ptr_eq(a, b))
+            .count();
+        assert_eq!(rebuilt, 1, "{n}: the table's part again");
     }
 }

@@ -1385,7 +1385,12 @@ impl Document {
         let fields = self.follow_fields(ops);
         ops.extend(fields);
         // After the fields: the tables' schedules, fields and formulas (docs/adr/0327).
-        let tables = self.follow_tables(ops);
+        // Not on a dry run's copy nor in a preview (docs/adr/8051 §3): the step works them out.
+        let tables = if self.works_tables {
+            self.follow_tables(ops)
+        } else {
+            Vec::new()
+        };
         ops.extend(tables);
         // And the joinery list's block with its types and openings (docs/adr/8038 §6).
         let joinery = self.follow_joinery(ops);

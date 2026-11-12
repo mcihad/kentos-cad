@@ -158,6 +158,7 @@ impl Document {
         let first_slot = self.next_slot;
         let clock = self.store.preview_clock();
         let candidates = self.store.wall_candidates.clone();
+        let structure = self.store.structure.clone();
         let relocated = self.relocated.clone();
         let relocated_ends = self.relocated_ends.clone();
         // Preview writes are invisible even to readers holding the scratch drawing's change mark.
@@ -199,7 +200,11 @@ impl Document {
             ops.push(op);
         }
         let mark = ops.len();
+        // A preview draws what follows (a dimension chain, a tag, a room); the schedules are worked out when the step
+        // is written (docs/adr/8051 §3): a door's ghost along a wall worked out and drew 100 schedules of 1 000 rows.
+        let works_tables = std::mem::replace(&mut self.works_tables, false);
         self.follow_into(&mut ops);
+        self.works_tables = works_tables;
         // First and final states of each derived slot. A new source itself belongs to the
         // caller's input; only new followers are emitted as added geometry.
         let mut order = Vec::new();
@@ -234,6 +239,7 @@ impl Document {
         self.store
             .restore_preview_clock(clock, first_slot, end_slot);
         self.store.wall_candidates = candidates;
+        self.store.structure = structure;
         self.next_slot = first_slot;
         self.relocated = relocated;
         self.relocated_ends = relocated_ends;

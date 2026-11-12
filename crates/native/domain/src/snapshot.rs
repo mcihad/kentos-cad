@@ -214,6 +214,7 @@ impl Document {
             dirty: false,
             object_isolation: None,
             isolation_version: 0,
+            works_tables: true,
         }
     }
 

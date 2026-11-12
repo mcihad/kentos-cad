@@ -78,7 +78,7 @@ talimatla yapılır.
 | S21 | Tadilat: açıklığın evresi duvarından okunuyor, mevcut duvardaki yeni kapı gösterilemiyor; araçlarda evre seçilemiyor | `contracts/src/entity.rs:1999-2010` ✓, A1 S16 | Y | ADV-17 |
 | S22 | Türk proje takımının büyük parçaları yok: vaziyet planı ve emsal/TAKS, metrekare cetveli, kat irtifakı tablosu, çatı planı, grafik doğrama listesi, Türk anteti ve pafta takımı | A2 §4, W4 §3 | Y | ADV-22, 23, 24 |
 | S23 | Kabul açığı: 27 Ekim'den beri gerçek pencerede mimari kabul yok; 35 ADV ADR'sinin 32'si "elle denenmedi" diyor. Kabul izleri araçları kimlikle başlatıyor, kenetleme ve yardımları kapatıyor; `kullan` modül seçemiyor; `snapshot --sekme arch` "böyle bir şerit sekmesi yok" diyor | A3 §2, `apps/desktop/src/snapshot.rs:72-76` ✓ | Y | ADV-26 |
-| S24 | 200 çizelgeli 100 dairede kare 163 ms (hedef 100 ms); etiket motoru artımlı yerleşmiyor | ADR 0786, A3 §4 | O | ADV-07 |
+| S24 | 200 çizelgeli 100 dairede kare 163 ms (hedef 100 ms); etiket motoru artımlı yerleşmiyor — **kapandı (ADR 8051): kare 85 ms; yerleşim 3 ms, artımlısı gerekmedi** | ADR 0786, A3 §4 | O | ADV-07 |
 
 ### 1.3 Ölçülen başlangıç değerleri
 
@@ -94,7 +94,7 @@ Bu sayılar her fazın sonunda yeniden ölçülür (§7).
 | Aynı ikonu paylaşan komut | duvar 3, mahal 5, etiket 2 | ikon tablosu ✓ |
 | 2+1 örneğinde kullanılan katman | 1 (54 nesne) | M0 ✓ |
 | Ölçeğe göre ayrıntısı olan nesne türü | 1 (duvar) | `arch.rs:94-125` ✓ |
-| 100 daire + 200 çizelgede kare | 163 ms | ADR 0786 |
+| 100 daire + 200 çizelgede kare | 163 ms (M5); M51 başında bu makinede 562 ms, sonunda 85 ms | ADR 0786, ADR 8051 |
 
 ### 1.4 Planın kendi durumu
 
@@ -486,7 +486,7 @@ Kesit işareti bulunması, gerçek kesit üretimi kabulü yerine geçmesin.
 
 ### ADV-07 — Konut çizimini baştan sona ölçülen bir kalite teslimine dönüştür [~]
 
-**7 Kasım:** beş kabul senaryosu güncel ikiliyle oynatıldı, bütün beklentiler tuttu; ama izler araçları kimlikle başlatıyor ve yardımları kapatıyor, şerit ve kenetleme ölçülmüyor (S23). Ölçüm ADV-26 (M1) ile her fazın kapısı olur. Kalanlar: etiket motorunun artımlı yerleşimi ve 163 ms → M51; araçlarda evre → M39; gerçek ofis DWG'si → M48.
+**7 Kasım:** beş kabul senaryosu güncel ikiliyle oynatıldı, bütün beklentiler tuttu; ama izler araçları kimlikle başlatıyor ve yardımları kapatıyor, şerit ve kenetleme ölçülmüyor (S23). Ölçüm ADV-26 (M1) ile her fazın kapısı olur. Kalanlar: etiket motorunun artımlı yerleşimi ve 163 ms → M51 (yapıldı, ADR 8051: kare 85 ms, yerleşim 3 ms); araçlarda evre → M39; gerçek ofis DWG'si → M48.
 
 _Durum (31 Ekim 2026, [ADR 0776](../docs/adr/0776-measured-quality-acceptance-of-an-apartment.md)):_ 2+1 daire gerçek
 girdiyle iz ve bölüm ölçüsü, Python/MCP/masaüstü anlamsal eşitliği, büyük koordinat ve ölçek regresyonları, 1/20/100 daire
@@ -1209,7 +1209,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M48 | Eski DWG planından tanıma | ADV-25 | Patlatılmış plandan duvar ve açıklık **(1. bölüm yapıldı, ADR 8048: komut `cad.arch.recognize` (Planı tanı) — roller katmandan (adından: duvar, kapı, pencere, kolon; aks, merdiven, yazı, mobilya yok sayılır), duvar paralel çizgilerin bandı (yalıtım çizgisi bileşen, şaftın iki yanı iki duvar), kesintide yüz sürerse birleşim, yay kapı (menteşe ve yanıyla, iki kanat), pencere çizgisi pencere, kolon ve kesen duvar birleşim, boş aralık Boşluk; uçlar T'de eksene, köşede kesişime; okunan kaynak silinir, kalan söylenir. Bölüm binasının bağımsız ofis DXF'i (cm, patlatılmış): 8 duvar ve 7 açıklık tanımla mikrometresine kadar aynı, IFC'de 8 duvar 3 kapı 4 pencere; 41 ortak durum. 2. bölüm yapıldı, ADR 8048 §4: Mimari › Duvar ▾ › Planı tanı — seçim önce, Araç ayarlarında her katman rolüyle (değiştirilebilir), önizleme komutun planından; gerçek pencerede 8 duvar, 3 kapı, 4 pencere ve Toplu mahal bul ile 5 mahal. 3. bölümün ilk adımı yapıldı, ADR 8048 §5: kolon katmanının dikdörtgeni dikdörtgen, dairesi yuvarlak kolon (dolgulu, dönüşüyle), taraması kolonla gider; bölüm binasının 8 kolonu tanımla aynı. İkinci adım yapıldı, ADR 8048 §6: bloklar çizim değişmeden yerinde okunur (0 katmanındaki parça bloğun katmanında); kapıları, pencereleri ve kolonları blok olan ofis planı da tanımla aynı, 15 blok silinir. Üçüncü adım yapıldı, ADR 8048 §1: duvarın üstüne çizilmiş (silme maskeli) pencere ve kapı — yüzler sürerken iki pencere çizgisi pencere, kasalı kapı yayı kapı. Dördüncü adım yapıldı: kapıyla biten duvar karşı duvarın eksenine uzar, kapı uzadığı yerde. Beşinci adım yapıldı: altı dik köşeli çevre L kolon (dönüşüyle). Gerçek pencerede bloklu plan: 8 kolon dahil, 94 → 46 nesne. Sonraya: stil (isteğe bağlı), eğri duvar; ADV-25'in gerçek ofis DWG'siyle tadilat kabulü sahibin dosyasını bekliyor; bitti)** |
 | M49 | Ölçülü bölmede kalıcı bağ; bağ kapsamı | ADV-01 | Yay kenar, kolon, aks bağı **(yapıldı, ADR 8049. 1. bölüm yapıldı, ADR 8049 §1: ölçülü bölmenin Bu ölçüyü koru'su (K, `keep`) — net ya da eksen mesafesi aynı adımda kalıcı bağ ve parametresi; kaynak kayınca bölme izler (0,5 m dışa: 3 m korunur); yay kaynakta ret. 2. bölüm yapıldı, ADR 8049 §2: aks bağı — `grid` parçası, aks taşınınca duvar, duvar kayınca aks ve aks kesişimindeki kolon tek adımda izler; Mesafe'nin aksa ölçüsü korunur, geçici ölçünün aks kilidi; `.kcad` şema 243. 3. bölüm yapıldı, ADR 8049 §3: kolon yanı bağı — `columnSide` parçası, serbest kolon yanına dik kayar, akslara bağlı kolon aksıyla gider; kolonun Mesafe'sinde Bu ölçüyü koru ve geçici ölçü kilidi; `.kcad` şema 244. 4. bölüm (temel) yapıldı, ADR 8049 §4: yay kenarın Kaydır'ı — yay merkezinde büyür/küçülür, uçları komşu doğrular boyunca, saplanan duvarlar izler; yayın yanındaki düz kenar da kayar. Döşeme kenarı bağı yazılmadı (Kaynağa bağlı sınır zaten izliyor, §5). Yay kenarın geçici ölçüsü ve Mesafe'si (eş merkezli yaya radyal) ve yay kenar bağı (eş merkezli yay çizgileri; eğri koridor 1,20 m korunur) de yapıldı)** |
 | M50 | Modül kapsamı | ADV-05 | Kolon, merdiven, döşeme, mutfak, eğri duvar modülde **(yapıldı, ADR 8050. 1. bölüm yapıldı, ADR 8050 §1–3: modüle kolon, merdiven, rampa, döşeme ve eğri duvar girer — aynalı/döndürülmüş örnekte Aynala'nın kuralı (L kolonun kolları takas, merdivenin yayı ters), aynalı örnekten de kaynağı güncelleme; akslara bağlı kolon reddedilir; bağlı döşemenin iç noktası taşınınca gider (önce taşınan döşeme kopuyor, örneğin döşemesi kaynak odaya dönüyordu); rıht yüksekliği ve rampa kotu örneğin katından (3,24 m'lik katta 18 cm); gerçek pencerede Merdiven evi aynalı örnekle kabul edildi. 2. bölüm yapıldı, ADR 8050 §4: mahal ayırıcı modülde — katı örneğin, mahaller örneğin ayırıcısına bağlı (açık plan aynalı 1. katta 38,22 + 38,22 m²; kaynakta ayırıcı 1 m kayınca örnekte 46,02 / 30,42 m²). 3. bölüm yapıldı, ADR 8050 §5: mutfak dizisi modülde tarifiyle — her örnek kendi duvarlarına yeniden döşer, aynada yanı ve tek kapakların menteşesi ters; kaynaktan ve aynalı örnekten güncelleme, istisna, ayırma, çıkarma, ekleme; `.kcad` şema 245 (eski okuyucu kolonlu modülü "geçersiz" diyordu, artık "yeni sürüm" der). Mutfaklı modül gerçek pencerede kabul edildi; Oda modülleri penceresi liste ve ayrıntı düzeninde (ADR 8050 §6, ortak `ListDetails` bileşeni))** |
-| M51 | Büyük projede akıcılık | ADV-07 | 163 → < 100 ms |
+| M51 | Büyük projede akıcılık | ADV-07 | 163 → < 100 ms **(yapıldı, ADR 8051: 100 daire ve 200 çizelgede tasarım değişikliğinin karesi 562 → 85 ms bu makinede (i5-13500), komut 479 → 34 ms, Planı 530 → 3 ms, Kapı önizlemesi 450 → 1,9 ms. Sebep M40'ın mahal yüksekliğiydi: mahal çizelgesinin her hücresi için çizimin bütün nesnelerine iki kez bakılıyordu (500 mahalde 197 ms). Değer yalnız onu soran sütun için hesaplanır; döşeme ve kiriş dizini; deneme adımı ve önizleme çizelge yazmaz; 1 024–8 191 nesnelik yoğun katman sahnede 512'lik parçalarda, yalnız yazısı değişen tablo parçasını kirletmez. Etiket motorunun yerleşimi karenin 3 ms'si: artımlı yerleşim gerekmedi. Gerçek pencerede fare gezdirilirken Duvarı kaydır önizlemesi 16 s → 0,3 s, Kapı 10 s → 0,8 s geriden geliyordu)** |
 
 ## 6. Bir maddeyi baştan sona yapma talimatı (mimari)
 
@@ -1264,7 +1264,7 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 | 2+1 gerçek pencerede etkileşim | 147 | ≤ 80 | 2 |
 | 2+1 gerçek pencerede KLM süresi | 177,6 s | ≤ 100 s | 2 |
 | Ruhsat takımı | yok | tek komut, PDF/A | 3 |
-| 100 daire + 200 çizelgede kare | 163 ms | < 100 ms | 5 |
+| 100 daire + 200 çizelgede kare | 163 ms | < 100 ms (85 ms, ADR 8051) | 5 |
 
 **Faz kapısı:**
 - Kabul izleri Mimari modülünde, şeritten ve kenetle oynar; sayaç raporu önceki fazla karşılaştırılır.

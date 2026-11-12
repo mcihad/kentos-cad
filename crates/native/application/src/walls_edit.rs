@@ -1313,7 +1313,9 @@ fn effects(doc: &Document, work: &Work) -> Result<Option<kentos_commands::WallEf
         }
     };
     let before = gaps(doc);
-    let mut copy = doc.reading_copy();
+    // The effects are the walls', the rooms', the openings', the dimensions' and the fixtures': the schedules are not
+    // worked out on the copy (docs/adr/8051 §3).
+    let mut copy = doc.reading_copy().without_tables();
     // A command's step, as execute writes it (`call::run`): the constraints follow inside it and see what it changed
     // (`step_befores`), so a plan is refused as execute is, with the bonds in the way (docs/adr/0780 §1).
     let step = |d: &mut Document| -> Result<(), Stop> {
@@ -1348,7 +1350,17 @@ fn effects(doc: &Document, work: &Work) -> Result<Option<kentos_commands::WallEf
     for e in doc.entities() {
         let slot = Slot(e.base().id);
         let Some(now) = copy.get(slot) else { continue };
-        if std::ptr::eq(e, now) || !differs(e, now) {
+        // Only these kinds are effects: a table written again (a schedule of 500 rooms, a hundred times over) is not
+        // compared (docs/adr/8051 §3).
+        let effect = matches!(
+            e,
+            Entity::Space(_)
+                | Entity::Opening(_)
+                | Entity::Dimension(_)
+                | Entity::Insert(_)
+                | Entity::Wall(_)
+        );
+        if !effect || std::ptr::eq(e, now) || !differs(e, now) {
             continue;
         }
         let Some(uid) = doc.uid(slot).map(|u| u.to_string()) else {

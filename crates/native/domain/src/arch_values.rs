@@ -198,11 +198,10 @@ impl Document {
         if place == "count" {
             return Some(Count(1));
         }
-        let uid = self.uid_of_entity(e);
         match e {
             Entity::Opening(o) => {
                 let x = &o.opening;
-                let wall = self.wall_of(&x.host);
+                let wall = || self.wall_of(&x.host);
                 let height = x.head.map(|h| h - x.sill.unwrap_or(0.0));
                 match place {
                     "number" => text(&x.number),
@@ -248,7 +247,7 @@ impl Document {
                     "head" => x.head.map(Length),
                     "area" => height.map(|h| Area(x.width * h)),
                     // An unstyled wall says its thickness, with its unit (docs/adr/0344's 27 October addendum).
-                    "wall" => wall.map(|w| match w.style.filter(|s| !s.is_empty()) {
+                    "wall" => wall().map(|w| match w.style.filter(|s| !s.is_empty()) {
                         Some(s) => Text(self.wall_style_name(Some(&s))),
                         None => Text(format!(
                             "{} {}",
@@ -256,10 +255,10 @@ impl Document {
                             crate::text_fields::unit_name(self.settings().drawing_unit.unwrap_or_default())
                         )),
                     }),
-                    "level" => wall.and_then(|w| self.level_name(&w.arch)).map(Text),
+                    "level" => wall().and_then(|w| self.level_name(&w.arch)).map(Text),
                     // Its own phase first (docs/adr/8039 §1), its wall's otherwise.
                     "phase" => x.phase.map(|p| Text(p.label().to_owned())).or_else(|| {
-                        wall.and_then(|w| w.arch.phase)
+                        wall().and_then(|w| w.arch.phase)
                             .map(|p| Text(p.label().to_owned()))
                     }),
                     _ => None,
@@ -267,15 +266,17 @@ impl Document {
             }
             Entity::Space(s) => {
                 let x = &s.space;
-                let areas = core_areas(&x.parts);
-                let area = kentos_geometry_core::geom::space::area(&areas);
+                // Worked out for the places that read them: a room's height looks for the slabs under and over it
+                // (docs/adr/8040 §3), and a schedule asks every room for each of its columns (docs/adr/8051 §1).
+                let areas = || core_areas(&x.parts);
+                let area = || kentos_geometry_core::geom::space::area(&areas());
                 // Its finished floor to its ceiling (docs/adr/8040 §3).
-                let height = self.room_height(x);
+                let height = || self.room_height(x);
                 match place {
                     "number" => text(&x.number),
                     "name" => text(&x.name),
                     "usage" => text(&x.usage),
-                    "area" => Some(Area(area)),
+                    "area" => Some(Area(area())),
                     "netArea" => crate::space_follow::SpaceSearch::new(self).net_area(x).map(Area),
                     // The building program (docs/adr/0773): its group, its brief's range, how far out it is.
                     "unit" => {
@@ -304,7 +305,7 @@ impl Document {
                     "targetDiff" => {
                         let program = self.program();
                         let b = program.brief(x.usage.as_deref()?)?;
-                        b.area_difference(area).map(Area)
+                        b.area_difference(area()).map(Area)
                     }
                     // The shares (docs/adr/0784 §3): the space's unit's share of the common areas and its gross.
                     "share" | "gross" => {
@@ -315,10 +316,10 @@ impl Document {
                         t.parse::<f64>().ok().map(Area)
                     }
                     "perimeter" => {
-                        Some(Length(kentos_geometry_core::geom::space::perimeter(&areas)))
+                        Some(Length(kentos_geometry_core::geom::space::perimeter(&areas())))
                     }
-                    "height" => height.map(|h| Length(h.inside())),
-                    "volume" => height.map(|h| Volume(area * h.inside())),
+                    "height" => height().map(|h| Length(h.inside())),
+                    "volume" => height().map(|h| Volume(area() * h.inside())),
                     // On a storey the project knows: its finished floor; its ceiling when it has one (an asma tavan, a
                     // height typed, the slab over it): floor to floor is no ceiling.
                     "floorElevation" => self
@@ -326,7 +327,7 @@ impl Document {
                         .map(|_| Length(self.room_floor(x).0)),
                     "ceilingElevation" => self
                         .room_floor_elevation(&x.arch)
-                        .and(height)
+                        .and_then(|_| height())
                         .filter(crate::RoomHeight::ceiling_known)
                         .map(|h| Length(h.ceiling)),
                     "level" => self.level_name(&x.arch).map(Text),
@@ -378,16 +379,16 @@ impl Document {
             }
             Entity::Wall(w) => {
                 let x = &w.wall;
-                let (length, net) = self.wall_faces(uid.as_deref(), x);
+                let faces = || self.wall_faces(self.uid_of_entity(e).as_deref(), x);
                 match place {
                     "type" | "style" => {
                         text(&x.style).map(|_| Text(self.wall_style_name(x.style.as_deref())))
                     }
                     "thickness" | "width" => Some(Length(x.width)),
-                    "length" => Some(Length(length)),
+                    "length" => Some(Length(faces().0)),
                     "height" => self.wall_height(x).map(Length),
-                    "area" => net.map(Area),
-                    "volume" => net.map(|n| Volume(n * x.width)),
+                    "area" => faces().1.map(Area),
+                    "volume" => faces().1.map(|n| Volume(n * x.width)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
                     _ => None,

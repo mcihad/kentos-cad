@@ -98,6 +98,7 @@ mod snapshot;
 mod step;
 mod store;
 mod wall_candidates;
+mod structure_index;
 pub mod wall_pieces;
 mod wall_height;
 mod room_height;

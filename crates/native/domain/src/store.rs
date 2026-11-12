@@ -46,6 +46,9 @@ struct Item {
 pub(crate) struct Store {
     /// Derived wall reach boxes; shared immutably by reading copies, never serialized.
     pub(crate) wall_candidates: OnceLock<Arc<crate::wall_candidates::WallCandidates>>,
+    /// Derived slabs and beams with their outlines (docs/adr/8051 §2); shared immutably by reading copies, never
+    /// serialized.
+    pub(crate) structure: OnceLock<Arc<crate::structure_index::StructureIndex>>,
     items: SlotMap<Item>,
     order: BTreeMap<u64, Slot>,
     layers: HashMap<String, BTreeMap<u64, Slot>>,
@@ -313,6 +316,9 @@ impl Store {
         if matches!(&*stored.entity, Entity::Wall(_)) {
             self.wall_candidates.take();
         }
+        if crate::structure_index::indexed(&stored.entity) {
+            self.structure.take();
+        }
         if computed_table(stored) {
             self.computed.insert(stored.slot());
         }
@@ -352,6 +358,9 @@ impl Store {
         self.space_separators.remove(&stored.slot());
         if matches!(&*stored.entity, Entity::Wall(_)) {
             self.wall_candidates.take();
+        }
+        if crate::structure_index::indexed(&stored.entity) {
+            self.structure.take();
         }
         self.computed.remove(&stored.slot());
         self.tags.remove(&stored.slot());

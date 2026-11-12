@@ -50,6 +50,9 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 | `key SPEC` | `Return`, `Escape`, `Home`, `F8`, `ctrl+a` … |
 | `type METİN` | Metni tuş tuş yazar |
 | `shot AD` | Ekranın resmi: `ÇIKTI/AD.png` |
+| `glide X1 Y1 X2 Y2 N MS` | İmleci bir doğru boyunca N adımda, adımlar arası MS ile götürür (duvar boyunca gezdirilen araç) |
+| `settle MS` | Uygulama boşa çıkana dek bekler (çeyrek saniyede bir çekirdeğin onda birinden az iş), en çok MS |
+| `cpu AD` … `cpu AD end` | İki işaret arasında uygulamanın işlemci ve duvar saati süresini yazar ([ADR 8051](../../../docs/adr/8051-large-project-fluency.md)) |
 
 **Yazım kuralları:**
 - Noktalar ekran pikselidir. Çizimdeki bir noktanın pikseli, görünüm bilinen bir duruma getirilince (Home) ölçülür. Ölçek ve

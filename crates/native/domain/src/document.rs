@@ -80,6 +80,9 @@ pub struct Document {
     /// Session-only visibility, keyed by persistent identity. Never saved or put in geometry Undo.
     pub(crate) object_isolation: Option<Arc<std::collections::BTreeSet<Uuid>>>,
     pub(crate) isolation_version: u64,
+    /// Whether a step works out the tables' computed cells (docs/adr/0327): not on a dry run's copy that never reads
+    /// them (docs/adr/8051 §3).
+    pub(crate) works_tables: bool,
 }
 
 /// What a step may do to the drawing's objects (docs/adr/0411 §5).
@@ -327,7 +330,16 @@ impl Document {
             dirty: self.dirty,
             object_isolation: self.object_isolation.clone(),
             isolation_version: self.isolation_version,
+            works_tables: self.works_tables,
         }
+    }
+
+    /// This reading copy with its tables' computed cells left as they are at its steps (docs/adr/8051 §3): a dry run
+    /// that reads what a change does to the walls, the rooms and the openings (Mesafe's effects) does not work out the
+    /// schedules it never reads, 200 of them at 100 flats. Only for a copy no one writes back or shows.
+    pub fn without_tables(mut self) -> Document {
+        self.works_tables = false;
+        self
     }
 
     /// This reading copy drawn in the phase view `view` (docs/adr/8039 §2): a sheet's map showing a phase of its own

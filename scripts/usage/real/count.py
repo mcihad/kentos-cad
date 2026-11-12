@@ -4,7 +4,8 @@ values and their letters, pointer moves, wheel notches, tool starts; and the Key
 KLM operators and times as Kieras gives them ("Using the Keystroke-Level Model to Estimate Execution Times", after
 Card, Moran & Newell 1983): K .28 s (average non-secretarial typist), P 1.1 s, B .1 s (a click is BB), H .4 s,
 M 1.2 s. Rules kept the same for every scenario, as the KLM asks (consistency over placement):
-  - click: P + BB; double click: P + 4B; move: P; drag: 2P + 2B; wheel: B per notch;
+  - click: P + BB; double click: P + 4B; move and glide (one hand's sweep along a line): P; drag: 2P + 2B; wheel: B per
+    notch; settle and cpu ask nothing of the hand;
   - key: K per key of the chord; type: K per letter;
   - H whenever the hand changes between keyboard and mouse (it starts on the mouse);
   - M at each tool start (a line whose comment begins with "araç:") and before each typed value.
@@ -39,7 +40,7 @@ def count(path):
             if comment.strip().startswith("araç:"):
                 c["arac"] += 1
                 ops["M"] += 1
-        elif word == "move":
+        elif word in ("move", "glide"):
             to("mouse")
             c["hareket"] += 1
             ops["P"] += 1

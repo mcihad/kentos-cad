@@ -16,7 +16,7 @@
 //! - A beam's top is where it hangs: the structure's top of the slab over its storey at the middle of its axis (within
 //!   its storey), else its storey's top; its offset added. Its underside is its top less its height.
 
-use kentos_contracts::{BeamFields, Entity, SlabFields, Vec2, WallFields};
+use kentos_contracts::{BeamFields, SlabFields, Vec2, WallFields};
 
 use crate::document::Document;
 
@@ -87,12 +87,8 @@ impl Document {
     /// The lowest underside, of the beams whose band holds `at`, more than [`OVER`] above `foot`. A lintel and a bond
     /// beam sit in the wall, which runs on round them (docs/adr/8041 §3): only a beam of the frame stops it.
     fn beam_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
-        self.entities()
-            .filter_map(|e| match e {
-                Entity::Beam(b) if b.beam.role == kentos_contracts::BeamRole::Beam => Some(&b.beam),
-                _ => None,
-            })
-            .filter(|b| beam_holds(b, at))
+        self.beams_at(at)
+            .filter(|b| b.role == kentos_contracts::BeamRole::Beam)
             .filter_map(|b| self.beam_underside(b))
             .filter(|u| *u > foot + OVER)
             .min_by(f64::total_cmp)
@@ -167,21 +163,15 @@ impl Document {
             .as_ref()
             .map(|a| a.levels.as_slice())
             .unwrap_or_default();
-        self.entities()
-            .filter_map(|e| match e {
-                Entity::Slab(s) => Some(&s.slab),
-                _ => None,
-            })
-            .filter(move |s| holds(s, at))
-            .map(move |s| {
-                let floor = s
-                    .arch
-                    .level
-                    .as_deref()
-                    .and_then(|id| levels.iter().find(|l| l.id == id))
-                    .map_or(0.0, |l| l.elevation);
-                (s, floor)
-            })
+        self.slabs_at(at).map(move |s| {
+            let floor = s
+                .arch
+                .level
+                .as_deref()
+                .and_then(|id| levels.iter().find(|l| l.id == id))
+                .map_or(0.0, |l| l.elevation);
+            (s, floor)
+        })
     }
 
     /// Its level's floor and height (floor to floor), metres.
@@ -203,15 +193,6 @@ impl Document {
 pub enum WallTop {
     Slab,
     Beam,
-}
-
-/// Whether the beam's band holds `at`.
-fn beam_holds(b: &BeamFields, at: Vec2) -> bool {
-    let kentos_geometry_core::entity::Shape::Beam { pts, beam } = kentos_formats::arch_elements::core_beam(b) else {
-        return false;
-    };
-    let band = kentos_geometry_core::geom::beam::band(&pts, &beam);
-    kentos_geometry_core::geometry::point_in_polygon(kentos_geometry_core::Vec2::new(at.x, at.y), &band)
 }
 
 /// The middle of a path of straight stretches by its length.
@@ -262,23 +243,6 @@ fn middle(w: &WallFields) -> Option<Vec2> {
     Some(first)
 }
 
-/// Whether one of the slab's parts holds `at`: inside its outer ring and none of its holes.
-fn holds(s: &SlabFields, at: Vec2) -> bool {
-    let p = kentos_geometry_core::Vec2::new(at.x, at.y);
-    let ring = |pts: &[Vec2]| -> Vec<kentos_geometry_core::Vec2> {
-        pts.iter()
-            .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
-            .collect()
-    };
-    s.parts.iter().any(|part| {
-        kentos_geometry_core::geometry::point_in_polygon(p, &ring(&part.outer.pts))
-            && !part
-                .holes
-                .iter()
-                .any(|h| kentos_geometry_core::geometry::point_in_polygon(p, &ring(&h.pts)))
-    })
-}
-
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
@@ -321,7 +285,7 @@ pub(crate) mod tests {
                 .as_array_mut()
                 .unwrap()
                 .push(serde_json::json!(format!(
-                    "0192f5a1-2590-7000-8000-0000000000{:02}",
+                    "0192f5a1-2590-7000-8000-00000000{:04}",
                     i + 10
                 )));
         }

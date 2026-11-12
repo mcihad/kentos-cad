@@ -10,6 +10,9 @@ Scenario lines, one per line; a line starting with '#' and anything after ' #' i
   key SPEC                Return, Escape, Home, F8, ctrl+a, shift+Tab …
   type TEXT               the text as keystrokes (Turkish letters too)
   shot NAME               the screen as OUT_DIR/NAME.png
+  glide X1 Y1 X2 Y2 N MS  the pointer along a line in N moves MS apart (a tool drawn along a wall)
+  settle MS               until the app is idle (under a tenth of a core for a quarter second), at most MS
+  cpu NAME / cpu NAME end the app's processor and wall time between the two marks, printed (docs/adr/8051)
 Points are screen pixels, as the pictures show them.
 """
 import sys, time
@@ -139,6 +142,44 @@ def fit(title):
     # The windows there are said: a drawing's title is its own name, not its file's.
     raise SystemExit(f"no window: {title} (there: {', '.join(seen) or 'none'})")
 
+def app_pid():
+    # The app on this display: its environment names the display the driver drives, never the owner's own window.
+    import os
+    me = os.environ.get("DISPLAY")
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        try:
+            if not open(f"/proc/{pid}/comm").read().strip().startswith("kentos-cad"):
+                continue
+            if f"DISPLAY={me}".encode() in open(f"/proc/{pid}/environ", "rb").read().split(b"\0"):
+                return int(pid)
+        except OSError:
+            pass
+    raise SystemExit("no app on this display")
+
+
+def cpu_ms(pid):
+    # Every thread's user and system time (fields 14 and 15), milliseconds.
+    import os
+    fields = open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()
+    return (int(fields[11]) + int(fields[12])) * 1000.0 / os.sysconf("SC_CLK_TCK")
+
+
+marks = {}
+
+
+def cpu(name):
+    # The app's processor time since the mark of the same name, and the wall's: "NAME" starts, "NAME end" ends.
+    pid = app_pid()
+    now = (cpu_ms(pid), time.monotonic() * 1000.0)
+    if name.endswith(" end"):
+        start = marks.pop(name[:-4])
+        print(f"CPU {name[:-4]}: {now[0] - start[0]:.0f} ms işlemci, {now[1] - start[1]:.0f} ms duvar saati", flush=True)
+    else:
+        marks[name] = now
+
+
 for raw in open(sys.argv[1], encoding="utf-8"):
     if raw.lstrip().startswith("#"):
         continue
@@ -178,6 +219,27 @@ for raw in open(sys.argv[1], encoding="utf-8"):
         sync(300); shot(a[0])
     elif word == "fit":
         fit(rest.strip()); sync(800)
+    elif word == "glide":
+        x0, y0, x1, y1, n, ms = (int(v) for v in a)
+        xtest.fake_input(d, X.MotionNotify, x=x0, y=y0)
+        sync(ms)
+        for i in range(1, n + 1):
+            xtest.fake_input(d, X.MotionNotify, x=round(x0 + (x1 - x0) * i / n), y=round(y0 + (y1 - y0) * i / n))
+            sync(ms)
+        pos[:] = [x1, y1]
+    elif word == "settle":
+        pid = app_pid()
+        end = time.monotonic() + int(a[0]) / 1000
+        last = cpu_ms(pid)
+        while time.monotonic() < end:
+            sync(250)
+            now = cpu_ms(pid)
+            if now - last < 25:
+                break
+            last = now
+    elif word == "cpu":
+        sync()
+        cpu(rest.strip())
     else:
         raise SystemExit(f"unknown line: {line}")
     print("ok:", line.strip(), flush=True)
