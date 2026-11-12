@@ -3,11 +3,15 @@
 //! worked out here once: every set's options but the one it shows (the primary unless the view chooses another).
 
 use std::collections::{BTreeSet, HashMap};
+use std::sync::Arc;
 
-use kentos_contracts::{OptionChoice, OptionCombo, OptionSet, option_combos_problem, option_sets_problem};
+use kentos_contracts::{
+    OptionChoice, OptionCombo, OptionSet, option_combos_problem, option_sets_problem,
+};
 
 use crate::Refusal;
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 use crate::{Slot, Uuid};
 
@@ -32,7 +36,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::ArchOptions { before, after: next }], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::Options {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -56,7 +66,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::OptionCombos { before, after: next }], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::OptionCombos {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

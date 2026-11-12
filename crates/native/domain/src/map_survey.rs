@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use kentos_contracts::MapSurvey;
 
+use crate::history::MapOp;
 use crate::{Document, history::Op};
 
 impl Document {
@@ -26,6 +27,6 @@ impl Document {
             next,
         ));
         let after = Arc::new(self.settings.map_survey.clone());
-        self.record(vec![Op::MapSurvey { before, after }], label);
+        self.record(vec![Op::Map(MapOp::MapSurvey { before, after })], label);
     }
 }

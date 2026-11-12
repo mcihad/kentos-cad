@@ -1,11 +1,13 @@
 //! A road project's templates and sample line sets (docs/adr/0903 §6): settings the drawing keeps in its undo
 //! history, so every write of the Enkesit window and of `road.templates.*` and `road.sections.*` is one undo step.
 
+use std::sync::Arc;
 use kentos_contracts::{CorridorDef, HaulDef, RoadSettings, SectionSetDef, SuperelevationDef, TemplateDef, VolumeDef};
 
 use crate::Refusal;
 use crate::document::Document;
 use crate::history::Op;
+use crate::history::RoadOp;
 
 impl Document {
     /// The project's templates, in the order the project tree shows them.
@@ -39,7 +41,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadVolumes { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Volumes {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -65,7 +73,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadSheetSets { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::SheetSets {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -86,7 +100,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadGuardrails { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Guardrails {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -107,7 +127,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadCulverts { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Culverts {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -128,7 +154,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadJunctions { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Junctions {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -149,7 +181,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadPay { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Pay {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -170,7 +208,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadWalls { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Walls {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -191,7 +235,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadPlatforms { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Platforms {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -208,7 +258,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadSurfaces { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Surfaces {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -229,7 +285,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadHauls { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Hauls {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -250,7 +312,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadCorridors { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Corridors {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -270,7 +338,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadSuperelevations { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Superelevations {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -290,7 +364,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadTemplates { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Templates {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -309,7 +389,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadSections { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Sections {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -330,7 +416,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadDrawings { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Drawings {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -347,7 +439,10 @@ impl Document {
             return false;
         }
         let _ = self.transact(label, |doc| -> Result<(), Refusal> {
-            doc.record(vec![Op::RoadAutoRebuild { before, after: on }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::AutoRebuild { before, after: on })],
+                label,
+            );
             Ok(())
         });
         true
@@ -365,7 +460,13 @@ impl Document {
             return false;
         }
         let _ = self.transact(label, |doc| -> Result<(), Refusal> {
-            doc.record(vec![Op::RoadRebuildWhole { before, after: whole }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::RebuildWhole {
+                    before,
+                    after: whole,
+                })],
+                label,
+            );
             Ok(())
         });
         true

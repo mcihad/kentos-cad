@@ -2,8 +2,11 @@
 //! list's change rewrites the copies its linked fields hold and undo must give both back.
 
 use kentos_contracts::{FieldDomain, domains_problem, follow_domains};
+use std::sync::Arc;
 
 use crate::document::Document;
+use crate::history::ArchOp;
+use crate::history::GisOp;
 use crate::history::Op;
 use crate::{Refusal, Slot};
 
@@ -32,10 +35,10 @@ impl Document {
         self.transact(label, |doc| {
             if before != next {
                 doc.record(
-                    vec![Op::Domains {
-                        before,
-                        after: next,
-                    }],
+                    vec![Op::Gis(GisOp::Domains {
+                        before: Arc::new(before),
+                        after: Arc::new(next),
+                    })],
                     label,
                 );
             }
@@ -79,7 +82,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::AuditExceptions { before, after: next }], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::AuditExceptions {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }
@@ -116,7 +125,13 @@ impl Document {
         }
         self.transact(label, |doc| {
             if before != next {
-                doc.record(vec![Op::BuildingProgram { before, after: next }], label);
+                doc.record(
+                    vec![Op::Arch(ArchOp::BuildingProgram {
+                        before: Arc::new(before),
+                        after: Arc::new(next),
+                    })],
+                    label,
+                );
             }
             if !changes.is_empty() {
                 doc.update_many(changes, label);

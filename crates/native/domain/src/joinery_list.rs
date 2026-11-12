@@ -17,6 +17,7 @@ use kentos_contracts::{
 use serde_json::{Value, json};
 
 use crate::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 
 /// The joinery list's block: one in a drawing, KentOS's.
@@ -552,7 +553,7 @@ impl Document {
     /// type or an opening, the list's block written again in the step.
     pub(crate) fn follow_joinery(&mut self, ops: &[Op]) -> Vec<Op> {
         let touched = ops.iter().any(|op| match op {
-            Op::OpeningTypes { .. } => true,
+            Op::Arch(ArchOp::OpeningTypes { .. }) => true,
             Op::Add(s) | Op::Remove(s) => s.entity.kind() == "opening",
             Op::Update { before, after } => {
                 before.entity.kind() == "opening" || after.entity.kind() == "opening"

@@ -1,11 +1,13 @@
 //! A road project's vertical alignments (docs/adr/0902 §9): a setting the drawing keeps in its undo history, so every
 //! write of the Boykesit editor and of `road.profiles.*` is one undo step.
 
+use std::sync::Arc;
 use kentos_contracts::{ProfileDef, RoadSettings};
 
 use crate::Refusal;
 use crate::document::Document;
 use crate::history::Op;
+use crate::history::RoadOp;
 
 impl Document {
     /// The project's profiles, in the order the project tree shows them.
@@ -29,7 +31,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadProfiles { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Profiles {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

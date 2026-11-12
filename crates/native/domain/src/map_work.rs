@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use kentos_contracts::MapWork;
 
+use crate::history::MapOp;
 use crate::{Document, history::Op};
 
 impl Document {
@@ -26,6 +27,6 @@ impl Document {
             next,
         ));
         let after = Arc::new(self.settings.map_work.clone());
-        self.record(vec![Op::MapWork { before, after }], label);
+        self.record(vec![Op::Map(MapOp::MapWork { before, after })], label);
     }
 }

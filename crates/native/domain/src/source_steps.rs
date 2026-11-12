@@ -5,6 +5,7 @@
 use kentos_contracts::{SourceBase, SourceLink};
 
 use crate::document::Document;
+use crate::history::GisOp;
 use crate::history::{Op, SourceState};
 
 impl Document {
@@ -33,7 +34,7 @@ impl Document {
             return;
         }
         self.record(
-            vec![Op::Source {
+            vec![Op::Gis(GisOp::Source {
                 id: id.to_owned(),
                 before: Box::new(SourceState {
                     link: before.0,
@@ -43,7 +44,7 @@ impl Document {
                     link: now.0,
                     base: now.1,
                 }),
-            }],
+            })],
             label,
         );
     }

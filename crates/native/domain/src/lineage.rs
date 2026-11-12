@@ -7,6 +7,7 @@ use kentos_contracts::{LineageRecord, lineage_problem, lineage_with};
 
 use crate::Refusal;
 use crate::document::Document;
+use crate::history::GisOp;
 use crate::history::Op;
 
 impl Document {
@@ -36,10 +37,10 @@ impl Document {
         }
         self.transact(label, |doc| {
             doc.record(
-                vec![Op::Lineage {
+                vec![Op::Gis(GisOp::Lineage {
                     before: Arc::new(before),
                     after: Arc::new(after),
-                }],
+                })],
                 label,
             );
             Ok(true)

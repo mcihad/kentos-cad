@@ -6,6 +6,7 @@ use kentos_contracts::{NamedView, Vec2, view_holds, view_key};
 
 use crate::Refusal;
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 
 /// A view's area: its middle, width, height and twist.
@@ -56,11 +57,11 @@ impl Document {
         }
         self.transact(label, |doc| {
             doc.record(
-                vec![Op::ViewArea {
+                vec![Op::Arch(ArchOp::ViewArea {
                     key: key.to_owned(),
                     before,
                     after: area,
-                }],
+                })],
                 label,
             );
             Ok(true)

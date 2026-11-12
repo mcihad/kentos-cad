@@ -2,9 +2,11 @@
 //! step with the openings that follow them, so undo gives both back.
 
 use kentos_contracts::{OpeningType, opening_types_problem};
+use std::sync::Arc;
 
 use crate::Refusal;
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 
 impl Document {
@@ -32,10 +34,10 @@ impl Document {
         }
         self.transact(label, |doc| {
             doc.record(
-                vec![Op::OpeningTypes {
-                    before,
-                    after: next,
-                }],
+                vec![Op::Arch(ArchOp::OpeningTypes {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
                 label,
             );
             Ok(true)

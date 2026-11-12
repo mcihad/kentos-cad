@@ -174,7 +174,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 03 — `crates/native/domain/src/history.rs` (2.102 Satır) İçindeki 55+ Varyantlı `Op` Enum'ının Disiplinlere Bölünmesi ve `Arc` İyileştirmesi (Öncelik: P0)
+### [x] ADIM 03 — `crates/native/domain/src/history.rs` (2.102 Satır) İçindeki 55+ Varyantlı `Op` Enum'ının Disiplinlere Bölünmesi ve `Arc` İyileştirmesi (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:**
   - [crates/native/domain/src/history.rs#L91-L495](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/history.rs#L91-L495) içindeki `Op` enum'ı 55'ten fazla varyanta ulaşmış durumda.
@@ -187,6 +187,7 @@ flowchart LR
      - `Op::Road(RoadHistoryOp)` (`history/road.rs`)
      - `Op::Gis(GisHistoryOp)` (`history/gis.rs`)
 - **Tamamlanma Ölçütü:** `history.rs` 2.102 satırdan ~700 satıra iner; `Op::inverse()` içinde hiçbir `Vec` derin kopyalanmaz.
+- **12 Kasım 2026 ([ADR 8054 §3](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** `history/` klasörü (`mod.rs` 629 satır; `op`, `apply`, `forget`, `road`, `map`, `arch`, `gis`); yol/mimari/CBS yükleri `Arc`; 200 alan × 500 seçenekte geri alma 10,1 → 4,1 ms.
 
 ---
 

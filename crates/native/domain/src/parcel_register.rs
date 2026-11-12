@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use kentos_contracts::{KeptAdjustment, MonitoringReview, ParcelRegister};
 
+use crate::history::MapOp;
 use crate::{Document, history::Op};
 
 impl Document {
@@ -25,7 +26,10 @@ impl Document {
             next,
         ));
         let after = Arc::new(self.settings.parcel_register.clone());
-        self.record(vec![Op::ParcelRegister { before, after }], label);
+        self.record(
+            vec![Op::Map(MapOp::ParcelRegister { before, after })],
+            label,
+        );
     }
 
     /// The adjustments the project keeps (docs/adr/5200).
@@ -44,7 +48,10 @@ impl Document {
             next,
         ));
         let after = Arc::new(self.settings.survey_adjustments.clone());
-        self.record(vec![Op::SurveyAdjustments { before, after }], label);
+        self.record(
+            vec![Op::Map(MapOp::SurveyAdjustments { before, after })],
+            label,
+        );
     }
 
     /// The reviews the project keeps of its monitoring jobs (docs/adr/5220).
@@ -62,6 +69,9 @@ impl Document {
             next,
         ));
         let after = Arc::new(self.settings.monitoring_reviews.clone());
-        self.record(vec![Op::MonitoringReviews { before, after }], label);
+        self.record(
+            vec![Op::Map(MapOp::MonitoringReviews { before, after })],
+            label,
+        );
     }
 }

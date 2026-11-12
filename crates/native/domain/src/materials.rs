@@ -2,9 +2,11 @@
 //! step with the wall styles, walls and slabs bound to them, so undo gives both back.
 
 use kentos_contracts::{ArchMaterial, materials_problem};
+use std::sync::Arc;
 
 use crate::Refusal;
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 
 impl Document {
@@ -28,7 +30,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::Materials { before, after: next }], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::Materials {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

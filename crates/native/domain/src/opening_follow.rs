@@ -25,6 +25,7 @@ use kentos_geometry_core::geom::wall::Spec as WallSpec;
 use kentos_geometry_core::ops::path::Path;
 
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 use crate::identity::{Slot, Uuid};
 use crate::store::Stored;
@@ -229,9 +230,13 @@ impl Document {
                     }
                 },
                 // Objects into or out of a design option (docs/adr/0788 §4): their openings may clash or not anew.
-                Op::ArchOptions { before, after } => {
+                Op::Arch(ArchOp::Options { before, after }) => {
                     for uid in crate::arch_options::touched_members(before, after) {
-                        let entity = self.store.slot_of(uid).and_then(|s| self.store.get(s)).map(|s| s.entity.clone());
+                        let entity = self
+                            .store
+                            .slot_of(uid)
+                            .and_then(|s| self.store.get(s))
+                            .map(|s| s.entity.clone());
                         match entity.as_deref().and_then(host_of) {
                             Some(h) => {
                                 openings.insert(uid);

@@ -13,6 +13,7 @@ use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::text::Font;
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 use crate::identity::Uuid;
 use crate::store::Stored;
@@ -42,7 +43,7 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
 fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
     let program = ops
         .iter()
-        .any(|op| matches!(op, Op::BuildingProgram { .. }));
+        .any(|op| matches!(op, Op::Arch(ArchOp::BuildingProgram { .. })));
     let settings = ops
         .iter()
         .any(|op| matches!(op, Op::TemplateSettings { .. }));
@@ -54,7 +55,9 @@ fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
     let Some(TableSource::Schedule { of, columns, .. }) = &t.source else {
         return false;
     };
-    let types = ops.iter().any(|op| matches!(op, Op::OpeningTypes { .. }));
+    let types = ops
+        .iter()
+        .any(|op| matches!(op, Op::Arch(ArchOp::OpeningTypes { .. })));
     match of {
         kentos_contracts::ScheduleOf::Units => program || settings,
         kentos_contracts::ScheduleOf::Spaces => {
@@ -447,7 +450,9 @@ impl Document {
             }))
             .collect();
         // Another primary design option, or objects into or out of one (docs/adr/0788 §5): every schedule reads anew.
-        let options_changed = ops.iter().any(|op| matches!(op, Op::ArchOptions { .. }));
+        let options_changed = ops
+            .iter()
+            .any(|op| matches!(op, Op::Arch(ArchOp::Options { .. })));
         let mut out = Vec::new();
         // Schedules alike but for where they stand work out alike (docs/adr/0782 §3): each is worked out once a step.
         let mut alike: Vec<(Arc<Entity>, Option<TableEntity>)> = Vec::new();

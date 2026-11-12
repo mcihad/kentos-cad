@@ -1,11 +1,13 @@
 //! A road project's horizontal alignments (docs/adr/0901 §10): a setting the drawing keeps in its undo history, so
 //! every write of the Güzergâh editor and of `road.alignments.*` is one undo step.
 
+use std::sync::Arc;
 use kentos_contracts::{AlignmentDef, RoadSettings};
 
 use crate::Refusal;
 use crate::document::Document;
 use crate::history::Op;
+use crate::history::RoadOp;
 
 impl Document {
     /// The project's alignments, in the order the project tree shows them.
@@ -29,7 +31,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::RoadAlignments { before, after: next }], label);
+            doc.record(
+                vec![Op::Road(RoadOp::Alignments {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

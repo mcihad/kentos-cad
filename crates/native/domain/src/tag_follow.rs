@@ -14,6 +14,7 @@ use kentos_contracts::{Entity, TagFields};
 use crate::tag_read::TagRead;
 
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 use crate::identity::Uuid;
 use crate::store::Stored;
@@ -108,7 +109,12 @@ impl Document {
             }
         }
         for op in &out { self.apply_op(op); }
-        let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. } | Op::BuildingProgram { .. }));
+        let settings = ops.iter().any(|op| {
+            matches!(
+                op,
+                Op::TemplateSettings { .. } | Op::Arch(ArchOp::BuildingProgram { .. })
+            )
+        });
         // A space's change moves the shares of every unit in its pools (docs/adr/0784 §3).
         let spaces = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => matches!(&*s.entity, Entity::Space(_)),

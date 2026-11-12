@@ -58,3 +58,27 @@ saklanması); ayarı değiştiren komut yine iki damga öder.
 **Doğrulama:** `cargo test -p kentos-domain --test all steps::parts_kept_before_a_write` (saklanan parçalar belge sonra
 değişse de o anki damgayı verir); `-p kentos-native-application` (komut özetleri ve plan kimlikleri), `-p kentos-headless`.
 
+## §3. Geri alma kaydı disiplinlere bölündü, ayar yükleri paylaşımlı (`ADIM 03`)
+
+**İddianın denetimi.** Doğru: `history.rs` 2 182 satır, `Op` 72 varyant. 19 yol varyantı ve mimari/CBS listeleri
+(`Domains`, `OpeningTypes`, `Materials`, `ArchModules`, `ArchOptions`, `OptionCombos`, `AuditExceptions`) önceki ve
+sonraki hâli düz `Vec` tutuyordu; her geri alma ve yinelemede ters işlem (`inverse`) ikisini de kopyalıyordu. Harita
+varyantları zaten `Arc` tutuyordu.
+
+**Karar.**
+- `history.rs` → `history/` klasörü: `mod.rs` (adım, grup, geri alma/yineleme; 629 satır), `op.rs` (çekirdek işlemler ve
+  tersi), `apply.rs` (işlemin belgeye uygulanması), `forget.rs` (başka düzenleyicinin değişikliğiyle bırakılan adımlar)
+  ve disiplin alt enum'ları: `road.rs` (`RoadOp`, 19), `map.rs` (`MapOp`, 6), `arch.rs` (`ArchOp`, 8), `gis.rs`
+  (`GisOp`, 3). `Op` onları `Op::Road(..)`, `Op::Map(..)`, `Op::Arch(..)`, `Op::Gis(..)` olarak taşır; çekirdek işlemler
+  (nesne, katman, blok, dizi, ölçü kümesi, pafta, kısıtlar) `Op`'ta kaldı.
+- Yol, mimari ve CBS yükleri `Arc<Vec<T>>` (`RoadOp::Pay` `Arc<Option<_>>`, `ArchOp::BuildingProgram` `Arc<_>`): ters
+  işlem hiçbir listeyi kopyalamaz. Uygulama değeri ayara bir kez kopyalar; ayar alanlarının kendilerinin paylaşımlı olması
+  sözleşme değişikliğidir (`ProjectSettings`'in alanları), ayrı iş.
+- Adım raporu (`report_of_ops`) ve geçmişi unutma, disiplin işlemlerini tek kolla sınıflar (`Op::Road(_)` …); davranış aynı.
+
+**Ölçüm** (`cargo run --release -p kentos-domain --example undo_settings -- 200 500`: 200 değer alanı × 500 seçenek): bir
+geri alma ya da yineleme 10,055 → **4,116 ms**. `history.rs` 2 182 → `history/mod.rs` 629 satır.
+
+**Doğrulama:** `cargo test -p kentos-domain`, `-p kentos-native-application`, `-p kentos-headless`, `-p kentos-desktop --lib`
+(2 312) değişmeden geçti.
+

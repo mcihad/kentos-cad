@@ -737,12 +737,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             }
             Op::TemplateSettings { .. }
             | Op::ReviewNotes { .. }
-            | Op::MapWork { .. }
-            | Op::MapSurvey { .. }
-            | Op::ParcelRegister { .. }
-            | Op::SurveyAdjustments { .. }
-            | Op::MonitoringReviews { .. }
-            | Op::ZoningPlan { .. }
+            | Op::Map(_)
             | Op::PatternTables { .. }
             | Op::ApprovedSheetTemplates { .. }
             | Op::StyleTables(_) => {
@@ -762,37 +757,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                     report.undo_parts.push(ProjectPart::Sheets);
                 }
             }
-            Op::Units { .. }
-            | Op::Domains { .. }
-            | Op::AuditExceptions { .. }
-            | Op::OpeningTypes { .. }
-            | Op::Materials { .. }
-            | Op::BuildingProgram { .. }
-            | Op::ArchModules { .. }
-            | Op::RoadAlignments { .. }
-            | Op::RoadProfiles { .. }
-            | Op::RoadTemplates { .. }
-            | Op::RoadSections { .. }
-            | Op::RoadSuperelevations { .. }
-            | Op::RoadCorridors { .. }
-            | Op::RoadVolumes { .. }
-            | Op::RoadHauls { .. }
-            | Op::RoadSheetSets { .. }
-            | Op::RoadGuardrails { .. }
-            | Op::RoadCulverts { .. }
-            | Op::RoadWalls { .. }
-            | Op::RoadPlatforms { .. }
-            | Op::RoadSurfaces { .. }
-            | Op::RoadPay { .. }
-            | Op::RoadJunctions { .. }
-            | Op::RoadDrawings { .. }
-            | Op::RoadAutoRebuild { .. }
-            | Op::RoadRebuildWhole { .. }
-            | Op::ViewArea { .. }
-            | Op::ArchOptions { .. }
-            | Op::OptionCombos { .. }
-            | Op::Source { .. }
-            | Op::Lineage { .. } => {
+            Op::Units { .. } | Op::Road(_) | Op::Arch(_) | Op::Gis(_) => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);
                 }

@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use kentos_contracts::ZoningPlanData;
 
+use crate::history::MapOp;
 use crate::{Document, history::Op};
 
 impl Document {
@@ -25,6 +26,6 @@ impl Document {
             next,
         ));
         let after = Arc::new(self.settings.zoning_plan.clone());
-        self.record(vec![Op::ZoningPlan { before, after }], label);
+        self.record(vec![Op::Map(MapOp::ZoningPlan { before, after })], label);
     }
 }

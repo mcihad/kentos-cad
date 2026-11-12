@@ -2,9 +2,11 @@
 //! the objects a module places or updates, so undo gives both back.
 
 use kentos_contracts::{ArchModule, arch_modules_problem};
+use std::sync::Arc;
 
 use crate::Refusal;
 use crate::document::Document;
+use crate::history::ArchOp;
 use crate::history::Op;
 
 impl Document {
@@ -33,10 +35,10 @@ impl Document {
         }
         self.transact(label, |doc| {
             doc.record(
-                vec![Op::ArchModules {
-                    before,
-                    after: next,
-                }],
+                vec![Op::Arch(ArchOp::Modules {
+                    before: Arc::new(before),
+                    after: Arc::new(next),
+                })],
                 label,
             );
             Ok(true)
