@@ -1,5 +1,7 @@
 # KentOS — Python eklentileri ve analitik ekosistem
 
+> **Sıralı Ana Uygulama Yol Haritası (`ADIM 01` → `ADIM 22`):** Dağınıklığı önlemek için tüm geliştirmelerin **tek sıralı uygulama planı [argon-tavsiye.md](argon-tavsiye.md)** içindedir. Kural gereği **önce FAZ 1 (`ADIM 01` – `ADIM 12`) derin kod refactoring, bellek/derleme optimizasyonu ve modülerleştirme** adımları tamamlanacak, ardından **FAZ 2 (`ADIM 13` – `ADIM 15`) Kategorize MCP v2** ve **FAZ 3 (`ADIM 16` – `ADIM 22`) %100 AI-Native (Sıfır Elle Kodlama) `.kek` eklenti sistemi** uygulanacaktır. Bu belge (`python.md`), `uv` ortam yönetimi ve güvenlik kuralları için referans sözleşmedir.
+
 İnceleme tarihi: **12 Ekim 2026**. Bu belge [CAD geliştirme planındaki](cad.md) ortak komut, Python ve AI tamlığı şartını Python/uv ortamlarına, KentOS arayüz eklentilerine, Processing araçlarına ve onaylı `.kek` dağıtımına genişletir.
 
 **Form sistemi ayrı plan:** Ortak CBS form standardı, tasarımcı, domain/subtype/ilişki/join, merkezi yayın/izinler ve mobil saha akışı [form.md](form.md) içinde ayrıntılıdır. Bütün `FORM-*` görevlerinin tek kaynak planı o belgedir.

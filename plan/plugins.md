@@ -1,6 +1,8 @@
 # KentOS — eklenti, Python API ve yapay zekâ uygulama kararları
 
-İnceleme: **30 Ekim 2026**. Kod tabanı: `dc7b16d6c`.
+> **Sıralı Ana Uygulama Yol Haritası (`ADIM 01` → `ADIM 22`):** Dağınıklığı önlemek için tüm geliştirmelerin **tek sıralı uygulama planı [argon-tavsiye.md](argon-tavsiye.md)** içindedir. Kural gereği **önce FAZ 1 (`ADIM 01` – `ADIM 12`) derin kod refactoring, bellek/derleme optimizasyonu ve modülerleştirme** adımları tamamlanacak, ardından **FAZ 2 (`ADIM 13` – `ADIM 15`) Kategorize MCP v2** ve **FAZ 3 (`ADIM 16` – `ADIM 22`) %100 AI-Native (Sıfır Elle Kodlama) ve QGIS ilhamlı `.kek` eklenti sistemi** uygulanacaktır. Bu belge (`plugins.md`), `ADIM 16` – `ADIM 22` uygulanırken başvurulacak ayrıntılı kabul ölçütleri sözleşmesidir.
+
+İnceleme: **30 Ekim 2026** (Güncelleme: **12 Kasım 2026**). Kod tabanı: `dc7b16d6c`.
 Plan dalı: `codex/architecture-advanced-plugin-plans`.
 
 Hedef; KentOS'un kendi arayüz bileşenleriyle geliştirilen, mevcut CAD/GIS
@@ -114,7 +116,7 @@ normalize edilmiş model, birimler, ret/uyarı, kalıcı kimlik, tek Undo ve
 kaydet–aç sonucu eşdeğer olsun. Yüzeylerin farklı çağrı tutamaçları model
 farkı sayılmasın; semantik veri farkı gizlenmesin.
 
-### EKL-02 — Eklenti türlerini ve Eklentiler sekmesini tek kayıtla yönet [ ]
+### EKL-02 — Eklenti türlerini, dikey Ribbon sekmelerini ve Eklentiler sekmesini tek kayıtla yönet [ ]
 
 Eski görevler: `PY-RUN`, `PY-UI`, `PY-TOOL`. Modül sınırları için mevcut
 [module_surfaces.rs](../apps/desktop/src/module_surfaces.rs) ve komutların
@@ -122,32 +124,45 @@ Eski görevler: `PY-RUN`, `PY-UI`, `PY-TOOL`. Modül sınırları için mevcut
 
 | Katkı türü | Kullanıcının erişimi | Ortak yürütme |
 | --- | --- | --- |
-| Komut/menü eylemi | Eklentiler'de ana giriş; uygun bağlam menüsünde ek erişim | Aynı sürümlü komut kaydı |
-| Dialog/form veya dock/panel | Eklentiler → Aç; açık panelin kendi yaşam döngüsü | KentOS UI host + eklenti oturumu |
-| Processing provider/algoritma | Eklentiler'de provider ve araçlarına erişim; İşlemler kataloğu/model/batch; uygun nesne bağlamı | Aynı araç kimliği ve runner |
-| Portable CBS form kaynağı | Eklentiler'de kaynak yönetimi; veri girişinde normal form akışı | Mevcut FormBody/domain/yayın/izin modeli |
-| Etkileşimli çizim aracı | Eklentiler'de başlangıç; açık araç ayarları ve komut istemi | Host giriş/önizleme protokolü + semantik ürün komutu |
+| Dikey sistem Ribbon sekmesi (`kind: "vertical"`) | Hedeflenen modülde (ör. CBS'de *Mezarlık BS*, *Kent Bilgi Sistemi*) kendi üst Ribbon sekmesi ve grup panelleri; Eklentiler'de yönetim | `ExtensionLease` ile bağlı dinamik `Tab`/`Panel` + sürümlü komut kaydı |
+| Komut/menü eylemi (`kind: "utility"`) | Eklentiler'de ana giriş; uygun mevcut Ribbon grubunda ve nesne/katman sağ-tık bağlam menüsünde ek erişim | Aynı sürümlü komut kaydı |
+| Dialog/form veya dock/panel | Eklentiler veya dikey sekme → Aç; açık panelin kendi yaşam döngüsü | KentOS UI host + eklenti oturumu |
+| Processing provider/algoritma | Eklentiler'de provider ve araçlarına erişim; İşlemler kataloğu/model/batch; uygun nesne bağlamı | Aynı araç kimliği ve `ToolHost` composite runner |
+| Denetim (Audit) provider/kuralı | Denetim paneli, dikey sekme denetim düğmesi, `cad.audit.*` ve toplu kalite kontrol | Rust `ProjectAuditFacts` özeti + Python kural/otomatik `Fix` yürütücüsü |
+| İfade (Expression) fonksiyonu | Etiket, tematik stil, sanal alan, filtre ve form hesaplayıcısında `@kentos.expr` işlevleri | `kentos-expression` kayıt defteri + önbellekli/vektörize değerlendirme |
+| Portable CBS form ve katman şablonu | Eklentiler'de kaynak yönetimi; proje kurulumunda katman/domain/ilişki şeması; veri girişinde normal form akışı | Mevcut FormBody/domain/yayın/izin modeli |
+| Etkileşimli çizim/harita aracı (`MapTool`) | Dikey sekmede veya Eklentiler'de başlangıç; açık araç ayarları, kenetleme (snap), canlı önizleme ve komut istemi | Host giriş/önizleme protokolü + semantik ürün komutu |
 
-- Her kurulu eklenti Eklentiler'de adı, yayımlayıcı, sürüm, durum, yardım,
-  ayar, aç/çalıştır, devre dışı bırak/kaldır ile bulunabilsin. Python kapalı
-  veya bağımlılık eksikse yönetim ekranı çalışsın; neden kullanılamadığı söylensin.
+- Her kurulu eklenti Eklentiler'de adı, yayımlayıcı, sürüm, sınıfı (`vertical` /
+  `utility`), durum, yardım, ayar, aç/çalıştır, devre dışı bırak/kaldır ile
+  bulunabilsin. Python kapalı veya bağımlılık eksikse yönetim ekranı çalışsın;
+  neden kullanılamadığı söylensin.
 - Bir paket birden fazla katkı sunabilir. Tip yalnız bir etiket değildir;
   açılış, parametre toplama, sonuç sunumu ve kapatmanın davranışını belirler.
-  Eklenti kendiliğinden yeni üst ribbon sekmeleri ve rastgele araç kalabalığı yaratmasın.
-- Topoloji denetimi gibi bir araç, analizi uygunsa Processing algoritması
-  olarak; özel inceleme gerekiyorsa aynı komuta bağlı panel/menü eylemi olarak
-  sunulabilir. Sekmedeki ve İşlemler'deki iki giriş ayrı hesaplayıcı olmasın.
-- Katkılar desteklenen Mimari/Harita/GIS modülünü ve gerekli veri türlerini
-  bildirsin. Başka modüle ait araç yanlış aramada/bağlamda sunulmasın; eklenti
-  ana kaydı görünür kalıp bu modülde neden çalışmadığını açıklayabilsin.
-- Kayıtların sahibi plugin kimliği+sürüm+runtime generation olsun. Disable,
-  crash, update ve uninstall; araç, menü, provider, callback ve abonelikleri
+  **Dikey sistem eklentileri (`kind: "vertical"`, ör. Mezarlık Bilgi Sistemi,
+  Kent Bilgi Sistemi)** izinli oldukları modülde (`cbs`, `harita`, `mimari`,
+  `yol`) kendi adlarına düzenli bir üst Ribbon sekmesi (`ui.ribbonTabs`) açabilir;
+  **yardımcı araç eklentileri (`kind: "utility"`)** ise kendiliğinden yeni üst
+  ribbon sekmeleri yaratmayıp `Eklentiler` sekmesinde ve ilgili mevcut panellerde/menülerde yer alır.
+- Topoloji, mevzuat veya sektörel veri denetimi (ör. mezar/defin bütünlüğü,
+  PAİY/belediye plan notu, KTEK yol denetimi) hem `audit.providers` üzerinden
+  Denetim motoruna kural (`Finding` + otomatik düzeltme `Fix`) olarak hem de
+  gerekirse Processing algoritması / inceleme paneli olarak enjekte edilebilir.
+  Sekmedeki, Denetim'deki ve İşlemler'deki girişler ayrı hesaplayıcı olmasın.
+- Katkılar desteklenen Mimari/Harita/GIS/Yol modülünü ve gerekli veri türlerini
+  bildirsin. Başka modüle ait araç veya dikey Ribbon sekmesi yanlış modülde
+  sunulmasın; eklenti ana kaydı görünür kalıp bu modülde neden çalışmadığını açıklayabilsin.
+- Kayıtların sahibi plugin kimliği+sürüm+runtime generation (`ExtensionLease`) olsun. Disable,
+  crash, update ve uninstall; açılan dikey Ribbon sekmesini, araç, menü,
+  processing/audit provider, ifade fonksiyonu, callback ve abonelikleri kalıntısız
   temizlesin. Paket içe aktarmak/metadata okumak kodu import etmek anlamına gelmesin.
-  Komut/araç kimlikleri eklenti ad alanında olsun; hazır komutu gölgeleyemesin.
+  Komut/araç kimlikleri eklenti ad alanında (`ext.<plugin_id>.*`) olsun; hazır komutu gölgeleyemesin.
 
-**Kabul:** Aynı eklenti panel ve iki Processing aracı sunsun. Eklentiler,
-İşlemler, komut arama ve uygun bağlamdan aynı kimliğe gidilsin. Devre dışı
-bırakılınca hayalet komut/callback kalmasın; ilgili olmayan modülün yüzeyi bozulmasın.
+**Kabul:** Büyük bir dikey eklenti (ör. `mezarlik-bs.kek`) kendi Ribbon sekmesini,
+sağ dock panelini, iki Processing aracını ve bir Python Denetim (`audit`) kuralını
+sunsun. Şerit sekmesi, Eklentiler, İşlemler, Denetim, komut arama ve MCP'den
+aynı kimliğe gidilsin. Devre dışı bırakılınca Ribbon sekmesi ve tüm kayıtlar
+hayalet komut/callback bırakmadan kalksın; ilgili olmayan modülün yüzeyi bozulmasın.
 
 ### EKL-03 — KentOS UI bileşenlerine tam, sürümlü Python bağları sağla [ ]
 
@@ -291,10 +306,20 @@ sağlayıcısı ve araç yürütücüsü ayrı sorumluluklardır.
   zorunlu değildir. İki yol aynı komut, belge kapsamı, gizli alan redaksiyonu,
   preview ve izinleri kullanır. Çalışan işler, maliyet/istek bütçesi ve
   gönderilecek çizim verisinin kapsamı kullanıcıya anlaşılır gösterilsin.
-- Plugin komutu/UI/tool descriptor ve doküman sürüm/özet ile bağlansın.
-  Yükleme/kapatmada MCP keşfi güncellensin; sayfalama ve liste değişikliği,
-  uygulanan modern ve legacy protokol sürümlerinin kendi kurallarına uysun.
-  Salt bir araç adı değil tipli sonuç ve anlamlı hata da AI'a dönsün.
+- Plugin komutu/UI/tool/audit descriptor ve doküman sürüm/özet ile bağlansın.
+  Yükleme/kapatmada MCP keşfi (`notifications/tools/list_changed`) güncellensin;
+  sayfalama ve liste değişikliği, uygulanan modern ve legacy protokol sürümlerinin
+  kendi kurallarına uysun. Salt bir araç adı değil tipli sonuç ve anlamlı hata da AI'a dönsün.
+- **Kategorize ve Ajan Dostu MCP (`kentos-mcp` v2):** `tools/list` çağrısında
+  500+ katalog komutunu ve megabaytlarca ham JSON şemasını tek düz listede dökerek
+  AI ajanlarının bağlam penceresini (context window) yorma. Varsayılan olarak
+  8 temiz kategoriye ayrılmış (`session.*`, `drawing.*`, `scene.*`, `catalog.*`,
+  `cad/arch/map/gis/road.run`, `processing.*`, `audit.*`, `extension.*`) ~22
+  yüksek sinyalli çekirdek araç ve aşamalı keşif (`catalog.categories` →
+  `catalog.search` → `catalog.describe`) sun; masaüstü bağlantısında (`desktop.attach`)
+  `mimari`, `harita`, `cbs` ve `yol` modüllerinin tamamını destekle ve aktif
+  modüle göre bağlama duyarlı filtreleme uygula (ayrıntılı mimari ve hafta sonu
+  uygulama adımları için bkz. [argon-tavsiye.md](argon-tavsiye.md) Bölüm 4–6).
 
 **Kabul:** Yerleşik sağlayıcı adapter'ı ve bağımsız bir dış MCP istemcisi
 aynı küçük eklentiyi kurulu dokümandan üretip doğrulasın. Uydurulmuş API,
