@@ -1,0 +1,217 @@
+//! What the tests of opening, saving and recovery share (opening.rs,
+//! saving.rs, recovery.rs): the app's own tasks driven to their end without a
+//! window, scratch folders under the system's temporary one (never the user's
+//! files), and drawings to save and open. Test code only.
+
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+use iced::Task;
+use iced::futures::StreamExt as _;
+use kentos_commands::{DocumentSnapshotV1, Entity, EntityBase, EntityId, PointEntity, Vec2};
+
+use crate::app::{App, Message};
+use crate::document::Document;
+
+/// Runs a task of the app to its end: its messages go back to the app, whose tasks run too.
+pub fn drive(app: &mut App, task: Task<Message>) {
+    let Some(mut stream) = iced_runtime::task::into_stream(task) else {
+        return;
+    };
+    while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+        if let iced_runtime::Action::Output(message) = action {
+            let next = app.update(message);
+            drive(app, next);
+        }
+    }
+}
+
+/// A fresh folder under the system's temporary one.
+pub fn scratch(name: &str) -> PathBuf {
+    static N: AtomicU64 = AtomicU64::new(0);
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-desktop-{name}-{}-{}",
+        std::process::id(),
+        N.fetch_add(1, Ordering::Relaxed)
+    ));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temporary directory");
+    dir
+}
+
+const DEMO: &str = include_str!("../../../../fixtures/document/v1/sample.json");
+
+/// The web's sample drawing (13 objects) with `extra` points more, as a new drawing.
+pub fn drawing(extra: usize) -> Document {
+    let mut snapshot = DocumentSnapshotV1::from_json(DEMO).expect("reads");
+    let layer = "cizim".to_owned();
+    let first = snapshot
+        .entities
+        .iter()
+        .map(|e| e.base().id)
+        .max()
+        .unwrap_or(0);
+    for i in 0..extra {
+        snapshot.entities.push(Entity::Point(PointEntity {
+            base: EntityBase {
+                look: Default::default(),
+                id: first + i as u32 + 1,
+                layer_id: layer.clone(),
+                color: None,
+                attrs: [("Ad".to_owned(), format!("N{i}"))].into(),
+                label: None,
+                symbol: None,
+                line_weight: None,
+                label_pins: Vec::new(),
+                attachments: Vec::new(),
+            },
+            p: Vec2 {
+                x: 486_500.0 + i as f64,
+                y: 4_420_200.0,
+            },
+            z: None,
+            parts: None,
+        }));
+    }
+    let mut doc = Document::new(snapshot, None).expect("opens");
+    // As a drawing saved before: persistent ids of its own, no v1 source.
+    let mut v2 = doc.model.to_snapshot_v2();
+    v2.migrated_from = None;
+    for (i, uid) in v2.uids.iter_mut().enumerate() {
+        let mut id = [0x42u8; 16];
+        id[8..].copy_from_slice(&(i as u64 + 1).to_be_bytes());
+        *uid = EntityId(id);
+    }
+    doc = Document::from_v2(v2, None).expect("opens");
+    doc
+}
+
+/// The sample drawing saved as a `.kcad` v2 file in `dir`.
+pub fn saved(dir: &std::path::Path, name: &str, extra: usize) -> PathBuf {
+    let path = dir.join(name);
+    crate::document::write(&drawing(extra).model.to_snapshot_v2(), &path).expect("writes");
+    path
+}
+
+/// The app with the sample drawing on screen (no file), in memory.
+pub fn app_with_drawing() -> App {
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(0))))));
+    app
+}
+
+/// Makes the open drawing a CAD project (its ribbon, axes and ground) as the
+/// wizard makes one, without a word on the command line.
+pub fn make_cad(app: &mut App) {
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
+    doc.model.set_settings(settings);
+}
+
+/// What the command line said last.
+pub fn last_said(app: &App) -> String {
+    app.log.last().map(|l| l.text.clone()).unwrap_or_default()
+}
+
+/// An offscreen window for a test that runs beside the others: the software
+/// renderer. Many tests open one at once, and wgpu instances opened together
+/// crash the Vulkan loader (SIGSEGV in `vkEnumerateInstanceExtensionProperties`,
+/// 2026-10-02), as GPU drivers crashed under KentOS UI's own tests
+/// (docs/baseline/2026-09-25.md). The pictures for the owner, run by hand,
+/// keep `Snapshot::new` (the GPU's renderer, the drawing area too).
+pub fn offscreen(size: iced::Size) -> kentos_ui::snapshot::Snapshot {
+    kentos_ui::snapshot::Snapshot::software(size).expect("a software renderer")
+}
+
+/// Where a text is drawn: the first widget showing exactly `caption`.
+pub fn find_text(
+    snapshot: &mut kentos_ui::snapshot::Snapshot,
+    app: &App,
+    caption: &str,
+) -> Option<iced::Rectangle> {
+    find_texts(snapshot, app, caption).into_iter().next()
+}
+
+/// Where a text is drawn: every widget showing exactly `caption`, in the
+/// order the view lists them (a shortened one reports its whole text).
+pub fn find_texts(
+    snapshot: &mut kentos_ui::snapshot::Snapshot,
+    app: &App,
+    caption: &str,
+) -> Vec<iced::Rectangle> {
+    use std::sync::{Arc, Mutex};
+
+    use iced::advanced::widget::{Id, Operation};
+
+    struct Find {
+        caption: String,
+        found: Arc<Mutex<Vec<iced::Rectangle>>>,
+    }
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn text(&mut self, _id: Option<&Id>, bounds: iced::Rectangle, text: &str) {
+            if text == self.caption
+                && let Ok(mut found) = self.found.lock()
+            {
+                found.push(bounds);
+            }
+        }
+    }
+    let found = Arc::new(Mutex::new(Vec::new()));
+    snapshot.operate(
+        app.view(),
+        Box::new(Find {
+            caption: caption.to_owned(),
+            found: found.clone(),
+        }),
+    );
+    found.lock().map(|f| f.clone()).unwrap_or_default()
+}
+
+/// Snaps every scrollable to its end, for a picture of a window's foot (a
+/// dialog's body has no id).
+pub struct SnapAll;
+
+impl iced::advanced::widget::Operation for SnapAll {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
+        operate(self);
+    }
+
+    fn scrollable(
+        &mut self,
+        _id: Option<&iced::widget::Id>,
+        _bounds: iced::Rectangle,
+        _content_bounds: iced::Rectangle,
+        _translation: iced::Vector,
+        state: &mut dyn iced::advanced::widget::operation::Scrollable,
+    ) {
+        state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
+    }
+}
+
+/// Every scrollable to its end downwards and to its start across (a form's
+/// table under it, its first column in sight).
+pub struct SnapDown;
+
+impl iced::advanced::widget::Operation for SnapDown {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
+        operate(self);
+    }
+
+    fn scrollable(
+        &mut self,
+        _id: Option<&iced::widget::Id>,
+        _bounds: iced::Rectangle,
+        _content_bounds: iced::Rectangle,
+        _translation: iced::Vector,
+        state: &mut dyn iced::advanced::widget::operation::Scrollable,
+    ) {
+        state.snap_to(iced::widget::scrollable::RelativeOffset {
+            x: Some(0.0),
+            y: Some(1.0),
+        });
+    }
+}

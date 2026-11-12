@@ -111,3 +111,25 @@ yalnız iyileştiricinin (LLVM) yükünü indirdi.
 **Doğrulama:** `cargo test -p kentos-commands` (2 005: katalog JSON'u, birimler), `-p kentos-contracts`,
 `-p kentos-native-application --test all capabilit|catalog`, `cargo check --workspace --tests` (kentos-mcp hariç).
 
+## §5. Masaüstü kaynakları klasörlendi, testler ayrıldı (`ADIM 05`)
+
+**İddianın denetimi.** Doğru: `apps/desktop/src` kökünde 650 dosya, 353'ü test, sahne ya da ekran dosyası
+(`*_tests.rs`, `*_scenes.rs`, `*_screens.rs`), ayrıca 40 klasör.
+
+**Karar.**
+- Kökte yalnız `lib.rs` ve `main.rs` kaldı. Testler `tests/` (353); üretim kodu `shell/` (uygulama çerçevesi: pencere,
+  şerit, ayarlar, belge, kaydet/aç; 252 dosya), `cad/` (çizim çekirdeği: blok, katman, yazı, ölçü, pafta, seçim, kenet;
+  212), `gis/` (öznitelik, veri kaynağı, form, ağ, raster, nokta bulutu, süreç; 224), `map/` (aplikasyon, parsel,
+  imar, ortofoto, ölçme ağı; 37), `road/` (güzergâh, boykesit, en kesit, kübaj; 45), `arch/` (mimari; 34). `cad/`
+  klasörü inceleme notunda yok: çizim araçları uygulama çerçevesi değildir, `shell/`'e konmadı (benim kararım).
+- Modül yolları değişmedi: `lib.rs` her modülü `#[path]` ile yeni yerinden yükler, `crate::labels::…` gibi bütün yollar
+  aynı. Klasörü olan modüller (`labels.rs` + `labels/`) `cad/labels/mod.rs` biçimine geçti: `#[path]` ile yüklenen dosya
+  `mod.rs` gibi arandığından iç modüller yerinde bulunur. Taşınan dosyalardaki bütün göreli `#[path]` ve `include_str!`
+  yolları, hedefleri de taşındıysa onların yeni yerine göre yeniden hesaplandı. `apps/desktop/equivalents.json`'daki 132
+  yol güncellendi; web'in ve betiklerin yorumlarındaki eski yollar tarihî kaldı.
+- Testler yine tek test ikilisine derlenir: sahne testleri crate'in iç öğelerini (`pub(crate)`) kullanıyor; onları ayrı
+  test hedeflerine (`tests/` crate'leri) taşımak dışa açık bir API ister, ayrı iş.
+
+**Doğrulama:** `cargo check -p kentos-desktop --tests`, `cargo test -p kentos-desktop --lib` (2 312) değişmeden geçti;
+1 157 dosya git'te yeniden adlandırma olarak görünür (`git log --follow`).
+

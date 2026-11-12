@@ -205,7 +205,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 05 — `apps/desktop/src/` Dizin Yapısının Klasörlenmesi ve 462 Test/Sahne Dosyasının (`146.814 Satır`) Üretim Kodu Kökünden Ayrılması (Öncelik: P0)
+### [x] ADIM 05 — `apps/desktop/src/` Dizin Yapısının Klasörlenmesi ve 462 Test/Sahne Dosyasının (`146.814 Satır`) Üretim Kodu Kökünden Ayrılması (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:**
   - `apps/desktop/src/` altında toplam **1.159 `.rs` dosyası** (549.781 satır) var: bunların **697'si üretim dosyası (402.967 satır)**, **462'si ise `*_scenes.rs`, `*_screens.rs` ve `*_tests.rs` dosyasıdır (146.814 satır)**!
@@ -221,6 +221,7 @@ flowchart LR
      - Kök dizindeki tüm `*_scenes.rs`, `*_screens.rs` ve `*_tests.rs` dosyaları `apps/desktop/src/tests/{shell,arch,map,gis,road}/` klasörlerine taşınacaktır.
 - **Tamamlanma Ölçütü:** `apps/desktop/src/` kökünde yalnız `lib.rs`, `main.rs`, `app.rs`, `program.rs` ve 5 modül bildirimi (`shell`, `arch`, `map`, `gis`, `road`) ile `#[cfg(test)] mod tests;` kalır.
 
+- **12 Kasım 2026 ([ADR 8054 §5](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** kökte yalnız `lib.rs`/`main.rs`; `tests/` 353, `shell/` 252, `cad/` 212, `gis/` 224, `map/` 37, `road/` 45, `arch/` 34 dosya; modül yolları `#[path]` ile aynı; 2 312 masaüstü testi geçti.
 ---
 
 ### [ ] ADIM 06 — `App` Struct, `Dialog` ve `Message` Enum'larının Modül Alt-Durumlarına (`Sub-State`) Bölünmesi (Öncelik: P0)
