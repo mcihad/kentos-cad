@@ -47,7 +47,7 @@ Son güncelleme: **12 Kasım 2026**. Kapsam: **KentOS Mimari**, **KentOS Harita*
 
 ### 1.3. Kod İncelemesinde Tespit Edilen Kritik Refactoring ve Performans Darboğazları
 
-Kod tabanı üzerinde yapılan derinlemesine incelemede, eklenti sistemine geçmeden önce mutlaka çözülmesi gereken **9 somut yapısal ve çalışma zamanı darboğazı** tespit edilmiştir:
+Kod tabanı üzerinde yapılan derinlemesine incelemede, eklenti sistemine geçmeden önce mutlaka çözülmesi gereken **10 somut yapısal, çalışma zamanı ve mobil modülerlik darboğazı** tespit edilmiştir:
 
 | # | Tespit Edilen Darboğaz | İlgili Dosya ve Boyut | Somut Etkisi (Neden Ciddi İyileştirme Şart?) |
 |---:|---|---|---|
@@ -55,21 +55,59 @@ Kod tabanı üzerinde yapılan derinlemesine incelemede, eklenti sistemine geçm
 | **2** | **Her Komut Öncesi Tüm Projeyi JSON'a Çevirip SHA-256 Alan `PartStamps::of(doc)`** | [call.rs#L86](file:///home/cihad/Projects/kentos-cad/crates/native/application/src/call.rs#L86), [etag.rs#L58](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/etag.rs#L58) | `recorded_with` içinde her MCP/Python/`call` komutu çalışmadan **önce**, komutun ne yaptığına bakılmaksızın `doc.settings_stamp()`, `doc.layers_stamp()`, `doc.styles_stamp()`, `doc.sheets_stamp()`, `doc.constraints_stamp()` çağrılıyor. Tek bir 2B nokta eklerken bile tüm `ProjectSettings`, tüm katman ağacı ve tüm stiller `serde_json::Value` ağacına çevrilip SHA-256 özeti hesaplanıyor! |
 | **3** | **`history.rs` İçindeki 55+ Varyantlı `Op` Enum'ı ve `Arc`'sız `Vec` Kopyaları** | [history.rs#L91-L495](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/history.rs#L91-L495) (2.102 satır) | `Op` enum'ı 55+ varyanta ulaşmış; içindeki **18 adet `Op::Road*` varyantı** (`RoadSurfaces`, `RoadCorridors`, `RoadSections`, `RoadDrawings` vb.) ve mimari/CBS ayar varyantları (`Domains`, `OpeningTypes`, `Materials`, `ArchModules`) `Arc` kullanmadan düz `Vec<...>` tutuyor ve her `undo`/`redo` (`Op::inverse`) işleminde tüm vektörleri klonluyor. |
 | **4** | **`catalog.rs` İçindeki 19.043 Satırlık Tek Fonksiyon (`pub fn catalog()`)** | [commands/src/catalog.rs#L20](file:///home/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs#L20) (19.043 satır), [capabilities.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs) (8.170 satır) | 503 komutun tamamı ve 1.000+ `schemars::schema_for!<T>()` makro genişlemesi **tek bir 19.000 satırlık Rust fonksiyonu** içinde derleniyor. LLVM optimizer tek bir dev stack frame üzerinde çalıştığı için derleme süresini, RAM kullanımını ve `rust-analyzer` hızını felç ediyor. |
-| **5** | **`apps/desktop/src/` İçinde 462 Test/Sahne Dosyasının (`146.814 Satır`) Üretim Koduyla Karışması** | [apps/desktop/src/lib.rs#L13](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/lib.rs#L13) (Toplam 1.159 dosya: 697 üretim + 462 test/sahne) | Kök dizindeki 650 dosyanın **353 tanesi (`%54`'ü)** `*_scenes.rs`, `*_screens.rs` ve `*_tests.rs` dosyasıdır. `cargo test -p kentos-desktop --lib` çalıştığında 549.800 satırın tamamı tek bir dev test ikilisine (monolithic binary) derlenip bağlanmaktadır. |
-| **6** | **5.061 Satırlık `app.rs` ve Dev `App` / `Dialog` / `Message` Yapıları** | [apps/desktop/src/app.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/app.rs) (5.061 satır) | `Dialog` enum'ı 130+ pencereyi, `Message` enum'ı 150+ olayı, `App` struct'ı dört disiplinin ~200 pencere/panel alanını tek yapıda tutuyor. |
-| **7** | **Masaüstünde 4.000–5.500 Satırlık Dev Tekil Arayüz Dosyaları** | [forms/entry.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/forms/entry.rs) (5.444 satır), [properties/rows.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/properties/rows.rs) (4.617 satır), [labels.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/labels.rs) (4.193 satır), [sheets.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/sheets.rs) (4.101 satır) | Form veri girişi, öznitelik satırları, etiketleme ve pafta düzenleyici binlerce satırlık tekil dosyalarda toplanmış durumda; bakım ve derleme süresini zorlaştırıyor. |
-| **8** | **Düz (Flat) Dizinlerde Yığılan Yüzlerce Komut, Etkileşim ve Sözleşme Dosyası** | `application/src` (612 dosya), `interaction/src` (225 dosya), `commands/src` (207 dosya), `contracts/src` (156 dosya) | Dört disiplinin (`arch`, `map`, `gis`, `road`) dosyaları alt klasörlere ayrılmadan aynı `src/` kökünde duruyor; [registry.rs](file:///home/cihad/Projects/kentos-cad/crates/native/application/src/registry.rs) (1.118 satır) 500+ komutu tek makroda eşleştiriyor. |
-| **9** | **`.kcad` İçinde 253 Doğrusal Şema Sabiti ve 4.500 Satırlık `encode`/`decode` Dosyaları** | [kcad/src/lib.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/lib.rs) (250 `SCHEMA_WITH_*` sabiti), [decode/objects.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/decode/objects.rs) (4.551 satır), [encode.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/encode.rs) (4.441 satır), [columns.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/columns.rs) (4.378 satır) | Her disiplin özelliği ortak doğrusal şema numarasını artırıyor (`253`); `encode.rs` ve `decode/objects.rs` dört disiplinin tüm serileştirmesini tek dosyada yapıyor. |
+| **5** | **Görüntüleme (`render-wgpu`), Uzamsal İndeks (`Spatial`) ve Sorgu/Ölçüm (`query.rs`) Kodlarının 256 Bin Satırlık Yazma (`application`/`interaction`) Crate'lerine Bağlı Olması (Mobil Derleme Engeli)** | [style/Cargo.toml#L19](file:///home/cihad/Projects/kentos-cad/crates/native/style/Cargo.toml#L19), [interaction/src/spatial.rs](file:///home/cihad/Projects/kentos-cad/crates/native/interaction/src/spatial.rs) (2.638 satır), [headless/src/query.rs](file:///home/cihad/Projects/kentos-cad/crates/native/headless/src/query.rs) (639 satır) | Salt-okunur çizim hattı olan `kentos-render-wgpu` → `kentos-native-style` üzerinden sırf `geometry::shape` ve `shx_text` okumak için **tüm `kentos-native-application` (256.284 satır, 503 yazma komutu), `kentos-dwg`, `kentos-ifc`, `kentos-ncz`, `kentos-pointcloud` ve `kentos-road` crate'lerini** kendisine bağlıyor! Benzer şekilde nesne seçme/yakalama (`Spatial`) 225 çizim aracının olduğu `kentos-interaction` içinde; alan/mesafe/koordinat/elipsoit ölçümü (`query.rs`) ise `kentos-headless` içinde gömülü duruyor. Bu durum hafif bir **Mobil Görüntüleyici/Sorgulama/Ölçüm SDK'sı** derlemeyi imkânsız kılıyor. |
+| **6** | **`apps/desktop/src/` İçinde 462 Test/Sahne Dosyasının (`146.814 Satır`) Üretim Koduyla Karışması** | [apps/desktop/src/lib.rs#L13](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/lib.rs#L13) (Toplam 1.159 dosya: 697 üretim + 462 test/sahne) | Kök dizindeki 650 dosyanın **353 tanesi (`%54`'ü)** `*_scenes.rs`, `*_screens.rs` ve `*_tests.rs` dosyasıdır. `cargo test -p kentos-desktop --lib` çalıştığında 549.800 satırın tamamı tek bir dev test ikilisine (monolithic binary) derlenip bağlanmaktadır. |
+| **7** | **5.061 Satırlık `app.rs` ve Dev `App` / `Dialog` / `Message` Yapıları** | [apps/desktop/src/app.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/app.rs) (5.061 satır) | `Dialog` enum'ı 130+ pencereyi, `Message` enum'ı 150+ olayı, `App` struct'ı dört disiplinin ~200 pencere/panel alanını tek yapıda tutuyor. |
+| **8** | **Masaüstünde 4.000–5.500 Satırlık Dev Tekil Arayüz Dosyaları** | [forms/entry.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/forms/entry.rs) (5.444 satır), [properties/rows.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/properties/rows.rs) (4.617 satır), [labels.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/labels.rs) (4.193 satır), [sheets.rs](file:///home/cihad/Projects/kentos-cad/apps/desktop/src/sheets.rs) (4.101 satır) | Form veri girişi, öznitelik satırları, etiketleme ve pafta düzenleyici binlerce satırlık tekil dosyalarda toplanmış durumda; bakım ve derleme süresini zorlaştırıyor. |
+| **9** | **Düz (Flat) Dizinlerde Yığılan Yüzlerce Komut, Etkileşim ve Sözleşme Dosyası** | `application/src` (612 dosya), `interaction/src` (225 dosya), `commands/src` (207 dosya), `contracts/src` (156 dosya) | Dört disiplinin (`arch`, `map`, `gis`, `road`) dosyaları alt klasörlere ayrılmadan aynı `src/` kökünde duruyor; [registry.rs](file:///home/cihad/Projects/kentos-cad/crates/native/application/src/registry.rs) (1.118 satır) 500+ komutu tek makroda eşleştiriyor. |
+| **10** | **`.kcad` İçinde 253 Doğrusal Şema Sabiti ve 4.500 Satırlık `encode`/`decode` Dosyaları** | [kcad/src/lib.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/lib.rs) (250 `SCHEMA_WITH_*` sabiti), [decode/objects.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/decode/objects.rs) (4.551 satır), [encode.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/encode.rs) (4.441 satır), [columns.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/kcad/src/columns.rs) (4.378 satır) | Her disiplin özelliği ortak doğrusal şema numarasını artırıyor (`253`); `encode.rs` ve `decode/objects.rs` dört disiplinin tüm serileştirmesini tek dosyada yapıyor. |
 
 ---
 
-## 2. Temel Mimari Karar: Ayrı Uygulama mı, Aynı Yazılım İçinde mi?
+## 2. Temel Mimari Kararlar: Masaüstü Paketleme ve Mobil/Saha Modülerliği
 
-> **Karar:** Üretim ve dağıtım (Release) katmanında şimdiki gibi **"Tek Çekirdek Binary (`kentos-cad`) + Modül Kimlikli Bağlantılar (`kentos-mimari`, `kentos-harita`, `kentos-gis`, `kentos-yol`) + `kentos-launcher`"** (Multi-Call Binary) mimarisiyle devam edilmelidir. Ancak kaynak kod ve derleme (Workspace/Crate) katmanında modüller **klasörlere, alt-durumlara ve Cargo `features` bayraklarına** ayrıştırılmalıdır.
+### 2.1. Masaüstü: Tek Çekirdek Binary + Modül Kimlikleri (`Multi-Call Binary`)
+
+> **Karar:** Masaüstü üretim ve dağıtım (Release) katmanında şimdiki gibi **"Tek Çekirdek Binary (`kentos-cad`) + Modül Kimlikli Bağlantılar (`kentos-mimari`, `kentos-harita`, `kentos-gis`, `kentos-yol`) + `kentos-launcher`"** (Multi-Call Binary) mimarisiyle devam edilmelidir. Ancak kaynak kod ve derleme (Workspace/Crate) katmanında modüller **klasörlere, alt-durumlara ve Cargo `features` bayraklarına** ayrıştırılmalıdır.
 
 - **Disk ve RAM Tasarrufu:** Dört modül ayrı binary olarak derlendiğinde toplam boyut >1 GB olurken, ortak multi-call binary **~216 MB** yer kaplar ve işletim sistemi çekirdeği aynı makinede birden fazla modül açıkken makine kodunu RAM'de (`page cache`) tek kez tutar.
 - **Sıfır Kayıplı Dosya Devri (`hand_over`):** Kullanıcı bir harita projesini yol veya mimari modülüne devrettiğinde aynı `.kcad` şema sürümü ve koordinat/birim kuralları garanti edilir.
 - **Kullanıcı Deneyiminde Tam Ayrım:** Her modül zaten kendi pencere başlığına, `.desktop` kimliğine, yerleşim dosyasına (`yerlesim-mimari.json` vb.), IPC soketine (`masaustu-mimari.sock` vb.) ve kendi şerit/komut kümesine (`App::offers`) sahiptir.
+
+### 2.2. Mobil ve Saha Uygulamaları İçin İki Katmanlı Çekirdek Mimarisi (`Viewer/Query/Measure` vs. `Authoring`)
+
+İleride iOS (`aarch64-apple-ios`), Android (`aarch64-linux-android`) ve saha tabletleri için **CAD, GIS, Harita, İmar Durumu, Altyapı ve Yol projelerini açıp görüntüleyen (`wgpu`), dokunmatik nesne/öznitelik/parsel/imar sorgulayan ve hassas ölçüm (düzlem, elipsoit, arazi/ground, dik ayak/kilometre-ofset, açı, alan) yapan** bir mobil uygulama derlenirken; 503 yazma komutunu (`kentos-native-application`), 225 masaüstü çizim aracını (`kentos-interaction`), ağır CBS işlem motorunu (`kentos-processing`), IFC/DWG/Pafta yazıcılarını ve masaüstü `iced` arayüzünü mobile derlemek **kesinlikle istenmez**.
+
+Bu nedenle refactoring sırasında crate bağımlılık grafiği **kesin olarak iki katmana** ayrılacaktır:
+
+```mermaid
+flowchart TB
+    subgraph TIER1["KATMAN 1: Mobil & Masaüstü Ortak Görüntüleme / Sorgulama / Ölçüm Çekirdeği (Mobile-Ready)"]
+        SH["kentos-contracts (no-schema)\nkentos-geometry-core (2D/CRS/Geodesic/Store)\nkentos-style-core / kentos-expression"]
+        DOM["kentos-domain (Arc CoW Document)\nkentos-project (CRS: TUREF/ITRF96/WGS84)\nkentos-kcad (.kcad v2 Okuyucu)"]
+        SQ["YENİ: crates/native/scene-query (kentos-scene-query)\n• Entity -> Shape & SHX (eski application::geometry)\n• Spatial R-Tree, Pick, Snap & Etiket (eski interaction::spatial)\n• Sorgu, Filtre, İmar/Parsel & Ölçüm: Plane/Ellipsoid/Ground,\n  Mesafe, Alan, Açı, Dik Ayak/Km-Ofset (eski headless::query)"]
+        REN["kentos-native-style & kentos-render-wgpu\n(Metal / Vulkan / GLES 2B & 3B Çizim Hattı)"]
+        SH --> DOM --> SQ --> REN
+    end
+
+    subgraph TIER2["KATMAN 2: Yalnız Masaüstü / Sunucu Üretim ve Yazarlık Katmanı (Authoring Suite)"]
+        ARCH["kentos-arch (BIM Sentez)\nkentos-road / kentos-ifc / kentos-dwg"]
+        APP["kentos-native-application (503 Yazma Komutu)\nkentos-interaction (225 Çizim Aracı)\nkentos-processing (CBS İşlemler)"]
+        DESK["apps/desktop (Iced Kabuk)\nkentos-headless / kentos-mcp / kentos-python"]
+        SQ --> APP --> DESK
+        ARCH --> APP
+    end
+```
+
+1. **Şu Anki Engel (Ters Bağımlılık):**
+   - [crates/native/style/Cargo.toml#L19](file:///home/cihad/Projects/kentos-cad/crates/native/style/Cargo.toml#L19) içinde `kentos-native-style`, sadece `geometry::shape`, `shx_text` ve `expression_unit` fonksiyonlarını çağırmak için **`kentos-native-application` crate'ine bağımlı**.
+   - Bu tek satırlık bağımlılık yüzünden, sadece ekran çizimi yapan `kentos-render-wgpu` bile derlenirken 256.284 satırlık `kentos-native-application`, `acadrust` (`kentos-dwg`), `kentos-ifc`, `kentos-ncz`, `kentos-pointcloud` ve `kentos-road` derlenmek zorunda kalıyor!
+2. **Refactoring Çözümü (`crates/native/scene-query` — `kentos-scene-query`):**
+   - `application` içindeki salt-okunur `geometry::shape`, `shx_text`, `blocks::core_blocks_in`, `label_texts`, `layer_filter`, `expression_unit`;
+   - `interaction` içindeki salt-okunur uzamsal indeks, nesne seçme (`pick`), yakalama (`snap`) ve etiket yerleştirme motoru olan `Spatial` ([spatial.rs](file:///home/cihad/Projects/kentos-cad/crates/native/interaction/src/spatial.rs));
+   - `headless` içindeki salt-okunur sayfalama, filtreleme, koordinat sistemi ve Düzlem/Elipsoit/Arazi (`Plane` / `Ellipsoid` / `Ground`) ölçüm motoru olan `query` ([query.rs](file:///home/cihad/Projects/kentos-cad/crates/native/headless/src/query.rs)) ile dokunmatik ölçüm yardımcıları (`measure`, `angle`, `coordinate`, `station_offset` — dik ayak/kilometre-ofset);
+   - **`crates/native/scene-query` (`kentos-scene-query`)** adlı yeni, hafif ve sıfır yazma-komutu içeren crate'e taşınacaktır.
+   - Böylece `kentos-native-style` ve `kentos-render-wgpu` artık `kentos-native-application`'a **hiç bağımlı olmayacak**; mobil uygulama (`iOS` / `Android`) yalnız `kentos-kcad + kentos-domain + kentos-scene-query + kentos-render-wgpu` (~15'lik çekirdek) ile saniyeler içinde derlenebilecektir.
 
 ---
 
@@ -216,12 +254,27 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 08 — `kentos-geometry-core` İçinden Mimari Geometrinin (`crates/shared/arch`) Ayrılması (Öncelik: P1)
+### [ ] ADIM 08 — Mobil & Görüntüleyici Modülerliği: `crates/native/scene-query` (`kentos-scene-query`) ve `crates/shared/arch` (`kentos-arch`) Crate'lerinin Ayrılması (Öncelik: P0)
 
-- **Kod İnceleme Bulgusu:** `crates/shared/geometry-core` **385 dosya ve ~173 bin satır**a büyümüş durumda ([geom/arch.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/geometry-core/src/geom/arch.rs) tek başına 2.591 satır); temel analitik geometri yanında mimari duvar/kolon birleşimleri, doğrama/merdiven/rampa parçaları gibi alana özgü kuralları barındırıyor.
+- **Kod İnceleme Bulgusu:**
+  1. **Görüntüleme (`render-wgpu`) ve Stil (`style`) Ters Bağımlılığı:** [crates/native/style/Cargo.toml#L19](file:///home/cihad/Projects/kentos-cad/crates/native/style/Cargo.toml#L19) içinde `kentos-native-style` (ve dolaylı olarak [crates/render/wgpu](file:///home/cihad/Projects/kentos-cad/crates/render/wgpu/Cargo.toml)), sırf `geometry::shape`, `shx_text` ve `expression_unit` okumak için **256.284 satırlık `kentos-native-application` crate'ini** kendisine bağlıyor. Bu yüzden sadece harita/CAD çizimi yapmak isteyen bir mobil veya hafif görüntüleyici bile 503 yazma komutunu, `kentos-dwg`, `kentos-ifc`, `kentos-ncz`, `kentos-pointcloud` ve `kentos-road` crate'lerini derlemek zorunda kalıyor.
+  2. **Uzamsal Sorgu (`Spatial`) ve Ölçüm (`query`) Kodlarının Yazarlık Crate'lerinde Gömülü Olması:** Dokunmatik/tıklama ile nesne seçme (`pick`), yakalama (`snap`) ve etiket yerleştirme motoru olan [interaction/src/spatial.rs](file:///home/cihad/Projects/kentos-cad/crates/native/interaction/src/spatial.rs) (2.638 satır) 225 çizim aracının olduğu `kentos-interaction` içinde; sayfalama, filtreleme ve Düzlem/Elipsoit/Arazi (`Plane` / `Ellipsoid` / `Ground`) ölçüm motoru olan [headless/src/query.rs](file:///home/cihad/Projects/kentos-cad/crates/native/headless/src/query.rs) (639 satır) ise `kentos-headless` içinde gömülü duruyor.
+  3. **`geometry-core` İçindeki Ağır BIM Sentez Kodları:** `crates/shared/geometry-core` (**385 dosya ve ~173 bin satır**; [geom/arch.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/geometry-core/src/geom/arch.rs) tek başına 2.591 satır) temel 2B/CRS/elipsoit/indeks geometrisi yanında ağır mimari BIM sentez kurallarını barındırıyor.
 - **Yapılacak İşlem:**
-  - Yol mühendisliği için `crates/shared/road` ve IFC için `crates/shared/ifc` nasıl ayrı birer `shared` crate ise, mimariye özgü saf geometri ve yapı fiziği hesapları da **`crates/shared/arch` (`kentos-arch`)** adlı yeni bir platform-bağımsız crate'e taşınacaktır.
-- **Tamamlanma Ölçütü:** `kentos-geometry-core` yalnız temel matematik, 2B/3B eğri/yüzey primitifleri, uzamsal indeks, Delaunay ve exact predicates içerir; [scripts/arch/deps.mjs](file:///home/cihad/Projects/kentos-cad/scripts/arch/deps.mjs) içinde `kentos-arch` sınırları doğrulanır.
+  1. **`crates/native/scene-query` (`kentos-scene-query`) Crate'i Oluşturulacaktır (Mobil & Masaüstü Ortak Görüntüleme/Sorgulama/Ölçüm Çekirdeği):**
+     - `kentos-domain`, `kentos-project`, `kentos-geometry-core` ve `kentos-expression` üzerinde duran, **sıfır yazma komutu içeren** saf salt-okunur crate olacaktır.
+     - İçine taşınacak modüller (`kentos-native-application`, `kentos-interaction` ve `kentos-headless` içinden çıkarılıp burada `pub use` ile geriye dönük uyumlu tutulacaktır):
+       - `shape` & `shx_text` & `blocks::core_blocks_in` (`Entity` → `Shape` dönüşümü ve SHX font okuma),
+       - `label_texts`, `layer_filter` & `expression_unit` (katman filtreleme ve etiket metni üretimi),
+       - `spatial::Spatial` (artımlı R-tree uzamsal indeks, nokta/pencere/çit seçimi `pick`, nesne kenetleme `snap` ve etiket yerleştirme),
+       - `query` (katman/tür/bbox/öznitelik sorgulama, sayfalama, `Conventions`, CRS dönüşümü `TUREF/ITRF96 <-> WGS84`, parsel/imar durumu sorgu özetleri),
+       - `measure` (`Method::Plane | Ellipsoid | Ground` üzerinde mesafe, alan, çevre, açı, kot/eğim ve güzergâh/boru hattı üzerinde **dik ayak / kilometre-ofset `station_offset`** ölçüm motoru).
+  2. **`kentos-native-style` ve `kentos-render-wgpu` Bağımlılığı Temizlenecektir:**
+     - `kentos-native-style/Cargo.toml` içinden `kentos-native-application` bağımlılığı tamamen kaldırılıp yerine `kentos-scene-query` konulacaktır.
+     - [scripts/arch/deps.mjs](file:///home/cihad/Projects/kentos-cad/scripts/arch/deps.mjs) içinde `style` ve `render` gruplarının `application`, `cad-codec` (`dwg`) veya `geopackage` kullanması yasaklanacaktır!
+  3. **`crates/shared/arch` (`kentos-arch`) Ayrılacaktır:**
+     - Mimariye özgü parametrik BIM/duvar/merdiven/çatı geometrisi `crates/shared/arch` crate'ine taşınacak; `kentos-geometry-core` yalnız 2B/3B temel analitik geometri, CRS/Karney jeodezi ve uzamsal indeks (`store`) içerecektir.
+- **Tamamlanma Ölçütü:** `cargo tree -p kentos-render-wgpu` ve `cargo tree -p kentos-scene-query` çıktısında `kentos-native-application`, `kentos-interaction`, `kentos-dwg`, `kentos-ifc` veya `schemars` kesinlikle yer almaz; mobil görüntüleyici/sorgulama/ölçüm çekirdeği tek başına derlenebilir hale gelir.
 
 ---
 
@@ -232,8 +285,9 @@ flowchart LR
   - `crates/native/interaction/src/` kökünde **225 dosya** (106.898 satır) ve `crates/shared/contracts/src/` kökünde **156 dosya** (aralarında 4.187 satırlık [road.rs](file:///home/cihad/Projects/kentos-cad/crates/shared/contracts/src/road.rs)) düz duruyor.
 - **Yapılacak İşlem:**
   1. `crates/native/application/src/`, `crates/native/interaction/src/` ve `crates/shared/contracts/src/` içindeki dosyalar `core/`, `arch/`, `map/`, `gis/`, `road/` alt klasörlerine taşınacaktır (4.187 satırlık `contracts/src/road.rs` → `road/{terrain,alignment,profile,corridor,structures}.rs` olarak bölünecektir).
-  2. `application/src/registry.rs` disiplin alt dağıtıcılarına (`core::dispatch`, `arch::dispatch`, `map::dispatch`, `gis::dispatch`, `road::dispatch`) bölünecektir.
-  3. 7.674 satırlık `application/tests/all/fixtures.rs` disiplin bazlı test modüllerine ayrılacaktır.
+  2. `interaction` içindeki **salt-okunur dokunmatik/fare ölçüm ve sorgu etkileşim durum makineleri** (`measure`, `angle`, `coordinate`, `station_offset`, `pick`, `select_fence`, `select_circle`, `select_containing`, `navigate`) `interaction/src/viewer_tools/` altında toplanacak ve yazma araçlarından (`authoring_tools/`) ayrılacaktır; böylece mobil uygulama aynı etkileşim durum makinelerini doğrudan kullanabilecektir.
+  3. `application/src/registry.rs` disiplin alt dağıtıcılarına (`core::dispatch`, `arch::dispatch`, `map::dispatch`, `gis::dispatch`, `road::dispatch`) bölünecektir.
+  4. 7.674 satırlık `application/tests/all/fixtures.rs` disiplin bazlı test modüllerine ayrılacaktır.
 - **Tamamlanma Ölçütü:** Üç crate'in kök `src/` dizinlerinde yalnız `lib.rs` ve disiplin modül klasörleri kalır; disiplinler arası yatay bağımlılık sıfırlanır.
 
 ---
@@ -249,14 +303,18 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 11 — Cargo Feature-Gated Modüller (`mod-arch`, `mod-map`, `mod-gis`, `mod-road`) ve Derleme/Test Hızlandırma (Öncelik: P1)
+### [ ] ADIM 11 — Cargo Feature-Gated Modüller (`mod-arch`, `mod-map`, `mod-gis`, `mod-road`) ve Mobil (`viewer-sdk`) Derleme Profili (Öncelik: P1)
 
-- **Sorun:** Tek bir modül üzerinde çalışırken bile diğer üç modülün tüm UI, sahne ve test kodları derlenip bağlanıyor (linking).
+- **Sorun:** Tek bir modül üzerinde çalışırken veya mobil/görüntüleyici hedefi derlenirken tüm disiplinlerin UI, yazma komutu, ağır dosya codec'leri (`dwg`, `ifc`, `ncz`) ve test kodları derlenip bağlanıyor (linking).
 - **Yapılacak İşlem:**
-  1. `apps/desktop` ve `crates/native/application` içinde `mod-arch`, `mod-map`, `mod-gis`, `mod-road` Cargo feature'ları tanımlanacaktır (`default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]`).
-  2. `ADIM 05`'te ayrılan `src/{arch,map,gis,road}/` ve `src/tests/{arch,map,gis,road}/` klasörleri ilgili modül feature'ının (`#[cfg(feature = "mod-road")]` vb.) arkasına alınacaktır.
-  3. `.cargo/config.toml` içinde hızlı linker (`lld` / `mold`) yapılandırması ve `Makefile` içinde değişen dosyaya göre seçici fixture doğrulama hedefleri eklenecektir.
-- **Tamamlanma Ölçütü:** `cargo build --release` tüm modülleri içeren tek `kentos-cad` binary'sini üretmeye devam ederken; `cargo test -p kentos-desktop --no-default-features --features mod-gis` yalnız kabuk + CBS modülünü 5–10 kat daha hızlı derleyip test eder.
+  1. **Disiplin Feature Bayrakları:** `kentos-contracts`, `kentos-commands`, `kentos-native-application`, `kentos-interaction` ve `apps/desktop` içinde `mod-arch`, `mod-map`, `mod-gis`, `mod-road` Cargo feature'ları tanımlanacaktır (`default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]`).
+  2. **Format Codec Feature Bayrakları:** `crates/shared/formats` içinde `dxf`, `landxml`, `shapefile`, `geojson`, `pdf`, `raster` özellikleri Cargo feature'larına ayrılacak; böylece mobil hedef yalnızca ihtiyaç duyduğu hafif okuyucuları seçebilecektir.
+  3. **Mobil Görüntüleyici/Sorgu/Ölçüm Cephesi (`kentos-scene-query`):** İleride iOS (`aarch64-apple-ios`) ve Android (`aarch64-linux-android`) FFI (`uniffi` / C-ABI) sarmalayıcısının doğrudan bağlanacağı tek hedef `kentos-scene-query` + `kentos-render-wgpu` + `kentos-kcad` olacak; [scripts/arch/deps.mjs](file:///home/cihad/Projects/kentos-cad/scripts/arch/deps.mjs) bu katmanın hiçbir masaüstü/sunucu/yazarlık bağımlılığı almadığını otomatik denetleyecektir.
+  4. `.cargo/config.toml` içinde hızlı linker (`lld` / `mold`) yapılandırması ve `Makefile` içinde değişen dosyaya göre seçici fixture doğrulama hedefleri eklenecektir.
+- **Tamamlanma Ölçütü:**
+  - Masaüstünde `cargo build --release` tüm modülleri içeren tek `kentos-cad` binary'sini üretmeye devam eder,
+  - `cargo test -p kentos-desktop --no-default-features --features mod-gis` yalnız kabuk + CBS modülünü 5–10 kat daha hızlı derleyip test eder,
+  - Mobil/Saha çekirdeği (`cargo build -p kentos-scene-query -p kentos-render-wgpu`) 256 bin satırlık `application` ve 106 bin satırlık `interaction` yazarlık kodlarını **hiç derlemeden** saniyeler içinde üretilir.
 
 ---
 
@@ -437,16 +495,55 @@ flowchart TB
 
 ---
 
-### [ ] ADIM 20 — Denetim (`Audit`) Motorunun Python'a Açılması ("Geometriyi Rust Çıkarır, Kararı Python Verir") (Öncelik: P1)
+### [ ] ADIM 20 — Masaüstü ve Bulut (`kentosd` / `kentos-jobrun`) Ortak Python Mevzuat Denetimi Motoru ("Geometriyi Rust Çıkarır, Kararı Aynı Python Betiği Verir") (Öncelik: P1)
 
-- **Sorun:** Türkiye mevzuat denetimleri (PAİY, BYKHY Yangın, TBDY 2018, Otopark/Sığınak, 2026 Dijital Bina EK-3/EK-4, Sivas/Büyükşehir Yerel İmar Yönetmelikleri, MPYY, KGM/KTEK 2022) ve sektörel CBS veri denetimleri yalnız düz eşik sayılarından oluşmaz; çok sayıda koşullu dallanma (`if/else`), istisna ve formül içerir.
+- **Sorun:** Türkiye mevzuat denetimleri (PAİY Planlı Alanlar İmar Yönetmeliği, BYKHY Yangın, TBDY 2018, Otopark/Sığınak, 2026 Dijital Bina EK-3/EK-4, Sivas/Büyükşehir Yerel İmar Yönetmelikleri, MPYY, KGM/KTEK 2022) ve sektörel CBS veri denetimleri yalnız düz eşik sayılarından oluşmaz; çok sayıda koşullu dallanma (`if/else`), istisna ve formül içerir. Üstelik bu denetimlerin **hem mühendisin/mimarın kendi bilgisayarında (Masaüstü uygulama üzerinden)** çalışması **hem de proje buluta/belediyeye/kuruma yüklendiğinde Bulut Sistem (`kentosd`) üzerinden birebir aynı Python betikleriyle** koşturulması şarttır.
+
+```mermaid
+flowchart TB
+    KCAD["📄 Proje Dosyası (.kcad v2)\n(Mimari / Harita / CBS / Yol)"]
+    FACTS["🦀 Rust Ortak Çıkarıcı (kentos-domain / scene-query)\nProjectAuditFacts JSON/CBOR Özeti:\n• Mahal net/brüt alanları, kat/duvar yükseklikleri\n• Yangın kaçış grafiği, kapı net açıklıkları\n• Parsel alanı, cephe, TAKS/KAKS, çekme mesafeleri\n• Yol kurp yarıçapı, dever, boyuna eğim, görüş\n• CBS topoloji ve form/ilişki özetleri"]
+    RULES["🐍 Ortak İmzalı Mevzuat Betikleri (catalog/standards/*.py & .kek)\n• paiy_2026.py / yangin_2026.py\n• belediye_imar_notlari.py / kgm_ktek_2026.py\n• mezarlik_bs_denetim.py (@ext.audit)"]
+
+    KCAD --> FACTS
+
+    subgraph DESKTOP["🖥️ 1. Masaüstü Uygulama (kentos-desktop / kentos-headless)"]
+        D_RUN["Yerel uv Python İşçisi\n(Anlık Etkileşimli Denetim)"]
+        D_UI["Denetim Paneli & Haritada Odakla (Zoom)\n+ Tek Tıkla Otomatik Düzelt (SemanticFix)"]
+        D_RUN --> D_UI
+    end
+
+    subgraph CLOUD["☁️ 2. Bulut Sistem (apps/api 'kentosd' + apps/jobrun 'kentos-jobrun')"]
+        C_RUN["ChildProcessor -> kentos-jobrun <klasör>\n(Ağsız, Dosya Kısıtlı, CPU/RAM Bütçeli İzole Kutu)"]
+        C_OUT["İmzalı Bulut Denetim Raporu (answer.json / PDF)\n+ Checkpoint/E-Ruhsat Onay Kapısı & Bulut Revizyonu"]
+        C_RUN --> C_OUT
+    end
+
+    FACTS --> D_RUN
+    FACTS --> C_RUN
+    RULES ==>|"Birebir Aynı .py / .kek Kodu"| D_RUN
+    RULES ==>|"Birebir Aynı .py / .kek Kodu"| C_RUN
+```
+
 - **Yapılacak İşlem:**
-  1. **Ağır Geometri Rust Çekirdeğinde Kalır (`ProjectAuditFacts`):** Poligon kesişimleri, mahal net/brüt alanları (`paiy_areas`), yangın kaçış yürüme grafiği (`kentos_domain::escape`), topoloji/parsel kapanma özetleri ve kurp/görüş mesafesi hesapları saf Rust'ta çözülüp tipli bir **`ProjectAuditFacts`** JSON/CBOR özeti olarak tek seferde üretilecektir.
-  2. **Mevzuat, Standart ve Sektörel CBS Kuralları Python Betiği Olur (`catalog/standards/*.py` ve `.kek`):**
+  1. **Ağır Geometri Rust Çekirdeğinde Kalır (`ProjectAuditFacts`):**
+     - Poligon kesişimleri, mahal net/brüt alanları (`paiy_areas`), yangın kaçış yürüme grafiği (`kentos_domain::escape`), topoloji/parsel kapanma özetleri ve kurp/görüş mesafesi hesapları saf Rust'ta çözülüp deterministik bir **`ProjectAuditFacts`** JSON/CBOR özeti olarak tek seferde üretilecektir.
+     - Bu çıkarıcı hem masaüstünde hem de bulut `kentos-jobrun` sürecinde aynı Rust kodu olduğu için girdi verisi bit-bit aynıdır.
+  2. **Mevzuat, Standart ve Sektörel CBS Kuralları Ortak Python Betiği Olur (`catalog/standards/*.py` ve `.kek`):**
      - `crates/native/application` içinde `audit_host.rs` (`AuditRuleProvider`) kurulacaktır.
-     - Ulusal yönetmelikler, belediye imar planı notları, KTEK yol kuralları ve dikey CBS eklenti kuralları (ör. *Mezarlık BS* içinde üst üste binen mezar, defin kaydı / mezar durumu uyuşmazlığı, mükerrer mezar numarası) hazır `ProjectAuditFacts` üzerinde çalışan okunabilir Python betikleri olarak yazılacaktır.
-     - Python denetim betiği `Vec<AuditFinding>` (bulgu, önem derecesi, ilgili nesne/katman kimliği, haritada odaklanma zarfı) ve `Vec<SemanticFix>` (tek tuşla uygulanabilir anlamsal komut düzeltmesi) döndürecektir.
-  3. **İzlenebilirlik (Provenance):** Resmi ruhsat ve denetim raporlarına çalıştırılan Python kural betiğinin sürümü ve SHA-256 özeti (`paiy_2026.py @ sha256:...`) kaydedilecektir.
+     - Ulusal yönetmelikler, belediye imar planı notları, KTEK yol kuralları ve dikey CBS eklenti kuralları (ör. *Mezarlık BS* içinde üst üste binen mezar, defin kaydı / mezar durumu uyuşmazlığı, mükerrer mezar numarası) hazır `ProjectAuditFacts` üzerinde çalışan okunabilir Python betikleri (`@ext.audit`) olarak yazılacaktır.
+     - Python denetim betiği `Vec<AuditFinding>` (bulgu, önem derecesi, mevzuat maddesi, ilgili nesne/katman kimliği, haritada odaklanma zarfı `bbox`) ve `Vec<SemanticFix>` (tek tuşla uygulanabilir anlamsal komut düzeltmesi) döndürecektir.
+  3. **Masaüstü Uygulama Üzerinden Denetim (`apps/desktop`):**
+     - Kullanıcı şeritten *"Mevzuat Denetimi"*ne bastığında (veya AI/MCP `audit.run` çağırdığında), masaüstü uygulaması yerel Python işçisinde seçili mevzuat betiklerini çalıştırır.
+     - Bulgular masaüstü Denetim Paneline düşer; kullanıcı hataya tıkladığında kamera doğrudan o odaya/parsele/kurba odaklanır (`Zoom to Object`) ve *"Otomatik Düzelt (`Apply Fix`)"* düğmesiyle Python betiğinin önerdiği `SemanticFix` komutu tek bir `Undo` adımı olarak çizime uygulanır.
+  4. **Bulut Sistem Üzerinden Aynı Betiklerle Denetim (`apps/api` + `apps/jobrun`):**
+     - Bulut sunucusundaki [apps/api/src/processing_job.rs](file:///home/cihad/Projects/kentos-cad/apps/api/src/processing_job.rs) (`ChildProcessor`) ve [apps/jobrun/src/main.rs](file:///home/cihad/Projects/kentos-cad/apps/jobrun/src/main.rs) içine **`RunRequest::Audit(AuditJobInput)`** görevi eklenecektir.
+     - Bir proje buluta kaydedildiğinde, yeni bir teslim/onay noktası (`checkpoint` / e-ruhsat ön inceleme) oluşturulduğunda veya web/mobil istemciden *"Bulutta Mevzuat Denetimi Yap"* istendiğinde:
+       1. `kentosd` sunucusu izole iş klasörüne `snapshot.kcad`, `request.json` ve kurumun/projenin seçtiği imzalı mevzuat paketini (`rules.kek` / `catalog/standards/*.py`) bağlayarak `kentos-jobrun <klasör>` alt sürecini başlatır.
+       2. `kentos-jobrun`, **ağ erişimi kapalı (`network: false`), yerel dosya sistemi kapalı (`forbid_local_files`) ve CPU/RAM bütçesi (`ProcessingBudget`) sınırlandırılmış** ortamda `ProjectAuditFacts` çıkarıp **masaüstündekiyle birebir aynı Python mevzuat betiğini** çalıştırır.
+       3. Bulut işi sonucunda `answer.json` içine tüm bulgular (`findings`), geçen/kalan kurallar, önerilen düzeltmeler (`SemanticFix`) ve eğer otomatik düzeltme (`Commit` modu) istendiyse oluşan `delta(&before, &after)` revizyon farkı yazılır.
+  5. **Masaüstü ↔ Bulut %100 Sonuç Eşitliği ve İzlenebilirlik (Provenance):**
+     - Hem masaüstünde hem bulutta üretilen resmi denetim ve ruhsat raporlarına çalıştırılan Python kural betiğinin sürümü, SHA-256 özeti (`paiy_2026.py @ sha256:...`) ve denetlenen `.kcad` revizyon özeti (`snapshot_etag`) kriptografik olarak kaydedilir. Mimarın masaüstünde aldığı sonuç ile belediyenin/kurumun bulutta aldığı sonuç **%100 aynı** olur.
 
 ---
 
@@ -672,6 +769,6 @@ def mebis_mezar_etiketi(mezar_no: str, durum: str, merhum_adi: str | None = None
 |---:|---|---|---|---|
 | **1** | **FAZ 1.A — Bellek, Hız ve Derleyici Darboğazları** | `ADIM 01`, `ADIM 02`, `ADIM 03`, `ADIM 04` | `ProjectSettings` `Arc` Copy-on-Write (sıfır derin kopya), `PartStamps` tembel/önbellekli SHA-256, `history.rs` `Op` bölünmesi ve 19.043 satırlık `catalog.rs` fonksiyonunun parçalanması | Yok (İlk yapılacak iş) |
 | **2** | **FAZ 1.B — Masaüstü Kabuk ve Dev Dosya Refactoring** | `ADIM 05`, `ADIM 06`, `ADIM 07` | `apps/desktop/src/` altının `shell/`, `arch/`, `map/`, `gis/`, `road/` ve `tests/` olarak ayrılması; `App`/`Dialog`/`Message` bölünmesi; 5.000 satırlık `forms/entry.rs` ve `properties/rows.rs` dosyalarının parçalanması | `ADIM 01`–`04` |
-| **3** | **FAZ 1.C — Çekirdek Crate, `.kcad` ve Feature Yalıtımı** | `ADIM 08`, `ADIM 09`, `ADIM 10`, `ADIM 11`, `ADIM 12` | `kentos-arch` crate ayrımı, `application`/`interaction`/`contracts`/`kcad` klasörlemesi, Cargo `mod-*` feature yalıtımı, canlı `xref` ve 4'lü sahne görünümü | `ADIM 05`–`07` |
+| **3** | **FAZ 1.C — Mobil Çekirdek (`scene-query`), Crate, `.kcad` ve Feature Yalıtımı** | `ADIM 08`, `ADIM 09`, `ADIM 10`, `ADIM 11`, `ADIM 12` | Mobil/Görüntüleyici için `kentos-scene-query` (Spatial + Query + Measure + Shape) ve `kentos-arch` crate ayrımı (`render-wgpu`'nun `application`'dan koparılması), `application`/`interaction`/`contracts`/`kcad` klasörlemesi, Cargo `mod-*` feature yalıtımı, canlı `xref` ve 4'lü sahne görünümü | `ADIM 05`–`07` |
 | **4** | **FAZ 2 — Kategorize MCP v2 & AI SDK Paketi** | `ADIM 13`, `ADIM 14`, `ADIM 15` | `desktop.rs` `"yol"` desteği, 535 düz araç yerine 8 kategorili (~22 çekirdek araç) + aşamalı keşifli (`catalog.*`) yüzey ve `kentos://sdk/ai-kek-pack` kaynağı | `FAZ 1` |
 | **5** | **FAZ 3 — %100 AI-Native `.kek` Eklenti Sistemi** | `ADIM 16` – `ADIM 22` | `crates/shared/extensions`, `ExtensionLease`, dikey Ribbon sekmeleri (*Mezarlık BS*, *Kent BS*), Python Processing/Audit enjeksiyonu, `extension.blueprint` + `extension.verify` AI fabrikası ve referans `mezarlik-bs.kek` kabulü | `FAZ 1` ve `FAZ 2` |

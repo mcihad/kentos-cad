@@ -128,7 +128,7 @@ Eski görevler: `PY-RUN`, `PY-UI`, `PY-TOOL`. Modül sınırları için mevcut
 | Komut/menü eylemi (`kind: "utility"`) | Eklentiler'de ana giriş; uygun mevcut Ribbon grubunda ve nesne/katman sağ-tık bağlam menüsünde ek erişim | Aynı sürümlü komut kaydı |
 | Dialog/form veya dock/panel | Eklentiler veya dikey sekme → Aç; açık panelin kendi yaşam döngüsü | KentOS UI host + eklenti oturumu |
 | Processing provider/algoritma | Eklentiler'de provider ve araçlarına erişim; İşlemler kataloğu/model/batch; uygun nesne bağlamı | Aynı araç kimliği ve `ToolHost` composite runner |
-| Denetim (Audit) provider/kuralı | Denetim paneli, dikey sekme denetim düğmesi, `cad.audit.*` ve toplu kalite kontrol | Rust `ProjectAuditFacts` özeti + Python kural/otomatik `Fix` yürütücüsü |
+| Denetim (Audit) provider/kuralı | Masaüstü Denetim paneli, dikey sekme denetim düğmesi, `cad.audit.*` ve **Bulut (`kentosd` / `kentos-jobrun`) mevzuat/kalite kontrol kapısı** | Ortak Rust `ProjectAuditFacts` özeti + hem masaüstünde hem bulutta (`kentos-jobrun` izole kutusunda) birebir aynı çalışan Python (`@ext.audit`) kural/otomatik `Fix` yürütücüsü |
 | İfade (Expression) fonksiyonu | Etiket, tematik stil, sanal alan, filtre ve form hesaplayıcısında `@kentos.expr` işlevleri | `kentos-expression` kayıt defteri + önbellekli/vektörize değerlendirme |
 | Portable CBS form ve katman şablonu | Eklentiler'de kaynak yönetimi; proje kurulumunda katman/domain/ilişki şeması; veri girişinde normal form akışı | Mevcut FormBody/domain/yayın/izin modeli |
 | Etkileşimli çizim/harita aracı (`MapTool`) | Dikey sekmede veya Eklentiler'de başlangıç; açık araç ayarları, kenetleme (snap), canlı önizleme ve komut istemi | Host giriş/önizleme protokolü + semantik ürün komutu |
@@ -148,7 +148,12 @@ Eski görevler: `PY-RUN`, `PY-UI`, `PY-TOOL`. Modül sınırları için mevcut
   PAİY/belediye plan notu, KTEK yol denetimi) hem `audit.providers` üzerinden
   Denetim motoruna kural (`Finding` + otomatik düzeltme `Fix`) olarak hem de
   gerekirse Processing algoritması / inceleme paneli olarak enjekte edilebilir.
-  Sekmedeki, Denetim'deki ve İşlemler'deki girişler ayrı hesaplayıcı olmasın.
+  **Aynı Python mevzuat betikleri (`catalog/standards/*.py` ve `.kek`) hem masaüstü
+  uygulamasında (`apps/desktop`) etkileşimli olarak hem de bulut sisteminde
+  (`apps/api` → `apps/jobrun` / `kentos-jobrun`) ağsız ve bütçe denetimli izole
+  süreçte birebir aynı `ProjectAuditFacts` girdisiyle çalışır; böylece masaüstü ve
+  bulut denetim sonuçları %100 aynıdır.**
+  Sekmedeki, Denetim'deki, Bulut'taki ve İşlemler'deki girişler ayrı hesaplayıcı olmasın.
 - Katkılar desteklenen Mimari/Harita/GIS/Yol modülünü ve gerekli veri türlerini
   bildirsin. Başka modüle ait araç veya dikey Ribbon sekmesi yanlış modülde
   sunulmasın; eklenti ana kaydı görünür kalıp bu modülde neden çalışmadığını açıklayabilsin.
