@@ -978,7 +978,12 @@ impl App {
                 Kind::Ok,
                 format!("Bu örnekten güncellenirse: {}.", report_words(done)),
             ),
-            Some(Err(why)) if w.preview_same => words::text_line(Kind::Info, why.clone()),
+            // The source as it is: said without the instance's inner id, with what would make an update.
+            Some(Err(_)) if w.preview_same => words::text_line(
+                Kind::Info,
+                "Bu örnek kaynakla aynı; kaynağı güncellemek için önce bu örnekte bir şeyi değiştirin."
+                    .to_owned(),
+            ),
             Some(Err(why)) => words::text_line(Kind::Warn, why.clone()),
             None => words::text_line(
                 Kind::Info,
