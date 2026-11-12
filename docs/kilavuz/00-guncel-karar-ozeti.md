@@ -508,7 +508,10 @@
     güncelle aynalı örnekten de. Bağlı döşemenin iç noktası taşınınca onunla gider (çekirdek şeklin `seed`'i). Modül
     karşılaştırması belgenin yazdıklarına bakmaz: kata bağlı merdivenin rıhtı, kata bağlı rampanın kotu, döşemenin kenar
     çizgileri, bağlı döşemenin halkaları/duvarları/kopukluğu. Duvarsız modülün tabanı nesnelerin sol altı. Mahal
-    ayırıcı (rolü olan çoklu çizgi) da girer, katı rolünün `ArchInfo`'sunda örneğinkidir (ADR 8050 §4).
+    ayırıcı (rolü olan çoklu çizgi) da girer, katı rolünün `ArchInfo`'sunda örneğinkidir (ADR 8050 §4). Mutfak dizisi
+    nesneleriyle değil tarifiyle (`ArchModule.runs`, örneğin `runs`'ı) girer: örnek kendi duvarlarına aynı adımda yeniden
+    döşer, aynada yan ve tek kapakların menteşesi ters; yarım dizi ya da dışarıdaki duvara dayanan dizi `module_outside`
+    (ADR 8050 §5). `.kcad` şema 245 bu kapsamın tamamıdır.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

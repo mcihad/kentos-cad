@@ -8,7 +8,7 @@ import type { Entity } from "./Entity";
 export type ModuleMember = { key: string, entity: Entity, 
 /**
  * Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up
- * (the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text
- * follows what it is on.
+ * (the levels by elevation). Only an object's with a level of its own ([`holds_own_storey`]); an opening, a tag, a
+ * dimension or a text follows what it is on.
  */
 storey?: number, };

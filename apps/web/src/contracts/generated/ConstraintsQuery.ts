@@ -17,6 +17,7 @@ uids?: Array<string>,
  */
 ids?: Array<string>, 
 /**
- * Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+ * Only the architectural bonds: the constraints naming a wall's line, a grid's or an opening's jamb (docs/adr/0770
+ * §4, 8049 §2).
  */
 architectural?: boolean, };

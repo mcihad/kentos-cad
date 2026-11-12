@@ -15,6 +15,10 @@
 //! The fourth slice (docs/adr/0796) lets a definition span several levels (each member on its storey above the base
 //! level, the host's levels taken by their order) and a repeat copy the level's objects in no module too
 //! (`modules_more.rs`); `fixtures/commands/v1/cad.modules.edit.storeys.json` (`scripts/fixtures/module_storeys_cases.py`).
+//!
+//! Module scope (docs/adr/8050) takes columns, stairs, ramps, slabs, curved walls and room separators as members, and
+//! kitchen runs as recipes each instance lays again (`modules_runs.rs`); `fixtures/commands/v1/cad.modules.edit.kinds.json`
+//! (`scripts/fixtures/module_kinds_cases.py`).
 
 use std::collections::{HashMap, HashSet};
 
@@ -39,6 +43,10 @@ pub const STEP: &str = "Oda modülü";
 mod more;
 pub use more::{drifted_keys, drifted_uids};
 
+#[path = "modules_runs.rs"]
+mod runs;
+pub use runs::run_key_of;
+
 /// What a write does: the modules after it, the objects to add (with their new ids) and to change, what to answer.
 #[derive(Default)]
 struct Work {
@@ -53,6 +61,10 @@ struct Work {
     module: Option<String>,
     instance: Option<String>,
     report: ModuleReport,
+    /// The kitchen runs the instances lay (docs/adr/8050 §5), after their objects.
+    lays: Vec<runs::Lay>,
+    /// The kitchen runs let go before their objects are deleted (Modülden çıkar), by their ids.
+    released: Vec<String>,
 }
 
 /// The matrix of an instance: its definition mirrored across its own y axis when asked, turned, then moved to its base.
@@ -544,12 +556,49 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         .flat_map(|i| i.members.iter().map(|o| o.uid.as_str()))
                 })
                 .collect();
+            // The kitchen runs it takes whole (docs/adr/8050 §5): their objects are the runs', not the module's.
+            let picked: Vec<(usize, String)> = found
+                .iter()
+                .map(|(i, _, _, u)| (*i, (*u).clone()))
+                .collect();
+            let chosen = runs::selected_runs(doc, &picked, &HashSet::new())?;
+            let in_runs = runs::run_objects(&chosen);
+            let taken_runs: HashSet<&str> = modules
+                .iter()
+                .flat_map(|m| {
+                    m.instances
+                        .iter()
+                        .flat_map(|i| i.runs.iter().map(|o| o.uid.as_str()))
+                })
+                .collect();
+            if let Some(r) = chosen
+                .iter()
+                .find(|r| taken_runs.contains(r.id.to_string().as_str()))
+            {
+                let at = picked
+                    .iter()
+                    .find(|(_, u)| {
+                        r.members
+                            .iter()
+                            .any(|m| Uuid::from_bytes(m.uid.0).to_string() == *u)
+                    })
+                    .map_or(0, |(i, _)| *i);
+                return Err(fail(
+                    codes::MODULE_MEMBER_TAKEN,
+                    "Bu mutfak dizisi zaten bir modül örneğinin; önce o örneği bağımsızlaştırın."
+                        .into(),
+                    &format!("operation.uids[{at}]"),
+                ));
+            }
             // The levels the objects stand on (docs/adr/0796 §1): all on the project's levels (one or several) or all
             // on none.
             let order = storey_order(doc);
             let mut levelled: Option<bool> = None;
             let mut ranks: Vec<usize> = Vec::new();
             for (i, _, e, uid) in &found {
+                if in_runs.contains(uid.as_str()) {
+                    continue;
+                }
                 let path = format!("operation.uids[{i}]");
                 if doc.layers().is_locked(&e.base().layer_id) {
                     return Err(fail(
@@ -651,6 +700,9 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             };
             let mut members = Vec::new();
             for (_, _, e, uid) in &found {
+                if in_runs.contains(uid.as_str()) {
+                    continue;
+                }
                 // Its storey above the base level (docs/adr/0796 §1).
                 let storey = match (low, e.own_level().filter(|_| arch_level_holder(e))) {
                     (Some(lo), Some(l)) => order.iter().position(|x| x == l).map_or(0, |r| r - lo),
@@ -691,14 +743,43 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 version: 1,
                 members: found
                     .iter()
+                    .filter(|(_, _, _, u)| !in_runs.contains(u.as_str()))
                     .map(|(_, _, _, u)| ModuleObject {
                         key: (*u).clone(),
                         uid: (*u).clone(),
                     })
                     .collect(),
+                runs: chosen
+                    .iter()
+                    .map(|r| ModuleObject {
+                        key: r.id.to_string(),
+                        uid: r.id.to_string(),
+                    })
+                    .collect(),
                 exceptions: Vec::new(),
                 broken: None,
             };
+            // Each run's recipe about the base, on the storey its objects stand on.
+            let module_runs = chosen
+                .iter()
+                .map(|r| {
+                    let storey = match (low, runs::run_level(doc, r)) {
+                        (Some(lo), Some(l)) => order
+                            .iter()
+                            .position(|x| *x == l)
+                            .and_then(|x| x.checked_sub(lo))
+                            .map_or(0, |d| u32::try_from(d).unwrap_or(0)),
+                        _ => 0,
+                    };
+                    kentos_commands::ModuleRun {
+                        key: r.id.to_string(),
+                        recipe: runs::normalized(&runs::placed_recipe(
+                            doc, &r.recipe, &back, false,
+                        )),
+                        storey,
+                    }
+                })
+                .collect();
             work.instance = Some(inst.id.clone());
             work.module = Some(mid.clone());
             modules.push(ArchModule {
@@ -706,6 +787,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 name: name.clone(),
                 version: 1,
                 members,
+                runs: module_runs,
                 instances: vec![inst],
                 removed: false,
             });
@@ -787,12 +869,14 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 storey: *storey,
                 version: m.version,
                 members: Vec::new(),
+                runs: Vec::new(),
                 exceptions: Vec::new(),
                 broken: None,
             };
             let (objects, made) = place_all(doc, m, &inst)?;
             inst.members = objects;
             work.adds = made;
+            work.lays = runs::lays_of(doc, m, &inst, None);
             work.instance = Some(inst.id.clone());
             work.module = Some(m.id.clone());
             modules[k].instances.push(inst);
@@ -897,6 +981,30 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     mem.storey = storey;
                 }
             }
+            // Its kitchen runs (docs/adr/8050 §5): the source's run taken back into the definition's frame.
+            let mut module_runs = modules[k].runs.clone();
+            for run in &mut module_runs {
+                if src.exceptions.contains(&run.key) || !runs::holds(&src, run) {
+                    continue;
+                }
+                let Some(o) = src.runs.iter().find(|o| o.key == run.key) else {
+                    continue;
+                };
+                let Some(now) = runs::definition_recipe(doc, &src, &o.uid) else {
+                    return Err(fail(
+                        codes::MODULE_MEMBER_MISSING,
+                        format!(
+                            "“{from}” örneğinin mutfak dizisi ({}) silinmiş ya da bırakılmış; başka bir örnekten güncelleyin.",
+                            o.uid
+                        ),
+                        "operation.from",
+                    ));
+                };
+                if !runs::same_recipe(&now, &run.recipe) {
+                    changed.push(run.key.clone());
+                    run.recipe = now;
+                }
+            }
             // Instances behind the module's version, or lacking a key, catch up whole (docs/adr/0779 §1).
             let old_version = modules[k].version;
             let behind = |i: &ModuleInstance| {
@@ -906,6 +1014,11 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         .iter()
                         .filter(|mem| more::holds(&modules[k], i, mem))
                         .any(|mem| i.members.iter().all(|o| o.key != mem.key))
+                    || modules[k]
+                        .runs
+                        .iter()
+                        .filter(|r| runs::holds(i, r))
+                        .any(|r| i.runs.iter().all(|o| o.key != r.key))
             };
             let catching = targets
                 .iter()
@@ -924,6 +1037,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 old_version + 1
             };
             modules[k].members = members;
+            modules[k].runs = module_runs;
             modules[k].version = version;
             modules[k].instances[f].version = version;
             work.report.updated.push(src.id.clone());
@@ -994,6 +1108,16 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                             .iter()
                             .find(|o| &o.uid == uid)
                             .map(|o| (i, o.key.clone()))
+                    })
+                    // An object of an instance's kitchen run names the run (docs/adr/8050 §5).
+                    .or_else(|| {
+                        modules[k]
+                            .instances
+                            .iter()
+                            .enumerate()
+                            .find_map(|(i, inst)| {
+                                runs::run_key_of(doc, inst, uid).map(|key| (i, key))
+                            })
                     });
                 let Some((i, key)) = found else {
                     return Err(fail(
@@ -1003,7 +1127,24 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     ));
                 };
                 let has = modules[k].instances[i].exceptions.contains(&key);
-                if restore {
+                if restore && modules[k].run(&key).is_some() {
+                    // The run laid again from the definition's recipe.
+                    let inst = modules[k].instances[i].clone();
+                    if !work
+                        .lays
+                        .iter()
+                        .any(|l| l.instance == inst.id && l.key == key)
+                    {
+                        work.lays.extend(runs::lays_of(
+                            doc,
+                            &modules[k],
+                            &inst,
+                            Some(std::slice::from_ref(&key)),
+                        ));
+                    }
+                    touched = true;
+                    modules[k].instances[i].exceptions.retain(|x| x != &key);
+                } else if restore {
                     let inst = modules[k].instances[i].clone();
                     let map: HashMap<String, String> = inst
                         .members
@@ -1097,6 +1238,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 let m = &mut modules[k];
                 m.removed = true;
                 m.members.clear();
+                m.runs.clear();
                 for inst in &mut m.instances {
                     inst.broken = Some(ModuleBreak::SourceGone);
                     inst.exceptions.clear();
@@ -1311,7 +1453,11 @@ pub fn plan_in(doc: &Document, input: &ModulesEdit) -> CommandResult<ModulesEdit
 /// The objects a placement would add, for a preview.
 pub fn placed_objects(doc: &Document, input: &ModulesEdit) -> Result<Vec<Entity>, String> {
     check(doc, input)
-        .map(|w| w.adds.into_iter().map(|(_, e)| e).collect())
+        .map(|w| {
+            // Its kitchen runs as their recipes lay them (docs/adr/8050 §5).
+            let laid = runs::laid_objects(doc, &w.lays);
+            w.adds.into_iter().map(|(_, e)| e).chain(laid).collect()
+        })
         .map_err(|s| s.into_error().message)
 }
 
@@ -1329,12 +1475,13 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: ModulesEdit,
 ) -> CommandResult<ModulesEdited> {
-    let work = match check(cx.doc, &input) {
+    let mut work = match check(cx.doc, &input) {
         Ok(work) => work,
         Err(stop) => return stop.into(),
     };
     let doc = &mut *cx.doc;
-    let created: Vec<String> = work.adds.iter().map(|(u, _)| u.to_string()).collect();
+    let mut created: Vec<String> = work.adds.iter().map(|(u, _)| u.to_string()).collect();
+    let mut modules = work.modules.clone();
     let result = doc.transact(STEP, |d| {
         if !work.adds.is_empty() {
             d.add_many_with_uids(work.adds.clone(), STEP)?;
@@ -1342,16 +1489,29 @@ fn write_execute(
         if !work.updates.is_empty() {
             d.update_many(work.updates.clone(), STEP);
         }
+        for id in &work.released {
+            if let Some(run) = kentos_commands::CaseworkId::parse(id) {
+                d.release_casework(run);
+            }
+        }
         if !work.removes.is_empty() {
             d.remove(&work.removes);
         }
-        d.set_arch_modules(work.modules.clone(), STEP)?;
-        Ok::<(), kentos_domain::Refusal>(())
+        // The kitchen runs after the walls they stand on (docs/adr/8050 §5).
+        let laid = runs::write_lays(d, &work.lays, &mut modules)?;
+        d.set_arch_modules(modules.clone(), STEP)?;
+        Ok::<_, kentos_domain::Refusal>((laid, modules))
     });
-    if let Err(e) = result {
-        return CommandResult::Failed {
-            error: error(codes::INVALID_INPUT, e.0, Some("operation".into())),
-        };
+    match result {
+        Err(e) => {
+            return CommandResult::Failed {
+                error: error(codes::INVALID_INPUT, e.0, Some("operation".into())),
+            };
+        }
+        Ok((laid, modules)) => {
+            created.extend(laid);
+            work.modules = modules;
+        }
     }
     CommandResult::Completed {
         warnings: warnings(&work.report),

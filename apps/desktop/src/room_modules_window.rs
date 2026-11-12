@@ -735,8 +735,12 @@ impl App {
                 let storeys = m
                     .storeys
                     .map_or_else(String::new, |n| format!(" · {n} katlı"));
+                // Its kitchen runs, kept as recipes (docs/adr/8050 §5).
+                let runs = m
+                    .runs
+                    .map_or_else(String::new, |n| format!(" · {n} mutfak dizisi"));
                 format!(
-                    "sürüm {} · {} nesne · {} örnek{storeys}",
+                    "sürüm {} · {} nesne{runs} · {} örnek{storeys}",
                     m.version,
                     m.members,
                     m.instances.len()
@@ -854,7 +858,7 @@ impl App {
         }
         let name = kentos_ui::widget::text_field("Yeni modülün adı (Banyo)", &w.name)
             .on_input(|t| msg(Event::Name(t)));
-        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatı, kolonlar, merdivenler, rampalar, döşemeler, ölçü ve etiketler (bir oda, bir daire, bir dubleks, bir merdiven evi); akslara bağlı kolon girmez. Taban noktası duvarların sol alt köşesi (duvar yoksa nesnelerin), taban katı en alçak kat.".into()));
+        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatı, kolonlar, merdivenler, rampalar, döşemeler, mutfak dizileri (bütünüyle), ölçü ve etiketler (bir oda, bir daire, bir dubleks, bir merdiven evi); akslara bağlı kolon girmez. Taban noktası duvarların sol alt köşesi (duvar yoksa nesnelerin), taban katı en alçak kat.".into()));
         let body = Column::new()
             .spacing(14)
             .push(

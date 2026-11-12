@@ -2948,6 +2948,11 @@ def document(d):
     if any("storey" in i for m in (d["settings"].get("arch") or {}).get("modules", []) for i in m.get("instances", [])):
         # A module instance holding one storey only (docs/adr/0811).
         schema = max(schema, 155)
+    if any(m.get("runs") or any(i.get("runs") for i in m.get("instances", []))
+           or any(mem["entity"]["kind"] in ("column", "stair", "ramp", "slab", "polyline") for mem in m.get("members", []))
+           for m in (d["settings"].get("arch") or {}).get("modules", [])):
+        # A module's columns, stairs, ramps, slabs and room separators, and its kitchen runs (docs/adr/8050).
+        schema = max(schema, 245)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3661,7 +3666,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-245.kcad"] = container(root(cmap(parts), version=uint(245)))
+    files["schema-version-246.kcad"] = container(root(cmap(parts), version=uint(246)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5865,6 +5870,20 @@ def build():
         d = copy.deepcopy(cw)
         change(d["casework"])
         out["broken/casework-" + name + ".kcad"] = container(document(d))
+    # Schema 245 (docs/adr/8050): that kitchen with a column and a room separator as one module, its L run kept as the
+    # module's recipe and the first instance's run; schema 244 refuses it, a run's key twice and an instance's run
+    # naming no run of the module are bad values.
+    sc = document(load("module-scope.json"))
+    assert sc.count(b"\x67version\x18\xf5") == 1, "the module scope is schema 245"
+    out["module-scope.kcad"] = container(sc)
+    out["broken/module-scope-in-schema-244.kcad"] = container(sc.replace(b"\x67version\x18\xf5", b"\x67version\x18\xf4"))
+
+    def scope_bad(name, change):
+        d = load("module-scope.json")
+        change(d["settings"]["arch"]["modules"][0])
+        out["broken/module-scope-" + name + ".kcad"] = container(document(d))
+    scope_bad("run-twice", lambda m: m["runs"].append(copy.deepcopy(m["runs"][0])))
+    scope_bad("run-unknown", lambda m: m["instances"][0]["runs"][0].update(key="0192f5a1-7270-7000-8000-0000000000ff"))
     casework_bad("twice", lambda runs: runs.append(copy.deepcopy(runs[0])))
     casework_bad("ties-short", lambda runs: runs[0]["ties"].pop())
     casework_bad("member-twice", lambda runs: runs[0]["members"].append(copy.deepcopy(runs[0]["members"][0])))

@@ -28,9 +28,12 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
     modülü”. operation: define (name, id isteğe bağlı, uids: bir ya da birkaç kattaki
     duvarlar (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatılar,
     kolonlar, merdivenler, rampalar, döşemeler, ölçüler, etiketler ve yazılar; akslara
-    bağlı kolon module_kind (docs/adr/8050); base taban noktası; nesneler yerinde kalır
-    ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da
-    etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation
+    bağlı kolon module_kind (docs/adr/8050); seçimdeki mutfak dizisi bütünüyle alınır ve
+    modülün runs'ında tarif olarak durur, her örnek onu kendi duvarlarına yeniden kurar
+    (aynada yanı ve tek kapakların menteşesi ters), dizinin bir kısmı ya da seçim
+    dışındaki duvara dayanan dizi module_outside; base taban noktası; nesneler yerinde
+    kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya
+    da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation
     radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase tadilat durumu,
     numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal
     kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module,
@@ -89,7 +92,10 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
         define (name, id isteğe bağlı, uids: bir ya da birkaç kattaki duvarlar (eğri olanlar
         da), açıklıklar, mahaller, mahal ayırıcılar, donatılar, kolonlar, merdivenler,
         rampalar, döşemeler, ölçüler, etiketler ve yazılar; akslara bağlı kolon module_kind
-        (docs/adr/8050); base taban noktası; nesneler yerinde kalır ve ilk örnek olur;
+        (docs/adr/8050); seçimdeki mutfak dizisi bütünüyle alınır ve modülün runs'ında tarif
+        olarak durur, her örnek onu kendi duvarlarına yeniden kurar (aynada yanı ve tek
+        kapakların menteşesi ters), dizinin bir kısmı ya da seçim dışındaki duvara dayanan
+        dizi module_outside; base taban noktası; nesneler yerinde kalır ve ilk örnek olur;
         açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi
         seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi
         y ekseninde aynalı, level hedef kat, phase tadilat durumu, numbering: prefix ve

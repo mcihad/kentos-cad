@@ -8,4 +8,8 @@ export type ModuleRow = { id: string, name: string, version: number, members: nu
 /**
  * The storeys a module of several spans (docs/adr/0796 §1); absent: one.
  */
-storeys?: number, removed: boolean, instances: Array<ModuleInstanceRow>, };
+storeys?: number, 
+/**
+ * Its kitchen runs (docs/adr/8050 §5); absent: none.
+ */
+runs?: number, removed: boolean, instances: Array<ModuleInstanceRow>, };

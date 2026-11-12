@@ -494,6 +494,11 @@ pub struct ModuleRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub storeys: Option<u32>,
+    /// Its kitchen runs (docs/adr/8050 §5); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub runs: Option<u32>,
     pub removed: bool,
     pub instances: Vec<ModuleInstanceRow>,
 }

@@ -71,7 +71,10 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
                 i.members
                     .iter()
                     .find(|o| &o.uid == uid)
-                    .map(|o| (m.id.clone(), i.id.clone(), o.key.clone()))
+                    .map(|o| o.key.clone())
+                    // An object of the instance's kitchen run: the run's key (docs/adr/8050 §5).
+                    .or_else(|| crate::modules_edit::run_key_of(doc, i, uid))
+                    .map(|k| (m.id.clone(), i.id.clone(), k))
             })
         });
         let Some((mid, iid, k)) = found else {
@@ -97,6 +100,7 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
             version: m.version,
             members: u32::try_from(m.members.len()).unwrap_or(u32::MAX),
             storeys: (m.storeys() > 1).then(|| m.storeys()),
+            runs: (!m.runs.is_empty()).then(|| u32::try_from(m.runs.len()).unwrap_or(u32::MAX)),
             removed: m.removed,
             instances: m
                 .instances

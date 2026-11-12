@@ -2,7 +2,8 @@
 
 - **Durum:** sürüyor (12 Kasım 2026); `plan/architecture-advanced.md` ADV-05, M50. 1. bölüm yapıldı: modüle kolon,
   merdiven, rampa, döşeme ve eğri duvar girer (§1); bağlı döşemenin iç noktası taşınınca onunla gider (§2); kata göre
-  yazılan değerler örneğin kendi katınındır (§3). 2. bölüm: mahal ayırıcı (§4). Mutfak dizisi sonraki bölüm.
+  yazılan değerler örneğin kendi katınındır (§3). 2. bölüm: mahal ayırıcı (§4). 3. bölüm: mutfak dizisi tarifiyle
+  (§5), dosya şeması 245.
 - **Bağlam belgesi:** ADR 0775 (oda modülleri), ADR 0779 (üye ekleme/çıkarma, elle değişen nesne, daire), ADR 0796 (çok
   katlı modül, katları tekrarla), ADR 0811 (tek katlı örnek), ADR 0725 §2–3 (kolonun aynası), ADR 0709 (eğri merdivenin
   aynası), ADR 0339 §1 (duvar yolunun aynası), ADR 0771 §4 (kaynağa bağlı döşeme), ADR 0723 §2 ve 0724 §1 (kata bağlı
@@ -98,11 +99,51 @@ Room Separation Lines", "Groups of Elements"; AUGI forumu "Rooms separation line
 Ölçüm (ADR 0679'un açık planı, 10 × 8 m, ayırıcı x = 5): aynalı 1. kat örneğinde iki mahal 38,22 + 38,22 m²; kaynağın
 ayırıcısı 1 m doğuya kayıp güncellenince örneğinki 1 m batıya kayar, mahaller 46,02 ve 30,42 m² (kaynakla aynı).
 
+### 5. Mutfak dizisi
+
+Mutfak dizisi (ADR 0706, 0727) bir nesne değil, kayıtlı bir tariftir: dolaplar, evye, ocak, dolgular ve tezgâh dizinin
+kuralıyla (modüller `from`'dan numaralı, evye modülünün başından 5 cm'de) döşenir ve dizi dayandığı duvar yüzlerini
+izler. Bu yüzden modül diziyi nesneleriyle değil **tarifiyle** tutar:
+
+- Tanımlarken seçimdeki dizi bütünüyle alınır: nesneleri modülün üyesi olmaz, modülün `runs`'ında tarifi tabana göre
+  durur (anahtarı dizinin kimliği), ilk örnek dizinin kimliğini tutar. Dizinin bir kısmı seçiliyse ya da dizi seçimin
+  dışındaki bir duvara dayanıyorsa `module_outside` ("Mutfak dizisinin bir kısmı seçili…", "Mutfak dizisi seçimin
+  dışındaki bir duvara dayanıyor…"); başka bir modülün örneğindeki dizi `module_member_taken`.
+- Örnek tarifi kendi matrisiyle, kendi duvarlarından sonra ve aynı geri alma adımında **yeniden döşer**: noktalar taşınır;
+  aynada dizinin yanı ters döner ve her tek kapaklı modülün menteşesi ters yazılır (sol kapı sağ olur; çift kapak ve
+  cihaz kapaksızdır). Örneğin dizisi çizimin sıradan dizisidir: kendi duvarlarına bağlıdır, onları izler, Mutfak
+  dizisini düzenle ile düzenlenir.
+- Kaynağı güncelle kaynak örneğin dizisini matrisinin tersiyle geri alır (aynada yan ve menteşeler geri döner,
+  varsayılanlar — sol yan, sol kapı — yazılmaz) ve tarif değiştiyse öbür örneklerde diziyi yeniden döşer; nesneler
+  parça ve numarasıyla korunur. Yerel istisna (dizinin herhangi bir nesnesiyle) diziyi korur, elle değişen dizi
+  kaynağın tarifiyle yazılır ve söylenir, ayrılan örneğin dizisi kendinindir. Kaynağa döndür diziyi tanımın tarifiyle
+  yeniden döşer.
+- Modülden çıkar: adı verilen örneğin dizisi olduğu gibi bırakılır, öbür örneklerin dizileri nesneleriyle silinir;
+  dizinin dayandığı duvar tek başına çıkarılmaz (`module_member_needed`). Modüle ekle: ilk örnekten seçilen dizi tanıma
+  girer, öbür örneklerde döşenir. Kaynağı sil: tanımın dizisi gider, örneklerin dizileri kalır. Katları tekrarla'nın
+  modülsüz kopyası dizinin nesnelerini kopyalamaz (dizi gevşek nesne değildir).
+- Modül sorgusu ve penceresi: modülün satırı "… nesne · 1 mutfak dizisi · … örnek"; dizinin bir nesnesi sorulunca
+  örneği ve dizinin anahtarı; elle değişen dizinin bütün nesneleri "değişmiş" listesinde.
+
+Aynada menteşe: tarif yalnız elle verilen kapakları tutar (`perModule`), öbürleri dizinin kuralıyla soldur. Aynalı
+örnekte her tek kapak açıkça ters yazılmasaydı aynalı mutfağın menteşeleri kaynağınkiyle aynı yanda kalır, ayna
+görüntüsü olmazdı. Aynalı örnekte eklenen yeni modül de kuralın sol kapısını alır; kaynağa dönünce sağ olur (ölçüldü:
+aynalı örnekte 4. modül 45 cm yapılınca kaynağın 4. ve yeni 6. modülü sağ kapılı).
+
+Başka programlar: Revit'te aynalanan sol kapı sağ kapı olur (Autodesk "Change the Orientation of a Door"); duvara
+yerleşen dolap ailesi ancak duvarı da grupta olunca grupla aynalanır (Autodesk forumu "Flip cabinet door swing" ve grup
+aynalama başlıkları). Bizde dizi duvarıyla birlikte modüle girer, ayna menteşeyi çevirir.
+
+Dosya: modülün `runs`'ı ve örneğin `runs`'ı ile §1–§4'ün yeni türleri **şema 245**'tir (`SCHEMA_WITH_MODULE_SCOPE`);
+eski okuyucu "daha yeni sürümle yazılmış" der. (Eski okuyucu kolonlu modülü "geçersiz değer" diye reddediyordu.)
+Örnek `fixtures/kcad/v2/module-scope.kcad`, bozuklar `broken/module-scope-*`; bağımsız okuyucu `tools/kcad/kcad.py`
+1804 dosyada Rust ile aynı.
+
 ## Sınırlar
 
-- Mutfak dizisi modülde değil (sonraki bölüm).
-- Katları tekrarla'nın modülsüz kopyası kolon, merdiven, rampa ve döşemeyi hâlâ kopyalamaz (ADR 0796 `kind`); modül
-  örneğinin içindekiler tekrarlanır.
+- Çok katlı modülde üst kattaki mutfak dizisi döşenirken bağlanacağı duvarı kata bakmadan arar: üst üste duvarlarda
+  alt kattakine bağlanabilir.
+- Katları tekrarla'nın modülsüz kopyası kolon, merdiven, rampa, döşeme ve mutfak dizisini hâlâ kopyalamaz.
 
 ## Doğrulama
 
@@ -120,6 +161,11 @@ ayırıcısı 1 m doğuya kayıp güncellenince örneğinki 1 m batıya kayar, m
   tabanı (0,5; 0,5)).
 - Mahal ayırıcı (§4): kinds dosyasında 5 durum daha (29; tanım, aynalı 1. kat yerleşimi — ayırıcının katı ve
   mahallerin kaynakları örneğin, kaynakla aynı, ayırıcının güncellenmesi, sıradan çoklu çizginin reddi).
+- Mutfak dizisi (§5): `cad.modules.edit.runs.json` 21 durum (`module_runs_cases.py`; dizinin döşenmesi bağımsız
+  `casework_model.py` ile): tanım; yarım dizi ve dışarıdaki duvar retleri; düz, aynalı (yan ve menteşe) ve üç örnekli
+  yerleşim; tek adım geri alma; aynalı örnekten "kaynakla aynı"; kaynaktan ve aynalı örnekten güncelleme; istisna,
+  kaynağa döndür, elle değişen, ayırma; örneğin duvarı kayınca yalnız onun dizisi izler; modülden çıkar, duvar reddi,
+  modüle ekle; kaynağı sil; başka modüldeki dizi reddi. Masaüstü işleyicisinde ve Python'da geçti.
 - Gerçek pencere (`fixtures/interaction/real/modul-kapsami.txt`, `bagli-doseme-tasi.txt`; Xvfb 1920×1080, gerçek
   fare/klavye): eğri duvarlı, kolonlu, merdivenli, bağlı döşemeli 3 × 5 m Merdiven evi. Eski sürüm Seçimden tanımla'da
   "Eğrisel duvar ilk modül kapsamında değil" dedi; yenisi tanımladı (4 nesne), Modül yerleştir Aynalı açık, taban 8,0:

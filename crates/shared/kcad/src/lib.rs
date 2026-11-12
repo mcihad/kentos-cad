@@ -953,11 +953,14 @@ pub const SCHEMA_WITH_GRID_BONDS: u32 = 243;
 /// Schema 244 (docs/adr/8049 §3): a constraint naming a column's side (`{"kind":"columnSide","side":0}`), an
 /// architectural bond's part as a wall's line is.
 pub const SCHEMA_WITH_COLUMN_SIDE_BONDS: u32 = 244;
+/// Schema 245 (docs/adr/8050): a room module's columns, stairs, ramps, slabs and room separators as members, and its
+/// kitchen runs (a module's `runs`, its recipes, and an instance's `runs`, its runs' ids).
+pub const SCHEMA_WITH_MODULE_SCOPE: u32 = 245;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 242] = [
+pub const SCHEMAS: [u32; 243] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1200,6 +1203,7 @@ pub const SCHEMAS: [u32; 242] = [
     SCHEMA_WITH_RAILING_OBJECTS,
     SCHEMA_WITH_GRID_BONDS,
     SCHEMA_WITH_COLUMN_SIDE_BONDS,
+    SCHEMA_WITH_MODULE_SCOPE,
 ];
 
 /// The file a drawing is saved as.

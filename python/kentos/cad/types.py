@@ -16573,6 +16573,7 @@ class ArchModule(_Model):
     its instances, broken, and no members.
     Attributes:
         version: Unit: count.
+        runs: Its kitchen runs (docs/adr/8050 §5, KCAD 245).
     """
     id: str
     name: str
@@ -16580,6 +16581,7 @@ class ArchModule(_Model):
     instances: list[ModuleInstance] | Unset = UNSET
     members: list[ModuleMember] | Unset = UNSET
     removed: bool | Unset = UNSET
+    runs: list[ModuleRun] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -16592,6 +16594,8 @@ class ArchModule(_Model):
             out["members"] = [e0.to_json() for e0 in self.members]
         if self.removed is not UNSET:
             out["removed"] = self.removed
+        if self.runs is not UNSET:
+            out["runs"] = [e0.to_json() for e0 in self.runs]
         return out
 
     @classmethod
@@ -16603,6 +16607,7 @@ class ArchModule(_Model):
             instances=[ModuleInstance.from_json(e0) for e0 in data["instances"]] if "instances" in data else UNSET,
             members=[ModuleMember.from_json(e0) for e0 in data["members"]] if "members" in data else UNSET,
             removed=data.get("removed", UNSET),
+            runs=[ModuleRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
         )
 
 
@@ -57948,7 +57953,9 @@ class ModuleInstance(_Model):
     Attributes:
         at: Unit: length.
         version: Unit: count.
+        exceptions: The keys it keeps as its own: its objects' and its runs'.
         rotation: Unit: rad.
+        runs: Its kitchen runs (docs/adr/8050 §5): the definition's run key and the id of the instance's run.
         storey: One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
             definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`. Unit: count.
         unit: The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module
@@ -57965,6 +57972,7 @@ class ModuleInstance(_Model):
     numbering: ModuleNumbering | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     rotation: float | Unset = UNSET
+    runs: list[ModuleObject] | Unset = UNSET
     storey: int | None | Unset = UNSET
     unit: str | None | Unset = UNSET
 
@@ -57988,6 +57996,8 @@ class ModuleInstance(_Model):
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.rotation is not UNSET:
             out["rotation"] = float(self.rotation)
+        if self.runs is not UNSET:
+            out["runs"] = [e0.to_json() for e0 in self.runs]
         if self.storey is not UNSET:
             out["storey"] = self.storey
         if self.unit is not UNSET:
@@ -58008,6 +58018,7 @@ class ModuleInstance(_Model):
             numbering=ModuleNumbering.from_json(data["numbering"]) if "numbering" in data else UNSET,
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             rotation=float(data["rotation"]) if "rotation" in data else UNSET,
+            runs=[ModuleObject.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             storey=data.get("storey", UNSET),
             unit=data.get("unit", UNSET),
         )
@@ -58143,8 +58154,8 @@ class ModuleMember(_Model):
     definition's frame, its level and phase left to the instance.
     Attributes:
         storey: Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up
-            (the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text
-            follows what it is on. Unit: count.
+            (the levels by elevation). Only an object's with a level of its own ([`holds_own_storey`]); an opening, a tag, a
+            dimension or a text follows what it is on. Unit: count.
     """
     key: str
     entity: Entity
@@ -58332,6 +58343,7 @@ class ModuleRow(_Model):
     Attributes:
         version: Unit: count.
         members: Unit: count.
+        runs: Its kitchen runs (docs/adr/8050 §5); absent: none. Unit: count.
         storeys: The storeys a module of several spans (docs/adr/0796 §1); absent: one. Unit: count.
     """
     id: str
@@ -58340,6 +58352,7 @@ class ModuleRow(_Model):
     members: int
     removed: bool
     instances: list[ModuleInstanceRow]
+    runs: int | None | Unset = UNSET
     storeys: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -58350,6 +58363,8 @@ class ModuleRow(_Model):
         out["members"] = self.members
         out["removed"] = self.removed
         out["instances"] = [e0.to_json() for e0 in self.instances]
+        if self.runs is not UNSET:
+            out["runs"] = self.runs
         if self.storeys is not UNSET:
             out["storeys"] = self.storeys
         return out
@@ -58363,7 +58378,39 @@ class ModuleRow(_Model):
             members=data["members"],
             removed=data["removed"],
             instances=[ModuleInstanceRow.from_json(e0) for e0 in data["instances"]],
+            runs=data.get("runs", UNSET),
             storeys=data.get("storeys", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ModuleRun(_Model):
+    """A kitchen run a module holds (docs/adr/8050 §5, KCAD 245): its recipe about the definition's base
+    (`cad.casework.run`'s input without an expected revision), laid again by each instance with its matrix (a mirror
+    turns its side and its single doors' hands over) among the instance's walls: each instance's run is a run of its own,
+    following its own walls; its objects are the run's, not the module's members.
+    Attributes:
+        key: Its key: the id of the run it was taken from.
+        storey: Its storey above the instance's base level (docs/adr/0796 §1), as a member's. Unit: count.
+    """
+    key: str
+    recipe: CaseworkRun
+    storey: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["recipe"] = self.recipe.to_json()
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModuleRun:
+        return cls(
+            key=data["key"],
+            recipe=CaseworkRun.from_json(data["recipe"]),
+            storey=data.get("storey", UNSET),
         )
 
 
@@ -137118,6 +137165,7 @@ __all__ = [
     "ModuleRepeatOne",
     "ModuleReport",
     "ModuleRow",
+    "ModuleRun",
     "ModuleSkipWhy",
     "ModuleSkipWhyName",
     "ModuleSkipped",

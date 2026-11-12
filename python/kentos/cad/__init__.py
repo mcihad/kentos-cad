@@ -2060,6 +2060,7 @@ __all__ = [
     "ModuleRepeatOne",
     "ModuleReport",
     "ModuleRow",
+    "ModuleRun",
     "ModuleSkipWhy",
     "ModuleSkipWhyName",
     "ModuleSkipped",

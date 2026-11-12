@@ -664,6 +664,9 @@ SCHEMA_WITH_RAILING_OBJECTS = 242
 SCHEMA_WITH_GRID_BONDS = 243
 # Docs/adr/8049 §3: a constraint naming a column's side (`columnSide`: side 0–3), a line as a wall's.
 SCHEMA_WITH_COLUMN_SIDE_BONDS = 244
+# Docs/adr/8050: a room module's columns, stairs, ramps, slabs and room separators, and its kitchen runs (`runs` of a
+# module, its recipes; of an instance, its runs' ids).
+SCHEMA_WITH_MODULE_SCOPE = 245
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
@@ -717,6 +720,8 @@ MATERIAL_CATEGORIES = ("structure", "insulation", "finish", "membrane", "other")
 # and a view recipe's chosen options.
 SCHEMA_WITH_OPTIONS = 149
 MODULE_KINDS = ("wall", "opening", "space", "insert", "dimension", "tag", "text")
+# Schema 245 (docs/adr/8050): a module's columns, stairs, ramps, slabs and room separators (a polyline with its role).
+MODULE_SCOPE_KINDS = ("column", "stair", "ramp", "slab", "polyline")
 RECIPE_CATEGORIES = ("dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks")
 RECIPE_PHASES = ("all", "existing", "demolition", "proposed")
 SCHEDULE_PROGRAM_FIELDS = ("unit", "target", "targetDiff")
@@ -1038,7 +1043,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES, SCHEMA_WITH_ROOFS, SCHEMA_WITH_ROOF_PARTS, SCHEMA_WITH_ROOF_EDGES, SCHEMA_WITH_ROOF_DOWNPIPES, SCHEMA_WITH_STAIR_WINDERS, SCHEMA_WITH_RAILING_OBJECTS, SCHEMA_WITH_GRID_BONDS, SCHEMA_WITH_COLUMN_SIDE_BONDS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES, SCHEMA_WITH_ROOFS, SCHEMA_WITH_ROOF_PARTS, SCHEMA_WITH_ROOF_EDGES, SCHEMA_WITH_ROOF_DOWNPIPES, SCHEMA_WITH_STAIR_WINDERS, SCHEMA_WITH_RAILING_OBJECTS, SCHEMA_WITH_GRID_BONDS, SCHEMA_WITH_COLUMN_SIDE_BONDS, SCHEMA_WITH_MODULE_SCOPE)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3719,6 +3724,7 @@ class _Schema:
         self.railing_objects = version >= SCHEMA_WITH_RAILING_OBJECTS
         self.grid_bonds = version >= SCHEMA_WITH_GRID_BONDS
         self.column_side_bonds = version >= SCHEMA_WITH_COLUMN_SIDE_BONDS
+        self.module_scope = version >= SCHEMA_WITH_MODULE_SCOPE
         self.section_breaks = version >= SCHEMA_WITH_SECTION_BREAKS
         self.volume_curve = version >= SCHEMA_WITH_VOLUME_CURVE
         self.corridor_sampling = version >= SCHEMA_WITH_CORRIDOR_SAMPLING
@@ -3925,6 +3931,39 @@ class _Schema:
         except KcadError as error:
             raise KcadError("bad_value", error.message) from error
 
+    def casework_recipe(self, value):
+        """A kitchen run's recipe (docs/adr/0727 §5): `cad.casework.run`'s input without an expected revision."""
+        def nonempty(check):
+            def read(v):
+                result = self.array(check)(v)
+                if not result:
+                    self.fail("bad_value", "boş isteğe bağlı liste yazılmaz")
+                return result
+            return read
+
+        def finite(v):
+            v = self.float(v)
+            if not math.isfinite(v):
+                self.fail("bad_value", "sayı sonlu olmalı")
+            return v
+
+        def point(v):
+            return self.fields({"x": (finite, True), "y": (finite, True)})(v)
+
+        setting = self.fields({
+            "module": (self.uint(32), True), "width": (finite, False),
+            "hand": (self.enum(("left", "right")), False),
+        })
+        return self.fields({
+            "layerId": (self.text, True), "from": (point, True), "through": (nonempty(point), False),
+            "to": (point, True), "side": (self.enum(("left", "right")), False), "module": (finite, False),
+            "depth": (finite, False), "corner": (self.enum(("blind", "open")), False),
+            "sink": (self.uint(32), False), "cooktop": (self.uint(32), False), "dishwasher": (self.uint(32), False),
+            "oven": (self.bool, False), "fridge": (self.enum(("start", "end")), False),
+            "perModule": (nonempty(setting), False), "upper": (self.bool, False), "color": (self.text, False),
+            "lineWeight": (finite, False),
+        })(value)
+
     def casework_checked(self, v):
         def uid(value):
             value = self.text(value)
@@ -3940,28 +3979,7 @@ class _Schema:
                 return result
             return read
 
-        def finite(value):
-            value = self.float(value)
-            if not math.isfinite(value):
-                self.fail("bad_value", "sayı sonlu olmalı")
-            return value
-
-        def point(value):
-            return self.fields({"x": (finite, True), "y": (finite, True)})(value)
-
-        setting = self.fields({
-            "module": (self.uint(32), True), "width": (finite, False),
-            "hand": (self.enum(("left", "right")), False),
-        })
-        recipe = self.fields({
-            "layerId": (self.text, True), "from": (point, True), "through": (nonempty(point), False),
-            "to": (point, True), "side": (self.enum(("left", "right")), False), "module": (finite, False),
-            "depth": (finite, False), "corner": (self.enum(("blind", "open")), False),
-            "sink": (self.uint(32), False), "cooktop": (self.uint(32), False), "dishwasher": (self.uint(32), False),
-            "oven": (self.bool, False), "fridge": (self.enum(("start", "end")), False),
-            "perModule": (nonempty(setting), False), "upper": (self.bool, False), "color": (self.text, False),
-            "lineWeight": (finite, False),
-        })
+        recipe = self.casework_recipe
         tie_fields = self.fields({
             "wall": (uid, True), "edge": (self.uint(32), True), "face": (self.enum(("left", "right")), True),
         })
@@ -12282,9 +12300,9 @@ class _Schema:
             self.fail("bad_value", "oda modülleri 1–200 olmalı; boş liste yazılmaz")
         uuid = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
         ident = re.compile(r"^[a-z0-9-]{1,64}$")
-        ids, names, uids = set(), set(), set()
+        ids, names, uids, instance_runs = set(), set(), set(), set()
         for m in modules:
-            if type(m) is not dict or not set(m) <= {"id", "name", "version", "members", "instances", "removed"}:
+            if type(m) is not dict or not set(m) <= {"id", "name", "version", "members", "runs", "instances", "removed"}:
                 self.fail("bad_value", "oda modülünün alanları geçersiz")
             if type(m.get("id")) is not str or not ident.match(m["id"]) or m["id"] in ids:
                 self.fail("bad_value", "oda modülünün kimliği geçersiz ya da yineleniyor")
@@ -12300,24 +12318,46 @@ class _Schema:
                 self.fail("bad_value", "removed yalnız true olarak yazılır")
             removed = m.get("removed", False)
             members = m.get("members", [])
-            if removed == bool(members):
+            runs = m.get("runs", [])
+            if "runs" in m:
+                # A module's kitchen runs (docs/adr/8050 §5): their recipes about its base.
+                if not self.module_scope:
+                    self.fail("unknown_field", "oda modülünün mutfak dizisi şema 245'ten beri yazılır")
+                if type(runs) is not list or not runs:
+                    self.fail("bad_value", "boş mutfak dizisi listesi yazılmaz")
+            if removed == bool(members or runs):
                 self.fail("bad_value", "kaldırılmamış modülün tanımı dolu, kaldırılmışınki boş olur")
             keys = set()
             for mem in members:
+                kind = mem.get("entity", {}).get("kind") if type(mem) is dict and type(mem.get("entity")) is dict else None
+                if kind in MODULE_SCOPE_KINDS and not self.module_scope:
+                    self.fail("unknown_field", "oda modülünün kolonu, merdiveni, rampası, döşemesi ve mahal ayırıcısı şema 245'ten beri yazılır")
+                scope = kind in MODULE_SCOPE_KINDS and (kind != "polyline" or "spaceSeparator" in mem["entity"])
                 if (type(mem) is not dict or not {"key", "entity"} <= set(mem) <= {"key", "entity", "storey"}
                         or not uuid.match(str(mem["key"])) or mem["key"] in keys or type(mem["entity"]) is not dict
-                        or mem["entity"].get("kind") not in MODULE_KINDS):
+                        or (kind not in MODULE_KINDS and not scope)):
                     self.fail("bad_value", "modül nesnesi geçersiz")
                 if "storey" in mem:
-                    # A member on a storey above its instance's base level (docs/adr/0796 §1): 1–15, a wall's, a
-                    # space's or a fixture's only.
+                    # A member on a storey above its instance's base level (docs/adr/0796 §1): 1–15, an object's with a
+                    # level of its own only (a wall's, a space's, a fixture's; with schema 245 a column's, a stair's, a
+                    # ramp's, a slab's and a room separator's too).
                     if not self.module_storeys:
                         self.fail("unknown_field", "oda modülü nesnesinin katı şema 152'den beri yazılır")
                     st = mem["storey"]
-                    if (type(st) is not int or not 1 <= st <= 15
-                            or mem["entity"].get("kind") not in ("wall", "space", "insert")):
-                        self.fail("bad_value", "modül nesnesinin katı 1–15 olur ve yalnız duvar, mahal ve donatının olur")
+                    if type(st) is not int or not 1 <= st <= 15 or (kind not in ("wall", "space", "insert") and not scope):
+                        self.fail("bad_value", "modül nesnesinin katı 1–15 olur ve yalnız kendi katı olan nesnenin olur")
                 keys.add(mem["key"])
+            run_keys = set()
+            for r in runs:
+                if (type(r) is not dict or not {"key", "recipe"} <= set(r) <= {"key", "recipe", "storey"}
+                        or not uuid.match(str(r["key"])) or r["key"] in keys or r["key"] in run_keys):
+                    self.fail("bad_value", "modülün mutfak dizisi geçersiz ya da anahtarı yineleniyor")
+                recipe = self.casework_recipe(r["recipe"])
+                if not recipe["layerId"] or len(recipe.get("through", [])) > 2:
+                    self.fail("bad_value", "modülün mutfak dizisinin katmanı boş ya da ikiden çok köşesi var")
+                if "storey" in r and (type(r["storey"]) is not int or not 1 <= r["storey"] <= 15):
+                    self.fail("bad_value", "mutfak dizisinin katı 1–15 olur")
+                run_keys.add(r["key"])
             seen = set()
             for inst in m.get("instances", []):
                 if type(inst) is not dict or not ident.match(str(inst.get("id"))) or inst["id"] in seen:
@@ -12350,6 +12390,19 @@ class _Schema:
                         self.fail("bad_value", "modül örneğinin nesnesi geçersiz")
                     own.add(o["key"])
                     uids.add(o["uid"])
+                if "runs" in inst:
+                    # An instance's kitchen runs by their ids (docs/adr/8050 §5).
+                    if not self.module_scope:
+                        self.fail("unknown_field", "modül örneğinin mutfak dizisi şema 245'ten beri yazılır")
+                    if type(inst["runs"]) is not list or not inst["runs"]:
+                        self.fail("bad_value", "boş mutfak dizisi listesi yazılmaz")
+                for o in inst.get("runs", []):
+                    if (type(o) is not dict or set(o) != {"key", "uid"} or o["key"] in own
+                            or (not removed and o["key"] not in run_keys) or not uuid.match(str(o["uid"]))
+                            or o["uid"] in instance_runs):
+                        self.fail("bad_value", "modül örneğinin mutfak dizisi geçersiz")
+                    own.add(o["key"])
+                    instance_runs.add(o["uid"])
                 exc = inst.get("exceptions", [])
                 if len(set(exc)) != len(exc) or not set(exc) <= own:
                     self.fail("bad_value", "örnek istisnası örneğin bir anahtarı olur")

@@ -2291,6 +2291,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 245 (docs/adr/8050): a room module's columns, stairs, ramps, slabs, room separators and kitchen runs.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| kentos_contracts::modules_have_scope(&a.modules))
+    {
+        return crate::SCHEMA_WITH_MODULE_SCOPE;
+    }
     // Schema 244 (docs/adr/8049 §3): a constraint naming a column's side.
     if doc
         .constraints

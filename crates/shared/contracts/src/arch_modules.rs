@@ -53,6 +53,26 @@ pub struct ModuleObject {
     pub uid: String,
 }
 
+/// A kitchen run a module holds (docs/adr/8050 §5, KCAD 245): its recipe about the definition's base
+/// (`cad.casework.run`'s input without an expected revision), laid again by each instance with its matrix (a mirror
+/// turns its side and its single doors' hands over) among the instance's walls: each instance's run is a run of its own,
+/// following its own walls; its objects are the run's, not the module's members.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ModuleRun {
+    /// Its key: the id of the run it was taken from.
+    pub key: String,
+    pub recipe: crate::CaseworkRun,
+    /// Its storey above the instance's base level (docs/adr/0796 §1), as a member's.
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    pub storey: u32,
+}
+
 /// How an instance numbers its spaces, openings and tags' marks: the definition's number with a prefix and a suffix.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -136,6 +156,11 @@ pub struct ModuleInstance {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub version: u32,
     pub members: Vec<ModuleObject>,
+    /// Its kitchen runs (docs/adr/8050 §5): the definition's run key and the id of the instance's run.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleObject>>", optional))]
+    pub runs: Vec<ModuleObject>,
+    /// The keys it keeps as its own: its objects' and its runs'.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub exceptions: Vec<String>,
@@ -167,6 +192,10 @@ pub struct ArchModule {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleMember>>", optional))]
     pub members: Vec<ModuleMember>,
+    /// Its kitchen runs (docs/adr/8050 §5, KCAD 245).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleRun>>", optional))]
+    pub runs: Vec<ModuleRun>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleInstance>>", optional))]
     pub instances: Vec<ModuleInstance>,
@@ -187,6 +216,31 @@ pub fn modules_have_instance_storeys(modules: &[ArchModule]) -> bool {
         .any(|m| m.instances.iter().any(|i| i.storey.is_some()))
 }
 
+/// Whether a module of `modules` holds a kitchen run (KCAD 245, docs/adr/8050 §5).
+pub fn modules_have_runs(modules: &[ArchModule]) -> bool {
+    modules
+        .iter()
+        .any(|m| !m.runs.is_empty() || m.instances.iter().any(|i| !i.runs.is_empty()))
+}
+
+/// Whether `modules` hold what came with the module scope (KCAD 245, docs/adr/8050): a column, a stair, a ramp, a slab
+/// or a room separator as a member, or a kitchen run.
+pub fn modules_have_scope(modules: &[ArchModule]) -> bool {
+    modules_have_runs(modules)
+        || modules.iter().any(|m| {
+            m.members.iter().any(|x| {
+                matches!(
+                    x.entity,
+                    Entity::Column(_)
+                        | Entity::Stair(_)
+                        | Entity::Ramp(_)
+                        | Entity::Slab(_)
+                        | Entity::Polyline(_)
+                )
+            })
+        })
+}
+
 /// Whether any instance of `modules` names a building-program group (KCAD 145, docs/adr/0779 §4).
 pub fn modules_have_units(modules: &[ArchModule]) -> bool {
     modules
@@ -205,9 +259,20 @@ impl ArchModule {
         self.members.iter().find(|m| m.key == key)
     }
 
-    /// How many storeys the definition spans: one past its highest member's (docs/adr/0796 §1).
+    /// The kitchen run of this key (docs/adr/8050 §5).
+    pub fn run(&self, key: &str) -> Option<&ModuleRun> {
+        self.runs.iter().find(|r| r.key == key)
+    }
+
+    /// How many storeys the definition spans: one past its highest member's or run's (docs/adr/0796 §1).
     pub fn storeys(&self) -> u32 {
-        self.members.iter().map(|m| m.storey).max().unwrap_or(0) + 1
+        self.members
+            .iter()
+            .map(|m| m.storey)
+            .chain(self.runs.iter().map(|r| r.storey))
+            .max()
+            .unwrap_or(0)
+            + 1
     }
 }
 
@@ -272,6 +337,27 @@ fn uuid_text_ok(s: &str) -> bool {
         })
 }
 
+/// What is wrong with a module's kitchen run's recipe (docs/adr/8050 §5): its points finite, at most two corners, no
+/// expected revision and a layer.
+fn run_recipe_problem(r: &crate::CaseworkRun) -> Option<&'static str> {
+    if r.layer_id.is_empty() {
+        return Some("Mutfak dizisinin katmanı boş.");
+    }
+    if r.through
+        .as_ref()
+        .is_some_and(|t| t.len() > crate::CASEWORK_CORNERS_MAX)
+    {
+        return Some("Mutfak dizisi en çok iki köşelidir.");
+    }
+    if !r.path().iter().all(|p| p.x.is_finite() && p.y.is_finite()) {
+        return Some("Mutfak dizisinin noktaları sonlu sayılar olur.");
+    }
+    if r.expected_revision.is_some() {
+        return Some("Mutfak dizisinin tarifi beklenen sürüm taşımaz.");
+    }
+    None
+}
+
 /// What is wrong with a project's modules: its path and why; none when nothing is.
 pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> {
     if modules.len() > MAX_MODULES {
@@ -283,6 +369,7 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
     let mut ids = std::collections::HashSet::new();
     let mut names = std::collections::HashSet::new();
     let mut uids = std::collections::HashSet::new();
+    let mut runs = std::collections::HashSet::new();
     for (i, m) in modules.iter().enumerate() {
         let at = format!("modules[{i}]");
         if !module_id_ok(&m.id) {
@@ -319,16 +406,16 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
                 "Modülün sürümü 1 ya da daha büyük olmalı.".into(),
             ));
         }
-        if m.removed && !m.members.is_empty() {
+        if m.removed && (!m.members.is_empty() || !m.runs.is_empty()) {
             return Some((
                 format!("{at}.members"),
                 "Kaldırılmış modülün tanımı boş olur.".into(),
             ));
         }
-        if !m.removed && m.members.is_empty() {
+        if !m.removed && m.members.is_empty() && m.runs.is_empty() {
             return Some((
                 format!("{at}.members"),
-                "Modülün tanımında en az bir nesne olur.".into(),
+                "Modülün tanımında en az bir nesne ya da mutfak dizisi olur.".into(),
             ));
         }
         if m.members.len() > MAX_MODULE_MEMBERS || m.instances.len() > MAX_MODULE_INSTANCES {
@@ -361,6 +448,26 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
                     format!("{at}.members[{k}].storey"),
                     format!(
                         "Modül nesnesinin katı 0 ile {} arasındadır ve yalnız kendi katı olan nesnenin olur (duvar, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme).",
+                        MAX_MODULE_STOREYS - 1
+                    ),
+                ));
+            }
+        }
+        for (k, run) in m.runs.iter().enumerate() {
+            if !uuid_text_ok(&run.key) || !keys.insert(run.key.as_str()) {
+                return Some((
+                    format!("{at}.runs[{k}].key"),
+                    "Modülün mutfak dizisinin anahtarı küçük harfli UUID metni olur ve bir kez geçer.".into(),
+                ));
+            }
+            if let Some(why) = run_recipe_problem(&run.recipe) {
+                return Some((format!("{at}.runs[{k}].recipe"), why.into()));
+            }
+            if run.storey >= MAX_MODULE_STOREYS {
+                return Some((
+                    format!("{at}.runs[{k}].storey"),
+                    format!(
+                        "Mutfak dizisinin katı 0 ile {} arasındadır.",
                         MAX_MODULE_STOREYS - 1
                     ),
                 ));
@@ -425,11 +532,26 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
                     ));
                 }
             }
+            for (k, o) in inst.runs.iter().enumerate() {
+                if (!m.removed && m.run(&o.key).is_none()) || !own.insert(o.key.as_str()) {
+                    return Some((
+                        format!("{ia}.runs[{k}].key"),
+                        "Örneğin mutfak dizisi tanımın bir dizisinin anahtarını bir kez anar."
+                            .into(),
+                    ));
+                }
+                if !uuid_text_ok(&o.uid) || !runs.insert(o.uid.as_str()) {
+                    return Some((
+                        format!("{ia}.runs[{k}].uid"),
+                        "Bir mutfak dizisi yalnız bir örneğin olur; kimliği küçük harfli UUID metni olur.".into(),
+                    ));
+                }
+            }
             for (k, e) in inst.exceptions.iter().enumerate() {
                 if !own.contains(e.as_str()) || inst.exceptions[..k].contains(e) {
                     return Some((
                         format!("{ia}.exceptions[{k}]"),
-                        "Örnek istisnası örneğin bir nesnesinin anahtarıdır ve bir kez geçer."
+                        "Örnek istisnası örneğin bir nesnesinin ya da mutfak dizisinin anahtarıdır ve bir kez geçer."
                             .into(),
                     ));
                 }

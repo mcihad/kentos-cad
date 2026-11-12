@@ -490,6 +490,8 @@ pub(super) struct Features {
     pub(super) grid_bonds: bool,
     /// Schema 244 (docs/adr/8049 §3): a constraint naming a column's side.
     pub(super) column_side_bonds: bool,
+    /// Schema 245 (docs/adr/8050): a room module's new kinds and its kitchen runs.
+    pub(super) module_scope: bool,
     /// Schema 235 (docs/adr/8041 §2): a column's material.
     pub(super) column_material: bool,
     /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
@@ -811,6 +813,7 @@ impl Features {
             railing_objects: schema >= crate::SCHEMA_WITH_RAILING_OBJECTS,
             grid_bonds: schema >= crate::SCHEMA_WITH_GRID_BONDS,
             column_side_bonds: schema >= crate::SCHEMA_WITH_COLUMN_SIDE_BONDS,
+            module_scope: schema >= crate::SCHEMA_WITH_MODULE_SCOPE,
             column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
             beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,

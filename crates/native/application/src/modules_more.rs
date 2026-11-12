@@ -65,7 +65,7 @@ fn written_by_the_document(e: &Entity) -> &'static [&'static str] {
 }
 
 /// Whether two values are the same, numbers within [`DRIFT_TOLERANCE`].
-fn near(a: &Value, b: &Value) -> bool {
+pub(super) fn near(a: &Value, b: &Value) -> bool {
     match (a, b) {
         (Value::Number(x), Value::Number(y)) => match (x.as_f64(), y.as_f64()) {
             (Some(x), Some(y)) => (x - y).abs() <= DRIFT_TOLERANCE,
@@ -146,16 +146,19 @@ pub fn drifted_keys(doc: &Document, m: &ArchModule, inst: &ModuleInstance) -> Ve
             let (_, current) = object_of(doc, &o.uid)?;
             drifted(doc, inst, mem, current).then(|| o.key.clone())
         })
+        // Its kitchen runs whose recipe is not the definition's (docs/adr/8050 §5).
+        .chain(super::runs::drifted_runs(doc, m, inst))
         .collect()
 }
 
-/// [`drifted_keys`] as the objects' ids.
+/// [`drifted_keys`] as the objects' ids (a run's, all its objects).
 pub fn drifted_uids(doc: &Document, m: &ArchModule, inst: &ModuleInstance) -> Vec<String> {
     let keys = drifted_keys(doc, m, inst);
     inst.members
         .iter()
         .filter(|o| keys.contains(&o.key))
         .map(|o| o.uid.clone())
+        .chain(super::runs::objects_of_runs(doc, inst, &keys))
         .collect()
 }
 
@@ -276,6 +279,53 @@ pub(super) fn sync_instance(
         fresh.push((slot, e));
     }
     work.updates.extend(fresh);
+    // Its kitchen runs (docs/adr/8050 §5): laid again from the definition's recipe, a new one for a run it lacks; a
+    // local exception keeps its own, a run released or deleted is passed by, one changed by hand is written and said.
+    for run in m.runs.iter().filter(|r| super::runs::holds(inst, r)) {
+        let entry = inst.runs.iter().find(|o| o.key == run.key);
+        if entry.is_some() && !whole && !changed.contains(&run.key) {
+            continue;
+        }
+        if let Some(o) = entry {
+            let conflict = |why| ModuleConflict {
+                instance: inst.id.clone(),
+                key: run.key.clone(),
+                uid: Some(o.uid.clone()),
+                why,
+            };
+            if inst.exceptions.contains(&run.key) {
+                work.report
+                    .conflicts
+                    .push(conflict(ModuleConflictWhy::Exception));
+                continue;
+            }
+            let Some(now) = super::runs::definition_recipe(doc, inst, &o.uid) else {
+                work.report
+                    .conflicts
+                    .push(conflict(ModuleConflictWhy::Gone));
+                continue;
+            };
+            if whole && super::runs::same_recipe(&now, &run.recipe) {
+                continue;
+            }
+            if !whole
+                && let Some(was) = old.run(&run.key)
+                && !super::runs::same_recipe(&now, &was.recipe)
+            {
+                work.report
+                    .conflicts
+                    .push(conflict(ModuleConflictWhy::Drifted));
+            }
+        } else if !work.report.added_keys.contains(&run.key) {
+            work.report.added_keys.push(run.key.clone());
+        }
+        work.lays.extend(super::runs::lays_of(
+            doc,
+            m,
+            inst,
+            Some(std::slice::from_ref(&run.key)),
+        ));
+    }
     Ok(entries)
 }
 
@@ -371,7 +421,36 @@ pub(super) fn add_members(
         .map(|o| o.uid.as_str())
         .chain(found.iter().map(|(_, _, _, u)| u.as_str()))
         .collect();
+    // The kitchen runs it takes whole (docs/adr/8050 §5), standing on its walls or the instance's.
+    let picked: Vec<(usize, String)> = found
+        .iter()
+        .map(|(j, _, _, u)| (*j, (*u).clone()))
+        .collect();
+    let mine: HashSet<&str> = inst.members.iter().map(|o| o.uid.as_str()).collect();
+    let chosen = super::runs::selected_runs(doc, &picked, &mine)?;
+    let in_runs = super::runs::run_objects(&chosen);
+    let taken_runs: HashSet<&str> = modules
+        .iter()
+        .flat_map(|m| {
+            m.instances
+                .iter()
+                .flat_map(|i| i.runs.iter().map(|o| o.uid.as_str()))
+        })
+        .collect();
+    if chosen
+        .iter()
+        .any(|r| taken_runs.contains(r.id.to_string().as_str()))
+    {
+        return Err(fail(
+            codes::MODULE_MEMBER_TAKEN,
+            "Bu mutfak dizisi zaten bir modül örneğinin; önce o örneği bağımsızlaştırın.".into(),
+            "operation.uids",
+        ));
+    }
     for (j, _, e, uid) in &found {
+        if in_runs.contains(uid.as_str()) {
+            continue;
+        }
         let path = format!("operation.uids[{j}]");
         if doc.layers().is_locked(&e.base().layer_id) {
             return Err(fail(
@@ -446,6 +525,9 @@ pub(super) fn add_members(
     }
     let mut added = Vec::new();
     for (_, _, e, uid) in &found {
+        if in_runs.contains(uid.as_str()) {
+            continue;
+        }
         let storey = if arch_level_holder(e) {
             storey_of(&order, inst.level.as_deref(), e.own_level()).unwrap_or(0)
                 + inst.storey.unwrap_or(0)
@@ -481,14 +563,35 @@ pub(super) fn add_members(
             storey,
         });
     }
+    let new_runs: Vec<kentos_commands::ModuleRun> = chosen
+        .iter()
+        .filter_map(|r| {
+            let id = r.id.to_string();
+            let storey = super::runs::run_level(doc, r)
+                .and_then(|l| storey_of(&order, inst.level.as_deref(), Some(l.as_str())))
+                .unwrap_or(0)
+                + inst.storey.unwrap_or(0);
+            Some(kentos_commands::ModuleRun {
+                recipe: super::runs::definition_recipe(doc, &inst, &id)?,
+                key: id,
+                storey,
+            })
+        })
+        .collect();
+    let run_keys: Vec<String> = new_runs.iter().map(|r| r.key.clone()).collect();
     let old_version = modules[k].version;
     let version = old_version + 1;
     modules[k].members.extend(added.iter().cloned());
+    modules[k].runs.extend(new_runs);
     modules[k].version = version;
     let from = &mut modules[k].instances[i];
     from.members.extend(added.iter().map(|mem| ModuleObject {
         key: mem.key.clone(),
         uid: mem.key.clone(),
+    }));
+    from.runs.extend(run_keys.iter().map(|key| ModuleObject {
+        key: key.clone(),
+        uid: key.clone(),
     }));
     if from.version == old_version {
         from.version = version;
@@ -516,6 +619,12 @@ pub(super) fn add_members(
             .cloned()
             .collect();
         let entries = place_new(doc, &other, &theirs, work)?;
+        work.lays.extend(super::runs::lays_of(
+            doc,
+            &modules[k],
+            &other,
+            Some(&run_keys),
+        ));
         let target = &mut modules[k].instances[j];
         target.members.extend(entries);
         if target.version == old_version {
@@ -523,7 +632,7 @@ pub(super) fn add_members(
         }
         work.report.updated.push(other.id);
     }
-    work.report.added_keys = added.into_iter().map(|m| m.key).collect();
+    work.report.added_keys = added.into_iter().map(|m| m.key).chain(run_keys).collect();
     work.module = Some(modules[k].id.clone());
     work.instance = Some(inst.id);
     Ok(())
@@ -582,6 +691,8 @@ pub(super) fn remove_members(
     checks::uids(uids, "Modülden çıkarılacak nesne verilmedi.").map_err(in_operation)?;
     let mut keys: Vec<(usize, String)> = Vec::new();
     let mut named: HashSet<String> = HashSet::new();
+    // The instances' runs an object named is part of, by their ids: let go as they are.
+    let mut named_runs: HashSet<String> = HashSet::new();
     for (j, uid) in uids.iter().enumerate() {
         let path = format!("operation.uids[{j}]");
         checks::named(doc, std::slice::from_ref(uid)).map_err(|s| {
@@ -589,12 +700,23 @@ pub(super) fn remove_members(
             e.path = Some(path.clone());
             Stop::failed(e)
         })?;
-        let key = modules[k].instances.iter().find_map(|inst| {
-            inst.members
-                .iter()
-                .find(|o| &o.uid == uid)
-                .map(|o| o.key.clone())
-        });
+        let key = modules[k]
+            .instances
+            .iter()
+            .find_map(|inst| {
+                inst.members
+                    .iter()
+                    .find(|o| &o.uid == uid)
+                    .map(|o| o.key.clone())
+            })
+            // An object of an instance's kitchen run names the run (docs/adr/8050 §5).
+            .or_else(|| {
+                modules[k].instances.iter().find_map(|inst| {
+                    let key = super::runs::run_key_of(doc, inst, uid)?;
+                    named_runs.insert(inst.runs.iter().find(|o| o.key == key)?.uid.clone());
+                    Some(key)
+                })
+            });
         let Some(key) = key else {
             return Err(fail(
                 codes::NOT_IN_MODULE,
@@ -607,7 +729,7 @@ pub(super) fn remove_members(
             keys.push((j, key));
         }
     }
-    if keys.len() >= modules[k].members.len() {
+    if keys.len() >= modules[k].members.len() + modules[k].runs.len() {
         return Err(fail(
             codes::INVALID_INPUT,
             "Modülün bütün nesneleri çıkarılamaz; modülü silmek için Kaynağı sil'i kullanın."
@@ -642,10 +764,98 @@ pub(super) fn remove_members(
             ));
         }
     }
+    // A run left in the definition standing on a wall taken out would lose its wall in every other instance.
+    for run in modules[k]
+        .runs
+        .iter()
+        .filter(|r| !gone.contains(r.key.as_str()))
+    {
+        let leans = modules[k].instances.iter().any(|inst| {
+            let to_key: HashMap<&str, &str> = inst
+                .members
+                .iter()
+                .map(|o| (o.uid.as_str(), o.key.as_str()))
+                .collect();
+            inst.runs
+                .iter()
+                .filter(|o| o.key == run.key)
+                .filter_map(|o| super::runs::record_of(doc, &o.uid))
+                .flat_map(|r| r.ties.iter().flatten())
+                .any(|t| {
+                    to_key
+                        .get(Uuid::from_bytes(t.wall.0).to_string().as_str())
+                        .is_some_and(|key| gone.contains(key))
+                })
+        });
+        if leans {
+            return Err(fail(
+                codes::MODULE_MEMBER_NEEDED,
+                "Modülün mutfak dizisi çıkarılan duvara dayanıyor; diziyi de birlikte çıkarın ya da duvarı bırakın."
+                    .into(),
+                "operation.uids",
+            ));
+        }
+    }
     let old_version = modules[k].version;
     let version = old_version + 1;
     for inst in &mut modules[k].instances {
         let mut touched = false;
+        // Its kitchen runs taken out: the one named is let go as it is, the others' deleted with their objects
+        // (docs/adr/8050 §5); a local exception's or a locked one's let go and said.
+        for o in inst.runs.iter().filter(|o| gone.contains(o.key.as_str())) {
+            touched = true;
+            let Some(run) = super::runs::record_of(doc, &o.uid) else {
+                continue;
+            };
+            let objects: Vec<(String, Option<Slot>)> = run
+                .members
+                .iter()
+                .map(|m| {
+                    let u = Uuid::from_bytes(m.uid.0);
+                    (u.to_string(), doc.slot_of(u))
+                })
+                .collect();
+            if named_runs.contains(&o.uid) {
+                work.report
+                    .released
+                    .extend(objects.into_iter().map(|(u, _)| u));
+                continue;
+            }
+            let locked = objects.iter().any(|(_, s)| {
+                s.and_then(|s| doc.get(s))
+                    .is_some_and(|e| doc.layers().is_locked(&e.base().layer_id))
+            });
+            let why = if inst.exceptions.contains(&o.key) {
+                Some(ModuleConflictWhy::Exception)
+            } else if locked {
+                Some(ModuleConflictWhy::Locked)
+            } else {
+                None
+            };
+            match why {
+                Some(why) => {
+                    work.report
+                        .released
+                        .extend(objects.into_iter().map(|(u, _)| u));
+                    work.report.conflicts.push(ModuleConflict {
+                        instance: inst.id.clone(),
+                        key: o.key.clone(),
+                        uid: Some(o.uid.clone()),
+                        why,
+                    });
+                }
+                None => {
+                    work.released.push(o.uid.clone());
+                    for (u, s) in objects {
+                        if let Some(s) = s {
+                            work.removes.push(s);
+                        }
+                        work.report.deleted.push(u);
+                    }
+                }
+            }
+        }
+        inst.runs.retain(|o| !gone.contains(o.key.as_str()));
         for o in inst
             .members
             .iter()
@@ -694,6 +904,7 @@ pub(super) fn remove_members(
     modules[k]
         .members
         .retain(|m| !gone.contains(m.key.as_str()));
+    modules[k].runs.retain(|r| !gone.contains(r.key.as_str()));
     modules[k].version = version;
     work.report.removed_keys = keys.into_iter().map(|(_, k)| k).collect();
     work.module = Some(modules[k].id.clone());
@@ -741,6 +952,13 @@ fn loose_plan(
         }
         let why = if in_modules.contains(&uid) {
             Some(ModuleLeftWhy::Module)
+        } else if Uuid::parse_str(&uid)
+            .ok()
+            .and_then(|u| doc.casework_member(u))
+            .is_some()
+        {
+            // A kitchen run's object: the run is no loose object (docs/adr/8050 §5).
+            Some(ModuleLeftWhy::Kind)
         } else if in_options.contains(&uid) {
             Some(ModuleLeftWhy::Option)
         } else if doc.layers().is_locked(&e.base().layer_id) {
@@ -1043,12 +1261,14 @@ pub(super) fn repeat(
                 storey: src.storey,
                 version: m.version,
                 members: Vec::new(),
+                runs: Vec::new(),
                 exceptions: Vec::new(),
                 broken: None,
             };
             let (objects, made) = place_all(doc, m, &inst)?;
             inst.members = objects;
             work.adds.extend(made);
+            work.lays.extend(super::runs::lays_of(doc, m, &inst, None));
             for o in &src.members {
                 if let Some(n) = inst.members.iter().find(|x| x.key == o.key) {
                     map.insert(o.uid.clone(), n.uid.clone());

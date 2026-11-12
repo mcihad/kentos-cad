@@ -20,4 +20,12 @@ unit?: string,
  * One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
  * definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.
  */
-storey?: number, version: number, members: Array<ModuleObject>, exceptions?: Array<string>, broken?: ModuleBreak, };
+storey?: number, version: number, members: Array<ModuleObject>, 
+/**
+ * Its kitchen runs (docs/adr/8050 §5): the definition's run key and the id of the instance's run.
+ */
+runs?: Array<ModuleObject>, 
+/**
+ * The keys it keeps as its own: its objects' and its runs'.
+ */
+exceptions?: Array<string>, broken?: ModuleBreak, };
