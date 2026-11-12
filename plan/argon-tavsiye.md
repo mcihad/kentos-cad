@@ -161,7 +161,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 02 — `PartStamps::of(doc)` ve `etag.rs` İçindeki Tam-Belge JSON + SHA-256 Hesaplamasının Önbelleklenmesi (Öncelik: P0)
+### [x] ADIM 02 — `PartStamps::of(doc)` ve `etag.rs` İçindeki Tam-Belge JSON + SHA-256 Hesaplamasının Önbelleklenmesi (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:**
   - [crates/native/application/src/call.rs#L86-L98](file:///home/cihad/Projects/kentos-cad/crates/native/application/src/call.rs#L86-L98) ve [crates/native/domain/src/etag.rs#L58-L96](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/etag.rs#L58-L96) incelendiğinde; `recorded_with` içinde **her komut çalışmadan önce** (`state.summary || state.plan.is_some()` olduğunda — yani tüm MCP, Python SDK ve `call` çağrılarında) `PartStamps::of(cx.doc)` çağrılıyor.
@@ -170,6 +170,7 @@ flowchart LR
   1. `PartStamps` içindeki `before` damgaları komut başında peşin hesaplanmak yerine **tembel (lazy)** hale getirilecektir: yalnızca `Document::keep(part)` çağrıldığında (yani bir komut gerçekten `ProjectPart::Settings`, `Styles`, `Sheets` vb. bir parçayı değiştirmek üzereyken) o parçanın `before` damgası alınacaktır.
   2. Ayrıca `Document` üzerinde parça damgaları (`settings_stamp`, `layers_stamp`, `styles_stamp`, `sheets_stamp`, `constraints_stamp`, `dimension_sets_stamp`) `OnceLock<String>` / revizyon önbelleği ile tutulacak; ilgili parça değişmediği sürece tekrar JSON serileştirmesi ve SHA-256 yapılmayacaktır.
 - **Tamamlanma Ölçütü:** Ayarları veya stilleri değiştirmeyen standart çizim/düzenleme komutlarında `settings_stamp()` ve `styles_stamp()` sıfır kez JSON serileştirmesi yapar; komut çalışma süresi büyük projelerde katlanarak hızlanır.
+- **12 Kasım 2026 ([ADR 8054 §2](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** komuttan önce parçalar paylaşımlı saklanır (`PartsAt`), damga yalnız değişen parça için ve bir kez alınır; kayıtlı çağrı başına ek yük 16 MB'ta 40,5 → 0,000 ms, 64 MB'ta 135,2 → 0,000 ms.
 
 ---
 

@@ -463,6 +463,39 @@ fn stamps_come_from_the_content_and_come_back_with_undo() {
     assert_eq!(bytes.sheets_stamp(), sheets);
 }
 
+/// docs/adr/8054 §2: the parts kept before a write stamp as the drawing did then, whatever the write changes after.
+#[test]
+fn parts_kept_before_a_write_stamp_as_the_drawing_did_then() {
+    let mut doc = empty();
+    doc.add(point("a", 1.0)).unwrap();
+    let before = (
+        doc.layers_stamp(),
+        doc.settings_stamp(),
+        doc.styles_stamp(),
+        doc.sheets_stamp(),
+        doc.constraints_stamp(),
+        doc.dimension_sets_stamp(),
+    );
+    let kept = doc.parts_at();
+    let mut settings = doc.settings().clone();
+    settings.plot_scale = 500.0;
+    doc.set_settings(settings);
+    assert_ne!(doc.settings_stamp(), before.1, "the settings changed");
+    assert_eq!(
+        (
+            kept.layers_stamp(),
+            kept.settings_stamp(),
+            kept.styles_stamp(),
+            kept.sheets_stamp(),
+            kept.constraints_stamp(),
+            kept.dimension_sets_stamp(),
+        ),
+        before
+    );
+    // Asked again, the same stamp.
+    assert_eq!(kept.settings_stamp(), before.1);
+}
+
 /// The drawing written as a v2 snapshot and read back (the file's content).
 fn kentos_kcad_like_roundtrip(doc: &Document) -> Document {
     Document::from_snapshot_v2(doc.to_snapshot_v2()).expect("reads back")

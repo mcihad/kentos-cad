@@ -53,6 +53,25 @@ fn main() {
         std::hint::black_box(doc.reading_copy());
     }
     let copy = t.elapsed().as_secs_f64() * 1000.0 / f64::from(rounds);
+    // The six parts' stamps a recorded call (MCP, Python, a plan) took before every command (ADIM 02).
+    let t = Instant::now();
+    for _ in 0..10 {
+        std::hint::black_box((
+            doc.layers_stamp(),
+            doc.settings_stamp(),
+            doc.styles_stamp(),
+            doc.sheets_stamp(),
+            doc.constraints_stamp(),
+            doc.dimension_sets_stamp(),
+        ));
+    }
+    let stamps = t.elapsed().as_secs_f64() * 1000.0 / 10.0;
+    // What a recorded call keeps instead (docs/adr/8054 §2): the parts, to stamp those its write changes.
+    let t = Instant::now();
+    for _ in 0..rounds {
+        std::hint::black_box(doc.parts_at());
+    }
+    let kept = t.elapsed().as_secs_f64() * 1000.0 / f64::from(rounds);
     let t = Instant::now();
     for i in 0..rounds {
         doc.add(line(f64::from(i))).expect("a slot");
@@ -71,7 +90,7 @@ fn main() {
     }
     let undo = t.elapsed().as_secs_f64() * 1000.0 / f64::from(rounds);
     println!(
-        "kaynak özetleri {megabytes} MB, {symbols} sembol: okuma kopyası {copy:.3} ms, çizgi ekleme {add:.3} ms, \
-         ayar değişikliği {set:.3} ms, geri alma {undo:.3} ms"
+        "kaynak özetleri {megabytes} MB, {symbols} sembol: okuma kopyası {copy:.3} ms, altı parçanın damgası \
+         {stamps:.1} ms, parçaların saklanması {kept:.3} ms, çizgi ekleme {add:.3} ms, ayar değişikliği {set:.3} ms, geri alma {undo:.3} ms"
     );
 }

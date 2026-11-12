@@ -36,3 +36,25 @@ Ayar değişikliği aynı: çağıran ayarların kopyasını alıp değiştirir 
 
 **Doğrulama:** `cargo test -p kentos-domain` (159), `-p kentos-native-application` (812), `-p kentos-headless` (147),
 `-p kentos-desktop --lib`.
+
+## §2. Parça damgaları yalnız gerektiğinde (`ADIM 02`)
+
+**İddianın denetimi.** Doğru. MCP, Python ve planlar özet ister (`state.summary || state.plan`); her komuttan önce altı
+parçanın (katmanlar, ayarlar, stiller, paftalar, kısıtlar, ölçü kümeleri) JSON'u kurulup SHA-256'sı alınıyordu
+(`PartStamps::of`). Özet bu damgalardan yalnız komutun değiştirdiği parçalarınkini kullanır. Masaüstünün kendi komutları
+özet istemediği için etkilenmiyordu.
+
+**Karar.**
+- Komuttan önce parçalar saklanır, damgalanmaz (`Document::parts_at` → `PartsAt`): ad, paylaşımlı ayarlar, stiller,
+  paftalar, kısıtlar, ölçü kümeleri ve katman ağacının kopyası. Damga istendiğinde ve bir kez alınır (`OnceLock`).
+  Damgalar belgeninkiyle aynı işlevlerden gelir (`settings_stamp_of` …); planın kimliği değişmez.
+- Çağrının beklediği parça damgaları (`expected.layers` …) da yalnız beklenen parça için alınır.
+- Ayrıca belge düzeyinde bir damga önbelleği kurulmadı: önceki ve sonraki damgalar yalnız değişen parça için alındığından
+  gerek kalmadı.
+
+**Ölçüm** (aynı örnek): kayıtlı çağrı başına ek yük 16 MB'ta 40,5 → **0,000 ms**, 64 MB'ta 135,2 → **0,000 ms** (parçaların
+saklanması); ayarı değiştiren komut yine iki damga öder.
+
+**Doğrulama:** `cargo test -p kentos-domain --test all steps::parts_kept_before_a_write` (saklanan parçalar belge sonra
+değişse de o anki damgayı verir); `-p kentos-native-application` (komut özetleri ve plan kimlikleri), `-p kentos-headless`.
+

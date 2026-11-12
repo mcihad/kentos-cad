@@ -69,15 +69,11 @@ pub(crate) struct Outcome {
     pub(crate) call: Option<u64>,
 }
 
-/// The stamps of the project's parts, before a write.
+/// The project's parts before a write, stamped only when the summary asks (docs/adr/8054 §2): the parts the write
+/// changed. Before, all six were serialised and hashed before every recorded call.
 #[derive(Clone, Debug)]
 struct PartStamps {
-    layers: String,
-    settings: String,
-    styles: String,
-    sheets: String,
-    constraints: String,
-    dimension_sets: String,
+    at: kentos_domain::etag::PartsAt,
     plot_scale: f64,
     had_dimension_sets: bool,
 }
@@ -85,12 +81,7 @@ struct PartStamps {
 impl PartStamps {
     fn of(doc: &Document) -> Self {
         Self {
-            layers: doc.layers_stamp(),
-            settings: doc.settings_stamp(),
-            styles: doc.styles_stamp(),
-            sheets: doc.sheets_stamp(),
-            constraints: doc.constraints_stamp(),
-            dimension_sets: doc.dimension_sets_stamp(),
+            at: doc.parts_at(),
             plot_scale: doc.settings().plot_scale,
             had_dimension_sets: !doc.dimension_sets().is_empty(),
         }
@@ -550,7 +541,7 @@ fn summarize(
                 blocks_named(doc, entity, &mut referenced);
             }
         }
-        summary.sources.layers = Some(parts.layers.clone());
+        summary.sources.layers = Some(parts.at.layers_stamp());
     }
     // The definitions the touched inserts rest on, as they were, and the ones the step changed.
     let mut new_blocks: Vec<String> = Vec::new();
@@ -647,7 +638,7 @@ fn summarize(
         && (parts.had_dimension_sets || !doc.dimension_sets().is_empty());
     if scale_reads_dimensions {
         // Even an all-manual/fixed-row recipe is a read dependency of the scale operation.
-        summary.sources.dimension_sets = Some(parts.dimension_sets.clone());
+        summary.sources.dimension_sets = Some(parts.at.dimension_sets_stamp());
     }
     // The write's own undo step: an outermost one, not inside a group, that changed what undo takes back.
     let undoable = !report.objects.is_empty()
@@ -675,16 +666,16 @@ fn summarize(
     for part in &changed_parts {
         match part {
             ProjectPart::Name | ProjectPart::Settings => {
-                summary.sources.settings = Some(parts.settings.clone())
+                summary.sources.settings = Some(parts.at.settings_stamp())
             }
-            ProjectPart::Styles => summary.sources.styles = Some(parts.styles.clone()),
-            ProjectPart::Sheets => summary.sources.sheets = Some(parts.sheets.clone()),
-            ProjectPart::LayerFlags => summary.sources.layers = Some(parts.layers.clone()),
+            ProjectPart::Styles => summary.sources.styles = Some(parts.at.styles_stamp()),
+            ProjectPart::Sheets => summary.sources.sheets = Some(parts.at.sheets_stamp()),
+            ProjectPart::LayerFlags => summary.sources.layers = Some(parts.at.layers_stamp()),
             ProjectPart::Constraints => {
-                summary.sources.constraints = Some(parts.constraints.clone())
+                summary.sources.constraints = Some(parts.at.constraints_stamp())
             }
             ProjectPart::DimensionSets => {
-                summary.sources.dimension_sets = Some(parts.dimension_sets.clone())
+                summary.sources.dimension_sets = Some(parts.at.dimension_sets_stamp())
             }
         }
     }
@@ -729,7 +720,7 @@ fn summarize(
     // Optional metadata stays out of legacy plan fingerprints. Hash the new recipe JSON only
     // after replacing fresh set/member identities; raw stamps would make plan and execute differ.
     if changed_parts.contains(&ProjectPart::DimensionSets) || scale_reads_dimensions {
-        essence["sources"]["dimensionSets"] = json!(parts.dimension_sets);
+        essence["sources"]["dimensionSets"] = json!(parts.at.dimension_sets_stamp());
     }
     if changed_parts.contains(&ProjectPart::DimensionSets) {
         essence["result"]["dimensionSets"] = serde_json::to_value(
@@ -926,20 +917,23 @@ fn expectation_fault(doc: &Document, e: &CallExpectations) -> Option<CallAnswer>
             first.get_or_insert_with(|| format!("expected.blocks.{id}"));
         }
     }
-    for (name, want, have) in [
-        ("layers", &e.layers, doc.layers_stamp()),
-        ("settings", &e.settings, doc.settings_stamp()),
-        ("styles", &e.styles, doc.styles_stamp()),
-        ("sheets", &e.sheets, doc.sheets_stamp()),
-        ("constraints", &e.constraints, doc.constraints_stamp()),
+    // A part's stamp is taken only when the call expects one of it (docs/adr/8054 §2).
+    type Expected<'e> = (&'static str, &'e Option<String>, fn(&Document) -> String);
+    let parts: [Expected<'_>; 6] = [
+        ("layers", &e.layers, Document::layers_stamp),
+        ("settings", &e.settings, Document::settings_stamp),
+        ("styles", &e.styles, Document::styles_stamp),
+        ("sheets", &e.sheets, Document::sheets_stamp),
+        ("constraints", &e.constraints, Document::constraints_stamp),
         (
             "dimensionSets",
             &e.dimension_sets,
-            doc.dimension_sets_stamp(),
+            Document::dimension_sets_stamp,
         ),
-    ] {
+    ];
+    for (name, want, stamp) in parts {
         if let Some(want) = want
-            && *want != have
+            && *want != stamp(doc)
         {
             first.get_or_insert_with(|| format!("expected.{name}"));
         }
