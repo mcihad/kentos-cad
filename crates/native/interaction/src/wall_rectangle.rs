@@ -249,6 +249,9 @@ impl WallRectangle {
                     .map(|s| s.tone(crate::tool::Tone::Snap))
                     .collect();
             }
+            // Oda where every side stands on a wall writes the room alone (docs/adr/8052 §3): no refusal to show.
+            CommandResult::Failed { error }
+                if self.room && error.code == kentos_native_application::codes::NOTHING_TO_SET => {}
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => self.drawn.why = Some(error.message),
@@ -285,8 +288,17 @@ impl WallRectangle {
         };
         // Oda: the walls, the room and its tag one undo step; a refusal of the room takes the walls back too.
         let group = self.room.then(|| cx.doc.begin_group(ROOM_LABEL));
+        // A room whose four sides all stand on walls (docs/adr/8052 §3): no wall to draw, the room and its tag still go
+        // in. The rectangle's refusal ("bütün kenarları var olan duvarlarda") took the room with it: the last room of a
+        // plan drawn room by room, a bathroom between three rooms and the shell, had none.
+        let stood = self.room
+            && matches!(
+                walls_rectangle::plan_in(cx.doc, &self.request(a, p, cx)),
+                CommandResult::Failed { error }
+                    if error.code == kentos_native_application::codes::NOTHING_TO_SET
+            );
         let kind = wall::layer_kind(cx);
-        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+        let written = stood || crate::arch_layer::writing(&kind, cx, |_, cx| {
             let input = self.request(a, p, cx);
             let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
             match points::written(result, cx) {
@@ -308,7 +320,12 @@ impl WallRectangle {
             }
         }
         if written {
-            let said = if self.room {
+            let said = if self.room && stood {
+                format!(
+                    "Oda eklendi: mahali ({}) ve etiketi; duvarları zaten vardı. Tek geri almayla gider.",
+                    self.room_name.as_deref().unwrap_or(NO_NAME)
+                )
+            } else if self.room {
                 format!(
                     "Oda eklendi: duvarları, mahali ({}) ve etiketi; boy referansı: {}. Tek geri almayla gider.",
                     self.room_name.as_deref().unwrap_or(NO_NAME),

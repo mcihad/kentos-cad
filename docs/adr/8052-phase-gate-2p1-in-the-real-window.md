@@ -21,6 +21,9 @@ Yeni senaryoyu gerçek pencerede kurarken iki kusur çıktı:
   çalışmasıdır.
 - **Yeni projede mahal adı listesi boştu.** Oda'nın ve Mahal'in ad listesi projenin mahal adlarıdır (Proje ayarları ›
   Mimari); yeni Mimari projesinde liste yalnız "Adsız"dı, her odanın adı elle yazılıyordu.
+- **Dört yanı duvarlı yerde Oda odayı yazmıyordu.** Daireyi oda oda çizerken sonuncusu (Banyo: iki yanı kabuk, öbür
+  ikisi koridorun ve yatak odasının duvarı) için Dikdörtgen duvarın reddi ("bütün kenarları var olan duvarlarda;
+  çizilecek yeni duvar kalmadı") mahali ve etiketi de götürüyordu.
 
 Ayrıca çipten bir seçim yapıldıktan sonra klavye odağı komut satırında kalır: ↓ ve Tab (imleç kutusunun tuşları, ADR
 8018) çizime değil komut satırına gider. Bu dilimde değiştirilmedi; senaryo değerleri komut satırına yazar.
@@ -41,9 +44,16 @@ koridoru, denetimin onları tanıdığı sözcüklerle (`room_names::kind_of`: S
 Hol), ardından bir konut planının öbür mahalleri (Antre, Giyinme odası, Kiler, Çamaşırlık, Depo, Balkon, Teras). Yalnız
 yeni projeler: var olan çizimin listesine dokunulmaz (plan §8).
 
+### 3. Duvarları duran yerde Oda yalnız mahali ve etiketi yazar
+
+Oda, dikdörtgenin planı "çizilecek yeni duvar kalmadı" (`nothing_to_set`) derse duvar komutunu atlar; mahal ve etiketi
+aynı "Oda" adımında yazar ("Oda eklendi: mahali (Banyo) ve etiketi; duvarları zaten vardı"). Önizleme bu durumda ret
+göstermez. Başka bir ret (stil, kat, katman) eskisi gibi söylenir ve hiçbir şey yazılmaz.
+
 ## Doğrulama
 
 - `cargo test -p kentos-desktop --lib building_context_tests::oda`: komut satırında A ve ad ilk köşede ve ikinci köşede;
-  Adsız adı kaldırır; liste Kiler'i sunar, listede olmayan Arşiv de alınır.
+  Adsız adı kaldırır; liste Kiler'i sunar, listede olmayan Arşiv de alınır; Dikdörtgen duvarın duvarlarına çizilen
+  Oda duvar eklemeden 12 m²'lik mahali ve etiketini yazar, tek geri almayla ikisi gider.
 - `cargo test -p kentos-project`: yeni Mimari projesinin 20 adı, ayarların denetiminden geçer; Salon, Yatak odası,
   Mutfak, Banyo, WC ve Koridor denetimin türleri olarak okunur.

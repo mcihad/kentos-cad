@@ -466,6 +466,45 @@ fn oda_s_name_typed_after_a_on_the_command_line() {
     assert_eq!(names, ["Banyo"]);
 }
 
+/// docs/adr/8052 §3: Oda in a rectangle whose four sides all stand on walls (the 2+1's bathroom: the shell on two sides,
+/// the corridor's and the bedroom's walls on the others) writes the room and its tag without a wall, in one undo step.
+/// Before, the rectangle's "çizilecek yeni duvar kalmadı" refused the room too.
+#[test]
+fn oda_writes_the_room_alone_where_its_walls_stand() {
+    let mut app = fresh_mimari();
+    // Its walls first, 4 × 3 clear: no room.
+    let _ = app.update(Message::Run("tool.wallRectangle"));
+    for line in ["0,0", "4,3"] {
+        let _ = app.submit_line(line);
+    }
+    let (walls, rooms, tags) = counts(&app);
+    assert_eq!((rooms, tags), (0, 0), "the walls alone");
+    let _ = app.update(Message::Run("tool.room"));
+    let _ = app.submit_line("A");
+    let _ = app.submit_line("Banyo");
+    let _ = app.submit_line("0,0");
+    let _ = app.submit_line("4,3");
+    assert_eq!(counts(&app), (walls, 1, 1), "no wall, a room and its tag");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let room = doc
+        .entities()
+        .find(|e| e.kind() == "space")
+        .expect("the room");
+    match doc.arch_value(room, "area", None) {
+        Some(kentos_domain::arch_values::ArchValue::Area(a)) => {
+            assert!((a - 12.0).abs() < 1e-6, "4 × 3 clear: {a}")
+        }
+        other => panic!("an area: {other:?}"),
+    }
+    assert!(
+        crate::files_testing::last_said(&app).contains("duvarları zaten vardı"),
+        "{}",
+        crate::files_testing::last_said(&app)
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(counts(&app), (walls, 0, 0), "one undo takes both");
+}
+
 #[test]
 fn duvar_shows_the_loop_s_area_and_kapat_writes_its_room_when_asked() {
     use crate::viewport::Event;
