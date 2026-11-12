@@ -298,19 +298,20 @@ impl WallRectangle {
                     if error.code == kentos_native_application::codes::NOTHING_TO_SET
             );
         let kind = wall::layer_kind(cx);
-        let written = stood || crate::arch_layer::writing(&kind, cx, |_, cx| {
-            let input = self.request(a, p, cx);
-            let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
-            match points::written(result, cx) {
-                Some(out) => {
-                    for id in out.ids {
-                        self.d.note(id, cx);
+        let written = stood
+            || crate::arch_layer::writing(&kind, cx, |_, cx| {
+                let input = self.request(a, p, cx);
+                let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
+                match points::written(result, cx) {
+                    Some(out) => {
+                        for id in out.ids {
+                            self.d.note(id, cx);
+                        }
+                        true
                     }
-                    true
+                    None => false,
                 }
-                None => false,
-            }
-        });
+            });
         let written = written && (!self.room || self.write_room(a, p, cx));
         if let Some(group) = group {
             if written {

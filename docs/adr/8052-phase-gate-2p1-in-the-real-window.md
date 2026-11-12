@@ -13,7 +13,7 @@ Kapı, Pencere, beş Mahal (adı panelden yazılarak), Mutfak dizisi, Duvar öl�
 ölçüyle değişiklik ve iki çizelgeyle çizildi. O günden beri Oda aracı (M21: duvarlar, mahal ve etiketi tek adımda),
 imleç yanı seçenekler (M18), iki harfli adlar (M3) ve yeni şerit (M15) geldi.
 
-Yeni senaryoyu gerçek pencerede kurarken iki kusur çıktı:
+Yeni senaryoyu gerçek pencerede kurarken üç kusur çıktı:
 
 - **Oda'nın "A" harfi çalışmıyordu.** Komut çubuğu "Mahal adı: Adsız … A" gösteriyor, ama komut satırına yazılan A
   "“A” seçeneği şu adımda kullanılamıyor" diyordu: aracın yazılan seçenekleri B, D, E, S, R, O ve K'ydı. Ardından
