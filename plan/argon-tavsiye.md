@@ -309,6 +309,7 @@ flowchart LR
 - **Yapılacak İşlem:**
   1. `encode.rs` ve `decode.rs` içindeki disiplin ayarları `encode/{arch,map,gis,road}.rs` ve `decode/{arch,map,gis,road}.rs` alt modüllerine; `decode/objects.rs` ise `decode/objects/{primitives,annotations,arch,gis_road}.rs` alt modüllerine bölünecektir.
   2. `.kcad` v2 başlığında yeni özellikler için **Çekirdek Şema (`core_schema`) + Modül Uzantı Sürümleri (`extensions: { arch?: u16, map?: u16, gis?: u16, road?: u16, ext?: BTreeMap<String, u16> }`)** yapısı desteklenecek; böylece bir modüldeki veya `.kek` eklentisindeki veri uzantısı diğer modüllerin şema numarasını bozmayacaktır.
+- **12 Kasım 2026 ([ADR 8054 §10](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 1. iş tamam: çözücünün ayarları `decode/{arch,map,gis,road}.rs`'te (her disiplin kolu kendi işlevi), katmanlar `decode/layers.rs`; kodlayıcıda `encode/{schema,layers,map,gis}.rs`; `decode/objects/{features,object,build}.rs`; `columns/{pack,unpack,tests}.rs`. decode.rs 3.487 → 1.563, encode.rs 4.441 → 1.449, objects.rs 4.551 → 1.139, columns.rs 4.378 → 750; 244 kcad fikstürü geçti. **2. iş (uzantı sürümleri) karar bekliyor:** bilinmeyen bir modül sürümünde okuyucunun ne yapacağı bir biçim kararı.
 
 ---
 

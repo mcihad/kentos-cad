@@ -309,3 +309,44 @@ koşucusu `tests/all/fixtures.rs` 7 674 satır.
 (veri güdümlü bütün komut durumları dahil), `-p kentos-headless`, `-p kentos-desktop --lib`; `cargo check --workspace
 --tests` (kentos-mcp hariç).
 
+## §10. KCAD'in dev dosyaları bölündü (`ADIM 10`, 1. iş)
+
+**İddianın denetimi.** Doğru: `decode/objects.rs` 4 551, `encode.rs` 4 441, `columns.rs` 4 378, `decode.rs` 3 487 satır;
+`lib.rs`'te 251 doğrusal şema sabiti (3 → 253). Ayrıntı: kodlayıcının `schema_of`'u tek başına 1 857, çözücünün
+`settings`'i 1 397, `object`'i 1 419 satırlık birer işlev.
+
+**Karar.**
+- Çözücünün ayarları disiplin dosyalarında: `settings`'in disiplin kolları (yol 90, mimari 208 satır …) kendi
+  işlevleri oldu, kol tek satır kaldı (`"road" if has.road_work => road = road::road(r, has)?`): `decode/road.rs`
+  (yol ayarları ve şemalarının 21 denetimi), `decode/arch.rs` (mimari ayarlar, duvar stilleri), `decode/map.rs` (harita
+  işi, GNSS, parsel kütüğü, imar planı, saklı dengelemeler, izleme raporları, ölçme ve yükseklik ayarları),
+  `decode/gis.rs` (formlar, değer listeleri, ilişkiler, bağlı kaynaklar ve özetleri, birleşimler, doğrusal olaylar,
+  soy kütüğü, profil dosyaları, topoloji). Katman ağacı `decode/layers.rs`.
+- Kodlayıcıda `schema_of` `encode/schema.rs`'te; katmanlar ve çizgi tipleri `encode/layers.rs`, ölçme ve yükseklik
+  `encode/map.rs`, topoloji ve bağlı kaynak `encode/gis.rs`. Ayarların anahtarları kanonik CBOR sırasıyla (önce uzunluk)
+  yazıldığından ve disiplinler bu sırada iç içe geçtiğinden `Encoder::settings` bölünmedi; içindeki disiplin blokları
+  en çok 24 satır.
+- `decode/objects.rs` → `objects/features.rs` (şemanın izin verdikleri), `objects/object.rs` (tek nesne, alan alan),
+  `objects/build.rs` (nesnenin kurulması; raster, nokta bulutu, tablo). `object` alana göre okuyor (131 kol), türe
+  göre değil; notun önerdiği tür/disiplin bölmesi (`primitives`, `annotations`, `arch`, `gis_road`) bu yüzden doğal
+  değil, konuya göre bölündü. `columns.rs` → `columns/pack.rs`, `columns/unpack.rs`, `columns/tests.rs`; `columns`'un
+  açık yolları aynı.
+- Taşınan kod aynı (yalnız görünürlük ve 12 boşluk sola kayan kollar); yazılan satırlar rustfmt'ten geçti.
+
+| Dosya | Önce | Sonra |
+|---|---|---|
+| `decode.rs` | 3 487 | 1 563 (+ `arch` 243, `map` 221, `gis` 463, `road` 223, `layers` 859) |
+| `encode.rs` | 4 441 | 1 449 (+ `schema` 1 951, `layers` 786, `map` 123, `gis` 161) |
+| `decode/objects.rs` | 4 551 | 1 139 (+ `features` 944, `object` 1 448, `build` 1 041) |
+| `columns.rs` | 4 378 | 750 (+ `pack` 1 418, `unpack` 1 914, `tests` 307) |
+
+**2. iş (çekirdek şema + modül uzantı sürümleri) karar bekliyor.** Bugün yazıcı bir belgenin kullandığı en yeni
+özelliğin şemasını yazar, okuyucu bildiğinden yenisini reddeder; yol, harita, CBS ve mimari aynı sırayı paylaşır.
+Uzantı sürümleri (`extensions: {arch, map, gis, road, ext}`) bir modülün yeni verisinin ötekilerin numarasını
+yükseltmemesini sağlar ama okuyucunun bilmediği bir modül sürümünde ne yapacağı (reddetmek mi, o modülün verisini
+koruyup salt okunur açmak mı) ve `.kek` eklentilerinin verisinin nasıl korunacağı bir biçim kararıdır; bugünkü dosyalar
+değişmeden kalacak biçimde (uzantı ancak kullanılınca yazılır, onu taşıyan dosya yeni bir şema numarasıyla eski
+okuyucuya "daha yeni sürüm" der) uygulanabilir.
+
+**Doğrulama:** `cargo test -p kentos-kcad` (6 + 244 fikstür gidiş-dönüşü), `cargo check -p kentos-kcad --target
+wasm32-unknown-unknown`, `cargo check --workspace --tests`; clippy'de kcad'de uyarı yok.
