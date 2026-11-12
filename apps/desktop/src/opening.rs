@@ -23,7 +23,7 @@ use iced::futures::channel::mpsc;
 use iced::widget::{button, column};
 use iced::{Element, Task};
 use kentos_commands::DocumentSnapshotV1;
-use kentos_commands::{FileUnit, UnitDecision};
+use kentos_commands::{FileUnit, UnitDecision, UnitSource};
 use kentos_kcad::{Code, Sniff, Step};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, progress};
@@ -210,8 +210,7 @@ fn read_source(
                 path.display()
             )];
             if let Some(unit) = &opened.unit {
-                let bounds = unit
-                    .assumed
+                let bounds = asks_unit(unit)
                     .then(|| {
                         kentos_native_application::sheets_fit::extent_of(
                             &opened.document,
@@ -472,11 +471,30 @@ impl App {
                     self.warn("Birim seçimi sırasında açık çizim değişti; dosyayı yeniden açın.");
                     return Task::none();
                 }
-                return self.start_opening_unit(
-                    o.source_path.clone(),
-                    o.purpose.clone(),
-                    o.selected_unit,
-                );
+                // The unit the file declares, confirmed: the drawing read in it opens as it is, not read again.
+                let declared = o
+                    .unit
+                    .as_ref()
+                    .filter(|u| u.source == UnitSource::Declared)
+                    .and_then(|u| u.declared);
+                let (path, purpose, selected) =
+                    (o.source_path.clone(), o.purpose.clone(), o.selected_unit);
+                if declared.is_some()
+                    && declared == selected.map(FileUnit::code)
+                    && let Some(mut o) = self.opening.take()
+                    && let Some(doc) = o.ready.take()
+                {
+                    let opened = Opened {
+                        doc,
+                        purpose: o.purpose,
+                        external: !o.notes.is_empty(),
+                        notes: o.notes,
+                        source: o.source_path,
+                        asked: false,
+                    };
+                    return self.opened_in_program(opened);
+                }
+                return self.start_opening_unit(path, purpose, selected);
             }
             Event::Picked(Some(path)) => return self.start_opening(path, Purpose::File),
             Event::PickedTab(Some(path)) => return self.start_opening(path, Purpose::Tab),
@@ -537,7 +555,14 @@ impl App {
                             ));
                             return Task::none();
                         }
-                        if o.unit.as_ref().is_some_and(|u| u.assumed) {
+                        if o.unit.as_ref().is_some_and(asks_unit) {
+                            // An imperial unit the file declares is offered as the choice (ADR 8053).
+                            o.selected_unit = o
+                                .unit
+                                .as_ref()
+                                .filter(|u| !u.assumed)
+                                .and_then(|u| u.declared)
+                                .and_then(FileUnit::of_code);
                             o.ready = Some(doc);
                             self.opening = Some(o);
                             return Task::none();
@@ -713,8 +738,16 @@ impl App {
             if factor.is_some() {
                 confirm = confirm.on_press(Message::Opening(Event::ConfirmUnit));
             }
+            // An imperial unit the file declares is said with its name; a file that declares none, so.
+            let said = match o.unit.as_ref().filter(|u| !u.assumed) {
+                Some(u) => format!(
+                    "Dosya uzunluk birimini {} olarak bildiriyor. Türkiye'deki projelerde inç ve ft çoğunlukla bir şablondan kalır; çizimin gerçek birimini seçin.",
+                    u.name
+                ),
+                None => "Dosya güvenilir bir uzunluk birimi bildirmiyor. Gerçek ölçüyü bilmeden birim tahmini yapılmaz.".to_owned(),
+            };
             return Some(Dialog::new("Çizimin birimini doğrula")
-                .push(column![label::body(o.name.clone()), label::body("Dosya güvenilir bir uzunluk birimi bildirmiyor. Gerçek ölçüyü bilmeden birim tahmini yapılmaz."), select,
+                .push(column![label::body(o.name.clone()), label::body(said), select,
                     label::body(preview), label::muted("Seçim kaynak sayılarını yorumlar; pafta ölçeği ve yakınlaştırma değildir. Açık çizim ve kaynak dosya değişmez. Birimi bilmiyorsanız Vazgeç ile çıkıp bilinen bir ölçüyle İçe aktar kullanın.")].spacing(12))
                 .action(button(label::body("Vazgeç")).on_press(Message::Opening(Event::Cancel)).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary))
                 .action(confirm).width(540.0).modal(Message::Opening(Event::Cancel)));
@@ -746,6 +779,20 @@ impl App {
     }
 }
 
+/// Whether an open asks the file's unit: one the file does not declare (the numbers kept, docs/adr/0726 §2), or an
+/// imperial one it declares, read from it, not chosen: in Türkiye's projects mostly a template's left over (a real
+/// project read as inches, 12 November 2026; the owner's choice, ADR 8053).
+fn asks_unit(u: &UnitDecision) -> bool {
+    u.assumed
+        || (u.source == UnitSource::Declared
+            && u.declared.and_then(FileUnit::of_code).is_some_and(|f| {
+                matches!(
+                    f,
+                    FileUnit::In | FileUnit::Ft | FileUnit::Yd | FileUnit::Mi | FileUnit::UsFt
+                )
+            }))
+}
+
 /// A name in quotes, unless it is quoted already.
 fn quoted(name: &str) -> String {
     if name.starts_with('“') {
@@ -759,6 +806,46 @@ fn quoted(name: &str) -> String {
 mod tests {
     use super::*;
     use crate::files_testing::{app_with_drawing, drive, last_said, saved, scratch};
+
+    /// A file that declares an imperial unit is asked its unit, with that unit offered (ADR 8053): confirmed, the
+    /// drawing read in it opens as it is; another chosen, the file is read again in that one.
+    #[test]
+    fn an_imperial_unit_the_file_declares_is_asked_with_its_own_offered() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/formats/v1/dxf-units/inches.dxf");
+        let mut app = app_with_drawing();
+        let task = app.start_opening(path.clone(), Purpose::File);
+        drive(&mut app, task);
+        let open = app.opening.as_ref().expect("held for its unit");
+        assert!(open.ready.is_some());
+        assert_eq!(
+            open.selected_unit,
+            Some(FileUnit::In),
+            "the file's own offered"
+        );
+        assert!(app.opening_view().is_some(), "Çizimin birimini doğrula");
+        let task = app.opening_event(Event::ConfirmUnit);
+        drive(&mut app, task);
+        assert!(app.opening.is_none(), "opened as it was read");
+        assert_eq!(
+            app.document.as_ref().unwrap().settings().unit(),
+            kentos_commands::DrawingUnit::In
+        );
+        let task = app.start_opening(path, Purpose::File);
+        drive(&mut app, task);
+        let task = app.opening_event(Event::SourceUnit(Some(FileUnit::Cm)));
+        drive(&mut app, task);
+        let task = app.opening_event(Event::ConfirmUnit);
+        drive(&mut app, task);
+        assert!(
+            app.opening.is_none(),
+            "read again in centimetres, not asked again"
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().settings().unit(),
+            kentos_commands::DrawingUnit::Cm
+        );
+    }
 
     #[test]
     fn a_unitless_source_waits_for_an_explicit_unit_and_cancel_keeps_the_open_drawing() {

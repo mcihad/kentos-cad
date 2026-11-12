@@ -13,8 +13,8 @@ use acadrust::{DwgReader, DwgWriter, DxfReader, DxfVersion, DxfWriter};
 use kentos_contracts::{DwgVersion, DxfReadOptions, ImportResult};
 use kentos_formats::watch::{Quiet, STOPPED, Watch};
 
-pub const PROVIDER: &str = "OpenCADStudio / OpenCADCodec";
-pub const REVISION: &str = "ff75fddc322bda4cf817c5f68535c5c2b316b9c4";
+pub const PROVIDER: &str = "OpenCADStudio / acadrust";
+pub const REVISION: &str = "93449222904e9df1ba14e275b6b764df93227b33";
 /// An explicit input limit, not an estimate of decompressed memory.
 pub const MAX_FILE_BYTES: usize = 256 * 1024 * 1024;
 /// The in-memory DXF bridge's limit. A DWG writes several times its size as DXF text: a 32 MB architectural DWG of

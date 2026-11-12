@@ -1,6 +1,8 @@
 # 0586 — DWG için OpenCADStudio'nun OpenCADCodec Git bağımlılığı
 
 Tarih: 22 Ekim 2026. Durum: sahibin seçimiyle kabul; temel 2B entegrasyon, üretim DWG uyumluluğu kabulü henüz değil.
+**12 Kasım 2026:** aşağıdaki çatal deposu silindi; kodek OpenCADStudio'nun bugünkü kilidindeki `hakanaktt/acadrust`
+0.6.8 @ `93449222904e9df1ba14e275b6b764df93227b33`'tür ve gerçek projelerle kabul edildi ([ADR 8053](8053-real-dwg-projects-open.md)).
 
 ## Karar
 

@@ -1304,9 +1304,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-SHEET kâğıt çizgisinin geometriden ayrı seçme çerçevesi ve DXF/DWG bloklarının kendi birimleriyle normalizasyonu ortak/native yolda düzeltildi (ADR 0589). Web'in kendi içe aktarma belge/pafta işleyicisi ve ortak fixture beklentileri web yeniden açıldığında uyarlanacak; web kabulü yapılmış sayılmaz.
 - CAD-SHEET-05 birleşik model/pafta betik grubu ve changeset undo/redo'su native yolda (ADR 0590). Web yeniden açıldığında kendi belge geçmişi kitap/resim snapshot'larını, grup iptalini ve savepoint'i izlemeli; sonraki bağımsız pafta düzenlemesini ezmeden bütün undo/redo'yu reddetmeli. `fixtures/sheet/v1/model-transactions.json` aynı beklentileri taşır.
 - DWG içe/dışa aktarma: `file.import.dwg` / `file.export.dwg` masaüstü ve başsız yolda; web işleyicisi, dosya penceresi ve WASM bağlayıcısı web yeniden başladığında eklenecek (ADR 0586).
-- DWG kodeği (ADR 8053, sahibin onayını bekler): `HakanSeven12/opencadcodec` deposu silindi, derleme Cargo önbelleğinden
-  yürüyor; OpenCADStudio'nun bugünkü kilidi `hakanaktt/acadrust` 0.6.8 @ `9344922` (DGN stroke pattern düzeltmesi dahil).
-  Ardından: köprünün iki okuması tek okumaya, ASCII DXF köprüsü kodeğin belgesinden doğrudan KentOS nesnelerine.
+- DWG açılışı (ADR 8053): köprünün iki okuması tek okumaya; ASCII DXF köprüsü kodeğin belgesinden doğrudan KentOS
+  nesnelerine (büyük çizimde 2,7–3,6 GB ve yeni kodekte 4,6–11,8 s köprü yazımı); dosyanın kaydettiği etkin görünüm
+  (VPORT *Active: hedef ve dönüşle dünya koordinatı).
 
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
 

@@ -2525,7 +2525,9 @@
   DXF dosyası 256 MiB). Aç, kayıpsız taşınamayan çoklu çizgiyi (eşit olmayan ölçekli blokta yay ya da genişlik) yaklaşık
   açar ve söyler; İçe aktar'ın kayıp reddi sürer. Açılmayan dosya "Çizim açılamadı" penceresinde kalır; DWG olmayan dosya
   ne olduğunu söyler. DWG açılışta bir kez çözülür. CAD çizimi yoğun kısmında açılır (birkaç uzak nesne çizimi bir
-  şeride indirmez; kaç nesnenin dışarıda kaldığı söylenir). 4 gerçek proje (8–33 MB) reddediliyordu, 3–15 s'de açılıyor.
+  şeride indirmez; kaç nesnenin dışarıda kaldığı söylenir). İnç/ft/yard/mil bildiren dosyada Aç birimi sorar (dosyanınki
+  seçili; sahibin seçimi). Kodek OpenCADStudio'nun kilidindeki `hakanaktt/acadrust` @ `9344922` (eski çatal silindi).
+  4 gerçek proje (8–33 MB) reddediliyordu, 4–21 s'de açılıyor.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.

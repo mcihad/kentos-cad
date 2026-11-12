@@ -62,28 +62,39 @@ gelen çizgi tipleri). Proje B'nin 463 MB köprüsünün 380 MB'ı bunlar ve sö
    Dosyanın kaydettiği etkin görünüm (VPORT *Active) okunmuyor: merkezinin dünya koordinatı görünüm hedefi ve dönüşü
    ister, ayrı iştir.
 
+10. **Kodek, OpenCADStudio'nun bugünkü kilidi** (sahibin seçimi, 12 Kasım 2026). `HakanSeven12/opencadcodec` çatalı
+    GitHub'dan silinmişti ("Repository not found"); derleme yalnız Cargo önbelleğinden yürüyordu, temiz makinede
+    kırılırdı. Kodek `hakanaktt/acadrust` 0.6.8 @ `93449222904e9df1ba14e275b6b764df93227b33` (geliştiricisinin deposu;
+    595 commit ileride; 29 Ekim'de DGN "stroke pattern" okuma düzeltmesi; MPL-2.0; derlemede kod çalıştıran build.rs ya
+    da proc-macro yok; yeni bağımlılık yok, rayon ve crossbeam düştü). API değişmedi. Bu revizyonla kurtarılan kayıt
+    kalmadı (Proje B: 8 579 → 0, Proje D: 1 → 0) ve bellek düştü; çözme ve köprü yazımı yavaşladı (yazıcı belgeyi
+    kopyalayıp onarım geçişleri yapıyor, seçeneği yok).
+
+11. **Emperyal birim bildiren dosyada Aç birimi sorar** (sahibin seçimi, 12 Kasım 2026). Proje C birimini inç
+    bildiriyordu ve ADR 0624'ün kuralıyla (bildirilen birim geçerli) inç olarak açıldı; Türkiye'deki projelerde inç ve ft
+    çoğunlukla bir şablondan kalır. Dosya inç, ft, yard, mil ya da ABD ft bildirirse "Çizimin birimini doğrula" penceresi
+    açılır ("Dosya uzunluk birimini inç olarak bildiriyor …"), dosyanın birimi seçili gelir, önizleme her seçimin model
+    boyutunu söyler. Dosyanın birimi onaylanırsa okunan çizim yeniden okunmadan açılır; başka birim seçilirse o birimle
+    okunur ve bir daha sorulmaz. Metrik bildiren dosya ve İçe aktar değişmedi.
+
 ## Ölçüm
 
 Aynı 13 dosya, Aç yolu (`cad_open::read_in`, cm), sürüm derlemesi, 20 çekirdek, 23 GB:
 
-| Dosya | Önce | Sonra | En çok bellek |
-|---|---|---|---|
-| Proje B | ret | **14,7 s** | 3,9 GB |
-| Proje A | ret | **15,0 s** | 3,8 GB |
-| Proje D | ret | **12,9 s** | 3,4 GB |
-| Proje C | ret | **3,4 s** | 1,1 GB |
-| öbür 8 | 0,1–0,8 s | 0,1–0,8 s | |
-| sample1.dwg (JPEG) | anlamsız ileti | "içinde bir JPEG resmi var" | |
+| Dosya | Önce | Sonra (eski kodek) | Sonra (yeni kodek) | En çok bellek (eski → yeni) |
+|---|---|---|---|---|
+| Proje B | ret | **14,7 s** | **21,3 s** | 3,9 → 3,6 GB |
+| Proje A | ret | **15,0 s** | **18,5 s** | 3,8 → 3,1 GB |
+| Proje D | ret | **12,9 s** | **16,2 s** | 3,4 → 2,7 GB |
+| Proje C | ret | **3,4 s** | **3,6 s** | 1,1 → 0,9 GB |
+| öbür 8 | 0,1–0,8 s | 0,1–0,8 s | 0,1–0,8 s | |
+| sample1.dwg (JPEG) | anlamsız ileti | "içinde bir JPEG resmi var" | aynı | |
 
 Proje B'nin köprüsü 463 → 78 MB, yazımı 57 → 5,9 s. İlk görünüm (genişlik × yükseklik, çizim birimi): Proje C
 693 076 × 225 007 → 160 120 × 9 676, Proje A 1 225 385 × 2 746 062 → 365 829 × 34 050; Proje B'ninki değişmedi.
 
 ## Açık kalanlar
 
-- **Kodek deposu silindi.** `HakanSeven12/opencadcodec` GitHub'da yok ("Repository not found"); derleme yerel Cargo
-  önbelleğinden yürüyor, temiz makinede kırılır. OpenCADStudio bugün `hakanaktt/acadrust` 0.6.8 @ `9344922` kullanıyor
-  (595 commit ileride; 29 Ekim'de DGN "stroke pattern" okuma düzeltmesi). Geçiş bu ADR'de yapılmadı: yeni kodu
-  derlemek sahibin onayını bekliyor (ADR 0586'nın güncelleme yolu).
 - Açılış köprüyü yine iki kez okur (birim, sonra ölçeğiyle); büyük dosyada sürenin yaklaşık yarısı.
 - Bellekte ASCII DXF köprüsü (bkz. ADR 0586) büyük çizimde 3,4–4,7 GB tutuyor; kodeğin belgesinden doğrudan KentOS
   nesnelerine geçiş köprüyü kaldırır.
@@ -96,6 +107,7 @@ Proje B'nin köprüsü 463 → 78 MB, yazımı 57 → 5,9 s. İlk görünüm (ge
   stili kaydının sözlük girişiyle çıkması; kayıt türlerinin söylenmesi; DWG olmayan dosyaların iletileri.
 - `cargo test -p kentos-native-application --lib cad_open import_apply`: Aç kayıplı çoklu çizgiyi açar ve söyler, İçe
   aktar'ın kuralı reddeder; 3 000 çizgi tipi bir kez ve tablo kurallarıyla alınır.
-- `cargo test -p kentos-desktop --lib opening`: açılmayan dosya ekranda kalır, Tamam kapatır, çizim değişmez.
+- `cargo test -p kentos-desktop --lib opening`: açılmayan dosya ekranda kalır, Tamam kapatır, çizim değişmez; inç
+  bildiren dosya inç seçili sorulur, onaylanınca okunduğu gibi, cm seçilince yeniden okunarak açılır.
 - `cargo test -p kentos-formats --lib import`: birkaç çizim uzaktaki nesneler ilk görünümün dışında kalır ve sayılır;
   düzgün dağılan çizim bütün açılır.

@@ -169,9 +169,10 @@ publish = false
 
 # Exact versions: adding or bumping a dependency is a decision (CLAUDE.md §3).
 [workspace.dependencies]
-# OpenCADStudio's codec (owner's final choice, 22 October 2026).
+# OpenCADStudio's codec (owner's final choice, 22 October 2026): acadrust from its author's repository, the revision
+# OpenCADStudio's lock names (owner's choice, 12 November 2026: the fork pinned before was deleted; docs/adr/8053).
 # Pin the exact revision used by that application; update only with the CAD-IO corpus.
-acadrust = { git = "https://github.com/HakanSeven12/opencadcodec.git", rev = "ff75fddc322bda4cf817c5f68535c5c2b316b9c4", default-features = false }
+acadrust = { git = "https://github.com/hakanaktt/acadrust.git", rev = "93449222904e9df1ba14e275b6b764df93227b33", default-features = false }
 serde = { version = "=1.0.229", features = ["derive"] }
 # float_roundtrip: parsed floats are exact (the default parser may be one ulp off), so
 # coordinates cross the WASM boundary and files bit for bit (docs/adr/0008).

@@ -1,7 +1,8 @@
 # KentOS DWG adaptörü
 
-Codec kaynakları bu depoya kopyalanmaz. `acadrust`, OpenCADStudio'nun kullandığı
-OpenCADCodec Git deposundan workspace `rev` ve `Cargo.lock` ile alınır.
+Codec kaynakları bu depoya kopyalanmaz. `acadrust`, OpenCADStudio'nun kilidindeki revizyonla
+geliştiricisinin Git deposundan (`hakanaktt/acadrust`) workspace `rev` ve `Cargo.lock` ile alınır
+(12 Kasım 2026'ya kadar silinen OpenCADCodec çatalından; ADR 8053).
 Son kullanıcıya ayrı OpenCADStudio kurulumu gerekmez.
 
 Byte dizileri ↔ KentOS sözleşmeleri sınırı, birim/kayıp raporu ve yeniden okuma
