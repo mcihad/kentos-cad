@@ -64,6 +64,7 @@
       "layer": ["İdari birimler", "Mahalle"],
       "color": "#8A94A6",
       "geometry": "area",
+      "work": ["delivery"],
       "key": "MahalleKodu",
       "fields": [
         {"name": "MahalleKodu", "kind": "text", "length": 20, "required": true},
@@ -79,6 +80,7 @@
       "layer": ["Kadastro", "Ada"],
       "color": "#C8A165",
       "geometry": "area",
+      "work": ["delivery"],
       "key": "AdaKimlik",
       "fields": [
         {"name": "AdaKimlik", "alias": "Ada kimliği", "kind": "text", "length": 40, "required": true},
@@ -93,6 +95,7 @@
       "layer": ["Kadastro", "Parsel"],
       "color": "#E5484D",
       "geometry": "area",
+      "work": ["delivery"],
       "key": "ParselKimlik",
       "fields": [
         {"name": "ParselKimlik", "alias": "Parsel kimliği", "kind": "text", "length": 40, "required": true},
@@ -110,6 +113,7 @@
       "layer": ["Binalar", "Bina"],
       "color": "#0090FF",
       "geometry": "area",
+      "work": ["delivery"],
       "key": "BinaKimlik",
       "fields": [
         {"name": "BinaKimlik", "alias": "Bina kimliği", "kind": "text", "length": 40, "required": true},
@@ -125,6 +129,7 @@
       "layer": ["Ulaşım", "Yol orta hattı"],
       "color": "#F5A524",
       "geometry": "line",
+      "work": ["delivery"],
       "key": "YolKimlik",
       "fields": [
         {"name": "YolKimlik", "alias": "Yol kimliği", "kind": "text", "length": 40, "required": true},
@@ -140,6 +145,7 @@
       "layer": ["Adres", "Kapı"],
       "color": "#30A46C",
       "geometry": "point",
+      "work": ["delivery"],
       "key": "AdresKodu",
       "fields": [
         {"name": "AdresKodu", "alias": "Adres kodu", "kind": "text", "length": 10, "required": true},
@@ -159,6 +165,7 @@
       "layer": ["İmar", "Plan kullanımı"],
       "color": "#AB4ABA",
       "geometry": "area",
+      "work": ["delivery"],
       "key": "PlanKimlik",
       "fields": [
         {"name": "PlanKimlik", "alias": "Plan kimliği", "kind": "text", "length": 40, "required": true},

@@ -1,0 +1,31 @@
+{
+ "id": "konum-dogrulugu-2022",
+ "release": 1,
+ "jurisdiction": "Türkiye: tapu planlarında yanılma sınırı ve büyük ölçekli harita üretimi",
+ "detail": {
+  "metres": 0.07,
+  "source": "BÖHHBÜY m. 46(1)",
+  "words": "detay konumu ±7 cm"
+ },
+ "drawing": {
+  "mm": 0.2,
+  "source": "BÖHHBÜY m. 78(1)(h)",
+  "words": "çizimde nokta konumu ±0,2 mm"
+ },
+ "table": {
+  "source": "Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik m. 9(1)",
+  "read": "RG 27.09.2022/31966, tablo resim olarak; 12 Kasım 2026'da okundu",
+  "scales": [200, 250, 500, 1000, 2000, 2500, 3000, 4000, 5000, 10000],
+  "methods": [
+   {"id": "prizmatik-olcu", "title": "Prizmatik, ölçü değerlerine göre", "values": [0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21, 0.21]},
+   {"id": "prizmatik-pafta", "title": "Prizmatik, paftadan okunan", "values": [0.21, 0.22, 0.25, 0.35, 0.6, 0.74, 1.11, 1.28, 1.43, 2.01]},
+   {"id": "takeometrik-yakin", "title": "Takeometrik, poligona uzaklık 100 m'ye dek", "values": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]},
+   {"id": "takeometrik-uzak", "title": "Takeometrik, poligona uzaklık 100 m'den çok", "values": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]},
+   {"id": "takeometrik-pafta", "title": "Takeometrik, paftadan okunan", "values": [1, 1, 1.01, 1.04, 1.15, 1.22, 1.31, 1.51, 1.73, 3]},
+   {"id": "fotogrametrik", "title": "Fotogrametrik", "values": [null, null, null, null, 0.6, 0.75, 0.9, 1.2, 1.5, 3]},
+   {"id": "sayisal-fotogrametrik", "title": "Sayısal fotogrametrik", "values": [null, null, null, 0.09, 0.15, 0.15, 0.20, 0.25, 0.30, 0.40]},
+   {"id": "fotoplan", "title": "Fotoplan", "values": [null, null, null, null, 0.65, 0.8, 0.95, 1.35, 1.75, 3.5]},
+   {"id": "sayisal", "title": "Sayısal", "values": [0.09, 0.09, 0.09, 0.09, 0.09, 0.09, 0.09, 0.09, 0.09, 0.09]}
+  ]
+ }
+}

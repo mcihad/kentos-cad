@@ -1631,6 +1631,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -1660,6 +1664,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -1689,6 +1697,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -1728,6 +1740,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -1755,6 +1771,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -1782,6 +1802,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -1805,6 +1829,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -1827,6 +1855,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -1848,6 +1880,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -1877,6 +1913,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2017,6 +2057,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -2046,6 +2090,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -2075,6 +2123,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2114,6 +2166,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2141,6 +2197,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2168,6 +2228,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -2191,6 +2255,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2213,6 +2281,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2234,6 +2306,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2263,6 +2339,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -2979,6 +3059,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -3008,6 +3092,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -3037,6 +3125,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -3076,6 +3168,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -3103,6 +3199,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -3130,6 +3230,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -3153,6 +3257,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -3175,6 +3283,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -3196,6 +3308,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -3225,6 +3341,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4709,6 +4829,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -4738,6 +4862,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -4767,6 +4895,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4806,6 +4938,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4833,6 +4969,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4860,6 +5000,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -4883,6 +5027,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4905,6 +5053,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4926,6 +5078,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -4955,6 +5111,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5095,6 +5255,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -5124,6 +5288,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -5153,6 +5321,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5192,6 +5364,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5219,6 +5395,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5246,6 +5426,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -5269,6 +5453,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5291,6 +5479,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5312,6 +5504,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5341,6 +5537,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -5963,6 +6163,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -5992,6 +6196,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -6021,6 +6229,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -6060,6 +6272,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -6087,6 +6303,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -6114,6 +6334,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -6137,6 +6361,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -6159,6 +6387,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -6180,6 +6412,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -6209,6 +6445,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8506,6 +8746,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -8535,6 +8779,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -8564,6 +8812,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8603,6 +8855,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8630,6 +8886,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8657,6 +8917,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -8680,6 +8944,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8702,6 +8970,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8723,6 +8995,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8752,6 +9028,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8892,6 +9172,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -8921,6 +9205,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -8950,6 +9238,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -8989,6 +9281,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9016,6 +9312,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9043,6 +9343,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -9066,6 +9370,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9088,6 +9396,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9109,6 +9421,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9138,6 +9454,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9736,6 +10056,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -9765,6 +10089,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -9794,6 +10122,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9833,6 +10165,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9860,6 +10196,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9887,6 +10227,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -9910,6 +10254,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9932,6 +10280,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9953,6 +10305,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -9982,6 +10338,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11263,7 +11623,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -11354,6 +11714,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -11384,6 +11748,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11425,6 +11793,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11452,6 +11824,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11479,6 +11855,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11512,6 +11892,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -11535,6 +11919,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11556,6 +11944,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11577,6 +11969,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11598,6 +11994,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11626,6 +12026,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11730,6 +12134,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -11759,6 +12167,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -11788,6 +12200,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11828,6 +12244,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11855,6 +12275,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11882,6 +12306,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -11905,6 +12333,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11927,6 +12359,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11948,6 +12384,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -11977,6 +12417,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12031,7 +12475,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -12122,6 +12566,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -12152,6 +12600,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12193,6 +12645,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12220,6 +12676,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12247,6 +12707,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12280,6 +12744,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -12303,6 +12771,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12324,6 +12796,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12345,6 +12821,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12366,6 +12846,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12394,6 +12878,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12498,6 +12986,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -12527,6 +13019,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -12556,6 +13052,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12596,6 +13096,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12623,6 +13127,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12650,6 +13158,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -12673,6 +13185,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12695,6 +13211,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12716,6 +13236,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -12745,6 +13269,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13376,7 +13904,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -13467,6 +13995,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -13497,6 +14029,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13538,6 +14074,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13565,6 +14105,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13592,6 +14136,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13625,6 +14173,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -13648,6 +14200,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13669,6 +14225,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13690,6 +14250,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13711,6 +14275,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13739,6 +14307,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13843,6 +14415,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -13872,6 +14448,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -13901,6 +14481,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13941,6 +14525,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13968,6 +14556,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -13995,6 +14587,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -14018,6 +14614,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -14040,6 +14640,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -14061,6 +14665,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -14090,6 +14698,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15576,6 +16188,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -15605,6 +16221,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -15634,6 +16254,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15673,6 +16297,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15700,6 +16328,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15727,6 +16359,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -15750,6 +16386,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15772,6 +16412,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15793,6 +16437,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15822,6 +16470,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -15962,6 +16614,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -15991,6 +16647,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -16020,6 +16680,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16059,6 +16723,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16086,6 +16754,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16113,6 +16785,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -16136,6 +16812,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16158,6 +16838,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16179,6 +16863,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16208,6 +16896,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -16924,6 +17616,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -16953,6 +17649,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -16982,6 +17682,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -17021,6 +17725,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -17048,6 +17756,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -17075,6 +17787,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -17098,6 +17814,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -17120,6 +17840,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -17141,6 +17865,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -17170,6 +17898,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18655,6 +19387,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -18684,6 +19420,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -18713,6 +19453,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18752,6 +19496,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18779,6 +19527,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18806,6 +19558,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -18829,6 +19585,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18851,6 +19611,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18872,6 +19636,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -18901,6 +19669,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19041,6 +19813,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -19070,6 +19846,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -19099,6 +19879,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19138,6 +19922,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19165,6 +19953,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19192,6 +19984,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -19215,6 +20011,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19237,6 +20037,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19258,6 +20062,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -19287,6 +20095,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20003,6 +20815,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -20032,6 +20848,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -20061,6 +20881,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20100,6 +20924,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20127,6 +20955,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20154,6 +20986,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -20177,6 +21013,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20199,6 +21039,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20220,6 +21064,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -20249,6 +21097,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21749,6 +22601,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -21778,6 +22634,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -21807,6 +22667,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21846,6 +22710,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21873,6 +22741,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21900,6 +22772,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -21923,6 +22799,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21945,6 +22825,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21966,6 +22850,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -21995,6 +22883,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22135,6 +23027,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -22164,6 +23060,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -22193,6 +23093,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22232,6 +23136,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22259,6 +23167,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22286,6 +23198,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -22309,6 +23225,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22331,6 +23251,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22352,6 +23276,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -22381,6 +23309,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23071,6 +24003,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -23100,6 +24036,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -23129,6 +24069,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23168,6 +24112,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23195,6 +24143,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23222,6 +24174,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -23245,6 +24201,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23267,6 +24227,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23288,6 +24252,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -23317,6 +24285,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -24776,6 +25748,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -24805,6 +25781,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -24834,6 +25814,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -24873,6 +25857,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -24900,6 +25888,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -24927,6 +25919,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -24950,6 +25946,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -24972,6 +25972,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -24993,6 +25997,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25022,6 +26030,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25162,6 +26174,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -25191,6 +26207,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -25220,6 +26240,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25259,6 +26283,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25286,6 +26314,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25313,6 +26345,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -25336,6 +26372,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25358,6 +26398,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25379,6 +26423,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -25408,6 +26456,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26124,6 +27176,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -26153,6 +27209,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -26182,6 +27242,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26221,6 +27285,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26248,6 +27316,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26275,6 +27347,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -26298,6 +27374,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26320,6 +27400,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26341,6 +27425,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -26370,6 +27458,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -27823,6 +28915,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -27852,6 +28948,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -27881,6 +28981,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -27919,6 +29023,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -27945,6 +29053,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -27972,6 +29084,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -27995,6 +29111,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28017,6 +29137,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28038,6 +29162,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28067,6 +29195,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28175,6 +29307,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -28204,6 +29340,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -28233,6 +29373,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28271,6 +29415,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28297,6 +29445,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28324,6 +29476,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -28347,6 +29503,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28369,6 +29529,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28390,6 +29554,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -28419,6 +29587,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29156,6 +30328,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -29185,6 +30361,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -29214,6 +30394,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29252,6 +30436,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29278,6 +30466,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29305,6 +30497,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -29328,6 +30524,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29350,6 +30550,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29371,6 +30575,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -29400,6 +30608,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -30938,6 +32150,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -30967,6 +32183,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -30996,6 +32216,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31035,6 +32259,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31062,6 +32290,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31089,6 +32321,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -31112,6 +32348,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31134,6 +32374,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31155,6 +32399,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31184,6 +32432,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31324,6 +32576,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -31353,6 +32609,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -31382,6 +32642,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31421,6 +32685,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31448,6 +32716,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31475,6 +32747,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -31498,6 +32774,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31520,6 +32800,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31541,6 +32825,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -31570,6 +32858,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32302,6 +33594,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -32331,6 +33627,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -32360,6 +33660,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32399,6 +33703,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32426,6 +33734,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32453,6 +33765,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -32476,6 +33792,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32498,6 +33818,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32519,6 +33843,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -32548,6 +33876,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34049,6 +35381,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -34078,6 +35414,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -34107,6 +35447,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34146,6 +35490,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34173,6 +35521,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34200,6 +35552,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -34223,6 +35579,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34245,6 +35605,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34266,6 +35630,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34295,6 +35663,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34435,6 +35807,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -34464,6 +35840,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -34493,6 +35873,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34532,6 +35916,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34559,6 +35947,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34586,6 +35978,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -34609,6 +36005,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34631,6 +36031,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34652,6 +36056,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -34681,6 +36089,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35397,6 +36809,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -35426,6 +36842,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -35455,6 +36875,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35494,6 +36918,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35521,6 +36949,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35548,6 +36980,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -35571,6 +37007,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35593,6 +37033,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35614,6 +37058,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -35643,6 +37091,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37128,6 +38580,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -37157,6 +38613,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37196,6 +38656,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37223,6 +38687,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37250,6 +38718,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -37273,6 +38745,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37295,6 +38771,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37316,6 +38796,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37345,6 +38829,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37485,6 +38973,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -37514,6 +39006,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37553,6 +39049,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37580,6 +39080,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37607,6 +39111,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -37630,6 +39138,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37652,6 +39164,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37673,6 +39189,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -37702,6 +39222,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38415,6 +39939,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -38444,6 +39972,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38483,6 +40015,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38510,6 +40046,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38537,6 +40077,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -38560,6 +40104,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38582,6 +40130,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38603,6 +40155,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -38632,6 +40188,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39676,6 +41236,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -39705,6 +41269,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -39734,6 +41302,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39773,6 +41345,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39800,6 +41376,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39827,6 +41407,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -39850,6 +41434,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39872,6 +41460,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39893,6 +41485,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -39922,6 +41518,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40062,6 +41662,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -40091,6 +41695,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -40120,6 +41728,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40159,6 +41771,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40186,6 +41802,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40213,6 +41833,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -40236,6 +41860,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40258,6 +41886,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40279,6 +41911,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40308,6 +41944,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -40906,6 +42546,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -40935,6 +42579,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -40964,6 +42612,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -41003,6 +42655,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -41030,6 +42686,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -41057,6 +42717,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -41080,6 +42744,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -41102,6 +42770,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -41123,6 +42795,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -41152,6 +42828,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42521,6 +44201,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -42550,6 +44234,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -42579,6 +44267,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42618,6 +44310,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42645,6 +44341,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42672,6 +44372,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -42695,6 +44399,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42717,6 +44425,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42738,6 +44450,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42767,6 +44483,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -42907,6 +44627,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -42936,6 +44660,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -42965,6 +44693,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43004,6 +44736,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43031,6 +44767,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43058,6 +44798,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -43081,6 +44825,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43103,6 +44851,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43124,6 +44876,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43153,6 +44909,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43866,6 +45626,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -43895,6 +45659,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -43924,6 +45692,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43963,6 +45735,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -43990,6 +45766,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -44017,6 +45797,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -44040,6 +45824,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -44062,6 +45850,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -44083,6 +45875,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -44112,6 +45908,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45508,7 +47308,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -45600,6 +47400,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -45630,6 +47434,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45670,6 +47478,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45697,6 +47509,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45724,6 +47540,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45757,6 +47577,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -45780,6 +47604,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45801,6 +47629,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45822,6 +47654,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45843,6 +47679,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45871,6 +47711,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -45975,6 +47819,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -46004,6 +47852,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -46033,6 +47885,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46072,6 +47928,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46099,6 +47959,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46126,6 +47990,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -46149,6 +48017,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46171,6 +48043,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46192,6 +48068,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46221,6 +48101,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46275,7 +48159,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -46367,6 +48251,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -46397,6 +48285,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46437,6 +48329,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46464,6 +48360,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46491,6 +48391,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46524,6 +48428,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -46547,6 +48455,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46568,6 +48480,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46589,6 +48505,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46610,6 +48530,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46638,6 +48562,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46742,6 +48670,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -46771,6 +48703,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -46800,6 +48736,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46839,6 +48779,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46866,6 +48810,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46893,6 +48841,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -46916,6 +48868,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46938,6 +48894,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46959,6 +48919,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -46988,6 +48952,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47605,7 +49573,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -47697,6 +49665,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -47727,6 +49699,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47767,6 +49743,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47794,6 +49774,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47821,6 +49805,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47854,6 +49842,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -47877,6 +49869,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47898,6 +49894,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47919,6 +49919,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47940,6 +49944,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -47968,6 +49976,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48072,6 +50084,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -48101,6 +50117,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -48130,6 +50150,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48169,6 +50193,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48196,6 +50224,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48223,6 +50255,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -48246,6 +50282,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48268,6 +50308,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48289,6 +50333,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -48318,6 +50366,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51360,6 +53412,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -51389,6 +53445,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -51418,6 +53478,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51457,6 +53521,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51484,6 +53552,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51511,6 +53583,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -51534,6 +53610,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51556,6 +53636,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51577,6 +53661,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51606,6 +53694,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51732,6 +53824,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -51761,6 +53857,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -51790,6 +53890,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51829,6 +53933,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51856,6 +53964,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51883,6 +53995,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -51906,6 +54022,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51928,6 +54048,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51949,6 +54073,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -51978,6 +54106,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -52889,6 +55021,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -52918,6 +55054,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -52947,6 +55087,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -52986,6 +55130,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -53013,6 +55161,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -53040,6 +55192,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -53063,6 +55219,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -53085,6 +55245,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -53106,6 +55270,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -53135,6 +55303,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -53961,7 +56133,7 @@
        "name": "harita-varliklari",
        "title": "Harita varlıkları (saha kodlu)",
        "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
-       "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+       "basis": "KentOS çalışma profili, sürüm 1: saha kodları, ölçme yazılımlarının özellik kodu kütüphaneleri ve açıklama anahtarları gibi, kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
        "domains": [
         {
          "id": "kontrol-tur",
@@ -54052,6 +56224,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -54082,6 +56258,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54122,6 +56302,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54149,6 +56333,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54176,6 +56364,10 @@
          ],
          "color": "#30A46C",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54209,6 +56401,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "KapiNo",
@@ -54232,6 +56428,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54253,6 +56453,10 @@
          ],
          "color": "#6E56CF",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54274,6 +56478,10 @@
          ],
          "color": "#A18072",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54295,6 +56503,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54323,6 +56535,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54427,6 +56643,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -54456,6 +56676,10 @@
          ],
          "color": "#E5484D",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "key": "Ad",
          "fields": [
           {
@@ -54485,6 +56709,10 @@
          ],
          "color": "#3E63DD",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54524,6 +56752,10 @@
          ],
          "color": "#0090FF",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54551,6 +56783,10 @@
          ],
          "color": "#F76B15",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54578,6 +56814,10 @@
          ],
          "color": "#8E4EC6",
          "geometry": "point",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "NumaraTaj",
@@ -54601,6 +56841,10 @@
          ],
          "color": "#8A94A6",
          "geometry": "line",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54623,6 +56867,10 @@
          ],
          "color": "#A18072",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54644,6 +56892,10 @@
          ],
          "color": "#C8A165",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",
@@ -54673,6 +56925,10 @@
          ],
          "color": "#46A758",
          "geometry": "area",
+         "work": [
+          "campaign",
+          "working"
+         ],
          "fields": [
           {
            "name": "Ad",

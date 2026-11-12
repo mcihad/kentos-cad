@@ -67656,7 +67656,7 @@
       "id": "map.work.query",
       "version": 1,
       "title": "Harita işini sorgula",
-      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol). Onaydan sonra değişen öğenin changes'i: eklenen, silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve ne kadar kaydığı (objects[].shift: aynı türde ve aynı köşe sayısındaysa köşe köşe en büyük kayma, köşe numarası ve KOH; her durumda iki şeklin Hausdorff uzaklığı ve yeri), silinen nesnelerin onaylanan hâli (removedObjects). Profili olan öğenin profile'ı: profil bulundu mu, başlığı, sürümü, öğenin sınıfları (katmanı, nesne ve bulgu sayısı), bulguları (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi olan serbest katmanları. Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol). Onaydan sonra değişen öğenin changes'i: eklenen, silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve ne kadar kaydığı (objects[].shift: aynı türde ve aynı köşe sayısındaysa köşe köşe en büyük kayma, köşe numarası ve KOH; her durumda iki şeklin Hausdorff uzaklığı ve yeri), silinen nesnelerin onaylanan hâli (removedObjects). Profili olan öğenin profile'ı: profil bulundu mu, başlığı, sürümü, öğenin sınıfları (katmanı, nesne ve bulgu sayısı), bulguları (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi olan serbest katmanları. limit: kayma sınırı; basis own (metres), detail (BÖHHBÜY m. 46(1), ±7 cm), drawing (m. 78(1)(h), ±0,2 mm × scale) ya da method (Tapu Planlarında Yanılma Sınırı Yönetmeliği m. 9(1) tablosu: method ve scale; tabloda olmayan ölçek ve boş hücre reddedilir). Değerler kural dosyasındadır (konum-dogrulugu-2022). Her kaymanın beyond'u (köşeleri eşleniyorsa en büyük köşe kayması, eşlenmiyorsa Hausdorff sınırdan büyük mü) ve over'ı (sınırı aşan köşe sayısı), changes.beyond (sınırı aşan nesne sayısı), ağacın limit'i (değeri ve kaynağı); sınır içinde olmak teknik hata olmadığı yargısı değildir. suggest: profili olmayan öğeye türüne uyan profiller (suggested: adı, başlığı, sınıfları; sınıfın work alanı öğe türlerini söyler): KentOS'unkiler, çizimin içindekiler ve proje klasörününkiler (kurumun profili). Retler: not_a_map_project, invalid_file_path, invalid_input (limit), invalid_uid, entity_not_found.",
       "aliases": [
         "haritaisi"
       ],
@@ -67674,7 +67674,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date) and works out every item's content revision; without it a file\nis only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a\nderivation comes from, an approved item with a stamp; docs/adr/2080 §1).\n`uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative\npaths and the search paths (docs/adr/1201 §1).\n\nRefusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,\n`entity_not_found`.",
+        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date) and works out every item's content revision; without it a file\nis only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a\nderivation comes from, an approved item with a stamp; docs/adr/2080 §1).\n`uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative\npaths and the search paths (docs/adr/1201 §1). `limit` (docs/adr/5280) sets each changed object's shift against a\nlimit; `suggest` lists, for an item without a profile, the profiles whose classes say they suit its kind.\n\nRefusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_input`\n(`limit`), `invalid_uid`, `entity_not_found`.",
         "properties": {
           "deep": {
             "type": "boolean"
@@ -67685,6 +67685,21 @@
               "string",
               "null"
             ]
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ShiftLimit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The limit each changed object's shift is set against (docs/adr/5280)."
+          },
+          "suggest": {
+            "description": "List the suggested profiles of the items without one (docs/adr/5280).",
+            "type": "boolean"
           },
           "uid": {
             "type": [
@@ -67714,6 +67729,17 @@
               "$ref": "#/$defs/WorkRow"
             },
             "type": "array"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ShiftLimitUsed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The limit the shifts were set against, and its source (docs/adr/5280)."
           },
           "object": {
             "anyOf": [
@@ -67771,6 +67797,17 @@
             },
             "type": "array"
           },
+          "limit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ShiftLimitUsed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The limit the shifts were set against, and its source (docs/adr/5280)."
+          },
           "object": {
             "anyOf": [
               {
@@ -67822,6 +67859,17 @@
           "input": {
             "deep": true,
             "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        },
+        {
+          "title": "Kaymalar sayısal üretimin 1/1000 nokta konum doğruluğuyla; önerilen profillerle",
+          "input": {
+            "limit": {
+              "basis": "method",
+              "method": "sayisal",
+              "scale": 1000
+            },
+            "suggest": true
           }
         }
       ]
@@ -159242,6 +159290,31 @@
         }
       ]
     },
+    "LimitBasis": {
+      "description": "What a shift limit rests on.",
+      "oneOf": [
+        {
+          "const": "own",
+          "description": "The user's own value (`metres`).",
+          "type": "string"
+        },
+        {
+          "const": "detail",
+          "description": "A detail's position: BÖHHBÜY m. 46(1).",
+          "type": "string"
+        },
+        {
+          "const": "drawing",
+          "description": "A point's place on the drawing at `scale`: BÖHHBÜY m. 78(1)(h).",
+          "type": "string"
+        },
+        {
+          "const": "method",
+          "description": "The point position accuracy of `method` at `scale`: the error limit regulation's m. 9(1) table.",
+          "type": "string"
+        }
+      ]
+    },
     "LinLineProblem": {
       "description": "A LIN file's line that did not read.",
       "properties": {
@@ -185775,7 +185848,7 @@
       "description": "A class of the profile: a layer by its path, its objects' geometry, its fields.",
       "properties": {
         "codes": {
-          "description": "The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's\ndescription keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a\npoint class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).",
+          "description": "The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; a feature code library's codes,\ndescription keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a\npoint class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).",
           "items": {
             "type": "string"
           },
@@ -185828,6 +185901,13 @@
         },
         "title": {
           "type": "string"
+        },
+        "work": {
+          "description": "The map work items' kinds the class suits (docs/adr/5280): `map.work.query`'s `suggest` offers the profile, with\nthese classes, to an item of the kind without a profile. A profile's (an office's) own choice, not a rule.",
+          "items": {
+            "$ref": "#/$defs/WorkKind"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -200783,6 +200863,61 @@
           "type": "object"
         }
       ]
+    },
+    "ShiftLimit": {
+      "additionalProperties": false,
+      "description": "Input of a shift limit: its basis, and what the basis takes: `metres` (own), `scale` (drawing, method), `method`\n(method: a table's method id).",
+      "properties": {
+        "basis": {
+          "$ref": "#/$defs/LimitBasis"
+        },
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metres": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "scale": {
+          "description": "The scale's denominator (1000 for 1/1000).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "basis"
+      ],
+      "type": "object"
+    },
+    "ShiftLimitUsed": {
+      "description": "The limit a query used: its value and what it rests on, in words.",
+      "properties": {
+        "metres": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "metres",
+        "source"
+      ],
+      "type": "object"
     },
     "ShiftReference": {
       "additionalProperties": false,
@@ -223079,6 +223214,16 @@
           "type": "integer",
           "x-unit": "count"
         },
+        "beyond": {
+          "description": "With a limit (docs/adr/5280): how many of the listed objects moved beyond it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
         "changed": {
           "format": "uint32",
           "minimum": 0,
@@ -223603,6 +223748,29 @@
       ],
       "type": "object"
     },
+    "WorkProfileSuggestion": {
+      "description": "A profile suggested for an item's kind (docs/adr/5280): its name and title, and its classes that say they suit\nthe kind, in the profile's order.",
+      "properties": {
+        "classes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "title",
+        "classes"
+      ],
+      "type": "object"
+    },
     "WorkRemovedObject": {
       "description": "A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id).",
       "properties": {
@@ -223693,6 +223861,13 @@
         "status": {
           "$ref": "#/$defs/WorkStatus"
         },
+        "suggested": {
+          "description": "With `suggest`, for an item without a profile: the profiles whose classes suit its kind (docs/adr/5280).",
+          "items": {
+            "$ref": "#/$defs/WorkProfileSuggestion"
+          },
+          "type": "array"
+        },
         "why": {
           "items": {
             "type": "string"
@@ -223713,6 +223888,13 @@
     "WorkShift": {
       "description": "How far a changed object's geometry moved from the approved one (docs/adr/4880): with as many vertices of the same\nkind, vertex by vertex (the largest move and its number, the moves' root mean square); always the two outlines'\nHausdorff distance (the farthest a point of either is from the other) and where it is reached.",
       "properties": {
+        "beyond": {
+          "description": "With a limit (docs/adr/5280): whether it moved beyond it, by its largest vertex move when paired, else by the\nHausdorff distance; the full value is set against the limit, not a rounded one.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "hausdorff": {
           "anyOf": [
             {
@@ -223734,6 +223916,16 @@
             }
           ],
           "description": "The largest vertex move, when paired."
+        },
+        "over": {
+          "description": "With a limit, when paired: how many vertices moved beyond it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
         },
         "paired": {
           "description": "Its vertices pair one to one with the approved ones (same kind, as many).",

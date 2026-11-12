@@ -22,17 +22,18 @@ tamamlanma işaretleri ve başka ajanın çalışma alanındaki değişiklikleri
 değiştirilmemiştir. Aşağıdaki maddelerin tamamı **açıktır**; mevcut temellerin
 listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
 
-## Durum özeti (10 Kasım 2026)
+## Durum özeti (12 Kasım 2026)
 
 Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da yetkili kabul de ister. Her maddenin en az iki
 dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
 yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Turlar her satırın ilk işini MAP-01'den
 sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), dokuzuncu tur MAP-01'le başladı
-(ADR 4480–4860), onuncu tur 11 Kasım'da MAP-12 ile bitti (ADR 4880–5260).
+(ADR 4480–4860), onuncu tur 11 Kasım'da MAP-12 ile bitti (ADR 4880–5260), on birinci tur 12 Kasım'da MAP-01'le
+başladı (ADR 5280–).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880 | öğe türüne göre önerilen profil (kurum profiliyle); kaymanın kullanıcının seçtiği resmî değerle (yanılma sınırı) karşılaştırılması | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880, 5280 | sınırın projede saklanması; aplikasyon yanılma sınırı (m. 11) | nesnenin üretim yönteminin kaydı ve Ek-1 URETIM_YONTEMI eşlemesi (kurum kodları); içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900 | datum dönüşümlerinin alan çokgenleri ve koordinat sistemi penceresinde harita; atlamalı trigonometrik nivelman | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920 | bağımsız baz önerisi (oturum başına n − 1); oturumun bloklarının pencerede gösterilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
@@ -306,6 +307,19 @@ büyük kayma, KOH ve kesin Hausdorff uzaklığı (ortak çekirdek); Değişenle
 tabloda gösterir. 11 yeni bağımsız durum (query 41, edit 65), şema 239 örnekleri, Python, MCP, masaüstü. Açık: öğe
 türüne göre önerilen profil, kaymanın resmî değerle karşılaştırılması, eklenenleri de silen tam onaylı hâl (sahip
 kararı).
+
+**12 Kasım 2026, on birinci tur — kayma sınırı ve önerilen profil ([ADR 5280](../docs/adr/5280-map-work-shift-limit-and-suggested-profile.md)).**
+Kapsam: **yalnız Harita (CAD)**. Dayanak: Yanılma Sınırı Yönetmeliği m. 9(1) tablosu (resim olarak yayımlandı, büyütülüp
+okundu; boş hücreler, m. 9(3)), BÖHHBÜY m. 46(1) ve 78(1)(h); öğe türüne göre profil için resmî kural yok, benzer
+uygulamada kurum şablonu paylaşılan yerde durur. Kanıtlanan: `map.work.query`'nin `limit`'i (kendi değer, detay konumu,
+çizim doğruluğu × ölçek, üretim yöntemi ve ölçek; değerler `catalog/v1/rules/konum-dogrulugu-2022.json`'da; tutmayan
+ölçek ve boş hücre `invalid_input`); kaymanın `beyond`'u (eşlenen köşede en büyük köşe kayması, değilse Hausdorff),
+`over`'ı, `changes.beyond`, öğenin `why`'ı; sınır içinde olmak teknik hata yargısı değildir. `suggest`: profil sınıfının
+`work`'ü öğe türlerini söyler; KentOS'un, çizimin içindeki ve klasördeki (kurumun) profilleri önerir. Masaüstü Harita işi
+› Önerilen (tek adımda verir), Kayma sınırı (tabloda Sınır sütunu). 30 yeni bağımsız durum (query 71; değerler betiğe
+yönetmelikten ayrıca yazıldı), Python, MCP, masaüstü. Açık: sınırın projede saklanması, m. 11 aplikasyon yanılma sınırı,
+nesnenin üretim yöntemi ve m. 9(2) (kurum kodları), eklenenleri de silen tam onaylı hâl (sahip kararı).
+
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

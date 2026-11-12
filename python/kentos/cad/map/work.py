@@ -18,6 +18,7 @@ from ..types import (  # noqa: F401
     MapWorkRestore,
     MapWorkRestored,
     MapWorkTree,
+    ShiftLimit,
 )
 
 if TYPE_CHECKING:
@@ -217,7 +218,18 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
     (removedObjects). Profili olan öğenin profile'ı: profil bulundu mu, başlığı, sürümü,
     öğenin sınıfları (katmanı, nesne ve bulgu sayısı), bulguları
     (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi olan serbest katmanları.
-    Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.
+    limit: kayma sınırı; basis own (metres), detail (BÖHHBÜY m. 46(1), ±7 cm), drawing
+    (m. 78(1)(h), ±0,2 mm × scale) ya da method (Tapu Planlarında Yanılma Sınırı
+    Yönetmeliği m. 9(1) tablosu: method ve scale; tabloda olmayan ölçek ve boş hücre
+    reddedilir). Değerler kural dosyasındadır (konum-dogrulugu-2022). Her kaymanın
+    beyond'u (köşeleri eşleniyorsa en büyük köşe kayması, eşlenmiyorsa Hausdorff
+    sınırdan büyük mü) ve over'ı (sınırı aşan köşe sayısı), changes.beyond (sınırı aşan
+    nesne sayısı), ağacın limit'i (değeri ve kaynağı); sınır içinde olmak teknik hata
+    olmadığı yargısı değildir. suggest: profili olmayan öğeye türüne uyan profiller
+    (suggested: adı, başlığı, sınıfları; sınıfın work alanı öğe türlerini söyler):
+    KentOS'unkiler, çizimin içindekiler ve proje klasörününkiler (kurumun profili).
+    Retler: not_a_map_project, invalid_file_path, invalid_input (limit), invalid_uid,
+    entity_not_found.
     """
     __slots__ = ()
     id = "map.work.query"
@@ -235,6 +247,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -263,14 +277,26 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         yeri), silinen nesnelerin onaylanan hâli (removedObjects). Profili olan öğenin
         profile'ı: profil bulundu mu, başlığı, sürümü, öğenin sınıfları (katmanı, nesne ve
         bulgu sayısı), bulguları (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi
-        olan serbest katmanları. Retler: not_a_map_project, invalid_file_path, invalid_uid,
-        entity_not_found.
+        olan serbest katmanları. limit: kayma sınırı; basis own (metres), detail (BÖHHBÜY m.
+        46(1), ±7 cm), drawing (m. 78(1)(h), ±0,2 mm × scale) ya da method (Tapu Planlarında
+        Yanılma Sınırı Yönetmeliği m. 9(1) tablosu: method ve scale; tabloda olmayan ölçek
+        ve boş hücre reddedilir). Değerler kural dosyasındadır (konum-dogrulugu-2022). Her
+        kaymanın beyond'u (köşeleri eşleniyorsa en büyük köşe kayması, eşlenmiyorsa
+        Hausdorff sınırdan büyük mü) ve over'ı (sınırı aşan köşe sayısı), changes.beyond
+        (sınırı aşan nesne sayısı), ağacın limit'i (değeri ve kaynağı); sınır içinde olmak
+        teknik hata olmadığı yargısı değildir. suggest: profili olmayan öğeye türüne uyan
+        profiller (suggested: adı, başlığı, sınıfları; sınıfın work alanı öğe türlerini
+        söyler): KentOS'unkiler, çizimin içindekiler ve proje klasörününkiler (kurumun
+        profili). Retler: not_a_map_project, invalid_file_path, invalid_input (limit),
+        invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.
             deep:
             drawing: The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
                 its relative path from this file's folder, then in the project's search paths. None: only at its path.
+            limit: The limit each changed object's shift is set against (docs/adr/5280).
+            suggest: List the suggested profiles of the items without one (docs/adr/5280).
             uid:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -287,6 +313,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.execute_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ), request_id=request_id, expected=expected)
 
@@ -297,6 +325,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> MapWorkTree:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -305,6 +335,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.plan_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ))
 
@@ -315,6 +347,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -323,6 +357,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.validate_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ))
 
@@ -333,6 +369,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -346,6 +384,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.answer_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ), op=op, request_id=request_id, expected=expected)
 

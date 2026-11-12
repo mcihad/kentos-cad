@@ -10,7 +10,7 @@ use crate::app::{App, Message, Panel};
 use crate::map_work_panel::Event as P;
 use crate::map_work_stamps_tests::{opened, send, tree, uid};
 
-fn run(app: &mut App, command: &str, input: serde_json::Value) {
+pub(crate) fn run(app: &mut App, command: &str, input: serde_json::Value) {
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -54,7 +54,7 @@ fn tipli_katman_gives_classes_to_an_item() {
 }
 
 /// The design approved, its line at slot 6 moved (`dx`, `dy`), its line at slot 7 removed.
-fn approved_then_moved_and_removed(app: &mut App, dx: f64, dy: f64) -> String {
+pub(crate) fn approved_then_moved_and_removed(app: &mut App, dx: f64, dy: f64) -> String {
     send(app, P::Status("is-4".into(), W::Approved));
     let moved = uid(app, 6);
     let removed = uid(app, 7);
@@ -95,7 +95,7 @@ fn degisenler_lists_the_shift_and_draws_the_removed_shape() {
 /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib map_work_profile_tests::screens -- --ignored --nocapture
 /// ```
 /// One app's picture, rendered by its own snapshot (a snapshot keeps its first app's scene).
-fn picture(app: &mut App, size: iced::Size, file: &std::path::Path) {
+pub(crate) fn picture(app: &mut App, size: iced::Size, file: &std::path::Path) {
     let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
     let mut update = |app: &mut App, m: Message| {
         let _ = app.update(m);
@@ -106,7 +106,7 @@ fn picture(app: &mut App, size: iced::Size, file: &std::path::Path) {
 }
 
 /// The app in the theme and size, Harita işi in the dock with room, the campaigns folded.
-fn staged(theme: &str, size: iced::Size) -> App {
+pub(crate) fn staged(theme: &str, size: iced::Size) -> App {
     let mut app = opened();
     let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
     app.apply_settings();

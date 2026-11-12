@@ -171,12 +171,25 @@ fn attributes_changed(then: &serde_json::Value, now: &serde_json::Value) -> (Vec
 
 /// How far an object's geometry moved from its approved value (docs/adr/4880): vertex by vertex when they pair, and the
 /// two outlines' Hausdorff distance.
-fn shift_of(doc: &Document, approved: &serde_json::Value, uid: &kentos_commands::EntityId) -> Option<kentos_commands::WorkShift> {
+/// docs/adr/5280: with a limit, whether it moved beyond it (by the largest vertex move when paired, else by the
+/// Hausdorff distance) and, when paired, how many vertices did.
+fn shift_of(
+    doc: &Document,
+    approved: &serde_json::Value,
+    uid: &kentos_commands::EntityId,
+    limit: Option<f64>,
+) -> Option<kentos_commands::WorkShift> {
     let then = crate::map_work_restore::approved_entity(approved)?;
     let now = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0)).and_then(|s| doc.get(s))?;
-    let s = kentos_geometry_core::ops::shape_shift::shift(&crate::geometry::shape(&then), &crate::geometry::shape(now));
+    let (a, b) = (crate::geometry::shape(&then), crate::geometry::shape(now));
+    let s = kentos_geometry_core::ops::shape_shift::shift(&a, &b);
     let n = |k: usize| u32::try_from(k).unwrap_or(u32::MAX);
+    let measure = s.largest.as_ref().map(|m| m.d).or(s.hausdorff.as_ref().map(|h| h.d));
+    let beyond = limit.zip(measure).map(|(l, d)| d > l);
+    let over = limit.and_then(|l| kentos_geometry_core::ops::shape_shift::vertices_beyond(&a, &b, l)).map(n);
     Some(kentos_commands::WorkShift {
+        beyond,
+        over,
         paired: s.paired,
         vertices: [n(s.vertices[0]), n(s.vertices[1])],
         largest: s.largest.map(|m| kentos_commands::WorkVertexMove { index: n(m.index), dx: m.dx, dy: m.dy, d: m.d }),
@@ -200,6 +213,7 @@ pub(crate) fn changes_of(
     then_parts: &[[String; 4]],
     then_values: &[String],
     now: &[(kentos_commands::EntityId, String)],
+    limit: Option<f64>,
 ) -> kentos_commands::WorkChanges {
     let (mut i, mut j) = (0, 0);
     let (mut added, mut removed, mut changed) = (0u32, 0u32, 0u32);
@@ -244,7 +258,7 @@ pub(crate) fn changes_of(
                             };
                             // docs/adr/4480: a changed geometry's object as approved; docs/adr/4880: how far it moved.
                             let approved = if differ.contains(&0) { then_value } else { None };
-                            let shift = approved.as_ref().and_then(|a| shift_of(doc, a, &b.0));
+                            let shift = approved.as_ref().and_then(|a| shift_of(doc, a, &b.0, limit));
                             objects.push(kentos_commands::WorkChangedObject {
                                 uid: kentos_commands::uuid_text(&b.0.0),
                                 parts: differ.iter().map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned()).collect(),
@@ -283,7 +297,12 @@ pub(crate) fn changes_of(
         layer: counts[2],
         look: counts[3],
     });
-    kentos_commands::WorkChanges { added, removed, changed, uids, parts, objects, removed_objects }
+    // docs/adr/5280: of the listed objects, those beyond the limit.
+    let beyond = limit.map(|_| {
+        u32::try_from(objects.iter().filter(|o| o.shift.as_ref().and_then(|s| s.beyond) == Some(true)).count())
+            .unwrap_or(u32::MAX)
+    });
+    kentos_commands::WorkChanges { added, removed, changed, uids, parts, objects, removed_objects, beyond }
 }
 
 /// Each item's revision now, worked out once a read: an item with a file, its kept revision (or read deep, a changed
@@ -370,7 +389,8 @@ fn stale_objects_by(doc: &Document, work: &MapWork, item: &WorkItem, revisions: 
 }
 
 /// The rows of the work structure as they stand now.
-pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Option<&str>) -> Result<MapWorkTree, Stop> {
+pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, Stop> {
+    let (deep, uid, drawing) = (input.deep, input.uid.as_deref(), input.drawing.as_deref());
     map_project(doc)?;
     if let Some(d) = drawing.filter(|d| !Path::new(d).is_absolute()) {
         return Err(Stop::failed(error(
@@ -379,6 +399,14 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             Some("drawing".into()),
         )));
     }
+    // docs/adr/5280: the limit's value and source.
+    let limit = match &input.limit {
+        Some(l) => Some(kentos_commands::limit_metres(l).map_err(|(path, why)| {
+            Stop::failed(error(codes::INVALID_INPUT, why, Some(path)))
+        })?),
+        None => None,
+    };
+    let metres = limit.as_ref().map(|l| l.metres);
     let empty = MapWork::default();
     let work = doc.map_work().unwrap_or(&empty);
     let object = match uid {
@@ -504,6 +532,7 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
                         &i.approved_parts,
                         &i.approved_values,
                         &content_objects(doc, work, &i.id),
+                        metres,
                     ));
                 }
                 let what = if i.file.is_some() { "dosyası" } else { "içeriği" };
@@ -516,6 +545,14 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
                     ),
                     &mut why,
                 );
+                // docs/adr/5280: how many moved beyond the limit; a measure, not a ruling.
+                if let (Some(l), Some(k)) = (&limit, changes.as_ref().and_then(|c| c.beyond).filter(|k| *k > 0)) {
+                    why.push(format!(
+                        "{k} nesne seçilen sınırın dışına kaydı: {} m ({}).",
+                        format!("{}", l.metres).replace('.', ","),
+                        l.source
+                    ));
+                }
             }
         }
         if state != S::Current {
@@ -533,11 +570,16 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             approved: i.approved.clone(),
             changes,
             profile: crate::map_work_profile::row(doc, &work, i, drawing),
+            suggested: if input.suggest && i.profile.is_none() {
+                crate::map_work_profile::suggested(doc, i.kind, drawing)
+            } else {
+                Vec::new()
+            },
             state,
             why,
         });
     }
-    Ok(MapWorkTree { items, derivations, object, stale, problems, deep, revision: doc.revision().to_string() })
+    Ok(MapWorkTree { items, derivations, object, stale, problems, deep, limit, revision: doc.revision().to_string() })
 }
 
 /// A revision's first 12 hex digits, as the panel shows it.
@@ -605,7 +647,7 @@ fn object_source(
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResult<()> {
-    match tree(cx.doc, input.deep, input.uid.as_deref(), input.drawing.as_deref()) {
+    match tree(cx.doc, input) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -613,7 +655,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResul
 
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResult<MapWorkTree> {
-    match tree(cx.doc, input.deep, input.uid.as_deref(), input.drawing.as_deref()) {
+    match tree(cx.doc, input) {
         Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -625,8 +667,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: MapWorkQuery) -> CommandRes
 }
 
 /// The tree for a panel (and, with `uid`, the object's source), or why it does not read.
-pub fn preview(doc: &Document, deep: bool, uid: Option<&str>, drawing: Option<&str>) -> Result<MapWorkTree, String> {
-    tree(doc, deep, uid, drawing).map_err(|stop| stop.into_error().message)
+pub fn preview(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, String> {
+    tree(doc, input).map_err(|stop| stop.into_error().message)
 }
 
 /// Where one object comes from, read quickly (the items' revisions, no file read), for the properties; none outside a

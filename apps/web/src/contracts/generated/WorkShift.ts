@@ -27,4 +27,13 @@ rms?: number,
 /**
  * The outlines' Hausdorff distance, to a millionth of a millimetre; none for an object without a point (a text).
  */
-hausdorff?: WorkFarthest, };
+hausdorff?: WorkFarthest, 
+/**
+ * With a limit (docs/adr/5280): whether it moved beyond it, by its largest vertex move when paired, else by the
+ * Hausdorff distance; the full value is set against the limit, not a rounded one.
+ */
+beyond?: boolean, 
+/**
+ * With a limit, when paired: how many vertices moved beyond it.
+ */
+over?: number, };

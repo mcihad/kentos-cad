@@ -289,6 +289,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çekirdek `volume_sections::along_axis` WASM'den) ve `road.terrains.cutfill`'de `sections`, `materials` (compare.sections'ın
   15, cutfill'in 14 yeni durumu); web Yüzey analizi › Fark › Kesit'te Eksen, genişlikler, Eksen noktalarında da,
   Başlangıç km.
+- MAP-01 / ADR 5280: web'in `map.work.query` işleyicisinde `limit` (kural dosyası `konum-dogrulugu-2022.json`;
+  `shift.beyond`, `over`, `changes.beyond`, `why` cümlesi) ve `suggest` (profil sınıfının `work`'ü;
+  map.work.query.json'un 30 yeni durumu); web Harita işi'nde Önerilen satırı ve Kayma sınırı.
 - MAP-12 / ADR 5260: web'in `cad.orthophoto.network` (25 durum) ve `cad.orthophoto.footprint` (21 durum) işleyicileri
   (ortak çekirdeğin `ops::seam_network`'ü WASM'den); web Mozaik birleşme çizgisi'nde Ağ ve Ayak izi.
 - MAP-20 / ADR 5240: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin `contingents`,

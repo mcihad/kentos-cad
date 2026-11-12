@@ -261,6 +261,19 @@ pub fn shift(then: &Shape, now: &Shape) -> Shift {
     Shift { paired, vertices: [va.len(), vb.len()], largest, rms, hausdorff: hausdorff(then, now) }
 }
 
+/// How many vertices moved farther than `limit` (docs/adr/5280), when they pair one to one; none otherwise.
+pub fn vertices_beyond(then: &Shape, now: &Shape, limit: f64) -> Option<usize> {
+    let (va, vb) = (entity_vertices(then), entity_vertices(now));
+    if !(same_kind(then, now) && va.len() == vb.len() && !va.is_empty()) {
+        return None;
+    }
+    let d = |p: &Vec2, q: &Vec2| {
+        let (dx, dy) = (q.x - p.x, q.y - p.y);
+        (dx * dx + dy * dy).sqrt()
+    };
+    Some(va.iter().zip(&vb).filter(|(p, q)| d(p, q) > limit).count())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

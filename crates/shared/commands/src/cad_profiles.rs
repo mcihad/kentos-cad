@@ -107,12 +107,17 @@ pub struct ProfileClass {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub registered_area: Option<RegisteredArea>,
-    /// The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+    /// The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; a feature code library's codes,
     /// description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
     /// point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub codes: Vec<String>,
+    /// The map work items' kinds the class suits (docs/adr/5280): `map.work.query`'s `suggest` offers the profile, with
+    /// these classes, to an item of the kind without a profile. A profile's (an office's) own choice, not a rule.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::WorkKind>>", optional))]
+    pub work: Vec<crate::WorkKind>,
 }
 
 /// Whether `code` can be a class's field code: a capital ASCII letter, then capital ASCII letters, 1–12 in all (the

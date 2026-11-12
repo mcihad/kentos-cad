@@ -3962,6 +3962,24 @@ LibraryOperationName = Literal["create", "update", "duplicate", "rename", "move"
 """The names of :class:`LibraryOperation`, for a plain string."""
 
 
+class LimitBasis(_StrEnum):
+    """What a shift limit rests on.
+
+    - ``own``: The user's own value (`metres`).
+    - ``detail``: A detail's position: BÖHHBÜY m. 46(1).
+    - ``drawing``: A point's place on the drawing at `scale`: BÖHHBÜY m. 78(1)(h).
+    - ``method``: The point position accuracy of `method` at `scale`: the error limit regulation's m. 9(1) table.
+    """
+    OWN = "own"
+    DETAIL = "detail"
+    DRAWING = "drawing"
+    METHOD = "method"
+
+
+LimitBasisName = Literal["own", "detail", "drawing", "method"]
+"""The names of :class:`LimitBasis`, for a plain string."""
+
+
 class LineEnd(_StrEnum):
     """Which end of a line."""
     START = "start"
@@ -57412,16 +57430,21 @@ class MapWorkQuery(_Model):
     is only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a
     derivation comes from, an approved item with a stamp; docs/adr/2080 §1).
     `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
-    paths and the search paths (docs/adr/1201 §1).
+    paths and the search paths (docs/adr/1201 §1). `limit` (docs/adr/5280) sets each changed object's shift against a
+    limit; `suggest` lists, for an item without a profile, the profiles whose classes say they suit its kind.
 
-    Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,
-    `entity_not_found`.
+    Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_input`
+    (`limit`), `invalid_uid`, `entity_not_found`.
     Attributes:
         drawing: The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
             its relative path from this file's folder, then in the project's search paths. None: only at its path.
+        limit: The limit each changed object's shift is set against (docs/adr/5280).
+        suggest: List the suggested profiles of the items without one (docs/adr/5280).
     """
     deep: bool | Unset = UNSET
     drawing: str | None | Unset = UNSET
+    limit: ShiftLimit | None | Unset = UNSET
+    suggest: bool | Unset = UNSET
     uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -57430,6 +57453,10 @@ class MapWorkQuery(_Model):
             out["deep"] = self.deep
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else self.limit.to_json()
+        if self.suggest is not UNSET:
+            out["suggest"] = self.suggest
         if self.uid is not UNSET:
             out["uid"] = self.uid
         return out
@@ -57439,6 +57466,8 @@ class MapWorkQuery(_Model):
         return cls(
             deep=data.get("deep", UNSET),
             drawing=data.get("drawing", UNSET),
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else ShiftLimit.from_json(data["limit"]),
+            suggest=data.get("suggest", UNSET),
             uid=data.get("uid", UNSET),
         )
 
@@ -57527,6 +57556,7 @@ class MapWorkTree(_Model):
     Attributes:
         stale: Unit: count.
         problems: Unit: count.
+        limit: The limit the shifts were set against, and its source (docs/adr/5280).
     """
     items: list[WorkRow]
     derivations: list[WorkDerivationRow]
@@ -57534,6 +57564,7 @@ class MapWorkTree(_Model):
     problems: int
     deep: bool
     revision: str
+    limit: ShiftLimitUsed | None | Unset = UNSET
     object: WorkObjectSource | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -57544,6 +57575,8 @@ class MapWorkTree(_Model):
         out["problems"] = self.problems
         out["deep"] = self.deep
         out["revision"] = self.revision
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else self.limit.to_json()
         if self.object is not UNSET:
             out["object"] = None if self.object is None else self.object.to_json()
         return out
@@ -57557,6 +57590,7 @@ class MapWorkTree(_Model):
             problems=data["problems"],
             deep=data["deep"],
             revision=data["revision"],
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else ShiftLimitUsed.from_json(data["limit"]),
             object=UNSET if "object" not in data else None if data["object"] is None else WorkObjectSource.from_json(data["object"]),
         )
 
@@ -76049,10 +76083,12 @@ class ProfileClass(_Model):
         theme: The theme it belongs to, as the profile names it (“Kadastro”).
         layer: The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).
         color: The layer's colour when the profile adds it (a palette name or `#RRGGBB`).
-        codes: The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+        codes: The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; a feature code library's codes,
             description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
             point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
         key: The identifier field: unique among the class's objects.
+        work: The map work items' kinds the class suits (docs/adr/5280): `map.work.query`'s `suggest` offers the profile, with
+            these classes, to an item of the kind without a profile. A profile's (an office's) own choice, not a rule.
     """
     id: str
     title: str
@@ -76064,6 +76100,7 @@ class ProfileClass(_Model):
     codes: list[str] | Unset = UNSET
     key: str | None | Unset = UNSET
     registered_area: RegisteredArea | None | Unset = UNSET
+    work: list[WorkKind | WorkKindName] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -76080,6 +76117,8 @@ class ProfileClass(_Model):
             out["key"] = self.key
         if self.registered_area is not UNSET:
             out["registeredArea"] = None if self.registered_area is None else self.registered_area.to_json()
+        if self.work is not UNSET:
+            out["work"] = [_enum_out(e0) for e0 in self.work]
         return out
 
     @classmethod
@@ -76095,6 +76134,7 @@ class ProfileClass(_Model):
             codes=list(data["codes"]) if "codes" in data else UNSET,
             key=data.get("key", UNSET),
             registered_area=UNSET if "registeredArea" not in data else None if data["registeredArea"] is None else RegisteredArea.from_json(data["registeredArea"]),
+            work=[_enum_in(WorkKind, e0) for e0 in data["work"]] if "work" in data else UNSET,
         )
 
 
@@ -94041,6 +94081,63 @@ class SheetsSetResult(_Model):
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
             standard_ratios=UNSET if "standardRatios" not in data else None if data["standardRatios"] is None else [PaperScaleRatio.from_json(e0) for e0 in data["standardRatios"]],
             templates=UNSET if "templates" not in data else None if data["templates"] is None else [PaperTemplate.from_json(e0) for e0 in data["templates"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShiftLimit(_Model):
+    """Input of a shift limit: its basis, and what the basis takes: `metres` (own), `scale` (drawing, method), `method`
+    (method: a table's method id).
+    Attributes:
+        metres: Unit: m.
+        scale: The scale's denominator (1000 for 1/1000). Unit: 1.
+    """
+    basis: LimitBasis | LimitBasisName
+    method: str | None | Unset = UNSET
+    metres: float | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["basis"] = _enum_out(self.basis)
+        if self.method is not UNSET:
+            out["method"] = self.method
+        if self.metres is not UNSET:
+            out["metres"] = None if self.metres is None else float(self.metres)
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShiftLimit:
+        return cls(
+            basis=_enum_in(LimitBasis, data["basis"]),
+            method=data.get("method", UNSET),
+            metres=UNSET if "metres" not in data else None if data["metres"] is None else float(data["metres"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShiftLimitUsed(_Model):
+    """The limit a query used: its value and what it rests on, in words.
+    Attributes:
+        metres: Unit: m.
+    """
+    metres: float
+    source: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["metres"] = float(self.metres)
+        out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShiftLimitUsed:
+        return cls(
+            metres=float(data["metres"]),
+            source=data["source"],
         )
 
 
@@ -116631,6 +116728,7 @@ class WorkChanges(_Model):
         added: Unit: count.
         removed: Unit: count.
         changed: Unit: count.
+        beyond: With a limit (docs/adr/5280): how many of the listed objects moved beyond it. Unit: count.
         objects: Each changed object with the parts that changed (docs/adr/3280), by id, at most [`WORK_CHANGES_LISTED`].
         parts: Of the changed objects, how many changed in each part (docs/adr/3280; an object may change in several), when the
             approval kept its objects' parts (schema 211).
@@ -116640,6 +116738,7 @@ class WorkChanges(_Model):
     added: int
     removed: int
     changed: int
+    beyond: int | None | Unset = UNSET
     objects: list[WorkChangedObject] | Unset = UNSET
     parts: WorkChangedParts | None | Unset = UNSET
     removed_objects: list[WorkRemovedObject] | Unset = UNSET
@@ -116650,6 +116749,8 @@ class WorkChanges(_Model):
         out["added"] = self.added
         out["removed"] = self.removed
         out["changed"] = self.changed
+        if self.beyond is not UNSET:
+            out["beyond"] = self.beyond
         if self.objects is not UNSET:
             out["objects"] = [e0.to_json() for e0 in self.objects]
         if self.parts is not UNSET:
@@ -116666,6 +116767,7 @@ class WorkChanges(_Model):
             added=data["added"],
             removed=data["removed"],
             changed=data["changed"],
+            beyond=data.get("beyond", UNSET),
             objects=[WorkChangedObject.from_json(e0) for e0 in data["objects"]] if "objects" in data else UNSET,
             parts=UNSET if "parts" not in data else None if data["parts"] is None else WorkChangedParts.from_json(data["parts"]),
             removed_objects=[WorkRemovedObject.from_json(e0) for e0 in data["removedObjects"]] if "removedObjects" in data else UNSET,
@@ -117047,6 +117149,31 @@ class WorkProfileRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkProfileSuggestion(_Model):
+    """A profile suggested for an item's kind (docs/adr/5280): its name and title, and its classes that say they suit
+    the kind, in the profile's order.
+    """
+    name: str
+    title: str
+    classes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["title"] = self.title
+        out["classes"] = list(self.classes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkProfileSuggestion:
+        return cls(
+            name=data["name"],
+            title=data["title"],
+            classes=list(data["classes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkRemovedObject(_Model):
     """A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id)."""
     uid: str
@@ -117079,6 +117206,7 @@ class WorkRow(_Model):
         content: Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
             read worked it out (deep, a source of a derivation, an approved item with a stamp).
         profile: Its typed layers' profile and how its classes stand (docs/adr/4880).
+        suggested: With `suggest`, for an item without a profile: the profiles whose classes suit its kind (docs/adr/5280).
     """
     id: str
     kind: WorkKind | WorkKindName
@@ -117092,6 +117220,7 @@ class WorkRow(_Model):
     file: WorkFileRow | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
     profile: WorkProfileRow | None | Unset = UNSET
+    suggested: list[WorkProfileSuggestion] | Unset = UNSET
     why: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -117114,6 +117243,8 @@ class WorkRow(_Model):
             out["layers"] = list(self.layers)
         if self.profile is not UNSET:
             out["profile"] = None if self.profile is None else self.profile.to_json()
+        if self.suggested is not UNSET:
+            out["suggested"] = [e0.to_json() for e0 in self.suggested]
         if self.why is not UNSET:
             out["why"] = list(self.why)
         return out
@@ -117133,6 +117264,7 @@ class WorkRow(_Model):
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             profile=UNSET if "profile" not in data else None if data["profile"] is None else WorkProfileRow.from_json(data["profile"]),
+            suggested=[WorkProfileSuggestion.from_json(e0) for e0 in data["suggested"]] if "suggested" in data else UNSET,
             why=list(data["why"]) if "why" in data else UNSET,
         )
 
@@ -117145,24 +117277,33 @@ class WorkShift(_Model):
     Attributes:
         paired: Its vertices pair one to one with the approved ones (same kind, as many).
         vertices: How many vertices it had approved and has now. Unit: count.
+        beyond: With a limit (docs/adr/5280): whether it moved beyond it, by its largest vertex move when paired, else by the
+            Hausdorff distance; the full value is set against the limit, not a rounded one.
         hausdorff: The outlines' Hausdorff distance, to a millionth of a millimetre; none for an object without a point (a text).
         largest: The largest vertex move, when paired.
+        over: With a limit, when paired: how many vertices moved beyond it. Unit: count.
         rms: The vertex moves' root mean square, when paired. Unit: m.
     """
     paired: bool
     vertices: list[int]
+    beyond: bool | None | Unset = UNSET
     hausdorff: WorkFarthest | None | Unset = UNSET
     largest: WorkVertexMove | None | Unset = UNSET
+    over: int | None | Unset = UNSET
     rms: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["paired"] = self.paired
         out["vertices"] = list(self.vertices)
+        if self.beyond is not UNSET:
+            out["beyond"] = self.beyond
         if self.hausdorff is not UNSET:
             out["hausdorff"] = None if self.hausdorff is None else self.hausdorff.to_json()
         if self.largest is not UNSET:
             out["largest"] = None if self.largest is None else self.largest.to_json()
+        if self.over is not UNSET:
+            out["over"] = self.over
         if self.rms is not UNSET:
             out["rms"] = None if self.rms is None else float(self.rms)
         return out
@@ -117172,8 +117313,10 @@ class WorkShift(_Model):
         return cls(
             paired=data["paired"],
             vertices=list(data["vertices"]),
+            beyond=data.get("beyond", UNSET),
             hausdorff=UNSET if "hausdorff" not in data else None if data["hausdorff"] is None else WorkFarthest.from_json(data["hausdorff"]),
             largest=UNSET if "largest" not in data else None if data["largest"] is None else WorkVertexMove.from_json(data["largest"]),
+            over=data.get("over", UNSET),
             rms=UNSET if "rms" not in data else None if data["rms"] is None else float(data["rms"]),
         )
 
@@ -141247,6 +141390,8 @@ __all__ = [
     "LibraryEdited",
     "LibraryOperation",
     "LibraryOperationName",
+    "LimitBasis",
+    "LimitBasisName",
     "LinLineProblem",
     "LineArrayLayout",
     "LineCreate",
@@ -142858,6 +143003,8 @@ __all__ = [
     "SheetsSet",
     "SheetsSetResult",
     "ShelterTableSource",
+    "ShiftLimit",
+    "ShiftLimitUsed",
     "ShiftReference",
     "ShiftWallsOperation",
     "ShowHeaderPaperEmptyTable",
@@ -143729,6 +143876,7 @@ __all__ = [
     "WorkObjectSource",
     "WorkProfile",
     "WorkProfileRow",
+    "WorkProfileSuggestion",
     "WorkRemovedObject",
     "WorkRow",
     "WorkShift",

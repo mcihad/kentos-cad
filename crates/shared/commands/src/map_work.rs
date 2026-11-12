@@ -26,10 +26,11 @@ pub const MAP_WORK_RESTORE_VERSION: u32 = 1;
 /// is only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a
 /// derivation comes from, an approved item with a stamp; docs/adr/2080 §1).
 /// `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
-/// paths and the search paths (docs/adr/1201 §1).
+/// paths and the search paths (docs/adr/1201 §1). `limit` (docs/adr/5280) sets each changed object's shift against a
+/// limit; `suggest` lists, for an item without a profile, the profiles whose classes say they suit its kind.
 ///
-/// Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,
-/// `entity_not_found`.
+/// Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_input`
+/// (`limit`), `invalid_uid`, `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -47,6 +48,14 @@ pub struct MapWorkQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
+    /// The limit each changed object's shift is set against (docs/adr/5280).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub limit: Option<crate::ShiftLimit>,
+    /// List the suggested profiles of the items without one (docs/adr/5280).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub suggest: bool,
 }
 
 /// How an item's file stands: there (looked for only), the same content as its revision, other content, not there.
@@ -142,6 +151,10 @@ pub struct WorkRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub profile: Option<WorkProfileRow>,
+    /// With `suggest`, for an item without a profile: the profiles whose classes suit its kind (docs/adr/5280).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkProfileSuggestion>>", optional))]
+    pub suggested: Vec<WorkProfileSuggestion>,
     pub state: WorkState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -179,6 +192,24 @@ pub struct WorkChanges {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkRemovedObject>>", optional))]
     pub removed_objects: Vec<WorkRemovedObject>,
+    /// With a limit (docs/adr/5280): how many of the listed objects moved beyond it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub beyond: Option<u32>,
+}
+
+/// A profile suggested for an item's kind (docs/adr/5280): its name and title, and its classes that say they suit
+/// the kind, in the profile's order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkProfileSuggestion {
+    pub name: String,
+    pub title: String,
+    pub classes: Vec<String>,
 }
 
 /// A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id).
@@ -284,6 +315,16 @@ pub struct WorkShift {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub hausdorff: Option<WorkFarthest>,
+    /// With a limit (docs/adr/5280): whether it moved beyond it, by its largest vertex move when paired, else by the
+    /// Hausdorff distance; the full value is set against the limit, not a rounded one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub beyond: Option<bool>,
+    /// With a limit, when paired: how many vertices moved beyond it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub over: Option<u32>,
 }
 
 /// One vertex's move: its number (from 0, in the object's vertex order), east and north, its length.
@@ -440,6 +481,10 @@ pub struct MapWorkTree {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub problems: u32,
     pub deep: bool,
+    /// The limit the shifts were set against, and its source (docs/adr/5280).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub limit: Option<crate::ShiftLimitUsed>,
     pub revision: String,
 }
 

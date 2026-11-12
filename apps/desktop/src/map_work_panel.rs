@@ -14,6 +14,9 @@
 //! layer joining the item); an item with a profile has a Profil row under it (its classes, findings and free layers).
 //! Değişenler also draws the removed objects' approved shapes and lists how far each changed geometry moved (vertex by
 //! vertex, the Hausdorff distance) in a table under the tree.
+//!
+//! docs/adr/5280: the table sets each shift against the limit Kayma sınırı picks (map_work_limit.rs); Tipli katman
+//! offers, for an item without a profile, the profile whose classes suit its kind (KentOS's or the project's own).
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -73,13 +76,16 @@ pub enum Event {
     ProfileClass(String),
     ProfileAdd,
     ProfileRemove(String),
+    /// docs/adr/5280: the item given its suggested profile; the shift limit's row.
+    Suggest(String),
+    Limit(crate::map_work_limit::LimitEvent),
 }
 
 fn msg(e: Event) -> Message {
     Message::MapWork(e)
 }
 
-type Read = (String, bool, Result<MapWorkTree, String>);
+type Read = (String, bool, String, Result<MapWorkTree, String>);
 
 /// The panel's state: deep or quick, the new item's kind and name, the user's folds, the filter, and the last tree.
 pub struct PanelState {
@@ -99,6 +105,9 @@ pub struct PanelState {
     profile_class: Option<String>,
     /// How far the objects Değişenler selected moved (docs/adr/4880): the table's rows.
     pub(crate) shifts: Vec<Vec<String>>,
+    /// docs/adr/5280: the shift limit, and the item whose changes the table shows.
+    pub(crate) limit: crate::map_work_limit::LimitPick,
+    changes_of: Option<String>,
 }
 
 impl Default for PanelState {
@@ -115,6 +124,8 @@ impl Default for PanelState {
             profile_item: None,
             profile_class: None,
             shifts: Vec::new(),
+            limit: crate::map_work_limit::LimitPick::default(),
+            changes_of: None,
         }
     }
 }
@@ -184,17 +195,27 @@ impl App {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
         let deep = self.map_work.deep;
+        let key = self.map_work.limit.key();
         let mut kept = self.map_work.read.borrow_mut();
-        if let Some((r, d, answer)) = kept.as_ref()
+        if let Some((r, d, k, answer)) = kept.as_ref()
             && *r == revision
             && *d == deep
+            && *k == key
         {
             return Some(answer.clone());
         }
         // A moved project's files are found by their relative paths and the search paths (docs/adr/1201 §1).
         let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
-        let answer = map_work::preview(&doc.model, deep, None, drawing.as_deref());
-        *kept = Some((revision, deep, answer.clone()));
+        // docs/adr/5280: the limit when it holds (the row says why not), and the suggested profiles.
+        let input = kentos_commands::MapWorkQuery {
+            deep,
+            drawing,
+            uid: None,
+            limit: self.map_work.limit.holding(),
+            suggest: true,
+        };
+        let answer = map_work::preview(&doc.model, &input);
+        *kept = Some((revision, deep, key, answer.clone()));
         Some(answer)
     }
 
@@ -282,6 +303,35 @@ impl App {
         }
     }
 
+    /// docs/adr/5280: the item given the first profile suggested for its kind, with the classes that suit it.
+    fn map_work_suggest(&mut self, item: &str) {
+        let Some(Ok(tree)) = self.map_work_read() else { return };
+        let Some(s) = tree.items.iter().find(|r| r.id == item).and_then(|r| r.suggested.first()).cloned() else { return };
+        let op = MapWorkOperation::Profile { item: item.to_owned(), name: Some(s.name.clone()), classes: s.classes.clone() };
+        if let Some(out) = self.map_work_edit(op) {
+            self.say(
+                Level::Success,
+                format!(
+                    "“{}” profilinin {} sınıfı öğeye verildi ({} katman, {} alan eklendi).",
+                    s.title,
+                    s.classes.len(),
+                    out.layers.len(),
+                    out.fields.len()
+                ),
+            );
+        }
+    }
+
+    /// docs/adr/5280: the shift table's rows read again against the limit now.
+    fn map_work_shifts_again(&mut self) {
+        let Some(id) = self.map_work.changes_of.clone() else { return };
+        let Some(Ok(tree)) = self.map_work_read() else { return };
+        let decimals = self.document.as_ref().map_or(3, |d| d.model.settings().length_decimals as usize);
+        if let Some(c) = tree.items.iter().find(|r| r.id == id).and_then(|r| r.changes.as_ref()) {
+            self.map_work.shifts = shift_rows(c, decimals);
+        }
+    }
+
     fn pick_file(title: &'static str, then: impl FnOnce(Option<PathBuf>) -> Event + Send + 'static) -> Task<Message> {
         Task::perform(
             async move { rfd::AsyncFileDialog::new().set_title(title).pick_file().await.map(|f| f.path().to_path_buf()) },
@@ -343,6 +393,11 @@ impl App {
             Event::ProfileItem(id) => self.map_work.profile_item = Some(id),
             Event::ProfileClass(c) => self.map_work.profile_class = Some(c),
             Event::ProfileAdd => self.map_work_profile_add(),
+            Event::Suggest(id) => self.map_work_suggest(&id),
+            Event::Limit(e) => {
+                self.map_work.limit.apply(e);
+                self.map_work_shifts_again();
+            }
             Event::ProfileRemove(id) => {
                 if self.map_work_edit(MapWorkOperation::Profile { item: id, name: None, classes: Vec::new() }).is_some() {
                     self.say(Level::Info, "Öğenin tipli katman profili kaldırıldı; katmanları öğede kalır.".to_owned());
@@ -532,6 +587,7 @@ impl App {
     /// Değişenler (docs/adr/2880 §4): the objects changed and added since the item's approval selected
     /// and shown, as the tree lists them (at most `WORK_CHANGES_LISTED`); the removed ones are gone from the drawing.
     fn select_changes(&mut self, id: &str) {
+        self.map_work.changes_of = Some(id.to_owned());
         let Some(Ok(tree)) = self.map_work_read() else { return };
         let Some(c) = tree.items.iter().find(|r| r.id == id).and_then(|r| r.changes.clone()) else { return };
         let Some(doc) = self.document.as_ref() else { return };
@@ -687,6 +743,22 @@ impl App {
                 .spacing(4)
                 .align_y(Center),
             );
+            // docs/adr/5280: the profile suggested for the item's kind, when it has none.
+            if let Some(s) = tree.items.iter().find(|r| r.id == item).and_then(|r| r.suggested.first()) {
+                head = head.push(
+                    row![
+                        container(label::caption("Önerilen")).width(84),
+                        container(label::caption(format!("{} · {} sınıf", s.title, s.classes.len()))).width(Fill),
+                        crate::style::strip::icon_button(
+                            Icon::Check,
+                            "Önerilen profili öğeye ver: türüne uyan sınıfları, katmanları ve alanlarıyla",
+                            Some(msg(Event::Suggest(item.clone()))),
+                        ),
+                    ]
+                    .spacing(4)
+                    .align_y(Center),
+                );
+            }
         }
         let mut items = Vec::new();
         for (name, kind, heading, glyph) in KINDS {
@@ -715,7 +787,7 @@ impl App {
         // Docs/adr/4880: how far the objects Değişenler selected moved, while their shapes are drawn.
         if self.map_work.approved.as_ref().is_some_and(|a| a.version == self.selection.version()) && !self.map_work.shifts.is_empty() {
             use crate::road_dialog::{col, num};
-            let cols = vec![
+            let mut cols = vec![
                 col("Nesne", 90.0),
                 num("Köşe", 56.0),
                 num("En büyük (m)", 88.0),
@@ -723,9 +795,14 @@ impl App {
                 num("KOH (m)", 72.0),
                 num("Hausdorff (m)", 92.0),
             ];
+            // docs/adr/5280: against the limit, when one holds.
+            if self.map_work.limit.holding().is_some() {
+                cols.insert(1, col("Sınır", 112.0));
+            }
             all = all.push(
                 column![
                     label::caption("Onaydan sonra kaymalar"),
+                    crate::map_work_limit::view(&self.map_work.limit),
                     crate::road_dialog::sheet(cols, self.map_work.shifts.clone(), "Kayan nesne yok.", 160.0),
                 ]
                 .spacing(4)
@@ -879,6 +956,18 @@ pub(crate) fn shift_rows(c: &WorkChanges, decimals: usize) -> Vec<Vec<String>> {
                 s.rms.map_or("—".to_owned(), m),
                 s.hausdorff.as_ref().map_or("—".to_owned(), |h| m(h.d)),
             ])
+            .map(|mut r| {
+                // docs/adr/5280: against the limit, with the vertices beyond it when they pair.
+                // Beside the object: the dock is narrow.
+                if let Some(b) = s.beyond {
+                    r.insert(1, match (b, s.over) {
+                        (true, Some(k)) => format!("Dışında ({k} köşe)"),
+                        (true, None) => "Dışında".to_owned(),
+                        (false, _) => "İçinde".to_owned(),
+                    });
+                }
+                r
+            })
         })
         .collect()
 }
@@ -979,6 +1068,10 @@ fn changes_item<'a>(r: &WorkRow, c: &WorkChanges) -> StatusItem<'a, Message> {
     });
     if there > c.uids.len() {
         detail.push(format!("İlk {} nesne seçilir.", c.uids.len()));
+    }
+    // docs/adr/5280: how many moved beyond the limit chosen.
+    if let Some(k) = c.beyond {
+        detail.push(format!("Kayma sınırının dışında: {k} nesne."));
     }
     let total = c.changed + c.added + c.removed;
     let mut item = StatusItem::new(format!("ch:{}", r.id), "Değişenler")

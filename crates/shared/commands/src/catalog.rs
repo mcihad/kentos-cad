@@ -10755,7 +10755,9 @@ pub fn catalog() -> CommandCatalog {
             summary: "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol). \
                       Onaydan sonra değişen öğenin changes'i: eklenen, silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve ne kadar kaydığı (objects[].shift: aynı türde ve aynı köşe sayısındaysa köşe köşe en büyük kayma, köşe numarası ve KOH; her durumda iki şeklin Hausdorff uzaklığı ve yeri), silinen nesnelerin onaylanan hâli (removedObjects). \
                       Profili olan öğenin profile'ı: profil bulundu mu, başlığı, sürümü, öğenin sınıfları (katmanı, nesne ve bulgu sayısı), bulguları (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi olan serbest katmanları. \
-                      Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found."
+                      limit: kayma sınırı; basis own (metres), detail (BÖHHBÜY m. 46(1), ±7 cm), drawing (m. 78(1)(h), ±0,2 mm × scale) ya da method (Tapu Planlarında Yanılma Sınırı Yönetmeliği m. 9(1) tablosu: method ve scale; tabloda olmayan ölçek ve boş hücre reddedilir). Değerler kural dosyasındadır (konum-dogrulugu-2022). Her kaymanın beyond'u (köşeleri eşleniyorsa en büyük köşe kayması, eşlenmiyorsa Hausdorff sınırdan büyük mü) ve over'ı (sınırı aşan köşe sayısı), changes.beyond (sınırı aşan nesne sayısı), ağacın limit'i (değeri ve kaynağı); sınır içinde olmak teknik hata olmadığı yargısı değildir. \
+                      suggest: profili olmayan öğeye türüne uyan profiller (suggested: adı, başlığı, sınıfları; sınıfın work alanı öğe türlerini söyler): KentOS'unkiler, çizimin içindekiler ve proje klasörününkiler (kurumun profili). \
+                      Retler: not_a_map_project, invalid_file_path, invalid_input (limit), invalid_uid, entity_not_found."
                 .into(),
             aliases: vec!["haritaisi".into()],
             effect: CommandEffect::Query,
@@ -10769,11 +10771,18 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::MapWorkTree>(),
             plan: Some(schema::<crate::MapWorkTree>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "Dosyaları okuyarak, bir noktanın kaynağıyla".into(),
-                input: json!({ "deep": true, "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11" }),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "Dosyaları okuyarak, bir noktanın kaynağıyla".into(),
+                    input: json!({ "deep": true, "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kaymalar sayısal üretimin 1/1000 nokta konum doğruluğuyla; önerilen profillerle".into(),
+                    input: json!({ "limit": { "basis": "method", "method": "sayisal", "scale": 1000 }, "suggest": true }),
+                    output: None,
+                },
+            ],
         },
         CommandDescriptor {
             id: crate::MAP_WORK_EDIT.into(),

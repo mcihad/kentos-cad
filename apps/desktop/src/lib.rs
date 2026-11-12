@@ -184,6 +184,7 @@ mod blocks_panel;
 mod navigator;
 mod road_project_panel;
 mod map_work_panel;
+mod map_work_limit;
 mod map_survey_panel;
 mod map_survey_network_rows;
 mod bottom;
@@ -380,6 +381,8 @@ mod road_project_panel_tests;
 mod road_project_regional_tests;
 #[cfg(test)]
 mod map_work_panel_tests;
+#[cfg(test)]
+mod map_work_limit_tests;
 #[cfg(test)]
 mod map_work_tools_tests;
 #[cfg(test)]

@@ -4111,8 +4111,11 @@ impl Input for kentos_commands::MapWorkRestore {
     }
 }
 impl Input for kentos_commands::MapWorkQuery {
-    fn number(&mut self, _path: &str) -> Option<&mut f64> {
-        None
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "limit.metres" => self.limit.as_mut()?.metres.as_mut(),
+            _ => None,
+        }
     }
 }
 impl Input for kentos_commands::MapWorkEdit {

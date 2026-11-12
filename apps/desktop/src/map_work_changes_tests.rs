@@ -75,7 +75,7 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     assert_eq!(got.removed_objects.len(), 1);
     assert_eq!(got.removed_objects[0].approved["kind"], "line");
     let removed_objects = got.removed_objects.clone();
-    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects, removed_objects };
+    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects, removed_objects, beyond: None };
     assert_eq!(t.items[3].changes.as_ref(), Some(&changes));
     assert_eq!(
         crate::map_work_panel::changes_words(&changes),

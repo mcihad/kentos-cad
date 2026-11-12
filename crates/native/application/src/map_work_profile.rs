@@ -99,3 +99,36 @@ pub(crate) fn row(doc: &Document, work: &MapWork, item: &WorkItem, drawing: Opti
         free,
     })
 }
+
+/// docs/adr/5280: the profiles whose classes say they suit `kind` (each with those classes, in its order): KentOS's,
+/// the drawing's copies and the project folder's files (an office's profile is one of these), each name once, in the
+/// list's order. A profile that does not read is left out; the profiles' list says why.
+pub(crate) fn suggested(
+    doc: &Document,
+    kind: kentos_commands::WorkKind,
+    drawing: Option<&str>,
+) -> Vec<kentos_commands::WorkProfileSuggestion> {
+    let listed = crate::profile_files::list::run(
+        &doc.settings().profile_files,
+        &kentos_commands::ProfilesList { drawing: drawing.map(str::to_owned) },
+    );
+    let mut names: Vec<String> = Vec::new();
+    for it in listed.items {
+        if it.kind == kentos_commands::ProfileFileKind::Profile
+            && it.problem.is_none()
+            && !it.shadowed
+            && !names.contains(&it.name)
+        {
+            names.push(it.name);
+        }
+    }
+    names
+        .into_iter()
+        .filter_map(|name| {
+            let p = load(doc, &name, drawing, "suggest").ok()?;
+            let classes: Vec<String> =
+                p.classes.iter().filter(|c| c.work.contains(&kind)).map(|c| c.id.clone()).collect();
+            (!classes.is_empty()).then(|| kentos_commands::WorkProfileSuggestion { name, title: p.title, classes })
+        })
+        .collect()
+}

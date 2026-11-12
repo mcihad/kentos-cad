@@ -3,6 +3,7 @@ import type { WorkChanges } from "./WorkChanges";
 import type { WorkFileRow } from "./WorkFileRow";
 import type { WorkKind } from "./WorkKind";
 import type { WorkProfileRow } from "./WorkProfileRow";
+import type { WorkProfileSuggestion } from "./WorkProfileSuggestion";
 import type { WorkState } from "./WorkState";
 import type { WorkStatus } from "./WorkStatus";
 
@@ -29,4 +30,8 @@ changes?: WorkChanges,
 /**
  * Its typed layers' profile and how its classes stand (docs/adr/4880).
  */
-profile?: WorkProfileRow, state: WorkState, why?: Array<string>, };
+profile?: WorkProfileRow, 
+/**
+ * With `suggest`, for an item without a profile: the profiles whose classes suit its kind (docs/adr/5280).
+ */
+suggested?: Array<WorkProfileSuggestion>, state: WorkState, why?: Array<string>, };
