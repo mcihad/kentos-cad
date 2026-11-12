@@ -1,0 +1,162 @@
+# 2+1 daire, faz kapısı (docs/adr/8052; üretici scripts/usage/real/scenario_2p1_faz.py).
+# Oynatma: KENTOS_REAL_SIZE=1920x1080 KENTOS_BIN=target/release/kentos-cad scripts/usage/real/session.sh
+#   fixtures/interaction/real/daire-2p1-faz.txt .run/gui-evidence/faz-2p1 --modul mimari
+fit KentOS Mimari
+wait 2000
+click 594 425   # Başlangıç: Yeni proje
+wait 2500
+# Kabuk: Dikdörtgen duvar, iç net 11 × 8, Dış duvar 25
+click 31 104    # Duvar ▾
+wait 500
+click 94 172    # araç: Dikdörtgen duvar
+wait 600
+type 0,0
+key Return
+type 11,8
+key Return
+wait 800
+key Escape       # Home araç açıkken komut satırına gider
+key Home
+wait 1200
+shot f01-kabuk
+# Odalar: Oda, İç duvar 15; adı listeden, köşeleri yazılarak
+click 88 75     # araç: Oda
+wait 600
+click 935 1032  # Stil ▾
+wait 400
+click 943 880   # İç duvar 15
+wait 400
+click 240 1032  # Mahal adı ▾
+wait 400
+click 236 469   # Salon
+wait 300
+type 0,0
+key Return
+type 4.5,8
+key Return
+wait 1000
+click 240 1032  # Mahal adı ▾
+wait 400
+click 236 525   # Yatak odası
+wait 300
+type 4.65,0
+key Return
+type 8.15,4.5
+key Return
+wait 1000
+click 240 1032  # Mahal adı ▾
+wait 400
+click 236 525   # Yatak odası
+wait 300
+type 8.3,0
+key Return
+type 11,4.5
+key Return
+wait 1000
+click 240 1032  # Mahal adı ▾
+wait 400
+click 236 833   # Koridor
+wait 300
+type 4.65,4.65
+key Return
+type 7.85,8
+key Return
+wait 1000
+click 240 1032  # Mahal adı ▾
+wait 400
+click 236 665   # Banyo
+wait 300
+type 8,4.65
+key Return
+type 11,8
+key Return
+wait 1000
+shot f02-odalar
+# Kapılar: Kapı 90, girişte Genişlik 1,0
+click 153 75    # araç: Kapı
+wait 600
+click 685 363   # kapı: salon-koridor
+wait 300
+click 845 514   # kapı: yatak 1
+wait 300
+click 1134 514   # kapı: yatak 2
+wait 300
+click 978 363   # kapı: banyo
+wait 300
+key e          # Genişlik
+type 1
+key Return
+wait 300
+click 827 203   # giriş kapısı
+wait 300
+# Pencereler: Pencere 120
+click 210 75    # araç: Pencere
+wait 600
+click 481 926   # pencere
+wait 300
+click 845 926   # pencere
+wait 300
+click 1134 926   # pencere
+wait 300
+click 1259 363   # pencere
+wait 300
+click 273 565   # pencere
+wait 300
+wait 300
+shot f04-aciklik
+# Mutfak dizisi: Salon'un üst duvarı boyunca 3 m
+click 614 107   # Donatı ▾
+wait 400
+click 645 144   # araç: Mutfak
+wait 600
+click 284 214
+click 547 214
+click 415 302
+wait 800
+shot f05-mutfak
+# Ölçüler: Planı ölçülendir; döşeme
+click 994 56    # Ölçü ▾
+wait 400
+click 1070 90   # araç: Planı ölçülendir
+wait 1500
+key Return
+wait 1200
+shot f06-olcu
+click 532 56    # araç: Döşeme
+wait 600
+click 459 740
+wait 600
+key Escape
+wait 500
+shot f07-doseme
+# Değişiklik: Bölme 3'ü seç, geçici ölçüyü 3,6 yap
+click 1005 740   # Bölme 3
+wait 800
+click 844 713   # geçici ölçü: batı 3.500
+wait 400
+type 3.6
+key Return
+wait 1500
+key Escape       # seçimi bırak
+wait 300
+shot f08-degisiklik
+# Çizelgeler: kapı ve pencere, mahal
+click 1094 56   # Çizelge ▾
+wait 400
+click 1195 90   # araç: Kapı ve pencere çizelgesi
+wait 600
+click 1379 214
+wait 800
+shot f085-ilk-cizelge
+click 589 20    # Mimari sekmesine dön: tablo yerleşince şerit Tablo sekmesine geçer
+wait 400
+click 1094 56   # Çizelge ▾
+wait 400
+click 1170 118  # araç: Mahal çizelgesi
+wait 600
+click 1379 740
+wait 800
+key Escape
+key Home
+wait 1200
+shot f09-cizelgeler

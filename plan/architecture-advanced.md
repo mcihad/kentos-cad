@@ -1256,14 +1256,14 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 | Aynı harfe istemde ve panelde farklı ad | 49 → **0 (M4)** | 0 | 0 |
 | İstemlerde birden çok harfte duran ad | 12 → **0 (M4)** | 0 | 0 |
 | Komut geçmişinde kimlik ya da İngilizce alan adı (Mimari komutları) | her satırda → **0 (M5)** | 0 | 0 |
-| İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
-| 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |
-| Aynı ikonu paylaşan komut | 10 | 0 | 1 |
-| Görünen şerit düğmesi | 78 komut; 4 büyük + Proje ▾ | ≤ 30, ana araçlar (Mahal, Oda, Donatı dahil) büyük | 1 |
-| Ölçeğe göre ayrıntısı olan nesne türü | 1 | ≥ 6 | 1 |
-| 2+1 gerçek pencerede etkileşim | 147 | ≤ 80 | 2 |
-| 2+1 gerçek pencerede KLM süresi | 177,6 s | ≤ 100 s | 2 |
-| Ruhsat takımı | yok | tek komut, PDF/A | 3 |
+| İlk poşeli duvara eylem | ölçülecek (M1) → **3 (M8, ADR 8007)** | ≤ 3 | 1 |
+| 2+1 örneğinde katman | 1 → **9, türlerine göre (M9, ADR 8008)** | türlerine göre (EK-4) | 1 |
+| Aynı ikonu paylaşan komut | 10 → **0 (M16, ADR 8016)** | 0 | 1 |
+| Görünen şerit düğmesi | 78 komut; 4 büyük + Proje ▾ → **27, altı büyük (M15, ADR 8015)** | ≤ 30, ana araçlar (Mahal, Oda, Donatı dahil) büyük | 1 |
+| Ölçeğe göre ayrıntısı olan nesne türü | 1 → **8: duvar, kapı, pencere, kolon, merdiven, rampa, döşeme kenarı, mobilya (ADR 8010, 8011)** | ≥ 6 | 1 |
+| 2+1 gerçek pencerede etkileşim | 147 → **82 (ADR 8052)** | ≤ 80 | 2 |
+| 2+1 gerçek pencerede KLM süresi | 177,6 s → **121,3 s (ADR 8052)** | ≤ 100 s | 2 |
+| Ruhsat takımı | yok → **tek komut, PDF/A-2b (M37, ADR 8037)** | tek komut, PDF/A | 3 |
 | 100 daire + 200 çizelgede kare | 163 ms | < 100 ms (85 ms, ADR 8051) | 5 |
 
 **Faz kapısı:**

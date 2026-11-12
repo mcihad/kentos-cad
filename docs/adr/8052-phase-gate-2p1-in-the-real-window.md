@@ -1,6 +1,6 @@
 # ADR 8052: Faz kapısı — 2+1 gerçek pencerede bugünkü araçlarla
 
-- **Durum:** sürüyor (12 Kasım 2026); `plan/architecture-advanced.md` §7 "Kabul ölçüleri ve faz kapıları", ADV-26. M51
+- **Durum:** ölçüldü (12 Kasım 2026): 82 etkileşim, KLM 121,3 s; `plan/architecture-advanced.md` §7 "Kabul ölçüleri ve faz kapıları", ADV-26. M51
   ile iş sırası (M1…M51) bitti; §7'nin faz kapısı kabul izlerinin Mimari modülünde, şeritten ve kenetle oynanmasını ve
   sayaç raporunun başlangıçla (ADR 8000: 147 etkileşim, KLM 177,6 s; hedef ≤ 80 ve ≤ 100 s) karşılaştırılmasını ister.
 - **Bağlam belgesi:** ADR 8000 (gerçek pencere düzeneği, 2+1 tabanı), ADR 8018 (seçenekler imlecin yanında), ADR 8021
@@ -49,6 +49,32 @@ yeni projeler: var olan çizimin listesine dokunulmaz (plan §8).
 Oda, dikdörtgenin planı "çizilecek yeni duvar kalmadı" (`nothing_to_set`) derse duvar komutunu atlar; mahal ve etiketi
 aynı "Oda" adımında yazar ("Oda eklendi: mahali (Banyo) ve etiketi; duvarları zaten vardı"). Önizleme bu durumda ret
 göstermez. Başka bir ret (stil, kat, katman) eskisi gibi söylenir ve hiçbir şey yazılmaz.
+
+### 4. Ölçüm: 147 → 82 etkileşim, 177,6 → 121,3 s
+
+`fixtures/interaction/real/daire-2p1-faz.txt` (üretici `scripts/usage/real/scenario_2p1_faz.py`; 1920×1080, KentOS
+Mimari, sahibin ayarlarının kopyası): Yeni proje; Dikdörtgen duvar 11 × 8 (iç net, Dış duvar 25); Oda ile beş oda (İç
+duvar 15, adlar yeni listeden, köşeler yazılarak; sonuncusu Banyo §3 ile); dört Kapı 90 ve 1,00'lık giriş (E); beş Pencere
+120; Mutfak; Planı ölçülendir; Döşeme; Bölme 3'ün geçici ölçüsü 3,500 → 3,6; kapı-pencere ve mahal çizelgeleri. Mahaller
+başlangıçtaki daireyle aynı alanlarda (36,00 · 15,75 · 12,15 · 10,72 · 10,05 m²); değişiklikten sonra 16,20 ve 11,70.
+
+| | 7 Kasım (ADR 8000) | 12 Kasım | Hedef (plan §7) |
+|---|---|---|---|
+| Etkileşim | 147 | **82** | ≤ 80 |
+| Tık / tuş / değer (harf) | 70 / 57 / 14 (71) | 46 / 22 / 14 (69) | |
+| Araç başlatma | 11 | 9 | |
+| KLM | 177,6 s | **121,3 s** | ≤ 100 s |
+
+Odalar mahalleri ve etiketleriyle tek adımda geldiği için beş Mahal, Hepsini etiketle ve dört Ölçülü bölmenin panel
+alanları düştü. Kalan sürenin çoğu işaretleme: 46 tık × 1,1 s = 50,6 s. Etkileşimde hedefe 2, KLM'de 21 s kaldı.
+
+Senaryo kurulurken görülen ve bu dilimde değiştirilmeyenler:
+
+- **Çipten sonra odak komut satırında kalır** (yukarıda): ↓ ve Tab orada iş görmez.
+- **Araç açıkken Home komut satırına gider:** Dikdörtgen duvardan sonra Esc'siz Home görünümü sığdırmadı, sonraki bütün
+  tıklar yanlış yere düştü.
+- **Çizelge yerleşince şerit Tablo sekmesine geçer** (yeni tablo seçili): ikinci çizelge için Mimari'ye bir tık.
+- **Geçici ölçüler mahal etiketine biner** (plan S19): Bölme 3'ün batı ölçüsü Yatak odası etiketinin üstünde.
 
 ## Doğrulama
 
