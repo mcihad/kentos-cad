@@ -1,6 +1,6 @@
 # ADR 8050: Oda modülünün kapsamı — kolon, merdiven, rampa, döşeme ve eğri duvar
 
-- **Durum:** sürüyor (12 Kasım 2026); `plan/architecture-advanced.md` ADV-05, M50. 1. bölüm yapıldı: modüle kolon,
+- **Durum:** yapıldı (12 Kasım 2026); `plan/architecture-advanced.md` ADV-05, M50. 1. bölüm yapıldı: modüle kolon,
   merdiven, rampa, döşeme ve eğri duvar girer (§1); bağlı döşemenin iç noktası taşınınca onunla gider (§2); kata göre
   yazılan değerler örneğin kendi katınındır (§3). 2. bölüm: mahal ayırıcı (§4). 3. bölüm: mutfak dizisi tarifiyle
   (§5), dosya şeması 245; pencere liste ve ayrıntı düzeninde (§6).
