@@ -44,3 +44,4 @@ mod curve_dashes;
 mod dots;
 mod shx_texts;
 mod table_styles;
+mod block_text_colours;

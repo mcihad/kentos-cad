@@ -36,7 +36,8 @@
 - Yazıların nerede çizileceğini deponun tipli sorgusu verir (`Spatial::labels` → `LabelSpot`): ölçü değeri, yazı nesnesi, merkez, köşe, yan, boyunca.
 - Çizim web'in `drawLabels`'ıdır:
   - ölçü değeri 500 ağırlıkla, taban çizgisinde ortalanır. Rengi nesnenin ya da katmanın rengidir; tema mürekkebiyse etiket rengidir;
-  - yazı nesnesi eğik 400 ağırlıkla, taban çizgisinde soldan çizilir;
+  - yazı nesnesi eğik 400 ağırlıkla, taban çizgisinde soldan çizilir; *(12 Kasım 2026, ADR 8053 §14: CAD çiziminde
+    yazı nesnesi ve bloğun yazısı kendi, yoksa katmanının renginde; öbür çalışma alanlarında etiket renginde.)*
   - etiketler katmanın etiket stiliyle çizilir: boy, büyüme, en çok boy, ağırlık, şablon, mürekkep. Stili olmayan katmanda web'in `DEFAULT_LABELS`'ı geçerlidir. Masaüstünün kopyasını bir test web'in kaynağından okuyarak karşılaştırır;
   - hale 3 px'tir, alanın renginde.
 - Taban çizgisi yazı sisteminin kendi ölçüsünden gelir: cosmic-text'in `line_y`'ı, 100 px'te ölçülüp boyla ölçeklenir.

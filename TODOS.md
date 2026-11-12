@@ -1307,6 +1307,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - DWG açılışı (ADR 8053): köprünün iki okuması tek okumaya; ASCII DXF köprüsü kodeğin belgesinden doğrudan KentOS
   nesnelerine (büyük çizimde 2,7–3,6 GB ve yeni kodekte 4,6–11,8 s köprü yazımı); dosyanın kaydettiği etkin görünüm
   (VPORT *Active: hedef ve dönüşle dünya koordinatı).
+- CAD çiziminde yazı rengi (ADR 8053 §14): web'in `drawLabels`'ı (`viewport/overlay.ts`'in `baselineText` ve
+  `paragraphLine`'ı) yazıları hâlâ etiket renginde çizer. CAD çalışma alanında yazı nesnesi, kılavuz notu ve bloğun
+  yazısı kendi, yoksa katmanının renginde çizilmeli; bloğun yazısı parçanın kendi rengi, izlediği katman, yerleştirme
+  sırasıyla (masaüstünde `kentos_interaction::spatial::PieceInk`).
 
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
 

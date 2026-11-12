@@ -101,6 +101,19 @@ gelen çizgi tipleri). Proje B'nin 463 MB köprüsünün 380 MB'ı bunlar ve sö
 
     Yerleştirmenin bütün görünüşü yalnız onun açılmadan sonra çizdiklerine (öznitelikler) yazılır.
 
+14. **CAD çiziminde yazılar kendi renginde** (sahibin seçimi, 12 Kasım 2026). Ekranda bütün yazılar (yazı nesnesi,
+    kılavuz notu, çok satırlı yazı, bloğun yazısı) tek etiket renginde ve haleyle çiziliyordu (ADR 0055, web'in
+    `drawLabels`'ı); DWG'deki kırmızı kot yazısı, sarı mahal adı ekranda renksizdi. Pafta ve PDF çıktısında kendi ya da
+    katman rengindeydiler; bloğun yazısı ise orada da yerleştirmenin rengini alıyordu. Şimdi:
+    - CAD çalışma alanındaki çizimde (açılan DWG/DXF, CAD projeleri) yazı kendi renginde, yoksa katmanının renginde
+      çizilir; ön plan rengi (mürekkep) olan yazı etiket rengini alır, hale aynıdır. CBS ve öbür çalışma alanlarında
+      yazılar bugünkü gibi etiket rengindedir.
+    - Bloğun yazısı parçanın kendi rengini (ya da iç içe yerleştirmeninkini) alır, yoksa izlediği katmanın rengini
+      (bloğun 0'ındaysa yerleştirmenin katmanının), yoksa yerleştirmenin rengini, yoksa yerleştirmenin katmanınınkini:
+      ekranda, paftanın haritasında ve PDF'te. Etiket hattı parçanın rengini taşır (`LabelSpot::PieceText` ve
+      `LabelSpot::Line`'ın `ink`'i, `PieceInk`).
+    - Satırın kendi rengi (çok satırlı yazıda renk kodu) her zaman önce gelir.
+
 ## Ölçüm
 
 Aynı 13 dosya, Aç yolu (`cad_open::read_in`, cm), sürüm derlemesi, 20 çekirdek, 23 GB:
@@ -147,6 +160,7 @@ desenli çizilen nesne sayısında:
 - Gerçek dosyalar ve adları depoya girmez (kişisel projeler; depo herkese açık): burada Proje A–D. Kabul yerelde,
   İndirilenler'deki dosyalarla yapıldı.
 - KCAD sıkıştırılmıyor: 33 MB'lık DWG 95–119 MB KCAD oluyor (`FILE-10/11`, TODOS).
+- Web'in yazıları (§14) hâlâ etiket renginde (TODOS, web'e dönüş).
 - Model alanında açılan yerleştirmenin çizgi tipi BYLAYER ise kendi katmanındaki BYBLOCK nesnesi o katmanın çizgi tipini
   alır, yerleştirmenin katmanınınkini almaz (tanımın içinde alır).
 
@@ -165,5 +179,12 @@ desenli çizilen nesne sayısında:
   nesneleri kendi kesikli çizgisini ve BYLAYER'ını korur, yalnız BYBLOCK parçaları yerleştirmeden alır (§13). İkisi de
   önceki kodda kırmızıydı.
 - `cargo test -p kentos-kcad --test all look`: ret iletisinde tek nokta.
+- `cargo test -p kentos-interaction --test all blocks::a_blocks_text`: bloğun yazısının etiketi kendi rengini, izlediği
+  katmanı ya da ikisini de değil (yerleştirmenin) taşır (§14).
+- `cargo test -p kentos-desktop --lib labels::tests::a_cad_drawings_texts`: aynı çizim CAD'de kırmızı yazıyı kırmızı,
+  rengi olmayanı katmanının renginde, bloğun yeşil yazısını yeşil; CBS'de üçünü de etiket renginde çizer (önceki kodda
+  CAD'de de etiket rengindeydi).
+- `cargo test -p kentos-plot --test all block_text_colours`: paftanın PDF'inde bloğun yazısı kendi yeşilinde, izlediği
+  katmanın renginde, bloğa göreyse yerleştirmenin kırmızısında (önce üçü de yerleştirmenin kırmızısındaydı).
 - `KENTOS_SAVE_KCAD=1 cargo run --release -p kentos-native-application --example open_cad -- DOSYA.dwg`: Aç ve
   Kaydet'in kodlaması; 12 DWG'nin 12'si kaydedildi.

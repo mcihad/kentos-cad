@@ -2529,7 +2529,9 @@
   seçili; sahibin seçimi). Kodek OpenCADStudio'nun kilidindeki `hakanaktt/acadrust` @ `9344922` (eski çatal silindi).
   4 gerçek proje (8–33 MB) reddediliyordu, 4–21 s'de açılıyor. Açılan DWG KCAD olarak kaydedilir (12/12; önce 7/12).
   Açılan (patlatılan) bloğun nesneleri yerleştirmeden yalnız bloğa göre parçalarını alır; kendi çizgi tipleri, BYLAYER'ları
-  ve saydamlıkları korunur (önce yerleştirmenin bütün görünüşü üstlerine yazılıyordu).
+  ve saydamlıkları korunur (önce yerleştirmenin bütün görünüşü üstlerine yazılıyordu). CAD çiziminde yazılar ekranda
+  kendi, yoksa katmanının renginde (sahibin seçimi; CBS'de etiket renginde kalır); bloğun yazısı ekranda, paftada ve
+  PDF'te yerleştirmenin değil kendi rengini alır.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.

@@ -68,6 +68,7 @@ fn bands(
     let labels = Labels {
         doc,
         map_layer_colors: None,
+        own_colors: super::own_colors(doc),
         spots,
         view: camera,
         camera: Cell::new(camera),

@@ -40,6 +40,29 @@ pub(crate) fn paper_color(c: Option<&str>) -> String {
     }
 }
 
+/// A block's text's colour on paper (docs/adr/8053 §14): the piece's own, else the layer it follows (the insert's on
+/// the block's layer; `find`: as the view shows it), else the insert's own, else the insert's layer's. Before, it was
+/// the insert's: a definition's green words were printed in the insert's colour.
+fn piece_color<'a>(
+    ink: &kentos_interaction::spatial::PieceInk,
+    insert: &Entity,
+    layer: &'a kentos_contracts::LayerNode,
+    find: impl Fn(&str) -> Option<&'a kentos_contracts::LayerNode>,
+) -> String {
+    let followed = match ink.layer.as_deref() {
+        Some("") => Some(layer),
+        Some(id) => find(id),
+        None => None,
+    };
+    paper_color(
+        ink.color
+            .as_deref()
+            .or(followed.map(|l| l.style.color.as_str()))
+            .or(insert.base().color.as_deref())
+            .or(Some(&layer.style.color)),
+    )
+}
+
 fn label(layer: &str, font: DrawingFont) -> MapLabel {
     MapLabel {
         unicode: None,
@@ -410,10 +433,12 @@ pub fn labels_in_view(
                     mask,
                     face: f,
                     placed,
+                    ink,
                     ..
                 },
                 _,
             ) => {
+                l.color = piece_color(ink, entity, layer, |id| visible.get(id).map(|l| &***l));
                 l.at = *at;
                 l.rotation = *rotation;
                 ground_height = *height;
@@ -514,10 +539,14 @@ pub fn labels_in_view(
                     piece,
                     face: f,
                     placed,
+                    ink,
                     ..
                 },
                 _,
             ) => {
+                if piece.is_some() || placed.is_some() {
+                    l.color = piece_color(ink, entity, layer, |id| visible.get(id).map(|l| &***l));
+                }
                 // A block's multi-line text in its SHX font, whole at its first line's place (docs/adr/1022).
                 if let Some(t) = placed
                     .as_deref()

@@ -193,7 +193,95 @@ fn block_highlight_does_not_reveal_hidden_layer_pieces_and_updates_when_the_laye
     assert_eq!(line.b.x,2.);
     b.doc.set_layer_visible("hidden",true);
     b.spatial.sync(&b.doc);
-    assert_eq!(b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap().len(),2);
-    b.doc.set_layer_visible("hidden",false); b.spatial.sync(&b.doc);
-    assert_eq!(b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap().len(),1);
+    assert_eq!(
+        b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap().len(),
+        2
+    );
+    b.doc.set_layer_visible("hidden", false);
+    b.spatial.sync(&b.doc);
+    assert_eq!(
+        b.spatial.pieces(b.doc.get(Slot(1)).unwrap()).unwrap().len(),
+        1
+    );
+}
+
+/// A block's text carries what colours it (docs/adr/8053 §14): its own, the layer it follows (`""`: the insert's), or
+/// neither (the insert's). Before, the painters had only the insert's.
+#[test]
+fn a_blocks_text_carries_its_own_colour_or_the_layer_it_follows() {
+    use kentos_geometry_core::store::placing::PlaceOptions;
+    use kentos_interaction::Vec2;
+    use kentos_interaction::spatial::{LabelSize, LabelSpot, PieceInk};
+    use serde_json::{Value, json};
+
+    let mut raw: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/dynamic-blocks.json"
+    ))
+    .expect("the sample");
+    raw["version"] = json!(1);
+    let text = |id: u32, y: f64, extra: Value| {
+        let mut t = json!({
+            "kind":"text", "id":id, "layerId":"", "attrs":{}, "p":{"x":0.0,"y":y},
+            "text":format!("T{id}"), "height":0.1, "rotation":0.0
+        });
+        for (k, v) in extra.as_object().expect("fields") {
+            t[k] = v.clone();
+        }
+        t
+    };
+    let block = &mut raw["blocks"][0];
+    block.as_object_mut().expect("a block").remove("dynamic");
+    block["entities"] = json!([
+        text(1, 0.0, json!({"color":"#00FF00"})),
+        text(2, 0.2, json!({"byLayer":["color"]})),
+        text(3, 0.4, json!({})),
+    ]);
+    raw["entities"] = json!([raw["entities"][0].clone()]);
+    raw["uids"] = json!([raw["uids"][0].clone()]);
+    raw["entities"][0]
+        .as_object_mut()
+        .expect("insert")
+        .remove("parameters");
+    let mut b = Bench::on(&raw.to_string());
+    b.spatial.sync(&b.doc);
+    let mut inks: Vec<(String, PieceInk)> = b
+        .spatial
+        .labels_shown(
+            Vec2::new(-10.0, -10.0),
+            Vec2::new(20.0, 20.0),
+            100.0,
+            LabelSize::Print,
+            PlaceOptions {
+                unplaced: true,
+                hidden: true,
+            },
+            false,
+        )
+        .into_iter()
+        .filter_map(|(label, _)| match label {
+            LabelSpot::PieceText { text, ink, .. } => Some((text, ink)),
+            _ => None,
+        })
+        .collect();
+    inks.sort_by(|a, b| a.0.cmp(&b.0));
+    assert_eq!(
+        inks,
+        [
+            (
+                "T1".to_owned(),
+                PieceInk {
+                    color: Some("#00FF00".into()),
+                    layer: None
+                }
+            ),
+            (
+                "T2".to_owned(),
+                PieceInk {
+                    color: None,
+                    layer: Some(String::new())
+                }
+            ),
+            ("T3".to_owned(), PieceInk::default()),
+        ]
+    );
 }

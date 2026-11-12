@@ -1939,6 +1939,7 @@ impl Spatial {
                     let piece = self.piece(r[0], r[6])?;
                     // The text piece whole, placed: what an SHX font lays out (docs/adr/1020).
                     let placed = self.placed_text(r[0], r[6]);
+                    let ink = PieceInk::of(&piece);
                     let (text, attribute, face) = match piece.shape {
                         Shape::Text { text, face, .. } => (text, piece.attribute, face),
                         // A leader's note among a block's pieces (docs/adr/0146 §5).
@@ -1958,6 +1959,7 @@ impl Spatial {
                         mask: r[8],
                         face,
                         placed,
+                        ink,
                     }
                 } else if what == LABEL_LINE {
                     LabelSpot::Line {
@@ -1970,12 +1972,18 @@ impl Spatial {
                         end: r[8] as usize,
                         piece: None,
                         face: None,
-                        unicode: self.store.get(r[0]).and_then(|it| self.unicode(r[0],None,&it.shape)),
+                        unicode: self
+                            .store
+                            .get(r[0])
+                            .and_then(|it| self.unicode(r[0], None, &it.shape)),
                         placed: None,
+                        ink: PieceInk::default(),
                     }
                 } else if what == LABEL_PIECE_LINE {
-                    let shape = self.piece(r[0],r[6])?.shape;
-                    let unicode = self.unicode(r[0],Some(r[6]),&shape);
+                    let piece = self.piece(r[0], r[6])?;
+                    let ink = PieceInk::of(&piece);
+                    let shape = piece.shape;
+                    let unicode = self.unicode(r[0], Some(r[6]), &shape);
                     let Shape::Text {
                         text,
                         width_factor,
@@ -1998,6 +2006,7 @@ impl Spatial {
                         face: Some(face),
                         unicode,
                         placed: self.placed_text(r[0], r[6]),
+                        ink,
                     }
                 } else if what == LABEL_PARAGRAPH_MASK {
                     // Its text's slant: the object's own, or a block's piece's (its place, d).
@@ -2239,6 +2248,27 @@ impl UnicodeText {
     }
 }
 
+/// The colour a block's piece draws its text in (docs/adr/8053 §14): its own (or a nested insert's, BYBLOCK), else the
+/// colour of the layer it follows (`""`: the layer of the insert that draws it); neither: the insert's.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PieceInk {
+    pub color: Option<String>,
+    pub layer: Option<String>,
+}
+
+impl PieceInk {
+    fn of(piece: &kentos_geometry_core::block::Piece) -> PieceInk {
+        PieceInk {
+            color: piece.color.clone(),
+            layer: piece
+                .by_layer
+                .iter()
+                .find(|(_, mask)| mask & kentos_geometry_core::block::BY_LAYER_COLOR != 0)
+                .map(|(layer, _)| layer.clone()),
+        }
+    }
+}
+
 /// One thing a view draws as text (the store's label records, typed).
 /// Points are in world units; angles in degrees, counter-clockwise.
 #[derive(Clone, Debug, PartialEq)]
@@ -2319,6 +2349,8 @@ pub enum LabelSpot {
         /// A text piece's shape as the insert places it (its point, alignment, box, runs): an SHX font lays it out
         /// (docs/adr/1020); none for a leader's note.
         placed: Option<Box<Shape>>,
+        /// The colour the piece draws its text in (docs/adr/8053 §14).
+        ink: PieceInk,
     },
     /// One line of a multi-line text (docs/adr/0182 §3): its letters
     /// `start..end` (Unicode scalar values) from where its baseline starts,
@@ -2340,6 +2372,8 @@ pub enum LabelSpot {
         /// A block's piece placed by its insert (its whole paragraph): an SHX font draws it whole at its first line
         /// (docs/adr/1022); none for a text object's own line.
         placed: Option<Box<Shape>>,
+        /// A block's piece's colour (docs/adr/8053 §14); a text object's own line has its object's.
+        ink: PieceInk,
     },
     /// A multi-line text's mask (docs/adr/0182 §3): the box from `at` (its
     /// corner under the first letter's left) `width` along its baseline and

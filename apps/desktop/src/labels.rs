@@ -390,6 +390,7 @@ fn build<'a>(
     let labels = Labels {
         doc,
         map_layer_colors: None,
+        own_colors: own_colors(doc),
         spots,
         view: *camera,
         camera: Cell::new(*camera),
@@ -583,6 +584,9 @@ struct Backdrop {
 struct Labels<'a> {
     doc: &'a Document,
     map_layer_colors: Option<&'a HashMap<String, String>>,
+    /// A CAD drawing's texts in their own colours, else their layers' (the owner's choice, docs/adr/8053 §14);
+    /// elsewhere in the label colour, a map's words over its imagery.
+    own_colors: bool,
     /// The labels and how each grows (docs/adr/0205 §5).
     spots: Shown,
     /// The view's camera, and the one the label being drawn goes through:
@@ -686,6 +690,7 @@ pub fn paint_in_map(
     Labels {
         doc,
         map_layer_colors,
+        own_colors: false,
         spots: parts_of(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
         view: camera,
         camera: Cell::new(camera),
@@ -729,6 +734,47 @@ pub fn texts_in_map(
     format: Format,
     fence: Fence,
 ) -> Vec<MapLabel> {
+    collect(doc, spots, camera, colors, font, format, Some(fence), false)
+}
+
+/// The drawing's text as the drawing area paints it (docs/adr/8053 §14: a CAD drawing's in their own colours), as a
+/// list.
+#[cfg(test)]
+pub fn texts_on_screen(
+    doc: &Document,
+    spots: Vec<LabelSpot>,
+    camera: Camera,
+    colors: Colors,
+) -> Vec<MapLabel> {
+    collect(
+        doc,
+        spots,
+        camera,
+        colors,
+        DrawingFont::Barlow,
+        Format::default(),
+        None,
+        own_colors(doc),
+    )
+}
+
+/// Whether the drawing area paints a drawing's texts in their own colours: a CAD drawing's (docs/adr/8053 §14).
+fn own_colors(doc: &Document) -> bool {
+    doc.settings().workspace == Some(kentos_commands::Workspace::Cad)
+}
+
+#[allow(clippy::too_many_arguments)]
+#[cfg(test)]
+fn collect(
+    doc: &Document,
+    spots: Vec<LabelSpot>,
+    camera: Camera,
+    colors: Colors,
+    font: DrawingFont,
+    format: Format,
+    fence: Option<Fence>,
+    own_colors: bool,
+) -> Vec<MapLabel> {
     let mut list = Collect {
         doc,
         camera,
@@ -737,6 +783,7 @@ pub fn texts_in_map(
     Labels {
         doc,
         map_layer_colors: None,
+        own_colors,
         spots: parts_of(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
         view: camera,
         camera: Cell::new(camera),
@@ -744,7 +791,7 @@ pub fn texts_in_map(
         font,
         format,
         key: 0,
-        fence: Some(fence),
+        fence,
         current: Cell::new(None),
         faded: Rc::default(),
         map_marks: None,
@@ -1355,6 +1402,39 @@ impl Labels<'_> {
         }
     }
 
+    /// A text's colour (docs/adr/8053 §14): in a CAD drawing and in a sheet's map its own, else its layer's (the
+    /// theme's ink the label colour); elsewhere the label colour.
+    fn text_ink(&self, own: Option<&str>, layer: Option<&kentos_commands::LayerNode>) -> Color {
+        if self.own_colors || self.map_layer_colors.is_some() {
+            self.ink_of(own.or(self.layer_color(layer)))
+        } else {
+            self.colors.label
+        }
+    }
+
+    /// A block's text's colour (docs/adr/8053 §14): the piece's own, else the layer it follows (`followed`: the
+    /// insert's on the block's layer), else the insert's own, else the insert's layer's. Before, a block's text took
+    /// the insert's even in a sheet's map: a definition's green words came out in the insert's colour.
+    fn piece_ink(
+        &self,
+        ink: &kentos_interaction::spatial::PieceInk,
+        insert: &kentos_commands::EntityBase,
+        layer: Option<&kentos_commands::LayerNode>,
+    ) -> Color {
+        let followed = match ink.layer.as_deref() {
+            Some("") => self.layer_color(layer),
+            Some(id) => self.layer_color(self.doc.layers().get(id)),
+            None => None,
+        };
+        self.text_ink(
+            ink.color
+                .as_deref()
+                .or(followed)
+                .or(insert.color.as_deref()),
+            layer,
+        )
+    }
+
     /// Whether a label may show in the view of `area` (true sizes, docs/adr/0626 §7): its anchor on the screen
     /// within its reach of the view, the reach a generous length for its letters (a text's own, a value's eight)
     /// at its height; a label without a height of its own reaches a quarter of the view.
@@ -1469,6 +1549,7 @@ impl Labels<'_> {
         height: f64,
         width_factor: f64,
         text_face: &kentos_commands::TextFace,
+        ink: Color,
     ) {
         let letters: Vec<char> = text.chars().collect();
         let (start, end) = (start.min(letters.len()), end.min(letters.len()));
@@ -1504,7 +1585,7 @@ impl Labels<'_> {
             let color = f
                 .and_then(|r| r.color.as_deref())
                 .and_then(|name| self.colors.named(name))
-                .unwrap_or(self.colors.label);
+                .unwrap_or(ink);
             let underlined = f.is_some_and(|r| r.underline);
             // What the run draws: its words, where along and how high, at what size, and its underline's length.
             let mut parts: Vec<(String, f64, f64, f64, f32)> = Vec::new();
@@ -1768,7 +1849,7 @@ impl Labels<'_> {
                         },
                         Entity::Text(t),
                     ) => {
-                        let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                        let ink = self.text_ink(base.color.as_deref(), layer);
                         if self.shx_text(frame, slot, t, ink) {
                             continue;
                         }
@@ -1783,7 +1864,7 @@ impl Labels<'_> {
                                 size: (t.height * self.camera.get().scale) as f32,
                                 font,
                                 anchor: Anchor::LeftBaseline,
-                                color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
+                                color: self.text_ink(base.color.as_deref(), layer),
                                 width_factor: *width_factor as f32,
                                 mask: (mask * self.camera.get().scale) as f32,
                                 underline: 0.0,
@@ -1920,7 +2001,7 @@ impl Labels<'_> {
                             note,
                         ) {
                             t.mask = *mask > 0.0;
-                            let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                            let ink = self.text_ink(base.color.as_deref(), layer);
                             if self.shx_text(frame, slot, &t, ink) {
                                 continue;
                             }
@@ -1935,7 +2016,7 @@ impl Labels<'_> {
                                 size: (l.height * self.camera.get().scale) as f32,
                                 font,
                                 anchor: Anchor::LeftBaseline,
-                                color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
+                                color: self.text_ink(base.color.as_deref(), layer),
                                 width_factor: 1.0,
                                 mask: (mask * self.camera.get().scale) as f32,
                                 underline: 0.0,
@@ -1957,6 +2038,7 @@ impl Labels<'_> {
                             mask,
                             face,
                             placed,
+                            ink,
                             ..
                         },
                         _,
@@ -1974,7 +2056,7 @@ impl Labels<'_> {
                             .as_deref()
                             .and_then(|s| kentos_native_application::shx_text::piece_text(s, &shown))
                         {
-                            let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                            let ink = self.piece_ink(ink, base, layer);
                             if self.shx_text(frame, slot, &t, ink) {
                                 continue;
                             }
@@ -1989,7 +2071,7 @@ impl Labels<'_> {
                                 size: (height * self.camera.get().scale) as f32,
                                 font,
                                 anchor: Anchor::LeftBaseline,
-                                color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
+                                color: self.piece_ink(ink, base, layer),
                                 width_factor: *width_factor as f32,
                                 mask: (mask * self.camera.get().scale) as f32,
                                 underline: 0.0,
@@ -2118,6 +2200,7 @@ impl Labels<'_> {
                             piece,
                             face,
                             placed,
+                            ink,
                             ..
                         },
                         entity,
@@ -2132,7 +2215,7 @@ impl Labels<'_> {
                             })
                         {
                             if *start == 0 {
-                                let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                                let ink = self.piece_ink(ink, base, layer);
                                 self.shx_text(frame, slot, &t, ink);
                             }
                             continue;
@@ -2147,7 +2230,7 @@ impl Labels<'_> {
                                 ),
                                 (None, Entity::Text(t)) => {
                                     // An SHX text is drawn whole at its first line's place (ADR 1125).
-                                    let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                                    let ink = self.text_ink(base.color.as_deref(), layer);
                                     if (*start > 0 || self.shx_text(frame, slot, t, ink))
                                         && kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
                                             .is_some_and(|p| p.is_ok())
@@ -2159,6 +2242,11 @@ impl Labels<'_> {
                                 }
                                 _ => continue,
                             };
+                        // Its words' colour where a run gives none (docs/adr/8053 §14): a block's piece's, a text's own.
+                        let default = match piece {
+                            Some(_) => self.piece_ink(ink, base, layer),
+                            None => self.text_ink(base.color.as_deref(), layer),
+                        };
                         self.line(
                             frame,
                             text,
@@ -2169,6 +2257,7 @@ impl Labels<'_> {
                             *height,
                             *width_factor,
                             &face,
+                            default,
                         );
                     }
                     (
@@ -2320,6 +2409,7 @@ impl Labels<'_> {
                         r[5],
                         r[6],
                         &p.face,
+                        self.colors.label,
                     );
                 }
             }
@@ -3524,6 +3614,87 @@ mod tests {
         );
     }
 
+    /// The owner's choice (docs/adr/8053 §14): a CAD drawing's texts in their own colours, else their layers'; a
+    /// block's text in its own, not the insert's; a GIS drawing's every text in the label colour, as before.
+    #[test]
+    fn a_cad_drawings_texts_take_their_own_colours() {
+        let mut raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .expect("the sample");
+        raw["version"] = serde_json::json!(1);
+        let text = |id: u32, x: f64, color: Option<&str>| {
+            let mut t = serde_json::json!({
+                "kind":"text", "id":id, "layerId":"kapilar", "attrs":{}, "p":{"x":x,"y":5.0},
+                "text":format!("T{id}"), "height":0.5, "rotation":0.0
+            });
+            if let Some(c) = color {
+                t["color"] = c.into();
+            }
+            t
+        };
+        let block = &mut raw["blocks"][0];
+        block.as_object_mut().expect("a block").remove("dynamic");
+        block["entities"] = serde_json::json!([{
+            "kind":"text", "id":1, "layerId":"", "attrs":{}, "color":"#00FF00", "p":{"x":0.0,"y":0.0},
+            "text":"P1", "height":0.5, "rotation":0.0
+        }]);
+        let mut insert = raw["entities"][0].clone();
+        insert.as_object_mut().expect("insert").remove("parameters");
+        insert["id"] = 3.into();
+        raw["entities"] = serde_json::json!([text(1, 0.0, Some("#FF0000")), text(2, 4.0, None), insert]);
+        let painted = |workspace: &str| {
+            let mut raw = raw.clone();
+            raw["settings"]["workspace"] = workspace.into();
+            let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&raw.to_string())
+                .expect("the drawing reads");
+            let doc = crate::document::Document::new(snapshot, None).expect("opens");
+            let mut spatial = Spatial::new();
+            spatial.reload(&doc.model);
+            let camera = Camera {
+                map: None,
+                map_ratio: 1.0,
+                center: kentos_render_wgpu::Vec2::new(3.0, 3.0),
+                scale: 40.0,
+                width: 800.0,
+                height: 600.0,
+                twist: 0.0,
+            };
+            let view = camera.visible_bounds();
+            let spots = spatial.labels(
+                Vec2::new(view.min_x, view.min_y),
+                Vec2::new(view.max_x, view.max_y),
+                camera.scale,
+                Default::default(),
+            );
+            let mut texts: Vec<(String, String)> =
+                texts_on_screen(&doc.model, spots, camera, paper_colors())
+                    .into_iter()
+                    .filter(|t| !t.text.is_empty())
+                    .map(|t| (t.text, t.color.to_lowercase()))
+                    .collect();
+            texts.sort();
+            texts
+        };
+        let label = crate::sheet_pdf::hex_of(paper_colors().label).to_lowercase();
+        assert_eq!(
+            painted("cad"),
+            [
+                ("P1".to_owned(), "#00ff00".to_owned()),
+                ("T1".to_owned(), "#ff0000".to_owned()),
+                ("T2".to_owned(), "#c8a165".to_owned()),
+            ]
+        );
+        assert_eq!(
+            painted("gis"),
+            [
+                ("P1".to_owned(), label.clone()),
+                ("T1".to_owned(), label.clone()),
+                ("T2".to_owned(), label),
+            ]
+        );
+    }
+
     #[test]
     fn the_sample_drawing_shows_its_texts_labels_and_dimensions() {
         let app = crate::files_testing::app_with_drawing();
@@ -4029,6 +4200,7 @@ fn perf() {
     let labels = Labels {
         doc,
         map_layer_colors: None,
+        own_colors: own_colors(doc),
         spots: parts_of(
             app.spatial
                 .labels(
@@ -4136,6 +4308,7 @@ fn file_paint() {
     let labels = Labels {
         doc,
         map_layer_colors: None,
+        own_colors: own_colors(doc),
         spots: parts_of(answered),
         view: camera,
         camera: Cell::new(camera),
