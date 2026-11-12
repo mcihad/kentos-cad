@@ -180,6 +180,10 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
                 cut_height: Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT),
                 // Its lines by the scale's line group (docs/adr/8013; TS 88-23 / ISO 128-23 Tablo 2).
                 line_groups: Some(kentos_contracts::LineGroups::ByScale),
+                // The room names Oda and Mahal offer (docs/adr/8052 §2).
+                space_names: kentos_contracts::NEW_PROJECT_SPACE_NAMES
+                    .map(str::to_owned)
+                    .to_vec(),
                 ..ArchSettings::default()
             }),
             ..default_settings(crs.srid)
@@ -645,6 +649,24 @@ mod tests {
             arch.active_level, None,
             "the level at ±0.00 is the active one by the rule"
         );
+        // The room names Oda and Mahal offer (docs/adr/8052 §2), each one the audit reads as its kind where it has one.
+        assert_eq!(arch.space_names.len(), 20);
+        assert!(arch.problem().is_none(), "{:?}", arch.problem());
+        for (name, kind) in [
+            ("Salon", "Oturma odası"),
+            ("Yatak odası", "Yatak odası"),
+            ("Mutfak", "Mutfak"),
+            ("Banyo", "Banyo"),
+            ("WC", "Tuvalet"),
+            ("Koridor", "Hol"),
+        ] {
+            assert!(arch.space_names.iter().any(|n| n == name), "{name}");
+            assert_eq!(
+                kentos_domain::room_names::kind_of(Some(name), None).map(|k| k.label()),
+                Some(kind),
+                "{name}"
+            );
+        }
         for other in [None, Some(CadWork::Map), Some(CadWork::Road)] {
             assert_eq!(made(other), None, "{other:?}");
         }

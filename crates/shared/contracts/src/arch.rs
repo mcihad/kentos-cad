@@ -1732,6 +1732,33 @@ pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
 /// The plan's cut height a new Mimari project starts with, metres (docs/adr/8012).
 pub const NEW_PROJECT_CUT_HEIGHT: f64 = 1.2;
 
+/// The room names a new Mimari project offers (docs/adr/8052 §2): the rooms Planlı Alanlar İmar Yönetmeliği 29/1–3 asks
+/// of a dwelling (oturma odası, yatak odası, mutfak, banyo, tuvalet; hol and koridor) by the words its audit reads them by
+/// (`room_names::kind_of`), and the other rooms of a dwelling's plan. Oda and Mahal offered only Adsız in a new project,
+/// so every name was typed.
+pub const NEW_PROJECT_SPACE_NAMES: [&str; 20] = [
+    "Salon",
+    "Oturma odası",
+    "Yatak odası",
+    "Ebeveyn yatak odası",
+    "Çocuk odası",
+    "Çalışma odası",
+    "Mutfak",
+    "Banyo",
+    "Ebeveyn banyosu",
+    "Duş",
+    "WC",
+    "Antre",
+    "Hol",
+    "Koridor",
+    "Giyinme odası",
+    "Kiler",
+    "Çamaşırlık",
+    "Depo",
+    "Balkon",
+    "Teras",
+];
+
 /// How the plan's lines are weighted (docs/adr/8013).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

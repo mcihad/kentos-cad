@@ -37,6 +37,8 @@ enum Ask {
     Width,
     Style,
     Reference,
+    /// Oda's room name (docs/adr/8021), typed after A: the prompt showed the letter, and the letter did nothing.
+    Name,
 }
 
 /// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on. Said plainly (docs/adr/8003):
@@ -370,6 +372,7 @@ impl WallRectangle {
                 "E" => Some(Ask::Width),
                 "S" => Some(Ask::Style),
                 "R" => Some(Ask::Reference),
+                "A" if self.room => Some(Ask::Name),
                 _ => None,
             };
             if self.ask.is_some() {
@@ -418,6 +421,11 @@ impl WallRectangle {
                 self.set_reference(text, cx);
                 true
             }
+            // One of the project's names or any other, as the list and the box take it; Adsız: none.
+            Some(Ask::Name) => {
+                self.ask = None;
+                self.choose_option("A", text, cx)
+            }
             None => match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => self.accept(p, cx),
                 None => false,
@@ -448,7 +456,7 @@ impl Tool for WallRectangle {
         Flow::Stay
     }
     fn takes_words(&self) -> bool {
-        matches!(self.ask, Some(Ask::Style | Ask::Reference))
+        matches!(self.ask, Some(Ask::Style | Ask::Reference | Ask::Name))
     }
     fn accepts_points(&self) -> bool {
         self.ask.is_none() || self.ask == Some(Ask::Rotation)
@@ -470,6 +478,7 @@ impl Tool for WallRectangle {
                     Ask::Width => "duvar kalınlığını yazın",
                     Ask::Style => "duvar stilinin adını yazın (Yok: stilsiz)",
                     Ask::Reference => "boy referansını seçin: İç net, Dış ölçü veya Eksen",
+                    Ask::Name => "mahalin adını yazın (Adsız: adsız)",
                 },
             )
             .option("Geri", "G");

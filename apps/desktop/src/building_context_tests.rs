@@ -408,15 +408,62 @@ fn oda_s_name_beside_the_cursor_takes_the_list_or_any_word() {
         .find(|s| s.key == "A")
         .expect("the room's name");
     assert!(name.open, "the list offers, any word is taken");
-    let _ = app.with_tool(|s, cx| s.configure("A", "Kiler", cx));
+    // A new project's list (docs/adr/8052 §2) offers Kiler; Arşiv is a word of no list.
+    assert!(
+        name.choices.iter().any(|c| c == "Kiler"),
+        "{:?}",
+        name.choices
+    );
+    let _ = app.with_tool(|s, cx| s.configure("A", "Arşiv", cx));
     let shown = app.session.settings(&app.format());
     let row = shown.iter().find(|r| r.key == "A").expect("Mahal adı");
     assert_eq!(row.value, "", "a word of no list is not a checked choice");
     assert!(
-        app.session.prompt().text().contains("Mahal adı (A): Kiler"),
+        app.session.prompt().text().contains("Mahal adı (A): Arşiv"),
         "{}",
         app.session.prompt().text()
     );
+}
+
+/// The command bar shows "Mahal adı … A": typed on the command line, A asks the name and the next words are it, at the
+/// first corner and at the second; Adsız takes it back. Before, A said "şu adımda kullanılamıyor" and a name typed after
+/// it ran as a command.
+#[test]
+fn oda_s_name_typed_after_a_on_the_command_line() {
+    let mut app = fresh_mimari();
+    let _ = app.update(Message::Run("tool.room"));
+    let _ = app.submit_line("A");
+    assert!(
+        app.session.prompt().text().contains("mahalin adını yazın"),
+        "{}",
+        app.session.prompt().text()
+    );
+    let _ = app.submit_line("Yatak odası 1");
+    assert!(
+        app.session
+            .prompt()
+            .text()
+            .contains("Mahal adı (A): Yatak odası 1"),
+        "{}",
+        app.session.prompt().text()
+    );
+    let _ = app.submit_line("0,0");
+    // At the second corner too, and Adsız takes the name back.
+    let _ = app.submit_line("A");
+    let _ = app.submit_line("Adsız");
+    let _ = app.submit_line("A");
+    let _ = app.submit_line("Banyo");
+    let _ = app.submit_line("3,4");
+    assert_eq!(counts(&app), (1, 1, 1), "the walls, the room and its tag");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let names: Vec<_> = doc
+        .entities()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Space(sp) => sp.space.name.clone(),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(names, ["Banyo"]);
 }
 
 #[test]
