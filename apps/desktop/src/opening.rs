@@ -321,6 +321,9 @@ pub struct Opening {
     unit_bounds: Option<[f64; 4]>,
     selected_unit: Option<FileUnit>,
     ready: Option<Box<Document>>,
+    /// Why the file did not open, on screen until it is closed: said only in Geçmiş, a refused DWG left the user before
+    /// an empty window wondering what had happened (12 November 2026).
+    failed: Option<String>,
 }
 
 /// How long an open runs before its window shows (a quick open does not flash one).
@@ -410,6 +413,7 @@ impl App {
             unit_bounds: None,
             selected_unit: None,
             ready: None,
+            failed: None,
         });
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let mut last = Instant::now();
@@ -499,6 +503,9 @@ impl App {
             }
             Event::Cancel => {
                 if let Some(o) = self.opening.take() {
+                    if o.failed.is_some() {
+                        return Task::none();
+                    }
                     o.stop.store(true, Ordering::Relaxed);
                     self.output(format!(
                         "{} açılışı durduruldu; ekrandaki çizim olduğu gibi duruyor.",
@@ -513,7 +520,11 @@ impl App {
                 };
                 match result {
                     None => {}
-                    Some(Err(error)) => self.say(Level::Error, error),
+                    Some(Err(error)) => {
+                        self.say(Level::Error, error.clone());
+                        o.failed = Some(error);
+                        self.opening = Some(o);
+                    }
                     Some(Ok(doc)) => {
                         let now = self
                             .document
@@ -640,6 +651,34 @@ impl App {
     /// The open's window, once the open takes a moment.
     pub(crate) fn opening_view(&self) -> Option<Element<'_, Message>> {
         let o = self.opening.as_ref()?;
+        if let Some(failed) = &o.failed {
+            let close = button(label::body("Tamam"))
+                .on_press(Message::Opening(Event::Cancel))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(style::button::primary);
+            return Some(
+                Dialog::new("Çizim açılamadı")
+                    .push(
+                        column![
+                            label::body(o.name.clone()),
+                            // The reason, without the file's path the message begins with: the name is above.
+                            label::body(
+                                failed
+                                    .strip_prefix(&format!("{}: ", o.source_path.display()))
+                                    .unwrap_or(failed)
+                                    .to_owned()
+                            ),
+                            label::muted(
+                                "Açık çizim olduğu gibi duruyor. Bu ileti Geçmiş'te de kalır."
+                            ),
+                        ]
+                        .spacing(12),
+                    )
+                    .action(close)
+                    .width(540.0)
+                    .modal(Message::Opening(Event::Cancel)),
+            );
+        }
         if let Some(doc) = &o.ready {
             let choices = std::iter::once(Choice::new("Dosyanın birimini seçin"))
                 .chain(FileUnit::ALL.iter().map(|u| Choice::new(u.mark())));
@@ -1025,6 +1064,19 @@ mod tests {
         drive(&mut app, task);
         assert_eq!(app.document.as_ref().expect("a drawing").session, before);
         assert!(last_said(&app).contains("SHA-256"), "{}", last_said(&app));
+        // Said in Geçmiş and on screen until it is closed: a refused DWG used to leave nothing to see.
+        let failed = app
+            .opening
+            .as_ref()
+            .and_then(|o| o.failed.clone())
+            .expect("on screen");
+        assert!(failed.contains("SHA-256"), "{failed}");
+        assert!(app.opening_view().is_some(), "Çizim açılamadı");
+        let said = last_said(&app);
+        let _ = app.opening_event(Event::Cancel);
+        assert!(app.opening.is_none(), "Tamam closes it");
+        assert_eq!(last_said(&app), said, "nothing was stopped");
+        assert_eq!(app.document.as_ref().expect("a drawing").session, before);
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

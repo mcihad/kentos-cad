@@ -169,16 +169,19 @@ impl ImportedStyles {
             };
             out.ids.insert(read, id);
         }
+        // Each line type is tried against the table as it stands: the project's (which must hold, else none is added,
+        // as before) and those taken already. One at a time with a set of names, not the whole table copied and
+        // checked again for each: a 32 MB DWG's 7 346 line types took 99 of its 122 s here (12 November 2026).
+        let holds = kentos_commands::line_types_problem(&settings.line_types).is_none();
+        let name = |n: &str| n.trim().to_lowercase();
+        let mut names: std::collections::HashSet<String> =
+            settings.line_types.iter().map(|p| name(&p.name)).collect();
         for t in styles.line_types {
-            let known = settings
-                .line_types
-                .iter()
-                .chain(&out.line_types)
-                .any(|p| kentos_commands::same_line_type_name(&p.name, &t.name));
-            let mut table = settings.line_types.clone();
-            table.extend(out.line_types.iter().cloned());
-            table.push(t.clone());
-            if !known && kentos_commands::line_types_problem(&table).is_none() {
+            if holds
+                && !names.contains(&name(&t.name))
+                && kentos_commands::line_types_problem(std::slice::from_ref(&t)).is_none()
+            {
+                names.insert(name(&t.name));
                 out.line_types.push(t);
             }
         }
@@ -1662,6 +1665,67 @@ mod tests {
     /// in; one the project may not keep (Standart's name) is none, its objects
     /// keeping their look. A definition's objects follow them too. Undo takes
     /// the objects, not the styles (a setting).
+    /// A file's line types join the project one at a time by the table's rules: a name the project has (letters' case
+    /// aside) or one taken before is not taken again, one the rules refuse is not taken; thousands come in at once (a
+    /// 32 MB DWG's 7 346 took 99 s while the whole table was copied and checked again for each, 12 November 2026).
+    #[test]
+    fn a_files_many_line_types_join_once_each() {
+        let line_type = |name: &str| kentos_commands::LineTypeDef {
+            name: name.into(),
+            description: String::new(),
+            elements: vec![
+                kentos_commands::PatternElement {
+                    length: 5.0,
+                    text: None,
+                    shape: None,
+                },
+                kentos_commands::PatternElement {
+                    length: -2.0,
+                    text: None,
+                    shape: None,
+                },
+            ],
+            unit: kentos_commands::PatternUnit::Paper,
+            source: None,
+        };
+        let mut doc = doc();
+        let mut settings = doc.settings().clone();
+        settings.line_types = vec![line_type("Kesik")];
+        doc.set_settings(settings);
+        let plan = ImportPlan {
+            source_srid: None,
+            label: "DWG: tipler.dwg".into(),
+            layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
+            group: None,
+        };
+        let mut types: Vec<_> = (0..3000).map(|i| line_type(&format!("Tip {i}"))).collect();
+        types.extend([
+            line_type("KESIK"),
+            line_type("tip 7"),
+            line_type(" Boşluklu "),
+        ]);
+        let styles = Styles {
+            cad_source: None,
+            layouts: Vec::new(),
+            line_type_scale: None,
+            line_types: types,
+            text: Vec::new(),
+            dimension: Vec::new(),
+            table: Vec::new(),
+        };
+        apply_styled_import(&mut doc, Vec::new(), Vec::new(), styles, &plan).expect("applied");
+        let table = &doc.settings().line_types;
+        assert_eq!(table.len(), 3001, "Kesik and the 3 000, nothing else");
+        assert_eq!(
+            (table[0].name.as_str(), table[3000].name.as_str()),
+            ("Kesik", "Tip 2999")
+        );
+        assert!(
+            kentos_commands::line_types_problem(table).is_none(),
+            "the whole table holds"
+        );
+    }
+
     #[test]
     fn a_files_styles_join_the_project_or_name_its_own() {
         let mut doc = doc();

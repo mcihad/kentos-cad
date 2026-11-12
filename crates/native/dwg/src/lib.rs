@@ -15,8 +15,11 @@ use kentos_formats::watch::{Quiet, STOPPED, Watch};
 
 pub const PROVIDER: &str = "OpenCADStudio / OpenCADCodec";
 pub const REVISION: &str = "ff75fddc322bda4cf817c5f68535c5c2b316b9c4";
-/// An explicit input/bridge limit, not an estimate of decompressed memory.
+/// An explicit input limit, not an estimate of decompressed memory.
 pub const MAX_FILE_BYTES: usize = 256 * 1024 * 1024;
+/// The in-memory DXF bridge's limit. A DWG writes several times its size as DXF text: a 32 MB architectural DWG of
+/// 725 000 objects (12 November 2026) wrote 270 MB, which the file limit refused; its open then took 1.4 GB.
+pub const MAX_BRIDGE_BYTES: usize = 1024 * 1024 * 1024;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Error {
@@ -52,12 +55,48 @@ fn bounded(bytes: &[u8]) -> Result<(), Error> {
 pub fn version(bytes: &[u8]) -> Result<DwgVersion, Error> {
     bounded(bytes)?;
     let signature = bytes.get(..6).and_then(|b| std::str::from_utf8(b).ok());
-    DwgVersion::ALL.into_iter().find(|v| Some(v.signature()) == signature).ok_or_else(|| {
-        error("unsupported_cad_version", format!(
-            "DWG imzası {} desteklenmiyor. Desteklenenler R14–2018 biçimleridir (AC1014–AC1032); dosyayı bunlardan biri olarak kaydedin.",
-            signature.unwrap_or("okunamadı")
-        ))
-    })
+    if let Some(v) = DwgVersion::ALL
+        .into_iter()
+        .find(|v| Some(v.signature()) == signature)
+    {
+        return Ok(v);
+    }
+    Err(error(
+        "unsupported_cad_version",
+        match signature.filter(|s| s.starts_with("AC1")) {
+            Some(s) => format!(
+                "Bu DWG'nin sürümü ({s}) desteklenmiyor. Desteklenenler R14–2018 biçimleridir (AC1014–AC1032); dosyayı bunlardan biri olarak kaydedin."
+            ),
+            None => not_a_dwg(bytes),
+        },
+    ))
+}
+
+/// What a file named .dwg is when its start is not a DWG's signature: one of the downloads was a JPEG photograph
+/// (12 November 2026), and "the signature is not supported" said nothing of that.
+fn not_a_dwg(bytes: &[u8]) -> String {
+    let what = [
+        (&b"\xFF\xD8\xFF"[..], "bir JPEG resmi"),
+        (&b"\x89PNG"[..], "bir PNG resmi"),
+        (&b"GIF8"[..], "bir GIF resmi"),
+        (&b"%PDF"[..], "bir PDF belgesi"),
+        (&b"PK\x03\x04"[..], "bir ZIP arşivi"),
+        (&b"Rar!"[..], "bir RAR arşivi"),
+        (&b"7z\xBC\xAF"[..], "bir 7z arşivi"),
+        (&b"AutoCAD Binary DXF"[..], "bir DXF çizimi"),
+    ]
+    .into_iter()
+    .find(|(magic, _)| bytes.starts_with(magic))
+    .map(|(_, what)| what)
+    .or_else(|| {
+        let head = String::from_utf8_lossy(&bytes[..bytes.len().min(64)]).into_owned();
+        let mut lines = head.lines().map(str::trim);
+        (lines.next() == Some("0") && lines.next() == Some("SECTION")).then_some("bir DXF çizimi")
+    });
+    match what {
+        Some(what) => format!("Bu dosya bir DWG çizimi değil: adı .dwg ile bitse de içinde {what} var."),
+        None => "Bu dosya bir DWG çizimi değil: başında DWG sürüm imzası (AC10…) yok. Dosya bozulmuş ya da başka bir biçimde olabilir.".into(),
+    }
 }
 
 fn codec_version(version: DwgVersion) -> DxfVersion {
@@ -80,17 +119,114 @@ fn guarded<T>(f: impl FnOnce() -> Result<T, Error>) -> Result<T, Error> {
     ))?
 }
 
+/// A DWG the codec read to its end opens; the records it could not decode are said in the report, not a refusal.
+/// Real drawings have them: 8 579 DGN line style records in one, one in another, none of them drawn (12 November
+/// 2026); refusing them kept every such drawing closed. A stream not read to its end is refused: what came out of it
+/// is part of a drawing.
+fn complete(stats: &acadrust::ReadStats) -> Result<(), Error> {
+    if !stats.stream_completed {
+        return Err(error(
+            "import_unreadable",
+            "DWG sonuna kadar okunamadı; yarım bir çizim açılmaz. Dosyayı kaynak yazılımda denetleyip yeniden kaydedin.",
+        ));
+    }
+    Ok(())
+}
+
+/// A diagnostic's record kind by its name: the codec gives a class's number as its type ("551") and names it only in
+/// the words ("Preserved auxiliary object LSSTROKEPATTERNCOMPONENT at handle 0x656DF8, type_code=551 …").
+fn record_kind(d: &acadrust::ReadDiagnostic) -> Option<&str> {
+    d.message
+        .split_once("auxiliary object ")
+        .and_then(|(_, rest)| rest.split_whitespace().next())
+        .or(d.record_type.as_deref())
+}
+
+/// The records the codec could not decode, said by their kinds as its diagnostics name them (a DGN line style's
+/// component is not drawn; another kind may be a missing object).
+fn recovered_said(stats: &acadrust::ReadStats) -> String {
+    let mut kinds = std::collections::BTreeMap::<&str, usize>::new();
+    for d in &stats.diagnostics {
+        if let Some(kind) = record_kind(d) {
+            *kinds.entry(kind).or_default() += 1;
+        }
+    }
+    let mut kinds: Vec<_> = kinds.into_iter().collect();
+    kinds.sort_by_key(|k| std::cmp::Reverse(k.1));
+    let named = kinds
+        .iter()
+        .take(4)
+        .map(|(kind, n)| {
+            let drawn = if DGN_LINE_STYLES.contains(kind) {
+                ", DGN çizgi stili, çizilmez"
+            } else {
+                ""
+            };
+            format!("{kind} {n}{drawn}")
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    let named = if named.is_empty() {
+        String::new()
+    } else {
+        format!(" Türleri (ilk {} tanı): {named}.", stats.diagnostics.len())
+    };
+    format!("Kodek bu kayıtları çözemedi; çizim onlarsız açıldı.{named}")
+}
+
+/// What KentOS writes must read back whole: the writer's own DXF and the DWG made of it, no record recovered.
 fn strict(stats: &acadrust::ReadStats) -> Result<(), Error> {
     if !stats.stream_completed || stats.recovered_errors > 0 {
         return Err(error(
-            "import_unreadable",
+            "file_unwritable",
             format!(
-                "CAD kayıtları tam okunamadı ({} kurtarılan hata). Kısmi dosya çizime alınmadı; kaynak yazılımda denetleyin.",
+                "Yazılan veri tam okunamadı ({} kurtarılan hata); eksik dosya yazılmadı.",
                 stats.recovered_errors
             ),
         ));
     }
     Ok(())
+}
+
+/// A DGN line style's records (DgnLS; a DWG made from MicroStation drawings holds them).
+const DGN_LINE_STYLES: [&str; 6] = [
+    "LSDEFINITION",
+    "LSSYMBOLCOMPONENT",
+    "LSCOMPOUNDCOMPONENT",
+    "LSSTROKEPATTERNCOMPONENT",
+    "LSPOINTCOMPONENT",
+    "LSINTERNALCOMPONENT",
+];
+
+/// Objects KentOS's DXF reading never takes, out of the temporary document before it is written as DXF text (the
+/// source DWG stays as it is): DGN line style records, decoded or kept raw after a decode failure, and proxy objects.
+/// In one drawing (12 November 2026) they were 380 of the bridge's 463 MB and most of its 57 s. Their dictionaries'
+/// entries go with them. Answers how many went.
+fn drop_unread(doc: &mut acadrust::CadDocument) -> usize {
+    use acadrust::objects::ObjectType;
+    let gone: std::collections::HashSet<acadrust::Handle> = doc
+        .objects
+        .iter()
+        .filter(|(_, o)| match o {
+            ObjectType::DgnLineStyle(_) | ObjectType::ProxyObject(_) => true,
+            ObjectType::Unknown { type_name, .. } => DGN_LINE_STYLES.contains(&type_name.as_str()),
+            _ => false,
+        })
+        .map(|(h, _)| *h)
+        .collect();
+    if gone.is_empty() {
+        return 0;
+    }
+    doc.objects.retain(|h, _| !gone.contains(h));
+    for o in doc.objects.values_mut() {
+        if let ObjectType::Dictionary(d) = o {
+            d.entries.retain(|(_, h)| !gone.contains(h));
+            let kept: std::collections::HashSet<&String> =
+                d.entries.iter().map(|(name, _)| name).collect();
+            d.hard_owner_entries.retain(|name| kept.contains(name));
+        }
+    }
+    gone.len()
 }
 
 /// Whether a DWG registers KENTOS in its APPID table, KentOS's own export (docs/adr/1061 §5): decoded through the same
@@ -131,15 +267,32 @@ pub fn read_watched(
     options: &DxfReadOptions,
     watch: &mut dyn Watch,
 ) -> Result<ImportResult, Error> {
+    let bridge = bridge(bytes, watch)?;
+    read_bridge(&bridge, options, watch)
+}
+
+/// A DWG decoded once and written as the DXF text the reader takes: an open reads it twice (its unit, then at its
+/// scale), and decoding a 32 MB DWG the second time cost 9 of its 24 s (12 November 2026).
+pub struct Bridge {
+    dxf: Vec<u8>,
+    stats: acadrust::ReadStats,
+    dropped: usize,
+    source: DwgVersion,
+}
+
+/// [`read_watched`]'s first half: the DWG decoded, the objects KentOS does not read dropped and the rest written as
+/// DXF text (the watch's first 40 %).
+pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
     let source = version(bytes)?;
     if !watch.step(0, 1000) {
         return Err(error("cancelled", STOPPED));
     }
-    let (dxf, stats) = guarded(|| {
+    let (dxf, stats, dropped) = guarded(|| {
         let mut outcome = DwgReader::from_stream(Cursor::new(bytes))
             .read_with_stats()
             .map_err(|e| error("import_unreadable", format!("DWG okunamadı: {e}")))?;
-        strict(&outcome.stats)?;
+        complete(&outcome.stats)?;
+        let dropped = drop_unread(&mut outcome.document);
         // R14 has no per-entity lineweight field. The upstream legacy
         // decoder's zero is a missing field, not a 0 mm object override.
         if source == DwgVersion::AC1014 {
@@ -171,17 +324,51 @@ pub fn read_watched(
                     format!("DWG aktarma verisi üretilemedi: {e}"),
                 )
             })?;
-        bounded(&dxf)?;
-        Ok((dxf, outcome.stats))
+        if dxf.len() > MAX_BRIDGE_BYTES {
+            return Err(error(
+                "cad_file_too_large",
+                format!(
+                    "DWG'nin aktarma verisi {} MiB sınırını aşıyor; çizimi kaynak yazılımda bölerek kaydedin.",
+                    MAX_BRIDGE_BYTES / (1024 * 1024)
+                ),
+            ));
+        }
+        Ok((dxf, outcome.stats, dropped))
     })?;
     if !watch.step(400, 1000) {
         return Err(error("cancelled", STOPPED));
     }
+    Ok(Bridge {
+        dxf,
+        stats,
+        dropped,
+        source,
+    })
+}
+
+/// [`read_watched`]'s second half: the bridge read with `options` (the watch's last 60 %), what the DWG lost said.
+pub fn read_bridge(
+    bridge: &Bridge,
+    options: &DxfReadOptions,
+    watch: &mut dyn Watch,
+) -> Result<ImportResult, Error> {
+    let Bridge {
+        dxf,
+        stats,
+        dropped,
+        source,
+    } = bridge;
+    let (dropped, source) = (*dropped, *source);
     let mut phase = kentos_formats::watch::Steps(|done: u64, total: u64| {
         watch.step(400 + done.saturating_mul(600) / total.max(1), 1000)
     });
-    let mut result = kentos_formats::dxf::read_checked_watched(&dxf, options, &mut phase)
-        .map_err(|e| error(e.code, e.message))?;
+    let mut result = kentos_formats::dxf::read_checked_watched_within(
+        dxf,
+        options,
+        &mut phase,
+        MAX_BRIDGE_BYTES,
+    )
+    .map_err(|e| error(e.code, e.message))?;
     result.report.source.retain(|f| f.label != "Sürüm");
     for (label, value) in [
         ("Kaynak biçimi", "DWG".to_owned()),
@@ -201,6 +388,26 @@ pub fn read_watched(
             value,
         });
     }
+    if stats.recovered_errors > 0 {
+        result.report.skipped.push(kentos_contracts::ReportItem {
+            severity: None,
+            details: Vec::new(),
+            what: "DWG kaydı".into(),
+            count: stats.recovered_errors.min(u32::MAX as usize) as u32,
+            reason: recovered_said(stats),
+            lines: Vec::new(),
+        });
+    }
+    if dropped > 0 {
+        result.report.notes.push(kentos_contracts::ReportItem {
+            severity: None,
+            details: Vec::new(),
+            what: "DWG nesnesi".into(),
+            count: dropped.min(u32::MAX as usize) as u32,
+            reason: "DGN çizgi stili bileşenleri ve vekil (proxy) nesneler okunmadı: KentOS onları çizmez; çizgiler çizgi tipinin kesik deseniyle çizilir.".into(),
+            lines: Vec::new(),
+        });
+    }
     if stats.skipped_source_records > 0 {
         result.report.skipped.push(kentos_contracts::ReportItem {
             severity: None,
@@ -212,7 +419,14 @@ pub fn read_watched(
             lines: Vec::new(),
         });
     }
-    for d in stats.diagnostics.iter().take(100) {
+    // The codec's own words for what it kept or left, a few: a DGN line style's are counted above, and a hundred lines
+    // of them filled Geçmiş on opening a drawing (12 November 2026).
+    for d in stats
+        .diagnostics
+        .iter()
+        .filter(|d| !record_kind(d).is_some_and(|t| DGN_LINE_STYLES.contains(&t)))
+        .take(10)
+    {
         result.report.notes.push(kentos_contracts::ReportItem {
             severity: None,
             details: Vec::new(),
@@ -281,4 +495,129 @@ pub fn encode(dxf: &[u8], target: DwgVersion) -> Result<Vec<u8>, Error> {
         }
         Ok(bytes)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use acadrust::Handle;
+    use acadrust::objects::{Dictionary, ObjectType};
+
+    /// A DWG read to its end opens with the records the codec recovered; only one not read to its end is refused.
+    #[test]
+    fn recovered_records_open_an_unfinished_stream_does_not() {
+        let read = |stream_completed, recovered_errors| {
+            complete(&acadrust::ReadStats {
+                stream_completed,
+                recovered_errors,
+                ..Default::default()
+            })
+        };
+        assert!(read(true, 0).is_ok());
+        assert!(
+            read(true, 8579).is_ok(),
+            "8 579 DGN line style records kept a real drawing closed"
+        );
+        let refused = read(false, 0).expect_err("a stream not read to its end");
+        assert_eq!(refused.code, "import_unreadable");
+        assert!(
+            refused.message.contains("sonuna kadar okunamadı"),
+            "{}",
+            refused.message
+        );
+        // What KentOS writes must still read back whole.
+        assert!(
+            strict(&acadrust::ReadStats {
+                stream_completed: true,
+                recovered_errors: 1,
+                ..Default::default()
+            })
+            .is_err()
+        );
+    }
+
+    /// DGN line style records (decoded or raw) and proxy objects leave the temporary document with their dictionary
+    /// entries; a layout and its entry stay.
+    #[test]
+    fn unread_objects_leave_the_bridge_with_their_entries() {
+        let mut doc = acadrust::CadDocument::new();
+        let (style, layout, table) = (
+            Handle::new(0x9001),
+            Handle::new(0x9002),
+            Handle::new(0x9003),
+        );
+        doc.objects.insert(
+            style,
+            ObjectType::Unknown {
+                type_name: "LSSTROKEPATTERNCOMPONENT".into(),
+                handle: style,
+                owner: table,
+                raw_dxf_codes: None,
+                raw_dwg_data: Some(vec![0; 8]),
+                raw_dwg_handle_bits: 0,
+                raw_dwg_version: None,
+            },
+        );
+        let mut dictionary = Dictionary::new();
+        dictionary.handle = table;
+        dictionary.entries = vec![("Stroke 1".into(), style), ("Pafta".into(), layout)];
+        dictionary.hard_owner_entries = vec!["Stroke 1".into(), "Pafta".into()];
+        doc.objects
+            .insert(table, ObjectType::Dictionary(dictionary));
+        let before = doc.objects.len();
+        assert_eq!(drop_unread(&mut doc), 1);
+        assert_eq!(doc.objects.len(), before - 1);
+        let Some(ObjectType::Dictionary(d)) = doc.objects.get(&table) else {
+            panic!("the dictionary stays")
+        };
+        assert_eq!(d.entries, vec![("Pafta".to_owned(), layout)]);
+        assert_eq!(d.hard_owner_entries, vec!["Pafta".to_owned()]);
+        assert_eq!(drop_unread(&mut doc), 0, "nothing more to drop");
+    }
+
+    /// The recovered records are said by their kinds; a DGN line style's is said not to be drawn.
+    #[test]
+    fn recovered_records_are_said_by_their_kinds() {
+        // As the codec says them: the class's number as the type, its name in the words; or a kind it names.
+        let diagnostic = |kind: &str| acadrust::ReadDiagnostic {
+            code: "auxiliary-object-preserved".into(),
+            stage: acadrust::ReadStage::RecordStream,
+            section: None,
+            source_offset: None,
+            source_offset_basis: None,
+            source_line: None,
+            record_handle: None,
+            record_type: Some(if kind == "HATCH" {
+                kind.into()
+            } else {
+                "551".into()
+            }),
+            message: if kind == "HATCH" {
+                "Parse error".into()
+            } else {
+                format!(
+                    "Preserved auxiliary object {kind} at handle 0x656DF8, type_code=551 as raw DWG data"
+                )
+            },
+        };
+        let stats = acadrust::ReadStats {
+            stream_completed: true,
+            recovered_errors: 3,
+            diagnostics: vec![
+                diagnostic("LSSTROKEPATTERNCOMPONENT"),
+                diagnostic("LSSTROKEPATTERNCOMPONENT"),
+                diagnostic("HATCH"),
+            ],
+            ..Default::default()
+        };
+        let said = recovered_said(&stats);
+        assert!(
+            said.starts_with("Kodek bu kayıtları çözemedi; çizim onlarsız açıldı."),
+            "{said}"
+        );
+        assert!(
+            said.contains("LSSTROKEPATTERNCOMPONENT 2, DGN çizgi stili, çizilmez; HATCH 1"),
+            "{said}"
+        );
+    }
 }

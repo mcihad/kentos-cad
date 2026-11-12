@@ -753,11 +753,28 @@ pub fn read_checked(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult,
 }
 
 /// One validation pass; parser errors and cancellation keep their structured code.
-pub fn read_checked_watched(bytes: &[u8], opts: &DxfReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, preflight::ReadError> {
-    if opts.scale_reference.is_some_and(|r|r.factor().is_none()) || (opts.scale_reference.is_some() && opts.file_unit.is_some()) {
+pub fn read_checked_watched(
+    bytes: &[u8],
+    opts: &DxfReadOptions,
+    watch: &mut dyn Watch,
+) -> Result<ImportResult, preflight::ReadError> {
+    read_checked_watched_within(bytes, opts, watch, preflight::MAX_BYTES)
+}
+
+/// [`read_checked_watched`] with its own size limit: a DWG's in-memory bridge (kentos-dwg) is not a file a user chose
+/// and is several times its DWG (a 32 MB DWG wrote 270 MB of DXF), so it has a larger one than a DXF file's.
+pub fn read_checked_watched_within(
+    bytes: &[u8],
+    opts: &DxfReadOptions,
+    watch: &mut dyn Watch,
+    max_bytes: usize,
+) -> Result<ImportResult, preflight::ReadError> {
+    if opts.scale_reference.is_some_and(|r| r.factor().is_none())
+        || (opts.scale_reference.is_some() && opts.file_unit.is_some())
+    {
         return Err(preflight::ReadError{code:"invalid_scale",message:"Ölçek doğrulamasında iki uzunluk da sıfırdan büyük ve sonlu olmalı; dosya birimi ile ölçü doğrulamasından yalnız birini seçin.".into()});
     }
-    preflight::check(bytes, watch)?;
+    preflight::check_within(bytes, max_bytes, watch)?;
     let read = (|| {
         let mut result = match read_once(bytes, opts, watch, false)? {
             Some(result) => result,

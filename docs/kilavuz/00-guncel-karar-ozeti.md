@@ -2519,6 +2519,13 @@
   Eğik/iç içe INSERT dönüşümleri önce tam XYZ'de birleştirilir; desteklenen düz nesnelerin açık patlatmasında
   XY ve kotlar korunur. SOLID/TRACE/3DFACE köşe kotları atılmaz. Eğik yay/genişlik için genel afin kaynak
   modeli henüz yoktur; mevcut varsayılan kayıp reddi korunur ve CAD-IO-15 açık kalır.
+- **Gerçek DWG projeleri açılır (12 Kasım 2026; [ADR 8053](../../docs/adr/8053-real-dwg-projects-open.md)).**
+  Sonuna kadar okunan DWG açılır; kodeğin çözemediği kayıtlar (DGN çizgi stili bileşenleri) rapordadır, ret değildir.
+  Okunmayan DGN çizgi stili ve vekil nesneler bellekteki DXF köprüsüne yazılmaz; köprünün kendi sınırı 1 GiB (DWG ve
+  DXF dosyası 256 MiB). Aç, kayıpsız taşınamayan çoklu çizgiyi (eşit olmayan ölçekli blokta yay ya da genişlik) yaklaşık
+  açar ve söyler; İçe aktar'ın kayıp reddi sürer. Açılmayan dosya "Çizim açılamadı" penceresinde kalır; DWG olmayan dosya
+  ne olduğunu söyler. DWG açılışta bir kez çözülür. CAD çizimi yoğun kısmında açılır (birkaç uzak nesne çizimi bir
+  şeride indirmez; kaç nesnenin dışarıda kaldığı söylenir). 4 gerçek proje (8–33 MB) reddediliyordu, 3–15 s'de açılıyor.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](../../docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.

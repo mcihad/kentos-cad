@@ -90,6 +90,26 @@ fn unsupported_and_truncated_files_return_errors() {
     }
 }
 
+/// A file named .dwg that is something else says what it is: one downloaded "drawing" was a JPEG photograph and the
+/// message was "DWG imzası okunamadı desteklenmiyor" (12 November 2026).
+#[test]
+fn a_file_that_is_not_a_dwg_says_what_it_is() {
+    let said = |bytes: &[u8]| {
+        kentos_dwg::read(bytes, &DxfReadOptions::default())
+            .expect_err("not a DWG")
+            .message
+    };
+    assert_eq!(
+        said(b"\xFF\xD8\xFF\xE0\0\x10JFIF"),
+        "Bu dosya bir DWG çizimi değil: adı .dwg ile bitse de içinde bir JPEG resmi var."
+    );
+    assert!(said(b"%PDF-1.7").contains("bir PDF belgesi"));
+    assert!(said(b"PK\x03\x04").contains("bir ZIP arşivi"));
+    assert!(said(b"  0\r\nSECTION\r\n  2\r\nHEADER").contains("bir DXF çizimi"));
+    assert!(said(b"not DWG").contains("DWG sürüm imzası (AC10…) yok"));
+    assert!(said(b"AC1009\0\0").contains("Bu DWG'nin sürümü (AC1009) desteklenmiyor"));
+}
+
 #[test]
 fn a_cancelled_read_returns_no_partial_result() {
     let bytes =

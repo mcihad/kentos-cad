@@ -580,6 +580,10 @@ pub struct Emitter<'l> {
     /// The block read as a definition: its attribute definitions' names KentOS kept for their tags (docs/adr/4800),
     /// upper-case tag → name.
     named: HashMap<String, String>,
+    /// The line type table's patterns by upper-case name → the first one's own spelling, worked out once. Looked up for
+    /// every object: a search of the table for each one took 45 µs a line in a drawing of 7 346 line types, 22 of a
+    /// 32 MB DWG's 25 s (12 November 2026).
+    pattern_names: HashMap<String, String>,
 }
 
 impl<'l> Emitter<'l> {
@@ -598,6 +602,15 @@ impl<'l> Emitter<'l> {
             closed_lines: false,
             heights: HashMap::new(),
             named: HashMap::new(),
+            pattern_names: {
+                let mut names = HashMap::with_capacity(lib.patterns.len());
+                for p in &lib.patterns {
+                    names
+                        .entry(p.name.to_uppercase())
+                        .or_insert_with(|| p.name.clone());
+                }
+                names
+            },
         }
     }
 
@@ -1125,12 +1138,7 @@ impl<'l> Emitter<'l> {
         // (docs/adr/0313 §6).
         let line_pattern = match up.as_str() {
             "BYBLOCK" | "" | "BYLAYER" => None,
-            _ => self
-                .lib
-                .patterns
-                .iter()
-                .find(|p| p.name.to_uppercase() == up)
-                .map(|p| p.name.clone()),
+            _ => self.pattern_names.get(&up).cloned(),
         };
         let line_type = match up.as_str() {
             "BYBLOCK" | "" | "BYLAYER" => None,

@@ -89,30 +89,37 @@ pub fn read_in(
         file_unit,
         scale: Some(1.0),
         closed_polylines: kentos_commands::ClosedPolylines::Line,
+        // Aç shows the drawing: a polyline the reader cannot carry exactly (a width or a bulge under a block's unequal
+        // scale) comes approximated and said in the open's notes. Refusing it kept a real 8 MB drawing of 197 858
+        // objects closed (12 November 2026); İçe aktar keeps its own choice (`allowPolylineLoss`).
+        allow_polyline_loss: true,
         ..Default::default()
     };
-    let read_at = |options: &DxfReadOptions, watch: &mut dyn Watch| match format {
+    // A DWG is decoded once for both reads below (its unit, then at its scale): the second decoding of a 32 MB DWG
+    // cost 9 of its 24 s (12 November 2026).
+    let mut bridge: Option<kentos_dwg::Bridge> = None;
+    let mut read_at = |options: &DxfReadOptions, watch: &mut dyn Watch| match format {
         Format::Dxf => kentos_formats::dxf::read_watched(bytes, options, watch)
             .map_err(|e| refused("import_unreadable", e)),
-        Format::Dwg => kentos_dwg::read_watched(bytes, options, watch)
-            .map_err(|e| refused(e.code, e.message)),
+        Format::Dwg => {
+            if bridge.is_none() {
+                bridge =
+                    Some(kentos_dwg::bridge(bytes, watch).map_err(|e| refused(e.code, e.message))?);
+            }
+            let Some(made) = bridge.as_ref() else {
+                return Err(refused("import_unreadable", "DWG aktarma verisi üretilemedi."));
+            };
+            kentos_dwg::read_bridge(made, options, watch).map_err(|e| refused(e.code, e.message))
+        }
         Format::Ncz => kentos_ncz::read(bytes, &kentos_commands::NczReadOptions::default(), watch)
             .map_err(|e| refused("import_unreadable", e)),
     };
     let mut result = read_at(&options, watch)?;
-    if let Some(e) = kentos_formats::dxf::polyline_policy::refusal(
-        result.report.notes.iter().chain(&result.report.skipped),
-    ) {
+    if let Some((place, kind)) = import_apply::unusable(&result.entities) {
         return Err(refused(
             "import_unreadable",
-            format!(
-                "{} Kayıp seçeneklerini incelemek için İçe aktar kullanın.",
-                e.message
-            ),
+            import_apply::unusable_text(place, kind),
         ));
-    }
-    if let Some((place, kind)) = import_apply::unusable(&result.entities) {
-        return Err(refused("import_unreadable", import_apply::unusable_text(place, kind)));
     }
     if let Some(e) = import_apply::unusable_block(&result.blocks) {
         return Err(refused("import_unreadable", e));
@@ -343,6 +350,58 @@ mod tests {
             assert!(doc.is_dirty());
             assert!(doc.undo().is_none(), "opening must not be undoable");
         }
+    }
+
+    /// A polyline the reader cannot carry exactly opens approximated and said (Aç); İçe aktar's rule still refuses
+    /// it unless the loss is accepted. Refused, a real 8 MB drawing did not open for one such polyline (12 November
+    /// 2026): an arc with a width in a block placed with unequal scales.
+    #[test]
+    fn an_approximated_polyline_opens_and_is_said() {
+        let dxf = "0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n8\n0\n2\n*U1\n70\n1\n10\n0\n20\n0\n30\n0\n3\n*U1\n\
+                   0\nLWPOLYLINE\n8\n0\n90\n2\n70\n0\n43\n0.5\n10\n0\n20\n0\n42\n0.5\n10\n10\n20\n0\n\
+                   0\nENDBLK\n8\n0\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nINSERT\n8\n0\n2\n*U1\n10\n0\n20\n0\n\
+                   41\n2\n42\n1\n0\nENDSEC\n0\nEOF\n";
+        let strict = DxfReadOptions {
+            closed_polylines: kentos_commands::ClosedPolylines::Line,
+            ..Default::default()
+        };
+        assert_eq!(
+            kentos_formats::dxf::read_checked(dxf.as_bytes(), &strict)
+                .err()
+                .map(|e| e.code),
+            Some(kentos_formats::dxf::polyline_policy::LOSS),
+            "İçe aktar's rule"
+        );
+        let opened = read(
+            Path::new("kayip.dxf"),
+            dxf.as_bytes(),
+            Format::Dxf,
+            &mut kentos_formats::watch::Quiet,
+        )
+        .expect("Aç opens it");
+        let said: Vec<&str> = opened
+            .report
+            .notes
+            .iter()
+            .map(|n| n.reason.as_str())
+            .collect();
+        assert!(
+            said.contains(
+                &"eşit olmayan ölçekle eklendiği için genişliği alınmadı; çizgi ekseniyle geldi"
+            ),
+            "{said:?}"
+        );
+        assert!(
+            said.contains(&"yaylı kenarları eşit olmayan ölçekle eklendiği için noktalara bölündü"),
+            "{said:?}"
+        );
+        assert!(
+            opened
+                .document
+                .entities()
+                .any(|e| matches!(e, Entity::Polyline(_))),
+            "the polyline is there"
+        );
     }
 
     #[test]

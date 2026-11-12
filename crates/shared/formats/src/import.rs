@@ -189,6 +189,51 @@ fn union_but(boxes: &[Bounds], far: &[usize]) -> Option<Bounds> {
     }))
 }
 
+/// Where a CAD drawing's objects crowd, to open on: the whole boxes of the objects whose centres lie between the
+/// centres' 2nd and 98th hundredths grown by a quarter, when `whole` is more than three times as wide or as high; else
+/// `whole`. Real DWGs
+/// (12 November 2026) held a few objects three to five drawings away from the rest, not far enough to be strays: fitted
+/// to them, a 32 MB plan opened as a strip of a few pixels. Answers the view and how many objects lie outside it.
+fn crowded(boxes: &[Bounds], whole: Bounds) -> (Bounds, usize) {
+    if boxes.len() < 100 {
+        return (whole, 0);
+    }
+    let pick = |mut v: Vec<f64>, q: f64| {
+        let at = (q * (v.len() - 1) as f64) as usize;
+        v.select_nth_unstable_by(at, f64::total_cmp);
+        v[at]
+    };
+    let xs: Vec<f64> = boxes.iter().map(|b| centre(b).0).collect();
+    let ys: Vec<f64> = boxes.iter().map(|b| centre(b).1).collect();
+    let (x0, x1) = (pick(xs.clone(), 0.02), pick(xs, 0.98));
+    let (y0, y1) = (pick(ys.clone(), 0.02), pick(ys, 0.98));
+    // The hundredths cut the crowd's own edge: grown by a quarter of its size, the crowd is whole.
+    let grow = 0.25 * (x1 - x0).max(y1 - y0);
+    let inside = |b: &&Bounds| {
+        let (x, y) = centre(b);
+        x >= x0 - grow && x <= x1 + grow && y >= y0 - grow && y <= y1 + grow
+    };
+    let Some(dense) = union(boxes.iter().filter(inside)) else {
+        return (whole, 0);
+    };
+    let span = |lo: f64, hi: f64| (hi - lo).max(f64::MIN_POSITIVE);
+    let wider = span(whole.min_x, whole.max_x) > 3.0 * span(dense.min_x, dense.max_x);
+    let higher = span(whole.min_y, whole.max_y) > 3.0 * span(dense.min_y, dense.max_y);
+    if !(wider || higher) {
+        return (whole, 0);
+    }
+    let outside = boxes
+        .iter()
+        .filter(|b| {
+            b.max_x < dense.min_x
+                || b.min_x > dense.max_x
+                || b.max_y < dense.min_y
+                || b.min_y > dense.max_y
+        })
+        .count();
+    (dense, outside)
+}
+
 /// Where the view shows what was imported: the extent of `boxes` without
 /// the far strays a file can hold (`strays`).
 pub fn view_bounds(boxes: &[Bounds]) -> Option<Bounds> {
@@ -268,6 +313,21 @@ fn summarise_with(result:&mut ImportResult,replace_bounds:bool){
     if replace_bounds{result.bounds=union(boxes.iter());}
     result.view = union_but(&boxes, &far);
     result.report.notes.extend(note);
+    // A CAD drawing opens on where its objects crowd (`crowded`); the rest is a Tümünü göster away, and said.
+    if replace_bounds && let Some(whole) = result.view {
+        let (view, outside) = crowded(&boxes, whole);
+        result.view = Some(view);
+        if outside > 0 {
+            result.report.notes.push(ReportItem {
+                severity: None,
+                details: Vec::new(),
+                what: "Açılış görünümü".into(),
+                count: outside.min(u32::MAX as usize) as u32,
+                reason: "çizimin yoğun kısmı gösterildi; bu nesneler uzakta kalıyor, hepsi için Tümünü göster (orta tuşa çift tık)".into(),
+                lines: Vec::new(),
+            });
+        }
+    }
     let elevated = result.entities.iter().filter(|e| has_elevation(e)).count();
     if elevated > 0 {
         result.report.source.push(SourceFact {
@@ -344,6 +404,36 @@ mod tests {
             boxes.push(at(f64::from(i), 0.0));
         }
         assert_eq!(view_bounds(&boxes).expect("a view").min_x, 0.0);
+    }
+
+    /// A CAD drawing opens on where its objects crowd when a few lie a few drawings away (not far enough to be
+    /// strays); a drawing spread evenly opens whole.
+    #[test]
+    fn a_cad_drawing_opens_on_where_its_objects_crowd() {
+        let mut boxes: Vec<Bounds> = (0..1000)
+            .map(|i| at(f64::from(i % 100), f64::from(i / 100)))
+            .collect();
+        let crowd = union(boxes.iter()).expect("the crowd");
+        assert_eq!(
+            crowd,
+            Bounds {
+                min_x: 0.0,
+                min_y: 0.0,
+                max_x: 100.0,
+                max_y: 10.0
+            }
+        );
+        // Five objects four drawings away: a strip at the edge of the whole extent.
+        boxes.extend((0..5).map(|i| at(500.0 + f64::from(i), 300.0)));
+        let whole = union(boxes.iter()).expect("all");
+        assert!(strays(&boxes).is_empty(), "not strays: too near");
+        assert_eq!(crowded(&boxes, whole), (crowd, 5));
+        // Spread evenly, the whole extent is the crowd.
+        let even: Vec<Bounds> = (0..400)
+            .map(|i| at(f64::from(i % 20) * 30.0, f64::from(i / 20) * 30.0))
+            .collect();
+        let all = union(even.iter()).expect("all");
+        assert_eq!(crowded(&even, all), (all, 0));
     }
 
     #[test]

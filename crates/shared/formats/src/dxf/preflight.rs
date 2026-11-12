@@ -27,10 +27,22 @@ fn fail(code: &'static str, message: impl Into<String>) -> ReadError {
 }
 
 pub fn check(bytes: &[u8], watch: &mut dyn Watch) -> Result<(), ReadError> {
-    if bytes.len() > MAX_BYTES {
+    check_within(bytes, MAX_BYTES, watch)
+}
+
+/// [`check`] with its own size limit (a DWG's bridge, `read_checked_watched_within`).
+pub fn check_within(
+    bytes: &[u8],
+    max_bytes: usize,
+    watch: &mut dyn Watch,
+) -> Result<(), ReadError> {
+    if bytes.len() > max_bytes {
         return Err(fail(
             "cad_file_too_large",
-            "DXF dosyası 256 MiB sınırını aşıyor; dosyayı bölün.",
+            format!(
+                "DXF dosyası {} MiB sınırını aşıyor; dosyayı bölün.",
+                max_bytes / (1024 * 1024)
+            ),
         ));
     }
     if bytes.starts_with(b"AutoCAD Binary DXF") {
