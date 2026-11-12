@@ -12,8 +12,10 @@ sınar ([ADR 8000](../../../docs/adr/8000-real-window-acceptance.md)).
 - **Uygulama:** `kentos-cad` X11 penceresi olarak açılır. Xvfb'de DRI3 olmadığı için yazılım Vulkan'ı (lavapipe,
   `WGPU_BACKEND=vulkan`) kullanılır.
 - **Ev dizini:** her koşu kendi geçici ev dizininde çalışır. İçine sahibin `ayarlar.json`, `yerlesim-mimari.json` ve
-  `pencereler.json` dosyalarının kopyası konur. Sahibin `~/.config/kentos-cad`'i, kurtarma kopyaları ve son dosyaları
-  hiç yazılmaz. Veritabanı bağlantıları kopyalanmaz.
+  `pencereler.json` dosyalarının kopyası konur. Yapılandırma, veri, durum (`XDG_STATE_HOME`: Son dosyalar orada) ve
+  önbellek klasörleri o ev dizinindedir: sahibin `~/.config/kentos-cad`'i, kurtarma kopyaları ve son dosyaları hiç
+  yazılmaz. 12 Kasım 2026'ya dek durum klasörü yalıtılmıyordu ve oturumların açtığı dosyalar sahibin Son dosyalar
+  listesine yazıldı. Veritabanı bağlantıları kopyalanmaz.
 - **Sürücü:** `driver.py` senaryoyu XTEST ile gerçek olay olarak gönderir: imleç aradaki noktalardan geçer, tuşlar
   basılıp bırakılır, Türkçe harfler için boş bir tuş ödünç alınır. Resimleri X ekranından alır.
 - **Sayaç:** `count.py` senaryonun etkileşimlerini sayar ve Keystroke-Level Model süresini verir (kurallar dosyanın
