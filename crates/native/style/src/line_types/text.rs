@@ -136,7 +136,7 @@ fn polygons(ops: Vec<OutlineOp>) -> Result<Vec<Vec<Vec<[f64; 2]>>>, String> {
         .collect())
 }
 
-use kentos_native_application::shx_text::attached;
+use kentos_scene_query::shx_text::attached;
 
 /// A linetype text in an SHX font (and its Big Font): open strokes in capital
 /// heights, the style's width factor and slant applied (ADR 1120 §3). Every
@@ -147,7 +147,7 @@ fn shx_text(
     text: &str,
     resources: &kentos_contracts::ProjectStyles,
 ) -> Result<Vec<Vec<[f64; 2]>>, String> {
-    let fonts = kentos_native_application::shx_text::Fonts::of(style, resources)?;
+    let fonts = kentos_scene_query::shx_text::Fonts::of(style, resources)?;
     let paths = fonts.run(text)?.paths;
     if paths.is_empty() {
         return Err(format!(
@@ -231,7 +231,7 @@ pub(super) fn prepare(
                 |h| h * settings.plot_scale / plot_scale * p.scale,
             );
         if let Some(s) = style
-            && kentos_native_application::shx_text::is_shx(s)
+            && kentos_scene_query::shx_text::is_shx(s)
         {
             let paths = shx_text(s, &text.text, resources)?;
             marks.push(json!({"at":at,"cap":1.,"height":height,"x":paper(p.x),"y":paper(p.y),

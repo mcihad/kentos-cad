@@ -14,7 +14,6 @@ use kentos_contracts::{Entity, LayerStyle};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::geometry::shape;
 use kentos_native_style::ReadingUnit;
 use kentos_native_style::classify::{
     ExprScope, Method, categories_of, classes_present, graduated_of, numbers_per_object,
@@ -24,6 +23,7 @@ use kentos_native_style::library::StyleLibrary;
 use kentos_native_style::program::{BuildOptions, build_layer};
 use kentos_native_style::renderer::Rule;
 use kentos_native_style::tally::{RuleCount, category_tally, class_tally, drawable, rule_counts};
+use kentos_scene_query::geometry::shape;
 use serde_json::{Value, json};
 use std::path::PathBuf;
 

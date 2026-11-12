@@ -36,3 +36,10 @@ impl fmt::Display for HeadlessError {
 }
 
 impl std::error::Error for HeadlessError {}
+
+/// A refused query or measure of the viewer core (kentos-scene-query) keeps its code and words.
+impl From<kentos_scene_query::QueryError> for HeadlessError {
+    fn from(e: kentos_scene_query::QueryError) -> Self {
+        Self::new(e.code, e.message)
+    }
+}

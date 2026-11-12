@@ -8,13 +8,13 @@ use std::path::PathBuf;
 
 use kentos_contracts::Entity;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::geometry::shape;
 use kentos_native_style::ReadingUnit;
 use kentos_native_style::classify::{ExprScope, numbers_per_object, values_of};
 use kentos_native_style::renderer::{Category, GraduatedClass, Rule};
 use kentos_native_style::tally::{
     RuleCount, category_tally, class_tally, drawable, field_token, rule_counts, shadowed,
 };
+use kentos_scene_query::geometry::shape;
 use serde_json::{Value, json};
 
 fn fixture() -> Value {

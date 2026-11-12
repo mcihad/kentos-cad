@@ -11,6 +11,8 @@ publish.workspace = true
 # its own TypeScript handlers (apps/web/src/product); this crate is never built for the
 # browser. The package is not `kentos-application`: that name is the server's use cases.
 [dependencies]
+# The read-only viewer core (docs/adr/8054 §8); its modules are re-exported here under their old paths.
+kentos-scene-query = { path = "../scene-query" }
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
 # Patlat (docs/adr/0302): a dimension exploded writes its value as the project shows it (the project's Format).

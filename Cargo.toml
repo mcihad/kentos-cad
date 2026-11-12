@@ -66,6 +66,7 @@ members = [
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
+    "crates/native/scene-query",
     # The desktop's processing tools (İşlemler, docs/PROCESSING.md): the web's tools and
     # models over the native document, held to fixtures/processing/v1.
     "crates/native/processing",
@@ -142,6 +143,7 @@ default-members = [
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
+    "crates/native/scene-query",
     "crates/native/processing",
     "crates/native/project",
     "crates/native/geopackage",

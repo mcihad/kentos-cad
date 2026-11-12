@@ -93,6 +93,9 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+// The read-only viewer core's modules, under their old paths (docs/adr/8054 §8).
+pub use kentos_scene_query::{level_view, spatial};
+
 #[path = "map/address_form.rs"]
 
 pub mod address_form;
@@ -244,8 +247,6 @@ pub mod labels_to_text;
 pub mod layer_move;
 #[path = "core/layer_tools.rs"]
 pub mod layer_tools;
-#[path = "viewer_tools/level_view.rs"]
-pub mod level_view;
 #[path = "core/leader.rs"]
 pub mod leader;
 #[path = "core/lengthen.rs"]
@@ -388,8 +389,6 @@ mod session;
 pub mod set_elevation;
 #[path = "gis/sources.rs"]
 pub mod sources;
-#[path = "viewer_tools/spatial.rs"]
-pub mod spatial;
 #[path = "core/spline.rs"]
 pub mod spline;
 #[path = "core/split.rs"]

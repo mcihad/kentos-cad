@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 use kentos_contracts::{Entity, LayerStyle, LineType};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::geometry::shape;
+use kentos_scene_query::geometry::shape;
 use serde_json::{Value, json};
 
 use crate::StylePalette;

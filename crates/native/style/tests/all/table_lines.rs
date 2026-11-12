@@ -6,9 +6,9 @@
 use kentos_contracts::{Entity, LayerStyle};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::geometry::shape;
 use kentos_native_style::library::StyleLibrary;
 use kentos_native_style::program::{BuildOptions, ReadingUnit, build_layer};
+use kentos_scene_query::geometry::shape;
 use serde_json::json;
 
 fn table(grid: Option<&str>, frame: Option<f64>) -> Entity {

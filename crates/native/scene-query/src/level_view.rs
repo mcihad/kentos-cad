@@ -74,7 +74,7 @@ pub fn roof_over_its_storey(settings: &ProjectSettings, e: &Entity) -> bool {
 
 /// Whether a roof on `level` at `offset` stands over that storey's plan's cut ([`roof_over_its_storey`]).
 pub fn roof_over(settings: &ProjectSettings, level: &str, offset: f64) -> bool {
-    kentos_native_application::roofs::over_its_storey(settings, level, offset)
+    crate::storeys::over_its_storey(settings, level, offset)
 }
 
 /// The project's levels.

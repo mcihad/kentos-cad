@@ -282,6 +282,7 @@ flowchart LR
   3. **`crates/shared/arch` (`kentos-arch`) Ayrılacaktır:**
      - Mimariye özgü parametrik BIM/duvar/merdiven/çatı geometrisi `crates/shared/arch` crate'ine taşınacak; `kentos-geometry-core` yalnız 2B/3B temel analitik geometri, CRS/Karney jeodezi ve uzamsal indeks (`store`) içerecektir.
 - **Tamamlanma Ölçütü:** `cargo tree -p kentos-render-wgpu` ve `cargo tree -p kentos-scene-query` çıktısında `kentos-native-application`, `kentos-interaction`, `kentos-dwg`, `kentos-ifc` veya `schemars` kesinlikle yer almaz; mobil görüntüleyici/sorgulama/ölçüm çekirdeği tek başına derlenebilir hale gelir.
+- **12 Kasım 2026 ([ADR 8054 §8](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** 1. ve 2. işler tamam, ölçüt sağlandı: `kentos-scene-query` (geometri, bloklar, SHX ve etiket metinleri, katman süzgeci, görünüm kapsamı, geometri deposu, `Spatial`, katlar, `query`) ayrıldı, eski yollar yeniden dışa veriliyor; `kentos-render-wgpu` 216 → 165 crate, içinde uygulama, etkileşim, DWG, IFC ve `schemars` yok; `deps.mjs` bunu bekliyor. **3. iş (`kentos-arch`) ertelendi, karar bekliyor:** geometry-core'un çekirdeğinden 39 dosya (nesne sınırı, depo, işlemler) mimari geometriyi kullanıyor; ayırmak önce geometry-core'un tabanını ayrı crate'e indirmeyi gerektiriyor.
 
 ---
 

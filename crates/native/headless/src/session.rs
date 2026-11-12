@@ -386,7 +386,7 @@ impl Session {
         after: Option<String>,
         limit: Option<usize>,
     ) -> Result<Page<'_>, HeadlessError> {
-        query::page(
+        Ok(query::page(
             &self.doc,
             &Filter {
                 layer,
@@ -395,7 +395,7 @@ impl Session {
                 after,
                 limit,
             },
-        )
+        )?)
     }
 
     /// One object by its persistent id, as the wire carries it.
@@ -412,12 +412,12 @@ impl Session {
 
     /// An object's area, length and box.
     pub fn measure(&self, uid: &str) -> Result<Measure, HeadlessError> {
-        query::measure(&self.doc, uid)
+        Ok(query::measure(&self.doc, uid)?)
     }
 
     /// An object's measures taken by `method` (docs/adr/0256 §4).
     pub fn measure_by(&self, uid: &str, method: query::Method) -> Result<Measure, HeadlessError> {
-        query::measure_by(&self.doc, uid, method)
+        Ok(query::measure_by(&self.doc, uid, method)?)
     }
 
     /// Many objects' measures taken by `method`, at most [`query::MEASURE_MAX`].
@@ -426,7 +426,7 @@ impl Session {
         uids: &[String],
         method: query::Method,
     ) -> Result<query::Measures, HeadlessError> {
-        query::measure_many(&self.doc, uids, method)
+        Ok(query::measure_many(&self.doc, uids, method)?)
     }
 
     /// Undoes the last step; its name, or none when there is nothing to undo.

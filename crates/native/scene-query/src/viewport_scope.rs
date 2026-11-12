@@ -6,11 +6,12 @@ pub use kentos_sheet::model_scope::Viewport;
 
 pub fn resolve(doc: &Document, scope: &SheetModelScope) -> Result<Viewport, Box<CommandError>> {
     let fail = |code: &str, message: String| {
-        Box::new(crate::checks::error(
-            code,
+        Box::new(CommandError {
+            code: code.to_owned(),
             message,
-            Some("modelScope".into()),
-        ))
+            path: Some("modelScope".into()),
+            ..CommandError::default()
+        })
     };
     let kept = doc
         .sheets()

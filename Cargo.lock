@@ -2828,6 +2828,7 @@ dependencies = [
  "kentos-plot",
  "kentos-processing",
  "kentos-project",
+ "kentos-scene-query",
  "kentos-sheet",
  "miniz_oxide 0.9.1",
  "serde",
@@ -2855,6 +2856,7 @@ dependencies = [
  "kentos-ifc",
  "kentos-native-application",
  "kentos-project",
+ "kentos-scene-query",
  "serde",
  "serde_json",
 ]
@@ -2946,6 +2948,7 @@ dependencies = [
  "kentos-project",
  "kentos-qml",
  "kentos-road",
+ "kentos-scene-query",
  "kentos-services",
  "kentos-sheet",
  "kentos-style-core",
@@ -2966,6 +2969,7 @@ dependencies = [
  "kentos-domain",
  "kentos-geometry-core",
  "kentos-native-application",
+ "kentos-scene-query",
  "kentos-style-core",
  "kentos-style-library",
  "kentos-svg-core",
@@ -3186,6 +3190,22 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-geometry-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-scene-query"
+version = "0.1.0"
+dependencies = [
+ "kentos-commands",
+ "kentos-domain",
+ "kentos-expression",
+ "kentos-formats",
+ "kentos-forms",
+ "kentos-geometry-core",
+ "kentos-project",
+ "kentos-sheet",
  "serde",
  "serde_json",
 ]

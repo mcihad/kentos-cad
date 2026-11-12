@@ -460,8 +460,14 @@ mod tests {
         let item = |name: &str, bytes: &[u8]| shape_resource::item(name, bytes).unwrap();
         ProjectStyles {
             items: vec![
-                item("kentos-uni.shx", include_bytes!("../../../../../fixtures/shx/v1/kentos-uni.shx")),
-                item("kentos-big.shx", include_bytes!("../../../../../fixtures/shx/v1/kentos-big.shx")),
+                item(
+                    "kentos-uni.shx",
+                    include_bytes!("../../../../fixtures/shx/v1/kentos-uni.shx"),
+                ),
+                item(
+                    "kentos-big.shx",
+                    include_bytes!("../../../../fixtures/shx/v1/kentos-big.shx"),
+                ),
             ],
             categories: Vec::new(),
         }
@@ -493,7 +499,8 @@ mod tests {
     #[test]
     fn texts_are_placed_as_the_independent_reference_places_them() {
         let expected: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/shx/v1/expected.json")).unwrap();
+            serde_json::from_str(include_str!("../../../../fixtures/shx/v1/expected.json"))
+                .unwrap();
         let cases = expected["texts"].as_array().unwrap();
         assert!(cases.len() >= 20, "{}", cases.len());
         let fonts = Fonts::of(&style(json!({})), &resources()).unwrap();
@@ -550,8 +557,10 @@ mod tests {
     #[test]
     fn the_style_decides_and_the_cache_follows_the_text() {
         let sample: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/shx-fonts.json")).unwrap();
-        let mut settings: ProjectSettings = serde_json::from_value(sample["settings"].clone()).unwrap();
+            serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/shx-fonts.json"))
+                .unwrap();
+        let mut settings: ProjectSettings =
+            serde_json::from_value(sample["settings"].clone()).unwrap();
         settings.text_styles = vec![
             style(json!({})),
             style(json!({"id":"ttf","name":"TTF","fontFile":"arial.ttf","bigFontFile":null})),

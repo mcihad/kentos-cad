@@ -1,0 +1,26 @@
+[package]
+name = "kentos-scene-query"
+description = "What a drawing shows and answers without changing it: objects' shapes, blocks, SHX texts and labels, layer filters, the spatial index (picking, snapping, label places), storeys' views, queries and measures (docs/adr/8054 §8)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Read-only and pure (plan/argon-tavsiye.md ADIM 08, scripts/arch/deps.mjs group `scene-query`): no command writes
+# here, so a viewer, a phone and the renderer take it without the authoring crates (application, interaction), the
+# heavy codecs (DWG, IFC) or the schema generators. The authoring crates re-export its modules under their old paths.
+[dependencies]
+kentos-commands = { path = "../../shared/commands", default-features = false }
+# The walls' and texts' drawing rules shared with the files (DXF, KCAD).
+kentos-formats = { path = "../../shared/formats" }
+kentos-domain = { path = "../domain" }
+kentos-expression = { path = "../../shared/expression" }
+# A layer filter's kind names (`kind_label`, the forms' own).
+kentos-forms = { path = "../../shared/forms" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The coordinate systems a query converts through (`systems::own`).
+kentos-project = { path = "../project" }
+# A paper viewport's model scope (viewport_scope.rs).
+kentos-sheet = { path = "../../shared/sheet", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -2,6 +2,7 @@
 //! and the server's wire form, each with its persistent id) and an object's
 //! measures from the shared geometry core (TODOS.md AI-05, AI-06).
 
+use crate::geometry::shape;
 use kentos_commands::{AngleUnit, Bounds, DrawingUnit, Entity, ProjectSettings, Workspace};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::crs::System;
@@ -11,10 +12,9 @@ use kentos_geometry_core::entity::{ellipse_geom, entity_area, entity_bounds, ent
 use kentos_geometry_core::geom::curve_outline::{ellipse_outline, spline_outline};
 use kentos_geometry_core::geom::ellipse::is_full_ellipse;
 use kentos_geometry_core::vec2::Vec2 as P;
-use kentos_native_application::geometry::shape;
 use serde::{Deserialize, Serialize};
 
-use crate::HeadlessError;
+
 
 /// The most objects one page gives; a program reads on with the cursor.
 pub const PAGE_MAX: usize = 10_000;
@@ -94,12 +94,12 @@ pub enum Method {
 
 impl Method {
     /// The method a request names; none: the plane.
-    pub fn named(name: Option<&str>) -> Result<Method, HeadlessError> {
+    pub fn named(name: Option<&str>) -> Result<Method, QueryError> {
         match name {
             None | Some("plane") => Ok(Method::Plane),
             Some("ellipsoid") => Ok(Method::Ellipsoid),
             Some("ground") => Ok(Method::Ground),
-            Some(other) => Err(HeadlessError::new(
+            Some(other) => Err(QueryError::new(
                 "invalid_input",
                 format!("method plane, ellipsoid ya da ground olmalı (“{other}” verildi)."),
             )),
@@ -293,15 +293,15 @@ pub fn conventions(settings: &ProjectSettings) -> Conventions {
     }
 }
 
-pub fn slot_of(doc: &Document, uid: &str) -> Result<Slot, HeadlessError> {
+pub fn slot_of(doc: &Document, uid: &str) -> Result<Slot, QueryError> {
     let id = Uuid::parse_str(uid).map_err(|_| {
-        HeadlessError::new(
+        QueryError::new(
             "invalid_input",
             format!("“{uid}” bir nesne kimliği değil: küçük harfli, tireli UUID olmalı."),
         )
     })?;
     doc.slot_of(id).ok_or_else(|| {
-        HeadlessError::new(
+        QueryError::new(
             "unknown_object",
             format!("{uid} kimlikli nesne bu çizimde yok (silinmiş ya da başka bir çizimin)."),
         )
@@ -316,7 +316,7 @@ fn meets(a: &Bounds, b: &Bounds) -> bool {
     a.min_x <= b.max_x && b.min_x <= a.max_x && a.min_y <= b.max_y && b.min_y <= a.max_y
 }
 
-pub fn page<'a>(doc: &'a Document, filter: &Filter) -> Result<Page<'a>, HeadlessError> {
+pub fn page<'a>(doc: &'a Document, filter: &Filter) -> Result<Page<'a>, QueryError> {
     let limit = filter.limit.unwrap_or(1000).clamp(1, PAGE_MAX);
     let start = match &filter.after {
         Some(uid) => Some(slot_of(doc, uid)?),
@@ -365,12 +365,12 @@ pub fn page<'a>(doc: &'a Document, filter: &Filter) -> Result<Page<'a>, Headless
     Ok(Page { items, next })
 }
 
-pub fn measure(doc: &Document, uid: &str) -> Result<Measure, HeadlessError> {
+pub fn measure(doc: &Document, uid: &str) -> Result<Measure, QueryError> {
     measure_by(doc, uid, Method::Plane)
 }
 
 /// An object's measures taken by `method`.
-pub fn measure_by(doc: &Document, uid: &str, method: Method) -> Result<Measure, HeadlessError> {
+pub fn measure_by(doc: &Document, uid: &str, method: Method) -> Result<Measure, QueryError> {
     let way = Way::of(doc.settings(), method)?;
     let item = item(doc, uid, &way, &std::cell::OnceCell::new())?;
     Ok(Measure {
@@ -389,9 +389,9 @@ pub fn measure_many(
     doc: &Document,
     uids: &[String],
     method: Method,
-) -> Result<Measures, HeadlessError> {
+) -> Result<Measures, QueryError> {
     if uids.len() > MEASURE_MAX {
-        return Err(HeadlessError::new(
+        return Err(QueryError::new(
             "invalid_input",
             format!(
                 "Bir seferde en çok {MEASURE_MAX} nesne ölçülür ({} verildi); listeyi bölün.",
@@ -426,19 +426,19 @@ enum Way {
 }
 
 impl Way {
-    fn of(settings: &ProjectSettings, method: Method) -> Result<Way, HeadlessError> {
+    fn of(settings: &ProjectSettings, method: Method) -> Result<Way, QueryError> {
         if method == Method::Plane {
             return Ok(Way::Plane);
         }
         let Some(system) = kentos_project::systems::own(settings).and_then(|n| n.system) else {
-            return Err(HeadlessError::new(
+            return Err(QueryError::new(
                 "method_unavailable",
                 "Projenin koordinat sistemi yok: elipsoit ve zemin ölçüsü verilemez; method plane kullanın.",
             ));
         };
         let height = match method {
             Method::Ground => Some(settings.ground_height().ok_or_else(|| {
-                HeadlessError::new(
+                QueryError::new(
                     "method_unavailable",
                     "Projenin ortalama elipsoit yüksekliği yazılı değil (Proje ayarları › Ölçme): zemin ölçüsü verilemez.",
                 )
@@ -451,8 +451,8 @@ impl Way {
 
 fn measured_bounds(doc: &Document, e: &Entity, s: &kentos_geometry_core::entity::Shape, blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>) -> Bounds {
     if matches!(e, Entity::Insert(_)) {
-        let blocks = blocks.get_or_init(|| kentos_native_application::blocks::core_blocks(doc.blocks()));
-        if let Some([min_x, min_y, max_x, max_y]) = kentos_native_application::blocks::placed_box_in(doc, blocks, e) {
+        let blocks = blocks.get_or_init(|| crate::blocks::core_blocks(doc.blocks()));
+        if let Some([min_x, min_y, max_x, max_y]) = crate::blocks::placed_box_in(doc, blocks, e) {
             return Bounds { min_x, min_y, max_x, max_y };
         }
     }
@@ -460,10 +460,15 @@ fn measured_bounds(doc: &Document, e: &Entity, s: &kentos_geometry_core::entity:
     Bounds { min_x: b.min_x, min_y: b.min_y, max_x: b.max_x, max_y: b.max_y }
 }
 
-fn item(doc: &Document, uid: &str, way: &Way, blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>) -> Result<MeasureItem, HeadlessError> {
+fn item(
+    doc: &Document,
+    uid: &str,
+    way: &Way,
+    blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>,
+) -> Result<MeasureItem, QueryError> {
     let slot = slot_of(doc, uid)?;
     let Some(e) = doc.get(slot) else {
-        return Err(HeadlessError::new(
+        return Err(QueryError::new(
             "unknown_object",
             format!("{uid} kimlikli nesne bu çizimde yok."),
         ));
@@ -613,14 +618,14 @@ fn on_ellipsoid(
     e: &Entity,
     system: &System,
     height: Option<f64>,
-) -> Result<(Option<f64>, Option<f64>), HeadlessError> {
+) -> Result<(Option<f64>, Option<f64>), QueryError> {
     let Some(parts) = rings_of(e) else {
         return Ok((None, None));
     };
     let (mut area, mut length, mut closed_any) = (0.0, 0.0, false);
     for (rings, closed) in &parts {
         let m = ground_measures(system, rings, *closed, height).map_err(|_| {
-            HeadlessError::new(
+            QueryError::new(
                 "out_of_system",
                 "Ölçülen yerin bir noktası projenin sisteminin ulaştığı yerin dışında; değer verilemedi.",
             )
@@ -637,3 +642,29 @@ fn on_ellipsoid(
     }
     Ok((closed_any.then_some(area), Some(length)))
 }
+
+/// Why a query or a measure was refused: a stable code and, for people, the cause and how to fix it (the headless
+/// host's `HeadlessError` takes it as it is).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct QueryError {
+    /// `unknown_method`, `unknown_object`, `invalid_input` … (`kentos_commands::codes`).
+    pub code: &'static str,
+    pub message: String,
+}
+
+impl QueryError {
+    pub fn new(code: &'static str, message: impl Into<String>) -> Self {
+        Self {
+            code,
+            message: message.into(),
+        }
+    }
+}
+
+impl std::fmt::Display for QueryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.code, self.message)
+    }
+}
+
+impl std::error::Error for QueryError {}

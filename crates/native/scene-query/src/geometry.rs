@@ -1561,11 +1561,32 @@ pub fn unlinked(mut entity: Entity) -> Entity {
 /// A separator's line/arc pieces retain their explicit role and architectural
 /// information. An unsupported representation is refused, never silently
 /// turned into ordinary linework by a geometry edit or a warp fallback.
-pub(crate) fn carry_space_separator(from:&Entity,entity:Entity)->Result<Entity,String> {
-    let Some(role)=kentos_domain::space_follow::separator_path(from).and_then(|p|p.space_separator.clone()) else{return Ok(entity)};
-    let path=|base,pts,bulges,closed|PathEntity {space_separator:None,base,pts,bulges,closed,
-        holes:None,parts:None,zs:None,ms:None,widths:None};
-    let circle=|base,c:Point,r:f64|path(base,vec![Point{x:c.x-r,y:c.y},Point{x:c.x+r,y:c.y}],Some(vec![1.,1.]),true);
+pub fn carry_space_separator(from: &Entity, entity: Entity) -> Result<Entity, String> {
+    let Some(role) =
+        kentos_domain::space_follow::separator_path(from).and_then(|p| p.space_separator.clone())
+    else {
+        return Ok(entity);
+    };
+    let path = |base, pts, bulges, closed| PathEntity {
+        space_separator: None,
+        base,
+        pts,
+        bulges,
+        closed,
+        holes: None,
+        parts: None,
+        zs: None,
+        ms: None,
+        widths: None,
+    };
+    let circle = |base, c: Point, r: f64| {
+        path(
+            base,
+            vec![Point { x: c.x - r, y: c.y }, Point { x: c.x + r, y: c.y }],
+            Some(vec![1., 1.]),
+            true,
+        )
+    };
     let mut p=match entity {
         Entity::Polyline(p)=>p,
         Entity::Line(l)=> {

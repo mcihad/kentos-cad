@@ -290,14 +290,14 @@ impl PySession {
     /// An object's measures taken by `method` (`plane`, `ellipsoid`, `ground`; docs/adr/0256 §4).
     #[pyo3(signature = (uid, method = None))]
     fn measure(&self, uid: &str, method: Option<&str>) -> PyResult<String> {
-        let method = kentos_headless::Method::named(method).map_err(host)?;
+        let method = kentos_headless::Method::named(method).map_err(|e| host(e.into()))?;
         text(&self.inner.measure_by(uid, method).map_err(host)?)
     }
 
     /// Many objects' measures, `uids` a JSON list of ids.
     #[pyo3(signature = (uids, method = None))]
     fn measure_many(&self, uids: &str, method: Option<&str>) -> PyResult<String> {
-        let method = kentos_headless::Method::named(method).map_err(host)?;
+        let method = kentos_headless::Method::named(method).map_err(|e| host(e.into()))?;
         let uids: Vec<String> = serde_json::from_str(uids).map_err(|e| {
             host(HeadlessError::new(
                 "invalid_input",

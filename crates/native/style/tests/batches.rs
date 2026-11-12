@@ -10,13 +10,13 @@ use std::path::PathBuf;
 use kentos_contracts::{Entity, LayerStyle};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::geometry::shape;
 use kentos_native_style::StylePalette;
 use kentos_native_style::View;
 use kentos_native_style::batches::{DecodeOptions, decode};
 use kentos_native_style::color::{ColorMode, ViewColors};
 use kentos_native_style::library::{Source, StyleLibrary};
 use kentos_native_style::program::{BuildOptions, ReadingUnit, build_layer, symbol_scale_of};
+use kentos_scene_query::geometry::shape;
 use serde_json::{Value, json};
 
 fn fixture() -> Value {

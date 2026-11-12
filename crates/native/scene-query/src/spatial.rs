@@ -33,6 +33,13 @@ use std::hash::BuildHasherDefault;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::blocks::{core_blocks_in, piece_entities_shown};
+use crate::expression_unit::{Unit, reading_unit};
+use crate::geometry::{drawing_font, shape};
+use crate::label_texts::{
+    label_defaults_json, label_layers_json, layer_texts, object_texts, texts_key,
+};
+use crate::layer_filter::{CompiledFilter, compile_filter};
 use kentos_commands::{
     BlockDefinition, Entity, EntityId, LayerFilter, LayerNode, LayerSnap, LayerTime,
 };
@@ -55,15 +62,8 @@ use kentos_geometry_core::store::placing::{
 use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
-use kentos_native_application::blocks::{core_blocks_in, piece_entities_shown};
-use kentos_native_application::expression_unit::{Unit, reading_unit};
-use kentos_native_application::geometry::{drawing_font, shape};
-use kentos_native_application::label_texts::{
-    label_defaults_json, label_layers_json, layer_texts, object_texts, texts_key,
-};
-use kentos_native_application::layer_filter::{CompiledFilter, compile_filter};
 
-use crate::Vec2;
+use kentos_geometry_core::Vec2;
 
 /// The geometry store and where it stands in the document's changes.
 #[derive(Default)]
@@ -79,8 +79,8 @@ pub struct Spatial {
     option_view: Vec<kentos_commands::OptionChoice>,
     /// Ephemeral model view denominator; never changes the project's paper scale.
     screen_wall_scale: Option<f64>,
-    sheet_view:Option<kentos_native_application::viewport_scope::Viewport>,
-    sheet_layers:Option<HashSet<String>>,
+    sheet_view: Option<crate::viewport_scope::Viewport>,
+    sheet_layers: Option<HashSet<String>>,
     /// The document's changes the store has taken.
     mark: ChangeMark,
     /// The document's revision at the last sync: nothing to do while it holds.
@@ -213,13 +213,9 @@ impl Spatial {
     ) {
         self.screen_wall_scale = scale.filter(|scale| scale.is_finite() && *scale > 0.0);
         let view = match (self.wall_scale, self.screen_wall_scale) {
-            (Some(scale), _) => {
-                kentos_native_application::walls::view_with(doc.settings(), scale, self.wall_detail)
-            }
-            (None, Some(scale)) => {
-                kentos_native_application::walls::screen_view(doc.settings(), scale, previous)
-            }
-            _ => kentos_native_application::walls::view_of(doc.settings()),
+            (Some(scale), _) => crate::walls::view_with(doc.settings(), scale, self.wall_detail),
+            (None, Some(scale)) => crate::walls::screen_view(doc.settings(), scale, previous),
+            _ => crate::walls::view_of(doc.settings()),
         };
         self.store.set_wall_view(view);
     }
@@ -271,11 +267,11 @@ impl Spatial {
     pub fn set_sheet_view(
         &mut self,
         doc: &Document,
-        view: Option<kentos_native_application::viewport_scope::Viewport>,
+        view: Option<crate::viewport_scope::Viewport>,
     ) {
         let layers = view
             .as_ref()
-            .map(|v| kentos_native_application::viewport_scope::visible_layers(doc, v));
+            .map(|v| crate::viewport_scope::visible_layers(doc, v));
         let geometry = self
             .sheet_view
             .as_ref()
@@ -296,7 +292,7 @@ impl Spatial {
     }
     fn sync_sheet_boundary(&mut self) {
         if let Some(view) = &self.sheet_view {
-            kentos_native_application::viewport_scope::apply_boundary(&mut self.store, view);
+            crate::viewport_scope::apply_boundary(&mut self.store, view);
         } else {
             self.store.set_scope_visible(None);
         }
@@ -310,20 +306,20 @@ impl Spatial {
     /// [`Spatial::walls_differ_at`] with a view's own detail (docs/adr/0781 §1).
     pub fn walls_differ_with(doc: &Document, scale: f64, detail: Option<kentos_commands::WallDetail>) -> bool {
         doc.has_scale_dependent_geometry()
-            && kentos_native_application::walls::view_with(doc.settings(), scale, detail)
-                != kentos_native_application::walls::view_of(doc.settings())
+            && crate::walls::view_with(doc.settings(), scale, detail)
+                != crate::walls::view_of(doc.settings())
     }
 
     fn wall_view_of(&self, doc: &Document) -> kentos_geometry_core::geom::wall::View {
         match self.wall_scale {
-            Some(scale) => kentos_native_application::walls::view_with(doc.settings(), scale, self.wall_detail),
+            Some(scale) => crate::walls::view_with(doc.settings(), scale, self.wall_detail),
             None => match self.screen_wall_scale {
-                Some(scale) => kentos_native_application::walls::screen_view(
+                Some(scale) => crate::walls::screen_view(
                     doc.settings(),
                     scale,
                     Some(self.store.wall_view().detail),
                 ),
-                None => kentos_native_application::walls::view_of(doc.settings()),
+                None => crate::walls::view_of(doc.settings()),
             },
         }
     }
@@ -358,7 +354,9 @@ impl Spatial {
                     .map(|part| {
                         scope.spawn(move || {
                             part.iter()
-                                .filter_map(|e| kentos_native_application::viewport_scope::record_at(e, scale, settings))
+                                .filter_map(|e| {
+                                    crate::viewport_scope::record_at(e, scale, settings)
+                                })
                                 .collect::<Vec<_>>()
                         })
                     })
@@ -369,11 +367,13 @@ impl Spatial {
                     .collect()
             })
         } else {
-            all.iter().filter_map(|e| kentos_native_application::viewport_scope::record_at(e, scale, settings)).collect()
+            all.iter()
+                .filter_map(|e| crate::viewport_scope::record_at(e, scale, settings))
+                .collect()
         };
         self.store.put_many_parallel(records, threads);
         self.store
-            .set_hosts(kentos_native_application::geometry_store::opening_hosts(doc, doc.entities()));
+            .set_hosts(crate::geometry_store::opening_hosts(doc, doc.entities()));
         // The masks are picked by their boundary only (docs/adr/0310 §4).
         self.store.set_masks(
             doc.entities()
@@ -534,7 +534,7 @@ impl Spatial {
                 roofs: looks.roofs,
                 elsewhere: Vec::new(),
             };
-            let mut hidden = kentos_native_application::viewport_scope::hidden_entities(doc);
+            let mut hidden = crate::viewport_scope::hidden_entities(doc);
             hidden.extend(shown.hidden.iter().map(|&id| f64::from(id)));
             hidden.extend(options.iter().copied());
             self.store.set_phase_hidden(hidden);
@@ -630,7 +630,7 @@ impl Spatial {
             .iter()
             .filter_map(|e| {
                 let (id, layer, label, mut shape) =
-                    kentos_native_application::viewport_scope::record_at(e, scale, doc.settings())?;
+                    crate::viewport_scope::record_at(e, scale, doc.settings())?;
                 match &mut shape {
                     Shape::Stair { stair, .. } => stair.upper = upper.contains(&e.base().id),
                     Shape::Space { space, .. } => {
@@ -713,10 +713,15 @@ impl Spatial {
                 self.store.remove(&gone);
                 let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
                 for entity in &changed {
-                    match kentos_native_application::viewport_scope::record_at(entity,scale,doc.settings()) {Some(record)=>{self.store.put_many(std::iter::once(record));},None=>self.store.remove(&[f64::from(entity.base().id)])}
+                    match crate::viewport_scope::record_at(entity, scale, doc.settings()) {
+                        Some(record) => {
+                            self.store.put_many(std::iter::once(record));
+                        }
+                        None => self.store.remove(&[f64::from(entity.base().id)]),
+                    }
                 }
                 // The openings put, in their walls (docs/adr/0341 §2).
-                self.store.set_hosts(kentos_native_application::geometry_store::opening_hosts(
+                self.store.set_hosts(crate::geometry_store::opening_hosts(
                     doc,
                     changed.iter().copied(),
                 ));
@@ -848,7 +853,7 @@ impl Spatial {
             let texts = object_texts(&list, &t, &names, &|i| {
                 store.get(f64::from(list[i].base().id)).map(|it| &it.shape)
             });
-            let shown = !matches!(t, kentos_native_application::label_texts::LayerTexts::Off);
+            let shown = !matches!(t, crate::label_texts::LayerTexts::Off);
             for (e, (texts, z)) in list.iter().zip(texts) {
                 let texts = point_texts(e, texts, shown, !self.hide_point_names, self.point_codes);
                 self.store
@@ -1328,7 +1333,7 @@ impl Spatial {
         if !self.store.shown(item) {
             return None;
         }
-        kentos_native_application::viewport_scope::entity_at(entity, Some(view.annotation_scale))
+        crate::viewport_scope::entity_at(entity, Some(view.annotation_scale))
     }
 
     /// A block's insert as the objects it draws (docs/adr/0144): its pieces
@@ -2529,7 +2534,7 @@ impl GripSet {
     /// Whether grip `index` is shown and can be taken: a mid grip only while
     /// its segment is at least 28 px long on the area, to tell it from the
     /// vertices (the web's `midGripVisible`).
-    pub fn shown(&self, index: usize, view: &dyn crate::tool::View) -> bool {
+    pub fn shown(&self, index: usize, view: &dyn crate::view::View) -> bool {
         let (Some(Some(segment)), Some(Some((first, count)))) =
             (self.segments.get(index), self.rings.get(index))
         else {
@@ -2546,13 +2551,13 @@ impl GripSet {
     }
 }
 
-pub(crate) fn slot(id: f64) -> Option<Slot> {
+pub fn slot(id: f64) -> Option<Slot> {
     (id >= 0.0 && id <= f64::from(u32::MAX) && id.fract() == 0.0).then_some(Slot(id as u32))
 }
 
 /// An object as the store takes it: its id (the slot), layer, whether it
 /// has a label, and its geometry. The one conversion of the desktop's
-/// objects into the store's shapes (`kentos_native_application::geometry`,
+/// objects into the store's shapes (`crate::geometry`,
 /// which the transform command shares); `fixtures/store-records/v1` holds
 /// it to what the web packs for the same object.
 pub fn record(entity: &Entity) -> (f64, &str, bool, Shape) {
@@ -2619,26 +2624,6 @@ pub fn shown_text<'a>(
         .unwrap_or(text)
 }
 
-#[cfg(test)]
-mod attribute_tests {
-    use super::shown_text;
-    use std::collections::BTreeMap;
-
-    #[test]
-    fn an_attribute_shows_the_inserts_value_else_its_default() {
-        let attrs = BTreeMap::from([
-            ("NO".to_owned(), "R-12".to_owned()),
-            ("KOT".to_owned(), String::new()),
-        ]);
-        assert_eq!(shown_text("R-1", Some("NO"), &attrs), "R-12");
-        // An empty value is no value: the default shows.
-        assert_eq!(shown_text("?", Some("KOT"), &attrs), "?");
-        assert_eq!(shown_text("", Some("KOT"), &attrs), "");
-        // A plain text of the block is itself.
-        assert_eq!(shown_text("Rögar", None, &attrs), "Rögar");
-    }
-}
-
 /// A point's label texts under Nokta adları and Nokta kodları (docs/adr/1540): as the layer's labelling makes them
 /// while names are on and codes off; else its name and/or its code (`Kod`), in the first text's class (the layer's
 /// first, or its kind's default), when the layer labels at all (`shown`). Other objects keep theirs.
@@ -2669,4 +2654,24 @@ fn point_texts(
     };
     let class = texts.first().map_or(0, |(k, _)| *k);
     vec![(class, text)]
+}
+
+#[cfg(test)]
+mod attribute_tests {
+    use super::shown_text;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn an_attribute_shows_the_inserts_value_else_its_default() {
+        let attrs = BTreeMap::from([
+            ("NO".to_owned(), "R-12".to_owned()),
+            ("KOT".to_owned(), String::new()),
+        ]);
+        assert_eq!(shown_text("R-1", Some("NO"), &attrs), "R-12");
+        // An empty value is no value: the default shows.
+        assert_eq!(shown_text("?", Some("KOT"), &attrs), "?");
+        assert_eq!(shown_text("", Some("KOT"), &attrs), "");
+        // A plain text of the block is itself.
+        assert_eq!(shown_text("Rögar", None, &attrs), "Rögar");
+    }
 }

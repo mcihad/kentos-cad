@@ -12,6 +12,8 @@ publish.workspace = true
 # shared core; a finished object is written through a product command
 # (native/application, docs/adr/0022) over the native document.
 [dependencies]
+# The read-only viewer core (docs/adr/8054 §8); its modules are re-exported here under their old paths.
+kentos-scene-query = { path = "../scene-query" }
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # The model quality control form's header (EK-9, docs/adr/8047 §10).

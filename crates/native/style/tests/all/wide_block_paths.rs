@@ -4,10 +4,10 @@ use std::sync::Arc;
 use kentos_contracts::{BlockDefinition, Entity, LayerStyle};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::blocks::core_blocks;
-use kentos_native_application::geometry::{edit_geometry, entity_of, shape};
 use kentos_native_style::library::StyleLibrary;
 use kentos_native_style::program::{BuildOptions, ReadingUnit, build_layer};
+use kentos_scene_query::blocks::core_blocks;
+use kentos_scene_query::geometry::{edit_geometry, entity_of, shape};
 use serde_json::json;
 
 fn build(

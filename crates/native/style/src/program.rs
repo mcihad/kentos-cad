@@ -26,8 +26,8 @@ use kentos_style_core::style::build::{
 use serde_json::{Map, Value, json};
 
 /// The unit a layer's renderer reads geometry in, and the project's: see [`BuildOptions::reading_unit`].
-pub use kentos_native_application::expression_unit::{Unit as ReadingUnit, reading_unit};
-use kentos_native_application::geometry::{edit_geometry, entity_of};
+pub use kentos_scene_query::expression_unit::{Unit as ReadingUnit, reading_unit};
+use kentos_scene_query::geometry::{edit_geometry, entity_of};
 
 use crate::library::StyleLibrary;
 use crate::simple::{Stroke, hatch_symbol_of, leader_symbols_of, symbols_of_layer_style};

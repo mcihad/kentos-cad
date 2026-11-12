@@ -9,7 +9,7 @@ publish.workspace = true
 # Pure dependencies only (CLAUDE.md §14): the contracts' shapes, the expression language and the
 # geometry core (an object's measures for `$uzunluk`, `$alan`: docs/adr/0402 §5).
 [dependencies]
-kentos-contracts = { path = "../contracts" }
+kentos-contracts = { path = "../contracts", default-features = false }
 kentos-expression = { path = "../expression" }
 kentos-geometry-core = { path = "../geometry-core" }
 regex-lite = { workspace = true }

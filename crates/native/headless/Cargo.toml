@@ -11,6 +11,8 @@ publish.workspace = true
 # (kentos-native-application) over the native document, so a script, an agent and the
 # window write the same way (TODOS.md §14–15, docs/adr/0130).
 [dependencies]
+# The read-only viewer core (docs/adr/8054 §8); its modules are re-exported here under their old paths.
+kentos-scene-query = { path = "../scene-query" }
 # The catalog with its JSON Schemas (the `schema` feature): discovery for Python and AI.
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }

@@ -1415,7 +1415,8 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         }
         "drawing.measure" => {
             let (s, _) = session(server, args)?;
-            let method = kentos_headless::Method::named(text(args, "method")).map_err(host)?;
+            let method =
+                kentos_headless::Method::named(text(args, "method")).map_err(|e| host(e.into()))?;
             let value = match args.get("uids") {
                 Some(uids) => {
                     let uids: Vec<String> = serde_json::from_value(uids.clone()).map_err(|_| {

@@ -16,7 +16,10 @@ use crate::geometry::{edit_geometry, entity_of, shape};
 
 /// Room separators are root drawing boundaries. A loaded definition can retain their data,
 /// but flattening it must not silently turn those boundaries into ordinary lines (ADR 0679).
-pub(crate) fn contains_space_separator(doc: &kentos_domain::Document, id: kentos_commands::BlockId) -> bool {
+pub fn contains_space_separator(
+    doc: &kentos_domain::Document,
+    id: kentos_commands::BlockId,
+) -> bool {
     let mut pending = vec![id];
     let mut seen = std::collections::HashSet::new();
     while let Some(id) = pending.pop() {

@@ -50,7 +50,7 @@ mod delivery_integrity;
 pub mod package_exchange;
 mod package_resources;
 mod package_sources;
-mod query;
+use kentos_scene_query::query;
 pub mod rpc;
 mod session;
 pub mod selection;

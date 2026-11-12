@@ -8,7 +8,6 @@ use std::path::PathBuf;
 
 use kentos_contracts::Entity;
 use kentos_geometry_core::store::Store;
-use kentos_native_application::geometry::shape;
 use kentos_native_style::ReadingUnit;
 use kentos_native_style::classify::{
     CLASS_COUNT_DEFAULT, CLASS_COUNT_MAX, CLASS_COUNT_MIN, DEFAULT_RAMP, ExprScope, Method,
@@ -17,6 +16,7 @@ use kentos_native_style::classify::{
     plain_symbols, ramp, ramp_colors, texts, unique_values, values_of,
 };
 use kentos_native_style::renderer::Category;
+use kentos_scene_query::geometry::shape;
 use serde_json::{Value, json};
 
 fn fixture() -> Value {

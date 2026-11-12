@@ -36,6 +36,12 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+// The read-only viewer core's modules, under their old paths (docs/adr/8054 §8).
+pub use kentos_scene_query::{
+    blocks, expression_unit, geometry, geometry_store, label_texts, layer_filter, shx_text,
+    viewport_scope,
+};
+
 #[path = "gis/address_define.rs"]
 
 pub mod address_define;
@@ -93,8 +99,6 @@ pub mod drawing_compare;
 pub mod drawing_repair;
 #[path = "core/drawing_take.rs"]
 pub mod drawing_take;
-#[path = "core/blocks.rs"]
-pub mod blocks;
 #[path = "core/blocks_define.rs"]
 pub mod blocks_define;
 #[path = "core/blocks_edit.rs"]
@@ -275,16 +279,10 @@ pub mod elevation;
 pub mod exchange_write;
 #[path = "core/explode.rs"]
 pub mod explode;
-#[path = "core/expression_unit.rs"]
-pub mod expression_unit;
-#[path = "core/geometry.rs"]
-pub mod geometry;
 #[path = "arch/info_templates.rs"]
 pub mod info_templates;
 #[path = "core/jobs.rs"]
 pub mod jobs;
-#[path = "core/label_texts.rs"]
-pub mod label_texts;
 #[path = "core/labels_pin.rs"]
 pub mod labels_pin;
 #[path = "core/labels_report.rs"]
@@ -365,8 +363,6 @@ pub mod box_grid;
 pub mod network_ellipses;
 #[path = "core/shape_edits.rs"]
 pub mod shape_edits;
-#[path = "core/shx_text.rs"]
-pub mod shx_text;
 #[path = "core/shape_split.rs"]
 mod shape_split;
 #[path = "core/text_curves.rs"]
@@ -413,16 +409,10 @@ mod cad_source;
 pub mod file_import;
 #[path = "core/file_import_dwg.rs"]
 pub mod file_import_dwg;
-#[path = "core/geometry_store.rs"]
-pub mod geometry_store;
 #[path = "map/grid_refs.rs"]
 pub(crate) mod grid_refs;
-#[path = "core/viewport_scope.rs"]
-pub mod viewport_scope;
 #[path = "core/import_apply.rs"]
 pub mod import_apply;
-#[path = "gis/layer_filter.rs"]
-pub mod layer_filter;
 #[path = "gis/layers_compose.rs"]
 pub mod layers_compose;
 #[path = "gis/layers_edit.rs"]

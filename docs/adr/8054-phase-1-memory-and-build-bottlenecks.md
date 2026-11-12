@@ -170,7 +170,9 @@ iki merkezi dağıtıcıya da (`handle`, `dialog_view`) birer koldan dokunmayı 
   modülü (pencere, panel) adlandırırsa düşer; denemede `crate::volume_window::` eklenince düştü.
 
 **Doğrulama:** `cargo check -p kentos-desktop` ve `--tests` uyarısız; `cargo test -p kentos-desktop --lib` 2 314 geçti
-(2 313 + bekçi), 564 yok sayıldı. Clippy'de yeni uyarı yok (`gis::Event::EventLinks` bir pencerenin adı olduğundan
+(2 313 + bekçi), 564 yok sayıldı. Gerçek pencerede (Xvfb, sahibin ayarlarının kopyası) dört modülde yol (Kübaj, Yeni kübaj,
+Enkesit), mimari (Malzemeler, Duvar stilleri, başka stil seçmek), CBS (Katman süzgeci, ifade yazmak) ve harita
+modülünde Raster ekle açıldı; 25 adımın ekran görüntüsü ADIM'lardan önceki ikiliyle piksel piksel aynı (fark %0,00). Clippy'de yeni uyarı yok (`gis::Event::EventLinks` bir pencerenin adı olduğundan
 `enum_variant_names` o enumda susturuldu).
 
 ## §7. Masaüstünün büyük dosyaları konularına bölündü (`ADIM 07`)
@@ -231,6 +233,55 @@ dosyası bölünse de tek dosyaya sığmıyordu.
 **Doğrulama:** `cargo check -p kentos-desktop` ve `--tests` uyarısız; `cargo test -p kentos-desktop --lib` 2 313 geçti
 (önceki 2 312 + bekçi), 564 yok sayıldı — hiçbir test kaybolmadı ya da çiftlenmedi. Clippy'nin bölünen dosyalarda
 gösterdiği 10 uyarının hepsi taşınan koddan; yazılan satırlarda uyarı yok.
+
+## §8. Görüntüleyici çekirdeği ayrı crate: `kentos-scene-query` (`ADIM 08`)
+
+**İddianın denetimi.** Doğru: `kentos-native-style` (ve onun üstünden `kentos-render-wgpu`) yalnız `geometry::shape`,
+`shx_text` ve `expression_unit` için bütün `kentos-native-application`'ı çekiyordu; onunla `kentos-dwg`, `kentos-ifc`,
+`kentos-ncz`, `kentos-pointcloud`, `kentos-road`, `kentos-geopackage` ve şema üreticileri `schemars`, `ts-rs` de
+geliyordu. Uzamsal indeks (`Spatial`) etkileşimde, sorgu ve ölçüm (`query`) headless'taydı. Eksik olan: `Spatial`
+uygulamadan `viewport_scope`, `geometry_store`, duvarların görünüm işlevleri ve katların çatı soruları da istiyordu.
+
+**Karar.**
+- Yeni crate `crates/native/scene-query` (`kentos-scene-query`): `kentos-commands` (özelliksiz), `kentos-domain`,
+  `kentos-project`, `kentos-geometry-core`, `kentos-expression`, `kentos-forms`, `kentos-formats` ve `kentos-sheet`
+  (özelliksiz) üstünde; yazan komut yok. `git mv` ile taşındı: uygulamadan `geometry`, `shx_text`, `expression_unit`,
+  `blocks`, `label_texts`, `layer_filter`, `viewport_scope`, `geometry_store`; etkileşimden `spatial`, `level_view`
+  ve araçların görünüm özelliği `View`; headless'tan `query` (sorgu, sayfalama, düzlem / elipsoit / arazi ölçüsü).
+  Uygulamanın `walls.rs`'inden dört görünüm işlevi `walls.rs`'e, `roofs.rs`'inden katların iki sorusu `storeys.rs`'e
+  geçti; duvar ve çatı komutları uygulamada kaldı.
+- Hepsi eski crate'lerinde eski yollarıyla yeniden dışa veriliyor (`kentos_native_application::geometry`,
+  `kentos_interaction::spatial`, `kentos_headless::Method` …); başka hiçbir dosyanın yolu değişmedi. Taşınan
+  modüllerin crate içi (`pub(crate)`) öğeleri `pub` oldu: artık başka crate'ler kullanıyor.
+- Headless'ın sorgu hatası `QueryError` (aynı `code` ve `message`); `HeadlessError` onu `From` ile olduğu gibi alır.
+  Python'ın ve MCP'nin iki çağrısı dönüşümü açıkça yazar.
+- `kentos-native-style` artık uygulamaya değil görüntüleyici çekirdeğine bağlı; uygulama yalnız komutla belge kuran
+  bir testin (`bound_legend`) geliştirme bağımlılığı. `kentos-forms` sözleşmelere özelliksiz bağlandı (şema ve TS
+  türetmesi kullanmıyordu; `schemars` görüntüleyici ağacına onun üstünden giriyordu).
+- `scripts/arch/deps.mjs`: yeni `scene-query` grubu (`shared`, `domain`, `project`); `style` ve `render` gruplarından
+  `application`, `cad-codec` (DWG) ve `geopackage` çıktı; üçünde de `schemars` yasak. Bağımlılık yönü temiz (55 crate,
+  74 crate × hedef).
+
+| `cargo tree -e normal,build` | Önce | Sonra |
+|---|---|---|
+| `kentos-render-wgpu` | 216 crate; uygulama, DWG, IFC, NCZ, nokta bulutu, yol, GeoPackage, `schemars`, `ts-rs` | **165**; hiçbiri |
+| `kentos-native-style` | 166 crate; aynıları | **105**; hiçbiri |
+| `kentos-scene-query` | — | **84**; hiçbiri |
+
+**`kentos-arch` ayrımı ertelendi (karar bekliyor).** Notun üçüncü işi geometry-core'un mimari modüllerini
+(`geom/arch.rs`, duvar, döşeme, mahal, açıklık, çatı, kiriş, korkuluk, … 17 dosya, 13 101 satır) ayrı crate'e almak.
+Ölçüldü: geometry-core'un kendi çekirdeğinden 39 dosya onları kullanıyor (`entity.rs`, `ops/` 14, `store/` 10, öbür
+`geom/` 14) — nesnenin sınırı, deponun duvar birleşimleri, tutamaçlar duvarın gövdesini buradan okuyor. Yeni crate
+geometry-core'a bağlanacağı için geometry-core ona bağlanamaz (döngü); ayırmak için önce geometry-core'un tabanı
+(vektör, sayısal, öngörüler, temel geometri) ayrı bir crate'e inmeli, mimari onun üstüne, depo ve nesne en üste.
+Ayrıca 10 crate'teki 96 dosya (`kentos_geometry_core::geom::wall` …) yolunu değiştirir; geometry-core web için de
+derlendiğinden WASM paketleri de etkilenir. Görüntüleyici ölçütü buna bağlı değil: mobil çekirdek mimari çizimi
+de göstermeli.
+
+**Doğrulama:** `cargo check --workspace --tests` (kentos-mcp'nin kitaplığı dahil) uyarısız; testler: görüntüleyici
+çekirdeği 7 (uygulamadan 6, etkileşimden 1 taşındı: uygulama kitaplığı 227 → 221, etkileşim 1 016 → 1 015), uygulama
+585 veri güdümlü durum, headless 109, stil, çizici, işlemler, pafta, masaüstü 2 314 — hepsi geçti. Clippy'de
+görüntüleyici çekirdeğinde uyarı yok (taşınan `spatial`'ın test modülü dosyanın sonuna alındı).
 
 ## §9. Uygulama, etkileşim ve sözleşme crate'leri klasörlendi (`ADIM 09`)
 

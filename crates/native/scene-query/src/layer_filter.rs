@@ -56,7 +56,7 @@ pub fn compile_filter(filter: &LayerFilter, unit: Unit) -> Result<CompiledFilter
 pub use kentos_forms::kind_label;
 
 /// Corners of a path or area, holes and every part's included (`$köşe`).
-pub(crate) fn vertex_count(e: &Entity) -> Option<f64> {
+pub fn vertex_count(e: &Entity) -> Option<f64> {
     let ring = |pts: usize, holes: &Option<Vec<kentos_commands::RingGeometry>>| {
         pts + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
     };
