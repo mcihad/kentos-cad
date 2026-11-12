@@ -56,7 +56,7 @@ pub const LEGACY_TEMPLATE_PLOT_SCALE: f64 = 50.0;
 /// KentOS's templates, by name.
 pub const BUILTIN_TEMPLATES: &[(&str, &str)] = &[(
     "mimari",
-    include_str!("../../../../catalog/v1/templates/mimari.json"),
+    include_str!("../../../../../catalog/v1/templates/mimari.json"),
 )];
 
 /// A built-in template by its name (case aside); none for a name KentOS has not.

@@ -953,7 +953,7 @@ pub fn font_label(f: DrawingFont) -> &'static str {
 /// The built-in standards: their ids and their data.
 const BUILT_IN: &[(&str, &str)] = &[(
     "mimari-ofis",
-    include_str!("../../../../catalog/v1/standards/mimari-ofis.json"),
+    include_str!("../../../../../catalog/v1/standards/mimari-ofis.json"),
 )];
 
 /// The ids of the built-in standards, in their order.

@@ -908,7 +908,7 @@ pub struct GnssRules {
 
 /// KentOS's GNSS network rule package (BÖHHBÜY 2018, Articles 15, 20 and 22).
 pub fn gnss_rules_default() -> Option<GnssRules> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/rules/gnss-ag-bohhbuy-2018.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/gnss-ag-bohhbuy-2018.json")).ok()
 }
 
 /// Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading

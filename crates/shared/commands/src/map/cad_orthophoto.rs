@@ -60,7 +60,7 @@ pub struct OrthoRules {
 
 /// KentOS's default package: BÖHHBÜY 2018's Articles 54, 67(6) and 91.
 pub fn ortho_rules_default() -> Option<OrthoRules> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/rules/ortofoto-bohhbuy-2018.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/ortofoto-bohhbuy-2018.json")).ok()
 }
 
 /// Input of `cad.orthophoto.check` v1: the orthophoto (a raster's persistent id), the layer of the points measured on

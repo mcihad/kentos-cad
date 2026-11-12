@@ -114,7 +114,7 @@ pub struct SectionCheck {
 
 /// KentOS's default package: BÖHHBÜY 2018's Article 78(1)(c)–(g) and Ek-3 0001–0005.
 pub fn contour_rules_default() -> Option<ContourRules> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/rules/esyukselti-bohhbuy-2018.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/esyukselti-bohhbuy-2018.json")).ok()
 }
 
 /// Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the

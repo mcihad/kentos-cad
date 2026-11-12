@@ -573,23 +573,23 @@ pub struct LongRun {
 pub const ARCH_PROFILES: &[(&str, &str)] = &[
     (
         "erisilebilirlik-rampa/1",
-        include_str!("../../../../catalog/v1/arch-profiles/erisilebilirlik-rampa-1.json"),
+        include_str!("../../../../../catalog/v1/arch-profiles/erisilebilirlik-rampa-1.json"),
     ),
     (
         "imar-merdiven-konut/1",
-        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-konut-1.json"),
+        include_str!("../../../../../catalog/v1/arch-profiles/imar-merdiven-konut-1.json"),
     ),
     (
         "imar-merdiven-konut-asansorsuz/1",
-        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-konut-asansorsuz-1.json"),
+        include_str!("../../../../../catalog/v1/arch-profiles/imar-merdiven-konut-asansorsuz-1.json"),
     ),
     (
         "imar-merdiven-diger/1",
-        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-diger-1.json"),
+        include_str!("../../../../../catalog/v1/arch-profiles/imar-merdiven-diger-1.json"),
     ),
     (
         "imar-merdiven-daire-ici/1",
-        include_str!("../../../../catalog/v1/arch-profiles/imar-merdiven-daire-ici-1.json"),
+        include_str!("../../../../../catalog/v1/arch-profiles/imar-merdiven-daire-ici-1.json"),
     ),
 ];
 

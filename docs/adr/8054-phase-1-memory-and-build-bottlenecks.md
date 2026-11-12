@@ -82,3 +82,32 @@ geri alma ya da yineleme 10,055 → **4,116 ms**. `history.rs` 2 182 → `histor
 **Doğrulama:** `cargo test -p kentos-domain`, `-p kentos-native-application`, `-p kentos-headless`, `-p kentos-desktop --lib`
 (2 312) değişmeden geçti.
 
+## §4. Katalog, yetenek tablosu ve komut dosyaları bölündü (`ADIM 04`)
+
+**İddianın denetimi.** Doğru: `pub fn catalog()` 14 600 satırlık tek işlevdi (içindeki tek `vec![…]` 438 komut);
+`protocol_commands` ve testlerle dosya 19 043 satır. `capabilities.rs` 8 170 satır, ama çoğu sabit bir tablo
+(`ENTRIES`, 481 kayıt): derleyicinin işlevi değil verisi. `commands/src` kökünde 206 modül düz duruyordu.
+
+**Karar.**
+- `catalog.rs` → `catalog/`: `mod.rs` (`catalog()` parçaları sırayla birleştirir, `protocol_commands`, testler) ve kataloğun
+  sırasıyla 10 parça: `project`, `drawing`, `arch`, `data`, `arch_project`, `annotation`, `road`, `map`, `road_field`, `gis`.
+  Sıra korunduğu için `commandCatalog.json` bayt bayt aynı (`cargo test -p kentos-commands`, 2 005).
+- `capabilities.rs` → `capabilities/`: tablo sırasıyla 8 parça (`drawing`, `road`, `map`, `arch`, `data`, `annotation`,
+  `gis`, `files`); `entries()` onları sırayla dolaşır.
+- 204 komut modülü `core/` (71), `map/` (38), `road/` (35), `gis/` (32), `arch/` (28) klasörlerine taşındı. Modül yolları
+  değişmedi (`lib.rs`'te `#[path]`): `kentos_commands::cad_walls::…` ve yeniden dışa verilen adlar aynı; taşınan dosyaların
+  göreli `include_str!` yolları bir düzey derinleşti, `scripts/cad/manifest.py` yeni yolları okur.
+
+**Ölçüm** (yalnız `kentos-commands`'ın yeniden derlenmesi, `/usr/bin/time -v`):
+
+| | Önce | Sonra |
+|---|---|---|
+| Sürüm derlemesi | 110,6 s, en çok 13,8 GB | **93,9 s, en çok 9,1 GB** |
+| Geliştirme derlemesi | 68,2 s, 6,7 GB | 64,9 s, 6,7 GB |
+
+Geliştirme derlemesinin kalanı şema türetmelerinin (`schemars`, 1 000'i aşkın tip) genişlemesinde; tek işlevin bölünmesi
+yalnız iyileştiricinin (LLVM) yükünü indirdi.
+
+**Doğrulama:** `cargo test -p kentos-commands` (2 005: katalog JSON'u, birimler), `-p kentos-contracts`,
+`-p kentos-native-application --test all capabilit|catalog`, `cargo check --workspace --tests` (kentos-mcp hariç).
+

@@ -111,7 +111,7 @@ pub struct PositionAccuracy {
 
 /// The position accuracy rules KentOS carries.
 pub fn position_accuracy() -> Option<PositionAccuracy> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/rules/konum-dogrulugu-2022.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/konum-dogrulugu-2022.json")).ok()
 }
 
 /// Thousands grouped by a dot, as Turkish writes a scale (1/10.000).

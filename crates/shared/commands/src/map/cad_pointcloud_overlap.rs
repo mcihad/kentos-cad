@@ -38,7 +38,7 @@ pub struct CloudRules {
 
 /// KentOS's example package (`catalog/v1/rules/lidar-uyum.json`).
 pub fn cloud_rules_default() -> Option<CloudRules> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/rules/lidar-uyum.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/lidar-uyum.json")).ok()
 }
 
 /// Input of `cad.pointclouds.overlap` v1: the two clouds (`uids`, exactly two), the cell's side (metres; none: 2), the

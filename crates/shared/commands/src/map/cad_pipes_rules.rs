@@ -139,7 +139,7 @@ pub struct PipeRules {
 
 /// KentOS's package: the Ministry's 2017 sewer and storm water regulations' annexes.
 pub fn pipe_rules_default() -> Option<PipeRules> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/rules/kanal-csb-2017.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/kanal-csb-2017.json")).ok()
 }
 
 /// The rules a check takes its limits from (docs/adr/4780). The limits the user gives (`minCover`, `minSlope`,

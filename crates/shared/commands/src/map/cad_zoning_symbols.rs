@@ -68,7 +68,7 @@ pub struct ZoningSymbolChoice {
 
 /// KentOS's table, as it ships.
 pub fn builtin_zoning_symbols() -> Option<ZoningSymbols> {
-    serde_json::from_str(include_str!("../../../../catalog/v1/profiles/imar-plani-semboller.json")).ok()
+    serde_json::from_str(include_str!("../../../../../catalog/v1/profiles/imar-plani-semboller.json")).ok()
 }
 
 impl ZoningSymbols {

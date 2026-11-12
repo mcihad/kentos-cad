@@ -191,7 +191,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 04 — `crates/shared/commands/src/catalog.rs` (19.043 Satırlık Tek Fonksiyon) ve `capabilities.rs` (8.170 Satır) Derleyici Darboğazının Parçalanması (Öncelik: P0)
+### [x] ADIM 04 — `crates/shared/commands/src/catalog.rs` (19.043 Satırlık Tek Fonksiyon) ve `capabilities.rs` (8.170 Satır) Derleyici Darboğazının Parçalanması (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:**
   - [crates/shared/commands/src/catalog.rs#L20](file:///home/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs#L20) içindeki `pub fn catalog() -> CommandCatalog` fonksiyonu **19.043 satırlık tek bir Rust fonksiyonudur**! 503 komutun tamamı ve 1.000'den fazla `schema::<T>()` (`schemars::schema_for!`) makro genişlemesi tek bir `vec![...]` ifadesi ve tek bir LLVM fonksiyonu içinde derlenmektedir.
@@ -201,6 +201,7 @@ flowchart LR
   2. `capabilities.rs` (8.170 satır) aynı şekilde `src/capabilities/{mod,core,arch,map,gis,road}.rs` alt modüllerine bölünecektir.
   3. `crates/shared/commands/src/` kökündeki 207 komut tip dosyası `core/`, `arch/`, `map/`, `gis/`, `road/` alt klasörlerine ayrılacak (`lib.rs` üzerinde `pub use` yeniden dışa aktarımları korunarak dış API hiç kırılmayacaktır).
 - **Tamamlanma Ölçütü:** LLVM artık 19.000 satırlık tek fonksiyon derlemez; `cargo build -p kentos-commands` derleme süresi ve RAM tüketimi büyük oranda düşer, üretilen `commandCatalog.json` bit-bit aynı kalır.
+- **12 Kasım 2026 ([ADR 8054 §4](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** `catalog/` 10 parça, `capabilities/` 8 parça, 204 modül `core/map/road/gis/arch` klasörlerinde; katalog JSON'u aynı; sürüm derlemesi 110,6 s / 13,8 GB → 93,9 s / 9,1 GB.
 
 ---
 
