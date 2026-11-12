@@ -133,3 +133,29 @@ yalnız iyileştiricinin (LLVM) yükünü indirdi.
 **Doğrulama:** `cargo check -p kentos-desktop --tests`, `cargo test -p kentos-desktop --lib` (2 312) değişmeden geçti;
 1 157 dosya git'te yeniden adlandırma olarak görünür (`git log --follow`).
 
+## §9. Uygulama, etkileşim ve sözleşme crate'leri klasörlendi (`ADIM 09`)
+
+**İddianın denetimi.** Doğru: `application/src` kökünde 587 dosya ve 9 klasör, `interaction/src` 213 dosya ve 4 klasör,
+`contracts/src` 152 dosya; `contracts/src/road.rs` 4 187 satır; `registry.rs` 457 kollu tek bir eşleşme makrosu; test
+koşucusu `tests/all/fixtures.rs` 7 674 satır.
+
+**Karar.**
+- Üç crate'in kökünde yalnız `lib.rs` ve klasörler kaldı: `application` → `core/` 189, `road/` 135, `gis/` 119, `arch/` 91,
+  `map/` 52 dosya; `interaction` → `core/` 107, `arch/` 45, `viewer_tools/` 34, `map/` 15, `gis/` 9, `road/` 4;
+  `contracts` → `core/` 64, `gis/` 53, `arch/` 21, `map/` 13, `road/` 6. Modül yolları `#[path]` ile aynı (ADIM 05'in
+  yöntemi), göreli yollar yeni yerlerine göre yeniden hesaplandı.
+- Etkileşimin salt-okunur araçları (seçim, çit, ölçü, açı, koordinat, km-ofset, gezinme, kenet adları, uzamsal indeks) ayrı
+  `viewer_tools/` klasöründe: mobil görüntüleyicinin alacağı kümesi (ADIM 08) bir arada.
+- `contracts/src/road.rs` → `road/`: `mod.rs` (ayarlar, sınırlar, ortak denetimler, testler), `terrain.rs`, `alignment.rs`,
+  `profile.rs`, `corridor.rs` (şablon, kaplama, en kesit, dever, koridor, kübaj, taşıma), `structures.rs` (pafta takımı,
+  bariyer, menfez, istinat, platform, kavşak, hakediş). Bütün adlar `kentos_contracts::road::…` ve kök yeniden dışa
+  vermeleriyle aynı.
+- Komut kaydı beş alt dağıtıcıya bölündü (`{core,arch,map,gis,road}/dispatch.rs`, `*_commands!`): her kol işleyicisinin
+  klasörüne gider; `by_command!` onları sırayla zincirler, işleyici adları yine kaydın içinde çözülür. 457 kolun hepsi
+  yerinde. Test koşucusu aynı biçimde bölündü: `tests/all/fixtures/` (`mod.rs` 2 514 satır, `run_*.rs` koşucu kolları,
+  `inputs_*.rs` 455 girdi tipi).
+
+**Doğrulama:** `cargo test -p kentos-contracts --all-features`, `-p kentos-interaction`, `-p kentos-native-application`
+(veri güdümlü bütün komut durumları dahil), `-p kentos-headless`, `-p kentos-desktop --lib`; `cargo check --workspace
+--tests` (kentos-mcp hariç).
+

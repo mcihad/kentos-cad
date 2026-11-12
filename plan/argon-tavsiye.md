@@ -283,7 +283,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 09 — `crates/native/application` (612 Dosya), `interaction` (225 Dosya) ve `contracts` (156 Dosya) Katmanlarının Disiplin Klasörlerine Ayrıştırılması (Öncelik: P1)
+### [x] ADIM 09 — `crates/native/application` (612 Dosya), `interaction` (225 Dosya) ve `contracts` (156 Dosya) Katmanlarının Disiplin Klasörlerine Ayrıştırılması (Öncelik: P1)
 
 - **Kod İnceleme Bulgusu:**
   - `crates/native/application/src/` kökünde **612 üretim dosyası** (256.284 satır) düz duruyor; [registry.rs](file:///home/cihad/Projects/kentos-cad/crates/native/application/src/registry.rs) (1.118 satır) 500+ komutu tek makroda eşleştiriyor; [tests/all/fixtures.rs](file:///home/cihad/Projects/kentos-cad/crates/native/application/tests/all/fixtures.rs) tek başına **7.674 satır**!
@@ -295,6 +295,7 @@ flowchart LR
   4. 7.674 satırlık `application/tests/all/fixtures.rs` disiplin bazlı test modüllerine ayrılacaktır.
 - **Tamamlanma Ölçütü:** Üç crate'in kök `src/` dizinlerinde yalnız `lib.rs` ve disiplin modül klasörleri kalır; disiplinler arası yatay bağımlılık sıfırlanır.
 
+- **12 Kasım 2026 ([ADR 8054 §9](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** `application`, `interaction`, `contracts` kökünde yalnız `lib.rs` ve disiplin klasörleri (etkileşimde ayrıca `viewer_tools/`); `contracts/road.rs` → `road/{mod,terrain,alignment,profile,corridor,structures}`; kayıt beş alt dağıtıcıda; test koşucusu `fixtures/` (7 674 → 2 514 satır + parçalar). Yatay bağımlılık denetimi ADIM 11 ile.
 ---
 
 ### [ ] ADIM 10 — `crates/shared/kcad` (253 Doğrusal Şema Sabiti ve 4.500 Satırlık `encode`/`decode` Dosyaları) Refactoring'i (Öncelik: P1)
