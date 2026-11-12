@@ -1,4 +1,4 @@
-# 3032 — Vaziyet planı: parsel, bahçe mesafeleri, oturum ve ±0,00
+# 8032 — Vaziyet planı: parsel, bahçe mesafeleri, oturum ve ±0,00
 
 Tarih: 2026-11-09. Durum: kabul (M32, iki bölüm; ADV-22; plan S22).
 

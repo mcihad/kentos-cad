@@ -1,4 +1,4 @@
-# 3006 — Mimari düzenleyicileri sorarak kapanır; seçimle çalışan pencerede Çizimden seç
+# 8006 — Mimari düzenleyicileri sorarak kapanır; seçimle çalışan pencerede Çizimden seç
 
 Tarih: 2026-11-07. Durum: kabul (M7, ADV-09; plan S3, G11).
 

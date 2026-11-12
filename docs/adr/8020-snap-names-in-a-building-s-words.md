@@ -1,4 +1,4 @@
-# 3020 — Kenet bir binanın diliyle
+# 8020 — Kenet bir binanın diliyle
 
 Tarih: 2026-11-08. Durum: kabul (M20, ADV-11; plan S11).
 

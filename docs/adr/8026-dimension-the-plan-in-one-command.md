@@ -1,4 +1,4 @@
-# 3026 — Planı tek komutla ölçülendirmek
+# 8026 — Planı tek komutla ölçülendirmek
 
 Tarih: 2026-11-08. Durum: kabul (M26, ADV-16; plan S19).
 

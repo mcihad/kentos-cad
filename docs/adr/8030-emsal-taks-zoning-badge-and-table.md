@@ -1,4 +1,4 @@
-# 3030 — Emsal ve TAKS: imar durumu, canlı rozet ve tablo
+# 8030 — Emsal ve TAKS: imar durumu, canlı rozet ve tablo
 
 Tarih: 2026-11-08. Durum: kabul (M30, ADV-22; plan S22).
 

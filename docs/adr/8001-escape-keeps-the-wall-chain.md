@@ -1,4 +1,4 @@
-# 3001 — Esc duvar zincirini korur
+# 8001 — Esc duvar zincirini korur
 
 Tarih: 2026-11-07. Durum: kabul (M2, ADV-08; plan S1). Kapsam: Duvar aracının zinciri
 (`crates/native/interaction/src/path.rs`, `Shape::Wall`).

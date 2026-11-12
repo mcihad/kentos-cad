@@ -1,4 +1,4 @@
-# 3029 — Bağımsız bölümün yönetmelik alanları (PAİY Madde 4)
+# 8029 — Bağımsız bölümün yönetmelik alanları (PAİY Madde 4)
 
 Tarih: 2026-11-08. Durum: kabul (M29, ADV-22; plan S22).
 

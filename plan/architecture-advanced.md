@@ -1162,7 +1162,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | M18 | İmleç yanında aracın seçenekleri | ADV-11 | Kalınlık, referans ve uzunluk Tab ile **(M18, ADR 8018: yapıldı; Duvar Kalınlık/Hiza, Dikdörtgen duvar Boyutlar/Kalınlık/Boy referansı; ↓ ile açılış)** |
-| M19 | Tıklanabilir geçici ölçü | ADV-11 | Ölçüye yazılan değer duvarı taşır **(M19, ADR 8019: yazılan değerin taşıması ADR 0710'dan vardı; yeni olan sayının altındaki + ile iki yüze bağlı kalıcı ölçü)** |
+| M19 | Tıklanabilir geçici ölçü | ADV-11 | Ölçüye yazılan değer duvarı taşır **(yapıldı, ADR 8019: yazılan değerin taşıması ADR 0710'dan vardı; yeni olan sayının altındaki + ile iki yüze bağlı kalıcı ölçü)** |
 | M20 | Mimari kenet türleri ve kenet dili | ADV-11 | Yüz, eksen, çekirdek; imleç yanında yazı **(M20, ADR 8020: yapıldı; ad noktadan bulunur, kenet değişmez; süzgeç sonraya)** |
 | M21 | Oda aracı | ADV-11 | Duvar + mahal + etiket tek adımda **(M21, ADR 8021: yapıldı; dikdörtgen oda, tek geri alma, mahal adı açık seçim; çokgen oda M22'yle)** |
 | M22 | Kendiliğinden mahal ve canlı alan | ADV-11 | Döngü kapanınca mahal; sürüklerken alan **(M22, ADR 8022: yapıldı; Kapanınca mahal M ile, canlı döngü alanı; çift tık ve hedef farkı sonraya)** |

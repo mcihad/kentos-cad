@@ -1,4 +1,4 @@
-# 3037 — Türk anteti, pafta takımları ve PDF/A
+# 8037 — Türk anteti, pafta takımları ve PDF/A
 
 Tarih: 2026-11-09. Durum: kabul (M37, üç bölüm; ADV-24; plan S22).
 

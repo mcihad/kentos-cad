@@ -1,4 +1,4 @@
-# 3040 — Düşey model: duvarın tepesi, kat yüksekliği zinciri, döşeme katmanları, mahalin iç yüksekliği
+# 8040 — Düşey model: duvarın tepesi, kat yüksekliği zinciri, döşeme katmanları, mahalin iç yüksekliği
 
 Tarih: 2026-11-09. Durum: kabul (M40; ADV-18).
 - §1: duvar üst döşemenin altında biter, katın yüksekliğini geçmez; bir katın yüksekliği değişince üstündeki katlar

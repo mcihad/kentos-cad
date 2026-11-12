@@ -1,4 +1,4 @@
-# 3010 — Kapı ve pencere ölçeğe göre: parçalar duvarın ayrıntı düzeyiyle çizilir
+# 8010 — Kapı ve pencere ölçeğe göre: parçalar duvarın ayrıntı düzeyiyle çizilir
 
 Tarih: 2026-11-07. Durum: kabul (M11, ADV-15; plan S4).
 

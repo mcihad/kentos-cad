@@ -1,4 +1,4 @@
-# 3019 — Geçici ölçüden kalıcı ölçü
+# 8019 — Geçici ölçüden kalıcı ölçü
 
 Tarih: 2026-11-08. Durum: kabul (M19, ADV-11; plan S11).
 

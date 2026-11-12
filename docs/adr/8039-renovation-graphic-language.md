@@ -1,4 +1,4 @@
-# 3039 — Tadilat grafik dili: tadilat durumu, açıklığın tadilat durumu, görünüme göre kesim, tadilat takımı
+# 8039 — Tadilat grafik dili: tadilat durumu, açıklığın tadilat durumu, görünüme göre kesim, tadilat takımı
 
 Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
 - 1. bölüm: açıklığın kendi tadilat durumu; tadilat görünümüne göre duvar birleşimi ve kesimi.

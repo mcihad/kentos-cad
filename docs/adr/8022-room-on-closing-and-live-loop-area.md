@@ -1,4 +1,4 @@
-# 3022 — Kapanınca mahal ve canlı döngü alanı
+# 8022 — Kapanınca mahal ve canlı döngü alanı
 
 Tarih: 2026-11-08. Durum: kabul (M22, ADV-11; plan S11, S13).
 

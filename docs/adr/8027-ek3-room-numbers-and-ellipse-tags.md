@@ -1,4 +1,4 @@
-# 3027 — EK-3 mahal numarası ve elips içinde numara
+# 8027 — EK-3 mahal numarası ve elips içinde numara
 
 Tarih: 2026-11-08. Durum: kabul (M27, ADV-16; plan S19).
 

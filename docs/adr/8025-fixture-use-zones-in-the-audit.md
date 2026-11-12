@@ -1,4 +1,4 @@
-# 3025 — Donatının kullanım alanı denetimde
+# 8025 — Donatının kullanım alanı denetimde
 
 Tarih: 2026-11-08. Durum: kabul (M25, ADV-12; plan S13).
 

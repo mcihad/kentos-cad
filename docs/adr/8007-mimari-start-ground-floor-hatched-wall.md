@@ -1,4 +1,4 @@
-# 3007 — Mimari başlangıç: Zemin kat, poşeli ilk duvar, Mimari sekmesi; şablon m ve 1:100
+# 8007 — Mimari başlangıç: Zemin kat, poşeli ilk duvar, Mimari sekmesi; şablon m ve 1:100
 
 Tarih: 2026-11-07. Durum: kabul (M8, ADV-13; plan S4, S12, G5, G9).
 

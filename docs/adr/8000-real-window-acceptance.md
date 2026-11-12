@@ -1,4 +1,4 @@
-# 3000 — Mimari kabul gerçek pencerede, kullanıcı gibi
+# 8000 — Mimari kabul gerçek pencerede, kullanıcı gibi
 
 Tarih: 2026-11-07. Durum: kabul (M1, ADV-26; [plan/architecture-advanced.md](../../plan/architecture-advanced.md)).
 Mimari ileri planın ADR'leri 3000'den başlar (plan §6).

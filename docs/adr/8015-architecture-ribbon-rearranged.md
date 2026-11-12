@@ -1,4 +1,4 @@
-# 3015 — Mimari şeridin yeniden düzeni
+# 8015 — Mimari şeridin yeniden düzeni
 
 Tarih: 2026-11-08. Durum: kabul (M15, ADV-09; plan S6, G13).
 

@@ -1,4 +1,4 @@
-# 3002 — Mimari adları: PENCERE pencere, iki harfli adlar, AutoCAD Architecture adları
+# 8002 — Mimari adları: PENCERE pencere, iki harfli adlar, AutoCAD Architecture adları
 
 Tarih: 2026-11-07. Durum: kabul (M3, ADV-08; plan S2, S7, S13).
 

@@ -1,4 +1,4 @@
-# 3004 — Komut geçmişi okunur Türkçe özet yazar; kimlik ve alanlar Ayrıntı'da
+# 8004 — Komut geçmişi okunur Türkçe özet yazar; kimlik ve alanlar Ayrıntı'da
 
 Tarih: 2026-11-07. Durum: kabul (M5, ADV-08; plan S14, araştırma A1 S15).
 

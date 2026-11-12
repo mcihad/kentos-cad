@@ -1,4 +1,4 @@
-# 3008 — Katman anahtarı: mimari nesne türünün EK-4 katmanına yazılır
+# 8008 — Katman anahtarı: mimari nesne türünün EK-4 katmanına yazılır
 
 Tarih: 2026-11-07. Durum: kabul (M9, ADV-14; plan S5, G4).
 

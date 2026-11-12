@@ -1,4 +1,4 @@
-# 3013 — Ölçeğe göre çizgi grubu
+# 8013 — Ölçeğe göre çizgi grubu
 
 Tarih: 2026-11-08. Durum: kabul (ADV-15; plan S4). Sahibin onayı: 1:200 0,25/0,13 · 1:100 0,35/0,18 · 1:50 0,5/0,25 ·
 1:20 0,7/0,35 mm ("Uygun", 8 Kasım 2026).

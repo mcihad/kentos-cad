@@ -1,4 +1,4 @@
-# 3034 — Mevzuat denetimi: merdiven, rampa, korkuluk, ışıklık, asansör ve yerel yönetmelik
+# 8034 — Mevzuat denetimi: merdiven, rampa, korkuluk, ışıklık, asansör ve yerel yönetmelik
 
 Tarih: 2026-11-09. Durum: kabul (M34, ADV-23; plan S23).
 

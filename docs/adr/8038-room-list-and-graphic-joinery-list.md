@@ -1,4 +1,4 @@
-# 3038 — Mahal listesi ve grafik doğrama listesi
+# 8038 — Mahal listesi ve grafik doğrama listesi
 
 Tarih: 2026-11-09. Durum: kabul (M38; ADV-24): 1. bölüm mahal listesi, 2. bölüm doğrama tipinin kasa-kanadı, U değeri
 ve grafik doğrama listesi.

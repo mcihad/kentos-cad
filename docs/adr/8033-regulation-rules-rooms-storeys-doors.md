@@ -1,4 +1,4 @@
-# 3033 — Mevzuat denetimi: piyes, kat ve kapı kuralları
+# 8033 — Mevzuat denetimi: piyes, kat ve kapı kuralları
 
 Tarih: 2026-11-09. Durum: kabul (M33, ADV-23; plan S23).
 

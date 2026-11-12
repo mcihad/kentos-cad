@@ -1,4 +1,4 @@
-# 3014 — TS 5319 taramaları ve yalıtım simgesi
+# 8014 — TS 5319 taramaları ve yalıtım simgesi
 
 Tarih: 2026-11-08. Durum: kabul (M14, ADV-15; plan S4).
 

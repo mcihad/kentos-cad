@@ -1,4 +1,4 @@
-# 3041 — Kiriş, lento, kolon–duvar birleşimi
+# 8041 — Kiriş, lento, kolon–duvar birleşimi
 
 Tarih: 2026-11-10. Durum: kabul (M41; ADV-18; üç bölüm tamam).
 - §1: kiriş nesnesi; planda kesikli ve ince çizilir, 1:100'de numarası, 1:50'den numarası ve ölçüsü yazılır; altındaki

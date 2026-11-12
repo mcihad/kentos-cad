@@ -1,4 +1,4 @@
-# 3018 — Aracın seçenekleri imlecin yanında
+# 8018 — Aracın seçenekleri imlecin yanında
 
 Tarih: 2026-11-08. Durum: kabul (M18, ADV-11; plan S11, S13).
 

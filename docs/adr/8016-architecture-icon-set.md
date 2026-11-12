@@ -1,4 +1,4 @@
-# 3016 — Mimari ikon seti
+# 8016 — Mimari ikon seti
 
 Tarih: 2026-11-08. Durum: kabul (M16, ADV-10; plan S16).
 

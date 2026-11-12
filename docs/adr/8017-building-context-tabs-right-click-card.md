@@ -1,4 +1,4 @@
-# 3017 — Bina nesnesinin bağlamı: sekme, sağ tık ve kart
+# 8017 — Bina nesnesinin bağlamı: sekme, sağ tık ve kart
 
 Tarih: 2026-11-08. Durum: kabul (M17, ADV-09; plan S11, S15).
 

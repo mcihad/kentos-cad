@@ -1,4 +1,4 @@
-# 3005 — Dar şeritte ⋯ menüsü; Öznitelikler'de yapı elemanının kendi alanları önce
+# 8005 — Dar şeritte ⋯ menüsü; Öznitelikler'de yapı elemanının kendi alanları önce
 
 Tarih: 2026-11-07. Durum: kabul (M6, ADV-09; plan S17, S18).
 

@@ -1,4 +1,4 @@
-# 3023 — Odayı kenarından büyütme
+# 8023 — Odayı kenarından büyütme
 
 Tarih: 2026-11-08. Durum: kabul (M23, ADV-11 ve ADV-01; plan S13).
 

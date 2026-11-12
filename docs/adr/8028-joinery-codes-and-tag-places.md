@@ -1,4 +1,4 @@
-# 3028 — Doğrama kodları, 90/210 ve etiketin yeri
+# 8028 — Doğrama kodları, 90/210 ve etiketin yeri
 
 Tarih: 2026-11-08. Durum: kabul (M28, ADV-16 ve ADV-03; plan S19, G10).
 

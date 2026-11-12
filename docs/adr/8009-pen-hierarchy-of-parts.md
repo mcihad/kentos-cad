@@ -1,4 +1,4 @@
-# 3009 — Kalem hiyerarşisi: açıklığın ve duvarın parçaları ISO 128-23'ün kalın/ince oranıyla
+# 8009 — Kalem hiyerarşisi: açıklığın ve duvarın parçaları ISO 128-23'ün kalın/ince oranıyla
 
 Tarih: 2026-11-07. Durum: kabul (M10, ADV-14; plan S4).
 

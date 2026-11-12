@@ -1,4 +1,4 @@
-# 3024 — Donatı araması ve duvara yaslı yerleşim
+# 8024 — Donatı araması ve duvara yaslı yerleşim
 
 Tarih: 2026-11-08. Durum: kabul (M24, ADV-12; plan S13; ADV-14'ün "donatı ve blok katmanları").
 

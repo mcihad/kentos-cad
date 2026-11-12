@@ -1,4 +1,4 @@
-# 3031 — Kat irtifakı: bağımsız bölüm, eklenti, ortak yer ve arsa payı
+# 8031 — Kat irtifakı: bağımsız bölüm, eklenti, ortak yer ve arsa payı
 
 Tarih: 2026-11-09. Durum: kabul (M31, ADV-22; plan S22).
 

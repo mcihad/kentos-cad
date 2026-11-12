@@ -1,4 +1,4 @@
-# 3003 — Mimari'de tek ad, tek harf: seçenek harfi sözleşmesi, terimler ve Açı
+# 8003 — Mimari'de tek ad, tek harf: seçenek harfi sözleşmesi, terimler ve Açı
 
 Tarih: 2026-11-07. Durum: kabul (M4, ADV-08; plan S5, S6, S9, S10, G2).
 
