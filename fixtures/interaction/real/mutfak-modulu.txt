@@ -1,0 +1,51 @@
+# M50 3. bölüm (docs/adr/8050 §5), on a kitchen drawn by the SDK into the section building's project: a 3.6 x 3.0 m
+# room of 20 cm walls (cad.walls.rectangle) and an L kitchen run along its north wall to the corner and down its west
+# wall (cad.casework.run, sink 2, cooktop 5). All selected, Oda modülleri › Mutfak › Seçimden tanımla: the old binary
+# says "Oda modülünde duvar, açıklık, mahal, …" (the countertop and the fillers are no member kind); the new one
+# defines it (1 nesne · 1 mutfak dizisi). Modül yerleştir with Aynalı on, its base typed 8,0: the copy's kitchen in its
+# north-east corner, laid by the run's rule on its own walls, its side and single doors turned over.
+fit Kesit binası — KentOS CAD
+wait 3000
+click 800 600 middle
+click 800 600 middle
+wait 2500
+wheel 380 560 -3
+wait 1500
+key ctrl+a
+wait 1000
+click 300 1032
+wait 600
+type ODAMODULU
+key Return
+wait 2500
+click 730 358
+wait 500
+type Mutfak
+wait 500
+click 929 1031
+wait 2500
+shot m50-mutfak-sonra-tanim
+click 1243 1031
+wait 1500
+key Escape
+wait 800
+click 300 1032
+wait 600
+type MODULYERLESTIR
+key Return
+wait 2500
+click 1763 746
+wait 1500
+move 1300 600
+wait 2000
+shot m50-mutfak-sonra-onizleme
+click 300 1032
+wait 600
+type 8,0
+key Return
+wait 3000
+key Escape
+wait 800
+move 1300 980
+wait 1500
+shot m50-mutfak-sonra-yerlestir

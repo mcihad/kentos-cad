@@ -3,7 +3,7 @@
 - **Durum:** sürüyor (12 Kasım 2026); `plan/architecture-advanced.md` ADV-05, M50. 1. bölüm yapıldı: modüle kolon,
   merdiven, rampa, döşeme ve eğri duvar girer (§1); bağlı döşemenin iç noktası taşınınca onunla gider (§2); kata göre
   yazılan değerler örneğin kendi katınındır (§3). 2. bölüm: mahal ayırıcı (§4). 3. bölüm: mutfak dizisi tarifiyle
-  (§5), dosya şeması 245.
+  (§5), dosya şeması 245; pencere liste ve ayrıntı düzeninde (§6).
 - **Bağlam belgesi:** ADR 0775 (oda modülleri), ADR 0779 (üye ekleme/çıkarma, elle değişen nesne, daire), ADR 0796 (çok
   katlı modül, katları tekrarla), ADR 0811 (tek katlı örnek), ADR 0725 §2–3 (kolonun aynası), ADR 0709 (eğri merdivenin
   aynası), ADR 0339 §1 (duvar yolunun aynası), ADR 0771 §4 (kaynağa bağlı döşeme), ADR 0723 §2 ve 0724 §1 (kata bağlı
@@ -139,6 +139,30 @@ eski okuyucu "daha yeni sürümle yazılmış" der. (Eski okuyucu kolonlu modül
 Örnek `fixtures/kcad/v2/module-scope.kcad`, bozuklar `broken/module-scope-*`; bağımsız okuyucu `tools/kcad/kcad.py`
 1804 dosyada Rust ile aynı.
 
+### 6. Oda modülleri penceresi: liste ve ayrıntı
+
+Kullanıcı: "Oda modülleri penceresinin tasarımı neden kötü, ortada duruyor her şey". Pencere bütün yüksekliği
+dolduruyordu (`scroll_fill`), içerik üstte ve ortada kümelenip yaklaşık 400 piksellik boşluk bırakıyordu; üç ayrı iş
+(modül listesi ve örnekleri, seçimden yeni modül, katları tekrarla) başlıksız aynı düzlemdeydi; alt çubuktaki beş
+düğmeden "Seçimden tanımla" ortadaki forma, "Bağımsızlaştır", "Kaynağı sil", "Kaynağı güncelle" en üstteki seçime
+aitti; satırlar DESIGN.md §13'ün yasakladığı "sürüm 1 · 4 nesne · 1 örnek" biçimindeydi; "kaynakla aynı" bir uyarı
+üçgeniyle söyleniyordu; örnekler iç kimlikle ("merdiven-evi-1") görünüyordu.
+
+Karar (DESIGN.md §7.9 "Liste ve ayrıntı"; Microsoft'un List/details kalıbı, Archicad'in Hotlink Module Manager'ı):
+
+- Ortak bileşen `kentos_ui::widget::ListDetails`: solda sabit genişlikte kayan liste ve altında listenin eylemi, ince
+  çizgi, sağda kayan ayrıntı; sabit yükseklik.
+- Üstte parçalı seçim: **Modüller** | **Katları tekrarla** (bir katın örneklerini tekrarlamak tek bir modülün işi değil).
+- Modüller: solda Modül/Örnek tablosu ve altında "Seçimden yeni modül" (ad ve "Seçimden tanımla" yan yana); sağda
+  modülün adı, ad–değer çiftleri (Sürüm, Nesneler, Mutfak dizisi, Katlar, Örnekler), modülün eylemleri ("Seçimi örneğe
+  ekle", "Seçimi modülden çıkar", sağda kırmızı çizgili "Kaynağı sil"), Örnekler tablosu (Örnek, Kat, Ayna, Sürüm,
+  Durum: güncel / eski sürüm / n istisna / n elle değişmiş / n silinmiş / bağı kopuk), seçilen örneğin planı ("Bu
+  örnekten güncellenirse: 3 örnek güncellenir; 1 kaynak nesnesi değişir."; kaynakla aynıysa bilgi, uyarı değil) ve
+  örneğin eylemleri (birincil "Kaynağı güncelle", "Bağımsızlaştır"). Modül yokken ayrıntı üç adımı söyler.
+- Katları tekrarla: solda kaynak kat ve hedef katlar (kısa önek alanıyla), sağda seçenekler, plan ve birincil
+  "Katları tekrarla".
+- Alt çubuk: "Çizimden seç" ve "Kapat".
+
 ## Sınırlar
 
 - Çok katlı modülde üst kattaki mutfak dizisi döşenirken bağlanacağı duvarı kata bakmadan arar: üst üste duvarlarda
@@ -166,6 +190,8 @@ eski okuyucu "daha yeni sürümle yazılmış" der. (Eski okuyucu kolonlu modül
   yerleşim; tek adım geri alma; aynalı örnekten "kaynakla aynı"; kaynaktan ve aynalı örnekten güncelleme; istisna,
   kaynağa döndür, elle değişen, ayırma; örneğin duvarı kayınca yalnız onun dizisi izler; modülden çıkar, duvar reddi,
   modüle ekle; kaynağı sil; başka modüldeki dizi reddi. Masaüstü işleyicisinde ve Python'da geçti.
+- Pencere (§6): `tools_screens` sahneleri modul-tanimla, modul-guncelle, dubleks-tekrar, daire-tekrar (1440×900 ve
+  1100×650, iki tema); masaüstü `room_modules_tests` 9 test.
 - Gerçek pencere (`fixtures/interaction/real/modul-kapsami.txt`, `bagli-doseme-tasi.txt`; Xvfb 1920×1080, gerçek
   fare/klavye): eğri duvarlı, kolonlu, merdivenli, bağlı döşemeli 3 × 5 m Merdiven evi. Eski sürüm Seçimden tanımla'da
   "Eğrisel duvar ilk modül kapsamında değil" dedi; yenisi tanımladı (4 nesne), Modül yerleştir Aynalı açık, taban 8,0:

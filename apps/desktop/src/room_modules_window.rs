@@ -24,7 +24,6 @@ use kentos_commands::{
     ModulesEdited, ModulesOperation, ModulesQuery, Vec2,
 };
 use kentos_interaction::Level;
-use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::{Choice, Select};
 use kentos_ui::{label, style};
@@ -45,14 +44,35 @@ const ADD_MEMBERS: &str = "Seçimi örneğe ekle";
 const REMOVE_MEMBERS: &str = "Seçimi modülden çıkar";
 const REPEAT: &str = "Katları tekrarla";
 
+/// The window's two parts (docs/adr/8050 §6): the project's modules, a list and the chosen one's details, and Katları
+/// tekrarla, which works on a level's instances rather than on one module.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Part {
+    #[default]
+    Modules,
+    Repeat,
+}
+
+impl std::fmt::Display for Part {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Part::Modules => "Modüller",
+            Part::Repeat => REPEAT,
+        })
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Window {
+    pub part: Part,
     pub rows: Vec<ModuleRow>,
     pub chosen: usize,
     pub instance: usize,
     pub name: String,
     /// What Kaynağı güncelle from the chosen instance would do; its refusal's words when refused.
     pub preview: Option<Result<ModulesEdited, String>>,
+    /// The refusal is only that the chosen instance is the source as it is: information, not a warning.
+    pub preview_same: bool,
     /// Katları tekrarla: the source level, and each other level chosen with its number prefix.
     pub repeat_from: Option<String>,
     pub repeat_to: Vec<RepeatTarget>,
@@ -75,6 +95,7 @@ pub struct RepeatTarget {
 
 #[derive(Clone, Debug)]
 pub enum Event {
+    Part(Part),
     Choose(usize),
     Instance(usize),
     Name(String),
@@ -137,7 +158,8 @@ pub(crate) fn report_words(done: &ModulesEdited) -> String {
         parts.push(format!("{} eksik nesne eklenir", r.added_keys.len()));
     }
     parts.push(format!("{} kaynak nesnesi değişir", r.changed_keys.len()));
-    parts.join(" · ")
+    // A sentence's clauses, not a meta line of “A · B · C” (DESIGN.md §13).
+    parts.join("; ")
 }
 
 impl App {
@@ -162,6 +184,12 @@ impl App {
             .as_ref()
             .map(|w| w.name.clone())
             .unwrap_or_default();
+        // The part the window shows stays as it is read again (after a write).
+        let part = self
+            .room_modules
+            .as_ref()
+            .map(|w| w.part)
+            .unwrap_or_default();
         let (repeat_from, repeat_to, repeat_loose, repeat_again) = self
             .room_modules
             .as_ref()
@@ -175,11 +203,13 @@ impl App {
             })
             .unwrap_or_default();
         self.room_modules = Some(Window {
+            part,
             rows,
             chosen,
             instance: 0,
             name,
             preview: None,
+            preview_same: false,
             repeat_from,
             repeat_to,
             repeat_preview: None,
@@ -351,15 +381,18 @@ impl App {
                         CommandResult::Completed { output, .. } => Ok(output),
                         CommandResult::Failed { error }
                         | CommandResult::Conflict { error }
-                        | CommandResult::NeedsInput { error } => Err(error.message),
-                        _ => Err("Önizlenemedi.".into()),
+                        | CommandResult::NeedsInput { error } => {
+                            Err((error.code == "nothing_to_set", error.message))
+                        }
+                        _ => Err((false, "Önizlenemedi.".into())),
                     },
                 )
             }
             _ => None,
         };
         if let Some(w) = self.room_modules.as_mut() {
-            w.preview = preview;
+            w.preview_same = matches!(preview, Some(Err((true, _))));
+            w.preview = preview.map(|p| p.map_err(|(_, why)| why));
         }
         self.room_modules_repeat_preview();
     }
@@ -518,6 +551,11 @@ impl App {
 
     pub(crate) fn room_modules_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::Part(p) => {
+                if let Some(w) = self.room_modules.as_mut() {
+                    w.part = p;
+                }
+            }
             Event::Choose(i) => {
                 if let Some(w) = self.room_modules.as_mut() {
                     w.chosen = i;
@@ -723,179 +761,255 @@ impl App {
         Task::none()
     }
 
+    /// The window (docs/adr/8050 §6): Modüller's list and the chosen module's details side by side (Microsoft's
+    /// list/details pattern, `kentos_ui::widget::ListDetails`), each module's and each instance's actions beside what
+    /// they act on; Katları tekrarla in a part of its own. The footer keeps the window's own: Çizimden seç and Kapat.
     pub(crate) fn room_modules_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.room_modules else {
             return iced::widget::text("").into();
         };
-        let mut list = Column::new().spacing(4);
-        for (i, m) in w.rows.iter().enumerate() {
-            let facts = if m.removed {
-                format!("kaynağı silinmiş · {} örnek", m.instances.len())
-            } else {
-                let storeys = m
-                    .storeys
-                    .map_or_else(String::new, |n| format!(" · {n} katlı"));
-                // Its kitchen runs, kept as recipes (docs/adr/8050 §5).
-                let runs = m
-                    .runs
-                    .map_or_else(String::new, |n| format!(" · {n} mutfak dizisi"));
-                format!(
-                    "sürüm {} · {} nesne{runs} · {} örnek{storeys}",
-                    m.version,
-                    m.members,
-                    m.instances.len()
-                )
-            };
-            let text = Column::new()
-                .spacing(2)
-                .push(label::body(m.name.clone()))
-                .push(label::caption(facts));
-            let entry = row![
-                icon(crate::icons::from_web(Some("roomModules"))).size(18.0),
-                container(text).width(Fill)
-            ]
-            .spacing(8)
-            .align_y(Center);
-            list = list.push(
-                button(entry)
-                    .on_press(msg(Event::Choose(i)))
-                    .padding([6, 8])
-                    .width(Fill)
-                    .style(style::button::row(i == w.chosen)),
-            );
-        }
-        if w.rows.is_empty() {
-            list = list.push(label::caption(
-                "Projede oda modülü yok. Bir banyonun duvarlarını, kapısını, mahalini ve donatılarını seçip aşağıdan tanımlayın.",
-            ));
-        }
-        let mut right = Column::new().spacing(6);
-        if let Some(m) = w.rows.get(w.chosen) {
-            right = right.push(label::strong(format!("{} örnekleri", m.name)));
-            for (j, inst) in m.instances.iter().enumerate() {
-                let mut facts = vec![format!("sürüm {}", inst.version)];
-                if inst.stale {
-                    facts.push("eski".into());
-                }
-                let level_name = |l: &String| {
-                    self.document
-                        .as_ref()
-                        .and_then(|d| d.model.settings().arch.as_ref())
-                        .and_then(|a| a.levels.iter().find(|x| &x.id == l))
-                        .map_or_else(|| l.clone(), |x| x.name.clone())
-                };
-                // A module of several storeys: the levels it stands on, base first (docs/adr/0796 §1).
-                if inst.levels.len() > 1 {
-                    facts.push(
-                        inst.levels
-                            .iter()
-                            .map(level_name)
-                            .collect::<Vec<_>>()
-                            .join("–"),
-                    );
-                } else if let Some(l) = &inst.level {
-                    facts.push(level_name(l));
-                }
-                // One storey of the module only (docs/adr/0811).
-                if let Some(n) = inst.storey {
-                    facts.push(format!("yalnız modülün {}. katı", n + 1));
-                }
-                if inst.mirror {
-                    facts.push("aynalı".into());
-                }
-                if !inst.exceptions.is_empty() {
-                    facts.push(format!("{} istisna", inst.exceptions.len()));
-                }
-                if !inst.drifted.is_empty() {
-                    facts.push(format!("{} nesne elle değişmiş", inst.drifted.len()));
-                }
-                if !inst.missing.is_empty() {
-                    facts.push(format!("{} nesne silinmiş", inst.missing.len()));
-                }
-                if let Some(u) = &inst.unit {
-                    facts.push(format!("bölüm {u}"));
-                }
-                if inst.broken.is_some() {
-                    facts.push("bağ kopuk".into());
-                }
-                let line = row![
-                    label::body(inst.id.clone()),
-                    label::caption(facts.join(" · "))
-                ]
-                .spacing(12)
-                .align_y(Center);
-                right = right.push(
-                    button(line)
-                        .on_press(msg(Event::Instance(j)))
-                        .padding([5, 8])
-                        .width(Fill)
-                        .style(style::button::row(j == w.instance)),
-                );
-            }
-            let summary = match &w.preview {
-                Some(Ok(done)) => words::text_line(
-                    Kind::Ok,
-                    format!("Bu örnekten {UPDATE}: {}.", report_words(done)),
-                ),
-                Some(Err(why)) => words::text_line(Kind::Warn, why.clone()),
-                None => words::text_line(
-                    Kind::Ok,
-                    "Kaynağı güncellemek için bir örnek seçin.".to_owned(),
-                ),
-            };
-            right = right.push(words::summary(vec![summary]));
-            let live = !m.removed;
-            right = right.push(
-                row![
-                    words::secondary(
-                        ADD_MEMBERS,
-                        (live && !m.instances.is_empty()).then(|| msg(Event::AddSelection))
-                    ),
-                    words::secondary(REMOVE_MEMBERS, live.then(|| msg(Event::RemoveSelection))),
-                ]
-                .spacing(8),
-            );
-        }
-        let name = kentos_ui::widget::text_field("Yeni modülün adı (Banyo)", &w.name)
-            .on_input(|t| msg(Event::Name(t)));
-        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatı, kolonlar, merdivenler, rampalar, döşemeler, mutfak dizileri (bütünüyle), ölçü ve etiketler (bir oda, bir daire, bir dubleks, bir merdiven evi); akslara bağlı kolon girmez. Taban noktası duvarların sol alt köşesi (duvar yoksa nesnelerin), taban katı en alçak kat.".into()));
-        let body = Column::new()
-            .spacing(14)
-            .push(
-                row![
-                    container(iced::widget::scrollable(list).height(Fill)).width(260.0),
-                    container(iced::widget::scrollable(right).height(Fill)).width(Fill)
-                ]
-                .spacing(16)
-                .height(230.0),
+        let parts = kentos_ui::widget::Segmented::new([Part::Modules, Part::Repeat], w.part, |p| {
+            msg(Event::Part(p))
+        });
+        let body: Element<'_, Message> = match w.part {
+            Part::Repeat => container(self.room_modules_repeat_view(w))
+                .height(kentos_ui::theme::typography::scaled(420.0))
+                .into(),
+            Part::Modules => kentos_ui::widget::ListDetails::new(
+                self.room_modules_list(w),
+                self.room_modules_details(w),
             )
-            .push(
-                row![
-                    container(define).width(Fill),
-                    container(self.room_modules_repeat_view(w)).width(Fill)
-                ]
-                .spacing(16),
-            );
-        let chosen = w.rows.get(w.chosen);
-        let live = chosen.is_some_and(|m| !m.removed);
-        let can_update = live && matches!(w.preview, Some(Ok(_)));
-        let has_instance = chosen.is_some_and(|m| !m.instances.is_empty());
+            .list_foot(self.room_modules_new(w))
+            .list_width(250.0)
+            .height(420.0)
+            .into(),
+        };
         Frame::new(TITLE)
-            .scroll_fill(body)
+            .push(parts)
+            .push(body)
             .aside(words::ghost(PICK, Some(msg(Event::PickFromDrawing))))
-            .action(words::secondary(DEFINE, Some(msg(Event::Define))))
-            .action(words::secondary(
-                DETACH,
-                has_instance.then(|| msg(Event::Detach)),
-            ))
-            .action(words::secondary(REMOVE, live.then(|| msg(Event::Remove))))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-            .action(words::primary(
-                UPDATE,
-                can_update.then(|| msg(Event::Update)),
-            ))
             .width(860.0)
             .modal(msg(Event::Close))
+    }
+
+    /// The project's modules: each one's name and how many instances it has.
+    fn room_modules_list<'a>(&self, w: &'a Window) -> Element<'a, Message> {
+        use kentos_ui::widget::table::{Column as Col, Row, Table};
+        let mut table = Table::new([
+            Col::new("Modül").width(Fill),
+            Col::new("Örnek")
+                .width(kentos_ui::theme::typography::scaled(48.0))
+                .align_right(),
+        ])
+        .empty("Projede oda modülü yok.");
+        for (i, m) in w.rows.iter().enumerate() {
+            let name = if m.removed {
+                label::caption(format!("{} (kaynağı silinmiş)", m.name))
+            } else {
+                label::body(m.name.clone())
+            };
+            table = table.push(
+                Row::new([
+                    name.into(),
+                    label::body(m.instances.len().to_string()).into(),
+                ])
+                .selected(i == w.chosen)
+                .on_press(msg(Event::Choose(i))),
+            );
+        }
+        table.into()
+    }
+
+    /// Seçimden yeni modül, under the list: its name and the button beside it.
+    fn room_modules_new<'a>(&self, w: &'a Window) -> Element<'a, Message> {
+        let name = kentos_ui::widget::text_field("Yeni modülün adı", &w.name)
+            .on_input(|t| msg(Event::Name(t)));
+        Column::new()
+            .spacing(6)
+            .push(label::strong("Seçimden yeni modül"))
+            .push(
+                row![
+                    container(name).width(Fill),
+                    words::secondary(DEFINE, Some(msg(Event::Define)))
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            .push(label::caption("Önce çizimde odanın nesnelerini seçin."))
+            .into()
+    }
+
+    /// The chosen module's details: what it is (name and values), its own actions, its instances in a table, and the
+    /// chosen instance's state and actions.
+    fn room_modules_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
+        use kentos_ui::widget::table::{Column as Col, Row, Table};
+        let Some(m) = w.rows.get(w.chosen) else {
+            // No module yet: what one is and how to make the first (DESIGN.md §7.5: no empty pane without a way on).
+            let step = |n: &'static str, words: &'static str| {
+                row![
+                    container(label::strong(n)).width(kentos_ui::theme::typography::scaled(18.0)),
+                    container(label::body(words)).width(Fill)
+                ]
+                .spacing(6)
+            };
+            return Column::new()
+                .spacing(10)
+                .padding(iced::Padding { right: 12.0, ..iced::Padding::ZERO })
+                .push(label::strong("Projede oda modülü yok"))
+                .push(label::caption(
+                    "Bir banyoyu, mutfağı ya da daireyi bir kez çizip bağlı örnekler olarak yerleştirirsiniz: kaynak değişince örnekler güncellenir.",
+                ))
+                .push(step("1", "Çizimde odanın nesnelerini seçin: duvarlar, kapı ve pencereler, mahal, donatı, kolonlar, merdivenler, döşemeler, mutfak dizileri."))
+                .push(step("2", "Soldaki Seçimden yeni modül'e ad verin ve Seçimden tanımla'ya basın; seçim modülün ilk örneği olur."))
+                .push(step("3", "Mimari › Proje › Modül yerleştir ile yeni örnekler koyun: aynalı, döndürülmüş ya da başka katta."))
+                .into();
+        };
+        let live = !m.removed;
+        let mut facts = kentos_ui::widget::pairs::Pairs::new()
+            .push(label::caption("Sürüm"), label::body(m.version.to_string()))
+            .push(
+                label::caption("Nesneler"),
+                label::body(m.members.to_string()),
+            );
+        if let Some(n) = m.runs {
+            facts = facts.push(label::caption("Mutfak dizisi"), label::body(n.to_string()));
+        }
+        if let Some(n) = m.storeys {
+            facts = facts.push(label::caption("Katlar"), label::body(format!("{n} katlı")));
+        }
+        facts = facts.push(
+            label::caption("Örnekler"),
+            label::body(m.instances.len().to_string()),
+        );
+        if m.removed {
+            facts = facts.push(
+                label::caption("Durum"),
+                label::body("Kaynağı silinmiş; örnekler son hâlleriyle duruyor."),
+            );
+        }
+        let remove = button(label::body(REMOVE))
+            .on_press_maybe(live.then(|| msg(Event::Remove)))
+            .padding(kentos_ui::theme::metrics::action())
+            .style(style::button::danger_outline);
+        let module_actions = row![
+            words::secondary(
+                ADD_MEMBERS,
+                (live && !m.instances.is_empty()).then(|| msg(Event::AddSelection))
+            ),
+            words::secondary(REMOVE_MEMBERS, live.then(|| msg(Event::RemoveSelection))),
+            iced::widget::space::horizontal(),
+            remove,
+        ]
+        .spacing(8)
+        .align_y(Center);
+        let level_name = |l: &String| {
+            self.document
+                .as_ref()
+                .and_then(|d| d.model.settings().arch.as_ref())
+                .and_then(|a| a.levels.iter().find(|x| &x.id == l))
+                .map_or_else(|| l.clone(), |x| x.name.clone())
+        };
+        let mut instances = Table::new([
+            Col::new("Örnek").width(kentos_ui::theme::typography::scaled(56.0)),
+            Col::new("Kat").width(kentos_ui::theme::typography::scaled(150.0)),
+            Col::new("Ayna").width(kentos_ui::theme::typography::scaled(56.0)),
+            Col::new("Sürüm")
+                .width(kentos_ui::theme::typography::scaled(52.0))
+                .align_right(),
+            Col::new("Durum").width(Fill),
+        ]);
+        for (j, inst) in m.instances.iter().enumerate() {
+            // The instance's number, its id's last part (“banyo-3” → 3).
+            let number = inst.id.rsplit('-').next().unwrap_or(&inst.id).to_owned();
+            // A module of several storeys: the levels it stands on, base first (docs/adr/0796 §1); one storey of the
+            // module only (docs/adr/0811).
+            let mut level = if inst.levels.len() > 1 {
+                inst.levels
+                    .iter()
+                    .map(&level_name)
+                    .collect::<Vec<_>>()
+                    .join("–")
+            } else {
+                inst.level
+                    .as_ref()
+                    .map_or_else(|| "—".to_owned(), &level_name)
+            };
+            if let Some(n) = inst.storey {
+                level = format!("{level} (modülün {}. katı)", n + 1);
+            }
+            let mut state: Vec<String> = Vec::new();
+            if inst.broken.is_some() {
+                state.push("bağı kopuk".into());
+            } else if inst.stale {
+                state.push("eski sürüm".into());
+            }
+            if !inst.exceptions.is_empty() {
+                state.push(format!("{} istisna", inst.exceptions.len()));
+            }
+            if !inst.drifted.is_empty() {
+                state.push(format!("{} elle değişmiş", inst.drifted.len()));
+            }
+            if !inst.missing.is_empty() {
+                state.push(format!("{} silinmiş", inst.missing.len()));
+            }
+            if let Some(u) = &inst.unit {
+                state.push(format!("bölüm {u}"));
+            }
+            let state = if state.is_empty() {
+                "güncel".to_owned()
+            } else {
+                state.join(", ")
+            };
+            instances = instances.push(
+                Row::new([
+                    label::body(number).into(),
+                    label::body(level).into(),
+                    label::body(if inst.mirror { "aynalı" } else { "—" }).into(),
+                    label::body(inst.version.to_string()).into(),
+                    label::body(state).into(),
+                ])
+                .selected(j == w.instance)
+                .on_press(msg(Event::Instance(j))),
+            );
+        }
+        let status = match &w.preview {
+            Some(Ok(done)) => words::text_line(
+                Kind::Ok,
+                format!("Bu örnekten güncellenirse: {}.", report_words(done)),
+            ),
+            Some(Err(why)) if w.preview_same => words::text_line(Kind::Info, why.clone()),
+            Some(Err(why)) => words::text_line(Kind::Warn, why.clone()),
+            None => words::text_line(
+                Kind::Info,
+                "Kaynağı güncellemek için bir örnek seçin.".to_owned(),
+            ),
+        };
+        let can_update = live && matches!(w.preview, Some(Ok(_)));
+        let instance_actions = row![
+            words::primary(UPDATE, can_update.then(|| msg(Event::Update))),
+            words::secondary(
+                DETACH,
+                (!m.instances.is_empty()).then(|| msg(Event::Detach))
+            ),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        Column::new()
+            .spacing(12)
+            .padding(iced::Padding {
+                right: 12.0,
+                ..iced::Padding::ZERO
+            })
+            .push(label::strong(m.name.clone()))
+            .push(facts)
+            .push(module_actions)
+            .push(kentos_ui::widget::horizontal_divider())
+            .push(label::strong("Örnekler"))
+            .push(instances)
+            .push(words::summary(vec![status]))
+            .push(instance_actions)
+            .into()
     }
 
     pub(crate) fn room_modules_control(
@@ -948,9 +1062,17 @@ impl App {
             |i| msg(Event::RepeatFrom(i)),
         )
         .searchable(false);
-        let mut targets = Column::new().spacing(4);
+        // The target levels: each one chosen or not and its number prefix (a short field, not the pane's width).
+        let mut targets = Column::new().spacing(4).push(
+            row![
+                container(label::caption("Hedef kat")).width(Fill),
+                container(label::caption("Numara öneki"))
+                    .width(kentos_ui::theme::typography::scaled(150.0))
+            ]
+            .spacing(8),
+        );
         for (i, t) in w.repeat_to.iter().enumerate() {
-            let prefix = kentos_ui::widget::text_field("Numara öneki", &t.prefix)
+            let prefix = kentos_ui::widget::text_field("Yok", &t.prefix)
                 .on_input(move |s| msg(Event::RepeatPrefix(i, s)));
             targets = targets.push(
                 row![
@@ -959,8 +1081,8 @@ impl App {
                         &t.name,
                         Some(msg(Event::RepeatChoose(i, !t.chosen)))
                     ))
-                    .width(130.0),
-                    container(prefix).width(Fill)
+                    .width(Fill),
+                    container(prefix).width(kentos_ui::theme::typography::scaled(150.0))
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -1006,10 +1128,15 @@ impl App {
             None => words::text_line(Kind::Ok, "Hedef katları seçin.".to_owned()),
         };
         let can = matches!(w.repeat_preview, Some(Ok(_)));
-        Column::new()
-            .spacing(6)
-            .push(words::field("Katları tekrarla: kaynak kat", from, None))
-            .push(targets)
+        // Two columns (docs/adr/8050 §6): what is repeated where on the left, how and what it will do on the right,
+        // the part's one primary action under its plan.
+        let left = Column::new()
+            .spacing(12)
+            .push(words::field("Kaynak kat", from, None))
+            .push(targets);
+        let right = Column::new()
+            .spacing(10)
+            .push(label::strong("Seçenekler"))
             .push(words::check(
                 w.repeat_loose,
                 "Modülsüz nesneler de (duvar, açıklık, mahal, donatı, ölçü, etiket)",
@@ -1021,8 +1148,14 @@ impl App {
                 w.repeat_loose.then(|| msg(Event::RepeatAgain(!w.repeat_again))),
             ))
             .push(words::summary(vec![summary]))
-            .push(words::secondary(REPEAT, can.then(|| msg(Event::Repeat))))
-            .into()
+            .push(words::primary(REPEAT, can.then(|| msg(Event::Repeat))));
+        row![
+            container(left).width(kentos_ui::theme::typography::scaled(330.0)),
+            kentos_ui::widget::vertical_divider(),
+            container(right).width(Fill)
+        ]
+        .spacing(kentos_ui::theme::typography::scaled(16.0))
+        .into()
     }
 
     /// Yerel istisna yap and Kaynağa döndür on the selection's objects, through `cad.modules.edit`.

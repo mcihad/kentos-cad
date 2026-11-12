@@ -91,6 +91,8 @@ fn defined(app: &mut App) {
 fn repeat(app: &mut App) {
     two(app);
     run(app, "arch.modules");
+    // Katları tekrarla is a part of its own (docs/adr/8050 §6).
+    event(app, Event::Part(crate::room_modules_window::Part::Repeat));
     for (i, prefix) in [(0, "1-"), (1, "2-")] {
         event(app, Event::RepeatChoose(i, true));
         event(app, Event::RepeatPrefix(i, prefix.into()));

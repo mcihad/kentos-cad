@@ -99,6 +99,8 @@ fn window(app: &mut App) {
 fn repeat(app: &mut App) {
     two(app);
     run(app, "arch.modules");
+    // Katları tekrarla is a part of its own (docs/adr/8050 §6).
+    event(app, Event::Part(crate::room_modules_window::Part::Repeat));
     // The project lists its levels 1. kat, zemin, 2. kat, bodrum: the ground floor is the second.
     event(app, Event::RepeatFrom(1));
     let k1 = app
