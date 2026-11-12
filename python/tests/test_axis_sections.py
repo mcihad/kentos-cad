@@ -4,8 +4,9 @@ and `materials`, docs/adr/4760; plan/map-cad.md MAP-15), held by this test's own
 - On the axis's quarter circle round (8005, 6) every section lies along the radius: its two ends and the centre on one
   line, the left end 1.5 m nearer the centre and the right one 1.5 m farther than the axis's place.
 - The volume is the test's own average end area over the sections' stations.
-- Drawn with a start of 1000 m, each section's kilometre is the test's own `k+mmm.cc` of 1000 + its station, and the
-  table's running sums are the test's own sums of the volumes before.
+- Drawn with a start of 1000 m, each section's kilometre is the test's own `k+mmm.cc` of 1000 + its station, the
+  table's running sums are the test's own sums of the volumes before, and its Brückner value is the running cut less
+  the running fill, each times its factor (1 when none; docs/adr/5140).
 - A material's words are its name and its own cut and fill to two decimals.
 """
 
@@ -68,10 +69,12 @@ class AlongAnAxis(unittest.TestCase):
             return f"{cm // 100000}+{(cm % 100000) // 100:03d}.{cm % 100:02d}"
         self.assertEqual([x.km for x in out.sections], [km(start + x.station) for x in out.sections])
         cut = fill = 0.0
+        factors = s["input"]["sections"]
+        k_cut, k_fill = factors.get("cutFactor", 1.0), factors.get("fillFactor", 1.0)
         for k, row in enumerate(out.section_table[2:], start=1):
             cut += out.sections[k].cut_volume
             fill += out.sections[k].fill_volume
-            self.assertEqual(row[6:], [f"{cut:.2f}", f"{fill:.2f}"])
+            self.assertEqual(row[6:], [f"{cut:.2f}", f"{fill:.2f}", f"{cut * k_cut - fill * k_fill:.2f}"])
         self.assertAlmostEqual(cut, out.section_cut, delta=1e-9)
 
     def test_a_material_s_words_are_its_name_and_volumes(self) -> None:
