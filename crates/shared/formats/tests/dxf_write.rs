@@ -2,7 +2,7 @@
 //! read back is the same object (TM coordinates bit for bit, labels,
 //! attributes, symbols, colours, holes, exact arc angles and hatch
 //! patterns), layers keep their colour, line type, weight, visibility and
-//! lock, and the file has what AutoCAD needs of a 2000+ drawing (unique
+//! lock, and the file has what a DXF reader needs of a 2000+ drawing (unique
 //! handles below the seed, owners, the tables, blocks and objects).
 
 use std::collections::{BTreeMap, HashSet};
@@ -724,7 +724,7 @@ fn pairs(text: &str) -> Vec<(i32, &str)> {
 }
 
 #[test]
-fn the_file_has_what_autocad_needs() {
+fn the_file_has_what_a_reader_needs() {
     let (text, _) = write(&input(objects()));
     assert!(text.ends_with("  0\r\nEOF\r\n"));
     let p = pairs(&text);
@@ -810,7 +810,7 @@ fn the_file_has_what_autocad_needs() {
     assert!(at("$EXTMIN", 10) < Y0 && at("$EXTMAX", 20) > X0);
     assert_eq!(at("$INSUNITS", 70), 6.0);
     assert_eq!(at("$AUNITS", 70), 2.0);
-    // Group codes are right-aligned in three places, as AutoCAD writes them.
+    // Group codes are right-aligned in three places, as the format's files have them.
     assert!(
         text.starts_with("  0\r\nSECTION\r\n  2\r\nHEADER\r\n  9\r\n$ACADVER\r\n  1\r\nAC1021\r\n")
     );
@@ -841,7 +841,7 @@ fn group<'a>(e: &[(i32, &'a str)], code: i32) -> Option<&'a str> {
 
 /// Each dimension is a DIMENSION of its DXF type with a block of its own
 /// (a block record, BLOCK, the lines and ticks, the arc as an ARC, the
-/// value as MTEXT on layer 0 in the dimension's colour) and AutoCAD's style
+/// value as MTEXT on layer 0 in the dimension's colour) and DXF's style
 /// overrides; KentOS reads the same dimensions back (`every_kind_…`).
 #[test]
 fn a_dimension_is_a_dxf_dimension_with_a_block_of_its_own() {
@@ -1100,13 +1100,13 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         panic!()
     };
     assert_eq!(p.base.attrs, long);
-    // Over AutoCAD's 16 KB the attributes and label are left out, and that is said.
+    // Over DXF's 16 KB the attributes and label are left out, and that is said.
     let Entity::Point(p) = &r.entities[1] else {
         panic!()
     };
     assert!(p.base.attrs.is_empty() && p.base.label.is_none());
     assert!(report.notes.iter().any(|n| n.what == "Öznitelikler"));
-    // Layers of the same name (DXF names ignore case) take their groups in front; a weight AutoCAD lacks moves.
+    // Layers of the same name (DXF names ignore case) take their groups in front; a weight DXF lacks moves.
     let Entity::Line(l) = &r.entities[2] else {
         panic!()
     };
@@ -1138,7 +1138,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
 }
 
 #[test]
-fn nothing_to_write_is_still_a_file_autocad_opens() {
+fn nothing_to_write_is_still_a_file_others_open() {
     let (text, report) = write(&DxfWriteInput {
         allow_polyline_loss: false,
         layouts: Vec::new(),
@@ -1172,7 +1172,7 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
 
 #[test]
 fn an_objects_line_weight_goes_out_as_370_and_comes_back_exactly() {
-    // docs/adr/0139: the nearest of AutoCAD's weights in 370; one it rounds goes in KentOS's
+    // docs/adr/0139: the nearest of DXF's weights in 370; one it rounds goes in KentOS's
     // data and comes back exactly, while the file's 370 still is the weight it rounds to.
     let line = |w: Option<f64>, dy: f64| {
         Entity::Line(LineEntity {
@@ -1819,7 +1819,7 @@ fn blocks_of<'a>(p: &[(i32, &'a str)]) -> Vec<Block<'a>> {
 /// unused one left out; their objects are the block's, on 0 or their own
 /// layer, BYBLOCK where they have no colour or weight of their own; the
 /// inserts are INSERTs (mirrored as −Y, turned in degrees); what cannot be
-/// written is said. The file still has what AutoCAD needs.
+/// written is said. The file still has what a DXF reader needs.
 #[test]
 fn blocks_are_written_as_blocks_their_inserts_as_inserts() {
     let (text, report) = write(&lights());
@@ -2574,11 +2574,11 @@ fn a_tag_written_for_a_name_comes_back_by_kentos_data_and_the_file_wins() {
     assert_eq!(value(&back, "Bakım_notu").as_deref(), Some("2026"));
 }
 
-/// docs/adr/4800: a definition's tag DXF's tags cannot hold as the name is (“Kol boyu”) goes out as “Kol_boyu” with
-/// its name in the ATTDEF's KentOS data, and only that ATTDEF's; read back, the definition and its inserts' values take
-/// the name. The file wins: its tag upper-cased elsewhere (AutoCAD writes tags in capitals), still the name; renamed
-/// elsewhere (BATTMAN, the definition and its ATTRIBs), the new tag, and that is said; the record gone, the tag; the
-/// name another ATTDEF's tag (a hand edit of KentOS's data), the tag stays.
+/// docs/adr/4800: a definition's tag DXF's tags cannot hold as the name is (“Kol boyu”) goes out as “Kol_boyu” with its
+/// name in the ATTDEF's KentOS data, and only that ATTDEF's; read back, the definition and its inserts' values take the
+/// name. The file wins: its tag upper-cased elsewhere (other programs write tags in capitals), still the name; renamed
+/// elsewhere (the definition and its ATTRIBs), the new tag, and that is said; the record gone, the tag; the name
+/// another ATTDEF's tag (a hand edit of KentOS's data), the tag stays.
 #[test]
 fn a_definition_s_tag_comes_back_by_its_attdef_s_kentos_data_and_the_file_wins() {
     let (text, _) = write(&blocks_input());
@@ -2667,7 +2667,7 @@ fn an_attribute_text_on_more_lines_is_written_on_one_and_said() {
 /// The leaders' fixture (`fixtures/formats/v1/dxf-write/leaders.input.json`,
 /// docs/adr/0146 §8) goes out as its committed bytes, which
 /// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code;
-/// every arrowhead is AutoCAD's block of it (docs/adr/0205 §7): nothing is said.
+/// every arrowhead is its DXF block (docs/adr/0205 §7): nothing is said.
 #[test]
 fn the_leaders_fixture_is_written_to_its_committed_bytes() {
     let report = written_as_committed("leaders");
@@ -2675,7 +2675,7 @@ fn the_leaders_fixture_is_written_to_its_committed_bytes() {
     assert!(report.skipped.is_empty(), "{:?}", report.skipped);
 }
 
-/// A drawing's block named as an arrow block AutoCAD's (`_Open`) keeps its
+/// A drawing's block named as a DXF arrow block (`_Open`) keeps its
 /// name: the leader's open arrowhead is then KentOS's data, said; another
 /// program draws Standard's filled one, KentOS reads the open one back.
 #[test]

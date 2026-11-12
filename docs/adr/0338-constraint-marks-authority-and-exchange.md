@@ -96,7 +96,7 @@ sessizce yaşıyordu.
   (ilişkili taramaya ve ilişkili ölçüye kısıt reddi) KentOS kodu olmadan denetlenir. Masaüstünün ve Python'un oynatıcıları geçer.
 - **İşaretler:** `cargo test -p kentos-interaction --test all constraint_marks`. Kapsar: kısıtsız çizim, buluşma noktasının tek
   işareti, kenar ortaları, ölçünün adı ve değeri, bağlı parçalar.
-- **DXF:** `cargo test -p kentos-formats --test all autocad_constraint_groups_are_said_not_read` ve
+- **DXF:** `cargo test -p kentos-formats --test all constraint_groups_are_said_not_read` ve
   `cargo test -p kentos-headless --test headless constraints_are_said_not_written_to_dxf`.
 - **Resimler:** `KENTOS_SHOTS_ONLY=kisit-isaretler,kisit-isaret-vurgu,kisit-parametreler,kisit-parametre-celiski cargo test -p
   kentos-desktop tools_screens -- --ignored --nocapture` (`.run/shots/arac-kisit-isaret*`, `arac-kisit-parametre*`).

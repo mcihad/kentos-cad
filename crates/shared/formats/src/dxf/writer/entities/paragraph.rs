@@ -64,7 +64,7 @@ fn letter(c: char, percent: bool, out: &mut String) {
 /// §5): a width factor other than 1 a `\W` first; each run a group: bold and
 /// italic a font switch (Arial, the text style's face), underline `\L`, a
 /// colour `\C` (an ACI index, `ink` 7) or `\c` (a true colour, blue in the
-/// high byte as AutoCAD reads it), raised letters stacked over nothing
+/// high byte as other programs read it), raised letters stacked over nothing
 /// (`\S…^ ;`) and lowered ones under it (`\S^ …;`). Also whether a raised or
 /// lowered run had a letter a stack cannot hold (`^ / # ; \ { }`, a line
 /// break): those are written on the line.

@@ -473,7 +473,7 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
     ] {
         assert!(notes.contains(&said), "{said}: {notes:?}");
     }
-    // NO's line on DETAY follows DETAY as AutoCAD draws it: nothing to say (docs/adr/0315 §2).
+    // NO's line on DETAY follows DETAY as other programs draw it: nothing to say (docs/adr/0315 §2).
     assert!(r.report.notes.iter().all(|n| n.what != "Blok (BLOCK)"));
     let reasons: Vec<&str> = r.report.skipped.iter().map(|s| s.reason.as_str()).collect();
     assert!(
@@ -1830,7 +1830,7 @@ fn leader(e: &Entity) -> Leader<'_> {
 /// LEADER's MTEXT, after it or before it in the file, is its note (the
 /// first line; the others stay texts); a hookline's end gives way to the
 /// leader's own landing; the arrowhead comes from the arrow block's name
-/// (the style's, or the entity's own DSTYLE data), every AutoCAD arrowhead
+/// (the style's, or the entity's own DSTYLE data), every DXF arrowhead
 /// KentOS has (docs/adr/0205 §7); without a note the height is 40, else the
 /// style's arrow; the arrowhead's size is the arrow (DIMASZ × DIMSCALE)
 /// over 40; a MULTILEADER is its first line with its content as the note,
@@ -2068,7 +2068,7 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
 }
 
 /// Another program's new dimensions (docs/adr/0147 §8;
-/// `fixtures/formats/v1/dimension-kinds.dxf`, written as AutoCAD 2007 writes
+/// `fixtures/formats/v1/dimension-kinds.dxf`, written as a 2007 DXF writes
 /// them): the ordinates measured from the origin, the arc length and the
 /// jogged radius come in as KentOS's own, as high as their style's text
 /// (DIMTXT 2 × DIMSCALE 1.5), the arc length's value over the background by
@@ -2089,7 +2089,7 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
     let [east, north, arc, jogged] = dims.as_slice() else {
         panic!("four dimensions: {dims:?}")
     };
-    // The east (AutoCAD's X type, bit 64): its point, its line's end; no offset, the style's height.
+    // The east (DXF's X type, bit 64): its point, its line's end; no offset, the style's height.
     assert_eq!(
         (
             east.style,
@@ -2159,7 +2159,7 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
 }
 
 /// Multi-line texts of docs/adr/0182 §5 (fixtures/formats/v1/mtext.dxf,
-/// written by hand as AutoCAD writes them): each MTEXT one text, its line
+/// written by hand as other programs write them): each MTEXT one text, its line
 /// breaks, box (41) and spacing (44); a font switch's bold, an ACI colour
 /// switch, a stack over nothing raised, an underline with a true colour
 /// (blue in the high byte); heights, fractions, two faces, over and strike
@@ -2646,10 +2646,10 @@ fn an_associative_hatch_is_tied_to_its_objects() {
     assert_eq!((a.outer, a.bounds.len()), (None, 4));
 }
 
-/// AutoCAD's constraints (docs/adr/0338 §4): a constraint group in the OBJECTS section is said, not read; the geometry
-/// comes as drawn. A file without one says nothing of constraints.
+/// Another program's constraints (docs/adr/0338 §4): a constraint group in the OBJECTS section is said, not read; the
+/// geometry comes as drawn. A file without one says nothing of constraints.
 #[test]
-fn autocad_constraint_groups_are_said_not_read() {
+fn constraint_groups_are_said_not_read() {
     let line = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n4\n21\n0\n0\nENDSEC\n";
     let objects = "0\nSECTION\n2\nOBJECTS\n0\nACDBASSOC2DCONSTRAINTGROUP\n5\n1F\n\
                    0\nACDBASSOC2DCONSTRAINTGROUP\n5\n2A\n0\nENDSEC\n";

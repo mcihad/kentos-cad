@@ -2,7 +2,7 @@
 //! planes: an edge with a slope (eğim: rise over run, per cent) lifts a plane from its line into the roof at that slope;
 //! an edge without one is a gable end (kalkan), where the roof stops at a wall standing up to it. Over a point inside
 //! the eaves the roof stands at the lowest of the planes there: their lower envelope, which for a convex eaves line is
-//! its straight skeleton's roof (Revit's roof by footprint: each edge "defines slope" or not).
+//! its straight skeleton's roof (each edge sloped or not, docs/adr/8044).
 //!
 //! - **Faces.** One for each sloping edge, where its plane is the lowest. Every edge sloping is a hip roof (kırma
 //!   çatı), two opposite ones a gable roof (beşik), one a shed (tek eğimli), none a flat roof (düz çatı).
