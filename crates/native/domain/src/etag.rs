@@ -64,12 +64,12 @@ impl Document {
 
     /// The drawing's name and the project's settings' stamp.
     pub fn settings_stamp(&self) -> String {
-        stamp_of(&json!({ "name": self.name, "settings": self.settings }))
+        stamp_of(&json!({ "name": self.name, "settings": *self.settings }))
     }
 
     /// The project's style library's stamp.
     pub fn styles_stamp(&self) -> String {
-        stamp_of(&serde_json::to_value(&self.styles).unwrap_or(Value::Null))
+        stamp_of(&serde_json::to_value(&*self.styles).unwrap_or(Value::Null))
     }
 
     /// The constraints' and parameters' stamp (docs/adr/0336 §3).

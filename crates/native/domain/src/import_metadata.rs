@@ -34,10 +34,16 @@ impl ImportMetadata {
         }
     }
     pub(crate) fn install(&self, doc: &mut Document) {
-        doc.settings.text_styles.clone_from(&self.text);
-        doc.settings.dimension_styles.clone_from(&self.dimension);
-        doc.settings.line_types.clone_from(&self.line_types);
-        doc.settings.line_type_scale = self.line_scale;
+        Arc::make_mut(&mut doc.settings)
+            .text_styles
+            .clone_from(&self.text);
+        Arc::make_mut(&mut doc.settings)
+            .dimension_styles
+            .clone_from(&self.dimension);
+        Arc::make_mut(&mut doc.settings)
+            .line_types
+            .clone_from(&self.line_types);
+        Arc::make_mut(&mut doc.settings).line_type_scale = self.line_scale;
         doc.sheets.clone_from(&self.sheets);
     }
 }

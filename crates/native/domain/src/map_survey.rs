@@ -21,7 +21,10 @@ impl Document {
         if self.settings.map_survey == next {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.map_survey, next));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).map_survey,
+            next,
+        ));
         let after = Arc::new(self.settings.map_survey.clone());
         self.record(vec![Op::MapSurvey { before, after }], label);
     }

@@ -1838,44 +1838,44 @@ impl Document {
                 return;
             }
             Op::ReviewNotes { after, .. } => {
-                self.settings.review_notes = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).review_notes = after.as_ref().clone();
                 return;
             }
             Op::MapWork { after, .. } => {
-                self.settings.map_work = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).map_work = after.as_ref().clone();
                 return;
             }
             Op::MapSurvey { after, .. } => {
-                self.settings.map_survey = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).map_survey = after.as_ref().clone();
                 return;
             }
             Op::ParcelRegister { after, .. } => {
-                self.settings.parcel_register = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).parcel_register = after.as_ref().clone();
                 return;
             }
             Op::SurveyAdjustments { after, .. } => {
-                self.settings.survey_adjustments = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).survey_adjustments = after.as_ref().clone();
                 return;
             }
             Op::MonitoringReviews { after, .. } => {
-                self.settings.monitoring_reviews = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).monitoring_reviews = after.as_ref().clone();
                 return;
             }
             Op::ZoningPlan { after, .. } => {
-                self.settings.zoning_plan = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).zoning_plan = after.as_ref().clone();
                 return;
             }
             Op::PatternTables { after, .. } => {
-                self.settings.line_types = after.0.clone();
-                self.settings.hatch_patterns = after.1.clone();
+                Arc::make_mut(&mut self.settings).line_types = after.0.clone();
+                Arc::make_mut(&mut self.settings).hatch_patterns = after.1.clone();
                 return;
             }
             Op::ApprovedSheetTemplates { after, .. } => {
-                self.settings.approved_sheet_templates = after.as_ref().clone();
+                Arc::make_mut(&mut self.settings).approved_sheet_templates = after.as_ref().clone();
                 return;
             }
             Op::StyleTables(tables) => {
-                tables.apply_to(&mut self.settings);
+                tables.apply_to(Arc::make_mut(&mut self.settings));
                 return;
             }
             Op::ImportMetadata { before, after } => {
@@ -1883,33 +1883,41 @@ impl Document {
                 return;
             }
             Op::Units { before, after } => {
-                self.settings.drawing_unit = after.drawing_unit;
+                Arc::make_mut(&mut self.settings).drawing_unit = after.drawing_unit;
                 self.home_view = after.home_view;
                 self.origin = after.origin;
                 // A keep-sizes unit change did not edit frames. Do not undo
                 // a UCS the user chose later through ordinary project settings.
                 if before.ucs != after.ucs {
-                    self.settings.ucs = after.ucs;
+                    Arc::make_mut(&mut self.settings).ucs = after.ucs;
                 }
                 if before.named_ucs != after.named_ucs {
-                    self.settings.named_ucs.clone_from(&after.named_ucs);
+                    Arc::make_mut(&mut self.settings)
+                        .named_ucs
+                        .clone_from(&after.named_ucs);
                 }
                 return;
             }
             Op::Domains { after, .. } => {
-                self.settings.domains = after.clone();
+                Arc::make_mut(&mut self.settings).domains = after.clone();
                 return;
             }
             Op::OpeningTypes { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.opening_types = after.clone();
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::Materials { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.materials = after.clone();
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::ViewArea { key, after, .. } => {
@@ -1918,152 +1926,224 @@ impl Document {
                 return;
             }
             Op::ArchModules { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.modules = after.clone();
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::RoadAlignments { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.alignments = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadProfiles { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.profiles = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadTemplates { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.templates = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadSections { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.sections = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadSuperelevations { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.superelevations = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadCorridors { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.corridors = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadVolumes { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.volumes = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadHauls { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.hauls = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadSheetSets { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.sheet_sets = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadGuardrails { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.guardrails = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadCulverts { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.culverts = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadJunctions { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.junctions = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadDrawings { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.drawings = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadAutoRebuild { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.auto_rebuild = *after;
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadRebuildWhole { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.rebuild_whole = *after;
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadPay { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.pay = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadWalls { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.walls = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadPlatforms { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.platforms = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::RoadSurfaces { after, .. } => {
-                let mut road = self.settings.road.take().unwrap_or_default();
+                let mut road = Arc::make_mut(&mut self.settings)
+                    .road
+                    .take()
+                    .unwrap_or_default();
                 road.surfaces = after.clone();
-                self.settings.road = (!road.is_empty()).then_some(road);
+                Arc::make_mut(&mut self.settings).road = (!road.is_empty()).then_some(road);
                 return;
             }
             Op::ArchOptions { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.options = after.clone();
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::OptionCombos { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.option_combos = after.clone();
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::AuditExceptions { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.audit_exceptions = after.clone();
                 // No empty settings are kept (a file refuses them).
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::BuildingProgram { after, .. } => {
-                let mut arch = self.settings.arch.take().unwrap_or_default();
+                let mut arch = Arc::make_mut(&mut self.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
                 arch.program = after.clone();
-                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                Arc::make_mut(&mut self.settings).arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::Source { id, after, .. } => {
-                let sources = &mut self.settings.sources;
+                let sources = &mut Arc::make_mut(&mut self.settings).sources;
                 match (&after.link, sources.iter().position(|l| l.id == *id)) {
                     (Some(link), Some(i)) => sources[i] = link.clone(),
                     (Some(link), None) => sources.push(link.clone()),
@@ -2072,7 +2152,7 @@ impl Document {
                     }
                     (None, None) => {}
                 }
-                let bases = &mut self.settings.source_bases;
+                let bases = &mut Arc::make_mut(&mut self.settings).source_bases;
                 bases.retain(|b| b.source != *id);
                 if let Some(b) = &after.base {
                     bases.push(b.clone());
@@ -2080,7 +2160,7 @@ impl Document {
                 return;
             }
             Op::Lineage { after, .. } => {
-                self.settings.lineage = (**after).clone();
+                Arc::make_mut(&mut self.settings).lineage = (**after).clone();
                 return;
             }
             Op::Constraints { after, .. } => {

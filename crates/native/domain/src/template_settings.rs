@@ -30,7 +30,7 @@ impl TemplateSettings {
     }
     /// Do not rewind settings that this package left untouched (or unrelated project preferences).
     pub(crate) fn apply_from(&self, before: &Self, doc: &mut Document) {
-        let s = &mut doc.settings;
+        let s = std::sync::Arc::make_mut(&mut doc.settings);
         if self.unit != before.unit {
             s.drawing_unit = self.unit;
         }

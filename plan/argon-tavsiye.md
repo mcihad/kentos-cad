@@ -142,7 +142,7 @@ flowchart LR
 
 ---
 
-### [ ] ADIM 01 — `ProjectSettings` ve `Document::reading_copy` / `keep` Sıfır-Kopya (`Arc` Copy-on-Write) Refactoring'i (Öncelik: P0)
+### [x] ADIM 01 — `ProjectSettings` ve `Document::reading_copy` / `keep` Sıfır-Kopya (`Arc` Copy-on-Write) Refactoring'i (Öncelik: P0)
 
 - **Kod İnceleme Bulgusu:**
   - [crates/native/domain/src/document.rs#L305](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/document.rs#L305) içindeki `Document::reading_copy()` ve [crates/native/domain/src/step.rs#L496](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/step.rs#L496) içindeki `Document::keep(ProjectPart::Settings)` her çağrıda `self.settings.clone()` çalıştırıyor.
@@ -157,6 +157,7 @@ flowchart LR
   2. `Document` içinde `pub(crate) settings: Arc<ProjectSettings>` tutulacak; `settings_mut(&mut self) -> &mut ProjectSettings` erişimi `Arc::make_mut(&mut self.settings)` (Copy-on-Write) kullanacaktır.
   3. [step.rs#L565](file:///home/cihad/Projects/kentos-cad/crates/native/domain/src/step.rs#L565) içindeki `*settings != self.settings` karşılaştırması önce `!Arc::ptr_eq(settings, &self.settings)` ile kısa devre (short-circuit) yapacaktır.
 - **Tamamlanma Ölçütü:** `doc.reading_copy()` çağrısı TIN yüzeyi veya GNSS arşivi içeren bir projede sıfır heap vektör kopyalaması (`O(1)` `Arc` sayaç artışı) ile tamamlanır; tüm `document-ops` ve `kcad` testleri geçer.
+- **12 Kasım 2026 ([ADR 8054 §1](../docs/adr/8054-phase-1-memory-and-build-bottlenecks.md)):** `Document`'ın ayarları ve stil kitaplığı `Arc` (yazınca kopyala); okuma kopyası 16 MB'lık bağlı kaynak özetinde 5,3 → 0,000 ms, 64 MB'ta 21,6 → 0,000 ms. Ayarların içindeki ağır parçaların paylaşımı ADIM 03'te geri almayla birlikte.
 
 ---
 

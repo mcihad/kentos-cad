@@ -369,7 +369,7 @@ impl Document {
         // The places that name a renamed field by its name, in an expression or in a template follow
         // it (docs/adr/0414 §2): the layer's own in the same step, the forms' drafts in the settings.
         let mut next_node = node.clone();
-        let mut next_settings = self.settings.clone();
+        let mut next_settings = (*self.settings).clone();
         for (old, new) in renames.iter().filter(|(old, new)| old != new) {
             kentos_forms::field_refs::rename_node(&mut next_node, old, new);
             kentos_forms::field_refs::rename_settings(&mut next_settings, id, old, new);
@@ -1307,10 +1307,10 @@ impl Document {
     /// docs/adr/0168).
     pub fn set_settings(&mut self, settings: ProjectSettings) {
         let settings = settings.sanitized();
-        if self.settings != settings {
+        if *self.settings != settings {
             let scale_changed = self.settings.plot_scale != settings.plot_scale;
             let (framed, base) = (self.before_part(ProjectPart::Settings), self.edits);
-            self.settings = settings;
+            self.settings = Arc::new(settings);
             self.refresh_viewmarks();
             self.refresh_level_marks();
             self.refresh_derived_tags();
@@ -1328,9 +1328,9 @@ impl Document {
     /// categories (web `doc.styles.set`, the style manager's Proje): an edit
     /// when it differs, never an undo step (the library keeps no undo).
     pub fn set_styles(&mut self, styles: ProjectStyles) {
-        if self.styles != styles {
+        if *self.styles != styles {
             let (framed, base) = (self.before_part(ProjectPart::Styles), self.edits);
-            self.styles = styles;
+            self.styles = Arc::new(styles);
             self.mark_edited();
             self.after_part(ProjectPart::Styles, framed, true, base);
         }

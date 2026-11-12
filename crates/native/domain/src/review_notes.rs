@@ -15,7 +15,10 @@ impl Document {
         if self.settings.review_notes == notes {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.review_notes, notes));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).review_notes,
+            notes,
+        ));
         let after = Arc::new(self.settings.review_notes.clone());
         self.record(vec![Op::ReviewNotes { before, after }], label);
     }
@@ -48,7 +51,10 @@ impl Document {
         if self.settings.approved_sheet_templates == templates {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.approved_sheet_templates, templates));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).approved_sheet_templates,
+            templates,
+        ));
         let after = Arc::new(self.settings.approved_sheet_templates.clone());
         self.record(vec![Op::ApprovedSheetTemplates { before, after }], label);
     }

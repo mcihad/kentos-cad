@@ -20,7 +20,10 @@ impl Document {
         if self.settings.parcel_register == next {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.parcel_register, next));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).parcel_register,
+            next,
+        ));
         let after = Arc::new(self.settings.parcel_register.clone());
         self.record(vec![Op::ParcelRegister { before, after }], label);
     }
@@ -36,7 +39,10 @@ impl Document {
         if self.settings.survey_adjustments == next {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.survey_adjustments, next));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).survey_adjustments,
+            next,
+        ));
         let after = Arc::new(self.settings.survey_adjustments.clone());
         self.record(vec![Op::SurveyAdjustments { before, after }], label);
     }
@@ -51,7 +57,10 @@ impl Document {
         if self.settings.monitoring_reviews == next {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.monitoring_reviews, next));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).monitoring_reviews,
+            next,
+        ));
         let after = Arc::new(self.settings.monitoring_reviews.clone());
         self.record(vec![Op::MonitoringReviews { before, after }], label);
     }

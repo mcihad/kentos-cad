@@ -30,11 +30,16 @@ use crate::store::Store;
 #[derive(Clone, Debug)]
 pub struct Document {
     pub(crate) name: String,
-    pub(crate) settings: ProjectSettings,
+    /// Shared (docs/adr/8054 §1): a reading copy and the open step's kept settings hold the same value; a change copies
+    /// it first only while they do (`Arc::make_mut`, field by field so other fields stay borrowable). Before, every
+    /// reading copy (a plan, a grip drag's preview of its followers, a background job) copied a project's bound
+    /// sources' bases: 5 ms at 16 MB, 22 ms at 64 MB.
+    pub(crate) settings: Arc<ProjectSettings>,
     /// Local anchor near the data: the GPU works in float32 relative to it.
     pub(crate) origin: Vec2,
     pub(crate) home_view: Option<Bounds>,
-    pub(crate) styles: ProjectStyles,
+    /// Shared as the settings are (docs/adr/8054 §1): a symbol library is copied only to be changed.
+    pub(crate) styles: Arc<ProjectStyles>,
     /// The block definitions (docs/adr/0144, blocks.rs), each shared: a reader
     /// that follows them keeps the list and compares its entries by pointer.
     pub(crate) blocks: Vec<Arc<BlockDefinition>>,
@@ -345,7 +350,9 @@ impl Document {
     /// This reading copy drawn in the phase view `view` (docs/adr/8039 §2): a sheet's map showing a phase of its own
     /// joins and cuts its walls as that phase stands. Its settings change without an edit: a copy is only read.
     pub fn with_phase_view(mut self, view: kentos_contracts::PhaseView) -> Document {
-        let arch = self.settings.arch.get_or_insert_with(Default::default);
+        let arch = Arc::make_mut(&mut self.settings)
+            .arch
+            .get_or_insert_with(Default::default);
         arch.phase_view = (view != kentos_contracts::PhaseView::All).then_some(view);
         self
     }

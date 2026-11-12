@@ -241,17 +241,19 @@ impl Document {
             if let Some(settings) = meta.settings {
                 // The former Hibrit mode is a type not asked yet (docs/adr/0165 §1); the
                 // systems and choices as a project keeps them (docs/adr/0167 §1, 0168).
-                self.settings = ProjectSettings {
-                    workspace: settings.project_type(),
-                    ..settings
-                }
-                .sanitized();
+                self.settings = Arc::new(
+                    ProjectSettings {
+                        workspace: settings.project_type(),
+                        ..settings
+                    }
+                    .sanitized(),
+                );
             }
             if let Some(name) = meta.name {
                 self.name = name;
             }
             if let Some(styles) = meta.styles {
-                self.styles = styles;
+                self.styles = Arc::new(styles);
             }
             if let Some(sheets) = meta.sheets {
                 self.sheets = sheets.map(Arc::new);

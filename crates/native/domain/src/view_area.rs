@@ -69,7 +69,11 @@ impl Document {
 
     /// The step's area on the view of `key`, when it is still there (history.rs).
     pub(crate) fn put_view_area(&mut self, key: &str, area: ViewArea) {
-        if let Some(v) = self.settings.named_views.iter_mut().find(|v| view_key(v) == key) {
+        if let Some(v) = std::sync::Arc::make_mut(&mut self.settings)
+            .named_views
+            .iter_mut()
+            .find(|v| view_key(v) == key)
+        {
             area.put(v);
         }
     }

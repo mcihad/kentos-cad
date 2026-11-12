@@ -20,7 +20,10 @@ impl Document {
         if self.settings.zoning_plan == next {
             return;
         }
-        let before = Arc::new(std::mem::replace(&mut self.settings.zoning_plan, next));
+        let before = Arc::new(std::mem::replace(
+            &mut Arc::make_mut(&mut self.settings).zoning_plan,
+            next,
+        ));
         let after = Arc::new(self.settings.zoning_plan.clone());
         self.record(vec![Op::ZoningPlan { before, after }], label);
     }

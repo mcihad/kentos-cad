@@ -39,8 +39,9 @@ use crate::store::Stored;
 #[derive(Clone, Debug)]
 pub(crate) struct Frame {
     name: Option<String>,
-    settings: Option<ProjectSettings>,
-    styles: Option<ProjectStyles>,
+    /// Shared with the drawing until the step changes them (docs/adr/8054 §1).
+    settings: Option<Arc<ProjectSettings>>,
+    styles: Option<Arc<ProjectStyles>>,
     sheets: Option<Option<Arc<ProjectSheets>>>,
     flags: Option<LayerFlags>,
     /// The active layer when the step began.
@@ -310,11 +311,11 @@ impl Document {
             self.name = name;
         }
         if let Some(settings) = frame.settings {
-            restored |= self.settings != settings;
+            restored |= !Arc::ptr_eq(&self.settings, &settings) && self.settings != settings;
             self.settings = settings;
         }
         if let Some(styles) = frame.styles {
-            restored |= self.styles != styles;
+            restored |= !Arc::ptr_eq(&self.styles, &styles) && self.styles != styles;
             self.styles = styles;
         }
         if let Some(sheets) = frame.sheets {
@@ -563,12 +564,14 @@ impl Document {
             report.parts.push(ProjectPart::Name);
         }
         if let Some(settings) = &frame.settings
+            && !Arc::ptr_eq(settings, &self.settings)
             && *settings != self.settings
             && !report.parts.contains(&ProjectPart::Settings)
         {
             report.parts.push(ProjectPart::Settings);
         }
         if let Some(styles) = &frame.styles
+            && !Arc::ptr_eq(styles, &self.styles)
             && *styles != self.styles
         {
             report.parts.push(ProjectPart::Styles);
