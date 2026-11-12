@@ -71,7 +71,7 @@
    "note": "Yay kenar da seçilir: yay kendi çemberinde kayar (docs/adr/1024).",
    "expect": {
     "points": 1,
-    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A)]"
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A) / Referans (R)]"
    }
   },
   {
@@ -90,7 +90,7 @@
    "note": "Karenin güney kenarı.",
    "expect": {
     "points": 1,
-    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A)]"
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A) / Referans (R)]"
    }
   },
   {
@@ -212,7 +212,7 @@
    ],
    "expect": {
     "points": 1,
-    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A)]"
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A) / Referans (R)]"
    }
   },
   {
@@ -306,7 +306,7 @@
    ],
    "expect": {
     "points": 1,
-    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (sağa artı)"
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (sağa artı) [Referans (R)]"
    }
   },
   {
@@ -322,7 +322,7 @@
     "logged": [
      "Hedef alan yalnız alanlarda yazılır."
     ],
-    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (sağa artı)"
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (sağa artı) [Referans (R)]"
    }
   },
   {

@@ -252,9 +252,20 @@ fn each_program_docks_its_own_panels() {
     let expected: [(Option<Module>, &[Panel]); 4] = [
         (None, &Panel::ALL),
         (MIMARI, &[Layers, Blocks, Templates, Navigator, Properties]),
+        // Harita's project tree (docs/adr/1720): its surfaces, pads and what was drawn from them.
         (
             HARITA,
-            &[Layers, Processing, Blocks, Templates, Sources, MapWork, MapSurvey, Properties],
+            &[
+                Layers,
+                Processing,
+                Blocks,
+                Templates,
+                Sources,
+                MapWork,
+                MapSurvey,
+                RoadProject,
+                Properties,
+            ],
         ),
         (GIS, &[Layers, Processing, Templates, Sources, Properties]),
     ];
