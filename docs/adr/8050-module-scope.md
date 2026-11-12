@@ -40,7 +40,9 @@ katınındır (§3); Mimari denetim (ADR 8034, 8045) her örneği kendi katında
   grupta olmaz); örnek taşınınca kolon akslarının kesişiminde kalır, modülün dediği yere gidemezdi. Aksın kendisi
   modülde değildir (eski ret metni yeni türleri sayar).
 - Yeni türler katlarını örnekten alır (`arch_mut`/`arch_of`: çok katlı modülde üyenin katı örneğin tabanından sayılır,
-  ADR 0796). Yerleştirme, aynalama ve döndürme Taşı/Döndür/Aynala'nın kuralıdır (`transform::by_matrix`): duvar yolu
+  ADR 0796). Modül verisinin denetimi (`arch_modules_problem`) üst katı yalnız duvar, mahal ve donatıya tanıyordu:
+  1. katında kolonu olan iki katlı modül "Modül nesnesinin katı … yalnız duvar, mahal ve donatının olur" ile
+  tanımlanamıyordu (ölçüldü); artık kendi katı olan her tür (`holds_own_storey`) üst katta olabilir. Yerleştirme, aynalama ve döndürme Taşı/Döndür/Aynala'nın kuralıdır (`transform::by_matrix`): duvar yolu
   aynada geri döner, büküm korunur; kolonun noktası aynalanır, dönüşü aynanın açısından kendi dönüşü çıkarılarak, L'nin eni
   ile derinliği ve kolları yer değiştirir, hizası takas edilir (ADR 0725 §2–3); merdiven ilk noktasından çıkmaya devam
   eder, yayı ters döner (ADR 0709); döşemenin halkaları, rampanın ekseni nokta nokta.

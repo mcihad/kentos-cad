@@ -379,6 +379,12 @@ def cases():
     p180 = Placed(2, (0, 20), rot=math.pi, mirror=True, level="kat1")
     out.append(case("Yerleştir: aynalı ve 180° döndürülmüş", [
         DEFINE(), run(place_op(p180), done("$any"), {"fields": p180.fields()}, within=1e-9)]))
+    up = Placed(2, (10, 0), level="zemin")
+    out.append(case("İki katlı modül: 1. kattaki kolon tanımda üst katta, örnekte örneğin bir üst katında", [
+        other("cad.arch.edit", {"uids": [UID(2)], "operation": {"kind": "set", "level": "kat1"}}),
+        run(DEFINE_OP, done("$any")),
+        run(place_op(up), done("$any"), {"fields": {str(up.slots[2]): {"arch": {"level": "kat1"}},
+                                                    str(up.slots[3]): {"arch": {"level": "zemin"}}}})]))
     out.append(case("Yerleştir ve geri al: tek adım", [
         DEFINE(), PLACE(p2),
         {"op": "undo", "returns": STEP, "expect": {"ids": IDS, "revision": "changed"}}]))

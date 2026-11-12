@@ -34,8 +34,8 @@ pub struct ModuleMember {
     pub key: String,
     pub entity: Entity,
     /// Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up
-    /// (the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text
-    /// follows what it is on.
+    /// (the levels by elevation). Only an object's with a level of its own ([`holds_own_storey`]); an opening, a tag, a
+    /// dimension or a text follows what it is on.
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
@@ -243,6 +243,24 @@ pub fn module_kind_ok(e: &Entity) -> bool {
     )
 }
 
+/// Whether a member stands on a storey of its own (docs/adr/0796 §1, 8050 §1): a wall, a space, a fixture, a column, a
+/// stair, a ramp, a slab or a room separator; an opening, a tag, a dimension or a text follows what it is on.
+pub fn holds_own_storey(e: &Entity) -> bool {
+    match e {
+        Entity::Polyline(p) => p.space_separator.is_some(),
+        _ => matches!(
+            e,
+            Entity::Wall(_)
+                | Entity::Space(_)
+                | Entity::Insert(_)
+                | Entity::Column(_)
+                | Entity::Stair(_)
+                | Entity::Ramp(_)
+                | Entity::Slab(_)
+        ),
+    }
+}
+
 fn uuid_text_ok(s: &str) -> bool {
     s.len() == 36
         && s.chars().enumerate().all(|(i, c)| {
@@ -333,20 +351,16 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
             if !module_kind_ok(&member.entity) {
                 return Some((
                     format!("{at}.members[{k}].entity"),
-                    "Modülde duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.".into(),
+                    "Modülde duvar, açıklık, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme, ölçü, etiket ve yazı olur.".into(),
                 ));
             }
             if member.storey >= MAX_MODULE_STOREYS
-                || (member.storey > 0
-                    && !matches!(
-                        member.entity,
-                        Entity::Wall(_) | Entity::Space(_) | Entity::Insert(_)
-                    ))
+                || (member.storey > 0 && !holds_own_storey(&member.entity))
             {
                 return Some((
                     format!("{at}.members[{k}].storey"),
                     format!(
-                        "Modül nesnesinin katı 0 ile {} arasındadır ve yalnız duvar, mahal ve donatının olur.",
+                        "Modül nesnesinin katı 0 ile {} arasındadır ve yalnız kendi katı olan nesnenin olur (duvar, mahal, mahal ayırıcı, donatı, kolon, merdiven, rampa, döşeme).",
                         MAX_MODULE_STOREYS - 1
                     ),
                 ));

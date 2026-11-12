@@ -1967,6 +1967,88 @@
       ]
     },
     {
+      "name": "İki katlı modül: 1. kattaki kolon tanımda üst katta, örnekte örneğin bir üst katında",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8050-7000-8000-000000000002"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Oda",
+              "uids": [
+                "0192f5a1-8050-7000-8000-000000000001",
+                "0192f5a1-8050-7000-8000-000000000002",
+                "0192f5a1-8050-7000-8000-000000000003",
+                "0192f5a1-8050-7000-8000-000000000004",
+                "0192f5a1-8050-7000-8000-000000000005",
+                "0192f5a1-8050-7000-8000-000000000006"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Oda",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "fields": {
+              "12": {
+                "arch": {
+                  "level": "kat1"
+                }
+              },
+              "13": {
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Yerleştir ve geri al: tek adım",
       "steps": [
         {
