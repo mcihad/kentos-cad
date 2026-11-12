@@ -1,4 +1,4 @@
-//! A layer's style as OGC SLD 1.1 with Symbology Encoding 1.1 (docs/adr/0516), the subset QGIS 4.2, GeoServer and
+//! A layer's style as OGC SLD 1.1 with Symbology Encoding 1.1 (docs/adr/0516), the subset common GIS readers, map servers and
 //! MapServer share: rules with OGC filters and scale ranges, polygon, line and point symbolizers with fills, strokes,
 //! dashes and well-known marks. What KentOS's style has and SE has not (a hatch, a gradient, a pattern, a marker line,
 //! an SVG or text marker, a data-defined size, an expression the filter grammar cannot say) is named, never dropped
@@ -7,8 +7,8 @@
 //!
 //! The style is the app's JSON (`model/style.ts`): a renderer (`single`, `categorized`, `graduated`, `rules`) whose
 //! symbol sets hold marker, line and fill symbols. Sizes in paper millimetres go out in pixels of SE's standard
-//! rendering pixel, 0.28 mm, as SE 1.1 §10.2 asks and QGIS writes them; metres with SE's metre unit; screen pixels as
-//! pixels. Read back, a pixel stays a screen pixel and a metre a metre, as QGIS reads them. Fields are
+//! rendering pixel, 0.28 mm, as SE 1.1 §10.2 asks and GIS writers write them; metres with SE's metre unit; screen pixels as
+//! pixels. Read back, a pixel stays a screen pixel and a metre a metre, as GIS readers read them. Fields are
 //! written as `[Ad]` in KentOS's expressions and as `<ogc:PropertyName>Ad</ogc:PropertyName>` in a filter.
 
 use std::fmt::Write as _;
@@ -206,7 +206,7 @@ fn tokens(src: &str, qgis: bool) -> Option<Vec<Tok>> {
             ));
             i = j + 1;
         } else if ch == '\'' || ch == '"' {
-            // A text in either quote, the quote doubled inside it (as KentOS's lexer reads it); in QGIS's
+            // A text in either quote, the quote doubled inside it (as KentOS's lexer reads it); in a GIS reader's
             // expressions a double-quoted word is a field.
             let q = ch;
             let mut s = String::new();
@@ -273,7 +273,7 @@ fn tokens(src: &str, qgis: bool) -> Option<Vec<Tok>> {
                 j += 1;
             }
             let w: String = c[i..j].iter().collect();
-            // QGIS's `IN`, which is no word of KentOS's.
+            // a GIS reader's `IN`, which is no word of KentOS's.
             if qgis && w.eq_ignore_ascii_case("in") {
                 out.push(Tok::Word("in".into()));
             } else if bare_field(&w) {
@@ -299,7 +299,7 @@ pub fn parse_filter(src: &str) -> Option<Filter> {
     (at == toks.len()).then_some(f)
 }
 
-/// A QGIS expression as a filter, when the grammar can say it: `"field"` and bare words are fields, `'text'`
+/// A GIS expression as a filter, when the grammar can say it: `"field"` and bare words are fields, `'text'`
 /// texts, `AND`, `OR`, `NOT`, `IS NULL`, `LIKE`, `BETWEEN … AND …` and `IN (…)` (one comparison each, joined by OR).
 pub fn parse_qgis(src: &str) -> Option<Filter> {
     let toks = tokens(src, true)?;
@@ -636,7 +636,7 @@ pub enum Paint {
 }
 
 /// A layer's colour at `key`: its fixed colour, or, data-defined by a field alone, that field (SE has no fallback
-/// value, and QGIS does not read a field in a colour parameter: both said); another expression is the fallback.
+/// value, and some readers do not read a field in a colour parameter: both said); another expression is the fallback.
 pub fn paint_of(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Paint> {
     if let Some(v) = layer.get(key)
         && let Some(e) = v.get("expr").and_then(Value::as_str)
@@ -644,7 +644,7 @@ pub fn paint_of(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) ->
     {
         let fallback = v.get("fallback").is_some_and(|f| !f.is_null());
         lost.push(format!(
-            "{what}: “{key}” [{f}] alanının değeri (veriye göre); SLD'ye alan adı olarak yazıldı{}; QGIS SLD'deki alana bağlı rengi okumaz (gri alır), GeoServer okur",
+            "{what}: “{key}” [{f}] alanının değeri (veriye göre); SLD'ye alan adı olarak yazıldı{}; her SLD okuyucusu alana bağlı rengi okumaz (gri alabilir)",
             if fallback { ", yedek değeri SLD'de yok" } else { "" }
         ));
         return Some(Paint::Field(f));
@@ -769,7 +769,7 @@ fn rotation_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> String {
     }
 }
 
-/// An SVG marker: the drawing the host put into the layer (`svgData`), inside the SLD twice, as QGIS reads it
+/// An SVG marker: the drawing the host put into the layer (`svgData`), inside the SLD twice, as GIS readers read it
 /// (`base64:` in an `OnlineResource`) and as SE says it (`InlineContent`); SE has no colour of a drawing that
 /// travels: its fill and outline are said.
 fn svg_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
@@ -808,7 +808,7 @@ fn svg_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<S
     })
 }
 
-/// A text marker as SE's font mark (the form QGIS reads): the font by `ttf://` and the character's code as
+/// A text marker as SE's font mark (the form GIS readers read): the font by `ttf://` and the character's code as
 /// `MarkIndex`. SE's mark is one character with no bold or italic; its halo is the mark's stroke.
 fn text_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym> {
     let text = match layer.get("text") {
@@ -1616,7 +1616,7 @@ fn size_in(v: f64, uom: Option<&str>) -> (f64, &'static str) {
     match uom {
         Some(u) if u.ends_with("/metre") => (v, "m"),
         Some(u) if u.ends_with("/foot") => (v * 0.3048, "m"),
-        // A pixel stays a screen pixel, as QGIS reads it.
+        // A pixel stays a screen pixel, as GIS readers read it.
         _ => (v, "px"),
     }
 }
@@ -1982,7 +1982,7 @@ fn as_classes(rules: &[RuleIn]) -> Option<Value> {
         if field.is_some_and(|x| x != f) {
             return None;
         }
-        // KentOS's classes are min ≤ v < max but the last; QGIS writes min < v ≤ max past the first, which reads
+        // KentOS's classes are min ≤ v < max but the last; GIS writers write min < v ≤ max past the first, which reads
         // the same but at the class bounds (said by the caller).
         let _ = (k, n, last_closed);
         field = Some(f);
@@ -2203,7 +2203,7 @@ mod tests {
             back.renderer["categories"][1]["symbols"]["fill"]["layers"][0]["color"],
             "#377eb8cc"
         );
-        // 0.28 mm is one pixel, and a pixel comes back a pixel (QGIS reads it so).
+        // 0.28 mm is one pixel, and a pixel comes back a pixel (GIS readers read it so).
         assert_eq!(
             back.renderer["categories"][0]["symbols"]["fill"]["layers"][1]["width"],
             1.0
@@ -2313,7 +2313,7 @@ mod tests {
             { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } } ] } } });
         let w = write("parsel", &r, &[], Kinds::ALL, &none);
         assert!(w.xml.contains("<ogc:PropertyName>renk</ogc:PropertyName>"), "{}", w.xml);
-        assert!(w.lost.iter().any(|l| l.contains("QGIS SLD'deki alana bağlı rengi okumaz")), "{:?}", w.lost);
+        assert!(w.lost.iter().any(|l| l.contains("her SLD okuyucusu alana bağlı rengi okumaz")), "{:?}", w.lost);
         let back = read(&w.xml).expect("reads");
         let c = &back.renderer["symbols"]["fill"]["layers"][0]["color"];
         assert_eq!(c["expr"], "[renk]");

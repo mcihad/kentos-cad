@@ -220,21 +220,20 @@ apply = _StandardsApply()
 
 
 class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsReport]):
-    """``cad.standards.check`` v1. Standardı denetle: Çizimin bir çizim standardından
-    (AutoCAD'in CAD Standards'ı) neyi bozduğunu söyler: standart adıyla (name:
-    mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard: katmanları
-    adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve topladıkları ad
-    örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve ölçü stilleri,
-    çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular sırasıyla: standardın
-    katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı farklı), çizimin öbür
-    katmanları (bir standart katmana ait ad, ad örüntülerine uymayan ad, izinsiz çizgi
-    tipi), projenin yazı tipi, stillerin yazı tipleri, eksik ve standartta olmayan
-    stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü nesnelerin sayıları. resources
-    verilirse çizgi tipi ve tarama deseninin eksik/farklı tanımları ile yayımlanmış blok
-    referansının eksik veya farklı kimlik/sürümü de raporlanır; bunlar otomatik
-    düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen ve bulunan değeri, Türkçe
-    iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle gelir. Çizimi
-    değiştirmez; plan aynı cevabı verir.
+    """``cad.standards.check`` v1. Standardı denetle: Çizimin bir çizim standardından neyi
+    bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya
+    da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları,
+    Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı
+    tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir.
+    Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı,
+    Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad
+    örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı
+    tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi
+    görünüşlü nesnelerin sayıları. resources verilirse çizgi tipi ve tarama deseninin
+    eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı
+    kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu,
+    katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın
+    düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.standards.check"
@@ -257,20 +256,20 @@ class _StandardsCheck(LocalCommand[StandardsCheck, StandardsReport, StandardsRep
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> StandardsReport:
-        """Standardı denetle: Çizimin bir çizim standardından (AutoCAD'in CAD Standards'ı) neyi
-        bozduğunu söyler: standart adıyla (name: mimari-ofis gibi yerleşik bir standart) ya
-        da kendisiyle (standard: katmanları adları, renkleri, çizgi tipleri, kalınlıkları,
-        Yazdır'ları ve topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı
-        tipleri, yazı ve ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir.
-        Bulgular sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı,
-        Yazdır'ı farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad
-        örüntülerine uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı
-        tipleri, eksik ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi
-        görünüşlü nesnelerin sayıları. resources verilirse çizgi tipi ve tarama deseninin
-        eksik/farklı tanımları ile yayımlanmış blok referansının eksik veya farklı
-        kimlik/sürümü de raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu,
-        katmanı, beklenen ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın
-        düzeltip düzeltmediğiyle gelir. Çizimi değiştirmez; plan aynı cevabı verir.
+        """Standardı denetle: Çizimin bir çizim standardından neyi bozduğunu söyler: standart
+        adıyla (name: mimari-ofis gibi yerleşik bir standart) ya da kendisiyle (standard:
+        katmanları adları, renkleri, çizgi tipleri, kalınlıkları, Yazdır'ları ve
+        topladıkları ad örüntüleriyle; öbür katmanların ad örüntüleri, yazı tipleri, yazı ve
+        ölçü stilleri, çizgi tipleri, nesnelerin katmana göreliği) verilir. Bulgular
+        sırasıyla: standardın katmanları (eksik; rengi, çizgi tipi, kalınlığı, Yazdır'ı
+        farklı), çizimin öbür katmanları (bir standart katmana ait ad, ad örüntülerine
+        uymayan ad, izinsiz çizgi tipi), projenin yazı tipi, stillerin yazı tipleri, eksik
+        ve standartta olmayan stiller, izinsiz kendi çizgi tipli ve kendi görünüşlü
+        nesnelerin sayıları. resources verilirse çizgi tipi ve tarama deseninin eksik/farklı
+        tanımları ile yayımlanmış blok referansının eksik veya farklı kimlik/sürümü de
+        raporlanır; bunlar otomatik düzeltilmez. Her bulgu türü, konusu, katmanı, beklenen
+        ve bulunan değeri, Türkçe iletisi ve cad.standards.apply'ın düzeltip düzeltmediğiyle
+        gelir. Çizimi değiştirmez; plan aynı cevabı verir.
 
         Args:
             doc: The drawing it works on.
@@ -666,11 +665,10 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
     korunur, onu kullananlar izler), keepLocal, renameIncoming (farklıysa standarttakini
     newName ile ekler). Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden
     verir. libraries: projenin ya da ofisin .kblok blok kitaplıklarının mutlak yolları;
-    verilen sırayla KentOS'un kitaplıklarından önce aranır, çizime yazılmaz
-    (docs/adr/1019). Retler: invalid_file_path, file_not_found, block_library_unreadable
-    (kitaplık yolu), no_standard, invalid_standard, standard_resource_not_found,
-    invalid_install_choice, duplicate_name, invalid_revision, revision_conflict,
-    block_refused.
+    verilen sırayla KentOS'un kitaplıklarından önce aranır, çizime yazılmaz. Retler:
+    invalid_file_path, file_not_found, block_library_unreadable (kitaplık yolu),
+    no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice,
+    duplicate_name, invalid_revision, revision_conflict, block_refused.
     """
     __slots__ = ()
     id = "cad.standards.install"
@@ -703,9 +701,9 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         izler), keepLocal, renameIncoming (farklıysa standarttakini newName ile ekler).
         Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden verir. libraries:
         projenin ya da ofisin .kblok blok kitaplıklarının mutlak yolları; verilen sırayla
-        KentOS'un kitaplıklarından önce aranır, çizime yazılmaz (docs/adr/1019). Retler:
-        invalid_file_path, file_not_found, block_library_unreadable (kitaplık yolu),
-        no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice,
+        KentOS'un kitaplıklarından önce aranır, çizime yazılmaz. Retler: invalid_file_path,
+        file_not_found, block_library_unreadable (kitaplık yolu), no_standard,
+        invalid_standard, standard_resource_not_found, invalid_install_choice,
         duplicate_name, invalid_revision, revision_conflict, block_refused.
 
         Args:

@@ -27,17 +27,17 @@ if TYPE_CHECKING:
 
 class _RoadStakeoutQuery(LocalCommand[StakeoutQuery, StakeoutQueried, StakeoutQueried]):
     """``road.stakeout.query`` v1. Aplikasyon cetveli: Koridorun kodlu kesit noktalarını
-    km'leriyle verir; hiçbir şey yazmaz. Cevap neyden hesaplandığını sources'ta söyler
-    (ADR 1038): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
-    çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest, ADR 1040) ve
-    son kabul edildiği özet (built; ikisi farklıysa çizim kabulden sonra değişmiştir) ve
-    koridorun kübaj hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve
-    yazıldığı zamanı Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod
-    (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis,
-    right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı
-    (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın
-    uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam
-    kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground:
+    km'leriyle verir; hiçbir şey yazmaz. Cevap neyden hesaplandığını sources'ta söyler:
+    koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
+    çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul
+    edildiği özet (built; ikisi farklıysa çizim kabulden sonra değişmiştir) ve koridorun
+    kübaj hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı
+    zamanı Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis,
+    left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right),
+    eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa
+    bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları,
+    her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya
+    da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground:
     öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin
     ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar:
     koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved.
@@ -67,20 +67,20 @@ class _RoadStakeoutQuery(LocalCommand[StakeoutQuery, StakeoutQueried, StakeoutQu
         expected: Expected | None = None,
     ) -> StakeoutQueried:
         """Aplikasyon cetveli: Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey
-        yazmaz. Cevap neyden hesaplandığını sources'ta söyler (ADR 1038): koridorun,
-        aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü
-        sürümleri, arazinin bugünkü kaynak özeti (digest, ADR 1040) ve son kabul edildiği
-        özet (built; ikisi farklıysa çizim kabulden sonra değişmiştir) ve koridorun kübaj
-        hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı
-        Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 …
-        left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden
-        öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin
-        uçları); step ile her step metrede (step'in katları ve aralığın uçları, her
-        bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da
-        her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme
-        ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama
-        elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun
-        kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler:
+        yazmaz. Cevap neyden hesaplandığını sources'ta söyler: koridorun, aksının,
+        boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri,
+        arazinin bugünkü kaynak özeti (digest) ve son kabul edildiği özet (built; ikisi
+        farklıysa çizim kabulden sonra değişmiştir) ve koridorun kübaj hesapları (sürüm,
+        onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı Kaynaklar sayfasına
+        yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe,
+        ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı,
+        plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile
+        her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun
+        kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun
+        sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak
+        (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin
+        çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları
+        (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler:
         not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.
 
         Args:
@@ -200,16 +200,16 @@ class _RoadStakeoutSend(LocalCommand[StakeoutSend, StakeoutSent, StakeoutSent]):
     plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol:
     koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla
     PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize
-    yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7,
-    jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1)
-    sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped),
-    noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve
-    Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da
-    hiç; çizimi değiştirmez. Sahaya giden kotlar projenin söylediği düşey sisteme
-    bağlıdır: söylenmemişse ret (field_heights_unknown; ADR 1031, BÖHHBÜY: TUDKA99'a
-    dayalı Helmert ortometrik yükseklik); LandXML dosyası sistemleri CoordinateSystem'de
-    söyler. Retler: not_a_road_project, unknown_corridor, invalid_stakeout,
-    invalid_file_path, file_exists, invalid_stakeout_send, field_heights_unknown.
+    yazılmaz; saha yazılımları okur), gsi16, gsi8, gts7, jobxml, nikon, csv (alet
+    yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan
+    noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz
+    (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun
+    adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Sahaya giden
+    kotlar projenin söylediği düşey sisteme bağlıdır: söylenmemişse ret
+    (field_heights_unknown, BÖHHBÜY: TUDKA99'a dayalı Helmert ortometrik yükseklik);
+    LandXML dosyası sistemleri CoordinateSystem'de söyler. Retler: not_a_road_project,
+    unknown_corridor, invalid_stakeout, invalid_file_path, file_exists,
+    invalid_stakeout_send, field_heights_unknown.
     """
     __slots__ = ()
     id = "road.stakeout.send"
@@ -243,17 +243,17 @@ class _RoadStakeoutSend(LocalCommand[StakeoutSend, StakeoutSent, StakeoutSent]):
         corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak
         yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi
         boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu
-        olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica
-        Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un
-        alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan
-        noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz
-        (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun
-        adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Sahaya giden
-        kotlar projenin söylediği düşey sisteme bağlıdır: söylenmemişse ret
-        (field_heights_unknown; ADR 1031, BÖHHBÜY: TUDKA99'a dayalı Helmert ortometrik
-        yükseklik); LandXML dosyası sistemleri CoordinateSystem'de söyler. Retler:
-        not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path,
-        file_exists, invalid_stakeout_send, field_heights_unknown.
+        olmayan dize orada kesilir, tek noktalı dize yazılmaz; saha yazılımları okur),
+        gsi16, gsi8, gts7, jobxml, nikon, csv (alet yazıcıları). Noktalar first'ten (yoksa
+        1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer
+        (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses).
+        job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve
+        saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Sahaya giden kotlar projenin
+        söylediği düşey sisteme bağlıdır: söylenmemişse ret (field_heights_unknown, BÖHHBÜY:
+        TUDKA99'a dayalı Helmert ortometrik yükseklik); LandXML dosyası sistemleri
+        CoordinateSystem'de söyler. Retler: not_a_road_project, unknown_corridor,
+        invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send,
+        field_heights_unknown.
 
         Args:
             doc: The drawing it works on.

@@ -326,6 +326,12 @@ pub fn from_document(doc: &kentos_domain::Document, id: &str) -> Result<FromDocu
         .find(|n| n.id == id)
         .cloned()
         .ok_or_else(|| format!("“{id}” ağı projede yok; Ağlar penceresinden tanımlayın."))?;
+    from_definition(doc, def)
+}
+
+/// Builds the network the definition `def` says from `doc`, as `from_document` builds a project's (docs/adr/5060: a
+/// scenario's side, the definition's layers swapped for the layers standing for them).
+pub fn from_definition(doc: &kentos_domain::Document, def: NetworkDef) -> Result<FromDocument, String> {
     let objects: Vec<&Entity> = def.layers().iter().flat_map(|l| doc.by_layer(l)).collect();
     let mut store = Store::new();
     store.put_many(objects.iter().map(|e| crate::geometry::record(e)));

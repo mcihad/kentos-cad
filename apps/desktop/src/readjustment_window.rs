@@ -9,6 +9,10 @@
 //! (düzenleme sınırı). Kapsam shows the separation sheet's numbers of the parcels it takes in and the basis of each
 //! (Yönetmelik m. 31), with the rule package's places and rounding; Esas alanları kayıtlara yaz puts each basis into the
 //! records of its parcel and says what changed, what kept its file area and what did not match.
+//!
+//! docs/adr/5080: Dağıtım esası picks the regulation's area basis or the user's value basis (a comparison, no rule of
+//! the regulation): by value the records carry a fifth column, the parcel's value before the readjustment, and
+//! Değerlerin kaynağı says who determined them; the answer says it is no rule.
 
 use std::path::PathBuf;
 
@@ -41,6 +45,8 @@ const MODES: [(&str, &str); 4] = [
     ("away_from_zero", "Sıfırdan uzağa"),
 ];
 const RULES: [(&str, &str); 2] = [("largest_remainder", "En büyük artık"), ("reject", "Artığı reddet")];
+/// docs/adr/5080: the distribution's bases, the regulation's first.
+const BASES: [(&str, &str); 2] = [("area", "Alan · yönetmelik"), ("value", "Değer · karşılaştırma")];
 
 /// What the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -100,6 +106,8 @@ impl Default for State {
                 scale: 2,
                 rounding: "half_even".into(),
                 remainder: "largest_remainder".into(),
+                basis: None,
+                value_source: None,
             },
             entries: Vec::new(),
             file: None,
@@ -127,6 +135,9 @@ pub enum Event {
     Scale(f64),
     Rounding(String),
     Remainder(String),
+    /// docs/adr/5080: Dağıtım esası (`area`, `value`) and Değerlerin kaynağı.
+    Basis(String),
+    ValueSource(String),
     Pick,
     Picked(Option<PathBuf>),
     View(View),
@@ -151,8 +162,9 @@ fn msg(e: Event) -> Message {
     Message::Readjustment(e)
 }
 
-/// The records of a CSV: `parsel;hak sahibi;tapu alanı;pay` a line (a head line whose third column is not a number is
-/// skipped); a line of another shape is said by its number.
+/// The records of a CSV: `parsel;hak sahibi;tapu alanı;pay` a line, and by value (docs/adr/5080) a fifth column, the
+/// parcel's value before the readjustment (a head line whose third column is not a number is skipped); a line of
+/// another shape is said by its number.
 pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
     let mut out = Vec::new();
     for (n, line) in text.lines().enumerate() {
@@ -161,8 +173,8 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
             continue;
         }
         let cells: Vec<&str> = line.split(';').map(str::trim).collect();
-        if cells.len() != 4 {
-            return Err(format!("{}. satır dört sütun değil (parsel;hak sahibi;tapu alanı;pay).", n + 1));
+        if cells.len() != 4 && cells.len() != 5 {
+            return Err(format!("{}. satır dört ya da beş sütun değil (parsel;hak sahibi;tapu alanı;pay[;değer]).", n + 1));
         }
         if n == 0 && !cells[2].chars().next().is_some_and(|c| c.is_ascii_digit()) {
             continue;
@@ -172,6 +184,7 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
             holder: cells[1].to_owned(),
             area: cells[2].to_owned(),
             share: cells[3].to_owned(),
+            value: cells.get(4).filter(|v| !v.is_empty()).map(|v| (*v).to_owned()),
         });
     }
     Ok(out)
@@ -198,6 +211,23 @@ pub fn csv(r: &ReadjustmentDistributed) -> String {
     out.push_str("\nHak sahibi;Toplam (m²)\n");
     for h in &r.holders {
         out.push_str(&format!("{};{}\n", h.holder, h.value));
+    }
+    // docs/adr/5080: by value, the basis said and each parcel's value and share.
+    if r.basis.is_some() {
+        out.push_str(&format!(
+            "\nDağıtım esası;değer (yönetmelikte kural değil, karşılaştırma);Değerlerin kaynağı;{}\nParsel;Değer;Değer payı;Kesinti (m²);Net (m²)\n",
+            r.value_source.clone().unwrap_or_default()
+        ));
+        for p in &r.parcels {
+            out.push_str(&format!(
+                "{};{};{};{};{}\n",
+                p.parcel,
+                p.value.clone().unwrap_or_default(),
+                p.value_share.clone().unwrap_or_default(),
+                p.deduction,
+                p.net
+            ));
+        }
     }
     out
 }
@@ -402,6 +432,8 @@ impl App {
                 }
             }
             Event::Remainder(v) => r.remainder = v,
+            Event::Basis(v) => r.basis = (v != "area").then_some(v),
+            Event::ValueSource(v) => r.value_source = (!v.trim().is_empty()).then_some(v),
             Event::View(v) => {
                 self.readjustment.view = v;
                 return Task::none();
@@ -465,6 +497,9 @@ impl App {
         };
         let modes: Vec<(String, String)> = MODES.iter().map(|(a, b)| ((*a).into(), (*b).into())).collect();
         let rules: Vec<(String, String)> = RULES.iter().map(|(a, b)| ((*a).into(), (*b).into())).collect();
+        let bases: Vec<(String, String)> = BASES.iter().map(|(a, b)| ((*a).into(), (*b).into())).collect();
+        let basis = r.basis.clone().unwrap_or_else(|| "area".into());
+        let by_value = basis == "value";
         // Short fields that belong together share a line; every line starts on the box column.
         let form = Form::new()
             .label_width(120.0)
@@ -501,13 +536,32 @@ impl App {
                 .spacing(10)
                 .align_y(Center),
             )
+            // docs/adr/5080: the regulation's area basis, or the user's value basis with the values' source.
+            .field("Dağıtım esası", {
+                let mut line = row![container(fields::select_owned(bases, &basis, |v| msg(Event::Basis(v)))).width(210)]
+                    .spacing(10)
+                    .align_y(Center);
+                if by_value {
+                    line = line.push(
+                        container(text(
+                            "Değerlerin kaynağı: kim, hangi kararla",
+                            r.value_source.as_deref().unwrap_or_default(),
+                            Event::ValueSource,
+                        ))
+                        .width(300),
+                    );
+                }
+                line
+            })
             .field(
                 "Kayıtlar",
                 row![
                     words::secondary(OPEN, Some(msg(Event::Pick))),
-                    label::caption(match &s.file {
-                        Some(f) => format!("{f}: {} kayıt (parsel;hak sahibi;tapu alanı;pay)", s.entries.len()),
-                        None => "CSV: parsel;hak sahibi;tapu alanı;pay (hak sahibi kimlikle, adla değil)".to_owned(),
+                    label::caption(match (&s.file, by_value) {
+                        (Some(f), false) => format!("{f}: {} kayıt (parsel;hak sahibi;tapu alanı;pay)", s.entries.len()),
+                        (Some(f), true) => format!("{f}: {} kayıt (parsel;hak sahibi;tapu alanı;pay;değer)", s.entries.len()),
+                        (None, false) => "CSV: parsel;hak sahibi;tapu alanı;pay (hak sahibi kimlikle, adla değil)".to_owned(),
+                        (None, true) => "CSV: parsel;hak sahibi;tapu alanı;pay;değer (parselin düzenlemeden önceki değeri)".to_owned(),
                     })
                 ]
                 .spacing(10)
@@ -551,7 +605,7 @@ impl App {
             .field(
                 "Sığmayan numara",
                 kentos_ui::widget::switch::Switch::new(s.number_leader, |on| msg(Event::NumberLeader(on)))
-                    .label("Küçültme; parçanın dışına kılavuzla yaz"),
+                    .label("Küçültme; parçanın dışına, hiçbir şeye değmeyen yere kılavuzla yaz"),
             )
         } else {
             form
@@ -588,6 +642,17 @@ impl App {
         let mut table: Element<'_, Message> = words::empty("Kayıt yok: kayıtları seçin.");
         match &s.answer {
             Some(Ok(a)) => {
+                // docs/adr/5080: by value, said first: no rule of the regulation.
+                if a.basis.is_some() {
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        format!(
+                            "Değer esaslı dağıtım yönetmelikte bir kural değildir (dağıtım alan esaslıdır): bu, seçtiğiniz bir karşılaştırma taslağıdır. Dağıtım kütlesi {} m² parsellere düzenlemeden önceki değerleri oranında; değerlerin kaynağı: {}.",
+                            a.net,
+                            a.value_source.clone().unwrap_or_default()
+                        ),
+                    ));
+                }
                 lines.push(words::text_line(
                     if a.conserved { Kind::Ok } else { Kind::Error },
                     format!(
@@ -602,13 +667,23 @@ impl App {
                 let to = |v: &[String]| if v.is_empty() { String::new() } else { format!(" → {}", v.join(", ")) };
                 lines.push(words::text_line(
                     Kind::Info,
-                    format!(
-                        "Kesintinin kesin değeri {} m², yuvarlanmış {} m²; parsellere dağıtımın artığı {}{}.",
-                        a.deduction_exact,
-                        a.deduction,
-                        a.deduction_remainder,
-                        to(&a.deduction_remainder_to)
-                    ),
+                    match &a.mass_remainder {
+                        // docs/adr/5080: by value the mass is split, not the deduction.
+                        Some(rest) => format!(
+                            "Kesintinin kesin değeri {} m², yuvarlanmış {} m²; kütlenin değerlerle dağıtımının artığı {}{}.",
+                            a.deduction_exact,
+                            a.deduction,
+                            rest,
+                            to(&a.mass_remainder_to)
+                        ),
+                        None => format!(
+                            "Kesintinin kesin değeri {} m², yuvarlanmış {} m²; parsellere dağıtımın artığı {}{}.",
+                            a.deduction_exact,
+                            a.deduction,
+                            a.deduction_remainder,
+                            to(&a.deduction_remainder_to)
+                        ),
+                    },
                 ));
                 table = match s.view {
                     // Kapsam's table is the scope's, set below.
@@ -617,6 +692,35 @@ impl App {
                         vec![col("Hak sahibi", 160.0), num("Toplam hak (m²)", 160.0)],
                         a.holders.iter().map(|h| vec![h.holder.clone(), h.value.clone()]).collect(),
                         "Hak sahibi yok.",
+                        240.0,
+                    ),
+                    // docs/adr/5080: by value, each parcel's value and its exact share beside its area.
+                    View::Parcels if a.basis.is_some() => sheet(
+                        vec![
+                            col("Parsel", 70.0),
+                            num("Tapu alanı", 90.0),
+                            num("Değer", 100.0),
+                            num("Değer payı", 85.0),
+                            num("Kesinti", 85.0),
+                            num("Net", 85.0),
+                            col("Hak sahipleri (pay: değer)", 230.0),
+                        ],
+                        a.parcels
+                            .iter()
+                            .map(|p| {
+                                let parts: Vec<String> = p.parts.iter().map(|x| format!("{} ({}): {}", x.holder, x.share, x.value)).collect();
+                                vec![
+                                    p.parcel.clone(),
+                                    p.area.clone(),
+                                    p.value.clone().unwrap_or_default(),
+                                    p.value_share.clone().unwrap_or_default(),
+                                    p.deduction.clone(),
+                                    p.net.clone(),
+                                    parts.join("; "),
+                                ]
+                            })
+                            .collect(),
+                        "Parsel yok.",
                         240.0,
                     ),
                     View::Parcels => sheet(

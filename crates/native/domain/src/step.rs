@@ -737,6 +737,9 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::MapWork { .. }
             | Op::MapSurvey { .. }
             | Op::ParcelRegister { .. }
+            | Op::SurveyAdjustments { .. }
+            | Op::MonitoringReviews { .. }
+            | Op::ZoningPlan { .. }
             | Op::PatternTables { .. }
             | Op::ApprovedSheetTemplates { .. }
             | Op::StyleTables(_) => {
@@ -781,6 +784,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::RoadJunctions { .. }
             | Op::RoadDrawings { .. }
             | Op::RoadAutoRebuild { .. }
+            | Op::RoadRebuildWhole { .. }
             | Op::ViewArea { .. }
             | Op::ArchOptions { .. }
             | Op::OptionCombos { .. }

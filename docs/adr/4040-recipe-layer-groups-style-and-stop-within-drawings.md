@@ -135,7 +135,8 @@ katmanının grubu ve tam stili”.
 ## Sonra
 
 - Bellek ve CPU bütçesi, gerçek veriyle ölçümle birlikte.
-- Etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru hattı profili çizimlerinin kendi hesabının içinde durması.
+- Etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru hattı profili çizimlerinin kendi hesabının içinde durması:
+  yapıldı, [ADR 4860](4860-stop-within-seven-drawings-and-recipe-layer-fields.md).
 - Katmanın saydamlığı, türü ve alanlarının tarife girmesi (saydamlık, karışım kipi, tür ve Yazdır:
   [ADR 4440](4440-recipe-layer-transparency-type-and-print.md); alanlar açık).
 - Ölçüm arşivinin zincire bağlanması; atlas sayfalarının denetimi (ADR 3640 Sonra).

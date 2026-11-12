@@ -24,21 +24,20 @@ if TYPE_CHECKING:
 
 class _LegendsMaterials(LocalCommand[LegendsMaterials, LegendMade, LegendPlan]):
     """``cad.legends.materials`` v1. Malzeme lejandı: Duvarların malzemelerinin lejandını
-    yazar (docs/adr/0721 §5); tek geri alma adımı “Malzeme lejandı”. Her satır bir duvar
-    bileşenidir (duvarlar çizimin sırasıyla, bileşenleri sol yüzden): adı malzemesi
-    (yoksa bileşenin adı), örneği duvarın taradığı gibi taranmış kutu; adı ya da
-    taraması öncekilerden farklı olan yeni satırdır, walls onu taşıyan duvar sayısı.
-    Lejant “Malzeme lejandı” bloğudur: çizimde varsa yerinde yeniden yapılır (remade,
-    bütün yerleştirmeleri izler), at verilirse bir yerleştirmesi de konur (at sol üst
-    köşe). height yazının kâğıttaki yüksekliğidir (mm, yok: 2,5; en çok 50), H = height
-    · ölçek paydası / 1000: başlık sol üstte, i. satırın kutusu 6H eninde 3H
-    yüksekliğinde, üstü 2H + 4H·i aşağıda, adı 7H sağda kutunun ortası hizasında. Ret
-    sırası: not_finite (at, yükseklik), invalid_height, invalid_revision,
-    revision_conflict, no_materials (bileşenli duvar yok), no_legend (at yok, lejant da
-    yok), at ile katman (layer_not_found, not_a_layer, layer_locked); gizli katmana
-    layer_hidden uyarısı. Plan satırları, bloğu ve yeni yerleştirmeyi verir.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    yazar; tek geri alma adımı “Malzeme lejandı”. Her satır bir duvar bileşenidir
+    (duvarlar çizimin sırasıyla, bileşenleri sol yüzden): adı malzemesi (yoksa bileşenin
+    adı), örneği duvarın taradığı gibi taranmış kutu; adı ya da taraması öncekilerden
+    farklı olan yeni satırdır, walls onu taşıyan duvar sayısı. Lejant “Malzeme lejandı”
+    bloğudur: çizimde varsa yerinde yeniden yapılır (remade, bütün yerleştirmeleri
+    izler), at verilirse bir yerleştirmesi de konur (at sol üst köşe). height yazının
+    kâğıttaki yüksekliğidir (mm, yok: 2,5; en çok 50), H = height · ölçek paydası /
+    1000: başlık sol üstte, i. satırın kutusu 6H eninde 3H yüksekliğinde, üstü 2H + 4H·i
+    aşağıda, adı 7H sağda kutunun ortası hizasında. Ret sırası: not_finite (at,
+    yükseklik), invalid_height, invalid_revision, revision_conflict, no_materials
+    (bileşenli duvar yok), no_legend (at yok, lejant da yok), at ile katman
+    (layer_not_found, not_a_layer, layer_locked); gizli katmana layer_hidden uyarısı.
+    Plan satırları, bloğu ve yeni yerleştirmeyi verir. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.legends.materials"
@@ -61,21 +60,21 @@ class _LegendsMaterials(LocalCommand[LegendsMaterials, LegendMade, LegendPlan]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LegendMade:
-        """Malzeme lejandı: Duvarların malzemelerinin lejandını yazar (docs/adr/0721 §5); tek
-        geri alma adımı “Malzeme lejandı”. Her satır bir duvar bileşenidir (duvarlar çizimin
-        sırasıyla, bileşenleri sol yüzden): adı malzemesi (yoksa bileşenin adı), örneği
-        duvarın taradığı gibi taranmış kutu; adı ya da taraması öncekilerden farklı olan
-        yeni satırdır, walls onu taşıyan duvar sayısı. Lejant “Malzeme lejandı” bloğudur:
-        çizimde varsa yerinde yeniden yapılır (remade, bütün yerleştirmeleri izler), at
-        verilirse bir yerleştirmesi de konur (at sol üst köşe). height yazının kâğıttaki
-        yüksekliğidir (mm, yok: 2,5; en çok 50), H = height · ölçek paydası / 1000: başlık
-        sol üstte, i. satırın kutusu 6H eninde 3H yüksekliğinde, üstü 2H + 4H·i aşağıda, adı
-        7H sağda kutunun ortası hizasında. Ret sırası: not_finite (at, yükseklik),
-        invalid_height, invalid_revision, revision_conflict, no_materials (bileşenli duvar
-        yok), no_legend (at yok, lejant da yok), at ile katman (layer_not_found,
-        not_a_layer, layer_locked); gizli katmana layer_hidden uyarısı. Plan satırları,
-        bloğu ve yeni yerleştirmeyi verir. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Malzeme lejandı: Duvarların malzemelerinin lejandını yazar; tek geri alma adımı
+        “Malzeme lejandı”. Her satır bir duvar bileşenidir (duvarlar çizimin sırasıyla,
+        bileşenleri sol yüzden): adı malzemesi (yoksa bileşenin adı), örneği duvarın
+        taradığı gibi taranmış kutu; adı ya da taraması öncekilerden farklı olan yeni
+        satırdır, walls onu taşıyan duvar sayısı. Lejant “Malzeme lejandı” bloğudur: çizimde
+        varsa yerinde yeniden yapılır (remade, bütün yerleştirmeleri izler), at verilirse
+        bir yerleştirmesi de konur (at sol üst köşe). height yazının kâğıttaki yüksekliğidir
+        (mm, yok: 2,5; en çok 50), H = height · ölçek paydası / 1000: başlık sol üstte, i.
+        satırın kutusu 6H eninde 3H yüksekliğinde, üstü 2H + 4H·i aşağıda, adı 7H sağda
+        kutunun ortası hizasında. Ret sırası: not_finite (at, yükseklik), invalid_height,
+        invalid_revision, revision_conflict, no_materials (bileşenli duvar yok), no_legend
+        (at yok, lejant da yok), at ile katman (layer_not_found, not_a_layer, layer_locked);
+        gizli katmana layer_hidden uyarısı. Plan satırları, bloğu ve yeni yerleştirmeyi
+        verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
+        sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

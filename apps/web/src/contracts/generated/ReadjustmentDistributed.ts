@@ -8,4 +8,9 @@ import type { ReadjustmentParcel } from "./ReadjustmentParcel";
  * remainder and the parcels it went to, net, the holders' sum) and whether they are kept exactly, the parcels in the
  * records' order and the holders' totals in their first appearance's order.
  */
-export type ReadjustmentDistributed = { rules: string, release: number, draft: boolean, registered: string, deductionExact: string, deduction: string, deductionRemainder: string, deductionRemainderTo: Array<string>, net: string, held: string, conserved: boolean, parcels: Array<ReadjustmentParcel>, holders: Array<ReadjustmentHolder>, };
+export type ReadjustmentDistributed = { rules: string, release: number, draft: boolean, registered: string, deductionExact: string, deduction: string, deductionRemainder: string, deductionRemainderTo: Array<string>, net: string, held: string, conserved: boolean, parcels: Array<ReadjustmentParcel>, holders: Array<ReadjustmentHolder>, 
+/**
+ * docs/adr/5080, by value: `value`, the values' source as given, and the remainder of the mass's split over the
+ * parcels and the parcels it went to (the deduction is then not split: its remainder is 0).
+ */
+basis?: string, valueSource?: string, massRemainder?: string, massRemainderTo?: Array<string>, };

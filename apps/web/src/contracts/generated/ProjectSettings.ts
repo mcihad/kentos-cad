@@ -16,6 +16,7 @@ import type { FieldDomain } from "./FieldDomain";
 import type { HatchPatternDef } from "./HatchPatternDef";
 import type { HeightReference } from "./HeightReference";
 import type { JoinView } from "./JoinView";
+import type { KeptAdjustment } from "./KeptAdjustment";
 import type { LayerState } from "./LayerState";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
@@ -23,6 +24,7 @@ import type { LineTypeDef } from "./LineTypeDef";
 import type { LineageRecord } from "./LineageRecord";
 import type { MapSurvey } from "./MapSurvey";
 import type { MapWork } from "./MapWork";
+import type { MonitoringReview } from "./MonitoringReview";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -46,6 +48,7 @@ import type { Ucs } from "./Ucs";
 import type { ViewTemplate } from "./ViewTemplate";
 import type { WallStyleDef } from "./WallStyleDef";
 import type { Workspace } from "./Workspace";
+import type { ZoningPlanData } from "./ZoningPlanData";
 
 /**
  * Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
@@ -95,7 +98,7 @@ sources?: Array<SourceLink>,
  */
 sourceBases?: Array<SourceBase>, 
 /**
- * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+ * The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;
  * absent: 1.
  */
 lineTypeScale?: number, 
@@ -296,4 +299,18 @@ mapSurvey?: MapSurvey,
  * parcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;
  * absent: none (`.kcad` schema 216).
  */
-parcelRegister?: ParcelRegister, };
+parcelRegister?: ParcelRegister, 
+/**
+ * The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 252).
+ */
+surveyAdjustments?: Array<KeptAdjustment>, 
+/**
+ * The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
+ * (`.kcad` schema 253).
+ */
+monitoringReviews?: Array<MonitoringReview>, 
+/**
+ * A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
+ * (`.kcad` schema 250).
+ */
+zoningPlan?: ZoningPlanData, };

@@ -13,7 +13,8 @@ the same), the contour lines are that generator's (`contours`: levels crossing e
 started at their fixed place). A new line stays where an old one is exactly alike (level, major, closed, places) and not
 taken yet; the old ones left are removed, the new ones left written at the drawing's end, in its order. `region` is the
 box of the lines removed and written; `ids` is the document's order of objects after the step (kept lines keep their
-numbers). A drawing with a line of another colour is no line drawing: drawn whole.
+numbers). Docs/adr/4740: the new lines are all strokes of one look, free in their order; a line painted by hand is
+alike none (its colour differs) and is written again alone.
 
     uv run --no-project --python 3.11 --with triangle --with numpy python3 \\
         scripts/fixtures/road_regional_rebuild_cases.py [--check]
@@ -152,10 +153,11 @@ class State:
         surface, interval, old = self.drawings[name]
         made = self.lines(surface, interval)
         new_keys = [key(l) for l in made]
-        whole = not regional or (colours is not None and len(set(colours.values())) > 1)
+        # Docs/adr/4740: a line painted by hand is alike no new one (every new line has the drawing's look).
+        painted = {n for n, c in (colours or {}).items() if c is not None}
         stays = [None] * len(made)
-        if regional and not whole:
-            free = list(range(len(old)))
+        if regional:
+            free = [i for i in range(len(old)) if old[i][0] not in painted]
             for j, k in enumerate(new_keys):
                 hit = next((i for i in free if old[i][1] == k), None)
                 if hit is not None:
@@ -178,7 +180,7 @@ class State:
         if regional:
             row["kept"] = len(made) - len(written)
             places = [p for _, _, pts in gone for p in pts] + [p for pts in written for p in pts]
-            if places and not whole:
+            if places:
                 row["region"] = [min(p[0] for p in places), min(p[1] for p in places),
                                  max(p[0] for p in places), max(p[1] for p in places)]
         row["uids"] = "$any"
@@ -390,7 +392,7 @@ def cases():
          [s1, s2, rebuild_step([row], input_={"drawings": ["cz-1"], "edited": True, "regional": True},
                                expect=changed(st))])
 
-    # 14. A line coloured by hand: two colours, no line drawing: drawn whole.
+    # 14. A line coloured by hand (docs/adr/4740): it alone is written again in the drawing's look.
     st = State()
     s1 = contours_step(st)
     num = st.drawings["cz-1"][2][2][0]
@@ -399,11 +401,11 @@ def cases():
     s2 = {"op": "execute", "command": "cad.entities.set",
           "input": {"uids": [f"$uidOf:{num}"], "color": "#E5484D", "operation": "color"}, "result": ANY, "within": W}
     row = st.redraw("cz-1", colours=colours)
-    assert row["kept"] == 0 and "region" not in row
-    case("Elle rengi değişen eğri: iki renk, çizgi çizimi değil, bütün yeniden yazılır",
+    assert row["removed"] == 1 and row["kept"] == len(st.drawings["cz-1"][2]) - 1 and "region" in row, row
+    case("Elle rengi değişen eğri: yalnız o çizimin rengiyle yeniden yazılır, öbürleri yerinde",
          [s1, s2, rebuild_step([row], input_={"drawings": ["cz-1"], "edited": True, "regional": True},
                                expect=changed(st))],
-         note="çizim sırası resmin parçası olunca nesneler komutun sırasıyla yazılır")
+         note="ADR 4740: yeni eğrilerin hepsi tek renkte çizgi, sıraları resmi değiştirmez; boyalı eski eğri hiçbirine eş değil")
 
     # 15. Two drawings of two surfaces: only the stale one.
     st = State()

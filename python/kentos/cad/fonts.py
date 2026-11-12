@@ -26,13 +26,13 @@ class _FontsReport(LocalCommand[FontsReport, FontsReported, FontsReported]):
     olarak gömer: Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier
     Prime, IBM Plex Mono. Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı),
     çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi,
-    Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; shx:
-    AutoCAD'in SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan
-    yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri
-    font_substituted uyarısıdır: değişim sessiz değildir. names verilirse her ad aynı
-    kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının,
-    ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt
-    kümelerini gömer.
+    Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; shx: SHX
+    çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx
+    ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted
+    uyarısıdır: değişim sessiz değildir. names verilirse her ad aynı kuralla çözülür
+    (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve
+    kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini
+    gömer.
     """
     __slots__ = ()
     id = "cad.fonts.report"
@@ -58,9 +58,9 @@ class _FontsReport(LocalCommand[FontsReport, FontsReported, FontsReported]):
         Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono. Her stil
         için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own:
         kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Arial, Helvetica ve Liberation
-        Sans için Arimo, Courier için Courier Prime; shx: AutoCAD'in SHX çizgi yazı tipi,
-        okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin
-        kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz
+        Sans için Arimo, Courier için Courier Prime; shx: SHX çizgi yazı tipi, okunmaz;
+        missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin kendi
+        yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz
         değildir. names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı
         tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı
         tipleridir: paftanın PDF'i bunların alt kümelerini gömer.

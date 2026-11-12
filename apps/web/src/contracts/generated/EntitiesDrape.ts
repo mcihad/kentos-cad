@@ -6,13 +6,14 @@ import type { DrapeRange } from "./DrapeRange";
  * the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
  * only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
  * keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
- * none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
- * vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
+ * none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's ring's
+ * vertices, 0-based, `from` < `to`; the closing edge is not in it. The ring is the first part's outer one unless
+ * `part` and `ring` (docs/adr/4980) name another; the object's other rings keep theirs.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
  * `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
  * object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
- * range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+ * range), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
  * vertex of them, or of the range, on the surface), `layer_locked`.
  */
 export type EntitiesDrape = { uids: Array<string>, surface: string, breaks?: boolean, 

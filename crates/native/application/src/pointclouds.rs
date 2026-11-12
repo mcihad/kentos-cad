@@ -739,7 +739,8 @@ pub(crate) fn query_in(
     let mut recs = Vec::new();
     for (k, (uid, c)) in chosen.iter().enumerate() {
         for (si, s) in c.cloud.sources.iter().enumerate() {
-            let b = s.bounds;
+            // A file with a place of its own (docs/adr/5100) is searched where the drawing shows it.
+            let (b, pose) = (s.placed_bounds(), s.pose.as_ref());
             if at[0] + reach < b[0]
                 || at[0] - reach > b[3]
                 || at[1] + reach < b[1]
@@ -755,15 +756,15 @@ pub(crate) fn query_in(
                     while let Some(first) = text.next(&mut recs)? {
                         for (i, r) in recs.chunks_exact(layout.len).enumerate() {
                             read += 1;
-                            let dx = f64::from(layout.x(r)) * scale[0] + offset[0] - at[0];
-                            let dy = f64::from(layout.y(r)) * scale[1] + offset[1] - at[1];
+                            let q = placed(pose, xyz_of(&layout, r, scale, offset));
+                            let (dx, dy) = (q[0] - at[0], q[1] - at[1]);
                             let d = dx * dx + dy * dy;
                             if d > r2 || best.as_ref().is_some_and(|(bd, _)| d >= *bd) {
                                 continue;
                             }
                             best = Some((
                                 d,
-                                point_of(uid, si, first + i as u64, &layout, r, scale, offset, d),
+                                point_of(uid, si, first + i as u64, &layout, r, scale, offset, pose, d),
                             ));
                         }
                     }
@@ -797,7 +798,7 @@ pub(crate) fn query_in(
             for run in cloud.runs() {
                 // A COPC node whose cube is off the search square is not read.
                 if let (Some(key), Some(info)) = (run.node, cloud.info.as_ref())
-                    && !near(key, info, at, reach)
+                    && !near(key, info, pose, at, reach)
                 {
                     continue;
                 }
@@ -814,15 +815,15 @@ pub(crate) fn query_in(
                 }
                 for (i, r) in recs.chunks_exact(layout.len).enumerate() {
                     read += 1;
-                    let dx = f64::from(layout.x(r)) * scale[0] + offset[0] - at[0];
-                    let dy = f64::from(layout.y(r)) * scale[1] + offset[1] - at[1];
+                    let q = placed(pose, xyz_of(&layout, r, scale, offset));
+                    let (dx, dy) = (q[0] - at[0], q[1] - at[1]);
                     let d = dx * dx + dy * dy;
                     if d > r2 || best.as_ref().is_some_and(|(bd, _)| d >= *bd) {
                         continue;
                     }
                     best = Some((
                         d,
-                        point_of(uid, si, run.first + i as u64, &layout, r, scale, offset, d),
+                        point_of(uid, si, run.first + i as u64, &layout, r, scale, offset, pose, d),
                     ));
                 }
             }
@@ -848,16 +849,18 @@ fn point_of(
     r: &[u8],
     scale: [f64; 3],
     offset: [f64; 3],
+    pose: Option<&[f64; 16]>,
     d: f64,
 ) -> CloudPoint {
     let f = Facts::of(layout, r, scale, offset);
+    let xyz = placed(pose, f.xyz);
     CloudPoint {
         cloud: uid.to_owned(),
         source: source as u32,
         index,
-        x: f.xyz[0],
-        y: f.xyz[1],
-        z: f.xyz[2],
+        x: xyz[0],
+        y: xyz[1],
+        z: xyz[2],
         distance: d.sqrt(),
         class: f.class,
         intensity: f.intensity,
@@ -869,13 +872,34 @@ fn point_of(
     }
 }
 
-/// Whether a COPC node's cube meets the square of `reach` round `at`, in plan.
-fn near(key: Key, info: &kentos_pointcloud::copc::Info, at: [f64; 2], reach: f64) -> bool {
+/// Whether a COPC node's cube (taken through the file's place, docs/adr/5100) meets the square of `reach` round `at`,
+/// in plan.
+fn near(key: Key, info: &kentos_pointcloud::copc::Info, pose: Option<&[f64; 16]>, at: [f64; 2], reach: f64) -> bool {
+    let b = cube_box(key, info, pose);
+    !(at[0] + reach < b[0] || at[0] - reach > b[3] || at[1] + reach < b[1] || at[1] - reach > b[4])
+}
+
+/// A COPC node's cube as a box, taken through the file's place (docs/adr/5100).
+pub(crate) fn cube_box(key: Key, info: &kentos_pointcloud::copc::Info, pose: Option<&[f64; 16]>) -> [f64; 6] {
     let (low, side) = key.cube(info);
-    !(at[0] + reach < low[0]
-        || at[0] - reach > low[0] + side
-        || at[1] + reach < low[1]
-        || at[1] - reach > low[1] + side)
+    let b = [low[0], low[1], low[2], low[0] + side, low[1] + side, low[2] + side];
+    pose.map_or(b, |m| kentos_commands::pose_box(m, &b))
+}
+
+/// A record's coordinates on its file's grid.
+#[inline]
+pub(crate) fn xyz_of(layout: &kentos_pointcloud::record::Layout, r: &[u8], scale: [f64; 3], offset: [f64; 3]) -> [f64; 3] {
+    [
+        f64::from(layout.x(r)) * scale[0] + offset[0],
+        f64::from(layout.y(r)) * scale[1] + offset[1],
+        f64::from(layout.z(r)) * scale[2] + offset[2],
+    ]
+}
+
+/// A file's point where the drawing shows it: taken through the file's place (docs/adr/5100), else as it is.
+#[inline]
+pub(crate) fn placed(pose: Option<&[f64; 16]>, p: [f64; 3]) -> [f64; 3] {
+    pose.map_or(p, |m| kentos_commands::pose_apply(m, p))
 }
 
 pub(crate) fn answer<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {

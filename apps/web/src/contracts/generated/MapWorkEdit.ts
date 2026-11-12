@@ -12,8 +12,14 @@ import type { MapWorkOperation } from "./MapWorkOperation";
  * `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
  * refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
  * another derivation names), `own_content` (an object of the source's own layers, the source without a file),
- * `not_derived` (release of an object no derivation names), `approval_stale`,
- * `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
+ * `not_derived` (release of an object no derivation names), `approval_stale`, `unknown_profile` and `invalid_profile`
+ * (a profile, `operation.name`; an approved item's, `operation.status`), `unknown_profile_class` (`operation.classes[i]`),
+ * `approval_profile` (approving an item whose typed layers break its profile), `layer_refused` (a class's layer or
+ * field the drawing refuses), `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
  * `work_full`.
  */
-export type MapWorkEdit = { operation: MapWorkOperation, expectedRevision?: string, };
+export type MapWorkEdit = { operation: MapWorkOperation, 
+/**
+ * The open project's file, an absolute path (docs/adr/4880): a profile not built in is looked for in its folder.
+ */
+drawing?: string, expectedRevision?: string, };

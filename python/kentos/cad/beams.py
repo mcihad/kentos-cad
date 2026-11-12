@@ -22,21 +22,20 @@ if TYPE_CHECKING:
 
 
 class _BeamsCreate(LocalCommand[BeamsCreate, BeamsCreated, BeamsPlan]):
-    """``cad.beams.create`` v1. Kiriş: Kirişler ekler (docs/adr/8041 §1); tek geri alma
-    adımı “Kiriş”. Her biri eksen (pts: en az 2, en çok 1000 nokta, düz parçalar), gövde
-    genişliği (width, en çok 3 m), yükseklik (height: döşeme dahil toplam, TBDY 2018
-    7.4.1.1 b; en çok 5 m), hiza (justify: left eksen sol yüzü, gövde sağda; center
-    varsayılan; right), kot farkı (offset: tepesinin asıldığı yerden farkı — katının
-    üstündeki döşemenin taşıyıcı üstü, yoksa katın tepesi; en çok ±10 m), tür (role:
-    yoksa kiriş; lintel lento, bondBeam hatıl, docs/adr/8041 §3), kattan yükseklik
-    (baseOffset: alt yüzünün katın döşemesinden yüksekliği, lentonun açıklığın başında;
-    kot farkıyla birlikte olmaz), numara (tag, K101 gibi), malzeme (material; yoksa
-    Betonarme), kat ve tadilat durumu (arch).                       Planda kesit
-    düzleminin üstünde kaldığı için kesikli ve ince çizilir (ISO 128-23 02.1); 1:100'de
-    numarası, 1:50 ve ayrıntılı çizimde numarası ve ölçüsü (K101 25/50) yanına yazılır.
-    Altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir, duvar
-    onların üstünden sürer. Katman açıkça verilir; kilitli katmana yazılmaz, gizli
-    katmana uyarıyla yazılır.
+    """``cad.beams.create`` v1. Kiriş: Kirişler ekler; tek geri alma adımı “Kiriş”. Her
+    biri eksen (pts: en az 2, en çok 1000 nokta, düz parçalar), gövde genişliği (width,
+    en çok 3 m), yükseklik (height: döşeme dahil toplam, TBDY 2018 7.4.1.1 b; en çok 5
+    m), hiza (justify: left eksen sol yüzü, gövde sağda; center varsayılan; right), kot
+    farkı (offset: tepesinin asıldığı yerden farkı — katının üstündeki döşemenin
+    taşıyıcı üstü, yoksa katın tepesi; en çok ±10 m), tür (role: yoksa kiriş; lintel
+    lento, bondBeam hatıl), kattan yükseklik (baseOffset: alt yüzünün katın döşemesinden
+    yüksekliği, lentonun açıklığın başında; kot farkıyla birlikte olmaz), numara (tag,
+    K101 gibi), malzeme (material; yoksa Betonarme), kat ve tadilat durumu (arch).
+    Planda kesit düzleminin üstünde kaldığı için kesikli ve ince çizilir (ISO 128-23
+    02.1); 1:100'de numarası, 1:50 ve ayrıntılı çizimde numarası ve ölçüsü (K101 25/50)
+    yanına yazılır. Altındaki duvar kirişin altında biter; lento ve hatıl duvarın
+    içindedir, duvar onların üstünden sürer. Katman açıkça verilir; kilitli katmana
+    yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.beams.create"
@@ -60,20 +59,20 @@ class _BeamsCreate(LocalCommand[BeamsCreate, BeamsCreated, BeamsPlan]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> BeamsCreated:
-        """Kiriş: Kirişler ekler (docs/adr/8041 §1); tek geri alma adımı “Kiriş”. Her biri
-        eksen (pts: en az 2, en çok 1000 nokta, düz parçalar), gövde genişliği (width, en
-        çok 3 m), yükseklik (height: döşeme dahil toplam, TBDY 2018 7.4.1.1 b; en çok 5 m),
-        hiza (justify: left eksen sol yüzü, gövde sağda; center varsayılan; right), kot
-        farkı (offset: tepesinin asıldığı yerden farkı — katının üstündeki döşemenin
-        taşıyıcı üstü, yoksa katın tepesi; en çok ±10 m), tür (role: yoksa kiriş; lintel
-        lento, bondBeam hatıl, docs/adr/8041 §3), kattan yükseklik (baseOffset: alt yüzünün
-        katın döşemesinden yüksekliği, lentonun açıklığın başında; kot farkıyla birlikte
-        olmaz), numara (tag, K101 gibi), malzeme (material; yoksa Betonarme), kat ve tadilat
-        durumu (arch).                       Planda kesit düzleminin üstünde kaldığı için
-        kesikli ve ince çizilir (ISO 128-23 02.1); 1:100'de numarası, 1:50 ve ayrıntılı
-        çizimde numarası ve ölçüsü (K101 25/50) yanına yazılır. Altındaki duvar kirişin
-        altında biter; lento ve hatıl duvarın içindedir, duvar onların üstünden sürer.
-        Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        """Kiriş: Kirişler ekler; tek geri alma adımı “Kiriş”. Her biri eksen (pts: en az 2, en
+        çok 1000 nokta, düz parçalar), gövde genişliği (width, en çok 3 m), yükseklik
+        (height: döşeme dahil toplam, TBDY 2018 7.4.1.1 b; en çok 5 m), hiza (justify: left
+        eksen sol yüzü, gövde sağda; center varsayılan; right), kot farkı (offset: tepesinin
+        asıldığı yerden farkı — katının üstündeki döşemenin taşıyıcı üstü, yoksa katın
+        tepesi; en çok ±10 m), tür (role: yoksa kiriş; lintel lento, bondBeam hatıl), kattan
+        yükseklik (baseOffset: alt yüzünün katın döşemesinden yüksekliği, lentonun açıklığın
+        başında; kot farkıyla birlikte olmaz), numara (tag, K101 gibi), malzeme (material;
+        yoksa Betonarme), kat ve tadilat durumu (arch).                       Planda kesit
+        düzleminin üstünde kaldığı için kesikli ve ince çizilir (ISO 128-23 02.1); 1:100'de
+        numarası, 1:50 ve ayrıntılı çizimde numarası ve ölçüsü (K101 25/50) yanına yazılır.
+        Altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir, duvar
+        onların üstünden sürer. Katman açıkça verilir; kilitli katmana yazılmaz, gizli
+        katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

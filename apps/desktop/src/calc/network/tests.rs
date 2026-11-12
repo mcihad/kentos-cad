@@ -572,3 +572,25 @@ fn screens() {
         }
     }
 }
+
+/// Docs/adr/5200: Projede sakla's name keeps the window's result in the project with Çizime yaz: each new point's place
+/// and σ as the window solved them, f and m0; the message says it; one undo takes the record back with the points.
+#[test]
+fn projede_sakla_keeps_the_adjustment_with_the_write() {
+    let mut app = app_with_scene();
+    network_with(&mut app, &case("Çaprazlı dörtgen"), true);
+    let Some(Ok(r)) = app.calc.network.solved.result.clone() else {
+        panic!("adjusted");
+    };
+    let _ = app.update(Message::Calc(CalcEvent::Keep(" Poligon 2026/1 ".into())));
+    let _ = app.update(Message::Calc(CalcEvent::AddPoints));
+    assert!(last_said(&app).contains("; sonuç “Poligon 2026/1” adıyla projede saklandı"), "{}", last_said(&app));
+    let doc = app.document.as_mut().expect("a drawing");
+    let kept = doc.model.survey_adjustments().to_vec();
+    assert_eq!(kept.len(), 1);
+    assert_eq!((kept[0].name.as_str(), kept[0].kind), ("Poligon 2026/1", kentos_commands::KeptAdjustmentKind::Horizontal));
+    let at = kept[0].points[0].at.expect("a place");
+    assert_eq!((at.x, at.y), (r.points[0].y, r.points[0].x));
+    assert_eq!(doc.model.undo().as_deref(), Some(NETWORK_TITLE));
+    assert!(doc.model.survey_adjustments().is_empty());
+}

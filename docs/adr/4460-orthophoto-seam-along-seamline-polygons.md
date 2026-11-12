@@ -102,7 +102,7 @@ Tarih: 2026-11-10. plan/map-cad.md MAP-12, sekizinci tur. Durum: taslak. ADR 286
 
 ## Sonra
 
-- KentOS'un kendi dikiş çokgenlerini kurması (Voronoi, radyometri; Build Seamlines'ın yöntemleri).
+- ~~KentOS'un kendi dikiş çokgenlerini kurması (Voronoi, radyometri; Build Seamlines'ın yöntemleri).~~ ADR 4700.
 - Yaylı kenarlı dikiş çokgenleri; mozaikteki bütün görüntü çiftlerinin birlikte ölçülmesi.
 - Görüntüden türeyen nesnenin kaynağa izi (MAP-01'in kararı).
 - Web (TODOS §0.2).

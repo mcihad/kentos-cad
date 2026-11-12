@@ -116,3 +116,53 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// Docs/adr/4900: the pair's k is the measured k; Projeye yaz makes it the project's, and the leg sighted one way is
+/// worked out with it: its curvature and refraction term (1 − k)·S²/2R the test's own.
+#[test]
+fn projeye_yaz_makes_the_measured_k_the_project_s() {
+    let mut app = app_with_drawing();
+    typed(&mut app);
+    let doc = app.document.as_ref().expect("open");
+    let m = app.calc.traverse.measured(&doc.model).expect("a pair");
+    let pair = pair_k(99.4, 100.6009);
+    assert_eq!(m.pairs, 1);
+    assert!((m.mean - pair).abs() < 1e-9 && m.sd.is_none(), "{m:?}");
+    calc(&mut app, Event::TraverseRefraction);
+    let doc = app.document.as_ref().expect("open");
+    assert!((doc.settings().refraction() - pair).abs() < 1e-12, "the project's k now");
+    let r = app.calc.traverse.compute(&doc.model).result.expect("a result");
+    let second = one_way(100.2, 1.5, 1.6) + (1.0 - pair) * 100.0 * 100.0 / (2.0 * 6_371_000.0);
+    assert!((r.legs[1].dh.expect("a difference") - second).abs() < 1e-9, "{:?}", r.legs[1]);
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(said.iter().any(|l| l.starts_with("Projenin kırılma katsayısı k =")), "{said:?}");
+}
+
+/// `.run/gui-evidence/olculen-k-4900/`: the measured k under the summary, with Projeye yaz.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib traverse_reciprocal_tests::screens_measured -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_measured() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/olculen-k-4900");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = app_with_drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        typed(&mut app);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-olculen-k-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

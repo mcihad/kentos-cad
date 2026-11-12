@@ -14,6 +14,7 @@ mod arch_recognize;
 mod digital_audit;
 mod facades;
 mod blocks_find;
+mod pipes_profile_stop;
 mod review_take;
 mod reconcile_large;
 mod design_speeds;

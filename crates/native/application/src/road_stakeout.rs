@@ -78,10 +78,25 @@ pub(crate) fn table(
     doc: &Document,
     input: &StakeoutQuery,
 ) -> Result<(StakeoutQueried, Vec<CommandWarning>, crate::road_alignments::Built), Stop> {
+    table_told(doc, input, &|_, _| false)
+}
+
+/// [`table`] telling `tick` how far it has come (`done` of 2 × [`corridors::TICKS`], docs/adr/4860): its corridor's
+/// sections the first half, the crosses read every `step` metres the second; `tick` answering true stops it there,
+/// cancelled. The table is [`table`]'s.
+pub(crate) fn table_told(
+    doc: &Document,
+    input: &StakeoutQuery,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<(StakeoutQueried, Vec<CommandWarning>, crate::road_alignments::Built), Stop> {
+    let whole = 2 * corridors::TICKS;
     corridors::road_project(doc)?;
     let (_, def) = corridors::find(doc.road_corridors(), &input.corridor, "corridor")?;
-    let made = corridors::make(doc, def, false)
-        .map_err(|stop| bad("corridor", format!("“{}” koridoru kurulamıyor: {}", def.name, words(stop))))?;
+    let first_half = |done: u64, all: u64| tick(if all == 0 { 0 } else { done * corridors::TICKS / all }, whole);
+    let made = corridors::make_ticked(doc, def, false, &first_half).map_err(|stop| match stop {
+        Stop::Cancelled => Stop::Cancelled,
+        stop => bad("corridor", format!("“{}” koridoru kurulamıyor: {}", def.name, words(stop))),
+    })?;
     let first = def.regions.iter().map(|r| r.from).fold(f64::INFINITY, f64::min);
     let last = def.regions.iter().map(|r| r.to).fold(f64::NEG_INFINITY, f64::max);
     let from = input.from.unwrap_or(first);
@@ -124,7 +139,14 @@ pub(crate) fn table(
     let keep = |code: &str| {
         wanted.is_empty() || wanted.iter().any(|q| code == q || code.strip_suffix(q.as_str()).is_some_and(|h| h.ends_with('.')))
     };
-    // The crosses read: each region's own in the range, or one every `step` metres.
+    // The crosses read: each region's own in the range, or one every `step` metres (those told one at a time in the
+    // second half, docs/adr/4860).
+    let in_range = |r: &kentos_commands::CorridorRegionDef, step: f64| {
+        let (lo, hi) = (from.max(r.from), to.min(r.to));
+        if lo > hi + 1e-9 { 0 } else { stepped(lo, hi, step).len() as u64 }
+    };
+    let all = input.step.map_or(0, |step| def.regions.iter().map(|r| in_range(r, step)).sum::<u64>());
+    let mut told = 0u64;
     let mut crosses: Vec<(usize, Cross)> = Vec::new();
     for (ri, (region, r)) in made.regions.iter().zip(&def.regions).enumerate() {
         match input.step {
@@ -145,6 +167,10 @@ pub(crate) fn table(
                     return Err(bad("step", format!("Bu aralıkla {MOST_STATIONS}'den çok km çıkar; step'i büyütün.")));
                 }
                 for s in stations {
+                    if tick(corridors::TICKS + told * corridors::TICKS / all.max(1), whole) {
+                        return Err(Stop::Cancelled);
+                    }
+                    told += 1;
                     if let Some(c) = made.sampler.cross(&made.template_at(ri, s), s) {
                         crosses.push((ri, c));
                     }

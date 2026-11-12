@@ -212,32 +212,129 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-19 / ADR 4840: web'in `cad.asbuilt.check` işleyicisinde dönemlerden doğru ve iki eşik (`trend`, `thresholds`;
+  `fit`, `state`, `exceeded`; cad.asbuilt.check.series.json'un 12 yeni durumu) ve web Uygulama kontrolü'nde Dönem
+  dizisi bölümü, Hareketler | Doğru ve eşikler tablosu.
+- MAP-18 / ADR 4820: web'in atlas PDF'inde sayfaların görünüş özeti (`look`) ve değişen sayfanın `changes[].look`'u
+  (atlas/v1/cases.json'un 3 yeni durumu); web Atlası PDF yap'ın iletisi.
+- MAP-17 / ADR 5180: web'in eşleme okuyucusunda `names` (lowerCamelCase, upperSnakeCase; letters) ve
+  `cad.profiles.names` (cad.profiles.names.json'un 32 durumu); web Veri profili'nde Kurum adları ve Biçimi eşlemeye yaz.
+- MAP-17 / ADR 4800: dxf-wasm yeniden derlenince `dxf.wasm.test.ts`'in blocks.dxf baytları (Kol_boyu ATTDEF'inin
+  `tagname` kaydı) ve web'in DXF okuyucusunda tanımın adı.
+- MAP-16 / ADR 4780: web'in `cad.pipes.check` işleyicisinde `diameter.outer`, `wallMismatch` ve `rules`
+  (kanal-csb-2017.json; `class`, `noRule`, `exceptionalSlope`, `longSpan`; cad.pipes.check.json'un 15 yeni durumu),
+  `cad.pipes.profile`'da hattın kendi dış duvarları (7 yeni durum); web Boru hattı denetiminde Dış çap ve Kural.
 - MAP-11 / ADR 4680: web'in `cad.readjustment.sheets` işleyicisinde sığmayan numaranın kılavuzla dışarıda yazılması
   (`numberLeader`, etiketin `leader`'ı; cad.readjustment.sheets.json'un 3 yeni durumu) ve web Ayırma çapında anahtar.
+- MAP-10 / ADR 5060: web'in `cad.scenarios.impact` işleyicisinde ağ üzerinden erişim (`access.network`/`connect`,
+  `reach` yolları), eğim haritası (`slope.map`), `scenarioStamp` ve `records` (cad.scenarios.impact.json'un 11 yeni
+  durumu); yeni `cad.scenarios.record` işleyicisi (22 durum); web Senaryo ölçüleri'nde Erişim ağı / bağlanma, Eğimi
+  çizimde göster ve Ölçüleri çizime yaz.
+- MAP-11 / ADR 5080: web'in `cad.readjustment.sheets` işleyicisinde kılavuzlu numaranın çakışma denetimi (`clear`,
+  `clashes`, `number_crowded`; 6 yeni durum) ve `cad.readjustment.distribute`'ta değer esası (`basis`, `valueSource`,
+  kayıtların `value`'su, `value_basis_not_a_rule`; 14 yeni durum); web dağıtım penceresinde Dağıtım esası.
 - MAP-10 / ADR 4660: web'in `cad.scenarios.impact` işleyicisinde eğim sınıfları ve bakı (`slope.classes`,
   `slope.aspect`; cad.scenarios.impact.json'un 5 yeni durumu) ve web Senaryo ölçüleri'nde sınıf ve bakı satırı.
 - MAP-09 / ADR 4640: web'in `cad.zoning.check` işleyicisinde `symbolMismatch` (cad.zoning.check.json'un 4 yeni durumu)
   ve web İmar planı denetiminde Sembol uyuşmazlığı; web İşlem'inde hata katmanının GeoPackage'a yazılması.
+- MAP-09 / ADR 5040: web'de `.kcad` şema 250'nin `settings.zoningPlan`'ı; `cad.zoning.draft` işleyicisi
+  (cad.zoning.draft.json, 33 durum), `cad.zoning.symbolize`'ın `keep`/saklı seçimi (6 yeni durum), `cad.zoning.check`'in
+  saklı seçimle `symbolMismatch`'i ve `draftStale`'i (5 yeni durum); web'de Plan değişikliği taslağı penceresi ve Sembolü
+  karardan ver'in Seçimleri projede sakla anahtarı.
 - MAP-08 / ADR 4620: web'in `cad.parcels.record` işleyicisinde komşunun sınırının bölünmesi (`boundariesSplit`,
   `neighbours`; cad.parcels.record.json'un yeni ve değişen durumları) ve web Parsel kayıtları'nda planın sözü.
+- MAP-08 / ADR 5020: web'in `cad.parcels.record` işleyicisinde `lengths`, `draft` ve yaylı sınırın bölünmesi; web'de
+  `cad.parcels.approve` ve `cad.parcels.withdraw` işleyicileri; `cad.parcels.records`'un ölçü satırları, `drafts`,
+  `overLimit`; web `.kcad` okuyucusunda şema 249 (parsel kayıtlarının `lengths`, `drafts`, `approval`'ı); web Parsel
+  kayıtları'nda taslak, Seçili belge bölümü ve Sınırlar'ın Belgede, Fark (sınır) sütunları.
+- MAP-07 / ADR 5000: web'in `cad.entities.vertex` işleyicisinde `joinArcs` (aynı dairenin iki yayı tek yay,
+  `arcs_not_joined`; cad.entities.vertex.json'un 8 yeni durumu), web topolojik düzenlemesinde `Change::Join` ve web
+  tutamaç menüsünün Köşeyi sil'inde Topolojik temizlik'in toleransı; web Köşe tablosu açıkken kenarlarda gidiş oku ve Sil'de silinen dizinin yaylarının birleşmesi.
 - MAP-07 / ADR 4600: web Öznitelikler'inin Topoloji bölümünde Gerekçe satırı, bulgu durumunun açılır listesi
   (`cad.topology.exceptions`) ve çoklu seçimin bulgu sayıları.
+- MAP-06 / ADR 4980: web'in `cad.entities.drape`, `cad.entities.grade` ve `cad.entities.raise` işleyicilerinde
+  aralığın ve köşenin parçası ve halkası (`range.part`/`range.ring`, `part`/`ring`; cad.entities.drape.json'un 9,
+  cad.entities.grade.json'un 8, cad.entities.raise.json'un 7 yeni durumu) ve web Eğimle kot ver'de Halka listesi.
 - MAP-06 / ADR 4580: web'in `cad.entities.drape` işleyicisinde göreli kot ve köşe aralığı (`offset`, `range`,
   `wrong_place`; cad.entities.drape.json'un 13 yeni durumu) ve web Eğimle kot ver › Yüzeyden'de Kot farkı ve Aralık.
 - MAP-05 / ADR 4560: web'e `cad.survey.baselines` işleyicisi gelirken WASM çekirdeğinin seyrek GNSS çözümü (zarf sınırı,
   ölçüm) ve GNSS baz ağı özetindeki büyüklük satırı.
+- MAP-05 / ADR 4960: web'e `cad.survey.baselines` işleyicisi gelirken `robust` (Huber, Danimarka; cad.survey.baselines.json'un
+  6 yeni durumu) ve GNSS baz ağı penceresinde Dayanıklı kestirim satırı ile Ağırlık çarpanı sütunu.
+- MAP-04 / ADR 4940: web'de `cad.profiles.compare` işleyicisi (cad.profiles.compare.json'un 21 durumu) ve Katalog geçiş
+  raporu penceresi (iki katalog seçici, Sınıflar | Alanlar | Kodlar | Kararlar, Karar isteyenleri seç).
 - MAP-04 / ADR 4540: web'in `map.features.reconcile` işleyicisinde kayıtlı kararların yeniden uygulanması (`reapply`,
   `reapplied`; map.features.reconcile.json'un 4 yeni durumu) ve web Detay eşleştirme'de Önceki kararlar anahtarı.
+- MAP-03 / ADR 4920: web'in `map.survey.network` ve `map.survey.edit` işleyicilerinde baz oturumları (`baselineSessions`,
+  `correlations`, korelasyonlu w-testi), yeni noktaların hızı (`velocities`, `velocityGrid`) ve `tolerance` işlemi;
+  `map.survey.query`'de saklı sınır (network.json'un 13, edit.json'un ağ durumlarının 16, query.json'un 3 yeni durumu;
+  `.kcad` şema 248) ve web GNSS ağ dengelemesi ile GNSS arşivi'nde kutular.
 - MAP-03 / ADR 4520: web'in `map.survey.query` işleyicisinde kabul farkı sınırı (`tolerance`, `horizontal`, `beyond`;
   map.survey.query.json'un 8 yeni durumu) ve web GNSS arşivi'nde sınır kutuları.
 - MAP-02 / ADR 4500: web'in `cad.survey.points` işleyicisinde ve WASM çekirdeğinde karşılıklı başucu açıları
   (`heights.back`, `refractions`; cad.survey.points.json'un 5 yeni durumu, reference-calls.json'un 120. çağrısı) ve web
   Poligon hesabı'nda geri nişan sütunları.
+- MAP-02 / ADR 4900: web'de kullanım alanı notlarının EPSG çokgenleriyle denetlenmesi (`area-polygons.json`;
+  cad.crs.transform.json'un 1 yeni durumu), `cad.survey.points`'in `refraction`'ı, `cad.settings.set`'in `refraction`'ı
+  (2 yeni durum) ve web Poligon hesabı'nda Projeye yaz.
+- MAP-01 / ADR 4880: web'in `map.work.edit` işleyicisinde `profile` işlemi ve onayda `approval_profile`, `map.work.query`'de
+  `profile` satırı ve `shift` (map.work.query.json'un 3, map.work.edit.json'un 8 yeni durumu; `.kcad` şema 247) ve web
+  Harita işi'nde Tipli katman, Profil satırı, kayma tablosu ve silinenin şekli.
 - MAP-01 / ADR 4480: web'in `map.work.query` işleyicisinde geometrisi değişen nesnenin onaylanan hâli (`approved`;
   map.work.query.json'un 2 yeni durumu) ve web Harita işi'nde onaylanan şeklin çizim üstünde gösterilmesi.
 - MAP-12 / ADR 4460: web'in `cad.orthophoto.compare` işleyicisinde dikiş çokgenlerinin ortak sınırı boyunca ölçüm
   (`seam.polygons`, `seam.shared`; cad.orthophoto.compare.json'un 11 yeni durumu) ve web Ortofoto karşılaştırması'nda
   Seçili çokgenleri al.
+- MAP-15 / ADR 4760: web'in `road.terrains.compare` işleyicisinde çizimdeki eksen (`axis`, `left`, `right`, `corners`;
+  çekirdek `volume_sections::along_axis` WASM'den) ve `road.terrains.cutfill`'de `sections`, `materials` (compare.sections'ın
+  15, cutfill'in 14 yeni durumu); web Yüzey analizi › Fark › Kesit'te Eksen, genişlikler, Eksen noktalarında da,
+  Başlangıç km.
+- MAP-04 / ADR 5340: web'in `cad.profiles.carry` işleyicisi (26 durum; raporun izlemesi ve profil yazıcısı) ve web
+  Katalog geçiş raporu'nda Kataloğa taşı.
+- MAP-03 / ADR 5320: web'in `map.survey.query`'sinde bazın `independent`'i ve `map.survey.edit`'te `independent`
+  işlemi (map.survey.edit.json'un 6 yeni durumu); web GNSS ağ dengelemesi'nde Bağımsız sütunu, Oturumlar sekmesi ve
+  Bağımsız bazları seç.
+- MAP-02 / ADR 5300: web'de datum dönüşümünün alanının EPSG 1237 çokgeniyle okunması ve kaydın `area.extent`'i
+  (cad.crs.transform.json'un 1 yeni durumu, zincir ve geoit dosyalarında `extent`), `cad.survey.adjust`'un `leapfrog`'u
+  (çekirdeğin `fieldbook::leapfrog`'u WASM'den; 11 yeni durum); web Kot ağı dengelemesi'nde Atlamalı nivelman ve proje
+  ayarlarında Kullanım alanı haritası.
+- MAP-01 / ADR 5280: web'in `map.work.query` işleyicisinde `limit` (kural dosyası `konum-dogrulugu-2022.json`;
+  `shift.beyond`, `over`, `changes.beyond`, `why` cümlesi) ve `suggest` (profil sınıfının `work`'ü;
+  map.work.query.json'un 30 yeni durumu); web Harita işi'nde Önerilen satırı ve Kayma sınırı.
+- MAP-12 / ADR 5260: web'in `cad.orthophoto.network` (25 durum) ve `cad.orthophoto.footprint` (21 durum) işleyicileri
+  (ortak çekirdeğin `ops::seam_network`'ü WASM'den); web Mozaik birleşme çizgisi'nde Ağ ve Ayak izi.
+- MAP-20 / ADR 5240: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin `contingents`,
+  `rules`, `indexes`, `forms`'u ve `addFields` (`formsAdded`, `fieldsAdded`, `recipe_layer_fields_added`; 15 yeni durum);
+  web İş grafiği'nde Bulunan katman kutusu.
+- MAP-19 / ADR 5220: web'in `cad.asbuilt.review` işleyicisi (30 durum); web `.kcad` okuyucusunda şema 253
+  (`monitoringReviews`); web Uygulama kontrolü › İzleme'de Eşiklerin kaynağı, İnceleme ve Grafik.
+- MAP-18 / ADR 5200: web'in `cad.survey.adjust` işleyicisinde `keep`; web `.kcad` okuyucusunda şema 252
+  (`surveyAdjustments`); web ağ pencerelerinde Projede sakla.
+- MAP-16 / ADR 5160: web'in `cad.pipes.profile` işleyicisinde `crossing.hatch`; web Boru denetimi'nde Kesişen borunun
+  taraması.
+- MAP-15 / ADR 5140: web'in `road.terrains.compare` ve `road.terrains.cutfill` işleyicilerinde `formula: frustum`;
+  kazı-dolgu kesitlerinin `mass`'ı, `sections.cutFactor`/`fillFactor`'ı ve cetvelin Brükner sütunu; web Fark'ında
+  Kesik koni.
+- MAP-14 / ADR 5120: web'de `road.terrains.sectioncheck` işleyicisi (road.terrains.sectioncheck.json'un 35 durumu),
+  `builtUp.origin` ve `rotation`, paket sürüm 5'in `sectionCheck.spacing`'i; web Pafta eğrileri'nde Izgara (63/2)
+  satırı ve Kesit kontrolü penceresi.
+- MAP-14 / ADR 4740: web'in `road.terrains.sheetcontours` işleyicisinde `builtUp` (m. 63(2)) ve `check` (m. 93(1)(c)),
+  çizimin `layer` kaynaklarıyla tutulması; `road.project.rebuild`'in sıra kuralı; `road.project.edit` `regional` ve
+  ağacın `regional`'ı; `.kcad` şema 246 (sheetcontours.json'un 22, project.edit'in 6 yeni durumu); web Pafta eğrileri'nde
+  Yerleşik alan satırı ve Proje ağacı'nda Yalnız değişeni yaz.
+- MAP-13 / ADR 5100: web'de `cad.pointclouds.place` işleyicisi (cad.pointclouds.place.json'un 26 durumu), `.kcad` şema
+  251'in `sources[].pose`'u (`io/columns.ts`: kaynak bayrağı 8 ve 16 sayı), web çizicisinde ve sorgularında konumlu
+  dosyanın noktaları, Dönüşüm uygula'nın Euler açıları, `cad.pointclouds.network`'ün `rounds`'u (27 durum) ve Nokta
+  bulutu › Bulutu konumla penceresi, Tarama ağı'nın Nesnede tut ve Dış döngü (tur) alanları.
+- MAP-13 / ADR 4720: web'de `cad.pointclouds.network` işleyicisi (cad.pointclouds.network.json'un 22 durumu; çekirdek
+  `kentos_pointcloud::ops::network` WASM'den) ve Nokta bulutu › Tarama ağı penceresi.
+- MAP-12 / ADR 4700: web'de `cad.orthophoto.seamlines` işleyicisi (cad.orthophoto.seamlines.json'un 44 durumu; çekirdek
+  `ops::seamlines` WASM'den), Raster › Birleşme çizgisi penceresi ve web Ortofoto karşılaştırması'nın yeni sözleri
+  (Kayıklık ölçümü, Birleşme çizgisi, Seçili mozaik elemanlarını al).
+- MAP-20 / ADR 4860: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin katmanının alanları,
+  değer listeleri ve alt türleri (`fields`, `domains`, `subtypes`, `domainsAdded`, `recipe_layer_fields`; graph'ın 24,
+  produce'un 75 ortak durumu) ve web'in uzun çizimlerinde (etiket, boykesit, otokorkuluk, menfez, kavşak, platform, boru
+  hattı profili) hesabın içinde durdurma.
 - MAP-20 / ADR 4440: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin katmanının
   saydamlığı, karışım kipi, türü ve Yazdır'ı; türün tutmadığı nesnenin planda reddi (graph'ın 23, produce'un 64 ortak
   durumu) ve web İş grafiği'nin Tariften üret'i.

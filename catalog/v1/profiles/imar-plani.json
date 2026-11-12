@@ -231,6 +231,7 @@
    ],
    "color": "#1F2937",
    "geometry": "area",
+   "work": ["design"],
    "key": "PlanKimlik",
    "fields": [
     {
@@ -301,6 +302,7 @@
    ],
    "color": "#AB4ABA",
    "geometry": "area",
+   "work": ["design"],
    "key": "KararKimlik",
    "fields": [
     {
@@ -409,6 +411,7 @@
    ],
    "color": "#0F766E",
    "geometry": "point",
+   "work": ["design"],
    "key": "NotNo",
    "fields": [
     {
@@ -448,6 +451,7 @@
    ],
    "color": "#6B7280",
    "geometry": "line",
+   "work": ["design"],
    "key": "YolKimlik",
    "fields": [
     {

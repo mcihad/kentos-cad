@@ -4,6 +4,8 @@ import type { ImpactLayer } from "./ImpactLayer";
 import type { ImpactMeasure } from "./ImpactMeasure";
 import type { ImpactNear } from "./ImpactNear";
 import type { ImpactReach } from "./ImpactReach";
+import type { ImpactRecord } from "./ImpactRecord";
+import type { ImpactSlopeMap } from "./ImpactSlopeMap";
 import type { ImpactUse } from "./ImpactUse";
 
 /**
@@ -16,4 +18,18 @@ export type ScenariosImpacted = { scenario: string, name: string, layers: Array<
 /**
  * Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
  */
-near?: ImpactNear, revision: string, };
+near?: ImpactNear, 
+/**
+ * The slope map (only when `slope.map` is asked, docs/adr/5060).
+ */
+slopeMap?: ImpactSlopeMap, 
+/**
+ * The scenario layers' stamp now, made as the base's (docs/adr/5060): what a table written in the drawing is
+ * checked against besides the base's.
+ */
+scenarioStamp: string, 
+/**
+ * The comparisons of this scenario written in the drawing (`cad.scenarios.record`, docs/adr/5060), in the drawing's
+ * order.
+ */
+records?: Array<ImpactRecord>, revision: string, };

@@ -4,10 +4,10 @@
 //! (none: the images against each other only) and the scale on the third, the name attribute on the fourth. The
 //! summary says the largest shift against the limit (2·GSD of the coarser image, BÖHHBÜY 67(6)), the systematic shift
 //! and each image's own check; the table lists every point's shift and, with the ground's points, each image's error
-//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts. Dikiş hattı (docs/adr/2860) measures along
-//! the one line or polyline chosen in the drawing. Dikiş ölçümü (docs/adr/2460) measures the
+//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts. Birleşme çizgisi (docs/adr/2860) measures along
+//! the one line or polyline chosen in the drawing. Kayıklık ölçümü (docs/adr/2460) measures the
 //! shift in the images themselves where they overlap: its step, window, search and least correlation on one line, its
-//! places in their own table (Noktalar | Dikiş).
+//! places in their own table (Noktalar | Kayıklık).
 
 use std::path::PathBuf;
 
@@ -35,8 +35,8 @@ const SAVE: &str = "CSV kaydet…";
 const SWAP: &str = "Yer değiştir";
 /// The seam line taken from the drawing's selection, and let go (docs/adr/2860).
 const TAKE_LINE: &str = "Seçili çizgiyi al";
-const TAKE_POLYGONS: &str = "Seçili çokgenleri al";
-const DROP_LINE: &str = "Hattı kaldır";
+const TAKE_POLYGONS: &str = "Seçili mozaik elemanlarını al";
+const DROP_LINE: &str = "Çizgiyi kaldır";
 /// docs/adr/3660: the second resampled onto the first's grid.
 const RESAMPLE: &str = "İkinciyi birincinin ızgarasına örnekle";
 /// The ground's layer left out: the images are compared with each other only.
@@ -54,7 +54,7 @@ impl std::fmt::Display for Show {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Show::Points => "Noktalar",
-            Show::Seam => "Dikiş",
+            Show::Seam => "Kayıklık",
         })
     }
 }
@@ -92,7 +92,7 @@ pub struct State {
     pub field: String,
     pub scale: f64,
     pub answer: Option<Result<OrthophotoCompared, String>>,
-    /// Dikiş ölçümü (docs/adr/2460): on, its step (metres), window and search (pixels), least correlation (empty:
+    /// Kayıklık ölçümü (docs/adr/2460): on, its step (metres), window and search (pixels), least correlation (empty:
     /// every place counts), and which table shows.
     pub seam: bool,
     pub step: f64,
@@ -391,7 +391,7 @@ impl App {
                         s.seam_polygons = None;
                     }
                     None => {
-                        self.warn("Dikiş hattı için çizimde tek bir çizgi ya da çoklu çizgi seçin.".to_owned());
+                        self.warn("Birleşme çizgisi için çizimde tek bir çizgi ya da çoklu çizgi seçin.".to_owned());
                         return Task::none();
                     }
                 }
@@ -415,11 +415,11 @@ impl App {
                         let s = &mut self.ortho_compare;
                         s.seam_polygons = Some(pair);
                         s.seam_line.clear();
-                        s.seam_line_name = "İki dikiş çokgeni".to_owned();
+                        s.seam_line_name = "İki mozaik elemanı".to_owned();
                     }
                     None => {
                         self.warn(
-                            "Dikiş çokgenleri için çizimde iki alan ya da kapalı çoklu çizgi seçin: iki görüntünün mozaikteki dikiş çokgenleri."
+                            "Mozaik elemanları için çizimde iki alan ya da kapalı çoklu çizgi seçin: iki görüntünün mozaikte kullanılan bölümleri."
                                 .to_owned(),
                         );
                         return Task::none();
@@ -545,7 +545,7 @@ impl App {
             // Along a seam line (docs/adr/2860): its places in the overlap and those outside it.
             let where_ = match &m.line {
                 Some(l) => format!(
-                    "dikiş hattı boyunca ({}) {} yer, {} yer örtüşmenin dışında",
+                    "birleşme çizgisi boyunca ({}) {} yer, {} yer örtüşmenin dışında",
                     self.format().length(l.length),
                     m.patches.len(),
                     l.outside
@@ -553,7 +553,7 @@ impl App {
                 // docs/adr/4460: along the seamline polygons' shared boundary.
                 None => match &m.shared {
                     Some(sh) => format!(
-                        "dikiş çokgenlerinin ortak sınırı boyunca ({}, {} parça) {} yer, {} yer örtüşmenin dışında",
+                        "mozaik elemanlarının ortak sınırı boyunca ({}, {} parça) {} yer, {} yer örtüşmenin dışında",
                         self.format().length(sh.length),
                         sh.parts.len(),
                         m.patches.len(),
@@ -563,7 +563,7 @@ impl App {
                 },
             };
             let counted = format!(
-                "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
+                "Kayıklık ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
                 m.ok,
                 m.low,
                 m.edge,
@@ -679,7 +679,7 @@ impl App {
                 container(fields::input(None, "Ad", &s.field, false, false).on_input(|v| msg(Event::Field(v)))).width(260),
             )
             .field(
-                "Dikiş ölçümü",
+                "Kayıklık ölçümü",
                 row![
                     fields::check(
                         if s.seam { Check::Checked } else { Check::Unchecked },
@@ -699,7 +699,7 @@ impl App {
             )
             // Docs/adr/2860: along a drawn seam line, else the overlap's grid.
             .field(
-                "Dikiş hattı",
+                "Birleşme çizgisi",
                 row![
                     container(fields::input(
                         None,
@@ -719,7 +719,7 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             )
-            .help("Yerler seçili çizgi boyunca ya da iki görüntünün mozaikteki dikiş çokgenlerinin ortak sınırı boyunca; ikisi de yoksa örtüşmenin bütününde.")
+            .help("Yerler seçili çizgi boyunca ya da iki görüntünün mozaik elemanlarının ortak sınırı (birleşme çizgisi) boyunca; ikisi de yoksa örtüşmenin bütününde.")
             // Docs/adr/3260: the peak refined by a parabola, or by the second image resampled (cubic convolution).
             .field("Piksel altı", Segmented::new([Refine::Parabola, Refine::Bicubic], s.refine, |v| msg(Event::Refine(v))))
             // Docs/adr/3660: a second of other pixels or turned, resampled onto the first's grid.
@@ -747,7 +747,7 @@ impl App {
                     col("Durum", 130.0),
                 ],
                 rows,
-                "Dikiş ölçümü yok.",
+                "Kayıklık ölçümü yok.",
                 240.0,
             )
         } else {

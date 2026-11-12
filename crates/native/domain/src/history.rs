@@ -297,6 +297,21 @@ pub(crate) enum Op {
         before: std::sync::Arc<Option<kentos_contracts::ParcelRegister>>,
         after: std::sync::Arc<Option<kentos_contracts::ParcelRegister>>,
     },
+    /// The adjustments the project keeps (docs/adr/5200), before and after.
+    SurveyAdjustments {
+        before: std::sync::Arc<Vec<kentos_contracts::KeptAdjustment>>,
+        after: std::sync::Arc<Vec<kentos_contracts::KeptAdjustment>>,
+    },
+    /// The reviews the project keeps of its monitoring jobs (docs/adr/5220), before and after.
+    MonitoringReviews {
+        before: std::sync::Arc<Vec<kentos_contracts::MonitoringReview>>,
+        after: std::sync::Arc<Vec<kentos_contracts::MonitoringReview>>,
+    },
+    /// A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040), before and after.
+    ZoningPlan {
+        before: std::sync::Arc<Option<kentos_contracts::ZoningPlanData>>,
+        after: std::sync::Arc<Option<kentos_contracts::ZoningPlanData>>,
+    },
     /// The review notes (docs/adr/1000 §3), before and after: a note is not an object but its change is a step.
     ReviewNotes {
         before: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
@@ -419,6 +434,8 @@ pub(crate) enum Op {
     },
     /// Whether a road project draws its stale drawings again by itself (docs/adr/0911 §3), before and after.
     RoadAutoRebuild { before: bool, after: bool },
+    /// Whether drawing again draws each drawing whole rather than only what changed (docs/adr/4740), before and after.
+    RoadRebuildWhole { before: bool, after: bool },
     /// A road project's pay item book (docs/adr/0909 §4), before and after.
     RoadPay {
         before: Option<kentos_contracts::PayBookDef>,
@@ -741,6 +758,18 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::SurveyAdjustments { before, after } => Op::SurveyAdjustments {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::MonitoringReviews { before, after } => Op::MonitoringReviews {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::ZoningPlan { before, after } => Op::ZoningPlan {
+                before: after.clone(),
+                after: before.clone(),
+            },
             Op::PatternTables { before, after } => Op::PatternTables {
                 before: after.clone(),
                 after: before.clone(),
@@ -839,6 +868,7 @@ impl Op {
                 after: before.clone(),
             },
             Op::RoadAutoRebuild { before, after } => Op::RoadAutoRebuild { before: *after, after: *before },
+            Op::RoadRebuildWhole { before, after } => Op::RoadRebuildWhole { before: *after, after: *before },
             Op::RoadPay { before, after } => Op::RoadPay {
                 before: after.clone(),
                 after: before.clone(),
@@ -1515,6 +1545,9 @@ impl Document {
                 | Op::MapWork { .. }
                 | Op::MapSurvey { .. }
                 | Op::ParcelRegister { .. }
+                | Op::SurveyAdjustments { .. }
+                | Op::MonitoringReviews { .. }
+                | Op::ZoningPlan { .. }
                 | Op::PatternTables { .. }
                 | Op::ApprovedSheetTemplates { .. }
                 | Op::StyleTables(_)
@@ -1544,6 +1577,7 @@ impl Document {
                 | Op::RoadJunctions { .. }
                 | Op::RoadDrawings { .. }
                 | Op::RoadAutoRebuild { .. }
+                | Op::RoadRebuildWhole { .. }
                 | Op::ViewArea { .. }
                 | Op::ArchOptions { .. }
                 | Op::OptionCombos { .. }
@@ -1819,6 +1853,18 @@ impl Document {
                 self.settings.parcel_register = after.as_ref().clone();
                 return;
             }
+            Op::SurveyAdjustments { after, .. } => {
+                self.settings.survey_adjustments = after.as_ref().clone();
+                return;
+            }
+            Op::MonitoringReviews { after, .. } => {
+                self.settings.monitoring_reviews = after.as_ref().clone();
+                return;
+            }
+            Op::ZoningPlan { after, .. } => {
+                self.settings.zoning_plan = after.as_ref().clone();
+                return;
+            }
             Op::PatternTables { after, .. } => {
                 self.settings.line_types = after.0.clone();
                 self.settings.hatch_patterns = after.1.clone();
@@ -1958,6 +2004,12 @@ impl Document {
             Op::RoadAutoRebuild { after, .. } => {
                 let mut road = self.settings.road.take().unwrap_or_default();
                 road.auto_rebuild = *after;
+                self.settings.road = (!road.is_empty()).then_some(road);
+                return;
+            }
+            Op::RoadRebuildWhole { after, .. } => {
+                let mut road = self.settings.road.take().unwrap_or_default();
+                road.rebuild_whole = *after;
                 self.settings.road = (!road.is_empty()).then_some(road);
                 return;
             }

@@ -1,4 +1,4 @@
-//! Karola (docs/adr/0207 §7; PDAL's filters.splitter, LAStools' lastile):
+//! Karola (docs/adr/0207 §7):
 //! the cloud's points in tiles of the given size, their corners on the
 //! size's multiples; a point on a tile's edge goes to the tile on its right
 //! and above it (`ops::tile`). Each tile is a file `<ad>_<x>_<y>` beside
@@ -47,7 +47,7 @@ pub fn tool() -> Tool {
             number("size", "Karo boyu", 100.0, 1.0, 100_000.0, "m"),
             ParamDef::new("vpc", "Sanal bulut da yaz", ParamKind::Boolean)
                 .default_value(json!(true))
-                .describe("Karoların yanına <ad>.vpc yazılır (QGIS ve PDAL'ın sanal bulutu)."),
+                .describe("Karoların yanına <ad>.vpc yazılır (sanal nokta bulutu, VPC)."),
             format_param(),
             output_param("", &[".laz", ".las"]),
             add_param(),
@@ -214,6 +214,7 @@ fn go(
             format,
             count: *c,
             bounds: *b,
+            pose: None,
         })
         .collect();
     let object = (!sources.is_empty()).then(|| {

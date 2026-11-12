@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.entities.raise` (Referanstan kot ver; plan/map-cad.md MAP-06, docs/adr/3780), without
-KentOS code.
+"""The shared cases of `cad.entities.raise` (Referanstan kot ver; plan/map-cad.md MAP-06, docs/adr/3780 and 4980),
+without KentOS code.
 
     python3 scripts/fixtures/raise_cases.py           # writes fixtures/commands/v1/cad.entities.raise.json
     python3 scripts/fixtures/raise_cases.py --check   # writes nothing; compares
 
-The rule, by hand (Civil 3D's Raise/Lower by Reference): the vertex `at` (a line's ends 0 and 1, a polyline's first
-part's vertices, an area's outer ring's) stands d = √((x − xr)² + (y − yr)²) from the reference; its new elevation is
+The rule, by hand: the vertex `at` (a line's ends 0 and 1, a polyline's or an area's vertices of the ring `ring` of the
+part `part`, docs/adr/4980: 0 the object's own vertices and the outer ring, 1 on the further parts and the holes) stands d = √((x − xr)² + (y − yr)²) from the reference; its new elevation is
 zr + grade·d, or zr + difference. Every other elevation of the object (the holes', every part's) moves by as much as the
 vertex: by = new − old; the vertex takes the new elevation itself. A vertex without an elevation stays without. The
-answer's grade is the grade given, or (new − zr) / d for a difference; none when d is 0.
+answer's grade is the grade given, or (new − zr) / d for a difference; none when d is 0. No such part or ring:
+`wrong_place` on `part` or `ring`; no such vertex on the ring: `wrong_place` on `at`, naming the ring.
 """
 
 import copy
@@ -81,12 +82,20 @@ def setup():
 SAME = {"revision": "same", "canUndo": False}
 
 
-def numbered(e):
+def ring_of(e, rg):
+    """The ring `rg` (part, ring) of a polyline or an area (docs/adr/4980): the dict holding its pts and zs."""
+    part, ring = rg
+    owner = e if part == 0 else e["parts"][part - 1]
+    return owner if ring == 0 else owner["holes"][ring - 1]
+
+
+def numbered(e, rg=(0, 0)):
     """The vertices `at` counts, each with its elevation."""
     if e["kind"] == "line":
         return [(e["a"], e.get("za")), (e["b"], e.get("zb"))]
-    zs = e.get("zs", [None] * len(e["pts"]))
-    return list(zip(e["pts"], zs))
+    r = ring_of(e, rg)
+    zs = r.get("zs", [None] * len(r["pts"]))
+    return list(zip(r["pts"], zs))
 
 
 def lifted(zs, n, by):
@@ -97,9 +106,9 @@ def lifted(zs, n, by):
     return out, sum(z is not None for z in zs), sum(z is None for z in zs)
 
 
-def raised(e, at, ref, grade=None, difference=None):
+def raised(e, at, ref, grade=None, difference=None, rg=(0, 0)):
     """The object after, and the answer without the revision."""
-    p, z0 = numbered(e)[at]
+    p, z0 = numbered(e, rg)[at]
     d = math.hypot(p["x"] - ref["x"], p["y"] - ref["y"])
     new = ref["z"] + grade * d if grade is not None else ref["z"] + difference
     by = new - z0
@@ -111,11 +120,6 @@ def raised(e, at, ref, grade=None, difference=None):
         after["za"], after["zb"] = zs
         moved, unset = m, u
     else:
-        zs, m, u = lifted(e.get("zs"), len(e["pts"]), by)
-        zs[at] = new
-        after["zs"] = zs
-        moved, unset = moved + m, unset + u
-
         def ring(r):
             nonlocal moved, unset
             out, m_, u_ = lifted(r.get("zs"), len(r["pts"]), by)
@@ -123,12 +127,15 @@ def raised(e, at, ref, grade=None, difference=None):
             if out is not None:
                 r["zs"] = out
 
+        ring(after)
         for h in after.get("holes", []):
             ring(h)
         for part in after.get("parts", []):
             ring(part)
             for h in part.get("holes", []):
                 ring(h)
+        # The vertex takes the new elevation itself, on its ring (docs/adr/4980).
+        ring_of(after, rg)["zs"][at] = new
     g = None if d == 0.0 else (grade if grade is not None else (new - ref["z"]) / d)
     out = {"distance": d, "before": z0, "after": new, "by": by}
     if g is not None:
@@ -140,10 +147,10 @@ def raised(e, at, ref, grade=None, difference=None):
 KEYS = ["zs", "za", "zb", "holes", "parts"]
 
 
-def ok(name, slot, at, ref, op="execute", grade=None, difference=None):
+def ok(name, slot, at, ref, op="execute", grade=None, difference=None, rg=(0, 0)):
     e = ENTS[slot - 1]
-    after, out = raised(e, at, ref, grade, difference)
-    input_ = {"uid": uid(slot), "at": at, "reference": ref}
+    after, out = raised(e, at, ref, grade, difference, rg)
+    input_ = {"uid": uid(slot), "at": at, **{k: v for k, v in (("part", rg[0]), ("ring", rg[1])) if v}, "reference": ref}
     if grade is not None:
         input_["grade"] = grade
     if difference is not None:
@@ -213,6 +220,20 @@ def cases():
                                           "expectedRevision": "abc"},
                 "invalid_revision", "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. "
                 "Sürümü belgeden ya da komutun planından alın.", "expectedRevision"),
+        # Çok parçalı nesne (ADR 4980).
+        ok("Alan: ikinci parçanın köşesi eğimle; bütün kotlar aynı farkla", 3, 2, YAZILAN, grade=0.02, rg=(1, 0)),
+        ok("Alan: ilk parçanın deliğinin köşesi, kot farkıyla", 3, 1, YAZILAN, difference=-0.5, rg=(0, 1)),
+        ok("Çoklu çizginin ikinci parçasının köşesi; ilk parça aynı farkla", 7, 2, ESIK, grade=0.01, rg=(1, 0)),
+        refused("Olmayan parça", {"uid": uid(3), "at": 0, "part": 2, "reference": YAZILAN, "grade": 0.01},
+                "wrong_place", "Nesnenin 2 parçası var (0'dan): 2. parça yok.", "part"),
+        refused("Olmayan delik", {"uid": uid(3), "at": 0, "ring": 2, "reference": YAZILAN, "grade": 0.01},
+                "wrong_place", "0. parçanın 1 deliği var: 2. halka yok (0 dış halka, 1'den delikler).", "ring"),
+        refused("Deliğin köşe sayısının dışında", {"uid": uid(3), "at": 3, "part": 1, "ring": 1, "reference": YAZILAN,
+                                                   "grade": 0.01},
+                "wrong_place", "3. köşe yok: 1. parçanın 1. halkasının 3 köşesi var, sıra 0'dan başlar.", "at"),
+        refused("Kotsuz delikteki köşe", {"uid": uid(3), "at": 0, "part": 1, "ring": 1, "reference": YAZILAN,
+                                          "grade": 0.01}, "elevation_missing",
+                "0. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin.", "at"),
         {"name": "Beklenen sürüm eski: çatışma", "steps": [{"op": "execute", "input": {
             "uid": uid(1), "at": 0, "reference": ESIK, "grade": 0.01, "expectedRevision": "7"}, "result": {
             "status": "conflict", "error": {"code": "revision_conflict", "message":
@@ -224,7 +245,7 @@ def cases():
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.entities.raise", "commandVersion": 1,
-           "title": "Referanstan kot ver", "note": "ADR 3780. Bağımsız başvuru scripts/fixtures/raise_cases.py: "
+           "title": "Referanstan kot ver", "note": "ADR 3780, 4980. Bağımsız başvuru scripts/fixtures/raise_cases.py: "
            "referanstan yatay uzaklık, köşenin yeni kotu ve öbür kotların kayması elle; KentOS kodu yok.",
            "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

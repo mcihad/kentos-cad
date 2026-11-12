@@ -228,6 +228,19 @@ def heights_cases():
     ] + reciprocal_cases(connected, path, hs, inst, tgt, p1, p2)
 
 
+def measured(ks):
+    """docs/adr/4900: the pairs' k together: the mean, the count and with two or more the standard deviation (n − 1)
+    and the mean's (s/√n), each pair the same weight."""
+    ks = [k for k in ks if k is not None]
+    n = len(ks)
+    mean = sum(ks) / n
+    out = {"mean": mean, "pairs": n}
+    if n > 1:
+        sd = math.sqrt(sum((k - mean) ** 2 for k in ks) / (n - 1))
+        out.update(sd=sd, sigma=sd / math.sqrt(n))
+    return out
+
+
 def reciprocal_cases(connected, path, hs, inst, tgt, p1, p2):
     """docs/adr/4500: the connected traverse's legs sighted back too, the air's k 0.2 (the project's 0.13): a leg
     sighted back takes the mean of its two one-way differences, k falling out, so the heights are the path's; one way,
@@ -248,10 +261,10 @@ def reciprocal_cases(connected, path, hs, inst, tgt, p1, p2):
     assert all(abs(k - 0.2) < 2e-3 for k in pair) and pair_h[2] is None, (pair, pair_h)
     return [
         done("Poligon hesabı karşılıklı başucu açılarıyla: havanın k'sı 0,2, kotlar yine yolun kotları", every, points,
-             "Poligon hesabı", misclosure=dict(zero, refractions=pair)),
+             "Poligon hesabı", misclosure=dict(zero, refractions=pair, refraction=measured(pair))),
         done("Poligon hesabı karşılıklı başucu açılarıyla: ortadaki kenar tek yönlü, sonuncunun işareti başka "
              "yükseklikte (k yok)", mixed, points, "Poligon hesabı",
-             misclosure=dict(zero, refractions=[pair[0], None, None])),
+             misclosure=dict(zero, refractions=[pair[0], None, None], refraction=measured([pair[0]]))),
         refused("Poligon hesabı karşılıklı: geri nişan sayısı uymuyor",
                 {**every, "heights": dict(every["heights"], back=sights[:2])}, "survey_refused",
                 "3 kenarlı bu poligonda geri nişanlar 3 kenar için olmalı, 2 verildi.", "work"),

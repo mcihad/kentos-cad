@@ -83,6 +83,7 @@ Sonucun yeri ile; ADR 2200 Sonra)”.
 
 ## Sonra
 
-- Kullanıcının sembol seçimlerinin projede saklanması (şema); denetimin onları okuması.
-- Plan değişikliği taslağı; resmî şema ve eşleme (MAP-09'un kalanı).
+- ~~Kullanıcının sembol seçimlerinin projede saklanması (şema); denetimin onları okuması~~
+  ([ADR 5040](5040-zoning-plan-change-draft-and-kept-symbols.md)).
+- ~~Plan değişikliği taslağı~~ (ADR 5040); resmî şema ve eşleme (MAP-09'un kalanı).
 - Web (TODOS §0.2).

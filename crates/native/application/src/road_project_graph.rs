@@ -61,6 +61,8 @@ fn source_kind(k: K) -> G {
         K::Junction => G::Junction,
         K::Platform => G::Platform,
         K::Network => G::Network,
+        // A sheet's contour lines read layers (docs/adr/4740): the layer's node when the graph shows it.
+        K::Layer => G::Layer,
     }
 }
 
@@ -82,11 +84,36 @@ pub fn drawing_within(doc: &Document, d: &RoadDrawingDef, (lo, hi): ([f64; 2], [
     })
 }
 
+/// A layer's fields as a recipe keeps them (docs/adr/4860): a bound table's column left out (the binding is this
+/// project's); a field linked to a list this project no longer has unlinked (it keeps its copy, ADR 0430); and the
+/// lists the fields link, as this project defines them, in the order the fields first link them.
+fn recipe_fields(doc: &Document, fields: &[kentos_commands::LayerField]) -> (Vec<kentos_commands::LayerField>, Vec<kentos_commands::FieldDomain>) {
+    let lists = &doc.settings().domains;
+    let mut domains: Vec<kentos_commands::FieldDomain> = Vec::new();
+    let fields = fields
+        .iter()
+        .map(|f| {
+            let mut f = kentos_commands::LayerField { column: None, ..f.clone() };
+            match f.domain.as_ref().and_then(|id| lists.iter().find(|d| d.id == *id)) {
+                Some(d) => {
+                    if !domains.iter().any(|o| o.id == d.id) {
+                        domains.push(d.clone());
+                    }
+                }
+                None => f.domain = None,
+            }
+            f
+        })
+        .collect();
+    (fields, domains)
+}
+
 /// The definition of the layer drawing `d` went on (docs/adr/3640): its id, name and look; none when the layer is gone
 /// or not a layer. Docs/adr/4040: the groups it is in (from the top), its whole style and the project line type the
 /// style names, as this project defines it (none: it names none, or the project has no line type of that name).
 /// Docs/adr/4440: its opacity and blending mode (a mask is not kept: it cuts into this project's layers by their ids),
-/// its type and, when it is not printed, its Yazdır.
+/// its type and, when it is not printed, its Yazdır. Docs/adr/4860: its fields, the value lists they link and its
+/// subtypes.
 fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::RoadRecipeLayer> {
     let id = d.input.get("layerId")?.as_str()?;
     let layers = doc.layers();
@@ -104,6 +131,7 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
     let line_type_def = node.style.line_pattern.as_deref().and_then(|name| {
         doc.settings().line_types.iter().find(|t| kentos_commands::same_line_type_name(&t.name, name)).cloned()
     });
+    let (fields, domains) = recipe_fields(doc, &node.fields);
     Some(kentos_commands::RoadRecipeLayer {
         id: id.to_owned(),
         name: node.name.clone(),
@@ -118,6 +146,20 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
         }),
         geometry: node.geometry,
         plot: node.plot.filter(|printed| !printed),
+        fields,
+        domains,
+        subtypes: node.subtypes.clone(),
+        // Docs/adr/5240: its value combinations, record rules, indexes and the drafts of the forms that edit it.
+        contingents: node.contingents.clone(),
+        rules: node.rules.clone(),
+        indexes: node.indexes.clone(),
+        forms: doc
+            .settings()
+            .forms
+            .iter()
+            .filter(|f| f.layer == id)
+            .map(|f| kentos_commands::RoadRecipeForm { id: f.id.clone(), name: f.name.clone(), draft: f.draft.clone() })
+            .collect(),
     })
 }
 

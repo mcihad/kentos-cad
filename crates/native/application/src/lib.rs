@@ -55,6 +55,8 @@ pub(crate) mod dimension_set_copy;
 pub mod constraint_follow;
 #[cfg(test)]
 mod constraint_jobs_tests;
+#[cfg(test)]
+mod told_tests;
 pub mod constraint_solve;
 pub mod constraints_edit;
 pub mod constraints_query;
@@ -308,6 +310,7 @@ pub(crate) mod road_project;
 pub use road_project::outdated_drawings;
 pub mod road_project_graph;
 pub mod road_project_produce;
+pub(crate) mod road_recipe_fields;
 pub mod road_project_query;
 pub mod road_project_rebuild;
 pub(crate) mod road_project_regional;
@@ -320,34 +323,50 @@ pub mod entities_grade;
 pub mod entities_raise;
 pub mod entities_drape;
 pub mod topology_clean;
+pub mod parcel_drafts;
 pub mod parcel_register;
 pub mod parcels_boundaries;
 pub mod parcels_check;
 pub mod pipes_check;
 mod pipes_clearance;
 pub mod pipes_profile;
+mod pipes_rules;
 pub mod asbuilt_check;
+pub mod asbuilt_review;
 pub(crate) mod asbuilt_series;
 mod asbuilt_package;
 pub mod field_package;
 pub mod zoning_check;
 pub mod zoning_symbolize;
+pub mod zoning_draft;
 pub mod scenarios_impact;
+mod scenarios_impact_network;
+pub mod scenarios_record;
 pub mod readjustment;
 pub mod readjustment_scope;
 pub mod readjustment_sheets;
+pub mod separation_number_clear;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
+pub mod orthophoto_seamlines;
+pub mod orthophoto_network;
 mod orthophoto_mosaic;
 mod orthophoto_seams;
 pub mod pointcloud_overlap;
+pub mod pointcloud_network;
+pub mod pointcloud_place;
+pub mod profiles_compare;
+pub mod profiles_carry;
+pub mod profiles_names;
 pub mod pointcloud_register;
 pub mod map_work_edit;
+pub mod map_work_profile;
 pub mod map_work_restore;
 pub mod map_survey;
 pub mod map_survey_edit;
 pub mod map_survey_network;
 pub mod map_survey_places;
+pub(crate) mod map_survey_sessions;
 pub mod map_features_reconcile;
 pub mod road_corridors_draw;
 pub mod road_corridors_edit;
@@ -441,9 +460,11 @@ pub mod road_superelevations_edit;
 pub mod road_superelevations_query;
 pub mod road_templates_edit;
 pub mod road_terrains_contours;
+pub mod road_terrains_section;
 pub mod road_terrains_sheet;
 pub mod road_terrains_zeroline;
 pub mod road_terrains_cutfill;
+mod road_terrains_cutfill_sections;
 pub mod road_terrains_create;
 pub mod road_terrains_edit;
 pub mod road_terrains_query;
@@ -1372,6 +1393,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS_VERSION,
     ),
     (
+        kentos_commands::ROAD_TERRAINS_SECTIONCHECK,
+        kentos_commands::ROAD_TERRAINS_SECTIONCHECK_VERSION,
+    ),
+    (
         kentos_commands::ROAD_TERRAINS_ZEROLINE,
         kentos_commands::ROAD_TERRAINS_ZEROLINE_VERSION,
     ),
@@ -1560,20 +1585,35 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_PARCELS_BOUNDARIES, kentos_commands::CAD_PARCELS_BOUNDARIES_VERSION),
     (kentos_commands::CAD_PARCELS_RECORD, kentos_commands::CAD_PARCELS_RECORD_VERSION),
     (kentos_commands::CAD_PARCELS_RECORDS, kentos_commands::CAD_PARCELS_RECORDS_VERSION),
+    (kentos_commands::CAD_PARCELS_APPROVE, kentos_commands::CAD_PARCELS_APPROVE_VERSION),
+    (kentos_commands::CAD_PARCELS_WITHDRAW, kentos_commands::CAD_PARCELS_WITHDRAW_VERSION),
     (kentos_commands::CAD_PIPES_CHECK, kentos_commands::CAD_PIPES_CHECK_VERSION),
     (kentos_commands::CAD_PIPES_PROFILE, kentos_commands::CAD_PIPES_PROFILE_VERSION),
     (kentos_commands::CAD_ASBUILT_CHECK, kentos_commands::CAD_ASBUILT_CHECK_VERSION),
+    // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
+    (kentos_commands::CAD_ASBUILT_REVIEW, kentos_commands::CAD_ASBUILT_REVIEW_VERSION),
     (kentos_commands::CAD_FIELD_PACKAGE, kentos_commands::CAD_FIELD_PACKAGE_VERSION),
     (kentos_commands::CAD_ZONING_CHECK, kentos_commands::CAD_ZONING_CHECK_VERSION),
     (kentos_commands::CAD_ZONING_SYMBOLIZE, kentos_commands::CAD_ZONING_SYMBOLIZE_VERSION),
+    (kentos_commands::CAD_ZONING_DRAFT, kentos_commands::CAD_ZONING_DRAFT_VERSION),
     (kentos_commands::CAD_SCENARIOS_IMPACT, kentos_commands::CAD_SCENARIOS_IMPACT_VERSION),
+    (kentos_commands::CAD_SCENARIOS_RECORD, kentos_commands::CAD_SCENARIOS_RECORD_VERSION),
     (kentos_commands::CAD_READJUSTMENT_DISTRIBUTE, kentos_commands::CAD_READJUSTMENT_DISTRIBUTE_VERSION),
     (kentos_commands::CAD_READJUSTMENT_SCOPE, kentos_commands::CAD_READJUSTMENT_SCOPE_VERSION),
     (kentos_commands::CAD_READJUSTMENT_SHEETS, kentos_commands::CAD_READJUSTMENT_SHEETS_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_CHECK, kentos_commands::CAD_ORTHOPHOTO_CHECK_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_COMPARE, kentos_commands::CAD_ORTHOPHOTO_COMPARE_VERSION),
+    (kentos_commands::CAD_ORTHOPHOTO_SEAMLINES, kentos_commands::CAD_ORTHOPHOTO_SEAMLINES_VERSION),
+    // Birleşme çizgisi ağı ve ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
+    (kentos_commands::CAD_ORTHOPHOTO_NETWORK, kentos_commands::CAD_ORTHOPHOTO_NETWORK_VERSION),
+    (kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT, kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_REGISTER, kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION),
+    (kentos_commands::CAD_POINTCLOUDS_NETWORK, kentos_commands::CAD_POINTCLOUDS_NETWORK_VERSION),
+    (kentos_commands::CAD_POINTCLOUDS_PLACE, kentos_commands::CAD_POINTCLOUDS_PLACE_VERSION),
+    // The catalog's migration report (plan/map-cad.md MAP-04, docs/adr/4940).
+    (kentos_commands::CAD_PROFILES_COMPARE, kentos_commands::CAD_PROFILES_COMPARE_VERSION),
+    (kentos_commands::CAD_PROFILES_CARRY, kentos_commands::CAD_PROFILES_CARRY_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (
         kentos_commands::MAP_SURVEY_QUERY,
@@ -1953,6 +1993,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_PROFILES_REMOVE,
         kentos_commands::CAD_PROFILES_REMOVE_VERSION,
+    ),
+    // The fields' names in an institution by a mapping's form of names ([`profiles_names`], docs/adr/5180).
+    (
+        kentos_commands::CAD_PROFILES_NAMES,
+        kentos_commands::CAD_PROFILES_NAMES_VERSION,
     ),
     // The project's line types with patterns ([`line_types_edit`], docs/adr/0313).
     (

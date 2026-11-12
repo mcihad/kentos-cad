@@ -161,7 +161,7 @@ class _LabelsReport(LocalCommand[LabelsReport, LabelsReported, LabelsReported]):
     satırlarıdır: katmanın source ve part'ı söylenir, pencere parçanın ötesine
     uzanıyorsa partial true olur. Bir etiket motorunun sonucu görünüme göre değişir: bu
     komut tek bir pencereyi sayar; ardışık küçük kaydırmalarda etiketlerin yerinde
-    kalması masaüstünün işidir (docs/adr/0533 §3), bu komutun değil.
+    kalması masaüstünün işidir, bu komutun değil.
     """
     __slots__ = ()
     id = "cad.labels.report"
@@ -199,8 +199,8 @@ class _LabelsReport(LocalCommand[LabelsReport, LabelsReported, LabelsReported]):
         (cad.sources.edit extent) etiketi ve engeli yalnız o parçanın satırlarıdır: katmanın
         source ve part'ı söylenir, pencere parçanın ötesine uzanıyorsa partial true olur.
         Bir etiket motorunun sonucu görünüme göre değişir: bu komut tek bir pencereyi sayar;
-        ardışık küçük kaydırmalarda etiketlerin yerinde kalması masaüstünün işidir
-        (docs/adr/0533 §3), bu komutun değil.
+        ardışık küçük kaydırmalarda etiketlerin yerinde kalması masaüstünün işidir, bu
+        komutun değil.
 
         Args:
             doc: The drawing it works on.

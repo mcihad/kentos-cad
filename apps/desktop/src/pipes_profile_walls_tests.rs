@@ -76,7 +76,8 @@ fn the_profile_draws_the_crossing_pipes_outer_walls() {
     let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     let _ = app.update(Message::PipesCheck(P::DrawProfile));
     assert_eq!(ellipses(&app, before).len(), 3);
-    assert!(!crate::files_testing::last_said(&app).contains("dış duvar"));
+    // The run's own pipes keep their Et (docs/adr/4780: their outer walls drawn); the crossing ones have none.
+    assert!(!crate::files_testing::last_said(&app).contains("kesişen borunun dış duvarı"));
 }
 
 #[test]

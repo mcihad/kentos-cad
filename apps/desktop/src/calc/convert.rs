@@ -265,8 +265,7 @@ pub struct Converted {
 pub fn area_notes(from: &Side, to: &Side, choices: &[core::Choice], c: &Converted) -> Vec<&'static str> {
     let operation = core::operation::operation(&from.system, &to.system, choices, false)
         .ok()
-        .and_then(|o| o.area)
-        .map(|(_, b)| b);
+        .and_then(|o| kentos_project::crs::operation_region(&o));
     kentos_native_application::crs_transform::PointAreas::of(from.srid(), to.srid(), operation)
         .notes(&from.system, &to.system, c.at, c.point)
 }

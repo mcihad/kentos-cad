@@ -123,6 +123,7 @@ mod lineage;
 mod map_work;
 mod map_survey;
 mod parcel_register;
+mod zoning_plan;
 
 pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};
 pub use changes::{ChangeMark, Changes};

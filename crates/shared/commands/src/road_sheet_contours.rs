@@ -40,7 +40,9 @@ pub struct ContourInterval {
 /// lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'
 /// text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and
 /// the auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:
-/// the built-in dashed type, docs/adr/2720).
+/// the built-in dashed type, docs/adr/2720); docs/adr/4740: the spacing of the heights in built-up areas and along
+/// roads (paper mm, m. 63(2)'s about 2 cm; none: such heights are refused) and the section check's limit (m. 91(2),
+/// m. 93(1)(c); none: no comparison).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -78,6 +80,36 @@ pub struct ContourRules {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub auxiliary_pattern: Vec<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub height_every: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub section_check: Option<SectionCheck>,
+}
+
+/// The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,
+/// KOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences
+/// between measured heights and the heights read from the contour lines is under `factor` times KOH_Z. Docs/adr/5120:
+/// the section's points are at most `spacing` metres apart along it (m. 93(1)(b)'s 20 m; none: not checked).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionCheck {
+    /// The formula's coefficients of S², S and 1, giving centimetres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub xy: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub z_factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub factor: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub spacing: Option<f64>,
 }
 
 /// KentOS's default package: BÖHHBÜY 2018's Article 78(1)(c)–(g) and Ek-3 0001–0005.
@@ -90,13 +122,20 @@ pub fn contour_rules_default() -> Option<ContourRules> {
 /// (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
 /// the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
 /// (`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot
-/// heights (`slopes`, none: no such heights; docs/adr/3120), the rule package (none: KentOS's BÖHHBÜY 2018).
+/// heights (`slopes`, none: no such heights; docs/adr/3120), the built-up areas' and roads' heights (`builtUp`, none:
+/// none; docs/adr/4740), the rule package (none: KentOS's BÖHHBÜY 2018).
+///
+/// Drawn, its drawing is kept with the surface and every layer it reads (docs/adr/4740): it goes stale when they
+/// change and `road.project.rebuild` draws it again.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
 /// the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
-/// their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
-/// `slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
-/// `invalid_contours` (more than 10 000 levels), `no_contours`.
+/// their text height, built-up heights asked without a spacing above nought or with neither areas nor roads, a grid
+/// origin or rotation not finite),
+/// `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,
+/// `slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,
+/// `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning
+/// `section_check_exceeded`: the chosen points' RMS is not under the package's limit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -140,6 +179,10 @@ pub struct TerrainsSheetContours {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub points: Vec<String>,
+    /// The heights of built-up areas and roads (BÖHHBÜY m. 63(2), docs/adr/4740).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub built_up: Option<SheetBuiltUp>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<ContourRules>,
@@ -163,6 +206,68 @@ pub struct SheetSlopes {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub bottom: Vec<String>,
+}
+
+/// The heights of built-up areas and roads (BÖHHBÜY m. 63(2): “yerleşik alanlar ve yollarda harita üzerinde yaklaşık 2
+/// cm'de bir”, docs/adr/4740): the layers of the built-up areas' closed boundaries and of the roads' lines, and the
+/// spacing on the sheet (paper mm; none: the package's `heightEvery`). Along each road line from its start a height
+/// every spacing, the first at half of it; then on the grid of the spacing inside the built-up areas (even-odd over
+/// their rings), outside the details and farther than half the spacing from every height already placed. Heights are
+/// the surface's, written as the summits' are; a place off the surface is counted. Docs/adr/5120: the grid runs from
+/// `origin` (none: the coordinates' origin), turned by `rotation` (radians counter-clockwise from east; none: 0); its
+/// places are the origin plus whole multiples of the spacing along the turned east and north. The regulation gives
+/// neither: they are the surveyor's.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SheetBuiltUp {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub areas: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub roads: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub every: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub origin: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub rotation: Option<f64>,
+}
+
+/// The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points
+/// compared (an own height, on the surface, not one of the surface's corners: a corner's difference is nought), the
+/// corners left out, the RMS of the differences and the largest one with its place (metres), KOH_Z for the scale by
+/// m. 91(2) and the limit, `factor` times it (metres), and whether the RMS is under the limit.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SheetHeightCheck {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub compared: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub corners: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub rms: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub largest: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub koh_z: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub limit: f64,
+    pub within: bool,
 }
 
 /// A line as drawn: its level, its kind (`major`, `minor`, `auxiliary`), whether it closes, its places.
@@ -200,7 +305,8 @@ pub struct SheetContourLabel {
 /// A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
 /// with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
 /// (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point
-/// (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the
+/// (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none), or (docs/adr/4740, m. 63(2)) a
+/// `road` height along a road line or a `builtUp` one on the grid of a built-up area; its place and height, the
 /// height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -255,6 +361,9 @@ pub struct TerrainsSheetContoured {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pattern: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub check: Option<SheetHeightCheck>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,

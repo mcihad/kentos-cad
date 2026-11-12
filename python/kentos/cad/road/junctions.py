@@ -511,16 +511,16 @@ class _RoadJunctionsOverlap(LocalCommand[JunctionsOverlap, JunctionsOverlapped, 
     """``road.junctions.overlap`` v1. Kavşakta koridor örtüşmesi: Kavşağın iki koridorunun
     planda örtüştüğü yeri ve orada iki kez sayılan hacmi okur; hiçbir şey yazmaz. İki
     koridorun üst yüzeyi (şevleri dahil) dünya koordinatında cell aralıklı ızgaranın
-    hücre ortalarında örneklenir (Civil 3D'nin grid volume yöntemi); iki yüzeyin de
-    üstünde kalan hücre örtüşmedir. primary kavşağın alanı kendisinin sayılan kol; öbürü
-    tali koridordur. Tali koridorun yüzeyi kendi arazisiyle karşılaştırılır: örtüşmedeki
-    yarma ve dolgu, iki koridorun kübajı toplanınca iki kez sayılan hacimdir. Cevap:
-    hücre sayısı, alan, yarma, dolgu, arazisiz hücreler, iki tasarım yüzeyinin farkının
-    ortalaması ve en büyüğü yeriyle, her aksta örtüşmenin km aralığı (tali koridorun
-    kırpılacağı yer). corridors kolların sırasıyla iki koridor (yoksa aksların tek
-    koridorları); cell kullanıcınındır. Uyarılar: junction_stale, corridor_stale,
-    junction_corridors_overlap. Retler: not_a_road_project, unknown_junction,
-    invalid_junction, unknown_corridor, invalid_road_corridor, invalid_overlap.
+    hücre ortalarında örneklenir; iki yüzeyin de üstünde kalan hücre örtüşmedir. primary
+    kavşağın alanı kendisinin sayılan kol; öbürü tali koridordur. Tali koridorun yüzeyi
+    kendi arazisiyle karşılaştırılır: örtüşmedeki yarma ve dolgu, iki koridorun kübajı
+    toplanınca iki kez sayılan hacimdir. Cevap: hücre sayısı, alan, yarma, dolgu,
+    arazisiz hücreler, iki tasarım yüzeyinin farkının ortalaması ve en büyüğü yeriyle,
+    her aksta örtüşmenin km aralığı (tali koridorun kırpılacağı yer). corridors kolların
+    sırasıyla iki koridor (yoksa aksların tek koridorları); cell kullanıcınındır.
+    Uyarılar: junction_stale, corridor_stale, junction_corridors_overlap. Retler:
+    not_a_road_project, unknown_junction, invalid_junction, unknown_corridor,
+    invalid_road_corridor, invalid_overlap.
     """
     __slots__ = ()
     id = "road.junctions.overlap"
@@ -545,17 +545,17 @@ class _RoadJunctionsOverlap(LocalCommand[JunctionsOverlap, JunctionsOverlapped, 
     ) -> JunctionsOverlapped:
         """Kavşakta koridor örtüşmesi: Kavşağın iki koridorunun planda örtüştüğü yeri ve orada
         iki kez sayılan hacmi okur; hiçbir şey yazmaz. İki koridorun üst yüzeyi (şevleri
-        dahil) dünya koordinatında cell aralıklı ızgaranın hücre ortalarında örneklenir
-        (Civil 3D'nin grid volume yöntemi); iki yüzeyin de üstünde kalan hücre örtüşmedir.
-        primary kavşağın alanı kendisinin sayılan kol; öbürü tali koridordur. Tali koridorun
-        yüzeyi kendi arazisiyle karşılaştırılır: örtüşmedeki yarma ve dolgu, iki koridorun
-        kübajı toplanınca iki kez sayılan hacimdir. Cevap: hücre sayısı, alan, yarma, dolgu,
-        arazisiz hücreler, iki tasarım yüzeyinin farkının ortalaması ve en büyüğü yeriyle,
-        her aksta örtüşmenin km aralığı (tali koridorun kırpılacağı yer). corridors kolların
-        sırasıyla iki koridor (yoksa aksların tek koridorları); cell kullanıcınındır.
-        Uyarılar: junction_stale, corridor_stale, junction_corridors_overlap. Retler:
-        not_a_road_project, unknown_junction, invalid_junction, unknown_corridor,
-        invalid_road_corridor, invalid_overlap.
+        dahil) dünya koordinatında cell aralıklı ızgaranın hücre ortalarında örneklenir; iki
+        yüzeyin de üstünde kalan hücre örtüşmedir. primary kavşağın alanı kendisinin sayılan
+        kol; öbürü tali koridordur. Tali koridorun yüzeyi kendi arazisiyle karşılaştırılır:
+        örtüşmedeki yarma ve dolgu, iki koridorun kübajı toplanınca iki kez sayılan
+        hacimdir. Cevap: hücre sayısı, alan, yarma, dolgu, arazisiz hücreler, iki tasarım
+        yüzeyinin farkının ortalaması ve en büyüğü yeriyle, her aksta örtüşmenin km aralığı
+        (tali koridorun kırpılacağı yer). corridors kolların sırasıyla iki koridor (yoksa
+        aksların tek koridorları); cell kullanıcınındır. Uyarılar: junction_stale,
+        corridor_stale, junction_corridors_overlap. Retler: not_a_road_project,
+        unknown_junction, invalid_junction, unknown_corridor, invalid_road_corridor,
+        invalid_overlap.
 
         Args:
             doc: The drawing it works on.
@@ -763,18 +763,17 @@ query = _RoadJunctionsQuery()
 
 class _RoadJunctionsTie(LocalCommand[JunctionsTie, JunctionsTied, JunctionsTied]):
     """``road.junctions.tie`` v1. Kavşağa bağla: Hemzemin kavşakta tali yolun boykesitini
-    ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil
-    3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI
-    yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol
-    ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın
-    genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0
-    ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek
-    boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi)
-    ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange
-    (oran) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot,
-    önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim
-    değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar: junction_stale,
-    profile_stale, superelevation_stale, junction_grade_change. Retler:
+    ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır. Tali yol
+    boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali
+    yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki
+    kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar.
+    primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit
+    (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ;
+    oran, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS
+    eğim vermez; maxGradeChange (oran) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana
+    km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki
+    eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar:
+    junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler:
     not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile,
     invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie,
     invalid_revision, revision_conflict.
@@ -804,21 +803,20 @@ class _RoadJunctionsTie(LocalCommand[JunctionsTie, JunctionsTied, JunctionsTied]
         expected: Expected | None = None,
     ) -> JunctionsTied:
         """Kavşağa bağla: Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar;
-        ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown
-        Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun
-        boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği
-        yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar
-        arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles
-        kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine
-        eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi) ya da superelevation (ana
-        yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (oran) aşılırsa uyarı.
-        Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark),
-        kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri
-        alma adımı “Kavşağa bağla”. Uyarılar: junction_stale, profile_stale,
-        superelevation_stale, junction_grade_change. Retler: not_a_road_project,
-        unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile,
-        unknown_superelevation, invalid_superelevation, invalid_tie, invalid_revision,
-        revision_conflict.
+        ana yolun sırtı ve boykesiti olduğu gibi kalır. Tali yol boykesitine eğrisiz üç PVI
+        yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol
+        ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın
+        genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0
+        ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek
+        boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi)
+        ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange
+        (oran) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot,
+        önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim
+        değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar: junction_stale,
+        profile_stale, superelevation_stale, junction_grade_change. Retler:
+        not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile,
+        invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie,
+        invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.

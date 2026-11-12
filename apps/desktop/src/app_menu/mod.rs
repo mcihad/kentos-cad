@@ -1,5 +1,5 @@
 //! Uygulama menüsü (the web's `ui/appmenu/AppMenu.ts`, DESIGN.md §7.1.1):
-//! the KentOS mark at the ribbon's corner opens it, like AutoCAD's
+//! the KentOS mark at the ribbon's corner opens it, as a desktop
 //! application menu. The file commands run down the left; the right side
 //! shows what the pointed row holds (the import and export formats, the
 //! cloud) or, at first, the drawing on screen with the recent files. Rows
@@ -105,19 +105,19 @@ const IMPORTS: [Format; 9] = [
     Format {
         id: "file.import.dxf",
         label: "DXF",
-        detail: "AutoCAD R12–2018: katmanlar, bloklar, ölçüler ve taramalar",
+        detail: "DXF/DWG R12–2018: katmanlar, bloklar, ölçüler ve taramalar",
         badge: "DXF",
     },
     Format {
         id: "file.import.ncn",
         label: "Koordinat listesi",
-        detail: "Netcad NCN, TXT ya da CSV nokta listesi",
+        detail: "NCN, TXT ya da CSV nokta listesi",
         badge: "NCN",
     },
     Format {
         id: "file.import.ncz",
-        label: "Netcad çizimi",
-        detail: "Netcad NCZ dosyası",
+        label: "NCZ çizimi",
+        detail: "NCZ dosyası",
         badge: "NCZ",
     },
     // Every program's: a drawing's sheet into the drawing (docs/adr/0352, 0802).
@@ -159,7 +159,7 @@ const EXPORTS: [Format; 7] = [
     Format {
         id: "file.export.dxf",
         label: "DXF",
-        detail: "AutoCAD 2007: ölçüler DXF ölçüsü, Türkçe yazılar UTF-8",
+        detail: "DXF R2007: ölçüler DXF ölçüsü, Türkçe yazılar UTF-8",
         badge: "DXF",
     },
     Format {

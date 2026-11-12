@@ -847,12 +847,13 @@
    "level": "query",
    "via": [
     "cad.asbuilt.check",
-    "cad.field.package"
+    "cad.field.package",
+    "cad.asbuilt.review"
    ],
    "operation": null,
-   "python": "kentos.cad.asbuilt.check, kentos.cad.field.package",
-   "mcp": "cad.asbuilt.check, cad.field.package",
-   "note": "Pencere cad.asbuilt.check'in cevabını gösterir (salt okunur): ölçülen noktaların tasarım noktalarına, yüzeyine ve çizgilerine göre farkları, durumları ve işaretleri; sınırlar kullanıcınındır; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1700). Saha paketi yaz… formun tasarımını, sınırlarını ve kalite notlarını cad.field.package ile tek .zip olarak yazar; çizim değişmez (ADR 1920).",
+   "python": "kentos.cad.asbuilt.check, kentos.cad.field.package, kentos.cad.asbuilt.review",
+   "mcp": "cad.asbuilt.check, cad.field.package, cad.asbuilt.review",
+   "note": "Pencere cad.asbuilt.check'in cevabını gösterir (salt okunur): ölçülen noktaların tasarım noktalarına, yüzeyine ve çizgilerine göre farkları, durumları ve işaretleri; sınırlar kullanıcınındır; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1700). Saha paketi yaz… formun tasarımını, sınırlarını ve kalite notlarını cad.field.package ile tek .zip olarak yazar; çizim değişmez (ADR 1920). İzleme işinde İncelemeyi sakla… işi, eşikleri kaynağıyla ve inceleyenin beyanını cad.asbuilt.review ile projede saklar; Grafik seçili noktanın hareketini zamana göre gösterir (ADR 5220).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5253,6 +5254,23 @@
    "tests": 0
   },
   {
+   "id": "map.catalogReport",
+   "kind": "command",
+   "title": "Katalog geçiş raporu…",
+   "level": "semantic",
+   "via": [
+    "cad.profiles.compare",
+    "cad.profiles.carry"
+   ],
+   "operation": null,
+   "python": "kentos.cad.profiles.compare, kentos.cad.profiles.carry",
+   "mcp": "cad.profiles.compare, cad.profiles.carry",
+   "note": "Pencere iki nesne kataloğunu cad.profiles.compare ile karşılaştırır (salt okunur): sınıflar kimlikleriyle, yoksa saha kodlarıyla izlenir; alanlar, değer listelerinin kodları ve Detay eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli (ADR 4940). Kataloğa taşı nesneleri cad.profiles.carry ile yeni sınıfların katmanlarına taşır, tek adım (ADR 5340).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.contours",
    "kind": "command",
    "title": "Eşyükselti üret…",
@@ -5521,12 +5539,14 @@
    "via": [
     "cad.parcels.check",
     "cad.parcels.records",
-    "cad.parcels.record"
+    "cad.parcels.record",
+    "cad.parcels.approve",
+    "cad.parcels.withdraw"
    ],
    "operation": null,
-   "python": "kentos.cad.parcels.check, kentos.cad.parcels.records, kentos.cad.parcels.record",
-   "mcp": "cad.parcels.check, cad.parcels.records, cad.parcels.record",
-   "note": "Pencere cad.parcels.check'in cevabını gösterir (salt okunur): hesap alanı, tapu alanı, fark, 2022 Yönetmeliği Madde 8(2) yanılma sınırı, kimlik; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1400). Parsel kayıtları… kayıtları cad.parcels.records ile okur, Belgeyi kaydet cad.parcels.record ile tek adım yazar (ADR 4220).",
+   "python": "kentos.cad.parcels.check, kentos.cad.parcels.records, kentos.cad.parcels.record, kentos.cad.parcels.approve, kentos.cad.parcels.withdraw",
+   "mcp": "cad.parcels.check, cad.parcels.records, cad.parcels.record, cad.parcels.approve, cad.parcels.withdraw",
+   "note": "Pencere cad.parcels.check'in cevabını gösterir (salt okunur): hesap alanı, tapu alanı, fark, 2022 Yönetmeliği Madde 8(2) yanılma sınırı, kimlik; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1400). Parsel kayıtları… kayıtları cad.parcels.records ile okur, Belgeyi kaydet cad.parcels.record ile tek adım yazar (ADR 4220); Taslak olarak yaz taslağı yazar, Onayı yaz cad.parcels.approve, Taslağı geri çek cad.parcels.withdraw ile (ADR 5020).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -5614,6 +5634,22 @@
    "tests": 0
   },
   {
+   "id": "pointcloud.network",
+   "kind": "command",
+   "title": "Tarama ağı dengelemesi…",
+   "level": "query",
+   "via": [
+    "cad.pointclouds.network"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.network",
+   "mcp": "cad.pointclouds.network",
+   "note": "Pencere üç ve daha çok taramayı cad.pointclouds.network ile birlikte kaydeder (salt okunur): bağlar Tarama kaydı gibi kaydedilir ve normal matrisleriyle ağırlıklanır, sabit olmayan taramaların düzeltmeleri birlikte dengelenir (ADR 4720). Dönüşüm uygula seçilen taramayı matrisiyle taşır.",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "pointcloud.overlap",
    "kind": "command",
    "title": "Tarama uyumu…",
@@ -5625,6 +5661,22 @@
    "python": "kentos.cad.pointclouds.overlap",
    "mcp": "cad.pointclouds.overlap",
    "note": "Pencere iki bulutu cad.pointclouds.overlap ile karşılaştırır (salt okunur); CSV kaydet en kötü hücreleri ve kontrol noktalarını yazar (ADR 1500).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "pointcloud.place",
+   "kind": "command",
+   "title": "Bulutu konumla…",
+   "level": "semantic",
+   "via": [
+    "cad.pointclouds.place"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.place",
+   "mcp": "cad.pointclouds.place",
+   "note": "Pencere bulutun dosyalarına cad.pointclouds.place ile, dosyaları yazmadan çizimde konum verir (matris, eksen ve açı, Euler açıları; ADR 5100); tek geri alma adımı. Tarama ağı'nın Nesnede tut düğmesi de bu komutu çağırır.",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -8380,12 +8432,13 @@
     "cad.profiles.import",
     "cad.profiles.list",
     "cad.profiles.migrate",
-    "cad.profiles.remove"
+    "cad.profiles.remove",
+    "cad.profiles.names"
    ],
    "operation": null,
-   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply, kentos.cad.profiles.import_, kentos.cad.profiles.list, kentos.cad.profiles.migrate, kentos.cad.profiles.remove",
-   "mcp": "cad.profiles.check, cad.profiles.apply, cad.profiles.import, cad.profiles.list, cad.profiles.migrate, cad.profiles.remove",
-   "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un (Nereye: çizimin içine ya da profiller klasörüne, ADR 0735), Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558); çizimin taşıdığını kaldırmak cad.profiles.remove'un (ADR 0735).",
+   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply, kentos.cad.profiles.import_, kentos.cad.profiles.list, kentos.cad.profiles.migrate, kentos.cad.profiles.remove, kentos.cad.profiles.names",
+   "mcp": "cad.profiles.check, cad.profiles.apply, cad.profiles.import, cad.profiles.list, cad.profiles.migrate, cad.profiles.remove, cad.profiles.names",
+   "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un (Nereye: çizimin içine ya da profiller klasörüne, ADR 0735), Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558); çizimin taşıdığını kaldırmak cad.profiles.remove'un (ADR 0735); Kurum adları sekmesinin tablosu cad.profiles.names'in, Eşlemeye yaz eşlemenin ad biçimiyle cad.profiles.import'u (ADR 5180).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 0
@@ -8499,6 +8552,24 @@
    "python": "kentos.cad.rasters.mosaic",
    "mcp": "cad.rasters.mosaic",
    "note": "VRT'yi ve isteğe bağlı rasteri komut yazar; pencere planını gösterir (ADR 0517 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "raster.seamlines",
+   "kind": "command",
+   "title": "Mozaik birleşme çizgisi…",
+   "level": "semantic",
+   "via": [
+    "cad.orthophoto.seamlines",
+    "cad.orthophoto.network",
+    "cad.orthophoto.footprint"
+   ],
+   "operation": null,
+   "python": "kentos.cad.orthophoto.seamlines, kentos.cad.orthophoto.network, kentos.cad.orthophoto.footprint",
+   "mcp": "cad.orthophoto.seamlines, cad.orthophoto.network, cad.orthophoto.footprint",
+   "note": "Pencere iki ortofotonun birleşme çizgisini ve mozaik elemanlarını cad.orthophoto.seamlines'ın planıyla gösterir, Mozaik elemanlarını çiz komutun execute'uyla tek geri alma adımında yazar (ADR 4700). Ağ işaretli ortofotoların mozaik elemanlarını ve üçlü düğümleri cad.orthophoto.network ile, Ayak izi bir rasterin NoData olmayan piksellerinin sınırını ya da zarfını cad.orthophoto.footprint ile kurar ve yazar (ADR 5260).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -8704,14 +8775,15 @@
    "id": "scenario.impact",
    "kind": "command",
    "title": "Senaryo ölçüleri…",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.scenarios.impact"
+    "cad.scenarios.impact",
+    "cad.scenarios.record"
    ],
    "operation": null,
-   "python": "kentos.cad.scenarios.impact",
-   "mcp": "cad.scenarios.impact",
-   "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440).",
+   "python": "kentos.cad.scenarios.impact, kentos.cad.scenarios.record",
+   "mcp": "cad.scenarios.impact, cad.scenarios.record",
+   "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440). Ölçüleri çizime yaz karşılaştırmayı cad.scenarios.record ile “Senaryo ölçüleri” katmanına tablo olarak yazar (katman yoksa aynı adımda kurulur); tablonun damgalarını sonraki karşılaştırma records'ta okur (ADR 5060).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -10507,12 +10579,13 @@
    "title": "Pafta eğrileri…",
    "level": "semantic",
    "via": [
-    "road.terrains.sheetcontours"
+    "road.terrains.sheetcontours",
+    "road.terrains.sectioncheck"
    ],
    "operation": null,
-   "python": "Connection: road.terrains.sheetcontours",
-   "mcp": "road.terrains.sheetcontours",
-   "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820).",
+   "python": "Connection: road.terrains.sheetcontours, Connection: road.terrains.sectioncheck",
+   "mcp": "road.terrains.sheetcontours, road.terrains.sectioncheck",
+   "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820). Kesit kontrolü… seçili noktalarla road.terrains.sectioncheck'i gösterir (m. 93(1); ADR 5120).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -16652,12 +16725,13 @@
    "via": [
     "cad.zoning.check",
     "cad.profiles.apply",
-    "cad.zoning.symbolize"
+    "cad.zoning.symbolize",
+    "cad.zoning.draft"
    ],
    "operation": null,
-   "python": "kentos.cad.zoning.check, kentos.cad.profiles.apply, kentos.cad.zoning.symbolize",
-   "mcp": "cad.zoning.check, cad.profiles.apply, cad.zoning.symbolize",
-   "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420). Sembolleri karardan ver… karar alanlarının sembolünü cad.zoning.symbolize ile tek adımda verir (ADR 4240).",
+   "python": "kentos.cad.zoning.check, kentos.cad.profiles.apply, kentos.cad.zoning.symbolize, kentos.cad.zoning.draft",
+   "mcp": "cad.zoning.check, cad.profiles.apply, cad.zoning.symbolize, cad.zoning.draft",
+   "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420). Sembolleri karardan ver… karar alanlarının sembolünü cad.zoning.symbolize ile tek adımda verir, seçimleri projede saklar (ADR 4240, 5040). Plan değişikliği taslağı… taslağı cad.zoning.draft ile projede saklar ya da siler; yürürlükteki karar alanları değişmez (ADR 5040).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

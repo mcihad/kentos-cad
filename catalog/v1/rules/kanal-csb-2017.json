@@ -1,0 +1,56 @@
+{
+ "id": "csb-2017-kanal",
+ "release": 1,
+ "jurisdiction": "Türkiye: Çevre ve Şehircilik Bakanlığı, Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik ile Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik",
+ "source": "Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik, RG 06.01.2017/29940, EK-1 (tasarım); Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik, RG 23.06.2017/30105, EK-1 Çizelge 1.4; ekler Resmî Gazete'nin yayımladığı metinden 10 Kasım 2026'da okundu",
+ "effective": "2017-01-06",
+ "systems": [
+  {
+   "id": "atiksu",
+   "name": "Atıksu",
+   "source": "Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik (RG 06.01.2017/29940) EK-1: kanal eğimleri 1:A (“şu şekilde olabilir”), en az toprak örtüsü, baca aralıkları",
+   "effective": "2017-01-06",
+   "minCover": 2.7,
+   "coverNote": "Bodrumdan doğrudan bağlantı yoksa daha küçük olabilir (EK-1).",
+   "slopes": [
+    {"name": "Bağlantı kanalı", "from": 300, "to": 300, "least": 300, "greatest": 15},
+    {"name": "Tali kanal", "from": 350, "to": 600, "least": 500, "greatest": 25},
+    {"name": "Ana kanal", "from": 650, "to": 1000, "least": 1000, "greatest": 50},
+    {"name": "Ana kollektör", "over": 1000, "least": 3000, "greatest": 75}
+   ],
+   "spans": [
+    {"below": 1200, "least": 50, "greatest": 70},
+    {"over": 1200, "least": 70, "greatest": 100}
+   ]
+  },
+  {
+   "id": "yagmursuyu",
+   "name": "Yağmursuyu",
+   "source": "Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik (RG 23.06.2017/30105) EK-1 Çizelge 1.4 (beton kanallarda eğim 1:A: en az, istisnai en az, en çok) ve baca aralıkları; en az toprak örtüsü Atıksu Yönetmeliği EK-1 §1.3.6",
+   "effective": "2017-06-23",
+   "minCover": 1.2,
+   "coverNote": "Atıksu Yönetmeliği EK-1 §1.3.6: yağmursuyu kanallarında 1,2 m alınabilir.",
+   "slopes": [
+    {"name": "φ200", "from": 200, "to": 200, "least": 300, "greatest": 7},
+    {"name": "φ300", "from": 300, "to": 300, "least": 500, "greatest": 7},
+    {"name": "φ400", "from": 400, "to": 400, "least": 600, "exceptional": 900, "greatest": 25},
+    {"name": "φ500", "from": 500, "to": 500, "least": 800, "exceptional": 1000, "greatest": 25},
+    {"name": "φ600", "from": 600, "to": 600, "least": 1000, "exceptional": 1500, "greatest": 25},
+    {"name": "φ700", "from": 700, "to": 700, "least": 1000, "exceptional": 1500, "greatest": 50},
+    {"name": "φ800", "from": 800, "to": 800, "least": 1200, "exceptional": 1800, "greatest": 50},
+    {"name": "φ900", "from": 900, "to": 900, "least": 1500, "exceptional": 1800, "greatest": 50},
+    {"name": "φ1000", "from": 1000, "to": 1000, "least": 2000, "exceptional": 2500, "greatest": 75},
+    {"name": "φ1200", "from": 1200, "to": 1200, "least": 2050, "exceptional": 2500, "greatest": 75},
+    {"name": "φ1400", "from": 1400, "to": 1400, "least": 2100, "exceptional": 2500, "greatest": 75},
+    {"name": "φ1600", "from": 1600, "to": 1600, "least": 2150, "exceptional": 2500, "greatest": 75},
+    {"name": "φ2000", "from": 2000, "to": 2000, "least": 2250, "exceptional": 2500, "greatest": 75},
+    {"name": "φ3000", "from": 3000, "to": 3000, "least": 2500, "exceptional": 2500, "greatest": 75}
+   ],
+   "spans": [
+    {"below": 1200, "least": 50, "greatest": 70},
+    {"over": 1200, "greatest": 100}
+   ],
+   "spanNote": "Yerel şartlara göre artırılabilir (EK-1)."
+  }
+ ]
+}

@@ -923,17 +923,17 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
     mahallerinin kestiği alan (voidArea), net alan, çevre, hacim (net alan × kalınlık),
     kenar türü ve uzunluğu; excluded döşeme listelenir, toplanmaz. Geçişler
     (transitions): iki yanında döşeme kaplaması bilinen ve farklı iki oda olan geçişler,
-    genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723 §3): kat, genişlik, kot
-    farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa
-    yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık
-    sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata
-    bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
-    rampRailingLength. Kiriş (beams, docs/adr/8041 §3): numara, tür (kiriş, lento,
-    hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab)
-    ve beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik −
-    döşeme) × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın
-    tamamı; toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat
-    durumu, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
+    genişlikleri ve kaplamalarıyla. Rampa (ramps): kat, genişlik, kot farkı, çizildiği
+    eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu yoksa yok), eğimli
+    uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık sayısı, plan
+    alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata bağlıysa farkı
+    (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
+    rampRailingLength. Kiriş (beams): numara, tür (kiriş, lento, hatıl), kat, genişlik,
+    yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve beton hacmi:
+    kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme) × boy;
+    döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı; toplamı
+    beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu, kullanım
+    ve katmanlarla süzer (usages verilince yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -974,18 +974,17 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         düşülür), aynı kattaki boşluk mahallerinin kestiği alan (voidArea), net alan, çevre,
         hacim (net alan × kalınlık), kenar türü ve uzunluğu; excluded döşeme listelenir,
         toplanmaz. Geçişler (transitions): iki yanında döşeme kaplaması bilinen ve farklı
-        iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps, docs/adr/0723
-        §3): kat, genişlik, kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli
-        uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta
-        çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç
-        ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu;
-        toplamlarda rampArea ve rampRailingLength. Kiriş (beams, docs/adr/8041 §3): numara,
-        tür (kiriş, lento, hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı
-        döşemenin taşıyıcısı (slab) ve beton hacmi: kirişin döşemenin altında kalan kısmı
-        (genişlik × (yükseklik − döşeme) × boy; döşemenin içindeki kısmı döşemenin
-        hacmindedir), lento ve hatılın tamamı; toplamı beamVolume. levels, phases, usages ve
-        layers verilen kat, tadilat durumu, kullanım ve katmanlarla süzer (usages verilince
-        yalnız mahaller).
+        iki oda olan geçişler, genişlikleri ve kaplamalarıyla. Rampa (ramps): kat, genişlik,
+        kot farkı, çizildiği eğim (kot farkının büyüklüğü ÷ eğimli uzunluk; eğimli kolu
+        yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu,
+        sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu,
+        kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda
+        rampArea ve rampRailingLength. Kiriş (beams): numara, tür (kiriş, lento, hatıl),
+        kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab) ve
+        beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik − döşeme)
+        × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın tamamı;
+        toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat durumu,
+        kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
 
         Args:
             doc: The drawing it works on.

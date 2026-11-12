@@ -634,3 +634,85 @@ fn wall_screens() {
         shot(&mut app, "2-kesisimler");
     }
 }
+
+/// Docs/adr/5160: Kesişen borunun taraması › Bütün boru on pipes without a wall: the shared case's objects, one filled
+/// hatch per crossing pipe with an invert, each bounded by its one ellipse.
+#[test]
+fn the_crossing_pipes_fill_is_chosen() {
+    use kentos_commands::{CrossingHatch, Entity};
+    let want = profile_output("Etsiz kesişen boru, bütün boru taranır: iç elips");
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+    let _ = app.update(Message::PipesCheck(P::ProfileHatch(CrossingHatch::Whole)));
+    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let drawn: Vec<&Entity> = doc.entities().skip(before).collect();
+    assert_eq!(drawn.len(), want["uids"].as_array().map(Vec::len).unwrap_or(0));
+    let loops: Vec<usize> = drawn
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Hatch(h) => h.boundary.as_ref().map(Vec::len),
+            _ => None,
+        })
+        .collect();
+    let known = want["crossings"].as_array().expect("crossings").iter().filter(|c| c["invert"].is_number()).count();
+    assert_eq!(loops, vec![1; known]);
+}
+
+/// Docs/adr/5160, `.run/gui-evidence/kesisen-boru-taramasi-5160/`: the window with Kesişen borunun taraması on Bütün
+/// boru, then W1 close: filled whole; light wide and dark narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib pipes_check_window_tests::fill_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn fill_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesisen-boru-taramasi-5160");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pipes.check"));
+        let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+        let _ = app.update(Message::PipesCheck(P::ProfileHatch(kentos_commands::CrossingHatch::Whole)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+        let _ = app.update(Message::PipesCheck(P::DrawProfile));
+        let w1 = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .skip(before)
+            .filter_map(|e| match e {
+                kentos_commands::Entity::Ellipse(e) => Some([e.c.x, e.c.y]),
+                _ => None,
+            })
+            .nth(1)
+            .expect("W1");
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: w1[0] - 1.2, min_y: w1[1] - 0.8, max_x: w1[0] + 1.2, max_y: w1[1] + 1.0 },
+            12.0,
+        );
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-w1-yakin-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

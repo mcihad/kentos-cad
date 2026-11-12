@@ -1,7 +1,7 @@
-//! Ortofoto karşılaştırması's Dikiş hattı from the two images' seamline polygons (ortho_compare_window.rs,
+//! Ortofoto karşılaştırması's Birleşme çizgisi from the two images' mosaic elements (seamline polygons) (ortho_compare_window.rs,
 //! docs/adr/4460), on the shared seam cases' drawing of `cad.orthophoto.compare`: the two polygons chosen (Seçili
 //! çokgenleri al) give the shared case's places along their shared boundary; one polygon chosen is said and nothing is
-//! taken; the two-run case numbers each distance by its part in the table; Hattı kaldır goes back to the overlap's
+//! taken; the two-run case numbers each distance by its part in the table; Çizgiyi kaldır goes back to the overlap's
 //! grid; nothing is written. And its pictures.
 
 use kentos_domain::Slot;
@@ -33,14 +33,14 @@ fn the_seam_is_measured_along_the_seamline_polygons_shared_boundary() {
     // The two, in the case's order.
     app.selection.set(vec![Slot(3), Slot(4)]);
     let _ = app.update(Message::OrthoCompare(C::TakePolygons));
-    assert_eq!(app.ortho_compare.seam_line_name, "İki dikiş çokgeni");
+    assert_eq!(app.ortho_compare.seam_line_name, "İki mozaik elemanı");
     assert_eq!(app.ortho_compare.show, Show::Seam);
     let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
     close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
     let (_, rows) = app.ortho_compare_lines();
     assert_eq!(rows[0][0], "4.000", "one part: the distance alone");
     let notes = got["notes"].to_string();
-    assert!(notes.contains("dikiş çokgenlerinin ortak sınırı boyunca (15.31 m, 1 parça)"), "{notes}");
+    assert!(notes.contains("mozaik elemanlarının ortak sınırı boyunca (15.31 m, 1 parça)"), "{notes}");
     let _ = app.update(Message::OrthoCompare(C::DropLine));
     assert!(app.ortho_compare.seam_polygons.is_none());
     let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");

@@ -1,5 +1,5 @@
 //! Dik açılandır (the web's `square.ts`; docs/adr/0221 §3): corners near a
-//! right angle or near straight made exact, iD's and QGIS's rule; the other
+//! right angle or near straight made exact, the usual squaring rule; the other
 //! corners stay, elevations go with their vertices.
 
 use kentos_geometry_core::ops::generalize::calls::square_run;
@@ -24,7 +24,7 @@ pub fn tool() -> Tool {
         description: "Dik açıya ve düzlüğe yakın köşeleri tam dik ve düz yapar (binalar, parseller); öbür köşeler olduğu gibi kalır.".into(),
         help: Some([
             "Örnekler: sayısallaştırılmış bina köşelerini dik yapmak, el çizimi yapı adalarını düzeltmek.",
-            "Açısı dik açıya ya da düzlüğe Açı eşiği kadar yakın köşeler açıortayları boyunca adım adım kaydırılır (iD'nin ve QGIS'in kuralı); en kareye yakın sonuç yazılır. Daha uzak açılı köşeler (örneğin 45°) kalır. Açık çizginin uçları ve yayların uçları kıpırdamaz; kotlar köşeleriyle gider.",
+            "Açısı dik açıya ya da düzlüğe Açı eşiği kadar yakın köşeler açıortayları boyunca adım adım kaydırılır (yaygın dikleştirme kuralı); en kareye yakın sonuç yazılır. Daha uzak açılı köşeler (örneğin 45°) kalır. Açık çizginin uçları ve yayların uçları kıpırdamaz; kotlar köşeleriyle gider.",
         ]
         .join("\n\n")),
         keywords: ["dik", "açı", "kare", "orthogonalize", "bina", "doksan", "square"]

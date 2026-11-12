@@ -19,6 +19,8 @@ from ..types import (  # noqa: F401
     MapSurveyOperation,
     MapSurveyQuery,
     MapSurveyTree,
+    NetworkCorrelations,
+    NetworkCorrelationsName,
     SurveyPlaceTolerance,
 )
 
@@ -49,35 +51,49 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
     sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel
     değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye
     kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt
-    çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da. baselines: bir dosyanın baz
-    vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve
+    çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da; baz oturumu bo-N çıkar (bazları
+    kalır), dengelemedeki oturum ve bir oturumdaki baz çıkmaz. baselines: bir dosyanın
+    baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve
     PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz
-    korelasyonları okunmaz, uyarı gvx_correlations_ignored; ya da B; satırlı baz metni,
-    K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known:
-    bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve,
-    epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin
-    dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini
-    de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede
-    uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile
-    reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan,
-    sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin
-    noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne
-    yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed;
-    ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda
-    büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde,
-    kb-N dayanan kaydıyla (ADR 2960); heights ile kot çubuğu, labels ile yarı eksen
-    etiketi: etiket önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst,
-    sol üst, sağ alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş
-    değilse doğuda kalır (labelsMoved, labelsCrowded; ADR 4160). Bazı dışlanan ya da
-    bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler:
+    korelasyonları baz oturumu bo-N olarak saklanır (bazları, satır satır dokuzar
+    korelasyonlu blokları; blokları eksik oturum saklanır, uyarı gvx_session_incomplete;
+    iki vektör anmayan oturum alınmaz, uyarı gvx_correlations_ignored); ya da B; satırlı
+    baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek
+    baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi
+    çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir
+    işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn-
+    kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı
+    dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse
+    network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen
+    noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen
+    nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi
+    (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa
+    uyarı network_rules_failed; ellipses verilirse (layer, scale 1–100 000) her noktanın
+    hata elipsi aynı adımda büyütülerek çizilir, büyük ekseni semtinden meridyen
+    yakınsaması çıkarılmış yönde, kb-N dayanan kaydıyla; heights ile kot çubuğu, labels
+    ile yarı eksen etiketi: etiket önce doğuda, oraya elips, çubuk ya da önceki etiket
+    düşerse sağ üst, sol üst, sağ alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde;
+    hiçbiri boş değilse doğuda kalır (labelsMoved, labelsCrowded). Bazı dışlanan ya da
+    bilinen noktası dışlanan dengelemenin noktası güncel değildir. network'ün
+    correlations'ı ve velocities'i map.survey.network'ünkiler gibidir: dengeleme kaydı
+    kullandığı baz oturumlarını (sessions), noktanın sonucu hızını (velocity: doğu,
+    kuzey, yukarı m/yıl, ızgaranın adı ve SHA-256'sı) tutar. tolerance: bilinen
+    noktaların kabul farkı sınırı (horizontal, vertical metre; source: yönetmelik
+    maddesi ya da idarenin şartnamesi, zorunlu) projeye yazılır, map.survey.query'nin
+    places'i girdide sınır yoksa onunla değerlendirir; üçü de verilmezse saklı sınır
+    kalkar. independent: bir baz oturumunun (session verilmezse bütün oturumların)
+    bağımsız bazları dengelemeye girer, bağımlıları girmez (n alıcılı oturumda n − 1
+    bağımsız baz: dışlanmamış bazlar kısadan uzuna, işaretleri henüz bağlanmamış ikisini
+    bağlayan bağımsızdır; dışlananlar dışarıda kalır); tek geri alma adımı. Retler:
     invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record,
     unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path,
     file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame,
     no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch,
     method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
     already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
-    entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing,
-    known_differ, unknown_rule_class, duplicate_station, invalid_covariance,
+    entity_not_found, survey_full, ağın retleri (no_baselines, no_velocity_grid,
+    datum_missing, known_differ, unknown_rule_class, duplicate_station,
+    invalid_covariance, session_blocks_missing, session_covariance_invalid,
     network_too_large, network_disconnected, network_blunder, network_test_failed) ve
     koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing,
     geoid_missing, no_system).
@@ -123,35 +139,49 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
         nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler
         kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt
         çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki
-        baz ve bilinen nokta da. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0:
-        işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS
-        zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları okunmaz, uyarı
-        gvx_correlations_ignored; ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı
-        baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret,
-        enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı
-        verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen
-        noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network:
-        map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa
-        network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N
-        dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve
-        serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni
-        nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine),
-        method network, tek adım; sınıf tutmazsa uyarı network_rules_failed; ellipses
-        verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda büyütülerek
-        çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde, kb-N dayanan
-        kaydıyla (ADR 2960); heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket
+        baz ve bilinen nokta da; baz oturumu bo-N çıkar (bazları kalır), dengelemedeki
+        oturum ve bir oturumdaki baz çıkmaz. baselines: bir dosyanın baz vektörleri bz-N
+        (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans,
+        GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları baz oturumu bo-N
+        olarak saklanır (bazları, satır satır dokuzar korelasyonlu blokları; blokları eksik
+        oturum saklanır, uyarı gvx_session_incomplete; iki vektör anmayan oturum alınmaz,
+        uyarı gvx_correlations_ignored); ya da B; satırlı baz metni, K/N satırları alınmaz,
+        uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N
+        (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ
+        kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin
+        dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini
+        de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede
+        uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile
+        reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan,
+        sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin
+        noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne
+        yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed;
+        ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda
+        büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde,
+        kb-N dayanan kaydıyla; heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket
         önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst, sol üst, sağ
         alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş değilse doğuda
-        kalır (labelsMoved, labelsCrowded; ADR 4160). Bazı dışlanan ya da bilinen noktası
-        dışlanan dengelemenin noktası güncel değildir. Retler: invalid_revision,
+        kalır (labelsMoved, labelsCrowded). Bazı dışlanan ya da bilinen noktası dışlanan
+        dengelemenin noktası güncel değildir. network'ün correlations'ı ve velocities'i
+        map.survey.network'ünkiler gibidir: dengeleme kaydı kullandığı baz oturumlarını
+        (sessions), noktanın sonucu hızını (velocity: doğu, kuzey, yukarı m/yıl, ızgaranın
+        adı ve SHA-256'sı) tutar. tolerance: bilinen noktaların kabul farkı sınırı
+        (horizontal, vertical metre; source: yönetmelik maddesi ya da idarenin şartnamesi,
+        zorunlu) projeye yazılır, map.survey.query'nin places'i girdide sınır yoksa onunla
+        değerlendirir; üçü de verilmezse saklı sınır kalkar. independent: bir baz oturumunun
+        (session verilmezse bütün oturumların) bağımsız bazları dengelemeye girer,
+        bağımlıları girmez (n alıcılı oturumda n − 1 bağımsız baz: dışlanmamış bazlar
+        kısadan uzuna, işaretleri henüz bağlanmamış ikisini bağlayan bağımsızdır;
+        dışlananlar dışarıda kalır); tek geri alma adımı. Retler: invalid_revision,
         revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item,
         invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found,
         unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations,
         no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count,
         sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
         already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
-        entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing,
-        known_differ, unknown_rule_class, duplicate_station, invalid_covariance,
+        entity_not_found, survey_full, ağın retleri (no_baselines, no_velocity_grid,
+        datum_missing, known_differ, unknown_rule_class, duplicate_station,
+        invalid_covariance, session_blocks_missing, session_covariance_invalid,
         network_too_large, network_disconnected, network_blunder, network_test_failed) ve
         koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing,
         geoid_missing, no_system).
@@ -253,10 +283,19 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
     işlenmiş σ), noktanın σ kuzey/doğu/yukarısını sınırlarla ve testleri sınıfın
     güveniyle (C1: 1−α = 0,95, w > 1,96; başkasında Baarda α₀ = 0,001, w > 3,29)
     denetler. acceptable ve why: kabul edilip edilemeyeceği. Kurum onayı değildir.
-    Retler: not_a_map_project, unknown_survey_record, invalid_survey_value,
-    unknown_rule_class, no_baselines, solutions_differ, datum_missing, known_differ,
-    unknown_frame, duplicate_station, invalid_covariance, network_too_large,
-    network_disconnected.
+    correlations: session ile her baz oturumunun (bo-N) dengelemeye giren iki ya da daha
+    çok bazı tam kovaryansıyla (çapraz bloklar ρ·σ·σ) birlikte girer, bazlar
+    korelasyonlu ölçü gibi bileşen bileşen sınanır (w = |Pv|ᵢ/√(PQvvP)ᵢᵢ); none ya da
+    verilmezse her baz kendi 3×3'üyle; cevabın correlations'ı hangisinin kullanıldığını,
+    giren ve kullanılmayan oturumları söyler (uyarı session_correlations_unused).
+    velocities ile bilinen nokta olmayan her işaretin hızı (doğu, kuzey, yukarı m/yıl)
+    arazi ölçümünün hız ızgarasından, koordinat zinciriyle bir yıllık taşınmadan okunur;
+    velocityGrid ızgaranın adı ve SHA-256'sı; ızgarasız ret no_velocity_grid, ızgaranın
+    dışındaki işaret why'da. Retler: not_a_map_project, unknown_survey_record,
+    invalid_survey_value, unknown_rule_class, no_baselines, no_velocity_grid,
+    solutions_differ, datum_missing, known_differ, unknown_frame, duplicate_station,
+    invalid_covariance, session_blocks_missing, session_covariance_invalid,
+    network_too_large, network_disconnected.
     """
     __slots__ = ()
     id = "map.survey.network"
@@ -274,10 +313,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        correlations: NetworkCorrelations | NetworkCorrelationsName | None | Unset = UNSET,
         epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
+        velocities: bool | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> MapSurveyNetworked:
@@ -297,19 +338,33 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         σ'sını a + b·ppm·uzunluk sınırıyla (C1 serbest dengelemenin, C2/C3 işlenmiş σ),
         noktanın σ kuzey/doğu/yukarısını sınırlarla ve testleri sınıfın güveniyle (C1: 1−α =
         0,95, w > 1,96; başkasında Baarda α₀ = 0,001, w > 3,29) denetler. acceptable ve why:
-        kabul edilip edilemeyeceği. Kurum onayı değildir. Retler: not_a_map_project,
-        unknown_survey_record, invalid_survey_value, unknown_rule_class, no_baselines,
-        solutions_differ, datum_missing, known_differ, unknown_frame, duplicate_station,
-        invalid_covariance, network_too_large, network_disconnected.
+        kabul edilip edilemeyeceği. Kurum onayı değildir. correlations: session ile her baz
+        oturumunun (bo-N) dengelemeye giren iki ya da daha çok bazı tam kovaryansıyla
+        (çapraz bloklar ρ·σ·σ) birlikte girer, bazlar korelasyonlu ölçü gibi bileşen bileşen
+        sınanır (w = |Pv|ᵢ/√(PQvvP)ᵢᵢ); none ya da verilmezse her baz kendi 3×3'üyle;
+        cevabın correlations'ı hangisinin kullanıldığını, giren ve kullanılmayan oturumları
+        söyler (uyarı session_correlations_unused). velocities ile bilinen nokta olmayan her
+        işaretin hızı (doğu, kuzey, yukarı m/yıl) arazi ölçümünün hız ızgarasından,
+        koordinat zinciriyle bir yıllık taşınmadan okunur; velocityGrid ızgaranın adı ve
+        SHA-256'sı; ızgarasız ret no_velocity_grid, ızgaranın dışındaki işaret why'da.
+        Retler: not_a_map_project, unknown_survey_record, invalid_survey_value,
+        unknown_rule_class, no_baselines, no_velocity_grid, solutions_differ, datum_missing,
+        known_differ, unknown_frame, duplicate_station, invalid_covariance,
+        session_blocks_missing, session_covariance_invalid, network_too_large,
+        network_disconnected.
 
         Args:
             doc: The drawing it works on.
             campaign:
             class_:
+            correlations: `session`: each baseline session's baselines whitened together by its full covariance, the baselines tested
+                component by component as correlated observations; `none` (when not given): each baseline by its own 3×3
+                (docs/adr/4920).
             epoch: The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120). Unit: year.
             hold:
             rules:
             scale: Unit: 1.
+            velocities: Each new point's velocity east, north, up read from the campaign's velocity grid (docs/adr/4920).
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -325,10 +380,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.execute_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            correlations=correlations,
             epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
+            velocities=velocities,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -338,10 +395,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        correlations: NetworkCorrelations | NetworkCorrelationsName | None | Unset = UNSET,
         epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
+        velocities: bool | Unset = UNSET,
     ) -> MapSurveyNetworked:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -349,10 +408,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.plan_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            correlations=correlations,
             epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
+            velocities=velocities,
         ))
 
     def validate(
@@ -362,10 +423,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        correlations: NetworkCorrelations | NetworkCorrelationsName | None | Unset = UNSET,
         epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
+        velocities: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -373,10 +436,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.validate_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            correlations=correlations,
             epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
+            velocities=velocities,
         ))
 
     def answer(
@@ -386,10 +451,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        correlations: NetworkCorrelations | NetworkCorrelationsName | None | Unset = UNSET,
         epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
+        velocities: bool | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -402,10 +469,12 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.answer_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            correlations=correlations,
             epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
+            velocities=velocities,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -427,9 +496,13 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
     sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her
     bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız
     ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı ve yatay
-    uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve
-    düşey sınırını aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da
-    0'dan büyük değil), not_a_map_project, invalid_uid, entity_not_found.
+    uzaklığı) ya da neden yeri olmadığı; tolerance ile kullanıcının yatay ve düşey
+    sınırını aşan yer beyond; girdide sınır yoksa projede saklı sınır (tolerance,
+    kaynağıyla) kullanılır. Ağaç baz oturumlarını (baselineSessions) ve bazın oturumunu
+    da verir; oturumdaki dışlanmamış bazın independent'i oturumun n − 1 bağımsız
+    bazından mı (kısadan uzuna yayılan ağaç) yoksa bağımlı mı olduğunu söyler. Retler:
+    invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project,
+    invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.survey.query"
@@ -465,9 +538,12 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi
         yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle;
         işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı;
-        tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını aşan yer beyond.
-        Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil),
-        not_a_map_project, invalid_uid, entity_not_found.
+        tolerance ile kullanıcının yatay ve düşey sınırını aşan yer beyond; girdide sınır
+        yoksa projede saklı sınır (tolerance, kaynağıyla) kullanılır. Ağaç baz oturumlarını
+        (baselineSessions) ve bazın oturumunu da verir; oturumdaki dışlanmamış bazın
+        independent'i oturumun n − 1 bağımsız bazından mı (kısadan uzuna yayılan ağaç) yoksa
+        bağımlı mı olduğunu söyler. Retler: invalid_input (sınır places'siz, boş ya da 0'dan
+        büyük değil), not_a_map_project, invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.

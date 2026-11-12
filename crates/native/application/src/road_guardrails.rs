@@ -68,6 +68,12 @@ pub(crate) struct Read {
 
 /// The guardrail read now.
 pub(crate) fn read(doc: &Document, def: &GuardrailDef) -> Result<Read, Stop> {
+    read_told(doc, def, &|_, _| false)
+}
+
+/// [`read`] telling `tick` how far it has come (docs/adr/4860): its corridor's sections, then its crosses every `step`
+/// metres (`road_stakeout::table_told`); `tick` answering true stops it there, cancelled.
+pub(crate) fn read_told(doc: &Document, def: &GuardrailDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
     let (_, corridor) = corridors::find(doc.road_corridors(), &def.corridor, "corridor")?;
     let query = StakeoutQuery {
         corridor: corridor.id.clone(),
@@ -77,12 +83,13 @@ pub(crate) fn read(doc: &Document, def: &GuardrailDef) -> Result<Read, Stop> {
         codes: Some(["left.hinge", "left.daylight", "right.hinge", "right.daylight"].map(str::to_owned).to_vec()),
         distances: StakeoutDistances::Grid,
     };
-    let (table, mut warnings, alignment) = crate::road_stakeout::table(doc, &query).map_err(|stop| {
-        fail(
+    let (table, mut warnings, alignment) = crate::road_stakeout::table_told(doc, &query, tick).map_err(|stop| match stop {
+        Stop::Cancelled => Stop::Cancelled,
+        stop => fail(
             codes::INVALID_GUARDRAIL,
             format!("“{}” otokorkuluğunun koridoru okunamıyor: {}", def.name, words(stop)),
             "corridor",
-        )
+        ),
     })?;
     // A cross without a section reads as no fill on either side; the stakeout's own words for it are not this table's.
     warnings.retain(|w| w.code != codes::STAKEOUT_UNSOLVED);

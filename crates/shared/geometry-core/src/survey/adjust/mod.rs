@@ -12,9 +12,11 @@ pub mod chi2;
 pub mod gnss;
 pub mod horizontal;
 pub mod levelling;
+pub mod robust;
 pub mod student;
 mod linalg;
 mod sparse;
+pub mod session;
 
 use crate::api::Op;
 use crate::text::edit::fold;

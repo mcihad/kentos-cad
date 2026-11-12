@@ -10,7 +10,8 @@
 //! with it is an anonymous block), and a name DXF's case-blind comparison
 //! takes for another's gets " (2)"; every change is said. A definition's
 //! attribute definitions (§7) follow its objects as ATTDEFs; a tag's white
-//! space and control characters become "_" (DXF's tags have none), and said.
+//! space and control characters become "_" (DXF's tags have none), and said;
+//! the name is then kept in the ATTDEF's KentOS data (docs/adr/4800).
 
 use std::collections::{HashMap, HashSet};
 
@@ -64,7 +65,7 @@ pub(super) fn tags(
             report.note(
                 "Öznitelik etiketi",
                 &format!(
-                    "“{name}” bloğunun “{}” etiketi “{tag}” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz)",
+                    "“{name}” bloğunun “{}” etiketi “{tag}” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz); adı ATTDEF'in KentOS verisinde, KentOS geri okurken düzeltir",
                     a.tag
                 ),
                 0,
@@ -271,13 +272,18 @@ pub(super) fn block(
         if vertical != 0 {
             out.int(74, vertical);
         }
-        // Its own height and point in KentOS's data when the file's do not give them back exactly.
-        let kept = super::super::xdata::Meta {
+        // Its own height and point in KentOS's data when the file's do not give them back exactly; docs/adr/4800: a tag
+        // DXF's tags could not hold as the name is gets the name there too. Read back, the definition and its inserts'
+        // values take the name while the file's tag is still this one.
+        let mut kept = super::super::xdata::Meta {
             height: super::super::capitals::kept(a.height, Some(super::super::capitals::ARIAL)),
             at: super::kept_point(&justified),
             ..Default::default()
         };
-        if kept.height.is_some() || kept.at.is_some() {
+        if *tag != a.tag {
+            kept.tag_names = std::collections::BTreeMap::from([(tag.clone(), a.tag.clone())]);
+        }
+        if kept.height.is_some() || kept.at.is_some() || !kept.tag_names.is_empty() {
             out.xdata(&super::super::xdata::groups(&kept));
         }
     }

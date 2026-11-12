@@ -18,6 +18,7 @@ from ..types import (  # noqa: F401
     MapWorkRestore,
     MapWorkRestored,
     MapWorkTree,
+    ShiftLimit,
 )
 
 if TYPE_CHECKING:
@@ -38,16 +39,22 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
     source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive:
     nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi
     diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release:
-    verilen nesneler kendi türetme kayıtlarından çıkar (Civil 3D'nin promote'u gibi
-    bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink,
-    kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son
-    yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya
-    ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz),
-    uyarı link_not_followed (ADR 1201). Retler: invalid_revision, revision_conflict,
-    not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text,
-    layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path,
-    file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found,
-    already_derived, not_derived, approval_stale, layer_locked, work_full.
+    verilen nesneler kendi türetme kayıtlarından çıkar (bağımsız çizim olur), nesnesi
+    kalmayan kayıt gider (freed, released). relink, kaynağı eski dosya olan dış
+    başvuruları da aynı adımda yeni dosyaya geçirir, son yükledikleri içerik yeni
+    dosyanınkiyse (links); başka içerik yükleyen dış başvuruya ve eski dosyadaki bağlı
+    katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz), uyarı link_not_followed.
+    profile: öğenin tipli katman profili (name: veri profilinin adı, classes: sınıfları;
+    yoksa hepsi); eksik sınıf katmanları profilin yerine eklenir, katmanların eksik
+    alanları eklenir, sınıfların katmanları öğeye girer, öbür katmanlar serbest kalır;
+    name verilmezse profil kalkar. Profili olan öğe tipli katmanlarında bulgu varken
+    onaylanmaz (approval_profile). drawing: açık projenin dosyası, profil klasörü için.
+    Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item,
+    unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item,
+    nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities,
+    invalid_uid, entity_not_found, already_derived, not_derived, approval_stale,
+    unknown_profile, invalid_profile, unknown_profile_class, approval_profile,
+    layer_refused, layer_locked, work_full.
     """
     __slots__ = ()
     id = "map.work.edit"
@@ -64,6 +71,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         /,
         *,
         operation: MapWorkOperation,
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -80,20 +88,27 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive:
         nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi
         diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release:
-        verilen nesneler kendi türetme kayıtlarından çıkar (Civil 3D'nin promote'u gibi
-        bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink,
-        kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son
-        yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya
-        ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz),
-        uyarı link_not_followed (ADR 1201). Retler: invalid_revision, revision_conflict,
-        not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text,
-        layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path,
-        file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found,
-        already_derived, not_derived, approval_stale, layer_locked, work_full.
+        verilen nesneler kendi türetme kayıtlarından çıkar (bağımsız çizim olur), nesnesi
+        kalmayan kayıt gider (freed, released). relink, kaynağı eski dosya olan dış
+        başvuruları da aynı adımda yeni dosyaya geçirir, son yükledikleri içerik yeni
+        dosyanınkiyse (links); başka içerik yükleyen dış başvuruya ve eski dosyadaki bağlı
+        katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz), uyarı link_not_followed.
+        profile: öğenin tipli katman profili (name: veri profilinin adı, classes: sınıfları;
+        yoksa hepsi); eksik sınıf katmanları profilin yerine eklenir, katmanların eksik
+        alanları eklenir, sınıfların katmanları öğeye girer, öbür katmanlar serbest kalır;
+        name verilmezse profil kalkar. Profili olan öğe tipli katmanlarında bulgu varken
+        onaylanmaz (approval_profile). drawing: açık projenin dosyası, profil klasörü için.
+        Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item,
+        unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item,
+        nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities,
+        invalid_uid, entity_not_found, already_derived, not_derived, approval_stale,
+        unknown_profile, invalid_profile, unknown_profile_class, approval_profile,
+        layer_refused, layer_locked, work_full.
 
         Args:
             doc: The drawing it works on.
             operation:
+            drawing: The open project's file, an absolute path (docs/adr/4880): a profile not built in is looked for in its folder.
             expected_revision:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -109,6 +124,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         """
         return self.execute_input(doc, MapWorkEdit(
             operation=operation,
+            drawing=drawing,
             expected_revision=expected_revision,
         ), request_id=request_id, expected=expected)
 
@@ -118,6 +134,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         /,
         *,
         operation: MapWorkOperation,
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> MapWorkEdited:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -125,6 +142,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         """
         return self.plan_input(doc, MapWorkEdit(
             operation=operation,
+            drawing=drawing,
             expected_revision=expected_revision,
         ))
 
@@ -134,6 +152,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         /,
         *,
         operation: MapWorkOperation,
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -141,6 +160,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         """
         return self.validate_input(doc, MapWorkEdit(
             operation=operation,
+            drawing=drawing,
             expected_revision=expected_revision,
         ))
 
@@ -150,6 +170,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         /,
         *,
         operation: MapWorkOperation,
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -162,6 +183,7 @@ class _MapWorkEdit(LocalCommand[MapWorkEdit, MapWorkEdited, MapWorkEdited]):
         """
         return self.answer_input(doc, MapWorkEdit(
             operation=operation,
+            drawing=drawing,
             expected_revision=expected_revision,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -186,13 +208,28 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
     içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası,
     mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra
     projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath,
-    none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Onaydan
-    sonra değişen öğenin changes'i (ADR 2880, 3280, 3680, 4480): eklenen, silinen,
-    değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları;
-    değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri,
-    geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve silinen
-    nesnelerin onaylanan hâli (removedObjects). Retler: not_a_map_project,
-    invalid_file_path, invalid_uid, entity_not_found.
+    none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol). Onaydan sonra
+    değişen öğenin changes'i: eklenen, silinen, değişen nesneler; onay parçaları
+    tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen
+    özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin
+    onaylanan hâli (objects[].approved) ve ne kadar kaydığı (objects[].shift: aynı türde
+    ve aynı köşe sayısındaysa köşe köşe en büyük kayma, köşe numarası ve KOH; her
+    durumda iki şeklin Hausdorff uzaklığı ve yeri), silinen nesnelerin onaylanan hâli
+    (removedObjects). Profili olan öğenin profile'ı: profil bulundu mu, başlığı, sürümü,
+    öğenin sınıfları (katmanı, nesne ve bulgu sayısı), bulguları
+    (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi olan serbest katmanları.
+    limit: kayma sınırı; basis own (metres), detail (BÖHHBÜY m. 46(1), ±7 cm), drawing
+    (m. 78(1)(h), ±0,2 mm × scale) ya da method (Tapu Planlarında Yanılma Sınırı
+    Yönetmeliği m. 9(1) tablosu: method ve scale; tabloda olmayan ölçek ve boş hücre
+    reddedilir). Değerler kural dosyasındadır (konum-dogrulugu-2022). Her kaymanın
+    beyond'u (köşeleri eşleniyorsa en büyük köşe kayması, eşlenmiyorsa Hausdorff
+    sınırdan büyük mü) ve over'ı (sınırı aşan köşe sayısı), changes.beyond (sınırı aşan
+    nesne sayısı), ağacın limit'i (değeri ve kaynağı); sınır içinde olmak teknik hata
+    olmadığı yargısı değildir. suggest: profili olmayan öğeye türüne uyan profiller
+    (suggested: adı, başlığı, sınıfları; sınıfın work alanı öğe türlerini söyler):
+    KentOS'unkiler, çizimin içindekiler ve proje klasörününkiler (kurumun profili).
+    Retler: not_a_map_project, invalid_file_path, invalid_input (limit), invalid_uid,
+    entity_not_found.
     """
     __slots__ = ()
     id = "map.work.query"
@@ -210,6 +247,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -229,19 +268,35 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan
         dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır;
         dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve
-        relative'i (kayıtlı göreli yol) ADR 1201. Onaydan sonra değişen öğenin changes'i
-        (ADR 2880, 3280, 3680, 4480): eklenen, silinen, değişen nesneler; onay parçaları
-        tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen
-        özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin
-        onaylanan hâli (objects[].approved) ve silinen nesnelerin onaylanan hâli
-        (removedObjects). Retler: not_a_map_project, invalid_file_path, invalid_uid,
-        entity_not_found.
+        relative'i (kayıtlı göreli yol). Onaydan sonra değişen öğenin changes'i: eklenen,
+        silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen
+        parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki
+        değerleri, geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve ne
+        kadar kaydığı (objects[].shift: aynı türde ve aynı köşe sayısındaysa köşe köşe en
+        büyük kayma, köşe numarası ve KOH; her durumda iki şeklin Hausdorff uzaklığı ve
+        yeri), silinen nesnelerin onaylanan hâli (removedObjects). Profili olan öğenin
+        profile'ı: profil bulundu mu, başlığı, sürümü, öğenin sınıfları (katmanı, nesne ve
+        bulgu sayısı), bulguları (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi
+        olan serbest katmanları. limit: kayma sınırı; basis own (metres), detail (BÖHHBÜY m.
+        46(1), ±7 cm), drawing (m. 78(1)(h), ±0,2 mm × scale) ya da method (Tapu Planlarında
+        Yanılma Sınırı Yönetmeliği m. 9(1) tablosu: method ve scale; tabloda olmayan ölçek
+        ve boş hücre reddedilir). Değerler kural dosyasındadır (konum-dogrulugu-2022). Her
+        kaymanın beyond'u (köşeleri eşleniyorsa en büyük köşe kayması, eşlenmiyorsa
+        Hausdorff sınırdan büyük mü) ve over'ı (sınırı aşan köşe sayısı), changes.beyond
+        (sınırı aşan nesne sayısı), ağacın limit'i (değeri ve kaynağı); sınır içinde olmak
+        teknik hata olmadığı yargısı değildir. suggest: profili olmayan öğeye türüne uyan
+        profiller (suggested: adı, başlığı, sınıfları; sınıfın work alanı öğe türlerini
+        söyler): KentOS'unkiler, çizimin içindekiler ve proje klasörününkiler (kurumun
+        profili). Retler: not_a_map_project, invalid_file_path, invalid_input (limit),
+        invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.
             deep:
             drawing: The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
                 its relative path from this file's folder, then in the project's search paths. None: only at its path.
+            limit: The limit each changed object's shift is set against (docs/adr/5280).
+            suggest: List the suggested profiles of the items without one (docs/adr/5280).
             uid:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -258,6 +313,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.execute_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ), request_id=request_id, expected=expected)
 
@@ -268,6 +325,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> MapWorkTree:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -276,6 +335,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.plan_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ))
 
@@ -286,6 +347,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -294,6 +357,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.validate_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ))
 
@@ -304,6 +369,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         *,
         deep: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
+        limit: ShiftLimit | None | Unset = UNSET,
+        suggest: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -317,6 +384,8 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         return self.answer_input(doc, MapWorkQuery(
             deep=deep,
             drawing=drawing,
+            limit=limit,
+            suggest=suggest,
             uid=uid,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -327,19 +396,18 @@ query = _MapWorkQuery()
 
 class _MapWorkRestore(LocalCommand[MapWorkRestore, MapWorkRestored, MapWorkRestored]):
     """``map.work.restore`` v1. Onaylı hâline getir: Onaylı bir harita işi öğesinin (item)
-    nesnelerini onayın tuttuğu değerlerle (şema 213, ADR 3680) geri getirir; tek geri
-    alma adımı “Onaylı hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne
-    aynı kalıcı kimlikle yeniden oluşturulur (restored); değişen ya da öğenin
-    katmanlarından çıkan nesne onaylanan değerine döner (reverted). uids verilirse
-    yalnız o onaylı nesneler (her biri silinmiş ya da değişmiş olmalı); verilmezse
-    hepsi. Onaydan sonra eklenen nesneler yerinde kalır (added sayısı); asApproved
-    öğenin içeriğinin onaylanan içerikle aynı olup olmadığını söyler. Geri gelen
-    nesnenin katmanı çizimde, katman, kilitsiz ve türüne uygun olmalı; değişen nesnenin
-    şimdiki katmanı kilitli olmamalı. Uyarılar: layer_hidden. Retler: invalid_revision,
-    revision_conflict, not_a_map_project, unknown_work_item, work_not_approved,
-    no_approved_values (dosyalı öğe, değerleri tutmayan onay), invalid_uid,
-    not_approved_object, nothing_to_restore, layer_not_found, not_a_layer, layer_locked,
-    layer_geometry_mismatch.
+    nesnelerini onayın tuttuğu değerlerle (şema 213) geri getirir; tek geri alma adımı
+    “Onaylı hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı
+    kimlikle yeniden oluşturulur (restored); değişen ya da öğenin katmanlarından çıkan
+    nesne onaylanan değerine döner (reverted). uids verilirse yalnız o onaylı nesneler
+    (her biri silinmiş ya da değişmiş olmalı); verilmezse hepsi. Onaydan sonra eklenen
+    nesneler yerinde kalır (added sayısı); asApproved öğenin içeriğinin onaylanan
+    içerikle aynı olup olmadığını söyler. Geri gelen nesnenin katmanı çizimde, katman,
+    kilitsiz ve türüne uygun olmalı; değişen nesnenin şimdiki katmanı kilitli olmamalı.
+    Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict,
+    not_a_map_project, unknown_work_item, work_not_approved, no_approved_values (dosyalı
+    öğe, değerleri tutmayan onay), invalid_uid, not_approved_object, nothing_to_restore,
+    layer_not_found, not_a_layer, layer_locked, layer_geometry_mismatch.
     """
     __slots__ = ()
     id = "map.work.restore"
@@ -362,8 +430,8 @@ class _MapWorkRestore(LocalCommand[MapWorkRestore, MapWorkRestored, MapWorkResto
         expected: Expected | None = None,
     ) -> MapWorkRestored:
         """Onaylı hâline getir: Onaylı bir harita işi öğesinin (item) nesnelerini onayın
-        tuttuğu değerlerle (şema 213, ADR 3680) geri getirir; tek geri alma adımı “Onaylı
-        hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı kimlikle
+        tuttuğu değerlerle (şema 213) geri getirir; tek geri alma adımı “Onaylı hâline
+        getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı kimlikle
         yeniden oluşturulur (restored); değişen ya da öğenin katmanlarından çıkan nesne
         onaylanan değerine döner (reverted). uids verilirse yalnız o onaylı nesneler (her
         biri silinmiş ya da değişmiş olmalı); verilmezse hepsi. Onaydan sonra eklenen

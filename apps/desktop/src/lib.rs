@@ -84,23 +84,34 @@ mod readjustment_sheet;
 mod parcel_boundaries_window;
 mod parcel_register_window;
 mod pipes_check_window;
+mod pipes_check_rules;
 mod exchange_check_window;
 mod asbuilt_window;
+mod asbuilt_trend;
+mod asbuilt_chart;
+mod ortho_network_section;
+mod asbuilt_review_form;
 mod project_graph_window;
 mod survey_network_window;
 mod features_reconcile_window;
 mod features_reconcile_fill;
 mod zoning_window;
 mod zoning_symbols_window;
+mod zoning_draft_window;
 mod zoning_marks;
 mod pipes_marks;
 mod survey_baseline_marks;
 mod impact_window;
 mod readjustment_window;
 mod ortho_compare_window;
+mod ortho_seamlines_window;
 mod ortho_window;
 mod overlap_window;
 mod register_window;
+mod scan_network_window;
+mod cloud_place_window;
+mod catalog_report_window;
+mod section_check_window;
 mod sheet_contours_window;
 mod stockpile_window;
 mod xrefs_review_view;
@@ -173,6 +184,7 @@ mod blocks_panel;
 mod navigator;
 mod road_project_panel;
 mod map_work_panel;
+mod map_work_limit;
 mod map_survey_panel;
 mod map_survey_network_rows;
 mod bottom;
@@ -235,6 +247,7 @@ mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
 mod data_profile;
+mod data_profile_names;
 mod subnetworks_window;
 mod source_status;
 mod source_trouble;
@@ -249,6 +262,8 @@ mod edge_shift_bond_scenes;
 mod edge_shift_junction_scenes;
 #[cfg(test)]
 mod topology_inner_scenes;
+#[cfg(test)]
+mod arc_join_scenes;
 #[cfg(test)]
 mod elevation_scenes;
 #[cfg(test)]
@@ -367,6 +382,12 @@ mod road_project_regional_tests;
 #[cfg(test)]
 mod map_work_panel_tests;
 #[cfg(test)]
+mod independent_baselines_tests;
+#[cfg(test)]
+mod catalog_carry_tests;
+#[cfg(test)]
+mod map_work_limit_tests;
+#[cfg(test)]
 mod map_work_tools_tests;
 #[cfg(test)]
 mod map_work_stamps_tests;
@@ -376,6 +397,8 @@ mod map_work_changes_tests;
 mod map_work_restore_tests;
 #[cfg(test)]
 mod map_work_geometry_tests;
+#[cfg(test)]
+mod map_work_profile_tests;
 #[cfg(test)]
 mod survey_heights_tests;
 #[cfg(test)]
@@ -417,9 +440,19 @@ mod asbuilt_window_tests;
 #[cfg(test)]
 mod asbuilt_series_tests;
 #[cfg(test)]
+mod asbuilt_trend_tests;
+#[cfg(test)]
+mod asbuilt_review_tests;
+#[cfg(test)]
+mod ortho_network_tests;
+#[cfg(test)]
 mod project_graph_window_tests;
 #[cfg(test)]
 mod recipe_layer_look_tests;
+#[cfg(test)]
+mod recipe_layer_fields_tests;
+#[cfg(test)]
+mod recipe_layer_rules_tests;
 #[cfg(test)]
 mod survey_network_window_tests;
 #[cfg(test)]
@@ -433,17 +466,23 @@ mod zoning_window_tests;
 #[cfg(test)]
 mod zoning_symbols_window_tests;
 #[cfg(test)]
+mod zoning_draft_window_tests;
+#[cfg(test)]
 mod impact_window_tests;
 #[cfg(test)]
 mod impact_slope_tests;
 #[cfg(test)]
 mod impact_slope_classes_tests;
 #[cfg(test)]
+mod impact_network_record_tests;
+#[cfg(test)]
 mod readjustment_window_tests;
 #[cfg(test)]
 mod brand_tests;
 #[cfg(test)]
 mod ortho_compare_window_tests;
+#[cfg(test)]
+mod ortho_seamlines_window_tests;
 #[cfg(test)]
 mod ortho_seam_polygons_tests;
 #[cfg(test)]
@@ -459,6 +498,14 @@ mod overlap_window_tests;
 #[cfg(test)]
 mod register_window_tests;
 #[cfg(test)]
+mod scan_network_window_tests;
+#[cfg(test)]
+mod cloud_place_window_tests;
+#[cfg(test)]
+mod catalog_report_window_tests;
+#[cfg(test)]
+mod section_check_window_tests;
+#[cfg(test)]
 mod sheet_contours_window_tests;
 #[cfg(test)]
 mod stockpile_window_tests;
@@ -470,6 +517,8 @@ mod map_survey_panel_tests;
 mod map_survey_network_rows_tests;
 #[cfg(test)]
 mod map_survey_limits_tests;
+#[cfg(test)]
+mod gnss_sessions_tests;
 #[cfg(test)]
 mod network_ellipses_tests;
 #[cfg(test)]
@@ -508,6 +557,10 @@ mod material_zones_tests;
 mod compare_sections_tests;
 #[cfg(test)]
 mod pipes_profile_walls_tests;
+#[cfg(test)]
+mod pipes_rules_tests;
+#[cfg(test)]
+mod dxf_attribute_names_tests;
 #[cfg(test)]
 mod culvert_window_tests;
 #[cfg(test)]
@@ -622,7 +675,7 @@ mod multipart_scenes;
 mod navigation;
 mod navigation_cards;
 #[cfg(test)]
-mod netcad_names_tests;
+mod typed_names_tests;
 #[cfg(test)]
 mod nurbs_scenes;
 mod object_info;
@@ -697,6 +750,8 @@ mod settings_view;
 mod address_compare_scenes;
 #[cfg(test)]
 mod data_profile_tests;
+#[cfg(test)]
+mod data_profile_names_tests;
 #[cfg(test)]
 mod profile_scenes;
 #[cfg(test)]

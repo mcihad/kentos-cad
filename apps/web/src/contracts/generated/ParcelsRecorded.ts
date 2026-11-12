@@ -9,4 +9,13 @@ export type ParcelsRecorded = { document: number, created: Array<number>, closed
  * Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
  * took the pieces (not closed: their identity, document and stated area stay).
  */
-boundariesSplit?: number, neighbours?: Array<number>, revision: string, };
+boundariesSplit?: number, neighbours?: Array<number>, 
+/**
+ * Docs/adr/5020: the boundaries' lengths the document states.
+ */
+lengths?: number, 
+/**
+ * Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would
+ * write today.
+ */
+draft?: boolean, revision: string, };

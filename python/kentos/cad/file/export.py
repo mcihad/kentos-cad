@@ -104,20 +104,25 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
     hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden
     ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür.
     GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her
-    sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada
-    çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek,
-    duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler,
-    tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources);
-    listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı
-    (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1:
-    PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin
-    özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince
-    changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti
-    değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin
-    settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa
-    changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da
-    başka paftanınsa no_previous. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi
-    değiştirmez ve geri alma adımı değildir.
+    sayfanın kaynak dökümü: sayfanın kendi nesnesi önce, sonra o sayfada çizilen
+    haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran
+    haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların
+    okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen
+    her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı: execute
+    PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve
+    SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record).
+    previous önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona
+    göre söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni
+    listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya
+    da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa
+    olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous.
+    Sayfanın görünüşü: sayfalar yapılınca her sayfanın look'u (SHA-256): paftanın
+    görüntü listesi yayının kendi damgaları dışarıda (gün, kullanıcı, boş kaynak notuna
+    yazılan çizim durumu), haritalarının yolları ve yazıları, tabloları, koordinat
+    listeleri, lejantları, kalite notları ve her sayfada duran haritalar; kayıtta da.
+    Önceki kayıt görünüşleri biliyorsa değişen her sayfanın changes[].look'u same
+    (yalnız çizmediği değişti) ya da changed. plan dosyayı yazmaz, sayfaları ve pin'i
+    söyler; çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.atlas"
@@ -163,21 +168,26 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact
         işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen
         nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem)
-        her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü
-        (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas
-        haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde)
-        zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı
+        her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü:
+        sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası
+        sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine
+        değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı
         kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik
-        özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in
-        yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı,
-        pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous
-        önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre
-        söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni
-        listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya
-        da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa
-        olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. plan
-        dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı
-        değildir.
+        özeti (objects, kentos.object-digest/1). Kaynak kaydı: execute PDF'in yanına
+        <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı, pafta,
+        gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous önceki
+        atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre söyler:
+        same, changed (listelediği nesnelerden özeti değişen changed, yeni listelenen added,
+        artık listelenmeyen removed; projenin settings, layers, styles ya da sheets parçası
+        değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa olmayan önceki
+        sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. Sayfanın görünüşü:
+        sayfalar yapılınca her sayfanın look'u (SHA-256): paftanın görüntü listesi yayının
+        kendi damgaları dışarıda (gün, kullanıcı, boş kaynak notuna yazılan çizim durumu),
+        haritalarının yolları ve yazıları, tabloları, koordinat listeleri, lejantları,
+        kalite notları ve her sayfada duran haritalar; kayıtta da. Önceki kayıt görünüşleri
+        biliyorsa değişen her sayfanın changes[].look'u same (yalnız çizmediği değişti) ya
+        da changed. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve
+        geri alma adımı değildir.
 
         Args:
             doc: The drawing it works on.
@@ -346,14 +356,14 @@ atlas = _FileExportAtlas()
 
 class _FileExportBlock(LocalCommand[ExportBlock, BlockFileExported, BlockFileExported]):
     """``file.export.block`` v1. Bloğu dosyaya yaz: Bir bloğu (block) ya da kalıcı
-    kimlikleriyle verilen nesneleri (uids) yeni bir .kcad çizimi olarak yazar
-    (AutoCAD'in WBLOCK'u): kullandıkları katmanlar, iç içe bloklar, stiller, kitaplık
-    öğeleri ve proje ayarlarıyla. base çizimin başlangıcına (0, 0) gelir; blokta
-    verilmezse bloğun taban noktasıdır, nesnelerde verilmezse nesneler yerinde kalır.
-    Bloğun kendi katmanındaki nesneler 0 katmanına yazılır. Dosya yarım kalmaz: geçici
-    adla yazılır, geri okunup denetlenir, tek adımda yerine konur; overwrite verilmezse
-    var olan dosya reddedilir (file_exists). plan yazmadan söyler. Çizimi değiştirmez ve
-    geri alma adımı değildir. Dosyadan blok almak file.import.block'tur.
+    kimlikleriyle verilen nesneleri (uids) yeni bir .kcad çizimi olarak yazar:
+    kullandıkları katmanlar, iç içe bloklar, stiller, kitaplık öğeleri ve proje
+    ayarlarıyla. base çizimin başlangıcına (0, 0) gelir; blokta verilmezse bloğun taban
+    noktasıdır, nesnelerde verilmezse nesneler yerinde kalır. Bloğun kendi katmanındaki
+    nesneler 0 katmanına yazılır. Dosya yarım kalmaz: geçici adla yazılır, geri okunup
+    denetlenir, tek adımda yerine konur; overwrite verilmezse var olan dosya reddedilir
+    (file_exists). plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.
+    Dosyadan blok almak file.import.block'tur.
     """
     __slots__ = ()
     id = "file.export.block"
@@ -378,14 +388,14 @@ class _FileExportBlock(LocalCommand[ExportBlock, BlockFileExported, BlockFileExp
         expected: Expected | None = None,
     ) -> BlockFileExported:
         """Bloğu dosyaya yaz: Bir bloğu (block) ya da kalıcı kimlikleriyle verilen nesneleri
-        (uids) yeni bir .kcad çizimi olarak yazar (AutoCAD'in WBLOCK'u): kullandıkları
-        katmanlar, iç içe bloklar, stiller, kitaplık öğeleri ve proje ayarlarıyla. base
-        çizimin başlangıcına (0, 0) gelir; blokta verilmezse bloğun taban noktasıdır,
-        nesnelerde verilmezse nesneler yerinde kalır. Bloğun kendi katmanındaki nesneler 0
-        katmanına yazılır. Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir,
-        tek adımda yerine konur; overwrite verilmezse var olan dosya reddedilir
-        (file_exists). plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.
-        Dosyadan blok almak file.import.block'tur.
+        (uids) yeni bir .kcad çizimi olarak yazar: kullandıkları katmanlar, iç içe bloklar,
+        stiller, kitaplık öğeleri ve proje ayarlarıyla. base çizimin başlangıcına (0, 0)
+        gelir; blokta verilmezse bloğun taban noktasıdır, nesnelerde verilmezse nesneler
+        yerinde kalır. Bloğun kendi katmanındaki nesneler 0 katmanına yazılır. Dosya yarım
+        kalmaz: geçici adla yazılır, geri okunup denetlenir, tek adımda yerine konur;
+        overwrite verilmezse var olan dosya reddedilir (file_exists). plan yazmadan söyler.
+        Çizimi değiştirmez ve geri alma adımı değildir. Dosyadan blok almak
+        file.import.block'tur.
 
         Args:
             doc: The drawing it works on.
@@ -499,7 +509,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
     ve kotu olanda Z sütunlarıyla yazar, nokta olmayanları sayar; none yalnız
     öznitelikleri. Birden çok katmanda katman sütunu satırın katmanını adlandırır.
     Alanlar katmanların alanlarından (sırasıyla), alan olmayan öznitelikler adlarıyla
-    metin sütunu; yanına GDAL'ın .csvt'si sütunların türlerini (WKT, CoordX, CoordY,
+    metin sütunu; yanına .csvt dosyası sütunların türlerini (WKT, CoordX, CoordY,
     String, Integer64, Real, Date, DateTime, Time, Integer(Boolean)), .prj projenin
     sistemini (Shapefile'ınki gibi ESRI WKT) yazar. Yazı, ölçü, tablo, resim, raster ve
     nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da
@@ -536,7 +546,7 @@ class _FileExportCsv(LocalCommand[ExportCsv, CsvExported, CsvExported]):
         sütunlarıyla yazar, nokta olmayanları sayar; none yalnız öznitelikleri. Birden çok
         katmanda katman sütunu satırın katmanını adlandırır. Alanlar katmanların
         alanlarından (sırasıyla), alan olmayan öznitelikler adlarıyla metin sütunu; yanına
-        GDAL'ın .csvt'si sütunların türlerini (WKT, CoordX, CoordY, String, Integer64, Real,
+        .csvt dosyası sütunların türlerini (WKT, CoordX, CoordY, String, Integer64, Real,
         Date, DateTime, Time, Integer(Boolean)), .prj projenin sistemini (Shapefile'ınki
         gibi ESRI WKT) yazar. Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz,
         türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan
@@ -657,7 +667,7 @@ csv = _FileExportCsv()
 class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
     """``file.export.dwg`` v1. DWG dışa aktar: Çizimi seçilen binary DWG biçiminde yazar
     (version: AC1014, AC1015, AC1018, AC1021, AC1024, AC1027 veya varsayılan AC1032).
-    AutoCAD ürün yılı binary biçim yılı değildir. Sürümü sabit OpenCADCodec ile bellekte
+    Ürün yılı binary biçim yılı değildir. Sürümü sabit OpenCADCodec ile bellekte
     dönüştürür; dosya dışarı gönderilmez: bütün nesneler, uids ile seçilenler ya da
     layers'ın katmanlarındakiler, katmanlarıyla; DWG'in tutamadıkları KentOS verisiyle.
     Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir,
@@ -694,8 +704,8 @@ class _FileExportDwg(LocalCommand[ExportDwg, DxfExported, DxfExported]):
         expected: Expected | None = None,
     ) -> DxfExported:
         """DWG dışa aktar: Çizimi seçilen binary DWG biçiminde yazar (version: AC1014, AC1015,
-        AC1018, AC1021, AC1024, AC1027 veya varsayılan AC1032). AutoCAD ürün yılı binary
-        biçim yılı değildir. Sürümü sabit OpenCADCodec ile bellekte dönüştürür; dosya dışarı
+        AC1018, AC1021, AC1024, AC1027 veya varsayılan AC1032). Ürün yılı binary biçim yılı
+        değildir. Sürümü sabit OpenCADCodec ile bellekte dönüştürür; dosya dışarı
         gönderilmez: bütün nesneler, uids ile seçilenler ya da layers'ın katmanlarındakiler,
         katmanlarıyla; DWG'in tutamadıkları KentOS verisiyle. Dosya yarım kalmaz: geçici
         adla yazılır, diske indirilir, geri okunup denetlenir, sonra tek adımda yerine
@@ -836,14 +846,14 @@ dwg = _FileExportDwg()
 
 
 class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
-    """``file.export.dxf`` v1. DXF dışa aktar: Çizimi AutoCAD 2007 DXF dosyası olarak
-    yazar: bütün nesneler ya da layers'ın katmanlarındakiler, katmanlarıyla; DXF'in
-    tutamadıkları KentOS verisiyle. Dosya yarım kalmaz: geçici adla yazılır, diske
-    indirilir, geri okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak
-    yenisi tamsa gider. overwrite verilmezse var olan dosya reddedilir (file_exists).
-    plan dosyayı yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar,
-    yazıcının raporu). Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri
-    alması dosyayı geri almaz. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak
+    """``file.export.dxf`` v1. DXF dışa aktar: Çizimi DXF R2007 dosyası olarak yazar: bütün
+    nesneler ya da layers'ın katmanlarındakiler, katmanlarıyla; DXF'in tutamadıkları
+    KentOS verisiyle. Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri
+    okunup denetlenir, sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa
+    gider. overwrite verilmezse var olan dosya reddedilir (file_exists). plan dosyayı
+    yazmadan yazılacak olanı söyler (nesneler, katmanlar, baytlar, yazıcının raporu).
+    Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri
+    almaz. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak
     polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla
     yaklaşık dönüşümü kabul eder.
     """
@@ -870,7 +880,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DxfExported:
-        """DXF dışa aktar: Çizimi AutoCAD 2007 DXF dosyası olarak yazar: bütün nesneler ya da
+        """DXF dışa aktar: Çizimi DXF R2007 dosyası olarak yazar: bütün nesneler ya da
         layers'ın katmanlarındakiler, katmanlarıyla; DXF'in tutamadıkları KentOS verisiyle.
         Dosya yarım kalmaz: geçici adla yazılır, diske indirilir, geri okunup denetlenir,
         sonra tek adımda yerine konur; eski dosya ancak yenisi tamsa gider. overwrite
@@ -996,19 +1006,19 @@ dxf = _FileExportDxf()
 
 class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
     """``file.export.fgb`` v1. FlatGeobuf dışa aktar: Katmanların (layers boşsa nesnesi
-    olan bütün katmanların) nesnelerini tek bir FlatGeobuf dosyasına yazar (v3; GDAL,
-    QGIS ve biçimin kendi kitaplıkları okur). Geometri biçimin türleriyle: nokta, çok
-    nokta, çizgi, alan ve delikleri, çok parçalı; yaylar CircularString, CompoundCurve,
-    CurvePolygon, MultiCurve ve MultiSurface olarak kesin; Z ve M köşelerde; elips, eğri
-    ve NURBS kirişlerle (söylenir). Katmanın alanları sütun olur (metin String, tam sayı
-    Long, ondalık Double, evet/hayır Bool, tarih ve tarih-saat DateTime); alan olmayan
-    öznitelikler adlarıyla metin sütunu; birden çok katmanda katman sütunu nesnenin
-    katmanını adlandırır. Projenin sistemi EPSG koduyla yazılır. Nesneler kutularının
-    Hilbert sırasıyla, önlerinde paketli R-ağacı dizini (16'lık düğümler) yazılır;
-    konumsuz kayıt varsa dizin yazılmaz (GDAL'ın kuralı). Yazı, ölçü, tablo, resim,
-    raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün
-    yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı
-    değildir.
+    olan bütün katmanların) nesnelerini tek bir FlatGeobuf dosyasına yazar (v3; CBS
+    yazılımları ve biçimin kendi kitaplıkları okur). Geometri biçimin türleriyle: nokta,
+    çok nokta, çizgi, alan ve delikleri, çok parçalı; yaylar CircularString,
+    CompoundCurve, CurvePolygon, MultiCurve ve MultiSurface olarak kesin; Z ve M
+    köşelerde; elips, eğri ve NURBS kirişlerle (söylenir). Katmanın alanları sütun olur
+    (metin String, tam sayı Long, ondalık Double, evet/hayır Bool, tarih ve tarih-saat
+    DateTime); alan olmayan öznitelikler adlarıyla metin sütunu; birden çok katmanda
+    katman sütunu nesnenin katmanını adlandırır. Projenin sistemi EPSG koduyla yazılır.
+    Nesneler kutularının Hilbert sırasıyla, önlerinde paketli R-ağacı dizini (16'lık
+    düğümler) yazılır; konumsuz kayıt varsa dizin yazılmaz (dizin her kaydın kutusunu
+    ister). Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre
+    sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi
+    değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.fgb"
@@ -1032,7 +1042,7 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
         expected: Expected | None = None,
     ) -> FgbExported:
         """FlatGeobuf dışa aktar: Katmanların (layers boşsa nesnesi olan bütün katmanların)
-        nesnelerini tek bir FlatGeobuf dosyasına yazar (v3; GDAL, QGIS ve biçimin kendi
+        nesnelerini tek bir FlatGeobuf dosyasına yazar (v3; CBS yazılımları ve biçimin kendi
         kitaplıkları okur). Geometri biçimin türleriyle: nokta, çok nokta, çizgi, alan ve
         delikleri, çok parçalı; yaylar CircularString, CompoundCurve, CurvePolygon,
         MultiCurve ve MultiSurface olarak kesin; Z ve M köşelerde; elips, eğri ve NURBS
@@ -1041,10 +1051,10 @@ class _FileExportFgb(LocalCommand[ExportFgb, FgbExported, FgbExported]):
         öznitelikler adlarıyla metin sütunu; birden çok katmanda katman sütunu nesnenin
         katmanını adlandırır. Projenin sistemi EPSG koduyla yazılır. Nesneler kutularının
         Hilbert sırasıyla, önlerinde paketli R-ağacı dizini (16'lık düğümler) yazılır;
-        konumsuz kayıt varsa dizin yazılmaz (GDAL'ın kuralı). Yazı, ölçü, tablo, resim,
-        raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün
-        yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı
-        değildir.
+        konumsuz kayıt varsa dizin yazılmaz (dizin her kaydın kutusunu ister). Yazı, ölçü,
+        tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır
+        (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez
+        ve geri alma adımı değildir.
 
         Args:
             doc: The drawing it works on.
@@ -1478,8 +1488,8 @@ gltf = _FileExportGltf()
 
 class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
     """``file.export.gml`` v1. GML dışa aktar: Katmanların (layers boşsa nesnesi olan bütün
-    katmanların) nesnelerini tek bir GML 3.2 dosyasına yazar (OGC basit nesneler; GDAL,
-    QGIS ve ArcGIS okur). Her katman bir nesne türüdür (adı katmanın adından, XML adına
+    katmanların) nesnelerini tek bir GML 3.2 dosyasına yazar (OGC basit nesneler; CBS
+    yazılımları okur). Her katman bir nesne türüdür (adı katmanın adından, XML adına
     çevrilir); katmanın alanları özellik olur, boş değer xsi:nil, geometri
     geometryProperty'de. Geometri: Point, LineString, Polygon (exterior ve interior),
     MultiPoint, MultiCurve, MultiSurface, MultiGeometry; yaylar ve bileşik eğriler
@@ -1516,20 +1526,20 @@ class _FileExportGml(LocalCommand[ExportGml, GmlExported, GmlExported]):
         expected: Expected | None = None,
     ) -> GmlExported:
         """GML dışa aktar: Katmanların (layers boşsa nesnesi olan bütün katmanların)
-        nesnelerini tek bir GML 3.2 dosyasına yazar (OGC basit nesneler; GDAL, QGIS ve
-        ArcGIS okur). Her katman bir nesne türüdür (adı katmanın adından, XML adına
-        çevrilir); katmanın alanları özellik olur, boş değer xsi:nil, geometri
-        geometryProperty'de. Geometri: Point, LineString, Polygon (exterior ve interior),
-        MultiPoint, MultiCurve, MultiSurface, MultiGeometry; yaylar ve bileşik eğriler
-        Curve'ün ArcString kesimi, Ring ve CompositeCurve olarak kesin; Z posList'in
-        srsDimension'ıyla (Z'si olmayan köşe 0 yazılır, söylenir); M GML'de yok. Elips, eğri
-        ve NURBS kirişlerle (söylenir). Projenin sistemi urn:ogc:def:crs:EPSG::kod olarak
-        srsName'e yazılır ve koordinatlar sistemin EPSG eksen sırasında gider (TUREF TM
-        dilimleri ve coğrafi sistemler kuzey ya da enlem önce). Dosyanın yanına alanların
-        türlerini veren <ad>.xsd uygulama şeması yazılır (schema false ise yazılmaz). Yazı,
-        ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır
-        (export_losses). Bütün yazılır ya da hiç (önce şema, sonra GML); plan yazmadan
-        söyler. Çizimi değiştirmez ve geri alma adımı değildir.
+        nesnelerini tek bir GML 3.2 dosyasına yazar (OGC basit nesneler; CBS yazılımları
+        okur). Her katman bir nesne türüdür (adı katmanın adından, XML adına çevrilir);
+        katmanın alanları özellik olur, boş değer xsi:nil, geometri geometryProperty'de.
+        Geometri: Point, LineString, Polygon (exterior ve interior), MultiPoint, MultiCurve,
+        MultiSurface, MultiGeometry; yaylar ve bileşik eğriler Curve'ün ArcString kesimi,
+        Ring ve CompositeCurve olarak kesin; Z posList'in srsDimension'ıyla (Z'si olmayan
+        köşe 0 yazılır, söylenir); M GML'de yok. Elips, eğri ve NURBS kirişlerle (söylenir).
+        Projenin sistemi urn:ogc:def:crs:EPSG::kod olarak srsName'e yazılır ve koordinatlar
+        sistemin EPSG eksen sırasında gider (TUREF TM dilimleri ve coğrafi sistemler kuzey
+        ya da enlem önce). Dosyanın yanına alanların türlerini veren <ad>.xsd uygulama
+        şeması yazılır (schema false ise yazılmaz). Yazı, ölçü, tablo, resim, raster ve
+        nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da
+        hiç (önce şema, sonra GML); plan yazmadan söyler. Çizimi değiştirmez ve geri alma
+        adımı değildir.
 
         Args:
             doc: The drawing it works on.
@@ -1943,21 +1953,21 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
     """``file.export.landxml`` v1. LandXML dışa aktar: Yol projesinin arazi yüzeylerini
     (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km
     denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol,
-    daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer
+    daire eğrisi) LandXML 1.2 dosyasına yazar; yol projelendirme yazılımları okur. Yer
     kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu
     kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si
     + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste
     hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa
     şimdi, UTC). Aksın proje hızı ve kurplarının kendi hızları
     Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı
-    TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks
+    TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour). Paralel aks
     LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına
     yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi
     değiştirmez ve geri alma adımı değildir. Dosya projenin sistemlerini
-    CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu; ADR
-    1031). machineControl: true makine kontrolü içindir: projenin kotlarının düşey
-    sistemi söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini
-    o sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project,
+    CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu).
+    machineControl: true makine kontrolü içindir: projenin kotlarının düşey sistemi
+    söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini o
+    sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project,
     invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml,
     field_heights_unknown, unproven_heights.
     """
@@ -1988,21 +1998,21 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         """LandXML dışa aktar: Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler),
         akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının
         boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2
-        dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla,
+        dosyasına yazar; yol projelendirme yazılımları okur. Yer kuzey doğu sırasıyla,
         uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde);
         elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık).
         surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri);
         withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi,
         UTC). Aksın proje hızı ve kurplarının kendi hızları
         Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı
-        TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks
+        TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour). Paralel aks
         LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına
         yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi
         değiştirmez ve geri alma adımı değildir. Dosya projenin sistemlerini
-        CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu; ADR
-        1031). machineControl: true makine kontrolü içindir: projenin kotlarının düşey
-        sistemi söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini
-        o sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project,
+        CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu).
+        machineControl: true makine kontrolü içindir: projenin kotlarının düşey sistemi
+        söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini o
+        sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project,
         invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml,
         field_heights_unknown, unproven_heights.
 
@@ -2129,9 +2139,9 @@ landxml = _FileExportLandxml()
 class _FileExportMaplibre(LocalCommand[ExportMaplibre, MaplibreExported, MaplibreExported]):
     """``file.export.maplibre`` v1. Görünüşü MapLibre stili olarak dışa aktar: Bir katmanın
     (layer) ya da görünen bütün katmanların görünüşünü MapLibre GL stili (sürüm 8)
-    olarak path'e (.json) yazar; MapLibre GL JS, MapLibre Native, Maputnik ve QGIS'in
-    vektör karo stili açar. Her katmanın nesneleri sourceUrl verilmezse WGS 84 GeoJSON
-    olarak stilin yanına yazılır (tek katmanda <ad>.geojson, birden çokta <ad>.<katman
+    olarak path'e (.json) yazar; MapLibre okuyucuları ve CBS yazılımlarının vektör karo
+    stili açar. Her katmanın nesneleri sourceUrl verilmezse WGS 84 GeoJSON olarak stilin
+    yanına yazılır (tek katmanda <ad>.geojson, birden çokta <ad>.<katman
     kimliği>.geojson) ve stilin kaynağı o dosyadır; sourceUrl verilirse kaynak o
     adrestir (vektör karo ya da GeoJSON adresi), katman adı source-layer olur. Katmanlar
     alan, çizgi ve daire (circle) katmanlarına yazılır: tek simge sabit değerlerle,
@@ -2173,10 +2183,10 @@ class _FileExportMaplibre(LocalCommand[ExportMaplibre, MaplibreExported, Maplibr
     ) -> MaplibreExported:
         """Görünüşü MapLibre stili olarak dışa aktar: Bir katmanın (layer) ya da görünen bütün
         katmanların görünüşünü MapLibre GL stili (sürüm 8) olarak path'e (.json) yazar;
-        MapLibre GL JS, MapLibre Native, Maputnik ve QGIS'in vektör karo stili açar. Her
-        katmanın nesneleri sourceUrl verilmezse WGS 84 GeoJSON olarak stilin yanına yazılır
-        (tek katmanda <ad>.geojson, birden çokta <ad>.<katman kimliği>.geojson) ve stilin
-        kaynağı o dosyadır; sourceUrl verilirse kaynak o adrestir (vektör karo ya da GeoJSON
+        MapLibre okuyucuları ve CBS yazılımlarının vektör karo stili açar. Her katmanın
+        nesneleri sourceUrl verilmezse WGS 84 GeoJSON olarak stilin yanına yazılır (tek
+        katmanda <ad>.geojson, birden çokta <ad>.<katman kimliği>.geojson) ve stilin kaynağı
+        o dosyadır; sourceUrl verilirse kaynak o adrestir (vektör karo ya da GeoJSON
         adresi), katman adı source-layer olur. Katmanlar alan, çizgi ve daire (circle)
         katmanlarına yazılır: tek simge sabit değerlerle, kategorili görünüş `match` ile,
         aralıklı görünüş `step` ile (sınıflar aynı yapıdaysa her simge katmanı için tek stil
@@ -2306,7 +2316,7 @@ maplibre = _FileExportMaplibre()
 class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExported]):
     """``file.export.parquet`` v1. GeoParquet dışa aktar: Katmanların (layers boşsa nesnesi
     olan bütün katmanların) nesnelerini tek bir GeoParquet 1.1 dosyasına yazar
-    (KentOS'un kendi Parquet yazıcısıyla; GDAL, geopandas, DuckDB ve QGIS okur).
+    (KentOS'un kendi Parquet yazıcısıyla; CBS ve veri çözümleme yazılımları okur).
     geometry sütunu ISO WKB: yaylar 0,1 mm'lik kirişlerle, elips, eğri ve NURBS
     kirişlerle (söylenir), Z köşelerde, M yazılmaz (söylenir); dış halkalar saat yönü
     tersine, delikler saat yönünde (orientation: counterclockwise). Katmanın alanları
@@ -2346,16 +2356,16 @@ class _FileExportParquet(LocalCommand[ExportParquet, ParquetExported, ParquetExp
     ) -> ParquetExported:
         """GeoParquet dışa aktar: Katmanların (layers boşsa nesnesi olan bütün katmanların)
         nesnelerini tek bir GeoParquet 1.1 dosyasına yazar (KentOS'un kendi Parquet
-        yazıcısıyla; GDAL, geopandas, DuckDB ve QGIS okur). geometry sütunu ISO WKB: yaylar
-        0,1 mm'lik kirişlerle, elips, eğri ve NURBS kirişlerle (söylenir), Z köşelerde, M
-        yazılmaz (söylenir); dış halkalar saat yönü tersine, delikler saat yönünde
-        (orientation: counterclockwise). Katmanın alanları türleriyle sütun olur (metin
-        STRING, tam sayı INT64, ondalık DOUBLE, evet/hayır BOOLEAN, tarih DATE, tarih-saat
-        TIMESTAMP(MICROS), saat TIME(MICROS)); alan olmayan öznitelikler metin sütunu;
-        kentos_uid nesnelerin kalıcı kimliği; birden çok katmanda katman sütunu. covering
-        açıkken (varsayılan) bbox yapısı (xmin, ymin, xmax, ymax) satır kutularını taşır.
-        geo anahtarı geometry_types, bbox ve projenin sisteminin PROJJSON'unu (kimliğiyle)
-        yazar; yerel projede crs null. Sayfalar Snappy ile (compression: none
+        yazıcısıyla; CBS ve veri çözümleme yazılımları okur). geometry sütunu ISO WKB:
+        yaylar 0,1 mm'lik kirişlerle, elips, eğri ve NURBS kirişlerle (söylenir), Z
+        köşelerde, M yazılmaz (söylenir); dış halkalar saat yönü tersine, delikler saat
+        yönünde (orientation: counterclockwise). Katmanın alanları türleriyle sütun olur
+        (metin STRING, tam sayı INT64, ondalık DOUBLE, evet/hayır BOOLEAN, tarih DATE,
+        tarih-saat TIMESTAMP(MICROS), saat TIME(MICROS)); alan olmayan öznitelikler metin
+        sütunu; kentos_uid nesnelerin kalıcı kimliği; birden çok katmanda katman sütunu.
+        covering açıkken (varsayılan) bbox yapısı (xmin, ymin, xmax, ymax) satır kutularını
+        taşır. geo anahtarı geometry_types, bbox ve projenin sisteminin PROJJSON'unu
+        (kimliğiyle) yazar; yerel projede crs null. Sayfalar Snappy ile (compression: none
         sıkıştırmasız), 65 536 satırlık satır grupları, sütun istatistikleri. Yazı, ölçü,
         tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır
         (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez
@@ -2611,18 +2621,18 @@ pdf = _FileExportPdf()
 class _FileExportQml(LocalCommand[ExportQml, QmlExported, QmlExported]):
     """``file.export.qml`` v1. Görünüşü QML olarak dışa aktar: Katmanın görünüşünü
     (işleyicisini, yoksa katmanın renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini)
-    QGIS'in stil dosyası olarak path'e (.qml) yazar; QGIS 4.2 Stil › Stil yükle ile
-    açar. Tek simge, kategorili (Diğerleri QGIS'in NULL sınıfı), aralıklı ve kurallı
-    görünüş (iç içe kurallar, ölçek aralıkları, ELSE, kapalı kural) QGIS'in aynı
-    türüyle; kuralların süzgeci QGIS'in ifadesiyle ("Ad" = 'x'): alanın sayı ya da
-    metinle karşılaştırması, arasında, boş, gibi, ve, veya ve değil. Simgeler: basit
-    dolgu, basit çizgi (renk, kalınlık, kesikler, uç, köşe, halkalar), şekil işaretleri
-    (on beş şekil; döndürme QGIS'in saat yönüyle), merkez işareti; birimler mm, piksel
-    ve haritada metre olarak kalır, simgenin saydamlığı ve kapalı katman korunur. QML
-    tek geometri türü içindir: alanlar, sonra çizgiler, sonra noktalar; öbürleri,
-    tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye
-    göre değer ve efektler yazılmaz, export_losses ile söylenir. Çizimi değiştirmez ve
-    geri alma adımı değildir.
+    QML stil dosyası olarak path'e (.qml) yazar; QML okuyan CBS yazılımları açar. Tek
+    simge, kategorili (Diğerleri: NULL sınıfı), aralıklı ve kurallı görünüş (iç içe
+    kurallar, ölçek aralıkları, ELSE, kapalı kural) QML'in aynı türüyle; kuralların
+    süzgeci QML'in ifadesiyle ("Ad" = 'x'): alanın sayı ya da metinle karşılaştırması,
+    arasında, boş, gibi, ve, veya ve değil. Simgeler: basit dolgu, basit çizgi (renk,
+    kalınlık, kesikler, uç, köşe, halkalar), şekil işaretleri (on beş şekil; döndürme
+    saat yönüyle), merkez işareti; birimler mm, piksel ve haritada metre olarak kalır,
+    simgenin saydamlığı ve kapalı katman korunur. QML tek geometri türü içindir:
+    alanlar, sonra çizgiler, sonra noktalar; öbürleri, tarama, degrade, desen ve resim
+    dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer ve efektler
+    yazılmaz, export_losses ile söylenir. Çizimi değiştirmez ve geri alma adımı
+    değildir.
     """
     __slots__ = ()
     id = "file.export.qml"
@@ -2645,19 +2655,18 @@ class _FileExportQml(LocalCommand[ExportQml, QmlExported, QmlExported]):
         expected: Expected | None = None,
     ) -> QmlExported:
         """Görünüşü QML olarak dışa aktar: Katmanın görünüşünü (işleyicisini, yoksa katmanın
-        renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) QGIS'in stil dosyası olarak
-        path'e (.qml) yazar; QGIS 4.2 Stil › Stil yükle ile açar. Tek simge, kategorili
-        (Diğerleri QGIS'in NULL sınıfı), aralıklı ve kurallı görünüş (iç içe kurallar, ölçek
-        aralıkları, ELSE, kapalı kural) QGIS'in aynı türüyle; kuralların süzgeci QGIS'in
-        ifadesiyle ("Ad" = 'x'): alanın sayı ya da metinle karşılaştırması, arasında, boş,
-        gibi, ve, veya ve değil. Simgeler: basit dolgu, basit çizgi (renk, kalınlık,
-        kesikler, uç, köşe, halkalar), şekil işaretleri (on beş şekil; döndürme QGIS'in saat
-        yönüyle), merkez işareti; birimler mm, piksel ve haritada metre olarak kalır,
-        simgenin saydamlığı ve kapalı katman korunur. QML tek geometri türü içindir:
-        alanlar, sonra çizgiler, sonra noktalar; öbürleri, tarama, degrade, desen ve resim
-        dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer ve efektler
-        yazılmaz, export_losses ile söylenir. Çizimi değiştirmez ve geri alma adımı
-        değildir.
+        renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) QML stil dosyası olarak path'e
+        (.qml) yazar; QML okuyan CBS yazılımları açar. Tek simge, kategorili (Diğerleri:
+        NULL sınıfı), aralıklı ve kurallı görünüş (iç içe kurallar, ölçek aralıkları, ELSE,
+        kapalı kural) QML'in aynı türüyle; kuralların süzgeci QML'in ifadesiyle ("Ad" =
+        'x'): alanın sayı ya da metinle karşılaştırması, arasında, boş, gibi, ve, veya ve
+        değil. Simgeler: basit dolgu, basit çizgi (renk, kalınlık, kesikler, uç, köşe,
+        halkalar), şekil işaretleri (on beş şekil; döndürme saat yönüyle), merkez işareti;
+        birimler mm, piksel ve haritada metre olarak kalır, simgenin saydamlığı ve kapalı
+        katman korunur. QML tek geometri türü içindir: alanlar, sonra çizgiler, sonra
+        noktalar; öbürleri, tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve
+        yazı işareti, veriye göre değer ve efektler yazılmaz, export_losses ile söylenir.
+        Çizimi değiştirmez ve geri alma adımı değildir.
 
         Args:
             doc: The drawing it works on.
@@ -2912,19 +2921,19 @@ shp = _FileExportShp()
 class _FileExportSld(LocalCommand[ExportSld, SldExported, SldExported]):
     """``file.export.sld`` v1. Görünüşü SLD olarak dışa aktar: Katmanın görünüşünü
     (işleyicisini, yoksa katmanın renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini)
-    OGC SLD 1.1 ve SE 1.1 olarak path'e (.sld) yazar; QGIS 4.2, GeoServer ve MapServer
-    okur. Tek simge tek kural, kategorili görünüşün her sınıfı alanın değerine eşit
-    süzgeçli kural, aralıklı görünüşün sınıfları alt ≤ değer < üst (sonuncusu ≤ üst),
-    kurallı görünüş süzgeçleriyle ve ölçek aralıklarıyla (iç içe kurallar üstlerinin
-    süzgeciyle birleşir, Diğerleri ElseFilter). Süzgeç alanın sayı ya da metinle
-    karşılaştırması, arasında, boş, gibi, ve, veya ve değil ile söylenebilen ifadedir;
-    başkası yazılmaz ve söylenir. Simgeler: basit dolgu, basit çizgi (renk, saydamlık,
-    kalınlık, kesikler, uç ve köşe), şekil işaretleri (daire, kare, üçgen, yıldız, artı,
-    çarpı); kâğıt mm SE'nin 0,28 mm'lik pikseliyle, metre SE'nin metre birimiyle.
-    Tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye
-    göre değer, efektler ve tematik işleyiciler yazılmaz, export_losses ile söylenir.
-    Simgeleyiciler katmanın nesnelerinin geometrisi için yazılır. Çizimi değiştirmez ve
-    geri alma adımı değildir.
+    OGC SLD 1.1 ve SE 1.1 olarak path'e (.sld) yazar; CBS yazılımları ve harita
+    sunucuları okur. Tek simge tek kural, kategorili görünüşün her sınıfı alanın
+    değerine eşit süzgeçli kural, aralıklı görünüşün sınıfları alt ≤ değer < üst
+    (sonuncusu ≤ üst), kurallı görünüş süzgeçleriyle ve ölçek aralıklarıyla (iç içe
+    kurallar üstlerinin süzgeciyle birleşir, Diğerleri ElseFilter). Süzgeç alanın sayı
+    ya da metinle karşılaştırması, arasında, boş, gibi, ve, veya ve değil ile
+    söylenebilen ifadedir; başkası yazılmaz ve söylenir. Simgeler: basit dolgu, basit
+    çizgi (renk, saydamlık, kalınlık, kesikler, uç ve köşe), şekil işaretleri (daire,
+    kare, üçgen, yıldız, artı, çarpı); kâğıt mm SE'nin 0,28 mm'lik pikseliyle, metre
+    SE'nin metre birimiyle. Tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG
+    ve yazı işareti, veriye göre değer, efektler ve tematik işleyiciler yazılmaz,
+    export_losses ile söylenir. Simgeleyiciler katmanın nesnelerinin geometrisi için
+    yazılır. Çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.sld"
@@ -2948,7 +2957,7 @@ class _FileExportSld(LocalCommand[ExportSld, SldExported, SldExported]):
     ) -> SldExported:
         """Görünüşü SLD olarak dışa aktar: Katmanın görünüşünü (işleyicisini, yoksa katmanın
         renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) OGC SLD 1.1 ve SE 1.1 olarak
-        path'e (.sld) yazar; QGIS 4.2, GeoServer ve MapServer okur. Tek simge tek kural,
+        path'e (.sld) yazar; CBS yazılımları ve harita sunucuları okur. Tek simge tek kural,
         kategorili görünüşün her sınıfı alanın değerine eşit süzgeçli kural, aralıklı
         görünüşün sınıfları alt ≤ değer < üst (sonuncusu ≤ üst), kurallı görünüş
         süzgeçleriyle ve ölçek aralıklarıyla (iç içe kurallar üstlerinin süzgeciyle
@@ -3202,13 +3211,13 @@ table = _FileExportTable()
 class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
     """``file.export.xyz`` v1. XYZ dışa aktar: Katmanların (layers boşsa nesnesi olan bütün
     katmanların) konumlarını X Y Z satırları olarak metin dosyasına yazar (UTF-8, LF; X
-    doğu, Y kuzey, projenin sisteminde; GDAL'ın XYZ sürücüsü ve nokta bulutu araçları
-    okur). vertices points (varsayılan): nokta nesnelerinin ve çok noktanın parçalarının
-    konumu, öbür nesneler yazılmaz ve türlerine göre sayılır; all: her nesnenin her
-    köşesi (çizgi, alanın dış ve delik halkaları; kapalı halkanın tekrarlanan son köşesi
-    bir kez; yayın uç noktaları, orta noktası değil). Ayırıcı boşluk, virgül, noktalı
-    virgül ya da sekme; sayılar double'a geri okunan en kısa metin, decimals verilirse o
-    kadar basamak (0 – 15); header ilk satıra sütun adlarını yazar. Kotu olmayan konum
+    doğu, Y kuzey, projenin sisteminde; CBS ve nokta bulutu yazılımları okur). vertices
+    points (varsayılan): nokta nesnelerinin ve çok noktanın parçalarının konumu, öbür
+    nesneler yazılmaz ve türlerine göre sayılır; all: her nesnenin her köşesi (çizgi,
+    alanın dış ve delik halkaları; kapalı halkanın tekrarlanan son köşesi bir kez; yayın
+    uç noktaları, orta noktası değil). Ayırıcı boşluk, virgül, noktalı virgül ya da
+    sekme; sayılar double'a geri okunan en kısa metin, decimals verilirse o kadar
+    basamak (0 – 15); header ilk satıra sütun adlarını yazar. Kotu olmayan konum
     withoutZ'ye göre 0 kotla yazılır (zero; çizimdeki konum kotsuz kalır, söylenir) ya
     da yazılmaz (skip). Dosya koordinat sistemi taşımaz; projenin EPSG kodu uyarıda ve
     cevapta söylenir. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez
@@ -3242,17 +3251,17 @@ class _FileExportXyz(LocalCommand[ExportXyz, XyzExported, XyzExported]):
     ) -> XyzExported:
         """XYZ dışa aktar: Katmanların (layers boşsa nesnesi olan bütün katmanların)
         konumlarını X Y Z satırları olarak metin dosyasına yazar (UTF-8, LF; X doğu, Y
-        kuzey, projenin sisteminde; GDAL'ın XYZ sürücüsü ve nokta bulutu araçları okur).
-        vertices points (varsayılan): nokta nesnelerinin ve çok noktanın parçalarının
-        konumu, öbür nesneler yazılmaz ve türlerine göre sayılır; all: her nesnenin her
-        köşesi (çizgi, alanın dış ve delik halkaları; kapalı halkanın tekrarlanan son köşesi
-        bir kez; yayın uç noktaları, orta noktası değil). Ayırıcı boşluk, virgül, noktalı
-        virgül ya da sekme; sayılar double'a geri okunan en kısa metin, decimals verilirse o
-        kadar basamak (0 – 15); header ilk satıra sütun adlarını yazar. Kotu olmayan konum
-        withoutZ'ye göre 0 kotla yazılır (zero; çizimdeki konum kotsuz kalır, söylenir) ya
-        da yazılmaz (skip). Dosya koordinat sistemi taşımaz; projenin EPSG kodu uyarıda ve
-        cevapta söylenir. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez
-        ve geri alma adımı değildir.
+        kuzey, projenin sisteminde; CBS ve nokta bulutu yazılımları okur). vertices points
+        (varsayılan): nokta nesnelerinin ve çok noktanın parçalarının konumu, öbür nesneler
+        yazılmaz ve türlerine göre sayılır; all: her nesnenin her köşesi (çizgi, alanın dış
+        ve delik halkaları; kapalı halkanın tekrarlanan son köşesi bir kez; yayın uç
+        noktaları, orta noktası değil). Ayırıcı boşluk, virgül, noktalı virgül ya da sekme;
+        sayılar double'a geri okunan en kısa metin, decimals verilirse o kadar basamak (0 –
+        15); header ilk satıra sütun adlarını yazar. Kotu olmayan konum withoutZ'ye göre 0
+        kotla yazılır (zero; çizimdeki konum kotsuz kalır, söylenir) ya da yazılmaz (skip).
+        Dosya koordinat sistemi taşımaz; projenin EPSG kodu uyarıda ve cevapta söylenir.
+        Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı
+        değildir.
 
         Args:
             doc: The drawing it works on.

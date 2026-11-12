@@ -13,13 +13,19 @@
 //! zone's deepest place (the core's: its pieces' corner where the difference is largest in size) gets a point and its
 //! depth beside it, the fill's as its height.
 //!
+//! Asked for (docs/adr/4760, `road_terrains_cutfill_sections`), sections along a drawn axis and material zones are
+//! written beside the zones: the sections' lines with their kilometres and areas, the materials' volumes inside them, and
+//! with `table` their tables.
+//!
 //! The checks, in the contract's order: a map or road project; the layer; the expected revision; the interval; the
-//! surfaces, two different ones; both made; the bands' count; a zone at all.
+//! sections' numbers and the materials' names and factors; the surfaces, two different ones; the axis and the
+//! materials' boundaries; both made; the bands' count; the sections' count; a zone at all.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    AnnotationKind, CommandResult, CommandWarning, CreateOperation, CutFillKind, CutFillLabel, EntitiesCreate,
+    AnnotationKind, CommandResult, CommandWarning, CreateOperation, CutFillKind, CutFillLabel, CutFillSection, EntitiesCreate,
+    MOST_COMPARE_SECTIONS,
     EntityBase, EntityGeometry, HatchPattern, HatchPatternType, MOST_CUTFILL_BANDS, NewObject, RingGeometry, TableAlign,
     TableEntity, TerrainCutFillZone, TerrainsCutFill, TerrainsCutFilled, TextAlign, Vec2,
 };
@@ -28,12 +34,15 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::ops::convert::points::interior_point;
 use kentos_road::surface::Surface;
 use kentos_road::volume::Triangle;
+use kentos_road::volume_sections;
 use kentos_road::volume_zones::{TooManyBands, cut_fill_told};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
 use crate::road_terrains::{self as terrains, fail};
+use crate::road_terrains_compare as compare;
+use crate::road_terrains_cutfill_sections as sections_draw;
 
 /// The cut's colour and the fill's: the red and the blue KentOS's road drawings already use (road_sections_draw.rs).
 const CUT: &str = "#d62828";
@@ -70,6 +79,33 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             "interval",
         ));
     }
+    // Docs/adr/4760: the sections' interval and widths, the materials' names and factors.
+    if let Some(s) = &input.sections {
+        if !(s.interval.is_finite() && s.interval > 0.0) {
+            return Err(fail(codes::INVALID_ANALYSIS, "Kesit aralığı 0'dan büyük bir uzunluk olmalı.".into(), "sections.interval"));
+        }
+        if !(s.left.is_finite() && s.right.is_finite() && s.left >= 0.0 && s.right >= 0.0 && s.left + s.right > 0.0) {
+            return Err(fail(codes::INVALID_ANALYSIS, compare::WIDTHS.into(), "sections.left"));
+        }
+        // Docs/adr/5140: the Brückner value's factors.
+        for (v, at) in [(s.cut_factor, "sections.cutFactor"), (s.fill_factor, "sections.fillFactor")] {
+            if v.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 10.0)) {
+                return Err(fail(
+                    codes::INVALID_ANALYSIS,
+                    "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).".into(),
+                    at,
+                ));
+            }
+        }
+        if s.start.is_some_and(|v| !(v.is_finite() && v >= 0.0)) {
+            return Err(fail(
+                codes::INVALID_ANALYSIS,
+                "Eksenin başlangıç kilometresi 0 ya da daha büyük bir uzunluk olmalı (m).".into(),
+                "sections.start",
+            ));
+        }
+    }
+    compare::check_zones(&input.materials, "materials")?;
     let base = crate::road_profiles::surface_id(doc, &input.base, "base")?;
     let comparison = crate::road_profiles::surface_id(doc, &input.comparison, "comparison")?;
     if base == comparison {
@@ -79,6 +115,8 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             "comparison",
         ));
     }
+    let axis = input.sections.as_ref().map(|s| compare::axis_of(doc, &s.axis, "sections.axis")).transpose()?;
+    let regions = compare::zone_regions_at(doc, &input.materials, "materials")?;
     let def = |id: &str| terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled);
     let (b, c) = (def(&base)?, def(&comparison)?);
     let (made_b, made_c) = (terrains::make(doc, &b), terrains::make(doc, &c));
@@ -97,6 +135,24 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             ));
         }
     };
+    // Docs/adr/4760: the sections along the axis, each with the volumes from the one before.
+    let sectioned = match (&input.sections, &axis) {
+        (Some(s), Some(a)) => Some(
+            volume_sections::along_axis(
+                &triangles(sc),
+                &triangles(sb),
+                a,
+                s.interval,
+                s.left,
+                s.right,
+                s.corners.unwrap_or(false),
+                compare::section_formula(s.formula.unwrap_or_default()),
+                MOST_COMPARE_SECTIONS,
+            )
+            .map_err(|e| compare::sections_refused(e, "sections."))?,
+        ),
+        _ => None,
+    };
     if z.zones.is_empty() {
         return Err(fail(
             codes::NO_CUT_FILL,
@@ -106,6 +162,39 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             "comparison",
         ));
     }
+    let mut warnings = warnings;
+    let materials = if input.materials.is_empty() {
+        Vec::new()
+    } else {
+        compare::zone_volumes(&triangles(sc), &triangles(sb), &input.materials, &regions, (1.0, 1.0), "materials", &mut warnings)
+    };
+    let material_labels: Vec<CutFillLabel> =
+        materials.iter().zip(&regions).filter_map(|(m, r)| sections_draw::material_label(m, r)).collect();
+    let start = input.sections.as_ref().and_then(|s| s.start).unwrap_or(0.0);
+    // Docs/adr/5140: the Brückner value, the running cut times its swell less the running fill times its factor.
+    let (kc, kf) = input.sections.as_ref().map_or((1.0, 1.0), |s| (s.cut_factor.unwrap_or(1.0), s.fill_factor.unwrap_or(1.0)));
+    let (mut run_cut, mut run_fill) = (0.0, 0.0);
+    let sections: Vec<CutFillSection> = sectioned.as_ref().map_or_else(Vec::new, |s| {
+        s.rows
+            .iter()
+            .enumerate()
+            .map(|(k, r)| CutFillSection {
+                station: r.station,
+                km: sections_draw::km_text(start + r.station),
+                at: r.at,
+                ends: [r.left, r.right],
+                cut_area: r.cut,
+                fill_area: r.fill,
+                cut_volume: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| b[0]),
+                fill_volume: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| b[1]),
+                mass: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| {
+                    run_cut += b[0];
+                    run_fill += b[1];
+                    run_cut * kc - run_fill * kf
+                }),
+            })
+            .collect()
+    });
     let (least, largest) = (z.least.unwrap_or(0.0), z.largest.unwrap_or(0.0));
     let zones = z
         .zones
@@ -145,6 +234,15 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             labels: Vec::new(),
             table: Vec::new(),
             depths: Vec::new(),
+            section_labels: sections_draw::section_labels(&sections),
+            section_table: Vec::new(),
+            section_cut: sectioned.as_ref().map(|s| s.cut),
+            section_fill: sectioned.as_ref().map(|s| s.fill),
+            length: sectioned.as_ref().map(|s| s.length),
+            sections,
+            material_table: Vec::new(),
+            material_labels,
+            materials,
             uids: Vec::new(),
             revision: doc.revision().to_string(),
         },
@@ -162,6 +260,13 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
         }
         if input.table.unwrap_or(false) {
             c.out.table = table_cells(&c.out);
+            // Docs/adr/4760: the section volume table and the material table.
+            if !c.out.sections.is_empty() {
+                c.out.section_table = sections_draw::section_table(&c.out.sections);
+            }
+            if !c.out.materials.is_empty() {
+                c.out.material_table = sections_draw::material_table(&c.out.materials);
+            }
         }
         if input.depths.unwrap_or(false) {
             c.out.depths = c.out.zones.iter().map(|z| CutFillLabel { at: z.deepest, text: depth_text(z) }).collect();
@@ -307,7 +412,9 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
         return objects;
     }
     let all = out.zones.iter().flat_map(|z| z.ring.iter());
-    let (x1, y1) = all.fold((f64::MIN, f64::MIN), |(x, y), p| (x.max(p[0]), y.max(p[1])));
+    let (_, y1) = all.fold((f64::MIN, f64::MIN), |(x, y), p| (x.max(p[0]), y.max(p[1])));
+    // Docs/adr/4760: beyond the sections and their words too.
+    let x1 = sections_draw::right_edge(out, text);
     let h = settings.annotation_height(AnnotationKind::Table);
     let columns = out.table.first().map_or(0, Vec::len);
     let aligns: Vec<TableAlign> = (0..columns).map(|j| if j < 2 { TableAlign::Left } else { TableAlign::Right }).collect();
@@ -470,17 +577,20 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> CommandResult
     };
     let mut written = objects(&c.out, &c.names);
     written.extend(annotations(cx.doc, &c.out));
+    written.extend(sections_draw::objects(cx.doc, &c.out));
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: written,
         operation: Some(CreateOperation::TerrainCutFill),
         expected_revision: None,
     };
+    // The check's own warnings (docs/adr/4760: a material off the surfaces); the layer's come from the write.
+    let own: Vec<CommandWarning> = c.warnings.iter().filter(|w| w.code == codes::COMPARE_UNCOVERED).cloned().collect();
     match crate::create::write_in(cx, create) {
-        CommandResult::Completed { output, warnings } => CommandResult::Completed {
-            output: TerrainsCutFilled { uids: output.created, revision: output.revision, ..c.out },
-            warnings,
-        },
+        CommandResult::Completed { output, mut warnings } => {
+            warnings.extend(own);
+            CommandResult::Completed { output: TerrainsCutFilled { uids: output.created, revision: output.revision, ..c.out }, warnings }
+        }
         other => crate::trim::relay(other),
     }
 }

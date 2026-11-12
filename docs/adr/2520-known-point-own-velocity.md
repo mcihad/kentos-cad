@@ -12,7 +12,7 @@ modelde”; ADR 2120'nin “Sonra”sındaki “Bilinen noktanın kendi hızı (
 ## Neden bu parça
 
 Bugün arazi ölçümünün hız ızgarası yoksa 2005,0'da girilmiş TUSAGA-Aktif koordinatlarıyla 2026'da ölçülmüş bazlar hiç
-dengelenmiyordu (`epoch_unsupported`). Resmî TUREF hız alanı da henüz yok (ADR 1230 §7). İstasyonların hızları ise
+dengelenmiyordu (`epoch_unsupported`). Resmî TUREF hız alanı da henüz yok (ADR 1230 §7). *(Düzeltme, 10 Kasım 2026, BÖHHBÜY denetimi: HGM “TUREF Hız Alanı-2020”yi yayımlamıştır; 4.10.2025 değişikliğiyle (CK 10455) BÖHHBÜY m. 21 yeni noktaların hızını HGM'nin güncel Türkiye Hız Alanı Modeli'nden ister. Bkz. plan/map-cad.md MAP-03.)* İstasyonların hızları ise
 yayımlanır; bu dilim onları kullanmanın yolunu açar.
 
 Sıradaki öbür iş, GVX oturumlarının çapraz korelasyonları, bu turda yapılmadı. Bazın uyuşumsuzluk testi bugün her bazı

@@ -1,0 +1,6395 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.orthophoto.network",
+ "commandVersion": 1,
+ "title": "Birleşme çizgisi ağı",
+ "note": "ADR 5260. Bağımsız başvuru scripts/fixtures/orthophoto_network_cases.py: elemanlar shapely'nin farkıyla, düğümler merkezlerin çevrel merkeziyle denetlenir; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Birleşme çizgisi ağı",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "altlik",
+    "name": "Altlık",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "ayak-izi",
+    "name": "Ayak izleri (çizilen)",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "raster",
+    "layerId": "altlik",
+    "attrs": {},
+    "affine": [
+     487000.0,
+     1.0,
+     0.0,
+     4420060.0,
+     0.0,
+     -1.0
+    ],
+    "width": 100,
+    "height": 60,
+    "bands": 1,
+    "sample": "u8",
+    "srid": 5254,
+    "style": {
+     "render": "gray",
+     "bands": [
+      1
+     ]
+    },
+    "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+    "id": 1
+   },
+   {
+    "kind": "raster",
+    "layerId": "altlik",
+    "attrs": {},
+    "affine": [
+     487040.0,
+     1.0,
+     0.0,
+     4420060.0,
+     0.0,
+     -1.0
+    ],
+    "width": 100,
+    "height": 60,
+    "bands": 1,
+    "sample": "u8",
+    "srid": 5254,
+    "style": {
+     "render": "gray",
+     "bands": [
+      1
+     ]
+    },
+    "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+    "id": 2
+   },
+   {
+    "kind": "raster",
+    "layerId": "altlik",
+    "attrs": {},
+    "affine": [
+     487020.0,
+     1.0,
+     0.0,
+     4420090.0,
+     0.0,
+     -1.0
+    ],
+    "width": 100,
+    "height": 60,
+    "bands": 1,
+    "sample": "u8",
+    "srid": 5254,
+    "style": {
+     "render": "gray",
+     "bands": [
+      1
+     ]
+    },
+    "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+    "id": 3
+   }
+  ],
+  "uids": [
+   "0192f5c0-5260-7000-8000-000000000001",
+   "0192f5c0-5260-7000-8000-000000000002",
+   "0192f5c0-5260-7000-8000-000000000003"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "üç görüntü: elemanlar ve tek üçlü düğüm (merkezlerin çevrel merkezi)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487037.5,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420038.333333334
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666681801,
+         "centre": [
+          487090.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487069.99999999977,
+             4420038.333333334
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420060.0
+            ],
+            [
+             487037.5,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3704.166666641443,
+         "centre": [
+          487070.0,
+          4420060.0
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487070.0,
+          4420038.333333333
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003"
+         ]
+        }
+       ],
+       "covered": 11399.999999984866,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "3 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 11400.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "yazılır: üç eleman Mozaik elemanları katmanına, katman aynı adımda açılır; geri alınır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487037.5,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487050.0,
+          4420030.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420038.333333334
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666681801,
+         "centre": [
+          487090.0,
+          4420030.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487069.99999999977,
+             4420038.333333334
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420060.0
+            ],
+            [
+             487037.5,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3704.166666641443,
+         "centre": [
+          487070.0,
+          4420060.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487070.0,
+          4420038.333333333
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003"
+         ]
+        }
+       ],
+       "covered": 11399.999999984866,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "3 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 11400.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Mozaik elemanları ağı",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "görüntülerin sırası değişince elemanlar aynı, düğümün görüntüleri girdinin sırasıyla",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000003",
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487102.5,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420060.0
+            ],
+            [
+             487037.5,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3704.166666676756,
+         "centre": [
+          487070.0,
+          4420060.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487037.5,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487102.5,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487090.0,
+          4420030.0
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487070.0,
+          4420038.333333333
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000003",
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002"
+         ]
+        }
+       ],
+       "covered": 11400.0,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "3 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 11400.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "iki görüntü: düğüm yok, birleşme çizgisi ortak sınır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 4200.0,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 4200.0,
+         "centre": [
+          487090.0,
+          4420030.0
+         ]
+        }
+       ],
+       "junctions": [],
+       "covered": 8400.0,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "2 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 8400.00 m².",
+        "Üç ya da daha çok elemanın buluştuğu düğüm yok.",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "dört görüntü 2 × 2: dört eleman bir düğümde (merkezler aynı çemberde)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420100.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420100.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 4
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003",
+       "0192f5c0-5260-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487050.0,
+             4420000.0
+            ],
+            [
+             487050.0,
+             4420050.0
+            ],
+            [
+             487000.0,
+             4420050.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487030.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487050.0,
+             4420000.0
+            ],
+            [
+             487100.0,
+             4420000.0
+            ],
+            [
+             487100.0,
+             4420050.0
+            ],
+            [
+             487050.0,
+             4420050.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487070.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420050.0
+            ],
+            [
+             487050.0,
+             4420050.0
+            ],
+            [
+             487050.0,
+             4420100.0
+            ],
+            [
+             487000.0,
+             4420100.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487030.0,
+          4420070.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000004",
+         "parts": [
+          {
+           "ring": [
+            [
+             487050.0,
+             4420050.0
+            ],
+            [
+             487100.0,
+             4420050.0
+            ],
+            [
+             487100.0,
+             4420100.0
+            ],
+            [
+             487050.0,
+             4420100.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487070.0,
+          4420070.0
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003",
+          "0192f5c0-5260-7000-8000-000000000004"
+         ]
+        }
+       ],
+       "covered": 10000.0,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "4 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 10000.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "dört görüntü yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420100.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420100.0,
+       0.0,
+       -1.0
+      ],
+      "width": 60,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 4
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003",
+       "0192f5c0-5260-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487050.0,
+             4420000.0
+            ],
+            [
+             487050.0,
+             4420050.0
+            ],
+            [
+             487000.0,
+             4420050.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487030.0,
+          4420030.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487050.0,
+             4420000.0
+            ],
+            [
+             487100.0,
+             4420000.0
+            ],
+            [
+             487100.0,
+             4420050.0
+            ],
+            [
+             487050.0,
+             4420050.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487070.0,
+          4420030.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420050.0
+            ],
+            [
+             487050.0,
+             4420050.0
+            ],
+            [
+             487050.0,
+             4420100.0
+            ],
+            [
+             487000.0,
+             4420100.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487030.0,
+          4420070.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000004",
+         "parts": [
+          {
+           "ring": [
+            [
+             487050.0,
+             4420050.0
+            ],
+            [
+             487100.0,
+             4420050.0
+            ],
+            [
+             487100.0,
+             4420100.0
+            ],
+            [
+             487050.0,
+             4420100.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487070.0,
+          4420070.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003",
+          "0192f5c0-5260-7000-8000-000000000004"
+         ]
+        }
+       ],
+       "covered": 10000.0,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "4 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 10000.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Mozaik elemanları ağı",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "örtüşmeyen görüntü: ayak izinin hepsi kendi elemanı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487400.0,
+       1.0,
+       0.0,
+       4420050.0,
+       0.0,
+       -1.0
+      ],
+      "width": 50,
+      "height": 50,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 4
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003",
+       "0192f5c0-5260-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487037.5,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420038.333333334
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666681801,
+         "centre": [
+          487090.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487069.99999999977,
+             4420038.333333334
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420060.0
+            ],
+            [
+             487037.5,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3704.166666641443,
+         "centre": [
+          487070.0,
+          4420060.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000004",
+         "parts": [
+          {
+           "ring": [
+            [
+             487400.0,
+             4420000.0
+            ],
+            [
+             487450.0,
+             4420000.0
+            ],
+            [
+             487450.0,
+             4420050.0
+            ],
+            [
+             487400.0,
+             4420050.0
+            ]
+           ]
+          }
+         ],
+         "area": 2500.0,
+         "centre": [
+          487425.0,
+          4420025.0
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487070.0,
+          4420038.333333333
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003"
+         ]
+        }
+       ],
+       "covered": 13899.999999984866,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "4 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 13900.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "küçük görüntü büyüğün içinde ve önce verilmiş: büyüğün elemanı delikli",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420040.0,
+       0.0,
+       -1.0
+      ],
+      "width": 20,
+      "height": 20,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487040.0,
+             4420020.0
+            ],
+            [
+             487060.0,
+             4420020.0
+            ],
+            [
+             487060.0,
+             4420040.0
+            ],
+            [
+             487040.0,
+             4420040.0
+            ]
+           ]
+          }
+         ],
+         "area": 400.0,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487100.0,
+             4420000.0
+            ],
+            [
+             487100.0,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ],
+           "holes": [
+            [
+             [
+              487040.0,
+              4420020.0
+             ],
+             [
+              487040.0,
+              4420040.0
+             ],
+             [
+              487060.0,
+              4420040.0
+             ],
+             [
+              487060.0,
+              4420020.0
+             ]
+            ]
+           ]
+          }
+         ],
+         "area": 5600.0,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        }
+       ],
+       "junctions": [],
+       "covered": 6000.0,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "2 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 6000.00 m².",
+        "Üç ya da daha çok elemanın buluştuğu düğüm yok.",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ],
+   "note": "merkezler aynı yerde: eşitlikte önce verilen kazanır"
+  },
+  {
+   "name": "verilen ayak izleriyle: dörtgenler, merkezleri alan ağırlık merkezleri",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487090.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487095.0,
+        "y": 4420055.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487075.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487135.0,
+        "y": 4420100.0
+       },
+       {
+        "x": 487035.0,
+        "y": 4420100.0
+       }
+      ],
+      "id": 6
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004",
+     "0192f5c0-5260-7000-8000-000000000005",
+     "0192f5c0-5260-7000-8000-000000000006"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "footprints": [
+       "0192f5c0-5260-7000-8000-000000000004",
+       "0192f5c0-5260-7000-8000-000000000005",
+       "0192f5c0-5260-7000-8000-000000000006"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487090.0,
+             4420000.0
+            ],
+            [
+             487090.0913242009,
+             4420001.00456621
+            ],
+            [
+             487083.84722165944,
+             4420000.692361083
+            ],
+            [
+             487082.75733394874,
+             4420042.3754074415
+            ],
+            [
+             487074.3077966976,
+             4420041.905988705
+            ],
+            [
+             487057.67895683186,
+             4420056.96426543
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 4580.028157457715,
+         "centre": [
+          487045.6103286385,
+          4420029.037558685
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487083.84722165944,
+             4420000.692361083
+            ],
+            [
+             487170.0,
+             4420005.0
+            ],
+            [
+             487170.0,
+             4420060.0
+            ],
+            [
+             487112.10905674496,
+             4420060.0
+            ],
+            [
+             487092.9521130457,
+             4420042.941784058
+            ],
+            [
+             487082.75733394874,
+             4420042.3754074415
+            ]
+           ]
+          }
+         ],
+         "area": 4625.700659179299,
+         "centre": [
+          487120.5505952381,
+          4420030.99702381
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487074.3077966976,
+             4420041.905988705
+            ],
+            [
+             487092.9521130457,
+             4420042.941784058
+            ],
+            [
+             487112.10905674496,
+             4420060.0
+            ],
+            [
+             487131.36363636365,
+             4420060.0
+            ],
+            [
+             487135.0,
+             4420100.0
+            ],
+            [
+             487035.0,
+             4420100.0
+            ],
+            [
+             487038.5022026432,
+             4420057.973568282
+            ],
+            [
+             487057.67895683186,
+             4420056.96426543
+            ]
+           ]
+          }
+         ],
+         "area": 4576.082964818655,
+         "centre": [
+          487084.27536231885,
+          4420071.735316552
+         ]
+        }
+       ],
+       "junctions": [],
+       "covered": 13781.811781455668,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "3 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 13781.81 m².",
+        "Üç ya da daha çok elemanın buluştuğu düğüm yok.",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "verilen katmana yazılır, katman açılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mozaik",
+      "name": "Ortofoto mozaiği",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "layer": "mozaik"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487037.5,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487050.0,
+          4420030.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420038.333333334
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666681801,
+         "centre": [
+          487090.0,
+          4420030.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487069.99999999977,
+             4420038.333333334
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420060.0
+            ],
+            [
+             487037.5,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3704.166666641443,
+         "centre": [
+          487070.0,
+          4420060.0
+         ],
+         "uids": [
+          "$any"
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487070.0,
+          4420038.333333333
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003"
+         ]
+        }
+       ],
+       "covered": 11399.999999984866,
+       "layer": "mozaik",
+       "notes": [
+        "3 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 11400.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "Mozaik elemanları ağı",
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol projesinde",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "elements": [
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000001",
+         "parts": [
+          {
+           "ring": [
+            [
+             487000.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487070.0,
+             4420038.333333333
+            ],
+            [
+             487037.5,
+             4420060.0
+            ],
+            [
+             487000.0,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666661622,
+         "centre": [
+          487050.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000002",
+         "parts": [
+          {
+           "ring": [
+            [
+             487070.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420000.0
+            ],
+            [
+             487140.0,
+             4420060.0
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487070.0,
+             4420038.333333334
+            ]
+           ]
+          }
+         ],
+         "area": 3847.916666681801,
+         "centre": [
+          487090.0,
+          4420030.0
+         ]
+        },
+        {
+         "image": "0192f5c0-5260-7000-8000-000000000003",
+         "parts": [
+          {
+           "ring": [
+            [
+             487069.99999999977,
+             4420038.333333334
+            ],
+            [
+             487102.49999999953,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420060.0
+            ],
+            [
+             487120.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420090.0
+            ],
+            [
+             487020.0,
+             4420060.0
+            ],
+            [
+             487037.5,
+             4420060.0
+            ]
+           ]
+          }
+         ],
+         "area": 3704.166666641443,
+         "centre": [
+          487070.0,
+          4420060.0
+         ]
+        }
+       ],
+       "junctions": [
+        {
+         "at": [
+          487070.0,
+          4420038.333333333
+         ],
+         "images": [
+          "0192f5c0-5260-7000-8000-000000000001",
+          "0192f5c0-5260-7000-8000-000000000002",
+          "0192f5c0-5260-7000-8000-000000000003"
+         ]
+        }
+       ],
+       "covered": 11399.999999984866,
+       "layer": "mozaik-elemanlari",
+       "notes": [
+        "3 görüntünün mozaik elemanları: her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın; kaplanan alan 11400.00 m².",
+        "1 düğümde üç ya da daha çok eleman buluşuyor (üçlü düğüm).",
+        "Birleşme çizgileri elemanların ortak kenarlarıdır. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması)."
+       ],
+       "revision": "$current",
+       "opened": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "tek görüntü",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Ağ 2 ile 50 arasında ortofotoyla kurulur; 1 verildi.",
+       "path": "images"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı görüntü iki kez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Aynı ortofoto iki kez verildi; her görüntü ağda bir kez yer alır.",
+       "path": "images[2]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "ayak izleri her görüntüye bir değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487090.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487095.0,
+        "y": 4420055.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487075.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487135.0,
+        "y": 4420100.0
+       },
+       {
+        "x": 487035.0,
+        "y": 4420100.0
+       }
+      ],
+      "id": 6
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004",
+     "0192f5c0-5260-7000-8000-000000000005",
+     "0192f5c0-5260-7000-8000-000000000006"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "footprints": [
+       "0192f5c0-5260-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Ayak izleri görüntülerle aynı sırada, her görüntüye bir tane verilir (3 görüntü, 1 ayak izi).",
+       "path": "footprints"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "içbükey ayak izi",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 4
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002"
+      ],
+      "footprints": [
+       "0192f5c0-5260-7000-8000-000000000003",
+       "0192f5c0-5260-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. ayak izi dışbükey değil; ağ dışbükey ayak izleriyle kurulur. İçbükey ayak izini parçalara bölün ya da Ayak izi'nin zarfını kullanın.",
+       "path": "footprints[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı yerdeki ikinci görüntüye yer kalmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "2. görüntünün ayak izinin her yeri başka bir görüntünün merkezine daha yakın; mozaikte ona yer kalmıyor. Onu ağdan çıkarın.",
+       "path": "images[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "raster değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487090.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487095.0,
+        "y": 4420055.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487070.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487170.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487075.0,
+        "y": 4420060.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "ayak-izi",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487040.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487135.0,
+        "y": 4420100.0
+       },
+       {
+        "x": 487035.0,
+        "y": 4420100.0
+       }
+      ],
+      "id": 6
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003",
+     "0192f5c0-5260-7000-8000-000000000004",
+     "0192f5c0-5260-7000-8000-000000000005",
+     "0192f5c0-5260-7000-8000-000000000006"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_raster",
+       "message": "“0192f5c0-5260-7000-8000-000000000004” bir raster değil; ortofotoyu seçin.",
+       "path": "images[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "x"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "images[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000063"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-5260-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "images[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka sistemde görüntü",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5256,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "Ortofotonun koordinat sistemi EPSG:5256, projeninki EPSG:5254; birleşme çizgisi aynı sistemdeki görüntüler arasında kurulur. Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).",
+       "path": "images[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” katmanı çizimde yok.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; mozaik elemanları bu katmana yazılır. Kilidi Katmanlar panelinden açın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eski sürüme göre hazırlanmış",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sürüm yazısı geçersiz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Birleşme çizgisi ağı",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ayak-izi",
+      "name": "Ayak izleri (çizilen)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487000.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487040.0,
+       1.0,
+       0.0,
+       4420060.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 2
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487020.0,
+       1.0,
+       0.0,
+       4420090.0,
+       0.0,
+       -1.0
+      ],
+      "width": 100,
+      "height": 60,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/ag-a.tif",
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-5260-7000-8000-000000000001",
+     "0192f5c0-5260-7000-8000-000000000002",
+     "0192f5c0-5260-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "images": [
+       "0192f5c0-5260-7000-8000-000000000001",
+       "0192f5c0-5260-7000-8000-000000000002",
+       "0192f5c0-5260-7000-8000-000000000003"
+      ],
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

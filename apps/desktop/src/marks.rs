@@ -89,6 +89,8 @@ pub struct Marks {
     pub hot: Vec<(Slot, usize)>,
     /// The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3).
     pub marked: Vec<Vec2>,
+    /// Köşe tablosu's object's way (docs/adr/5000 §7): each edge's middle, its direction of travel and its length.
+    pub ways: Vec<(Vec2, Vec2, f64)>,
     /// Eğimle kot ver's range: the path from its start vertex to its end, drawn over in the accent (docs/adr/2980).
     pub range: Vec<Vec2>,
     /// The place the data search's Git marked and its coordinates' words
@@ -275,6 +277,7 @@ impl<Message> canvas::Program<Message> for Marks {
         param_grips(&mut frame, &self.params, &self.camera, &self.colors);
         range(&mut frame, &self.range, &self.camera, &self.colors, accent);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
+        ways(&mut frame, &self.ways, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
         }
@@ -555,6 +558,42 @@ fn marked(
         |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     frame.stroke(&rings, stroke(4.0, colors.halo));
     frame.stroke(&rings, stroke(2.0, accent));
+}
+
+/// Köşe tablosu's arrows (docs/adr/5000 §7): just past each edge's middle a head pointing the way the vertices run, an arc's
+/// along its chord (the arc's tangent there); none on an edge shorter than 48 px on the screen.
+fn ways(
+    frame: &mut canvas::Frame,
+    ways: &[(Vec2, Vec2, f64)],
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    if ways.is_empty() {
+        return;
+    }
+    let heads = Path::new(|b| {
+        for &(mid, dir, len) in ways.iter().take(2000) {
+            let s = camera.world_to_screen(mid);
+            let t = camera.world_to_screen(Vec2::new(mid.x + dir.x * len, mid.y + dir.y * len));
+            let (dx, dy) = ((t[0] - s[0]) as f32, (t[1] - s[1]) as f32);
+            let span = (dx * dx + dy * dy).sqrt();
+            if !span.is_finite() || span < 48.0 {
+                continue;
+            }
+            let (ux, uy) = (dx / span, dy / span);
+            // Past the middle by 16 px, clear of the edge's middle grip.
+            let c = Point::new(s[0] as f32 + ux * 16.0, s[1] as f32 + uy * 16.0);
+            let tip = Point::new(c.x + ux * 6.0, c.y + uy * 6.0);
+            let back = Point::new(c.x - ux * 6.0, c.y - uy * 6.0);
+            b.move_to(Point::new(back.x - uy * 5.0, back.y + ux * 5.0));
+            b.line_to(tip);
+            b.line_to(Point::new(back.x + uy * 5.0, back.y - ux * 5.0));
+            b.close();
+        }
+    });
+    frame.stroke(&heads, Stroke::default().with_color(colors.halo).with_width(3.0));
+    frame.fill(&heads, accent);
 }
 
 /// The web's `drawSearchMark` (docs/adr/0178 §6): the place the data search

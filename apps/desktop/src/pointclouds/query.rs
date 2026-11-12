@@ -34,7 +34,20 @@ fn nearest_in(entry: &Entry, at: [f64; 2], reach: f64) -> Result<Option<(f64, Fa
                 continue;
             }
         };
-        near(&o.tree, at, reach, &mut nodes);
+        // docs/adr/5100: a placed file is searched in its own coordinates about the place taken back (at the heights'
+        // middle), its reach grown by how far a tilt moves a point across the heights; its points compared where the
+        // drawing shows them.
+        let (look_at, look_reach) = match &m.pose {
+            Some(p) => {
+                let zm = (entry.z[0] + entry.z[1]) / 2.0;
+                let d = [at[0] - p[3], at[1] - p[7], zm - p[11]];
+                let back = [0, 1].map(|a| p[a] * d[0] + p[4 + a] * d[1] + p[8 + a] * d[2]);
+                let lean = (p[8] * p[8] + p[9] * p[9]).sqrt() * (entry.z[1] - entry.z[0]).abs();
+                (back, reach + lean)
+            }
+            None => (at, reach),
+        };
+        near(&o.tree, look_at, look_reach, &mut nodes);
         for &n in &nodes {
             let k = o.tree.keys[n as usize];
             let Some(run) = o.cloud.node_run(Key {
@@ -52,6 +65,18 @@ fn nearest_in(entry: &Entry, at: [f64; 2], reach: f64) -> Result<Option<(f64, Fa
                 .map_err(|e| e.0)?;
             let (layout, scale, offset) =
                 (&o.cloud.layout, o.cloud.head.scale, o.cloud.head.offset);
+            if let Some(p) = &m.pose {
+                let r2 = reach * reach;
+                for r in records.chunks_exact(layout.len.max(1)) {
+                    let mut f = Facts::of(layout, r, scale, offset);
+                    f.xyz = kentos_commands::pose_apply(p, f.xyz);
+                    let d = (f.xyz[0] - at[0]).powi(2) + (f.xyz[1] - at[1]).powi(2);
+                    if d <= r2 && best.as_ref().is_none_or(|(b, _)| d < *b) {
+                        best = Some((d, f));
+                    }
+                }
+                continue;
+            }
             if let Some((i, d)) = nearest(layout, &records, scale, offset, at, reach)
                 && best.as_ref().is_none_or(|(b, _)| d < *b)
             {

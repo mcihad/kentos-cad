@@ -1,18 +1,17 @@
-//! `cad.entities.drape` v1 (plan/map-cad.md MAP-06, docs/adr/4180): Yüzeyden kot ver, as Civil 3D's Elevations From
-//! Surface. Each vertex of the objects (a point, a line's ends, every part's and hole's of a polyline or an area) takes
+//! `cad.entities.drape` v1 (plan/map-cad.md MAP-06, docs/adr/4180): Yüzeyden kot ver. Each vertex of the objects (a point, a line's ends, every part's and hole's of a polyline or an area) takes
 //! the project's terrain surface's height under it, read by the surface's own query; a vertex off the surface keeps
-//! its own. With `breaks` (Insert Intermediate Grade Break Points) a vertex with the surface's height goes wherever a
+//! its own. With `breaks` (ara kırık noktaları) a vertex with the surface's height goes wherever a
 //! straight edge crosses an edge of the surface's triangles: in polylines and areas that carry no measures (M) nor
-//! widths; an arc is not split, a line keeps its two ends. Docs/adr/4580: with `offset` (Relative Elevation to Surface's
-//! offset) every height is the surface's plus it; with `range` (Partial) only one object's vertices from `from` to `to`
-//! (a line's ends, a polyline's or an area's outer ring) take heights, only the edges between them break points. The
-//! heights are not kept tied to the surface. One undo step. The shared cases are
+//! widths; an arc is not split, a line keeps its two ends. Docs/adr/4580: with `offset` every height is the surface's
+//! plus it; with `range` only one object's vertices from `from` to `to` (a line's ends, a polyline's or an area's ring)
+//! take heights, only the edges between them break points; docs/adr/4980: the ring is any part's outer ring or hole
+//! (`part`, `ring`), the object's other rings keep theirs. The heights are not kept tied to the surface. One undo step. The shared cases are
 //! `fixtures/commands/v1/cad.entities.drape.json`.
 
 use std::collections::{BTreeSet, HashSet};
 
 use kentos_commands::{
-    CommandResult, DrapeRange, DrapedObject, EntitiesDrape, EntitiesDraped, Entity, MAX_DRAPED, Vec2,
+    CommandResult, DrapeRange, DrapedObject, EntitiesDrape, EntitiesDraped, Entity, MAX_DRAPED, PathEntity, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_road::surface::Surface;
@@ -79,11 +78,13 @@ fn crossings(p: Vec2, q: Vec2, edges: &[([f64; 2], [f64; 2])]) -> Vec<f64> {
     ts
 }
 
-/// How a ring is draped: the height over the surface and the vertices taken (docs/adr/4580; none: all).
+/// How a ring is draped: the height over the surface and the vertices taken (docs/adr/4580; none: all) of the ring
+/// `at` (part, ring; docs/adr/4980).
 #[derive(Clone, Copy)]
 struct Over {
     offset: f64,
     range: Option<(usize, usize)>,
+    at: (usize, usize),
 }
 
 impl Over {
@@ -166,13 +167,67 @@ fn ring(
     (out_pts, out_bulges, out_zs, set, outside, inserted)
 }
 
+/// A ring's vertices, bulges, elevations and whether it closes, by its part (0: the object's own vertices, 1 on: the
+/// further parts) and ring (0: the outer one, 1 on: the holes); none when there is no such ring (docs/adr/4980).
+#[allow(clippy::type_complexity)]
+fn ring_at(
+    p: &mut PathEntity,
+    area: bool,
+    (part, ring): (usize, usize),
+) -> Option<(&mut Vec<Vec2>, &mut Option<Vec<f64>>, &mut Option<Vec<Option<f64>>>, bool)> {
+    let closed = area || p.closed;
+    match (part, ring) {
+        (0, 0) => Some((&mut p.pts, &mut p.bulges, &mut p.zs, closed)),
+        (0, h) => p.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs, true)),
+        (k, 0) => p.parts.as_mut()?.get_mut(k - 1).map(|q| (&mut q.pts, &mut q.bulges, &mut q.zs, area)),
+        (k, h) => {
+            let q = p.parts.as_mut()?.get_mut(k - 1)?;
+            q.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs, true))
+        }
+    }
+}
+
+/// How many vertices the ring `at` has, or why there is none (the field and the message; docs/adr/4980).
+fn ring_count(e: &Entity, (part, ring): (usize, usize)) -> Result<usize, (&'static str, String)> {
+    let p = match e {
+        Entity::Line(_) if part == 0 && ring == 0 => return Ok(2),
+        Entity::Line(_) => {
+            return Err((
+                if part != 0 { "range.part" } else { "range.ring" },
+                "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.".into(),
+            ));
+        }
+        Entity::Polyline(p) | Entity::Polygon(p) => p,
+        _ => return Ok(1),
+    };
+    let parts = 1 + p.parts.as_ref().map_or(0, Vec::len);
+    if part >= parts {
+        return Err(("range.part", format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok.")));
+    }
+    let (outer, holes) = match part {
+        0 => (p.pts.len(), p.holes.as_deref().unwrap_or(&[])),
+        k => {
+            let q = &p.parts.as_deref().unwrap_or(&[])[k - 1];
+            (q.pts.len(), q.holes.as_deref().unwrap_or(&[]))
+        }
+    };
+    match ring {
+        0 => Ok(outer),
+        h if h <= holes.len() => Ok(holes[h - 1].pts.len()),
+        h => Err((
+            "range.ring",
+            format!("{part}. parçanın {} deliği var: {h}. halka yok (0 dış halka, 1'den delikler).", holes.len()),
+        )),
+    }
+}
+
 /// Elevations as stored: none when no vertex has one.
 fn stored(zs: Vec<Option<f64>>) -> Option<Vec<Option<f64>>> {
     zs.iter().any(Option::is_some).then_some(zs)
 }
 
-/// An object draped, and its row; none for a kind without vertices. With a range (docs/adr/4580) only the outer ring's
-/// (the first part's) vertices in it, a line's ends in it.
+/// An object draped, and its row; none for a kind without vertices. With a range (docs/adr/4580) only the vertices in it
+/// of the ring it names (docs/adr/4980), a line's ends in it.
 fn draped(
     e: &Entity,
     uid: &str,
@@ -216,17 +271,23 @@ fn draped(
                 || p.parts.iter().flatten().any(|q| q.ms.as_ref().is_some_and(|m| m.iter().any(Option::is_some)))
                 || p.widths.is_some();
             let split = if measured { None } else { edges };
+            // With a range only the ring it names takes heights (docs/adr/4980); the check found it.
+            if over.range.is_some() {
+                let (pts, bulges, zs, closed) = ring_at(p, area, over.at)?;
+                let (new_pts, new_bulges, new_zs, s, o, i) = ring(pts, bulges.as_ref(), zs.as_ref(), closed, surface, split, over);
+                *pts = new_pts;
+                *bulges = new_bulges;
+                *zs = stored(new_zs);
+                count(s, o, i, &mut row);
+                row.unsplit = edges.is_some() && measured;
+                return Some((next, row));
+            }
             let (pts, bulges, zs, s, o, i) = ring(&p.pts, p.bulges.as_ref(), p.zs.as_ref(), area || p.closed, surface, split, over);
             p.pts = pts;
             p.bulges = bulges;
             p.zs = stored(zs);
             count(s, o, i, &mut row);
-            // With a range only the outer ring (of the first part) takes heights.
             let whole = Over { range: None, ..over };
-            if over.range.is_some() {
-                row.unsplit = edges.is_some() && measured;
-                return Some((next, row));
-            }
             for h in p.holes.iter_mut().flatten() {
                 let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split, whole);
                 h.pts = pts;
@@ -311,22 +372,20 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
                 &path,
             ));
         }
-        if let Some(DrapeRange { from, to }) = input.range {
-            let count = match e {
-                Entity::Line(_) => 2,
-                Entity::Polyline(p) | Entity::Polygon(p) => p.pts.len(),
-                _ => {
-                    return Err(fail(
-                        codes::NOT_A_PATH,
-                        "Nokta tek köşelidir: köşe aralığı çizgi, çoklu çizgi ya da alanın köşelerine verilir.".into(),
-                        "range",
-                    ));
-                }
-            };
+        if let Some(DrapeRange { from, to, part, ring }) = input.range {
+            if matches!(e, Entity::Point(_)) {
+                return Err(fail(
+                    codes::NOT_A_PATH,
+                    "Nokta tek köşelidir: köşe aralığı çizgi, çoklu çizgi ya da alanın köşelerine verilir.".into(),
+                    "range",
+                ));
+            }
+            let count = ring_count(e, (part as usize, ring as usize)).map_err(|(at, why)| fail(codes::WRONG_PLACE, why, at))?;
             if !(from < to && (to as usize) < count) {
+                let whose = if part == 0 && ring == 0 { "nesnenin".to_owned() } else { format!("{part}. parçanın {ring}. halkasının") };
                 return Err(fail(
                     codes::WRONG_PLACE,
-                    format!("Köşe aralığı {from}–{to} olamaz: nesnenin {count} köşesi var (0'dan), başlangıç bitişten önce olmalı."),
+                    format!("Köşe aralığı {from}–{to} olamaz: {whose} {count} köşesi var (0'dan), başlangıç bitişten önce olmalı."),
                     "range",
                 ));
             }
@@ -337,7 +396,11 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let edges = input.breaks.then(|| edges_of(surface));
-    let over = Over { offset: input.offset.unwrap_or(0.0), range: input.range.map(|r| (r.from as usize, r.to as usize)) };
+    let over = Over {
+        offset: input.offset.unwrap_or(0.0),
+        range: input.range.map(|r| (r.from as usize, r.to as usize)),
+        at: input.range.map_or((0, 0), |r| (r.part as usize, r.ring as usize)),
+    };
     let mut changed = Vec::new();
     let mut rows = Vec::new();
     for (slot, e, uid) in &objects {

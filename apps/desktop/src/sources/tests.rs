@@ -198,7 +198,7 @@ fn a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_
     send(&mut app, Event::Toggle(folder_key(&inner)));
     send(&mut app, Event::Listed(inner.clone(), read_folder(&inner)));
     assert!(
-        rows(&app).contains(&"      imar.ncz · Netcad NCZ".to_owned()),
+        rows(&app).contains(&"      imar.ncz · NCZ çizimi".to_owned()),
         "{:?}",
         rows(&app)
     );

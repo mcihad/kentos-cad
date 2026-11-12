@@ -110,6 +110,50 @@ pub struct RoadRecipeLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<bool>,
+    /// Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's
+    /// column (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;
+    /// the list is in `domains`. Empty: no fields.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LayerField>>"))]
+    pub fields: Vec<crate::LayerField>,
+    /// The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::FieldDomain>>"))]
+    pub domains: Vec<crate::FieldDomain>,
+    /// Its subtypes (Alt türler, docs/adr/0422, 4860): its field that sorts the records and what each kind narrows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub subtypes: Option<crate::LayerSubtypes>,
+    /// Its value combinations (Değer bileşimleri, docs/adr/0423, 5240): the groups of fields whose values go together.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::FieldGroup>>"))]
+    pub contingents: Vec<crate::FieldGroup>,
+    /// Its record rules (Kayıt kuralları, docs/adr/0438, 5240).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LayerRule>>"))]
+    pub rules: Vec<crate::LayerRule>,
+    /// Its indexes (Dizinler, docs/adr/0758, 5240).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LayerIndex>>"))]
+    pub indexes: Vec<crate::LayerIndex>,
+    /// Its project's forms that edit it (Formlar, docs/adr/0401, 5240), each its id, name and draft; a release is its
+    /// project's decision and is not kept (the project it goes to publishes again).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RoadRecipeForm>>"))]
+    pub forms: Vec<RoadRecipeForm>,
+}
+
+/// A form a recipe layer keeps (docs/adr/5240): its id and name in its project and its draft, bound to the layer's
+/// fields by their keys.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadRecipeForm {
+    pub id: String,
+    pub name: String,
+    pub draft: crate::FormBody,
 }
 
 /// How a drawing is made again: its command and the version that draws it again (a record keeps no version; every

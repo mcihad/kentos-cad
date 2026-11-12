@@ -35,11 +35,22 @@ ADR 2080 adds, written here from the ADR with hashlib and json:
   status takes it away; approving an approved item that moved on stamps it again. An approved item whose revision now
   is not its stamp is `revised`, after the other states.
 - An object its own layers hold is not derived from an item without a file (`own_content`).
+
+ADR 5280 adds, written here from the regulations (not from KentOS's rules file, which the cases thus check):
+
+- A shift limit: the user's own value; BÖHHBÜY m. 46(1)'s detail position ±7 cm; m. 78(1)(h)'s ±0.2 mm on the drawing
+  times the scale; the error limit regulation's m. 9(1) table (read from its image, RG 27.09.2022/31966). Each changed
+  object's shift is beyond it when its largest vertex move (paired) or its Hausdorff distance (not paired) is larger;
+  how many vertices are, when paired; the item's changes count the listed objects beyond it and its row says so.
+- `suggest`: an item without a profile lists the profiles (KentOS's, then the drawing's copies) with the classes whose
+  `work` holds its kind.
 """
 
 import copy
 import hashlib
+import importlib.util
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -47,7 +58,95 @@ sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
+
+
+def _load(name):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(f"{name}.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+# docs/adr/4880: an item's typed layers are a data profile's classes; `cad.profiles`' own independent reference writes
+# and checks them (scripts/fixtures/profile_cases.py, no KentOS code).
+PR = _load("profile_cases")
+PROFILES = {n: json.loads((ROOT / f"catalog/v1/profiles/{n}.json").read_text("utf-8"))
+            for n in ("tucbs-temel", "harita-varliklari", "imar-plani")}
 FILES = ROOT / "fixtures/map-work/v1"
+
+# docs/adr/5280: the position accuracy values, transcribed from the regulations' text and the m. 9(1) table's image.
+DETAIL = (0.07, "BÖHHBÜY m. 46(1): detay konumu ±7 cm")
+DRAWING_MM = 0.2
+DRAWING_SOURCE = "BÖHHBÜY m. 78(1)(h): çizimde nokta konumu ±0,2 mm"
+TABLE_SOURCE = "Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik m. 9(1)"
+TABLE_SCALES = [200, 250, 500, 1000, 2000, 2500, 3000, 4000, 5000, 10000]
+_ = None
+TABLE = [
+    ("prizmatik-olcu", "Prizmatik, ölçü değerlerine göre", [0.21] * 10),
+    ("prizmatik-pafta", "Prizmatik, paftadan okunan", [0.21, 0.22, 0.25, 0.35, 0.6, 0.74, 1.11, 1.28, 1.43, 2.01]),
+    ("takeometrik-yakin", "Takeometrik, poligona uzaklık 100 m'ye dek", [0.5] * 10),
+    ("takeometrik-uzak", "Takeometrik, poligona uzaklık 100 m'den çok", [1] * 10),
+    ("takeometrik-pafta", "Takeometrik, paftadan okunan", [1, 1, 1.01, 1.04, 1.15, 1.22, 1.31, 1.51, 1.73, 3]),
+    ("fotogrametrik", "Fotogrametrik", [_, _, _, _, 0.6, 0.75, 0.9, 1.2, 1.5, 3]),
+    ("sayisal-fotogrametrik", "Sayısal fotogrametrik", [_, _, _, 0.09, 0.15, 0.15, 0.2, 0.25, 0.3, 0.4]),
+    ("fotoplan", "Fotoplan", [_, _, _, _, 0.65, 0.8, 0.95, 1.35, 1.75, 3.5]),
+    ("sayisal", "Sayısal", [0.09] * 10),
+]
+
+
+def num_words(x):
+    """A number as the shortest text that reads back to it, without a trailing `.0` (Rust's `Display`)."""
+    t = repr(float(x))
+    return t[:-2] if t.endswith(".0") else t
+
+
+def scale_words(n):
+    return "1/" + f"{n:,}".replace(",", ".")
+
+
+def limit_of(lim):
+    """docs/adr/5280: the limit's (metres, source), or (path, message) refused."""
+    basis = lim["basis"]
+    if basis == "own":
+        m = lim.get("metres")
+        if m is None:
+            return None, ("limit.metres", "Kendi sınırınız için metres verin (ör. 0,05).")
+        if not (0 < m <= 1000):
+            return None, ("limit.metres", f"Sınır {num_words(m)} m: 0'dan büyük, en çok 1000 m olmalı.")
+        return (float(m), "kullanıcının değeri"), None
+    if basis == "detail":
+        return DETAIL, None
+
+    def scale(what):
+        sc = lim.get("scale")
+        if sc is None:
+            return None, ("limit.scale", f"{what} için ölçek gerekir (1000: 1/1.000).")
+        if not (1 <= sc <= 1_000_000):
+            return None, ("limit.scale", f"Ölçek paydası {sc}: 1 ile 1000000 arasında olmalı.")
+        return sc, None
+    if basis == "drawing":
+        sc, bad = scale("Çizimde nokta konumu")
+        if bad:
+            return None, bad
+        return (DRAWING_MM * sc / 1000.0, f"{DRAWING_SOURCE}, {scale_words(sc)}"), None
+    ids = ", ".join(t[0] for t in TABLE)
+    mid = lim.get("method")
+    if mid is None:
+        return None, ("limit.method", f"Üretim yöntemini verin: {ids}.")
+    row = next((t for t in TABLE if t[0] == mid), None)
+    if row is None:
+        return None, ("limit.method", f"“{mid}” yöntemi tabloda yok; yöntemler: {ids}.")
+    sc, bad = scale("Üretim yöntemi")
+    if bad:
+        return None, bad
+    if sc not in TABLE_SCALES:
+        have = ", ".join(scale_words(x) for x in TABLE_SCALES)
+        return None, ("limit.scale", f"{scale_words(sc)} tabloda yok (tablonun ölçekleri {have}); tabloda olmayan "
+                                     "ölçeğin değerini Genel Müdürlük belirler (m. 9(3)).")
+    v = row[2][TABLE_SCALES.index(sc)]
+    if v is None:
+        return None, ("limit.scale", f"Tablo {scale_words(sc)} için “{row[1]}” değeri vermiyor.")
+    return (float(v), f"{TABLE_SOURCE}: {row[1]}, {scale_words(sc)}"), None
 
 # ── The source files ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -233,6 +332,146 @@ def setup(work="map", map_work="start"):
     }
 
 
+# ── How far a shape moved (docs/adr/4880) ───────────────────────────────────────────────────────────────────────────
+#
+# Vertex by vertex when both states are of one kind and have as many vertices (a point's place, a line's two ends, a
+# polyline's corners, an area's ring then its holes): the largest move (the first of equal ones), the moves' root mean
+# square. Always the Hausdorff distance of the two outlines (a shape without edges is its points), exactly: along a
+# straight edge the distance to the other outline is the least of convex functions (the distance to each of its
+# edges), so its largest value is at the edge's ends or where two of those functions are equal: two points (a line),
+# a point and a line (a quadratic), two lines (their bisectors). Every such place is tried. The fixtures' outlines are
+# straight.
+
+
+def _sub(p, q):
+    return (p[0] - q[0], p[1] - q[1])
+
+
+def _dot(p, q):
+    return p[0] * q[0] + p[1] * q[1]
+
+
+def _xy(p):
+    return (p["x"], p["y"])
+
+
+def outline_of(e):
+    """(vertices, edges) of an object's snapshot form."""
+    k = e["kind"]
+    if k == "point":
+        return [_xy(e["p"])], []
+    if k == "line":
+        a, b = _xy(e["a"]), _xy(e["b"])
+        return [a, b], [(a, b)]
+    if k in ("polyline", "polygon"):
+        assert not e.get("bulges"), "the fixtures' outlines are straight"
+        rings = [[_xy(p) for p in e["pts"]]] + [[_xy(p) for p in h["pts"]] for h in e.get("holes", [])]
+        closed = k == "polygon" or e.get("closed", False)
+        verts, edges = [], []
+        for r in rings:
+            verts += r
+            edges += list(zip(r, r[1:])) + ([(r[-1], r[0])] if closed and len(r) > 2 else [])
+        return verts, edges
+    return [], []
+
+
+def _near_seg(p, a, b):
+    v = _sub(b, a)
+    l2 = _dot(v, v)
+    if l2 == 0.0:
+        return a
+    t = min(1.0, max(0.0, _dot(_sub(p, a), v) / l2))
+    return (a[0] + v[0] * t, a[1] + v[1] * t)
+
+
+def _nearest(p, edges, points):
+    best = (math.inf, p)
+    for q in [_near_seg(p, a, b) for a, b in edges] + list(points):
+        d = math.dist(p, q)
+        if d < best[0]:
+            best = (d, q)
+    return best
+
+
+def _crossings(a, b, edges, points):
+    """The places along a → b (0 … 1) where two of the other outline's distance functions are equal."""
+    v = _sub(b, a)
+    verts = list(points) + [x for e in edges for x in e]
+    lines = []
+    for p, q in edges:
+        w = _sub(q, p)
+        n = math.hypot(*w)
+        if n > 0:
+            lines.append((p, (-w[1] / n, w[0] / n)))
+    ts = []
+    for i, P in enumerate(verts):
+        for Q in verts[i + 1:]:
+            den = 2.0 * _dot(v, _sub(Q, P))
+            if den != 0.0:
+                ts.append((_dot(_sub(a, Q), _sub(a, Q)) - _dot(_sub(a, P), _sub(a, P))) / den)
+        for L, n in lines:
+            nv, na = _dot(n, v), _dot(n, _sub(a, L))
+            qa = _dot(v, v) - nv * nv
+            qb = 2.0 * (_dot(v, _sub(a, P)) - na * nv)
+            qc = _dot(_sub(a, P), _sub(a, P)) - na * na
+            if abs(qa) < 1e-300:
+                if qb != 0.0:
+                    ts.append(-qc / qb)
+                continue
+            disc = qb * qb - 4.0 * qa * qc
+            if disc >= 0.0:
+                r = math.sqrt(disc)
+                ts += [(-qb - r) / (2.0 * qa), (-qb + r) / (2.0 * qa)]
+    for i, (L1, n1) in enumerate(lines):
+        for L2, n2 in lines[i + 1:]:
+            for sign in (1.0, -1.0):
+                den = _dot(n1, v) - sign * _dot(n2, v)
+                if den != 0.0:
+                    ts.append((sign * _dot(n2, _sub(a, L2)) - _dot(n1, _sub(a, L1))) / den)
+    return [t for t in ts if 0.0 < t < 1.0]
+
+
+def directed(a_edges, a_points, b_edges, b_points):
+    """The farthest a point of A is from B: (d, from, to)."""
+    best = (-1.0, None, None)
+    tries = list(a_points)
+    for a, b in a_edges:
+        tries += [a, b]
+        v = _sub(b, a)
+        tries += [(a[0] + v[0] * t, a[1] + v[1] * t) for t in _crossings(a, b, b_edges, b_points)]
+    for p in tries:
+        d, q = _nearest(p, b_edges, b_points)
+        if d > best[0]:
+            best = (d, p, q)
+    return best
+
+
+def shift_of(then, now):
+    """docs/adr/4880: how far `now` moved from `then` (both snapshot forms)."""
+    vt, et = outline_of(then)
+    vn, en = outline_of(now)
+    paired = then["kind"] == now["kind"] and len(vt) == len(vn) and len(vt) > 0
+    out = {"paired": paired, "vertices": [len(vt), len(vn)]}
+    if paired:
+        top, total = None, 0.0
+        for k, (p, q) in enumerate(zip(vt, vn)):
+            dx, dy = q[0] - p[0], q[1] - p[1]
+            d = math.hypot(dx, dy)
+            total += d * d
+            if top is None or d > top["d"]:
+                top = {"index": k, "dx": dx, "dy": dy, "d": d}
+        out["largest"] = top
+        out["rms"] = math.sqrt(total / len(vt))
+    pt, pn = ([] if et else vt), ([] if en else vn)
+    if (et or pt) and (en or pn):
+        d1, f1, t1 = directed(et, pt, en, pn)
+        d2, f2, t2 = directed(en, pn, et, pt)
+        # The way from the approved outline first; the other way only when it is farther.
+        d, f, t = (d2, t2, f2) if d2 > d1 else (d1, f1, t1)
+        out["hausdorff"] = {"d": d, "from": list(f), "to": list(t)}
+    return out
+
+
 # ── The rules (ADR 1200 §2) ──────────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -367,7 +606,20 @@ class Drawing:
                     n += held is not None and held["id"] == it["id"]
         return n
 
-    def tree(self, deep=False, of=None, drawing=None):
+    def suggested(self, kind):
+        """docs/adr/5280: KentOS's profiles (tucbs-temel, harita-varliklari, imar-plani), then the drawing's copies,
+        each with its classes whose `work` holds `kind`."""
+        profiles = [PROFILES[n] for n in ("tucbs-temel", "harita-varliklari", "imar-plani")]
+        profiles += [json.loads(f["text"]) for f in self.d["settings"].get("profileFiles", [])
+                     if f["kind"] == "profile"]
+        out = []
+        for p in profiles:
+            classes = [c["id"] for c in p["classes"] if kind in c.get("work", [])]
+            if classes:
+                out.append({"name": p["name"], "title": p["title"], "classes": classes})
+        return out
+
+    def tree(self, deep=False, of=None, drawing=None, limit=None, suggest=False):
         rows, derived, stale, problems = [], [], 0, 0
         for d in self.derivations():
             present = sum(u in self.objects for u in d["uids"])
@@ -461,19 +713,44 @@ class Drawing:
                                         o["attributes"] = attrs
                                     if attached:
                                         o["attachments"] = True
-                                    # docs/adr/4480: a changed geometry's object as approved.
+                                    # docs/adr/4480: a changed geometry's object as approved; docs/adr/4880: how
+                                    # far it moved.
                                     if "geometry" in differ:
                                         o["approved"] = then_values[u]
+                                        o["shift"] = shift_of(then_values[u], self.entities[u])
+                                        if limit is not None:
+                                            sh = o["shift"]
+                                            d = sh["largest"]["d"] if sh["paired"] else sh.get("hausdorff", {}).get("d")
+                                            if d is not None:
+                                                sh["beyond"] = d > limit[0]
+                                            if sh["paired"]:
+                                                vt, vn = outline_of(then_values[u])[0], outline_of(self.entities[u])[0]
+                                                sh["over"] = sum(math.hypot(q[0] - p[0], q[1] - p[1]) > limit[0]
+                                                                 for p, q in zip(vt, vn))
                                 part_objects.append(o)
                             ch["parts"] = by_part
                             if part_objects:
                                 ch["objects"] = part_objects[:1000]
                             if then_values is not None and removed:
                                 ch["removedObjects"] = [{"uid": u, "approved": then_values[u]} for u in removed][:1000]
+                        if limit is not None:
+                            ch["beyond"] = sum(o.get("shift", {}).get("beyond") is True
+                                               for o in ch.get("objects", []))
                         row["changes"] = ch
                     what = "dosyası" if "file" in i else "içeriği"
                     worse("revised", f"Onaydan sonra {what} değişti (onaylanan {i['approved'][:12]}, şimdi {now[:12]}): "
                                      "değişikliği denetleyip yeniden onaylayın.")
+                    k = row.get("changes", {}).get("beyond", 0)
+                    if limit is not None and k:
+                        why.append(f"{k} nesne seçilen sınırın dışına kaydı: {num_words(limit[0]).replace('.', ',')} m "
+                                   f"({limit[1]}).")
+            # docs/adr/4880: the typed layers' profile and how its classes stand.
+            if "profile" in i:
+                row["profile"] = self.profile_row(i, drawing)
+            elif suggest:
+                got = self.suggested(i["kind"])
+                if got:
+                    row["suggested"] = got
             problems += state != "current"
             row["state"] = state
             if why:
@@ -481,8 +758,36 @@ class Drawing:
             rows.append(row)
         out = {"items": rows, "derivations": derived, "stale": stale, "problems": problems, "deep": deep,
                "revision": "$current"}
+        if limit is not None:
+            out["limit"] = {"metres": limit[0], "source": limit[1]}
         if of is not None:
             out["object"] = self.object(of, deep)
+        return out
+
+    def doc_now(self):
+        """The drawing as a document dict with its objects now (for `cad.profiles`' reference)."""
+        d = copy.deepcopy(self.d)
+        d["entities"] = [copy.deepcopy(self.entities[u]) for u in self.d["uids"] if u in self.entities]
+        return d
+
+    def profile_row(self, i, drawing=None):
+        """docs/adr/4880: the item's profile narrowed to its classes, checked as cad.profiles.check checks it."""
+        pr = i["profile"]
+        if pr["name"] not in PROFILES:
+            return {"name": pr["name"], "found": False}
+        p = narrowed(PROFILES[pr["name"]], pr.get("classes", []))
+        rep = PR.report(self.doc_now(), p)
+        mine = [f for f in rep["findings"] if "class" in f][:1000]
+        typed = {c["layer"] for c in rep["classes"] if "layer" in c}
+        free = sorted({lid for lid in self.objects.values()
+                       if lid not in typed and (self.item_of_layer(lid) or {}).get("id") == i["id"]})
+        out = {"name": pr["name"], "found": True, "title": rep["title"], "version": rep["version"]}
+        if rep["classes"]:
+            out["classes"] = rep["classes"]
+        if mine:
+            out["findings"] = mine
+        if free:
+            out["free"] = free
         return out
 
     def object(self, u, deep):
@@ -512,6 +817,20 @@ class Drawing:
             self.d["settings"]["mapWork"] = work
         else:
             self.d["settings"].pop("mapWork", None)
+
+
+def narrowed(p, classes):
+    """docs/adr/4880: a profile with only `classes` (none: all), the value lists they bind, the relations between two of
+    them; no address data unless every class is kept."""
+    if not classes:
+        return copy.deepcopy(p)
+    out = copy.deepcopy(p)
+    out["classes"] = [c for c in p["classes"] if c["id"] in classes]
+    out["relations"] = [r for r in p.get("relations", []) if r["parent"] in classes and r["child"] in classes]
+    bound = {f["domain"] for c in out["classes"] for f in c["fields"] if f.get("domain")}
+    out["domains"] = [d for d in p.get("domains", []) if d["id"] in bound]
+    out.pop("address", None)
+    return out
 
 
 # ── Steps and answers ────────────────────────────────────────────────────────────────────────────────────────────────
@@ -561,8 +880,9 @@ def copy_file(src, dst):
     return {"op": "copyFile", "from": src, "to": dst}
 
 
-def ask(dr, deep=False, of=None, op="execute", expect=None, drawing=None):
-    """The query's answer; it writes nothing (after a write in the case, the undo step stays: only the revision)."""
+def ask(dr, deep=False, of=None, op="execute", expect=None, drawing=None, within=None, limit=None, suggest=False):
+    """The query's answer; it writes nothing (after a write in the case, the undo step stays: only the revision). With
+    `within`, its numbers are held to that many metres (a shift's, docs/adr/4880). `limit` and `suggest`: ADR 5280."""
     input_ = {}
     if deep:
         input_["deep"] = True
@@ -570,7 +890,18 @@ def ask(dr, deep=False, of=None, op="execute", expect=None, drawing=None):
         input_["drawing"] = drawing
     if of is not None:
         input_["uid"] = of
-    return step(op, input_, done(dr.tree(deep, of, drawing)), expect or UNCHANGED, command="map.work.query")
+    if limit is not None:
+        input_["limit"] = limit
+    if suggest:
+        input_["suggest"] = True
+    used = None
+    if limit is not None:
+        used, bad = limit_of(limit)
+        assert bad is None, bad
+    s = step(op, input_, done(dr.tree(deep, of, drawing, used, suggest)), expect or UNCHANGED, command="map.work.query")
+    if within is not None:
+        s["within"] = within
+    return s
 
 
 # ── map.work.query ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -769,7 +1100,7 @@ def query_cases():
     out.append(case("Onaydan sonra geometrisi değişen nesnenin onaylanan hâli (onay değerleri tuttu)", [
         ask(v0), step("execute", {"uids": [T2], "transform": {"kind": "move", "dx": 0.25, "dy": -0.1}}, "$any",
                       command="cad.entities.transform"),
-        ask(v3, expect={"revision": "same"})], d=valued))
+        ask(v3, expect={"revision": "same"}, within=1e-9)], d=valued))
     # Both its geometry and its height changed: the attribute named and the object as approved.
     v4 = Drawing(valued)
     for end in ("a", "b"):
@@ -784,7 +1115,37 @@ def query_cases():
                       command="cad.entities.transform"),
         step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
              command="cad.entities.set"),
-        ask(v4, expect={"revision": "same"})], d=valued))
+        ask(v4, expect={"revision": "same"}, within=1e-9)], d=valued))
+    # docs/adr/4880: the line T1 became a polyline with a corner 1 m off it: its vertices do not pair; the outlines are 1 m
+    # apart at that corner (the line is at most 0.98 m from the bent one).
+    bent = copy.deepcopy(valued)
+    at1 = bent["uids"].index(T1)
+    bent["entities"][at1] = {"kind": "polyline", "id": bent["entities"][at1]["id"], "layerId": "tasarim", "attrs": {},
+                             "pts": [{"x": X0, "y": Y0}, {"x": X0 + 4.0, "y": Y0 + 1.0}, {"x": X0 + 10.0, "y": Y0}]}
+    bd = Drawing(bent)
+    row4 = next(r for r in bd.tree(False)["items"] if r["id"] == "is-4")
+    bent_t1 = next(o for o in row4["changes"]["objects"] if o["uid"] == T1)["shift"]
+    assert not bent_t1["paired"] and abs(bent_t1["hausdorff"]["d"] - 1.0) < 1e-12, bent_t1
+    assert bent_t1["hausdorff"]["to"] == [X0 + 4.0, Y0 + 1.0], bent_t1
+    out.append(case("Onaydan sonra köşe eklenen çizgi: köşeler eşlenmez, iki şeklin Hausdorff uzaklığı eklenen köşede",
+                    [ask(bd, within=1e-9)], d=bent))
+    # docs/adr/4880: the design item's typed layers: the control points' class of a data profile on its layer; a point
+    # there without the class's fields; the design surface's layer stays a free drawing layer.
+    typed = setup()
+    typed["layers"].append(layer("hv", "Harita varlıkları", "group", children=[layer("hv-kn", "Kontrol noktaları")]))
+    typed["entities"].append({"kind": "point", "id": 10, "layerId": "hv-kn", "attrs": {},
+                              "p": {"x": X0 + 3.0, "y": Y0 + 3.0}})
+    typed["uids"].append(uid(10))
+    typed["settings"]["mapWork"]["items"][3].update(layers=["tasarim", "hv-kn"],
+                                                    profile={"name": "harita-varliklari",
+                                                             "classes": ["kontrol-noktasi"]})
+    td = Drawing(typed)
+    row4 = next(r for r in td.tree(False)["items"] if r["id"] == "is-4")
+    assert row4["profile"]["free"] == ["tasarim"] and row4["profile"]["findings"], row4
+    out.append(case("Tipli katman profili: öğenin sınıfları, bulguları ve serbest katmanı", [ask(td)], d=typed))
+    unknown = setup()
+    unknown["settings"]["mapWork"]["items"][3]["profile"] = {"name": "yok-profil"}
+    out.append(case("Öğenin profili bulunmuyor: found false", [ask(Drawing(unknown))], d=unknown))
     same = setup()
     same["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(same).content("is-4"),
                                                    approvedObjects=Drawing(same).pairs("is-4"),
@@ -795,10 +1156,118 @@ def query_cases():
     ortho["settings"]["mapWork"]["items"][1].update(status="approved", approved=S_OLD)
     out.append(case("Onaylı ortofotonun damgası başka bir dosya revizyonu: onaydan sonra dosyası değişti (revised)",
                     [ask(Drawing(ortho))], d=ortho))
+    out.extend(limit_cases(valued, v3, bent))
+    out.extend(suggest_cases(typed))
     out.append(case("Plan yazmaz, aynı ağacı söyler", [ask(dr, op="plan")]))
     out.append(case("Doğrulama yazmaz", [step("validate", {}, done(None), UNCHANGED)]))
     out.append(case("Doğrulama kimliği de denetler", [step("validate", {"uid": GHOST}, refused(
         "entity_not_found", f"“{GHOST}” kimlikli nesne çizimde yok.", "uid"), UNCHANGED)]))
+    return out
+
+
+def limit_cases(valued, moved, bent):
+    """docs/adr/5280: the line T2 moved 0.25 m east and 0.1 m south (0.269 m) after an approval that kept its objects'
+    values, set against limits on either side; the bent line T1 (not paired) by its Hausdorff distance, 1 m."""
+    out = []
+    t2 = math.hypot(0.25, 0.1)
+    move = step("execute", {"uids": [T2], "transform": {"kind": "move", "dx": 0.25, "dy": -0.1}}, "$any",
+                command="cad.entities.transform")
+    for name, lim, beyond in [
+        ("kendi değeri 0,5 m: içinde", {"basis": "own", "metres": 0.5}, False),
+        ("kendi değeri 0,2 m: dışında, iki köşesi de", {"basis": "own", "metres": 0.2}, True),
+        ("detay konumu ±7 cm (BÖHHBÜY m. 46(1)): dışında", {"basis": "detail"}, True),
+        ("çizimde ±0,2 mm, 1/1000 (0,2 m): dışında", {"basis": "drawing", "scale": 1000}, True),
+        ("çizimde ±0,2 mm, 1/2000 (0,4 m): içinde", {"basis": "drawing", "scale": 2000}, False),
+        ("sayısal üretim, 1/1000 (0,09 m): dışında", {"basis": "method", "method": "sayisal", "scale": 1000}, True),
+        ("takeometrik, poligona yakın, 1/1000 (0,5 m): içinde",
+         {"basis": "method", "method": "takeometrik-yakin", "scale": 1000}, False),
+        ("prizmatik paftadan, 1/500 (0,25 m): dışında",
+         {"basis": "method", "method": "prizmatik-pafta", "scale": 500}, True),
+        ("prizmatik paftadan, 1/1000 (0,35 m): içinde",
+         {"basis": "method", "method": "prizmatik-pafta", "scale": 1000}, False),
+        ("sayısal fotogrametrik, 1/5000 (0,30 m): içinde",
+         {"basis": "method", "method": "sayisal-fotogrametrik", "scale": 5000}, False),
+    ]:
+        used, _ = limit_of(lim)
+        assert (t2 > used[0]) == beyond, (name, used)
+        row = next(r for r in moved.tree(False, limit=used)["items"] if r["id"] == "is-4")
+        sh = next(o for o in row["changes"]["objects"] if o["uid"] == T2)["shift"]
+        assert sh["beyond"] == beyond and sh["over"] == (2 if beyond else 0), sh
+        out.append(case(f"Kayma sınırı, {name}", [move, ask(moved, limit=lim, expect={"revision": "same"},
+                                                                  within=1e-9)], d=valued))
+    bd = Drawing(bent)
+    used, _ = limit_of({"basis": "own", "metres": 0.9})
+    row = next(r for r in bd.tree(False, limit=used)["items"] if r["id"] == "is-4")
+    sh = next(o for o in row["changes"]["objects"] if o["uid"] == T1)["shift"]
+    assert sh["beyond"] is True and "over" not in sh, sh
+    out.append(case("Kayma sınırı: köşeleri eşlenmeyen çizgi Hausdorff uzaklığıyla (1 m > 0,9 m)",
+                    [ask(bd, limit={"basis": "own", "metres": 0.9}, within=1e-9)], d=bent))
+    out.append(case("Kayma sınırı, değişen nesne yok: yalnız sınır söylenir",
+                    [ask(Drawing(setup()), limit={"basis": "detail"})]))
+    out.append(case("Kayma sınırıyla plan yazmaz",
+                    [move, ask(moved, op="plan", limit={"basis": "own", "metres": 0.2}, expect={"revision": "same"},
+                               within=1e-9)], d=valued))
+    for name, lim in [
+        ("kendi değerinde metres yok", {"basis": "own"}),
+        ("kendi değeri 0", {"basis": "own", "metres": 0}),
+        ("kendi değeri 2000 m", {"basis": "own", "metres": 2000}),
+        ("çizim doğruluğunda ölçek yok", {"basis": "drawing"}),
+        ("ölçek paydası 0", {"basis": "drawing", "scale": 0}),
+        ("üretim yöntemi verilmemiş", {"basis": "method", "scale": 1000}),
+        ("tabloda olmayan yöntem", {"basis": "method", "method": "lidar", "scale": 1000}),
+        ("üretim yönteminde ölçek yok", {"basis": "method", "method": "sayisal"}),
+        ("tabloda olmayan ölçek 1/1500", {"basis": "method", "method": "sayisal", "scale": 1500}),
+        ("tablonun boş hücresi: fotogrametrik 1/1000", {"basis": "method", "method": "fotogrametrik", "scale": 1000}),
+    ]:
+        _, (path, message) = limit_of(lim)
+        out.append(case(f"Kayma sınırı reddi: {name}", [step("execute", {"limit": lim}, refused(
+            "invalid_input", message, path), UNCHANGED, command="map.work.query")]))
+    _, (path, message) = limit_of({"basis": "own", "metres": -1})
+    out.append(case("Kayma sınırı kimlikten önce denetlenir; doğrulama da reddeder", [step("validate", {
+        "limit": {"basis": "own", "metres": -1}, "uid": GHOST}, refused("invalid_input", message, path), UNCHANGED)]))
+    out.append(case("Harita projesi olmayan çizimde önce proje reddi", [step("execute", {
+        "limit": {"basis": "own"}}, NOT_MAP, UNCHANGED, command="map.work.query")],
+        d=setup(work="road", map_work=None)))
+    return out
+
+
+def suggest_cases(typed):
+    """docs/adr/5280: suggested profiles by the item's kind."""
+    out = []
+    base = setup()
+    dr = Drawing(base)
+    rows = {r["id"]: r for r in dr.tree(False, suggest=True)["items"]}
+    assert rows["is-1"]["suggested"][0]["name"] == "harita-varliklari" and "suggested" not in rows["is-2"], rows
+    assert rows["is-4"]["suggested"] == [{"name": "imar-plani", "title": PROFILES["imar-plani"]["title"],
+                                          "classes": [c["id"] for c in PROFILES["imar-plani"]["classes"]]}], rows
+    out.append(case("Önerilen profil: arazi ölçümüne harita varlıkları, tasarıma imar planı, altlığa yok",
+                    [ask(dr, suggest=True)]))
+    more = setup()
+    more["settings"]["mapWork"]["items"] += [item("is-6", "working", "Çalışma verisi", ["cizim"]),
+                                             item("is-7", "delivery", "Teslim paketi", ["bos"])]
+    md = Drawing(more)
+    rows = {r["id"]: r for r in md.tree(False, suggest=True)["items"]}
+    assert rows["is-7"]["suggested"][0]["name"] == "tucbs-temel" and "suggested" not in rows.get("is-3", {}), rows
+    out.append(case("Önerilen profil: çalışma verisine harita varlıkları, teslime TUCBS", [ask(md, suggest=True)],
+                    d=more))
+    out.append(case("Profili olan öğeye öneri yok", [ask(Drawing(typed), suggest=True)], d=typed))
+    # An office's own profile carried inside the drawing: its boundary point class for survey campaigns and checks.
+    office = copy.deepcopy(narrowed(PROFILES["harita-varliklari"], ["kontrol-noktasi", "duvar"]))
+    office.update(name="kurum-olcum", title="Belediye ölçüm profili")
+    office["classes"][0]["work"] = ["campaign", "check"]
+    office["classes"][1].pop("work", None)
+    kurum = setup()
+    kurum["settings"]["profileFiles"] = [{"kind": "profile", "name": "kurum-olcum",
+                                         "text": json.dumps(office, ensure_ascii=False)}]
+    kurum["settings"]["mapWork"]["items"].append(item("is-6", "check", "Denetim", ["bos"]))
+    kd = Drawing(kurum)
+    rows = {r["id"]: r for r in kd.tree(False, suggest=True)["items"]}
+    assert [x["name"] for x in rows["is-1"]["suggested"]] == ["harita-varliklari", "kurum-olcum"], rows
+    assert rows["is-6"]["suggested"] == [{"name": "kurum-olcum", "title": "Belediye ölçüm profili",
+                                          "classes": ["kontrol-noktasi"]}], rows
+    out.append(case("Kurumun profili çizimin içinde: önerilere eklenir, yalnız türüne uyan sınıfıyla",
+                    [ask(kd, suggest=True)], d=kurum))
+    out.append(case("Önerisiz sorguda öneri yok", [ask(kd)], d=kurum))
     return out
 
 
@@ -1145,6 +1614,74 @@ def edit_cases():
     steps[-1]["expect"]["xrefs"] = {"Kadastro": xref_of(P_DXF, S_DXF)}
     out.append(case("Yeniden bağla: aynı içeriği yükleyen dış başvuru öğeyle birlikte yeni dosyaya geçer, başka içerik "
                     "yükleyen kalır ve söylenir; geri alma hepsini birlikte geri getirir", steps, d=with_refs))
+    # docs/adr/4880: an item's typed layers' profile. The classes' layers the drawing lacks are added as the profile
+    # places them (cad.profiles' own reference writes them) and join the item; its other layers stay free.
+    p4 = narrowed(PROFILES["harita-varliklari"], ["kontrol-noktasi", "rogar"])
+    d4 = dr.doc_now()
+    applied, warned = PR.apply(d4, p4)
+    class_ids = [PR.find(d4["layers"], c["layer"])[1] for c in p4["classes"]]
+    d4["settings"]["mapWork"]["items"][3]["layers"] = ["tasarim"] + class_ids
+    d4["settings"]["mapWork"]["items"][3]["profile"] = {"name": "harita-varliklari",
+                                                        "classes": ["kontrol-noktasi", "rogar"]}
+    after = Drawing(d4)
+    steps = [edit(op({"op": "profile", "item": "is-4", "name": "harita-varliklari",
+                      "classes": ["kontrol-noktasi", "rogar"]}),
+                  done(edited(after, item="is-4", layers=applied["layers"], fields=applied["fields"]), warned),
+                  {"revision": "changed", "canUndo": True, "layers": d4["layers"],
+                   "settings": {"mapWork": after.d["settings"]["mapWork"]}}),
+             {"op": "undo", "returns": "Harita işi öğesine profil ver",
+              "expect": {"canRedo": True, "layers": base["layers"], "settings": {"mapWork": dr.work}}}]
+    out.append(case("Profil: kontrol noktası ve rogar sınıflarının katmanları eklenir ve tasarım öğesine girer; tasarım "
+                    "yüzeyinin katmanı serbest kalır; tek adımda geri alınır", steps))
+    out.append(case("Profil: adı bilinmeyen profil", [fail_step(
+        op({"op": "profile", "item": "is-4", "name": "yok-profil"}), "unknown_profile",
+        "“yok-profil” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani.",
+        "operation.name")]))
+    have = ", ".join(c["id"] for c in PROFILES["harita-varliklari"]["classes"])
+    out.append(case("Profil: profilde olmayan sınıf", [fail_step(
+        op({"op": "profile", "item": "is-4", "name": "harita-varliklari", "classes": ["rogar", "kopru"]}),
+        "unknown_profile_class", f"“harita-varliklari” profilinde “kopru” sınıfı yok; sınıfları: {have}.",
+        "operation.classes[1]")]))
+    out.append(case("Profil: aynı sınıf iki kez", [fail_step(
+        op({"op": "profile", "item": "is-4", "name": "harita-varliklari", "classes": ["rogar", "rogar"]}),
+        "invalid_work_text", "“rogar” sınıfı iki kez verilmiş.", "operation.classes[1]")]))
+    with_profile = setup()
+    with_profile["settings"]["mapWork"]["items"][3]["profile"] = {"name": "imar-plani"}
+    wpd = Drawing(with_profile)
+    no_profile = Drawing(with_profile)
+    w = copy.deepcopy(no_profile.work)
+    del w["items"][3]["profile"]
+    no_profile.set_work(w)
+    out.append(case("Profili kaldır: katmanlar öğede kalır", write_step(
+        wpd, no_profile, op({"op": "profile", "item": "is-4"}), {"item": "is-4"},
+        "Harita işi öğesinin profilini kaldır"), d=with_profile))
+    out.append(case("Profili olmayan öğeden profil kaldırılmaz", [fail_step(
+        op({"op": "profile", "item": "is-4"}), "nothing_to_set", "Değişecek bir şey yok.", "operation")]))
+    # Approving an item whose typed layers break its profile: refused with the count and the first finding.
+    typed = setup()
+    typed["layers"].append(layer("hv", "Harita varlıkları", "group", children=[layer("hv-kn", "Kontrol noktaları")]))
+    typed["entities"].append({"kind": "point", "id": 10, "layerId": "hv-kn", "attrs": {},
+                              "p": {"x": X0 + 3.0, "y": Y0 + 3.0}})
+    typed["uids"].append(uid(10))
+    typed["settings"]["mapWork"]["items"][3].update(layers=["tasarim", "hv-kn"],
+                                                    profile={"name": "harita-varliklari",
+                                                             "classes": ["kontrol-noktasi"]})
+    rep_ = PR.report(Drawing(typed).doc_now(), narrowed(PROFILES["harita-varliklari"], ["kontrol-noktasi"]))
+    mine = [f for f in rep_["findings"] if "class" in f]
+    out.append(case("Onay: tipli katmanlarında profiline uymayan nesne olan öğe onaylanmaz", [fail_step(
+        op({"op": "set", "item": "is-4", "status": "approved"}), "approval_profile",
+        f"“Tasarım yüzeyi” onaylanamaz: tipli katmanlarında “{rep_['title']}” profiline uymayan {len(mine)} bulgu var; "
+        f"ilki: {mine[0]['message']} Profili denetle ile düzeltin.", "operation.status")], d=typed))
+    # The class's layer another item holds: refused, nothing written.
+    taken = copy.deepcopy(typed)
+    taken["settings"]["mapWork"]["items"][3].update(layers=["tasarim"])
+    del taken["settings"]["mapWork"]["items"][3]["profile"]
+    taken["settings"]["mapWork"]["items"][0]["layers"] = ["gnss", "hv-kn"]
+    out.append(case("Profil: sınıfın katmanı başka öğede", [fail_step(
+        op({"op": "profile", "item": "is-4", "name": "harita-varliklari", "classes": ["kontrol-noktasi"]}),
+        "layer_in_work_item",
+        "Profilin “Harita varlıkları / Kontrol noktaları” katmanı harita işinin “GNSS ölçümü 2026-10” öğesinde; bir "
+        "katman tek öğenin olur.", "operation.name")], d=taken))
     plan_after = changed(lambda w: w["items"].append(item("is-6", "check", "Topoloji denetimi")))
     for o in ("plan", "validate"):
         result = done(edited(plan_after, item="is-6")) if o == "plan" else done(None)
@@ -1155,7 +1692,7 @@ def edit_cases():
 
 
 def edited(dr, item=None, derivation=None, file_revision=None, relinked=0, released=0, links=0, freed=0, content=None,
-           approved=None):
+           approved=None, layers=(), fields=()):
     o = {}
     if item is not None:
         o["item"] = item
@@ -1176,6 +1713,10 @@ def edited(dr, item=None, derivation=None, file_revision=None, relinked=0, relea
     if freed:
         o["freed"] = freed
     o["stale"] = dr.stale_count()
+    if layers:
+        o["layers"] = list(layers)
+    if fields:
+        o["fields"] = list(fields)
     o["revision"] = "$current"
     return o
 

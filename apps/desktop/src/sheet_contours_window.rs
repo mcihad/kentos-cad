@@ -5,11 +5,13 @@
 //! Şevler (ğ, docs/adr/3120): a tick and the layers of the slopes' tops and bottoms (guessed from their names, left
 //! out of the details), whose lines' corners take spot heights. Seçilen noktalar (ğ, docs/adr/3520): a tick and the
 //! layer of the points the surveyor chose (guessed from its name: seçilen, karakteristik, kot noktası), each taking its
-//! own height or the surface's.
+//! own height or the surface's; their own heights against the surface's by m. 93(1)(c)'s limit (docs/adr/4740), said
+//! in the summary. Yerleşik alan (m. 63(2), docs/adr/4740): a tick and the layers of the built-up areas and of the
+//! roads' lines (guessed from their names), heights about every 2 cm on the sheet.
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
+use kentos_commands::{CommandResult, SheetBuiltUp, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_terrains_sheet};
 use kentos_ui::label;
@@ -51,6 +53,17 @@ pub struct State {
     /// The surveyor's chosen points (ğ, docs/adr/3520): ticked, and their layer ("" none).
     pub chosen: bool,
     pub chosen_layer: String,
+    /// The heights of built-up areas and roads (m. 63(2), docs/adr/4740): ticked, and the layers of the areas' bounds and
+    /// of the roads' lines ("" none).
+    pub built: bool,
+    pub built_area: String,
+    pub built_road: String,
+    /// Docs/adr/5120: the grid's origin as typed (Y east, X north; empty: the coordinates' origin) and its turn as typed
+    /// in the project's angle unit, with the turn read (radians counter-clockwise; none: 0).
+    pub grid_y: String,
+    pub grid_x: String,
+    pub grid_angle: String,
+    pub grid_turn: Option<f64>,
     pub answer: Option<Result<TerrainsSheetContoured, String>>,
 }
 
@@ -70,6 +83,12 @@ pub enum Event {
     SlopeBottom(String),
     Chosen(bool),
     ChosenLayer(String),
+    Built(bool),
+    BuiltArea(String),
+    BuiltRoad(String),
+    GridY(String),
+    GridX(String),
+    GridAngle(String),
     Draw,
     Close,
 }
@@ -99,6 +118,31 @@ impl State {
                 bottom: [&self.slope_bottom].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
             }),
             points: if self.chosen && !self.chosen_layer.is_empty() { vec![self.chosen_layer.clone()] } else { Vec::new() },
+            built_up: if self.built {
+                let number = |t: &str, what: &str| -> Result<Option<f64>, String> {
+                    match t.trim() {
+                        "" => Ok(None),
+                        t => t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("Izgaranın {what} “{t}” bir sayı değil.")),
+                    }
+                };
+                // Docs/adr/5120: Y is east, X north; one of them alone counts the other as nought.
+                let origin = match (number(&self.grid_y, "başlangıcının Y'si")?, number(&self.grid_x, "başlangıcının X'i")?) {
+                    (None, None) => None,
+                    (y, x) => Some([y.unwrap_or(0.0), x.unwrap_or(0.0)]),
+                };
+                if !self.grid_angle.trim().is_empty() && self.grid_turn.is_none() {
+                    return Err(format!("Izgaranın açısı “{}” bir sayı değil.", self.grid_angle.trim()));
+                }
+                Some(SheetBuiltUp {
+                    areas: [&self.built_area].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                    roads: [&self.built_road].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                    every: None,
+                    origin,
+                    rotation: self.grid_turn,
+                })
+            } else {
+                None
+            },
             ..Default::default()
         })
     }
@@ -169,9 +213,12 @@ impl App {
         };
         let (slope_top, slope_bottom) = (slope(&["üst", "ust"]), slope(&["dip", "dib", "alt", "taban"]));
         let chosen_layer = named(&["seçilen", "secilen", "karakteristik", "kot noktası", "kot noktasi"]).into_iter().next().unwrap_or_default();
+        // Docs/adr/4740 (m. 63(2)): the built-up areas' and the roads' centre lines' layers.
+        let built_area = named(&["yerleşik", "yerlesik", "yerleşim", "yerlesim", "iskân", "iskan"]).into_iter().next().unwrap_or_default();
+        let built_road = named(&["yol ekseni", "yol-ekseni", "eksen", "aks"]).into_iter().next().unwrap_or_default();
         let details: Vec<String> = named(&["bina", "yol", "dere", "kanal", "ark", "şev", "sev"])
             .into_iter()
-            .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer)
+            .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer && *d != built_area && *d != built_road)
             .collect();
         self.sheet_contours = State {
             surfaces,
@@ -190,7 +237,11 @@ impl App {
             slope_bottom,
             chosen: false,
             chosen_layer,
+            built: false,
+            built_area,
+            built_road,
             answer: None,
+            ..State::default()
         };
         self.sheet_contours_run();
         self.dialog = Some(Dialog::SheetContours);
@@ -209,7 +260,7 @@ impl App {
             self.say(
                 Level::Success,
                 format!(
-                    "{TITLE}: {} eğri, {} kot yazısı ve {} karakteristik nokta kotu çizildi.",
+                    "{TITLE}: {} eğri, {} eğri kotu ve {} nokta kotu çizildi; çizim yüzeyine ve okuduğu katmanlara bağlı tutulur.",
                     out.lines.len(),
                     out.labels.len(),
                     out.spots.len()
@@ -242,6 +293,18 @@ impl App {
             Event::SlopeBottom(v) => s.slope_bottom = v,
             Event::Chosen(v) => s.chosen = v,
             Event::ChosenLayer(v) => s.chosen_layer = v,
+            Event::Built(v) => s.built = v,
+            Event::BuiltArea(v) => s.built_area = v,
+            Event::BuiltRoad(v) => s.built_road = v,
+            Event::GridY(v) => s.grid_y = v,
+            Event::GridX(v) => s.grid_x = v,
+            Event::GridAngle(v) => {
+                let typed = v.trim().replace(',', ".").parse::<f64>().ok();
+                let turn = typed.map(|t| self.format().turn_from_typed(t));
+                let s = &mut self.sheet_contours;
+                s.grid_turn = turn;
+                s.grid_angle = v;
+            }
             Event::Draw => {
                 self.sheet_contours_draw();
                 return Task::none();
@@ -263,7 +326,11 @@ impl App {
             .map_or("ölçek için aralık yok".to_owned(), |i| format!("{i} (m. 78(1)(c))"));
         let mut ticks = row![].spacing(14).align_y(Center);
         for (id, name) in &s.layers {
-            if *id == s.layer || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom)) || (s.chosen && *id == s.chosen_layer) {
+            if *id == s.layer
+                || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom))
+                || (s.chosen && *id == s.chosen_layer)
+                || (s.built && (*id == s.built_area || *id == s.built_road))
+            {
                 continue;
             }
             let on = s.details.contains(id);
@@ -303,7 +370,8 @@ impl App {
                 .spacing(14)
                 .align_y(Center),
             )
-            .field("Kesmeyeceği (g)", ticks)
+            // Many layers wrap onto further lines rather than run out of the window.
+            .field("Kesmeyeceği (g)", ticks.wrap().vertical_spacing(6))
             .field("Şevler (ğ)", {
                 let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
                 choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
@@ -326,6 +394,36 @@ impl App {
                     label::caption("Katman"),
                     container(fields::select_owned(choices, &s.chosen_layer, |v| msg(Event::ChosenLayer(v)))).width(190),
                     label::caption("Kendi kotu varsa o, yoksa yüzeyden")
+                ]
+                .spacing(10)
+                .align_y(Center)
+            })
+            // docs/adr/4740: m. 63(2)'s heights in built-up areas and along roads, about every 2 cm on the sheet.
+            .field("Yerleşik alan (63/2)", {
+                let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
+                choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
+                row![
+                    words::check(s.built, "2 cm'de bir kot", Some(msg(Event::Built(!s.built)))),
+                    label::caption("Alan"),
+                    container(fields::select_owned(choices.clone(), &s.built_area, |v| msg(Event::BuiltArea(v)))).width(190),
+                    label::caption("Yol"),
+                    container(fields::select_owned(choices, &s.built_road, |v| msg(Event::BuiltRoad(v)))).width(190)
+                ]
+                .spacing(10)
+                .align_y(Center)
+            })
+            // Docs/adr/5120: the grid's origin and turn, the surveyor's (m. 63(2) gives neither).
+            .field("Izgara (63/2)", {
+                let input = |value: &str, hint: &'static str, on: fn(String) -> Event| {
+                    container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(130)
+                };
+                row![
+                    label::caption("Başlangıç Y"),
+                    input(&s.grid_y, "0", Event::GridY),
+                    label::caption("X"),
+                    input(&s.grid_x, "0", Event::GridX),
+                    label::caption(format!("Açı ({})", self.format().turn_words())),
+                    input(&s.grid_angle, "0", Event::GridAngle)
                 ]
                 .spacing(10)
                 .align_y(Center)
@@ -359,6 +457,26 @@ impl App {
                         ),
                     ));
                 }
+                // Docs/adr/4740: the chosen points' heights against the surface, by m. 93(1)(c)'s limit.
+                if let Some(c) = &r.check {
+                    lines.push(words::text_line(
+                        if c.within { Kind::Ok } else { Kind::Warn },
+                        format!(
+                            "Ölçülen kot − yüzey: {} noktada KOH {}, m. 93(1)(c) sınırı {}: {}.",
+                            c.compared,
+                            self.format().length(c.rms),
+                            self.format().length(c.limit),
+                            if c.within { "altında" } else { "aşıyor" }
+                        ),
+                    ));
+                }
+                let built = |k: &str| r.spots.iter().filter(|sp| sp.kind == k).count();
+                if built("road") + built("builtUp") > 0 {
+                    lines.push(words::text_line(
+                        Kind::Ok,
+                        format!("m. 63(2): yolda {}, yerleşik alanda {} kot.", built("road"), built("builtUp")),
+                    ));
+                }
                 for n in r.notes.iter().skip(1) {
                     lines.push(words::text_line(Kind::Info, n.clone()));
                 }
@@ -370,6 +488,10 @@ impl App {
         let ready = matches!(s.answer, Some(Ok(_)));
         Frame::new(TITLE)
             .push(body)
+            .aside(words::secondary(
+                crate::section_check_window::OPEN,
+                Some(Message::SectionCheck(crate::section_check_window::Event::Open)),
+            ))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(DRAW, ready.then(|| msg(Event::Draw))))
             .width(820.0)
@@ -380,6 +502,9 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),
+            Control::Press(crate::section_check_window::OPEN) => {
+                Some(Message::SectionCheck(crate::section_check_window::Event::Open))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

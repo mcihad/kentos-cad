@@ -99,6 +99,9 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         map_work: None,
         map_survey: None,
         parcel_register: None,
+        zoning_plan: None,
+        survey_adjustments: Vec::new(),
+        monitoring_reviews: Vec::new(),
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         forms: Vec::new(),
@@ -231,7 +234,7 @@ pub fn standard_layer(id: &str, plot_scale: f64, cad: bool) -> Option<LayerNode>
 
 /// The middle of the zone at Türkiye's centre latitude (the web's `workAreaCentre`).
 pub fn work_area_centre(crs: &System) -> Vec2 {
-    // A drawing in no coordinate system starts at 0,0 (AutoCAD's new drawing).
+    // A drawing in no coordinate system starts at 0,0, as a new drawing usually does.
     if crs.is_local() {
         return Vec2 { x: 0.0, y: 0.0 };
     }
@@ -261,7 +264,7 @@ const A3: (f64, f64) = (0.42, 0.297);
 
 /// Where a new project opens and comes back to, its home view (docs/adr/0165
 /// §3): a local project on an A3 landscape sheet at its scale with 0,0 at the
-/// bottom left, as AutoCAD's new drawing; any other on one sheet at its scale
+/// bottom left, as a new drawing usually is; any other on one sheet at its scale
 /// around its province's centre, or around its zone's work area without one
 /// (the web's `startView`).
 pub fn start_view(crs: &System, plot_scale: f64, province: Option<&Province>) -> Bounds {
@@ -365,7 +368,7 @@ fn group(id: &str, name: &str, children: Vec<LayerNode>) -> LayerNode {
 
 /// The technical drawing layers a CAD project starts with (docs/adr/0165
 /// §3): drawn edges in the drawing's ink, then dimensions, texts, hatches,
-/// construction and centre lines, AutoCAD's usual set (the web's `cadLayers`).
+/// construction and centre lines, the usual drafting set (the web's `cadLayers`).
 pub fn cad_layers() -> Vec<LayerNode> {
     let lined = |line_type, color: &str, weight| LayerStyle {
         line_type,

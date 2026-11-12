@@ -29,7 +29,9 @@ library and no KentOS code:
 - a block with attribute definitions (docs/adr/0144 §7) is flagged so (70 2)
   and has an ATTDEF for each after its objects, on 0: its place, height,
   default, turn (none when 0), prompt and tag (white space and control
-  characters "_", a tag taken before "_2"); an insert of it says attributes
+  characters "_", a tag taken before "_2"; such a tag's ATTDEF, and only it,
+  holds KentOS's "tagname" item: the tag and the name, docs/adr/4800); an
+  insert of it says attributes
   follow (66 1) and is followed by an ATTRIB for each, owned by it, on its
   layer: the text it shows (its value, else the default, else nothing),
   placed as the insert places the definition (height times the scale; the
@@ -1922,6 +1924,10 @@ def check(name: str) -> list[str]:
             ensure(group(d, 3) == (a.get("prompt") or ""), f"{w}: its prompt")
             ensure(group(d, 2) == tag and group(d, 70) == "0", f"{w}: tag {tag!r}, visible")
             ensure((group(d, 50) is None) if a["rotation"] == 0 else float(group(d, 50)) == a["rotation"], f"{w}: its turn")
+            # docs/adr/4800: a tag that is not the name holds the name in its own KentOS data; any other holds none.
+            record = kentos(d).get("tagname")
+            want = [tag, a["tag"]] if tag != a["tag"] else None
+            ensure(record == want, f"{w}: KentOS's name record {want!r}, not {record!r}")
         kinds = [k for e in b["entities"] for k in written_kinds(e)]
         ensure([o[0][1] for o in objects] == kinds, f"{b['name']}: objects {kinds}")
         k = 0

@@ -436,6 +436,8 @@ pub enum Dialog {
     Zoning,
     /// Sembolü karardan ver (zoning_symbols_window.rs, docs/adr/4240); its state is `App::zoning_symbols`.
     ZoningSymbols,
+    /// Plan değişikliği taslağı (zoning_draft_window.rs, docs/adr/5040); its state is `App::zoning_draft`.
+    ZoningDraft,
     /// Senaryo ölçüleri (impact_window.rs, docs/adr/1440); its state is `App::impact`.
     Impact,
     /// Düzenleme dağıtım taslağı (readjustment_window.rs, docs/adr/1460); its state is `App::readjustment`.
@@ -444,12 +446,22 @@ pub enum Dialog {
     Ortho,
     /// Ortofoto karşılaştırması (ortho_compare_window.rs, docs/adr/1780); its state is `App::ortho_compare`.
     OrthoCompare,
+    /// Dikiş çokgenleri (ortho_seamlines_window.rs, docs/adr/4700); its state is `App::ortho_seamlines`.
+    OrthoSeamlines,
     /// Tarama uyumu (overlap_window.rs, docs/adr/1500); its state is `App::overlap`.
     Overlap,
     /// Tarama kaydı (register_window.rs, docs/adr/1800); its state is `App::register`.
     Register,
+    /// Tarama ağı dengelemesi (scan_network_window.rs, docs/adr/4720); its state is `App::scan_network`.
+    ScanNetwork,
+    /// Bulutu konumla (cloud_place_window.rs, docs/adr/5100); its state is `App::cloud_place`.
+    CloudPlace,
+    /// Katalog geçiş raporu (catalog_report_window.rs, docs/adr/4940); its state is `App::catalog_report`.
+    CatalogReport,
     /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `App::sheet_contours`.
     SheetContours,
+    /// Kesit kontrolü (section_check_window.rs, docs/adr/5120); its state is `App::section_check`.
+    SectionCheck,
     /// Stok hacmi (stockpile_window.rs, docs/adr/3140); its state is `App::stockpile`.
     Stockpile,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
@@ -709,7 +721,7 @@ pub enum Message {
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
     Sources(crate::sources::Event),
-    /// Veritabanı bağlantıları: the connection window, the password question, QGIS's file (db_connections.rs).
+    /// Veritabanı bağlantıları: the connection window, the password question, a connections file (db_connections.rs).
     Db(crate::db_connections::Event),
     /// Şablon düzenleyici (template_editor.rs).
     TemplateEditor(crate::template_editor::Event),
@@ -888,13 +900,19 @@ pub enum Message {
     FeaturesReconcile(crate::features_reconcile_window::Event),
     Zoning(crate::zoning_window::Event),
     ZoningSymbols(crate::zoning_symbols_window::Event),
+    ZoningDraft(crate::zoning_draft_window::Event),
     Impact(crate::impact_window::Event),
     Readjustment(crate::readjustment_window::Event),
     Ortho(crate::ortho_window::Event),
     OrthoCompare(crate::ortho_compare_window::Event),
+    OrthoSeamlines(crate::ortho_seamlines_window::Event),
     Overlap(crate::overlap_window::Event),
     Register(crate::register_window::Event),
+    ScanNetwork(crate::scan_network_window::Event),
+    CloudPlace(crate::cloud_place_window::Event),
+    CatalogReport(crate::catalog_report_window::Event),
     SheetContours(crate::sheet_contours_window::Event),
+    SectionCheck(crate::section_check_window::Event),
     Stockpile(crate::stockpile_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
@@ -1579,13 +1597,19 @@ pub struct App {
     pub(crate) features_reconcile: crate::features_reconcile_window::State,
     pub(crate) zoning: crate::zoning_window::State,
     pub(crate) zoning_symbols: crate::zoning_symbols_window::State,
+    pub(crate) zoning_draft: crate::zoning_draft_window::State,
     pub(crate) impact: crate::impact_window::State,
     pub(crate) readjustment: crate::readjustment_window::State,
     pub(crate) ortho: crate::ortho_window::State,
     pub(crate) ortho_compare: crate::ortho_compare_window::State,
+    pub(crate) ortho_seamlines: crate::ortho_seamlines_window::State,
     pub(crate) overlap: crate::overlap_window::State,
     pub(crate) register: crate::register_window::State,
+    pub(crate) scan_network: crate::scan_network_window::State,
+    pub(crate) cloud_place: crate::cloud_place_window::State,
+    pub(crate) catalog_report: crate::catalog_report_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
+    pub(crate) section_check: crate::section_check_window::State,
     pub(crate) stockpile: crate::stockpile_window::State,
     /// Senaryo ölçüleri's base stamps saved this session, by scenario (docs/adr/1440 §3).
     pub(crate) impact_stamps: crate::impact_window::Stamps,
@@ -2061,13 +2085,19 @@ impl App {
             features_reconcile: Default::default(),
             zoning: Default::default(),
             zoning_symbols: Default::default(),
+            zoning_draft: Default::default(),
             impact: Default::default(),
             readjustment: Default::default(),
             ortho: Default::default(),
             ortho_compare: Default::default(),
+            ortho_seamlines: Default::default(),
             overlap: Default::default(),
             register: Default::default(),
+            scan_network: Default::default(),
+            cloud_place: Default::default(),
+            catalog_report: Default::default(),
             sheet_contours: Default::default(),
+            section_check: Default::default(),
             stockpile: Default::default(),
             impact_stamps: Default::default(),
             xref_watch: Default::default(),
@@ -2897,13 +2927,19 @@ impl App {
             Message::FeaturesReconcile(event) => return self.features_reconcile_event(event),
             Message::Zoning(event) => return self.zoning_event(event),
             Message::ZoningSymbols(event) => return self.zoning_symbols_event(event),
+            Message::ZoningDraft(event) => return self.zoning_draft_event(event),
             Message::Impact(event) => return self.impact_event(event),
             Message::Readjustment(event) => return self.readjustment_event(event),
             Message::Ortho(event) => return self.ortho_event(event),
             Message::OrthoCompare(event) => return self.ortho_compare_event(event),
+            Message::OrthoSeamlines(event) => return self.ortho_seamlines_event(event),
             Message::Overlap(event) => return self.overlap_event(event),
             Message::Register(event) => return self.register_event(event),
+            Message::ScanNetwork(event) => return self.scan_network_event(event),
+            Message::CloudPlace(event) => return self.cloud_place_event(event),
+            Message::CatalogReport(event) => return self.catalog_report_event(event),
             Message::SheetContours(event) => return self.sheet_contours_event(event),
+            Message::SectionCheck(event) => return self.section_check_event(event),
             Message::Stockpile(event) => return self.stockpile_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
@@ -3289,7 +3325,7 @@ impl App {
         }
     }
 
-    /// A drafting aid of this session turned over (F8, F10): said as AutoCAD says it.
+    /// A drafting aid of this session turned over (F8, F10): said as the classic CAD programs say it.
     /// Çakışma's cell: between Serbest and the last mode that avoided overlap (docs/adr/0162 §1).
     fn toggle_overlap(&mut self) {
         use kentos_interaction::Overlap;
@@ -3803,8 +3839,12 @@ impl App {
             "readjustment.distribute" => return self.open_readjustment(),
             "raster.accuracy" => return self.open_ortho(),
             "raster.compare" => return self.open_ortho_compare(),
+            "raster.seamlines" => return self.open_ortho_seamlines(),
             "pointcloud.overlap" => return self.open_overlap(),
             "pointcloud.register" => return self.open_register(),
+            "pointcloud.network" => return self.open_scan_network(),
+            "pointcloud.place" => return self.open_cloud_place(),
+            "map.catalogReport" => return self.open_catalog_report(),
             "terrain.sheetContours" => return self.open_sheet_contours(),
             "terrain.stockpile" => return self.open_stockpile(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
@@ -4428,7 +4468,7 @@ impl App {
         if let Some(task) = self.run_module_name(text) {
             return task;
         }
-        // AutoCAD takma adları, when the preference is on (alias_profile.rs, docs/adr/0282):
+        // Klasik CAD komut adları, when the preference is on (alias_profile.rs, docs/adr/0282):
         // the profile holds no name of KentOS's, which keep their meaning.
         if let Some(task) = self.run_profile_name(text) {
             return task;
@@ -4530,8 +4570,8 @@ impl App {
                     .set_title("Çizim aç")
                     .add_filter("CAD çizimleri (.kcad, .dwg, .dxf, .ncz)", &["kcad", "dwg", "dxf", "ncz"])
                     .add_filter("KentOS çizimi (.kcad)", &["kcad"])
-                    .add_filter("AutoCAD (.dwg, .dxf)", &["dwg", "dxf"])
-                    .add_filter("Netcad (.ncz)", &["ncz"])
+                    .add_filter("DWG ve DXF çizimleri (.dwg, .dxf)", &["dwg", "dxf"])
+                    .add_filter("NCZ çizimi (.ncz)", &["ncz"])
                     .pick_file()
                     .await?;
                 Some(file.path().to_path_buf())

@@ -126,7 +126,7 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
     assert!(
-        facts.contains(&("Sürüm", "AutoCAD 2000 (AC1015)")),
+        facts.contains(&("Sürüm", "DXF 2000 (AC1015)")),
         "{facts:?}"
     );
     assert!(facts.contains(&("Karakter kodlaması", "Windows-1254 (Türkçe)")));
@@ -2664,7 +2664,7 @@ fn autocad_constraint_groups_are_said_not_read() {
         .collect();
     assert_eq!(said.len(), 1, "{:?}", r.report.notes);
     assert!(
-        said[0].reason.contains("2 AutoCAD kısıt grubu"),
+        said[0].reason.contains("2 kısıt grubu"),
         "{}",
         said[0].reason
     );

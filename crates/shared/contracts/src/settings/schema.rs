@@ -157,16 +157,16 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Nesne bilgi kartı",
                 "Seçim aracında bir nesnenin üzerinde durunca türü, katmanı, uzunluğu ya da alanı gösterilir.",
             ),
-        // Off by default (docs/adr/0282): AutoCAD's English names typed in the
+        // Off by default (docs/adr/0282): the classic English CAD command names typed in the
         // command line, beside KentOS's own; the desktop only while the web waits (ADR 0228).
         boolean("drafting.autocadAliases", false)
             .hosts(&[Desktop])
             .text(
-                "AutoCAD takma adları",
-                "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
+                "Klasik CAD komut adları",
+                "Komut satırına klasik İngilizce CAD komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
             ),
         // Off by default (docs/adr/0622 §6): the right button opens the menu of what is going on, as
-        // AutoCAD's does by default; on, a quick click is Enter (AutoCAD's time-sensitive right click).
+        // the classic CAD programs do by default; on, a quick click is Enter (a time-sensitive right click).
         boolean("drafting.rightClickEnter", false)
             .hosts(&[Desktop])
             .text(
@@ -183,7 +183,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Açıkken çizilen, düzenlenen, taşınan ve seçilen her şeyin Python karşılığı alttaki Python konsoluna yazılır; kod kopyalanıp betikte yeniden çalıştırılabilir. Konsolun kendi çalıştırmaları yazılmaz.",
             ),
         // On by default (docs/adr/0622 §4): a selection brings its kind's ribbon tab to the front,
-        // as AutoCAD's contextual tabs do; the desktop only while the web waits (ADR 0228).
+        // as a contextual tab does; the desktop only while the web waits (ADR 0228).
         boolean("drafting.contextualTabs", true)
             .hosts(&[Desktop])
             .text(
@@ -494,7 +494,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Desktop])
         .text(
             "Çizim zemini",
-            "Çizim alanının zemini, arayüzün temasından bağımsız: projenin türüne göre (CAD'de arduvaz, CBS'de tema; ADR 0165), temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
+            "Çizim alanının zemini, arayüzün temasından bağımsız: projenin türüne göre (CAD'de arduvaz, CBS'de tema), temaya uyar, arduvaz, siyah ya da kâğıt.",
         ),
         choice(
             "appearance.crosshair",
@@ -549,7 +549,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web, Desktop])
         .text(
             "Proje türü",
-            "Yeni proje sihirbazında önce seçili gelen tür; proje kendi türünü saklar (ADR 0165).",
+            "Yeni proje sihirbazında önce seçili gelen tür: proje kendi türünü saklar.",
         ),
         choice(
             "newProjects.drawingUnit",
@@ -565,7 +565,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web, Desktop])
         .text(
             "Çizim birimi",
-            "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar (ADR 0165, 0626, 0802).",
+            "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar.",
         ),
         choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
             .hosts(&[Web, Desktop])
@@ -675,7 +675,7 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Alan sınırları",
                 "Kapalı alanların çizgileri çizilir. Kapalıyken yalnız dolguları görünür.",
             ),
-        // A point's name and its code beside it (docs/adr/1540): what Netcad's point display shows.
+        // A point's name and its code beside it (docs/adr/1540), as a map's point display shows them.
         boolean("graphics.pointNames", true)
             .hosts(&[Desktop])
             .text(
@@ -799,7 +799,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web, Desktop])
         .text(
             "Proje türü",
-            "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir (ADR 0165).",
+            "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir.",
         ),
         choice("project.drawingFont", "barlow", DRAWING_FONTS)
             .scope(SettingScope::Project)

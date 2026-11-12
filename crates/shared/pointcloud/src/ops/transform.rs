@@ -1,5 +1,5 @@
 //! Dönüşüm uygula's machine (plan/map-cad.md MAP-13, docs/adr/3100): an affine matrix of 4 × 4 numbers, row-major as
-//! PDAL's filters.transformation and CloudCompare's Apply Transformation take it (the rotation, or any linear part, in
+//! the point cloud tools the ADR read take it (the rotation, or any linear part, in
 //! the upper left 3 × 3, the translation in the fourth column, the bottom row 0 0 0 1), applied to each record's X, Y
 //! and Z. A point's coordinate is its whole number on the grid (X · scale + offset, as the file says); moved, it goes
 //! back onto the same grid rounded half away from zero, so a coordinate is off by at most half the scale. The record's
@@ -101,6 +101,58 @@ impl Affine {
         }
         m[15] = 1.0;
         Affine::new(m)
+    }
+
+    /// docs/adr/5100: a rotation by Euler angles in degrees — `yaw` about Z, `pitch` about Y, `roll` about X, each
+    /// right-handed, turned about the rotated axes Z, Y′, X″ in that order (the same as about the fixed axes X, Y, Z
+    /// in that order): R = Rz(yaw)·Ry(pitch)·Rx(roll) — about the point `center`, then the move `translation`, as
+    /// [`Affine::axis_angle`] places it. Each number in a fixed order so that an independent reference gets the same
+    /// bits: with c1, s1 the cosine and sine of the yaw, c2, s2 the pitch's, c3, s3 the roll's (radians, degrees ×
+    /// π/180) the rows [c2·c1, s3·s2·c1 − c3·s1, c3·s2·c1 + s3·s1], [c2·s1, s3·s2·s1 + c3·c1, c3·s2·s1 − s3·c1],
+    /// [−s2, s3·c2, c3·c2], each product left to right; the translation's row as the axis's. Refused for a number not
+    /// finite.
+    pub fn euler(yaw: f64, pitch: f64, roll: f64, center: [f64; 3], translation: [f64; 3]) -> Result<Affine> {
+        if [yaw, pitch, roll].iter().chain(&center).chain(&translation).any(|v| !v.is_finite()) {
+            return Err(PcError::new("Açıların, merkezin ve ötelemenin bütün sayıları sonlu olmalı."));
+        }
+        let (a, b, c) = (yaw.to_radians(), pitch.to_radians(), roll.to_radians());
+        let (s1, c1) = (a.sin(), a.cos());
+        let (s2, c2) = (b.sin(), b.cos());
+        let (s3, c3) = (c.sin(), c.cos());
+        let rot = [
+            [c2 * c1, s3 * s2 * c1 - c3 * s1, c3 * s2 * c1 + s3 * s1],
+            [c2 * s1, s3 * s2 * s1 + c3 * c1, c3 * s2 * s1 - s3 * c1],
+            [-s2, s3 * c2, c3 * c2],
+        ];
+        Affine::placed(rot, center, translation)
+    }
+
+    /// A rotation `rot` about the point `center`, then the move `translation`: p ↦ R(p − c) + c + t, the translation's
+    /// row c_i + t_i − (R_i0·c0 + R_i1·c1 + R_i2·c2).
+    fn placed(rot: [[f64; 3]; 3], center: [f64; 3], translation: [f64; 3]) -> Result<Affine> {
+        let mut m = [0.0; 16];
+        for (i, row) in rot.iter().enumerate() {
+            let rc = row[0] * center[0] + row[1] * center[1] + row[2] * center[2];
+            m[4 * i..4 * i + 4].copy_from_slice(&[row[0], row[1], row[2], center[i] + translation[i] - rc]);
+        }
+        m[15] = 1.0;
+        Affine::new(m)
+    }
+
+    /// The map `after` applied after this one (docs/adr/5100: a cloud's place given again on top of the one it has),
+    /// each number in a fixed order so that an independent reference gets the same bits: element (i, j) of
+    /// after · self is Σ_k after(i, k) · self(k, j) for k = 0…3 added in that order; the bottom row 0 0 0 1.
+    pub fn then(&self, after: &Affine) -> Affine {
+        let (a, b) = (&after.m, &self.m);
+        let mut m = [0.0; 16];
+        for i in 0..3 {
+            for j in 0..4 {
+                m[4 * i + j] =
+                    a[4 * i] * b[j] + a[4 * i + 1] * b[4 + j] + a[4 * i + 2] * b[8 + j] + a[4 * i + 3] * b[12 + j];
+            }
+        }
+        m[15] = 1.0;
+        Affine { m }
     }
 
     /// Three numbers from text (an axis, a centre, a move), apart by spaces or commas, a point for the decimal; `what`
@@ -283,6 +335,28 @@ mod tests {
         assert!(Affine::axis_angle([0.0; 3], 10.0, [0.0; 3], [0.0; 3]).is_err());
         assert!(Affine::triple("1 2", "Eksen").is_err());
         assert_eq!(Affine::triple("0, 0, 1", "Eksen").unwrap(), [0.0, 0.0, 1.0]);
+    }
+
+    /// docs/adr/5100: each angle alone is a right-handed quarter turn about its axis (yaw +X → +Y, pitch +Z → +X,
+    /// roll +Y → +Z); the three together turn about Z first, then the turned Y, then the twice turned X; a map then
+    /// another is their product.
+    #[test]
+    fn euler_angles_make_the_map() {
+        let near = |p: [f64; 3], q: [f64; 3]| p.iter().zip(&q).all(|(a, b)| (a - b).abs() < 1e-12);
+        let o = [0.0; 3];
+        assert!(near(Affine::euler(90.0, 0.0, 0.0, o, o).unwrap().apply([1.0, 0.0, 0.0]), [0.0, 1.0, 0.0]));
+        assert!(near(Affine::euler(0.0, 90.0, 0.0, o, o).unwrap().apply([0.0, 0.0, 1.0]), [1.0, 0.0, 0.0]));
+        assert!(near(Affine::euler(0.0, 0.0, 90.0, o, o).unwrap().apply([0.0, 1.0, 0.0]), [0.0, 0.0, 1.0]));
+        // Z then Y′ then X″: the same as the roll first, then the pitch, then the yaw about the fixed axes.
+        let all = Affine::euler(30.0, -20.0, 10.0, [5.0, 6.0, 7.0], [1.0, 2.0, 3.0]).unwrap();
+        let fixed = Affine::euler(0.0, 0.0, 10.0, [5.0, 6.0, 7.0], o)
+            .unwrap()
+            .then(&Affine::euler(0.0, -20.0, 0.0, [5.0, 6.0, 7.0], o).unwrap())
+            .then(&Affine::euler(30.0, 0.0, 0.0, [5.0, 6.0, 7.0], [1.0, 2.0, 3.0]).unwrap());
+        let p = [8.0, -3.0, 2.5];
+        assert!(near(all.apply(p), fixed.apply(p)), "{:?} {:?}", all.apply(p), fixed.apply(p));
+        assert!(all.rigid());
+        assert!(Affine::euler(f64::NAN, 0.0, 0.0, o, o).is_err());
     }
 
     /// docs/adr/3500: a map and its inverse give the point back (within rounding); a translation's inverse is exactly

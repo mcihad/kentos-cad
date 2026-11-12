@@ -24,22 +24,21 @@ if TYPE_CHECKING:
 
 class _ElevationsEdit(LocalCommand[ElevationsEdit, ElevationsEdited, ElevationsEdited]):
     """``cad.elevations.edit`` v1. Oda iç görünüşü: Bir mahalin iç görünüşlerini modelin
-    bildiklerinden türetir (docs/adr/0799): mahalin dış halkalarının her düz yanı
-    (0'dan, parça parça numaralı) odanın içinden bakılarak çizilir; yüzü o yanda olan
-    aynı kattaki duvarlar, yüksekliği (mahalinki, yoksa duvarların en alçağı: duvarın
-    kendisi ya da katın), duvarlardaki açıklıklar denizlik ve lento kotlarıyla, açıklık
-    numaraları, başlık ve iki ölçü. Nesneler İç görünüşler grubunda yeni bir katmanda,
-    katmanın türetim kaydıyla (mahal, yanlar, başlangıç, her nesnenin rolü ve kimliği,
-    çizilenin özeti); tek geri alma adımı “Oda iç görünüşü”. Modelin bilmediği çizilmez,
-    leftOut'ta listelenir: yaylı yan (curvedSide), mahalin boşluğu (hole), odadaki
-    kolon, merdiven, rampa ve blok (column, stair, ramp, fixture), baca (flue), kopuk
-    açıklık (brokenOpening); üst kotu olmayan açıklığın pervazları kesikli
-    (headUnknown). operation: derive (space, sides isteğe bağlı, at: başlangıç, yoksa
-    mahalin kutusunun 3 m sağı; gap: yanların arası, yoksa 1 m; name: katmanın adı),
-    refresh (layer: modelin şimdiki hâliyle yeniden çizer, nesneler rollerine göre aynı
-    kimlikle kalır), release (layer: türetim kaydını kaldırır, çizim kalır).
-    Kesit/görünüş işareti (cad.viewmarks.create) yalnız başvurudur; işaret koymak çizim
-    üretmez.
+    bildiklerinden türetir: mahalin dış halkalarının her düz yanı (0'dan, parça parça
+    numaralı) odanın içinden bakılarak çizilir; yüzü o yanda olan aynı kattaki duvarlar,
+    yüksekliği (mahalinki, yoksa duvarların en alçağı: duvarın kendisi ya da katın),
+    duvarlardaki açıklıklar denizlik ve lento kotlarıyla, açıklık numaraları, başlık ve
+    iki ölçü. Nesneler İç görünüşler grubunda yeni bir katmanda, katmanın türetim
+    kaydıyla (mahal, yanlar, başlangıç, her nesnenin rolü ve kimliği, çizilenin özeti);
+    tek geri alma adımı “Oda iç görünüşü”. Modelin bilmediği çizilmez, leftOut'ta
+    listelenir: yaylı yan (curvedSide), mahalin boşluğu (hole), odadaki kolon, merdiven,
+    rampa ve blok (column, stair, ramp, fixture), baca (flue), kopuk açıklık
+    (brokenOpening); üst kotu olmayan açıklığın pervazları kesikli (headUnknown).
+    operation: derive (space, sides isteğe bağlı, at: başlangıç, yoksa mahalin kutusunun
+    3 m sağı; gap: yanların arası, yoksa 1 m; name: katmanın adı), refresh (layer:
+    modelin şimdiki hâliyle yeniden çizer, nesneler rollerine göre aynı kimlikle kalır),
+    release (layer: türetim kaydını kaldırır, çizim kalır). Kesit/görünüş işareti
+    (cad.viewmarks.create) yalnız başvurudur; işaret koymak çizim üretmez.
     """
     __slots__ = ()
     id = "cad.elevations.edit"
@@ -60,22 +59,22 @@ class _ElevationsEdit(LocalCommand[ElevationsEdit, ElevationsEdited, ElevationsE
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ElevationsEdited:
-        """Oda iç görünüşü: Bir mahalin iç görünüşlerini modelin bildiklerinden türetir
-        (docs/adr/0799): mahalin dış halkalarının her düz yanı (0'dan, parça parça numaralı)
-        odanın içinden bakılarak çizilir; yüzü o yanda olan aynı kattaki duvarlar,
-        yüksekliği (mahalinki, yoksa duvarların en alçağı: duvarın kendisi ya da katın),
-        duvarlardaki açıklıklar denizlik ve lento kotlarıyla, açıklık numaraları, başlık ve
-        iki ölçü. Nesneler İç görünüşler grubunda yeni bir katmanda, katmanın türetim
-        kaydıyla (mahal, yanlar, başlangıç, her nesnenin rolü ve kimliği, çizilenin özeti);
-        tek geri alma adımı “Oda iç görünüşü”. Modelin bilmediği çizilmez, leftOut'ta
-        listelenir: yaylı yan (curvedSide), mahalin boşluğu (hole), odadaki kolon, merdiven,
-        rampa ve blok (column, stair, ramp, fixture), baca (flue), kopuk açıklık
-        (brokenOpening); üst kotu olmayan açıklığın pervazları kesikli (headUnknown).
-        operation: derive (space, sides isteğe bağlı, at: başlangıç, yoksa mahalin kutusunun
-        3 m sağı; gap: yanların arası, yoksa 1 m; name: katmanın adı), refresh (layer:
-        modelin şimdiki hâliyle yeniden çizer, nesneler rollerine göre aynı kimlikle kalır),
-        release (layer: türetim kaydını kaldırır, çizim kalır). Kesit/görünüş işareti
-        (cad.viewmarks.create) yalnız başvurudur; işaret koymak çizim üretmez.
+        """Oda iç görünüşü: Bir mahalin iç görünüşlerini modelin bildiklerinden türetir:
+        mahalin dış halkalarının her düz yanı (0'dan, parça parça numaralı) odanın içinden
+        bakılarak çizilir; yüzü o yanda olan aynı kattaki duvarlar, yüksekliği (mahalinki,
+        yoksa duvarların en alçağı: duvarın kendisi ya da katın), duvarlardaki açıklıklar
+        denizlik ve lento kotlarıyla, açıklık numaraları, başlık ve iki ölçü. Nesneler İç
+        görünüşler grubunda yeni bir katmanda, katmanın türetim kaydıyla (mahal, yanlar,
+        başlangıç, her nesnenin rolü ve kimliği, çizilenin özeti); tek geri alma adımı “Oda
+        iç görünüşü”. Modelin bilmediği çizilmez, leftOut'ta listelenir: yaylı yan
+        (curvedSide), mahalin boşluğu (hole), odadaki kolon, merdiven, rampa ve blok
+        (column, stair, ramp, fixture), baca (flue), kopuk açıklık (brokenOpening); üst kotu
+        olmayan açıklığın pervazları kesikli (headUnknown). operation: derive (space, sides
+        isteğe bağlı, at: başlangıç, yoksa mahalin kutusunun 3 m sağı; gap: yanların arası,
+        yoksa 1 m; name: katmanın adı), refresh (layer: modelin şimdiki hâliyle yeniden
+        çizer, nesneler rollerine göre aynı kimlikle kalır), release (layer: türetim kaydını
+        kaldırır, çizim kalır). Kesit/görünüş işareti (cad.viewmarks.create) yalnız
+        başvurudur; işaret koymak çizim üretmez.
 
         Args:
             doc: The drawing it works on.
@@ -158,12 +157,12 @@ edit = _ElevationsEdit()
 
 class _ElevationsQuery(LocalCommand[ElevationsQuery, ElevationsQueried, ElevationsQueried]):
     """``cad.elevations.query`` v1. İç görünüşleri oku: Çizimin türetilmiş oda iç
-    görünüşlerini katman ağacının sırasıyla okur (docs/adr/0799); çizimi değiştirmez.
-    Her biri için katmanı, mahali ve adı, istenen yanlar, durum: current (yeniden
-    çizilse aynı ve nesnelerinin hepsi yerinde), stale (model değişti ya da
-    nesnelerinden bazıları silindi), gone (mahali yok); silinmiş nesneler (missing),
-    model değişmemişken elle değiştirilmiş nesneler (edited) ve türetildiği çizim
-    sürümü. layer ile tek katman, uid ile nesnenin üyesi olduğu iç görünüş.
+    görünüşlerini katman ağacının sırasıyla okur; çizimi değiştirmez. Her biri için
+    katmanı, mahali ve adı, istenen yanlar, durum: current (yeniden çizilse aynı ve
+    nesnelerinin hepsi yerinde), stale (model değişti ya da nesnelerinden bazıları
+    silindi), gone (mahali yok); silinmiş nesneler (missing), model değişmemişken elle
+    değiştirilmiş nesneler (edited) ve türetildiği çizim sürümü. layer ile tek katman,
+    uid ile nesnenin üyesi olduğu iç görünüş.
     """
     __slots__ = ()
     id = "cad.elevations.query"
@@ -185,12 +184,12 @@ class _ElevationsQuery(LocalCommand[ElevationsQuery, ElevationsQueried, Elevatio
         expected: Expected | None = None,
     ) -> ElevationsQueried:
         """İç görünüşleri oku: Çizimin türetilmiş oda iç görünüşlerini katman ağacının
-        sırasıyla okur (docs/adr/0799); çizimi değiştirmez. Her biri için katmanı, mahali ve
-        adı, istenen yanlar, durum: current (yeniden çizilse aynı ve nesnelerinin hepsi
-        yerinde), stale (model değişti ya da nesnelerinden bazıları silindi), gone (mahali
-        yok); silinmiş nesneler (missing), model değişmemişken elle değiştirilmiş nesneler
-        (edited) ve türetildiği çizim sürümü. layer ile tek katman, uid ile nesnenin üyesi
-        olduğu iç görünüş.
+        sırasıyla okur; çizimi değiştirmez. Her biri için katmanı, mahali ve adı, istenen
+        yanlar, durum: current (yeniden çizilse aynı ve nesnelerinin hepsi yerinde), stale
+        (model değişti ya da nesnelerinden bazıları silindi), gone (mahali yok); silinmiş
+        nesneler (missing), model değişmemişken elle değiştirilmiş nesneler (edited) ve
+        türetildiği çizim sürümü. layer ile tek katman, uid ile nesnenin üyesi olduğu iç
+        görünüş.
 
         Args:
             doc: The drawing it works on.

@@ -1,7 +1,12 @@
 //! The parcel register a drawing carries (docs/adr/4220; plan/map-cad.md MAP-08), apart from its areas: the documents
-//! that made and closed parcels, each parcel as its document made it, and the boundaries the parcels share. After
-//! ArcGIS's parcel fabric: a record (a deed, a plan, a survey) creates parcels and retires earlier ones, which stay as
-//! history; a parcel's lines are shared with its neighbours and go historic once no current parcel uses them.
+//! that made and closed parcels, each parcel as its document made it, and the boundaries the parcels share. A document
+//! (a deed, a plan, a survey) creates parcels and closes earlier ones, which stay as history; a parcel's boundaries are
+//! shared with its neighbours and close once no current parcel uses them.
+//!
+//! Docs/adr/5020: a document states its boundaries' lengths as measured (`lengths`, the document's values, kept as
+//! written); a document may first be a draft (`drafts`: what it would make and close, its areas' shape kept as drafted,
+//! nothing current changed) and an approved document carries the approval as written outside (`approval`: its number,
+//! date and who approved; KentOS never approves).
 //!
 //! A ring is a chain of boundaries: `edges` holds their numbers, negative where the ring runs a boundary from its
 //! `to` to its `from` (TopoJSON's arcs do the same). Two parcels that use one boundary number share that boundary, by
@@ -33,7 +38,11 @@ pub const MAX_PARCEL_NOTE: usize = 4000;
 /// Two bulges within this are one boundary's (docs/adr/2000's rule for the boundary graph).
 pub const BOUNDARY_BULGE_TOLERANCE: f64 = 1e-9;
 
-/// The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made.
+/// The most characters of an approval's number.
+pub const MAX_APPROVAL_REFERENCE: usize = 64;
+
+/// The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made; the lengths
+/// the documents state; the drafts, numbered apart (docs/adr/5020).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -43,9 +52,145 @@ pub struct ParcelRegister {
     pub documents: Vec<ParcelDocument>,
     pub boundaries: Vec<RecordedBoundary>,
     pub parcels: Vec<RecordedParcel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RecordedLength>>"))]
+    pub lengths: Vec<RecordedLength>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ParcelDraft>>"))]
+    pub drafts: Vec<ParcelDraft>,
 }
 
-/// A document that made or closed parcels (ArcGIS's record): its name, unique in the drawing; its kind as the user
+/// An approval written outside KentOS, as written (docs/adr/5020): its number (never empty), its date and who approved.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ParcelApproval {
+    pub reference: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub date: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub by: String,
+}
+
+/// The length a document states for a boundary (docs/adr/5020): a plain decimal in metres as written, an arc's length
+/// on an arc. One per boundary and document.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordedLength {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub boundary: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub document: u32,
+    pub length: String,
+}
+
+/// A length stated for one edge of an area's ring (docs/adr/5020): the ring in the area's order (the outline, its holes,
+/// then each further part's outline and holes; 0 first), the edge from the ring's vertex `edge` to the next, the length a
+/// plain decimal in metres as written.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StatedLength {
+    #[serde(default, skip_serializing_if = "is_first")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub ring: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub edge: u32,
+    pub length: String,
+}
+
+/// A draft's ring as its area was when drafted: its part, whether a hole, its vertices and each edge's bulge (none: all
+/// straight).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DraftRing {
+    #[serde(default, skip_serializing_if = "is_first")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub part: u32,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub hole: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<f64>>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub bulges: Vec<f64>,
+}
+
+/// A parcel a draft would make: its area, identity and stated area as read when drafted, its rings as drawn then and the
+/// lengths the document states.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DraftParcel {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub il: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub ilce: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub mahalle: String,
+    pub ada: String,
+    pub parsel: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub stated_area: String,
+    pub rings: Vec<DraftRing>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<StatedLength>>"))]
+    pub lengths: Vec<StatedLength>,
+}
+
+/// A document not yet approved (docs/adr/5020): its fields as a document's, the parcels it would make and the recorded
+/// parcels it would close. Approving it writes it as a document with the next number; nothing current changes before.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ParcelDraft {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub number: u32,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub date: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub note: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<DraftParcel>>"))]
+    pub create: Vec<DraftParcel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<u32>>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub close: Vec<u32>,
+}
+
+/// A document that made or closed parcels: its name, unique in the drawing; its kind as the user
 /// writes it (a plan, a deed …); the date it gives, as written; a note.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -65,6 +210,9 @@ pub struct ParcelDocument {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub note: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approval: Option<ParcelApproval>,
 }
 
 /// A boundary: from one corner to another (`from` the lesser by east, then north), its bulge from `from` to `to` (0:
@@ -174,7 +322,16 @@ pub type RingPath = (Vec<Vec2>, Vec<f64>);
 
 impl ParcelRegister {
     pub fn is_empty(&self) -> bool {
-        self.documents.is_empty() && self.boundaries.is_empty() && self.parcels.is_empty()
+        self.documents.is_empty() && self.boundaries.is_empty() && self.parcels.is_empty() && self.drafts.is_empty()
+    }
+
+    /// Whether the register holds what schema 249 brought (docs/adr/5020): stated lengths, drafts or an approval.
+    pub fn has_drafts(&self) -> bool {
+        !self.lengths.is_empty() || !self.drafts.is_empty() || self.documents.iter().any(|d| d.approval.is_some())
+    }
+
+    pub fn draft(&self, number: u32) -> Option<&ParcelDraft> {
+        self.drafts.iter().find(|d| d.number == number)
     }
 
     pub fn document(&self, number: u32) -> Option<&ParcelDocument> {
@@ -261,6 +418,11 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
         if !names.insert(d.name.as_str()) {
             return Some(format!("“{}” adlı parsel belgesi iki kez yazılmış", d.name));
         }
+        if let Some(a) = &d.approval
+            && let Some(problem) = approval_problem(a)
+        {
+            return Some(format!("{}. parsel belgesinin onayı geçersiz: {problem}", d.number));
+        }
     }
     let known = |n: u32| documents.contains(&n);
     let lifespan = |created: u32, closed: Option<u32>| {
@@ -335,6 +497,122 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
             return Some(format!("{}. sınırı hiçbir parsel ya da güncelken hiçbir güncel parsel kullanmıyor", b.number));
         }
     }
+    if r.lengths.len() > MAX_RECORDED_BOUNDARIES {
+        return Some(format!("Parsel kayıtları en çok {MAX_RECORDED_BOUNDARIES} kenar ölçüsü taşır"));
+    }
+    let mut stated = HashSet::new();
+    for l in &r.lengths {
+        let Some(b) = boundaries.get(&l.boundary) else {
+            return Some(format!("{}. sınırın ölçüsü olmayan bir sınırın", l.boundary));
+        };
+        if !known(l.document) || l.document < b.created_by {
+            return Some(format!("{}. sınırın ölçüsünün belgesi yok ya da sınırdan önce gelmiş", l.boundary));
+        }
+        if !positive_decimal(&l.length) {
+            return Some(format!("{}. sınırın belgedeki ölçüsü sıfırdan büyük düz bir ondalık sayı değil", l.boundary));
+        }
+        if !stated.insert((l.boundary, l.document)) {
+            return Some(format!("{}. sınırın {}. belgedeki ölçüsü iki kez yazılmış", l.boundary, l.document));
+        }
+    }
+    if r.documents.len() + r.drafts.len() > MAX_PARCEL_DOCUMENTS {
+        return Some(format!("Parsel kayıtları taslaklarıyla en çok {MAX_PARCEL_DOCUMENTS} belge taşır"));
+    }
+    let mut drafts = HashSet::new();
+    for d in &r.drafts {
+        if d.number == 0 || !drafts.insert(d.number) {
+            return Some(format!("{}. belge taslağının numarası sıfır ya da yinelenmiş", d.number));
+        }
+        if !review_label_ok(&d.name, MAX_PARCEL_NAME)
+            || !optional_label(&d.kind, MAX_PARCEL_NAME)
+            || !optional_label(&d.date, MAX_PARCEL_LABEL)
+            || !(d.note.is_empty() || review_text_ok(&d.note) && d.note.chars().count() <= MAX_PARCEL_NOTE)
+        {
+            return Some(format!("{}. belge taslağının adı, türü, tarihi ya da notu geçersiz", d.number));
+        }
+        if !names.insert(d.name.as_str()) {
+            return Some(format!("“{}” adlı belge ya da taslak iki kez yazılmış", d.name));
+        }
+        if let Some(problem) = draft_problem(d, &numbers) {
+            return Some(format!("{}. belge taslağı geçersiz: {problem}", d.number));
+        }
+    }
+    None
+}
+
+/// Whether `text` is a plain decimal above zero (a stated length).
+pub fn positive_decimal(text: &str) -> bool {
+    text.len() <= MAX_PARCEL_LABEL && plain_decimal(text) && text.bytes().any(|b| (b'1'..=b'9').contains(&b))
+}
+
+/// What is wrong with an approval: its number empty or too long, its date or approver too long.
+pub fn approval_problem(a: &ParcelApproval) -> Option<&'static str> {
+    if !review_label_ok(&a.reference, MAX_APPROVAL_REFERENCE) {
+        return Some("onay sayısı boş ya da 64 karakterden uzun");
+    }
+    if !optional_label(&a.date, MAX_PARCEL_LABEL) || !optional_label(&a.by, MAX_PARCEL_NAME) {
+        return Some("onay tarihi ya da onaylayan çok uzun");
+    }
+    None
+}
+
+/// What is wrong with a draft's content: nothing to make or close, a closed number twice or not a recorded parcel, a
+/// parcel without Ada and Parsel, an area given twice or not a UUID, a ring of fewer than three vertices, a vertex or
+/// bulge not finite, two vertices in one place, bulges not one per edge, parts out of order, a length on a missing edge,
+/// twice, or not a plain decimal above zero.
+fn draft_problem(d: &ParcelDraft, parcels: &HashSet<u32>) -> Option<&'static str> {
+    if d.create.is_empty() && d.close.is_empty() {
+        return Some("ne parsel oluşturuyor ne kapatıyor");
+    }
+    let mut closing = HashSet::new();
+    if d.close.iter().any(|n| !parcels.contains(n) || !closing.insert(*n)) {
+        return Some("kapatacağı parsel kayıtlarda yok ya da iki kez");
+    }
+    let mut uids = HashSet::new();
+    for p in &d.create {
+        if !review_id_ok(&p.uid) || !uids.insert(p.uid.as_str()) {
+            return Some("alanın kimliği geçersiz ya da iki kez");
+        }
+        if !review_label_ok(&p.ada, MAX_PARCEL_NAME)
+            || !review_label_ok(&p.parsel, MAX_PARCEL_NAME)
+            || ![&p.il, &p.ilce, &p.mahalle].iter().all(|t| optional_label(t, MAX_PARCEL_NAME))
+        {
+            return Some("parselin kimliği geçersiz");
+        }
+        if !(p.stated_area.is_empty() || p.stated_area.len() <= MAX_PARCEL_LABEL && plain_decimal(&p.stated_area)) {
+            return Some("belgedeki alan düz bir ondalık sayı değil");
+        }
+        if p.rings.is_empty() {
+            return Some("parselin halkası yok");
+        }
+        let mut part = 0;
+        for (i, ring) in p.rings.iter().enumerate() {
+            let opens = if i == 0 { ring.part == 0 } else { ring.part == part + 1 };
+            if !(opens && !ring.hole || i > 0 && ring.part == part && ring.hole) {
+                return Some("parselin parçaları sırasız");
+            }
+            part = ring.part;
+            let n = ring.pts.len();
+            if n < 3
+                || !(ring.bulges.is_empty() || ring.bulges.len() == n)
+                || ring.pts.iter().any(|v| !finite(*v))
+                || ring.bulges.iter().any(|b| !b.is_finite())
+                || (0..n).any(|k| ring.pts[k] == ring.pts[(k + 1) % n])
+            {
+                return Some("bir halkası üç köşeden az, sonlu değil ya da aynı yerde iki ardışık köşe taşıyor");
+            }
+        }
+        let mut edges = HashSet::new();
+        for l in &p.lengths {
+            let ring = p.rings.get(l.ring as usize);
+            if ring.is_none_or(|r| l.edge as usize >= r.pts.len()) || !edges.insert((l.ring, l.edge)) {
+                return Some("bir kenar ölçüsü olmayan bir kenarın ya da iki kez");
+            }
+            if !positive_decimal(&l.length) {
+                return Some("bir kenar ölçüsü sıfırdan büyük düz bir ondalık sayı değil");
+            }
+        }
+    }
     None
 }
 
@@ -404,6 +682,7 @@ mod tests {
                 rings: vec![RecordedRing { part: 0, hole: false, edges: vec![1, 2, -3, -4] }],
                 ..Default::default()
             }],
+            ..Default::default()
         }
     }
 
@@ -462,5 +741,44 @@ mod tests {
             }),
             None
         );
+    }
+
+    #[test]
+    fn lengths_drafts_and_approvals_read_and_what_they_may_not_hold() {
+        let mut r = square();
+        r.lengths.push(RecordedLength { boundary: 1, document: 1, length: "10,00".into() });
+        r.documents[0].approval = Some(ParcelApproval { reference: "2026/145".into(), ..Default::default() });
+        r.drafts.push(ParcelDraft {
+            number: 1,
+            name: "2026/146 ifraz".into(),
+            close: vec![1],
+            create: vec![DraftParcel {
+                uid: UID.into(),
+                ada: "101".into(),
+                parsel: "8".into(),
+                rings: vec![DraftRing { pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(0.0, 10.0)], ..Default::default() }],
+                lengths: vec![StatedLength { ring: 0, edge: 0, length: "10".into() }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+        assert_eq!(parcel_register_problem(&r), None);
+        assert!(r.has_drafts());
+        let broken = |f: &dyn Fn(&mut ParcelRegister)| {
+            let mut x = r.clone();
+            f(&mut x);
+            parcel_register_problem(&x)
+        };
+        // A length of zero, on a missing boundary, twice; an approval without its number.
+        assert!(broken(&|x| x.lengths[0].length = "0,00".into()).is_some());
+        assert!(broken(&|x| x.lengths[0].boundary = 9).is_some());
+        assert!(broken(&|x| x.lengths.push(x.lengths[0].clone())).is_some());
+        assert!(broken(&|x| x.documents[0].approval.as_mut().unwrap().reference.clear()).is_some());
+        // A draft named as a document, closing a parcel twice, a length on an edge the ring lacks, two rings in one
+        // place.
+        assert!(broken(&|x| x.drafts[0].name = "Kadastro 1985".into()).is_some());
+        assert!(broken(&|x| x.drafts[0].close = vec![1, 1]).is_some());
+        assert!(broken(&|x| x.drafts[0].create[0].lengths[0].edge = 3).is_some());
+        assert!(broken(&|x| x.drafts[0].create[0].rings[0].pts[1] = v(0.0, 0.0)).is_some());
     }
 }

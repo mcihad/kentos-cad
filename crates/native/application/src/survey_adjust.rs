@@ -116,7 +116,7 @@ fn numbers(work: &AdjustWork) -> Result<(), Stop> {
                 }
             }
         }
-        AdjustWork::Level { known, rows, .. } => {
+        AdjustWork::Level { known, rows, leapfrog, .. } => {
             for (i, k) in known.iter().enumerate() {
                 if let Some(h) = k.h {
                     finite(h, "Bilinen kot", format!("work.known[{i}].h"))?;
@@ -128,6 +128,14 @@ fn numbers(work: &AdjustWork) -> Result<(), Stop> {
             for (i, r) in rows.iter().enumerate() {
                 finite(r.dh, "Kot farkı", format!("work.rows[{i}].dh"))?;
                 finite(r.length, "Uzunluk", format!("work.rows[{i}].length"))?;
+            }
+            // docs/adr/5300: the leap-frog setups' sights.
+            for (i, r) in leapfrog.iter().enumerate() {
+                for (side, s) in [("back", &r.back), ("fore", &r.fore)] {
+                    finite(s.distance, "Eğik uzunluk", format!("work.leapfrog[{i}].{side}.distance"))?;
+                    finite(s.zenith, "Başucu açısı", format!("work.leapfrog[{i}].{side}.zenith"))?;
+                    finite(s.target, "İşaret yüksekliği", format!("work.leapfrog[{i}].{side}.target"))?;
+                }
             }
         }
     }
@@ -150,6 +158,8 @@ struct Adjusted {
     changes: Vec<Change>,
     adds: Vec<NewPoint>,
     absent: Vec<String>,
+    /// docs/adr/5300: the leap-frog setups' differences.
+    leapfrog: Vec<kentos_commands::AdjustDifference>,
     f: u32,
     m0: Option<f64>,
     passed: Option<bool>,
@@ -158,6 +168,16 @@ struct Adjusted {
 fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
     numbers(&input.work)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
+    // Docs/adr/5200: the name the adjustment is kept under.
+    if let Some(name) = &input.keep
+        && !kentos_commands::review_label_ok(name.trim(), kentos_commands::MAX_KEPT_ADJUSTMENT_NAME)
+    {
+        return Err(Stop::failed(checks::error(
+            codes::INVALID_INPUT,
+            "Dengeleme kaydının adı boş olmaz; en çok 120 karakterdir, denetim karakteri taşımaz.".into(),
+            Some("keep".into()),
+        )));
+    }
     match &input.work {
         AdjustWork::Horizontal { known, rows } => {
             let mut given = Vec::with_capacity(known.len());
@@ -265,6 +285,7 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                 changes,
                 adds,
                 absent: Vec::new(),
+                leapfrog: Vec::new(),
                 f: result.f as u32,
                 m0: result.m0,
                 passed: result.passed,
@@ -274,6 +295,7 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
             method,
             known,
             rows,
+            leapfrog,
         } => {
             let mut given = Vec::with_capacity(known.len());
             for (i, k) in known.iter().enumerate() {
@@ -299,6 +321,34 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                     sigma: k.sigma,
                 });
             }
+            // docs/adr/5300: each leap-frog setup a height difference after the rows, the project's k.
+            let unit = match input.unit.unwrap_or(doc.settings().angle_unit) {
+                AngleUnit::Grad => kentos_geometry_core::survey::Unit::GRAD,
+                AngleUnit::Deg => kentos_geometry_core::survey::Unit::DEG,
+            };
+            if !leapfrog.is_empty() && *method != LevelMethod::Trigonometric {
+                return Err(refuse(
+                    codes::INVALID_INPUT,
+                    "Atlamalı kurulumların kot farkı trigonometriktir; method trigonometric verin.",
+                    "work.method",
+                ));
+            }
+            let mut setups = Vec::with_capacity(leapfrog.len());
+            for (i, r) in leapfrog.iter().enumerate() {
+                let sight = |s: &kentos_commands::AdjustSight| kentos_geometry_core::survey::fieldbook::Sight {
+                    slope: s.distance,
+                    zenith: s.zenith,
+                    target: s.target,
+                };
+                let (dh, length) = kentos_geometry_core::survey::fieldbook::leapfrog(
+                    sight(&r.back),
+                    sight(&r.fore),
+                    unit,
+                    doc.settings().refraction(),
+                )
+                .map_err(|e| refuse(codes::SURVEY_REFUSED, e, &format!("work.leapfrog[{i}]")))?;
+                setups.push(kentos_commands::AdjustDifference { from: r.from.clone(), to: r.to.clone(), dh, length });
+            }
             let network = LevelInput {
                 kind: match method {
                     LevelMethod::Geometric => "geometric",
@@ -317,6 +367,13 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                         length: r.length,
                         line: Some(i + 1),
                     })
+                    .chain(setups.iter().enumerate().map(|(i, r)| LevelRow {
+                        from: r.from.clone(),
+                        to: r.to.clone(),
+                        dh: r.dh,
+                        length: r.length,
+                        line: Some(rows.len() + i + 1),
+                    }))
                     .collect(),
             };
             let result = levelling::adjust(&network)
@@ -355,6 +412,7 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                 changes,
                 adds: Vec::new(),
                 absent,
+                leapfrog: setups,
                 f: result.f as u32,
                 m0: result.m0,
                 passed: result.passed,
@@ -607,9 +665,9 @@ fn write_execute(
         .filter_map(|c| cx.doc.uid(c.slot))
         .map(|u| u.to_string())
         .collect();
-    let group = cx
-        .doc
-        .begin_group(if a.level { LEVEL_STEP } else { NETWORK_STEP });
+    let made_on = cx.doc.revision().to_string();
+    let step = if a.level { LEVEL_STEP } else { NETWORK_STEP };
+    let group = cx.doc.begin_group(step);
     let mut warnings: Vec<CommandWarning> = Vec::new();
     if let Some(edit) = w.edit {
         match edit::execute(cx, edit) {
@@ -649,6 +707,34 @@ fn write_execute(
             }
         }
     }
+    // Docs/adr/5200: the result kept under its name, one of that name replaced, in the same step.
+    let kept = input.keep.as_ref().map(|n| n.trim().to_owned());
+    if let Some(name) = &kept {
+        let record = kentos_commands::KeptAdjustment {
+            name: name.clone(),
+            kind: if a.level { kentos_commands::KeptAdjustmentKind::Height } else { kentos_commands::KeptAdjustmentKind::Horizontal },
+            revision: made_on,
+            points: a
+                .points
+                .iter()
+                .map(|p| kentos_commands::KeptAdjustedPoint { name: p.name.clone(), at: p.at, h: p.h, sigma: p.sigma })
+                .collect(),
+            f: a.f,
+            m0: a.m0,
+            passed: a.passed,
+        };
+        let mut list = cx.doc.survey_adjustments().to_vec();
+        match list.iter_mut().find(|r| r.name == *name) {
+            Some(r) => *r = record,
+            None => list.push(record),
+        }
+        if let Some(problem) = kentos_commands::kept_adjustments_problem(&list) {
+            cx.doc.cancel_group(group);
+            return Stop::failed(checks::error(codes::INVALID_INPUT, format!("Dengeleme kaydı yazılamıyor: {problem}."), Some("keep".into())))
+                .into();
+        }
+        cx.doc.set_survey_adjustments(list, step);
+    }
     cx.doc.end_group(group);
     warnings.extend(not_drawn(&a.absent));
     CommandResult::Completed {
@@ -658,9 +744,11 @@ fn write_execute(
             created,
             ids,
             absent: a.absent,
+            leapfrog: a.leapfrog,
             f: a.f,
             m0: a.m0,
             passed: a.passed,
+            kept,
             revision: cx.doc.revision().to_string(),
         },
         warnings,

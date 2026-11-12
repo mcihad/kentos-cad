@@ -19,4 +19,8 @@ import type { TerrainZoneVolumes } from "./TerrainZoneVolumes";
  * (`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the
  * comparison's).
  */
-export type TerrainsCompared = { base: string, comparison: string, cut: number, fill: number, net: number, cutArea: number, fillArea: number, covered: number, uncovered: number, least?: TerrainDifferenceAt, largest?: TerrainDifferenceAt, bands?: Array<TerrainDifferenceBand>, outsideArea?: number, cell?: number, exact?: TerrainVolumes, adjusted?: TerrainAdjusted, zones?: Array<TerrainZoneVolumes>, rest?: TerrainZoneRest, zoned?: TerrainVolumes, interval?: number, azimuth?: number, formula?: SectionFormula, sections?: Array<TerrainSection>, };
+export type TerrainsCompared = { base: string, comparison: string, cut: number, fill: number, net: number, cutArea: number, fillArea: number, covered: number, uncovered: number, least?: TerrainDifferenceAt, largest?: TerrainDifferenceAt, bands?: Array<TerrainDifferenceBand>, outsideArea?: number, cell?: number, exact?: TerrainVolumes, adjusted?: TerrainAdjusted, zones?: Array<TerrainZoneVolumes>, rest?: TerrainZoneRest, zoned?: TerrainVolumes, interval?: number, azimuth?: number, formula?: SectionFormula, 
+/**
+ * The drawn axis the sections stood along and its length (docs/adr/4760).
+ */
+axis?: string, length?: number, sections?: Array<TerrainSection>, };

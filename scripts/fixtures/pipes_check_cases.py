@@ -47,6 +47,20 @@ Et kalınlığı (docs/adr/3960; Civil 3D's cover “from the top outside of the
 own drawing the pipes carry `Et` (the wall, in the diameter's unit; P7 none). Asked, the crown is the invert plus the
 diameter plus the wall (a pipe without one noWall, its inner crown); the vertical clearance the upper invert less its
 wall less the lower crown less its wall, the horizontal the axes' distance less both radii and walls.
+
+Dış çap (docs/adr/4780): in the outers' drawing the pipes carry `Dış çap` too (the outer diameter, in the diameter's
+unit; P5 none, P4's 10 mm more than its inner and walls, P8's below its inner). Asked alone, the wall is half the outer
+less the inner; with `Et` asked too the two must agree to a billionth of the outer (else, or with an outer below the
+inner, wallMismatch, valued outer − (inner + 2 × wall) in metres, and no wall); a pipe with neither noWall.
+
+Kural paketi (docs/adr/4780): the Ministry's 2017 sewer regulation's EK-1 slope classes (φ300; φ350–600; φ650–1000;
+over φ1000, as 1:A), least cover 2.70 m and manhole spacing (under φ1200 at most 70 m, over it 100 m), the storm water
+regulation's EK-1 Çizelge 1.4 (each φ's least, exceptional least and greatest slope) with 1.2 m cover, typed below from
+the research note's reading of the Resmî Gazete texts, not from KentOS's package file, which main() compares with them.
+A pipe's φ is its diameter read in millimetres, held by a class to a billionth of the bound; the limits the case gives
+go first; below the exceptional least (or the least, without one) lowSlope, between the two exceptionalSlope, over the
+greatest steepSlope; a diameter in no class noRule; a pipe between two structures longer than its spacing's greatest
+longSpan.
 """
 
 import copy
@@ -60,9 +74,10 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.pipes.check.json"
 X0, Y0 = 487000.0, 4420000.0
 W = 1e-6
-KINDS = ["detached", "noStructure", "noInvert", "invertUnit", "invertIsDepth", "reverseSlope", "flat", "lowSlope",
-         "steepSlope", "outletAbove", "noDiameter", "diameterUnit", "notInCatalog", "noWall", "noGround", "offSurface",
-         "aboveGround", "shallow", "deep", "curved", "clash", "closeCrossing", "wrongSide", "closeAlongside"]
+KINDS = ["detached", "noStructure", "longSpan", "noInvert", "invertUnit", "invertIsDepth", "reverseSlope", "flat",
+         "lowSlope", "exceptionalSlope", "steepSlope", "outletAbove", "noDiameter", "diameterUnit", "notInCatalog",
+         "noRule", "noWall", "wallMismatch", "noGround", "offSurface", "aboveGround", "shallow", "deep", "curved", "clash",
+         "closeCrossing", "wrongSide", "closeAlongside"]
 UNITS = {"mm": 0.001, "cm": 0.01, "m": 1.0}
 
 
@@ -127,11 +142,19 @@ WATER = [
 # The walls (docs/adr/3960; the `Et` attribute, in the network's diameter unit): P7 has none.
 WALLS = {"P1": "20", "P2": "20", "P3": "25", "P4": "30", "P5": "15", "P6": "18", "P8": "20", "P9": "20",
          "W1": "5", "W2": "8", "W3": "5", "W4": "5", "W5": "5", "W6": "5", "W7": "5"}
+# The outer diameters (docs/adr/4780; `Dış çap`, in the diameter's unit), in the outers' drawing beside the walls: the
+# inner plus two walls, but P4's 10 mm more, P8's below its inner, P5 none, P7 one without a wall.
+OUTERS = {"P1": "340", "P2": "340", "P3": "350", "P4": "470", "P6": "286", "P7": "340", "P8": "290", "P9": "340",
+          "W1": "110", "W2": "216", "W3": "110", "W4": "110", "W5": "110", "W6": "110", "W7": "110"}
 
 
 def walled(attrs, name, walls):
+    """The walls' drawing (`walls` true) gives the pipes their `Et`; the outers' (`walls` == "outers") their
+    `Dış çap` too."""
     if walls and name in WALLS:
         attrs["Et"] = WALLS[name]
+    if walls == "outers" and name in OUTERS:
+        attrs["Dış çap"] = OUTERS[name]
     return attrs
 
 
@@ -318,16 +341,107 @@ def drawing(walls=False):
                                                                           izgara.items()}), "su": (water, {})}
 
 
-def wall_of(attrs, diameter):
-    """The wall in metres (docs/adr/3960): none asked: None; asked and missing (or below zero): False."""
-    if not diameter or not diameter.get("wall"):
+def wall_read(attrs, diameter):
+    """The wall as read (docs/adr/3960, 4780): None with neither `wall` nor `outer` asked; else ("ok", metres),
+    ("missing", None), ("mismatch", outer − (inner + 2 × wall) in metres, the wall 0 when not given) or ("noInner",
+    None): an outer given without an inner diameter, whose own finding says it."""
+    if not diameter or not (diameter.get("wall") or diameter.get("outer")):
         return None
-    v = number(attrs.get(diameter["wall"]))
-    return v * UNITS[diameter["unit"]] if v is not None and v >= 0 else False
+    unit = UNITS[diameter["unit"]]
+    w = number(attrs.get(diameter["wall"])) if diameter.get("wall") else None
+    w = w if w is not None and w >= 0 else None
+    o = number(attrs.get(diameter["outer"])) if diameter.get("outer") else None
+    o = o if o is not None and o > 0 else None
+    i = number(attrs.get(diameter["field"]))
+    i = i if i is not None and i > 0 else None
+    if o is not None and i is not None:
+        gap = o - (i + 2.0 * (w if w is not None else 0.0))
+        if o < i or (w is not None and abs(gap) > 1e-9 * max(abs(o), 1.0)):
+            return ("mismatch", gap * unit)
+        return ("ok", (w if w is not None else (o - i) / 2.0) * unit)
+    if w is not None:
+        return ("ok", w * unit)
+    return ("noInner", None) if o is not None else ("missing", None)
+
+
+def wall_of(attrs, diameter):
+    """The wall in metres (docs/adr/3960, 4780): none asked: None; asked and not known: False."""
+    r = wall_read(attrs, diameter)
+    if r is None:
+        return None
+    return r[1] if r[0] == "ok" else False
+
+
+# ── The rule package (docs/adr/4780) ─────────────────────────────────────────────────────────────────────────────
+# Typed here from the research note's reading of the regulations (Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında
+# Yönetmelik, RG 06.01.2017/29940, EK-1; Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik, RG
+# 23.06.2017/30105, EK-1 Çizelge 1.4); main() compares KentOS's catalog/v1/rules/kanal-csb-2017.json with them.
+ATIKSU = {
+    "id": "atiksu", "minCover": 2.7,
+    "slopes": [{"name": "Bağlantı kanalı", "from": 300, "to": 300, "least": 300, "greatest": 15},
+               {"name": "Tali kanal", "from": 350, "to": 600, "least": 500, "greatest": 25},
+               {"name": "Ana kanal", "from": 650, "to": 1000, "least": 1000, "greatest": 50},
+               {"name": "Ana kollektör", "over": 1000, "least": 3000, "greatest": 75}],
+    "spans": [{"below": 1200, "least": 50, "greatest": 70}, {"over": 1200, "least": 70, "greatest": 100}],
+}
+# Çizelge 1.4, beton kanallar: φ (mm), the least slope's A, the exceptional least's (none: “–”), the greatest's.
+CIZELGE_1_4 = [(200, 300, None, 7), (300, 500, None, 7), (400, 600, 900, 25), (500, 800, 1000, 25),
+               (600, 1000, 1500, 25), (700, 1000, 1500, 50), (800, 1200, 1800, 50), (900, 1500, 1800, 50),
+               (1000, 2000, 2500, 75), (1200, 2050, 2500, 75), (1400, 2100, 2500, 75), (1600, 2150, 2500, 75),
+               (2000, 2250, 2500, 75), (3000, 2500, 2500, 75)]
+YAGMURSUYU = {
+    "id": "yagmursuyu", "minCover": 1.2,
+    "slopes": [{"name": f"φ{d}", "from": d, "to": d, "least": a, **({"exceptional": e} if e else {}), "greatest": g}
+               for d, a, e, g in CIZELGE_1_4],
+    "spans": [{"below": 1200, "least": 50, "greatest": 70}, {"over": 1200, "greatest": 100}],
+}
+RULES_FILE = ROOT / "catalog" / "v1" / "rules" / "kanal-csb-2017.json"
+
+
+def rules_agree():
+    """KentOS's package holds the numbers typed here, class by class (names, bounds, slopes, cover, spacing)."""
+    package = json.loads(RULES_FILE.read_text("utf-8"))
+    keys = ("name", "from", "over", "to", "least", "exceptional", "greatest")
+    for mine in (ATIKSU, YAGMURSUYU):
+        theirs = next(s for s in package["systems"] if s["id"] == mine["id"])
+        assert theirs.get("minCover") == mine["minCover"], (mine["id"], theirs.get("minCover"))
+        assert [{k: c.get(k) for k in keys} for c in theirs["slopes"]] == \
+               [{k: c.get(k) for k in keys} for c in mine["slopes"]], mine["id"]
+        span_keys = ("below", "over", "least", "greatest")
+        assert [{k: c.get(k) for k in span_keys} for c in theirs.get("spans", [])] == \
+               [{k: c.get(k) for k in span_keys} for c in mine["spans"]], mine["id"]
+    return package
+
+
+def near_bound(b):
+    return 1e-9 * max(abs(b), 1.0)
+
+
+def slope_class(system, mm):
+    """The first slope class holding a diameter of `mm` millimetres, to a billionth of each bound."""
+    for c in system["slopes"]:
+        if "from" in c and not mm >= c["from"] - near_bound(c["from"]):
+            continue
+        if "over" in c and not mm > c["over"] + near_bound(c["over"]):
+            continue
+        if "to" in c and not mm <= c["to"] + near_bound(c["to"]):
+            continue
+        return c
+    return None
+
+
+def span_class(system, mm):
+    for c in system.get("spans", []):
+        if "below" in c and not mm < c["below"] - near_bound(c["below"]):
+            continue
+        if "over" in c and not mm > c["over"] + near_bound(c["over"]):
+            continue
+        return c
+    return None
 
 
 def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=None, smax=None, clearance=None,
-           walls=False):
+           walls=False, rules=None):
     pipes, structures = drawing(walls)[net]
     found, rows = [], []
     key = lambda p: (round(p[0], 6), round(p[1], 6))
@@ -386,11 +500,26 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
             v = number(p.attrs.get(diameter["field"]))
             dread = v if v is not None and v > 0 else None
             dm = dread * UNITS[diameter["unit"]] if dread is not None else None
-        wall = wall_of(p.attrs, diameter)
-        if wall is False:
+        wall = wall_read(p.attrs, diameter)
+        if wall is not None and wall[0] == "missing":
             mark(i, "noWall", start)
-        wm = wall if wall not in (None, False) else None
+        if wall is not None and wall[0] == "mismatch":
+            mark(i, "wallMismatch", start, wall[1])
+        wm = wall[1] if wall is not None and wall[0] == "ok" else None
         crown = 0.0 if not diameter else (None if dm is None else dm + (wm or 0.0))
+        # The rule package's class for the diameter in millimetres (docs/adr/4780); the case's own limits go first.
+        mm = dread * (UNITS[diameter["unit"]] * 1000.0) if rules and dread is not None else None
+        cls = slope_class(rules, mm) if mm is not None else None
+        if mm is not None and cls is None:
+            mark(i, "noRule", start, dread)
+        least = smin if smin is not None else (1.0 / cls["least"] if cls else None)
+        exceptional = None if smin is not None or not cls or cls.get("exceptional") is None else 1.0 / cls["exceptional"]
+        greatest = smax if smax is not None else (1.0 / cls["greatest"] if cls else None)
+        lo_ = lo if lo is not None else (rules.get("minCover") if rules else None)
+        if mm is not None and structures and all(key(q) in structures for q in (start, end)):
+            span = span_class(rules, mm)
+            if span is not None and L > span["greatest"]:
+                mark(i, "longSpan", start, L)
 
         def g_at(q):
             if ground_ and ground_["from"] == "surface":
@@ -406,11 +535,11 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
             samples = [(0.0, start, eg[0]), (L, end, eg[1])]
         else:
             samples = []
-        if ends_ and lo is not None and hi is not None and crown is not None:
+        if ends_ and lo_ is not None and hi is not None and crown is not None:
             for v, g0, q in ((ends_[0], eg[0], start), (ends_[1], eg[1], end)):
                 if g0 is None:
                     continue
-                fits = lambda c: lo <= c <= hi
+                fits = lambda c: lo_ <= c <= hi
                 if fits(g0 - (v + crown)):
                     continue
                 unit = next((u for kk, u in ((100.0, "cm"), (1000.0, "mm")) if fits(g0 - (v / kk + crown))), None)
@@ -426,9 +555,12 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
                 mark(i, "reverseSlope", start, slope)
             elif slope == 0:
                 mark(i, "flat", start, slope)
-            elif smin is not None and slope < smin:
+            elif (exceptional if exceptional is not None else least) is not None and \
+                    slope < (exceptional if exceptional is not None else least):
                 mark(i, "lowSlope", start, slope)
-            if smax is not None and slope > smax:
+            elif exceptional is not None and least is not None and slope < least:
+                mark(i, "exceptionalSlope", start, slope)
+            if greatest is not None and slope > greatest:
                 mark(i, "steepSlope", start, slope)
         if up is not None and down is not None:
             frm, to = (end, start) if rev else (start, end)
@@ -469,7 +601,7 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
             if mn:
                 if mn[0] < 0:
                     mark(i, "aboveGround", mn[1], mn[0])
-                elif lo is not None and mn[0] < lo:
+                elif lo_ is not None and mn[0] < lo_:
                     mark(i, "shallow", mn[1], mn[0])
             if mx and hi is not None and mx[0] > hi:
                 mark(i, "deep", mx[1], mx[0])
@@ -486,6 +618,8 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
             row["minCoverAt"] = [X0 + mn[1][0], Y0 + mn[1][1]]
         if mx:
             row["maxCover"] = mx[0]
+        if cls:
+            row["class"] = cls["name"]
         rows.append(row)
     for node, outs in at_node_out.items():
         ins = at_node_in.get(node)
@@ -507,7 +641,7 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
                 kinds.append(f["kind"])
         row["findings"] = kinds
     counts = [{"kind": kk, "count": sum(1 for t in found if t[3]["kind"] == kk)} for kk in KINDS]
-    cover_to = ("outside" if diameter.get("wall") else "crown") if diameter else "invert"
+    cover_to = ("outside" if diameter.get("wall") or diameter.get("outer") else "crown") if diameter else "invert"
     out = {"network": net, "coverTo": cover_to, "pipes": rows,
            "findings": [t[3] for t in found], "counts": [c for c in counts if c["count"]],
            "parts": len(part_len), "length": sum(p.length for p in pipes)}
@@ -803,10 +937,21 @@ def sewer_input(**over):
     return inp
 
 
+def system_of(inp):
+    """The rules' system a case asks (docs/adr/4780): the given package's, else the one typed here."""
+    r = inp.get("rules")
+    if not r:
+        return None
+    if r.get("package"):
+        return next(s for s in r["package"]["systems"] if s["id"] == r["system"])
+    return {"atiksu": ATIKSU, "yagmursuyu": YAGMURSUYU}[r["system"]]
+
+
 def sewer(walls=False, **over):
     inp = sewer_input(**over)
     return inp, report("atiksu", "fields", inp.get("diameter"), inp.get("ground"), inp.get("minCover"),
-                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"), walls)
+                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"), walls,
+                       system_of(inp))
 
 
 def storm(**over):
@@ -814,7 +959,8 @@ def storm(**over):
     inp = {k_: v for k_, v in inp.items() if v is not None}
     inv = inp["inverts"]["from"]
     return inp, report("yagmur", inv, inp.get("diameter"), inp.get("ground"), inp.get("minCover"),
-                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"))
+                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"),
+                       rules=system_of(inp))
 
 
 def cases():
@@ -974,6 +1120,119 @@ def wall_cases():
     ]
 
 
+def outer_cases():
+    """Dış çap (docs/adr/4780), in the outers' drawing: the wall from the outer diameter alone, the two attributes
+    together, the clearances, the refusals."""
+    setup_o = setup(water=True, walls="outers")
+    p = {name: uid(240 + k + 1) for k, (name, *_rest) in enumerate(SEWER)}
+    outer_d = {**SEWER_D, "outer": "Dış çap"}
+    both_d = {**SEWER_D, "wall": "Et", "outer": "Dış çap"}
+    alone_in, alone = sewer(walls="outers", diameter=outer_d)
+    both_in, both = sewer(walls="outers", diameter=both_d)
+    et_in, et = sewer(walls="outers", diameter={**SEWER_D, "wall": "Et"})
+    rows = lambda r: {x["uid"]: x for x in r["pipes"]}
+    kinds = lambda r: {(f["uid"], f["kind"]) for f in r["findings"]}
+    # Alone: P4's wall is its outer's (35 mm), P8's outer below its inner is said, P5 (no outer) has no wall.
+    assert abs(rows(alone)[p["P4"]]["wall"] - 0.035) < 1e-12 and abs(rows(alone)[p["P7"]]["wall"] - 0.02) < 1e-12
+    assert {(p["P8"], "wallMismatch"), (p["P5"], "noWall")} <= kinds(alone), kinds(alone)
+    # Together: P4 (10 mm more) and P8 do not agree and have no wall; P5 takes its Et, P7 its outer.
+    assert {(p["P4"], "wallMismatch"), (p["P8"], "wallMismatch")} <= kinds(both), kinds(both)
+    assert "wall" not in rows(both)[p["P4"]] and abs(rows(both)[p["P5"]]["wall"] - 0.015) < 1e-12
+    # Where the outer is the inner plus two walls the answer is the wall's, byte for byte.
+    for name in ("P1", "P2", "P3", "P6", "P9"):
+        assert rows(both)[p[name]] == rows(et)[p[name]] == rows(alone)[p[name]], name
+    water_outer = {**WATER_ASK, "diameter": {**WATER_ASK["diameter"], "outer": "Dış çap"}}
+    water_et = {**WATER_ASK, "diameter": {**WATER_ASK["diameter"], "wall": "Et"}}
+    clear_in, clear = sewer(walls="outers", diameter=outer_d,
+                            clearance={**water_outer, "vertical": 0.5, "horizontal": 3.0})
+    _, clear_et = sewer(walls="outers", diameter={**SEWER_D, "wall": "Et"},
+                        clearance={**water_et, "vertical": 0.5, "horizontal": 3.0})
+    assert clear["crossings"] == clear_et["crossings"] and clear.get("near") == clear_et.get("near")
+    bad = "invalid_pipe_check"
+    return [
+        ok("dış çap: et dış çaptan, iç çapın altındaki dış çap söylenir", alone_in, alone, setup_=setup_o),
+        ok("dış çap ve et birlikte: uyuşmayan söylenir, etsiz ölçülür", both_in, both, setup_=setup_o),
+        ok("dış çap: açıklıklar dıştan dışa, etle aynı", clear_in, clear, setup_=setup_o),
+        refused("dış çap: boş öznitelik", sewer_input(diameter={**SEWER_D, "outer": " "}), bad,
+                "Dış çapın özniteliği boş; özniteliğin adını yazın.", "diameter.outer", setup_=setup_o),
+        refused("dış çap: diğer ağın boş özniteliği", sewer_input(clearance={
+            **WATER_ASK, "diameter": {"field": "Çap", "unit": "mm", "outer": ""}}), bad,
+                "Dış çapın özniteliği boş; özniteliğin adını yazın.", "clearance.diameter.outer", setup_=setup_o),
+    ]
+
+
+# A package of the user's own (docs/adr/4780): one class for φ300 with an exceptional least, a 40 m spacing.
+OWN = {"id": "deneme", "release": 1, "jurisdiction": "İdarenin şartnamesi (deneme)", "source": "Durumun kendisi",
+       "effective": "2026-11-10",
+       "systems": [{"id": "atiksu", "name": "Atıksu", "source": "deneme", "effective": "2026-11-10",
+                    "slopes": [{"name": "Deneme", "from": 300, "to": 300, "least": 90, "exceptional": 150,
+                                "greatest": 15}],
+                    "spans": [{"below": 1200, "greatest": 40}]}]}
+
+
+def own(**change):
+    """The user's package with its class changed (or its spacing, under `spans`)."""
+    pkg = copy.deepcopy(OWN)
+    spans = change.pop("spans", None)
+    pkg["systems"][0]["slopes"][0].update(change)
+    for k_ in [k_ for k_, v in change.items() if v is None]:
+        del pkg["systems"][0]["slopes"][0][k_]
+    if spans is not None:
+        pkg["systems"][0]["spans"] = spans
+    return pkg
+
+
+def rule_cases():
+    """Kural paketi (docs/adr/4780): KentOS's sewer and storm water systems, the case's own limits first, a package of
+    the user's, the refusals."""
+    rules_agree()
+    p = {name: uid(240 + k + 1) for k, (name, *_rest) in enumerate(SEWER)}
+    none = dict(minCover=None, maxCover=None, minSlope=None, maxSlope=None)
+    sewer_in, sewer_out = sewer(rules={"system": "atiksu"}, **none)
+    kinds = lambda r: {(f["uid"], f["kind"]) for f in r["findings"]}
+    classes = {x["uid"]: x.get("class") for x in sewer_out["pipes"]}
+    assert classes[p["P1"]] == "Bağlantı kanalı" and classes[p["P4"]] == "Tali kanal", classes
+    assert {(p["P4"], "steepSlope"), (p["P5"], "noRule"), (p["P6"], "noRule"), (p["P1"], "shallow")} <= \
+        kinds(sewer_out), kinds(sewer_out)
+    first_in, first = sewer(rules={"system": "atiksu"}, minCover=0.8, minSlope=0.009, maxCover=None, maxSlope=None)
+    assert (p["P3"], "lowSlope") in kinds(first) and (p["P1"], "shallow") not in kinds(first), kinds(first)
+    storm_in, storm_out = storm(rules={"system": "yagmursuyu"})
+    assert [x.get("class") for x in storm_out["pipes"]] == ["φ400", "φ400", "φ500"], storm_out["pipes"]
+    assert "shallow" in {f["kind"] for f in storm_out["findings"]}, storm_out["findings"]
+    own_in, own_out = sewer(rules={"system": "atiksu", "package": OWN}, **none)
+    assert {(p["P1"], "exceptionalSlope"), (p["P3"], "exceptionalSlope"), (p["P1"], "longSpan"),
+            (p["P4"], "longSpan"), (p["P4"], "noRule")} <= kinds(own_out), kinds(own_out)
+    assert not any(f["kind"] == "shallow" for f in own_out["findings"])
+    bad = "invalid_pipe_check"
+    at = "rules.package.systems[0].slopes[0]"
+    return [
+        ok("kural: atıksu yönetmeliğinin EK-1'i; eğim çap sınıfından, en az örtü 2,70 m", sewer_in, sewer_out),
+        ok("kural: yazılan en az eğim ve örtü kuralınkinin yerine geçer", first_in, first),
+        ok("kural: yağmursuyu Çizelge 1.4, örtü kapak kotundan", storm_in, storm_out),
+        ok("kural: kullanıcının paketi; istisnai en az eğim ve uzun baca aralığı", own_in, own_out),
+        refused("kural: çapsız", sewer_input(rules={"system": "atiksu"}, diameter=None), bad,
+                "Kural paketinin eğim sınırları borunun çap sınıfına göredir; çapın özniteliğini (diameter) de verin.",
+                "rules"),
+        refused("kural: pakette olmayan sistem", sewer_input(rules={"system": "gaz"}), bad,
+                "“gaz” sistemi kural paketinde yok; paketin sistemleri: atiksu, yagmursuyu.", "rules.system"),
+        refused("kural: kullanıcının paketinde çap aralığı olmayan sınıf",
+                sewer_input(rules={"system": "atiksu", "package": own(**{"from": None, "to": None})}), bad,
+                "Kural paketinin “Deneme” sınıfı geçerli değil: çap aralığı yok; from, over ya da to verin.", at),
+        refused("kural: en çok eğim en az eğimden yatık",
+                sewer_input(rules={"system": "atiksu", "package": own(greatest=120)}), bad,
+                "Kural paketinin “Deneme” sınıfı geçerli değil: en çok eğimi en az eğiminden yatık olamaz (greatest, "
+                "least'ten büyük olamaz).", at),
+        refused("kural: istisnai en az eğim en az eğimden dik",
+                sewer_input(rules={"system": "atiksu", "package": own(exceptional=60)}), bad,
+                "Kural paketinin “Deneme” sınıfı geçerli değil: istisnai en az eğimi en az eğiminden dik olamaz "
+                "(exceptional, least'ten küçük olamaz).", at),
+        refused("kural: sıfır baca aralığı",
+                sewer_input(rules={"system": "atiksu", "package": own(spans=[{"below": 1200, "greatest": 0}])}), bad,
+                "Kural paketinin 1. baca aralığı geçerli değil: en çok aralığı 0'dan büyük, en az aralığı ondan büyük "
+                "olmayan sayılar olmalı (m).", "rules.package.systems[0].spans[0]"),
+    ]
+
+
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.pipes.check", "commandVersion": 1,
            "title": "Boru hattı denetimi",
@@ -981,8 +1240,10 @@ def main():
                    "(her kare tek düzlem), örtü köşelerde ve kafes çizgisi kesişimlerinde, eğim, birim ve bağlantı "
                    "kuralları elle; KentOS kodu yok. Sınırlar durumların kendi değerleridir, yönetmelik değeri değil. "
                    "ADR 2360: içme suyu ağına açıklıklar, kesişim ve en yakın yer mpmath ile kapalı biçimde. ADR 3960: "
-                   "et kalınlığıyla örtü dış tepeden, açıklıklar dıştan dışa (kendi çiziminde).",
-           "setup": setup(water=True), "cases": cases() + wall_cases()}
+                   "et kalınlığıyla örtü dış tepeden, açıklıklar dıştan dışa (kendi çiziminde). ADR 4780: et dış "
+                   "çaptan (kendi çiziminde); kural paketi: atıksu ve yağmursuyu yönetmeliklerinin EK-1 değerleri "
+                   "betikte elle yazılı, KentOS'un paketiyle karşılaştırılır.",
+           "setup": setup(water=True), "cases": cases() + wall_cases() + outer_cases() + rule_cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         ok_ = OUT.exists() and OUT.read_text("utf-8") == text

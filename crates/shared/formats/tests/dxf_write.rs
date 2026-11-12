@@ -625,7 +625,7 @@ fn every_kind_reads_back_as_the_same_object() {
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
     assert!(
-        facts.contains(&("Sürüm", "AutoCAD 2007 (AC1021)")),
+        facts.contains(&("Sürüm", "DXF 2007 (AC1021)")),
         "{facts:?}"
     );
     assert!(facts.contains(&("Karakter kodlaması", "UTF-8")));
@@ -2103,7 +2103,7 @@ fn the_blocks_fixture_is_written_to_its_committed_bytes() {
             ),
             (
                 "Öznitelik etiketi",
-                "“Direk” bloğunun “Kol boyu” etiketi “Kol_boyu” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz)"
+                "“Direk” bloğunun “Kol boyu” etiketi “Kol_boyu” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz); adı ATTDEF'in KentOS verisinde, KentOS geri okurken düzeltir"
             ),
             (
                 "Blok açıklaması",
@@ -2403,7 +2403,7 @@ fn attributes_go_out_as_attdef_and_attrib_and_come_back() {
         [
             ("No", Some("Direk numarası"), Some("?")),
             ("Tür", Some("Lamba türü"), None),
-            ("Kol_boyu", None, Some("2.5 m")),
+            ("Kol boyu", None, Some("2.5 m")),
         ]
     );
     for (a, g) in direk.attributes.iter().zip(&given.attributes) {
@@ -2418,12 +2418,12 @@ fn attributes_go_out_as_attdef_and_attrib_and_come_back() {
         insert_values(&r, "Direk"),
         [
             vec![
-                ("Kol_boyu", "2.5 m"),
+                ("Kol boyu", "2.5 m"),
                 ("Malzeme", "Çelik"),
                 ("No", "7"),
                 ("Tür", "LED")
             ],
-            vec![("Kol_boyu", "2.5 m"), ("No", "?"), ("Tür", "")],
+            vec![("Kol boyu", "2.5 m"), ("No", "?"), ("Tür", "")],
         ]
     );
     assert!(
@@ -2477,7 +2477,7 @@ fn an_attrib_edited_elsewhere_wins() {
     let values = insert_values(&back, "Direk");
     assert_eq!(
         values[0],
-        [("Kol_boyu", "2.5 m"), ("Malzeme", "Çelik"), ("No", "7"), ("Tür", "LED")]
+        [("Kol boyu", "2.5 m"), ("Malzeme", "Çelik"), ("No", "7"), ("Tür", "LED")]
     );
 }
 
@@ -2520,12 +2520,13 @@ fn attributes_without_a_definition_go_out_as_invisible_attribs() {
         report.notes
     );
     let renamed = report.notes.iter().filter(|n| n.what == "Öznitelik etiketi" && n.reason.contains("KentOS geri okurken düzeltir")).count();
-    assert_eq!(renamed, 2, "{:?}", report.notes);
+    // The two extra names and the definition's Kol boyu (docs/adr/4800).
+    assert_eq!(renamed, 3, "{:?}", report.notes);
     let back = read(&text);
     let values = insert_values(&back, "Direk");
-    // Every attribute back as it was; and, as before, the definition's default shown (Kol_boyu) as the insert's value.
+    // Every attribute back as it was; and, as before, the definition's default shown (Kol boyu, its name back by docs/adr/4800) as the insert's value.
     let mut want: Vec<(&str, &str)> = given.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-    want.push(("Kol_boyu", "2.5 m"));
+    want.push(("Kol boyu", "2.5 m"));
     want.sort_unstable();
     assert_eq!(values[0], want, "every attribute back as it was");
     assert!(!back.entities.iter().any(|e| matches!(e, Entity::Text(_))), "no ATTRIB comes back as a text");
@@ -2571,6 +2572,63 @@ fn a_tag_written_for_a_name_comes_back_by_kentos_data_and_the_file_wins() {
     let back = read(&clash);
     assert_eq!(value(&back, "No").as_deref(), Some("7"));
     assert_eq!(value(&back, "Bakım_notu").as_deref(), Some("2026"));
+}
+
+/// docs/adr/4800: a definition's tag DXF's tags cannot hold as the name is (“Kol boyu”) goes out as “Kol_boyu” with
+/// its name in the ATTDEF's KentOS data, and only that ATTDEF's; read back, the definition and its inserts' values take
+/// the name. The file wins: its tag upper-cased elsewhere (AutoCAD writes tags in capitals), still the name; renamed
+/// elsewhere (BATTMAN, the definition and its ATTRIBs), the new tag, and that is said; the record gone, the tag; the
+/// name another ATTDEF's tag (a hand edit of KentOS's data), the tag stays.
+#[test]
+fn a_definition_s_tag_comes_back_by_its_attdef_s_kentos_data_and_the_file_wins() {
+    let (text, _) = write(&blocks_input());
+    let record = "1001\r\nKENTOS\r\n1002\r\n{\r\n1000\r\ntagname\r\n1000\r\nKol_boyu\r\n1000\r\nKol boyu\r\n1002\r\n}\r\n";
+    assert_eq!(text.matches(record).count(), 1, "the name in Kol_boyu's ATTDEF alone");
+    let attdef = text.find("  0\r\nATTDEF\r\n").expect("an ATTDEF");
+    let no_record = |s: &str| !s.contains("tagname");
+    let p = pairs(&text);
+    for d in entities_of(&p, "ATTDEF") {
+        let own = d.iter().any(|g| g.0 == 1000 && g.1 == "tagname");
+        assert_eq!(own, group(&d, 2) == Some("Kol_boyu"), "{:?}", group(&d, 2));
+    }
+    assert!(no_record(&text[..attdef]), "no record before the definitions");
+    let tags = |r: &ImportResult| -> Vec<String> {
+        r.blocks.iter().find(|b| b.name == "Direk").expect("Direk").attributes.iter().map(|a| a.tag.clone()).collect()
+    };
+    let first = |r: &ImportResult, k: &str| {
+        insert_values(r, "Direk")[0].iter().find(|(n, _)| *n == k).map(|(_, v)| v.to_string())
+    };
+    let back = read(&text);
+    assert_eq!(tags(&back), ["No", "Tür", "Kol boyu"]);
+    assert_eq!(first(&back, "Kol boyu").as_deref(), Some("2.5 m"));
+    assert_eq!(first(&back, "Kol_boyu"), None);
+    // Upper-cased elsewhere, in the definition and the ATTRIBs: still the name.
+    let upper = text.replace("  2\r\nKol_boyu\r\n", "  2\r\nKOL_BOYU\r\n");
+    assert_ne!(upper, text);
+    let back = read(&upper);
+    assert_eq!(tags(&back), ["No", "Tür", "Kol boyu"]);
+    assert_eq!(first(&back, "Kol boyu").as_deref(), Some("2.5 m"));
+    // Renamed elsewhere: the new tag, the record not taken, said.
+    let renamed = text.replace("  2\r\nKol_boyu\r\n", "  2\r\nKOL_UZUNLUK\r\n");
+    let back = read(&renamed);
+    assert_eq!(tags(&back), ["No", "Tür", "KOL_UZUNLUK"]);
+    assert_eq!(first(&back, "KOL_UZUNLUK").as_deref(), Some("2.5 m"));
+    assert_eq!(first(&back, "Kol boyu"), None);
+    assert!(
+        back.report.notes.iter().any(|n| n.what == "Öznitelik etiketi" && n.reason.contains("“KOL_UZUNLUK” etiketi KentOS'un yazdığı “Kol_boyu” değil")),
+        "{:?}",
+        back.report.notes
+    );
+    // The record gone (another program dropped KentOS's data): the tag.
+    let bare = text.replace(record, "");
+    let back = read(&bare);
+    assert_eq!(tags(&back), ["No", "Tür", "Kol_boyu"]);
+    assert_eq!(first(&back, "Kol_boyu").as_deref(), Some("2.5 m"));
+    // The record names it No, an ATTDEF's tag: the tag stays.
+    let clash = text.replace("1000\r\nKol_boyu\r\n1000\r\nKol boyu\r\n", "1000\r\nKol_boyu\r\n1000\r\nNo\r\n");
+    let back = read(&clash);
+    assert_eq!(tags(&back), ["No", "Tür", "Kol_boyu"]);
+    assert_eq!(first(&back, "No").as_deref(), Some("7"));
 }
 
 /// DXF's attribute texts are one line: a line break in a value, a default

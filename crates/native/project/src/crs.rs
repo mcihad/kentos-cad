@@ -80,6 +80,9 @@ pub fn system(srid: u32) -> Option<&'static System> {
 /// Note 7-1 (§5.7) gives the box as approximate, meant for selecting records, in WGS 84 terms: a point outside it is
 /// a note to look at, not an error. Written from PROJ's database (fixtures/crs/v1/areas.json,
 /// scripts/fixtures/crs_areas.py).
+///
+/// Since docs/adr/4900 a system whose EPSG extent is not just its box carries the extent's polygon too
+/// (fixtures/crs/v1/area-polygons.json, from the EPSG Dataset unchanged): a point is then read against the polygon.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
 pub struct AreaOfUse {
     pub srid: u32,
@@ -88,6 +91,13 @@ pub struct AreaOfUse {
     pub south: f64,
     pub east: f64,
     pub north: f64,
+    /// The EPSG extent's polygon: its rings (a multipolygon's parts one after another), longitude and latitude in
+    /// degrees, read even-odd; empty: the box is read.
+    #[serde(skip)]
+    pub polygon: Vec<Vec<[f64; 2]>>,
+    /// The EPSG extent's code, when its polygon is carried.
+    #[serde(skip)]
+    pub extent: Option<u32>,
 }
 
 impl AreaOfUse {
@@ -95,6 +105,66 @@ impl AreaOfUse {
     /// its east crosses the antimeridian.
     pub fn holds(&self, lon: f64, lat: f64) -> bool {
         box_holds([self.west, self.south, self.east, self.north], lon, lat)
+    }
+
+    /// The box, degrees west, south, east, north.
+    pub fn bbox(&self) -> [f64; 4] {
+        [self.west, self.south, self.east, self.north]
+    }
+
+    /// Whether the area holds a point as a note reads it (docs/adr/3700, 4900): inside its polygon or within
+    /// [`EDGE`] of one of its edges when it has one, else in its box with every edge [`EDGE`] out.
+    pub fn holds_near(&self, lon: f64, lat: f64) -> bool {
+        if self.polygon.is_empty() {
+            return box_holds_near(self.bbox(), lon, lat);
+        }
+        polygon_holds(&self.polygon, lon, lat) || near_edge(&self.polygon, lon, lat, EDGE)
+    }
+}
+
+/// Whether rings (read even-odd) hold a point: a ray to the east crosses their edges an odd number of times.
+pub fn polygon_holds(rings: &[Vec<[f64; 2]>], x: f64, y: f64) -> bool {
+    let mut inside = false;
+    for r in rings {
+        for w in r.windows(2) {
+            let ([x1, y1], [x2, y2]) = (w[0], w[1]);
+            if (y1 > y) != (y2 > y) {
+                let at = x1 + (y - y1) * (x2 - x1) / (y2 - y1);
+                if x < at {
+                    inside = !inside;
+                }
+            }
+        }
+    }
+    inside
+}
+
+/// Whether a point is within `d` (degrees, read as plane) of one of the rings' edges.
+fn near_edge(rings: &[Vec<[f64; 2]>], x: f64, y: f64, d: f64) -> bool {
+    rings.iter().flat_map(|r| r.windows(2)).any(|w| {
+        let ([x1, y1], [x2, y2]) = (w[0], w[1]);
+        let (vx, vy) = (x2 - x1, y2 - y1);
+        let l2 = vx * vx + vy * vy;
+        let t = if l2 == 0.0 { 0.0 } else { (((x - x1) * vx + (y - y1) * vy) / l2).clamp(0.0, 1.0) };
+        let (dx, dy) = (x - x1 - vx * t, y - y1 - vy * t);
+        dx * dx + dy * dy <= d * d
+    })
+}
+
+/// A place read against an area of use: a registry system's (its polygon where it has one) or an operation's box.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Region {
+    Area(&'static AreaOfUse),
+    Box([f64; 4]),
+}
+
+impl Region {
+    /// [`AreaOfUse::holds_near`], or for a box [`box_holds_near`].
+    pub fn holds_near(&self, lon: f64, lat: f64) -> bool {
+        match self {
+            Region::Area(a) => a.holds_near(lon, lat),
+            Region::Box(b) => box_holds_near(*b, lon, lat),
+        }
     }
 }
 
@@ -127,10 +197,46 @@ pub fn areas() -> &'static [AreaOfUse] {
         struct File {
             areas: Vec<AreaOfUse>,
         }
-        serde_json::from_str::<File>(include_str!("../../../../fixtures/crs/v1/areas.json"))
+        #[derive(serde::Deserialize)]
+        struct Extent {
+            code: u32,
+            srids: Vec<u32>,
+            rings: Vec<Vec<[f64; 2]>>,
+        }
+        #[derive(serde::Deserialize)]
+        struct Polygons {
+            extents: Vec<Extent>,
+        }
+        let mut areas = serde_json::from_str::<File>(include_str!("../../../../fixtures/crs/v1/areas.json"))
             .map(|f| f.areas)
-            .unwrap_or_default()
+            .unwrap_or_default();
+        // docs/adr/4900: the polygons of the extents that are not just their boxes.
+        let polygons = serde_json::from_str::<Polygons>(include_str!("../../../../fixtures/crs/v1/area-polygons.json"))
+            .map(|p| p.extents)
+            .unwrap_or_default();
+        for a in &mut areas {
+            if let Some(x) = polygons.iter().find(|x| x.srids.contains(&a.srid)) {
+                a.polygon = x.rings.clone();
+                a.extent = Some(x.code);
+            }
+        }
+        areas
     })
+}
+
+/// docs/adr/5300: the area of an EPSG extent whose polygon is carried (a registry system's area of that extent).
+pub fn extent_area(code: u32) -> Option<&'static AreaOfUse> {
+    areas().iter().find(|a| a.extent == Some(code))
+}
+
+/// docs/adr/5300: the region a datum operation's points are read against: its extent's polygon where carried, else
+/// its box; none for an operation without an area (the datum stays).
+pub fn operation_region(op: &kentos_geometry_core::crs::operation::Operation) -> Option<Region> {
+    match (op.extent.and_then(extent_area), op.area) {
+        (Some(a), _) => Some(Region::Area(a)),
+        (None, Some((_, b))) => Some(Region::Box(b)),
+        (None, None) => None,
+    }
 }
 
 /// EPSG's area of use of a registry system; none for the local system and a code the registry does not hold.
@@ -281,6 +387,36 @@ pub fn turef_zone_for(lon: f64) -> Option<&'static System> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_turkish_zones_read_their_polygons() {
+        // docs/adr/4900: TUREF / TM30's extent leaves the Sea of Marmara out; its box holds it.
+        let tm30 = area(5254).expect("TM30");
+        assert_eq!(tm30.extent, Some(1525));
+        let (lon, lat) = (28.9, 40.75);
+        assert!(tm30.holds(lon, lat), "in the box");
+        assert!(!tm30.holds_near(lon, lat), "out of the polygon");
+        assert!(tm30.holds_near(29.5, 39.5), "Kütahya's plain");
+        // A band whose polygon is its box carries none.
+        assert!(area(32636).expect("UTM 36N").polygon.is_empty());
+    }
+
+    /// docs/adr/5300: the datum operations' area is extent 1237's polygon: Burgas is in their box, not in it.
+    #[test]
+    fn a_datum_operation_reads_its_extent_s_polygon() {
+        let ed50 = system(23035).and_then(System::transform_system).expect("ED50 / UTM 35N");
+        let turef = system(5252).and_then(System::transform_system).expect("TUREF");
+        let op = kentos_geometry_core::crs::operation::operation(&ed50, &turef, &[], false).expect("a way");
+        let region = operation_region(&op).expect("an area");
+        assert!(matches!(region, Region::Area(a) if a.extent == Some(1237)));
+        assert!(box_holds(op.area.expect("a box").1, 27.47, 42.5), "Burgas is in the box");
+        assert!(!region.holds_near(27.47, 42.5), "not in the polygon");
+        assert!(region.holds_near(32.86, 39.93), "Ankara");
+        // The same datum: no operation's area.
+        let tm30 = system(5254).and_then(System::transform_system).expect("TM30");
+        let same = kentos_geometry_core::crs::operation::operation(&tm30, &turef, &[], false).expect("a way");
+        assert!(operation_region(&same).is_none());
+    }
 
     /// Every registry system but the local one has EPSG's area of use (docs/adr/2500 §3); the boxes hold their own
     /// zone's middle and not a neighbour's, and one crossing the antimeridian holds both its ends.

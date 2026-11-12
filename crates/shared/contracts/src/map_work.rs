@@ -155,7 +155,31 @@ pub struct WorkItem {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub approved_values: Vec<String>,
+    /// Its typed layers' profile (schema 247, docs/adr/4880): a data profile by name whose classes type the item's
+    /// layers (each class's layer its kind of geometry and fields); the item's other layers stay free drawing layers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile: Option<WorkProfile>,
 }
+
+/// An item's typed layers' profile (docs/adr/4880): a data profile (`catalog/v1/profiles/`, or the project's own) by
+/// name and the classes of it the item holds; none listed, all of them.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkProfile {
+    /// The profile's name, 1–200 characters without space at its ends.
+    pub name: String,
+    /// Class ids, each once, at most [`MAX_PROFILE_CLASS_IDS`]; empty: every class of the profile.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub classes: Vec<String>,
+}
+
+/// At most this many classes an item's profile names (a data profile holds at most 64).
+pub const MAX_PROFILE_CLASS_IDS: usize = 64;
 
 /// The most objects an approval keeps a digest for (docs/adr/2880): an item of more is stamped whole only.
 pub const MAX_APPROVED_OBJECTS: usize = 100_000;
@@ -273,6 +297,11 @@ impl MapWork {
         self.items.iter().any(|i| !i.approved_parts.is_empty())
     }
 
+    /// Whether an item has a typed layers' profile (schema 247, docs/adr/4880).
+    pub fn has_profiles(&self) -> bool {
+        self.items.iter().any(|i| i.profile.is_some())
+    }
+
     /// Whether an approval keeps its objects' values (schema 213, docs/adr/3680).
     pub fn has_approved_values(&self) -> bool {
         self.items.iter().any(|i| !i.approved_values.is_empty())
@@ -343,6 +372,19 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
             }
             if !layers.insert(layer.as_str()) {
                 return fail(at("layers"), &format!("“{layer}” katmanı iki öğede ya da iki kez yazılmış"));
+            }
+        }
+        if let Some(p) = &item.profile {
+            if !text_ok(&p.name) {
+                return fail(at("profile.name"), &format!("profilin adı boşluksuz başlayıp biten 1–{MOST_WORK_TEXT} karakter olmalı"));
+            }
+            if p.classes.len() > MAX_PROFILE_CLASS_IDS {
+                return fail(at("profile.classes"), &format!("bir öğenin profilinde en çok {MAX_PROFILE_CLASS_IDS} sınıf olur"));
+            }
+            for (k, c) in p.classes.iter().enumerate() {
+                if !text_ok(c) || p.classes[..k].contains(c) {
+                    return fail(at("profile.classes"), "her sınıf boş olmayan, boşluksuz başlayıp biten bir kimliktir ve bir kez yazılır");
+                }
             }
         }
         if let Some(file) = &item.file {
@@ -479,6 +521,7 @@ mod tests {
                     approved_objects: Vec::new(),
                     approved_parts: Vec::new(),
                     approved_values: Vec::new(),
+                    profile: None,
                 },
                 WorkItem {
                     id: "is-2".into(),
@@ -491,6 +534,7 @@ mod tests {
                     approved_objects: Vec::new(),
                     approved_parts: Vec::new(),
                     approved_values: Vec::new(),
+                    profile: None,
                 },
             ],
             derivations: vec![WorkDerivation {

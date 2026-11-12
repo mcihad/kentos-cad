@@ -566,6 +566,14 @@
         "size": "small"
        },
        {
+        "command": "pointcloud.network",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.place",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.profile",
         "size": "small"
        }
@@ -1188,6 +1196,14 @@
        {
         "command": "cogo.update",
         "size": "small"
+       }
+      ],
+      "overflow": [
+       {
+        "command": "map.catalogReport",
+        "works": [
+         "map"
+        ]
        }
       ]
      },
@@ -3960,6 +3976,10 @@
         "size": "small"
        },
        {
+        "command": "map.catalogReport",
+        "size": "small"
+       },
+       {
         "command": "zoning.check",
         "size": "small"
        }
@@ -4061,6 +4081,14 @@
        },
        {
         "command": "pointcloud.register",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.network",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.place",
         "size": "small"
        },
        {
@@ -6421,6 +6449,10 @@
        "size": "small"
       },
       {
+       "command": "raster.seamlines",
+       "size": "small"
+      },
+      {
        "command": "processing.run.raster.cog",
        "size": "small"
       },
@@ -6758,6 +6790,14 @@
       },
       {
        "command": "pointcloud.register",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.network",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.place",
        "size": "small"
       },
       {
@@ -7567,6 +7607,10 @@
    ],
    "map.featuresReconcile": [
     "harita"
+   ],
+   "map.catalogReport": [
+    "harita",
+    "cbs"
    ]
   }
  }

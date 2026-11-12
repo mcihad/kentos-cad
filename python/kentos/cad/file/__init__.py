@@ -41,13 +41,13 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
     klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from
     klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/
     altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları
-    orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558).
-    Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left
-    her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı
-    kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases
-    (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar:
-    GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda
-    yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak
+    orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler. Adres ve yerinde
+    olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini
+    söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı kaynakların
+    yolu seçilir: geopackages (varsayılan copy) ve databases (varsayılan keep) her biri
+    copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt,
+    veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler)
+    projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak
     (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse
     source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma
     tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database).
@@ -61,17 +61,16 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
     path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın
     resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX
     şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla
-    söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında),
-    carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok),
-    substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve
-    nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır,
-    paket.json'a da yazılır. exchange istenince (docs/adr/2780) paketin nesneleri açık
-    biçimlerde de devir/ altına yazılır (biçimler boşsa altısı): her dosya teslim
-    edildiği hâliyle KentOS'un okuyucusuyla geri okunur, destek matrisi ve her biçimin
-    denetimi cevabın ve paket.json'un exchange'ine, matrisin Türkçesi
-    devir/devir-raporu.csv'ye yazılır; korunmayan özellikler export_losses uyarısıdır.
-    Proje dosyası kaynaktır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
-    geri alma adımı değildir.
+    söyler: builtIn (KentOS'la gelir), embedded (proje dosyasında), carried (yalnız
+    pakete kopyalanan dış başvuru kaynağında; bu çizimde yok), substituted (yerine başka
+    yüzle çizilir) ya da missing; kimin kullandığı (users) ve nesne sayısıyla; eksik ve
+    yalnız kaynakta olanlar package_resources uyarısıdır, paket.json'a da yazılır.
+    exchange istenince paketin nesneleri açık biçimlerde de devir/ altına yazılır
+    (biçimler boşsa altısı): her dosya teslim edildiği hâliyle KentOS'un okuyucusuyla
+    geri okunur, destek matrisi ve her biçimin denetimi cevabın ve paket.json'un
+    exchange'ine, matrisin Türkçesi devir/devir-raporu.csv'ye yazılır; korunmayan
+    özellikler export_losses uyarısıdır. Proje dosyası kaynaktır. plan yazmadan
+    yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.package"
@@ -107,34 +106,33 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki
         profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt
         kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur;
-        okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve
-        yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her
-        birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı
-        kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases
-        (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar:
-        GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda
-        yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak
-        (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse
-        source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma
-        tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database).
-        embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı
-        olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N;
-        katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları
-        kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left
-        excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz.
-        Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup
-        SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur;
-        path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın
-        resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX
-        şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla
-        söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında),
-        carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok),
-        substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve
-        nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır,
-        paket.json'a da yazılır. exchange istenince (docs/adr/2780) paketin nesneleri açık
-        biçimlerde de devir/ altına yazılır (biçimler boşsa altısı): her dosya teslim
-        edildiği hâliyle KentOS'un okuyucusuyla geri okunur, destek matrisi ve her biçimin
-        denetimi cevabın ve paket.json'un exchange'ine, matrisin Türkçesi
+        okunamayan dosya kopyalanmaz ve package_left söyler. Adres ve yerinde olmayan dosya
+        kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve
+        belirteç projede olmadığından pakete girmez. Bağlı kaynakların yolu seçilir:
+        geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya
+        da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu
+        bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde,
+        kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın
+        son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable);
+        bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır
+        (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman
+        nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). leaveOut pakete
+        girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir
+        nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun
+        kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe
+        invalid_input. validate veritabanını okumaz. Klasör bütün yapılır ya da hiç: geçici
+        adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası
+        doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse
+        reddedilir (file_exists). Cevabın resources'ı çizimin ve dış başvurularının
+        kullandığı her yazı stili yüzünü, SHX şekil dosyasını, çizgi tipini, tarama desenini
+        ve baskı profilini nasıl taşıdığıyla söyler: builtIn (KentOS'la gelir), embedded
+        (proje dosyasında), carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu
+        çizimde yok), substituted (yerine başka yüzle çizilir) ya da missing; kimin
+        kullandığı (users) ve nesne sayısıyla; eksik ve yalnız kaynakta olanlar
+        package_resources uyarısıdır, paket.json'a da yazılır. exchange istenince paketin
+        nesneleri açık biçimlerde de devir/ altına yazılır (biçimler boşsa altısı): her
+        dosya teslim edildiği hâliyle KentOS'un okuyucusuyla geri okunur, destek matrisi ve
+        her biçimin denetimi cevabın ve paket.json'un exchange'ine, matrisin Türkçesi
         devir/devir-raporu.csv'ye yazılır; korunmayan özellikler export_losses uyarısıdır.
         Proje dosyası kaynaktır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
         geri alma adımı değildir.

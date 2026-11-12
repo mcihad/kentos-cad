@@ -69,7 +69,7 @@ pub(crate) const MATERIAL: &str = "Malzeme";
 pub(crate) const CUT_FACTOR: &str = "Kazı katsayısı";
 pub(crate) const FILL_FACTOR: &str = "Dolgu katsayısı";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 19] = [
+pub(crate) const FIELDS: [&str; 22] = [
     "Sınırlar",
     "Raster hücresi (m)",
     "Fark aralıkları (m)",
@@ -92,7 +92,13 @@ pub(crate) const FIELDS: [&str; 19] = [
     // Fark by sections (docs/adr/4340): their spacing and the axis's azimuth (degrees from north, clockwise).
     "Kesit aralığı (m)",
     "Eksenin semti (°)",
+    // Sections along a drawn axis (docs/adr/4760; Netcad's Enkesit Çiz): the widths and the start's kilometre.
+    "Sola genişlik (m)",
+    "Sağa genişlik (m)",
+    "Başlangıç km (m)",
 ];
+/// A section's width each side when none is typed, m (docs/adr/4760; KGM 2019: the ground generally at least 50 m wide).
+const SECTION_WIDTH: f64 = 25.0;
 const MODES: [&str; 5] = ["Analiz", "Fark", "Kalite", "Kapsam", "Yoğunluk"];
 /// Fark by sections' spacing when none is typed, m (docs/adr/4340).
 const SECTION_INTERVAL: f64 = 10.0;
@@ -148,13 +154,20 @@ pub struct Window {
     pub(crate) roughness: bool,
     /// Fark by a grid's cells (docs/adr/1600), else the exact TIN–TIN prisms.
     pub(crate) volume_grid: bool,
-    /// Fark by parallel sections (docs/adr/4340), the prismoidal formula instead of the average end area.
+    /// Fark by parallel sections (docs/adr/4340) and their formula: the average end area, the prismoidal or (docs/adr/5140)
+    /// the frustum's.
     pub(crate) volume_sections: bool,
-    pub(crate) prismoidal: bool,
+    pub(crate) formula: kentos_commands::SectionFormula,
+    /// Fark by sections along a drawn axis (docs/adr/4760): a line's or an open polyline's uid; none, the azimuth's.
+    pub(crate) axis: Option<String>,
+    /// Sections at the axis's corners too (Netcad's “Eksen Çizgisi Noktalarında”).
+    pub(crate) corners: bool,
     /// The cut and fill zones' labels and quantity table (docs/adr/2340), their deepest places (docs/adr/2740).
     pub(crate) zone_labels: bool,
     pub(crate) zone_table: bool,
     pub(crate) zone_depths: bool,
+    /// The material zones' names and volumes written with the zones (docs/adr/4760): asked, never by itself.
+    pub(crate) zone_materials: bool,
     /// Fark's material zones (docs/adr/3540): the layer whose closed objects bound them; none, no zones.
     pub(crate) materials: Option<String>,
     pub(crate) checks: Option<String>,
@@ -162,7 +175,7 @@ pub struct Window {
     pub(crate) boundary: Option<String>,
     /// Kapsam's layer for the low confidence areas.
     pub(crate) layer: Option<String>,
-    pub(crate) fields: [String; 19],
+    pub(crate) fields: [String; 22],
     /// The result's tab: the chart or the content; the content's table shown (one at a time, DESIGN.md §7.19).
     pub(crate) tab: Tab,
     pub(crate) list: &'static str,
@@ -182,8 +195,11 @@ pub enum Event {
     Roughness(bool),
     /// Fark's method by its place in TIN–TIN | Izgara | Kesit (docs/adr/1600, 4340).
     VolumeMethod(usize),
-    /// Fark by sections: the prismoidal formula (true) or the average end area.
-    Prismoidal(bool),
+    /// Fark by sections: the formula (docs/adr/5140).
+    Formula(kentos_commands::SectionFormula),
+    /// Fark by sections along a drawn axis (docs/adr/4760), none the azimuth's; and sections at its corners too.
+    Axis(Option<String>),
+    Corners(bool),
     Checks(Option<String>),
     Boundary(Option<String>),
     Layer(String),
@@ -196,6 +212,8 @@ pub enum Event {
     ZoneLabels(bool),
     ZoneTable(bool),
     ZoneDepths(bool),
+    /// Fark: the material zones' words and their table with the zones (docs/adr/4760).
+    ZoneMaterials(bool),
     /// Fark: the layer of the material zones (docs/adr/3540).
     Materials(Option<String>),
     DrawSparse,
@@ -299,9 +317,41 @@ impl Window {
             zones: if self.volume_grid || self.volume_sections { Vec::new() } else { self.materials_of(doc, layers)? },
             // Docs/adr/4340: the sections' spacing (none typed: one every 10 m), the axis's azimuth and the formula.
             interval: if self.volume_sections { Some(number(&self.fields[17], FIELDS[17])?.unwrap_or(SECTION_INTERVAL)) } else { None },
-            azimuth: if self.volume_sections { number(&self.fields[18], FIELDS[18])? } else { None },
-            formula: (self.volume_sections && self.prismoidal).then_some(kentos_commands::SectionFormula::Prismoidal),
+            azimuth: if self.volume_sections && self.axis.is_none() { number(&self.fields[18], FIELDS[18])? } else { None },
+            formula: (self.volume_sections && self.formula != kentos_commands::SectionFormula::EndArea).then_some(self.formula),
+            // Docs/adr/4760: along a drawn axis, its widths (none typed: 25 m each side) and its corners.
+            axis: self.axis.clone().filter(|_| self.volume_sections),
+            left: self.along().then(|| self.width(19)).transpose()?,
+            right: self.along().then(|| self.width(20)).transpose()?,
+            corners: (self.along() && self.corners).then_some(true),
         })
+    }
+
+    /// Whether Fark measures by sections along a drawn axis (docs/adr/4760).
+    fn along(&self) -> bool {
+        self.volume_sections && self.axis.is_some()
+    }
+
+    /// A section's width typed in field `k`, 25 m when none is.
+    fn width(&self, k: usize) -> Result<f64, String> {
+        Ok(number(&self.fields[k], FIELDS[k])?.unwrap_or(SECTION_WIDTH))
+    }
+
+    /// The sections a cut and fill drawing writes (docs/adr/4760): Fark's along its drawn axis, none without one.
+    pub(crate) fn drawn_sections(&self) -> Result<Option<kentos_commands::CutFillSections>, String> {
+        let Some(axis) = self.axis.clone().filter(|_| self.volume_sections) else { return Ok(None) };
+        Ok(Some(kentos_commands::CutFillSections {
+            axis,
+            interval: number(&self.fields[17], FIELDS[17])?.unwrap_or(SECTION_INTERVAL),
+            left: self.width(19)?,
+            right: self.width(20)?,
+            corners: self.corners.then_some(true),
+            formula: (self.formula != kentos_commands::SectionFormula::EndArea).then_some(self.formula),
+            start: number(&self.fields[21], FIELDS[21])?,
+            // Docs/adr/5140: the Brückner value with the comparison's cut and fill factors.
+            cut_factor: number(&self.fields[14], FIELDS[14])?,
+            fill_factor: number(&self.fields[15], FIELDS[15])?,
+        }))
     }
 
     pub(crate) fn coverage(&self) -> Result<TerrainsCoverage, String> {
@@ -390,10 +440,14 @@ impl App {
             roughness: false,
             volume_grid: false,
             volume_sections: false,
-            prismoidal: false,
+            formula: kentos_commands::SectionFormula::EndArea,
+            // A single selected line or open polyline is the sections' axis (docs/adr/4760).
+            axis: self.selected_axis(),
+            corners: false,
             zone_labels: false,
             zone_table: false,
             zone_depths: false,
+            zone_materials: false,
             // A layer named for its material zones (docs/adr/3540), else none.
             materials: self
                 .relation_layers()
@@ -413,6 +467,19 @@ impl App {
         // The result follows the form (DESIGN.md §7.19): read at once.
         self.preview_surface_analysis();
         self.dialog = Some(Dialog::SurfaceAnalysis);
+    }
+
+    /// The sections' axis the selection gives (docs/adr/4760): its one object when it is a line or a single-part open
+    /// polyline; none otherwise.
+    fn selected_axis(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let [slot] = self.selection.ids()[..] else { return None };
+        let open = match doc.model.get(slot)? {
+            kentos_commands::Entity::Line(_) => true,
+            kentos_commands::Entity::Polyline(p) => !p.closed && p.parts.as_ref().is_none_or(|q| q.is_empty()),
+            _ => false,
+        };
+        open.then(|| doc.model.uid(slot).map(|u| u.to_string())).flatten()
     }
 
     fn preview_surface_analysis(&mut self) {
@@ -457,7 +524,9 @@ impl App {
                 w.volume_grid = i == 1;
                 w.volume_sections = i == 2;
             }
-            Event::Prismoidal(on) => w.prismoidal = on,
+            Event::Formula(f) => w.formula = f,
+            Event::Axis(a) => w.axis = a,
+            Event::Corners(on) => w.corners = on,
             Event::Materials(layer) => w.materials = layer,
             Event::ZoneLabels(on) => {
                 w.zone_labels = on;
@@ -469,6 +538,10 @@ impl App {
             }
             Event::ZoneDepths(on) => {
                 w.zone_depths = on;
+                return Task::none();
+            }
+            Event::ZoneMaterials(on) => {
+                w.zone_materials = on;
                 return Task::none();
             }
             Event::Checks(l) => w.checks = l,
@@ -527,6 +600,28 @@ impl App {
                         return Task::none();
                     }
                 };
+                // Docs/adr/4760: Fark's sections along its axis and its material zones drawn with the zones.
+                let sections = match w.drawn_sections() {
+                    Ok(s) => s,
+                    Err(why) => {
+                        self.warn(why);
+                        return Task::none();
+                    }
+                };
+                let layers = self.relation_layers();
+                let materials = {
+                    let Some(w) = self.surface_analysis_window.as_ref() else { return Task::none() };
+                    let Some(doc) = self.document.as_ref() else { return Task::none() };
+                    match w.materials_of(&doc.model, &layers) {
+                        Ok(m) if w.zone_materials && !w.volume_grid && !w.volume_sections => m,
+                        Ok(_) => Vec::new(),
+                        Err(why) => {
+                            self.warn(why);
+                            return Task::none();
+                        }
+                    }
+                };
+                let Some(w) = self.surface_analysis_window.as_ref() else { return Task::none() };
                 let input = kentos_commands::TerrainsCutFill {
                     base,
                     comparison,
@@ -535,6 +630,8 @@ impl App {
                     labels: w.zone_labels.then_some(true),
                     table: w.zone_table.then_some(true),
                     depths: w.zone_depths.then_some(true),
+                    sections,
+                    materials,
                     expected_revision: None,
                 };
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
@@ -704,14 +801,50 @@ impl App {
                 form = form.section("Hacim").field("Yöntem", method);
                 form = if w.volume_sections {
                     // Docs/adr/4340: parallel sections across an axis; Civil 3D's Average End Area and Prismoidal.
-                    let formula = container(Select::new(["Ortalama alan", "Prizmoidal"].into_iter().map(Choice::new), Some(usize::from(w.prismoidal)), |i| {
-                        msg(Event::Prismoidal(i == 1))
+                    // Docs/adr/5140: the frustum's (A₁ + A₂ + √(A₁·A₂))·L/3 too.
+                    use kentos_commands::SectionFormula as F;
+                    let formulas = [F::EndArea, F::Prismoidal, F::Frustum];
+                    let at = formulas.iter().position(|f| *f == w.formula);
+                    let formula = container(Select::new(["Ortalama alan", "Prizmoidal", "Kesik koni"].into_iter().map(Choice::new), at, move |i| {
+                        msg(Event::Formula(formulas[i]))
                     }))
                     .width(BOX);
-                    form.field(FIELDS[17], input("10", 17))
-                        .field(FIELDS[18], input("0", 18))
-                        .field("Formül", formula)
-                        .help("Kesitler eksene dik; semt kuzeyden saat yönünde (0: kesitler doğu–batı).")
+                    // Docs/adr/4760: a drawn axis (a line or an open polyline of the drawing) or the azimuth's.
+                    let mut ids: Vec<Option<String>> = vec![None];
+                    let mut names = vec!["Semtle (paralel kesitler)".to_owned()];
+                    if let Some(m) = model {
+                        for (uid, e) in m.entities_with_uids() {
+                            if ids.len() > 200 {
+                                break;
+                            }
+                            let open = match e {
+                                kentos_commands::Entity::Line(_) => true,
+                                kentos_commands::Entity::Polyline(p) => !p.closed && p.parts.as_ref().is_none_or(|q| q.is_empty()),
+                                _ => false,
+                            };
+                            if open {
+                                let layer = layers.iter().find(|l| l.0 == e.base().layer_id).map_or("", |l| l.1.as_str());
+                                names.push(format!("{} · {} #{}", crate::view::kind_name(e.kind()), layer, e.base().id));
+                                ids.push(Some(uid.to_string()));
+                            }
+                        }
+                    }
+                    let at = ids.iter().position(|a| *a == w.axis);
+                    let axis = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Axis(ids[i].clone())))).width(BOX);
+                    let form = form.field(FIELDS[17], input("10", 17)).field("Eksen", axis);
+                    let form = if w.axis.is_some() {
+                        form.field(FIELDS[19], input("25", 19))
+                            .field(FIELDS[20], input("25", 20))
+                            .row(words::check(w.corners, "Eksen noktalarında da", Some(msg(Event::Corners(!w.corners)))))
+                            .field(FIELDS[21], input("0", 21))
+                    } else {
+                        form.field(FIELDS[18], input("0", 18))
+                    };
+                    form.field("Formül", formula).help(if w.axis.is_some() {
+                        "Kesitler eksene dik (kurpta yarıçap doğrultusunda); boy eksen boyunca. KGM 2019: arazi genellikle en az 50 m genişlikte."
+                    } else {
+                        "Kesitler eksene dik; semt kuzeyden saat yönünde (0: kesitler doğu–batı)."
+                    })
                 } else if w.volume_grid {
                     form.field("Hücre (m)", input("ör. 1", 13))
                 } else {
@@ -772,7 +905,14 @@ impl App {
                         .spacing(6)
                         .push(words::check(w.zone_labels, "Yazı (tür, hacim)", Some(msg(Event::ZoneLabels(!w.zone_labels)))))
                         .push(words::check(w.zone_table, "Miktar tablosu", Some(msg(Event::ZoneTable(!w.zone_table)))))
-                        .push(words::check(w.zone_depths, "En derin yer", Some(msg(Event::ZoneDepths(!w.zone_depths))))),
+                        .push(words::check(w.zone_depths, "En derin yer", Some(msg(Event::ZoneDepths(!w.zone_depths)))))
+                        // Docs/adr/4760: the material zones (Hacim's layer, TIN) written in them, their table with the
+                        // quantity table.
+                        .push(words::check(
+                            w.zone_materials,
+                            "Malzemeler (ad, hacim)",
+                            (w.materials.is_some() && !w.volume_grid && !w.volume_sections).then(|| msg(Event::ZoneMaterials(!w.zone_materials))),
+                        )),
                 );
             }
         }
@@ -990,7 +1130,11 @@ fn content<'a>(w: &'a Window, read: &'a Read) -> (Vec<(String, String)>, Vec<(&'
                     "Kesit, {} m arayla, eksenin semti {}° ({})",
                     format!("{interval}").replace('.', ","),
                     format!("{}", c.azimuth.unwrap_or(0.0)).replace('.', ","),
-                    if c.formula == Some(kentos_commands::SectionFormula::Prismoidal) { "prizmoidal" } else { "ortalama alan" }
+                    match c.formula {
+                        Some(kentos_commands::SectionFormula::Prismoidal) => "prizmoidal",
+                        Some(kentos_commands::SectionFormula::Frustum) => "kesik koni",
+                        _ => "ortalama alan",
+                    }
                 ),
                 (None, None) => "TIN–TIN, kesin prizmalar".to_owned(),
             };

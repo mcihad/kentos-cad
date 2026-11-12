@@ -32,8 +32,8 @@
 
 use kentos_commands::{
     CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType, LineTypeDef, NewObject,
-    PatternElement, PatternUnit, SheetContourLabel, SheetContourLine, SheetSlopes, SheetSpot, TerrainsSheetContoured,
-    TerrainsSheetContours, TextAlign, Vec2, contour_rules_default,
+    PatternElement, PatternUnit, SheetBuiltUp, SheetContourLabel, SheetContourLine, SheetHeightCheck, SheetSlopes, SheetSpot,
+    TerrainsSheetContoured, TerrainsSheetContours, TextAlign, Vec2, contour_rules_default,
 };
 use kentos_road::surface::Surface;
 use kentos_road::surface::MAX_LEVELS;
@@ -144,6 +144,168 @@ fn chosen_spots(doc: &kentos_domain::Document, surface: &Surface, layers: &[Stri
         }
     }
     (out, off, measured)
+}
+
+/// The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)): the points with their own
+/// height on the surface that are not one of its corners (a corner's difference is nought); none when there are none.
+fn height_check(surface: &Surface, found: &[SheetSpot], c: &kentos_commands::SectionCheck, scale: u32) -> Option<SheetHeightCheck> {
+    let corners: std::collections::HashSet<(u64, u64)> = surface
+        .triangles
+        .iter()
+        .flatten()
+        .map(|&i| surface.vertices[i as usize])
+        .map(|v| (v[0].to_bits(), v[1].to_bits()))
+        .collect();
+    let measured: Vec<&SheetSpot> = found.iter().filter(|s| s.surface.is_some()).collect();
+    let compared: Vec<(&SheetSpot, f64)> = measured
+        .iter()
+        .filter(|s| !corners.contains(&(s.x.to_bits(), s.y.to_bits())))
+        .filter_map(|s| s.surface.map(|g| (*s, s.z - g)))
+        .collect();
+    if compared.is_empty() {
+        return None;
+    }
+    let rms = (compared.iter().map(|(_, d)| d * d).sum::<f64>() / compared.len() as f64).sqrt();
+    let (wide, largest) =
+        compared.iter().fold((compared[0].0, compared[0].1.abs()), |(s, m), (t, d)| if d.abs() > m { (*t, d.abs()) } else { (s, m) });
+    let s = f64::from(scale);
+    let koh_z = c.z_factor * (c.xy[0] * s * s + c.xy[1] * s + c.xy[2]) / 100.0;
+    let limit = c.factor * koh_z;
+    Some(SheetHeightCheck {
+        compared: compared.len() as u32,
+        corners: (measured.len() - compared.len()) as u32,
+        rms,
+        largest,
+        at: [wide.x, wide.y],
+        koh_z,
+        limit,
+        within: rms < limit,
+    })
+}
+
+/// The most grid places a built-up area may hold (docs/adr/4740): beyond, the spacing is too small for the area.
+const MAX_GRID: f64 = 1_000_000.0;
+
+/// The heights of built-up areas and roads (docs/adr/4740; BÖHHBÜY m. 63(2)), `d` metres apart: along each line or
+/// polyline of the road layers (each of its parts, a closed one round to its start; an arc read as its chord), in the
+/// drawing's order, a place every `d` from its start, the first at half of it, once per place; then the grid of `d`
+/// (docs/adr/5120: from its origin, turned by its rotation), row by row of its own axes, inside a built-up area's closed boundary
+/// (even-odd over its rings), outside the details and farther than half `d` from every height placed before (`placed`
+/// and these). Heights the surface's; the places off it counted. Answers the heights, how many along the roads, how
+/// many on the grid, how many off.
+fn built_up_spots(
+    doc: &kentos_domain::Document,
+    surface: &Surface,
+    b: &SheetBuiltUp,
+    d: f64,
+    details: &[Detail],
+    placed: &[SheetSpot],
+) -> Result<(Vec<SheetSpot>, usize, usize, usize), Stop> {
+    let on = |layers: &[String], e: &Entity| layers.iter().any(|l| l.trim() == e.base().layer_id);
+    let mut out: Vec<SheetSpot> = Vec::new();
+    let mut seen: Vec<P> = Vec::new();
+    let mut off = 0;
+    let mut add = |kind: &str, c: P, out: &mut Vec<SheetSpot>| match surface.height(c[0], c[1]).z {
+        Some(z) => out.push(SheetSpot { kind: kind.to_owned(), x: c[0], y: c[1], z, text: decimetre(z), surface: None }),
+        None => off += 1,
+    };
+    for e in doc.entities().filter(|e| on(&b.roads, e)) {
+        let pieces: Vec<Vec<P>> = match e {
+            Entity::Line(l) => vec![vec![[l.a.x, l.a.y], [l.b.x, l.b.y]]],
+            Entity::Polyline(p) => {
+                let close = |mut v: Vec<P>, closed: bool| {
+                    if closed && v.len() > 2 {
+                        v.push(v[0]);
+                    }
+                    v
+                };
+                std::iter::once(close(p.pts.iter().map(|v| [v.x, v.y]).collect(), p.closed))
+                    .chain(p.parts.iter().flatten().map(|part| close(part.pts.iter().map(|v| [v.x, v.y]).collect(), p.closed)))
+                    .collect()
+            }
+            _ => continue,
+        };
+        for piece in pieces {
+            let (mut at, mut walked) = (d / 2.0, 0.0);
+            for w in piece.windows(2) {
+                let (p, q) = (w[0], w[1]);
+                let len = (q[0] - p[0]).hypot(q[1] - p[1]);
+                if len == 0.0 {
+                    continue;
+                }
+                while at <= walked + len {
+                    let f = (at - walked) / len;
+                    let c = [p[0] + f * (q[0] - p[0]), p[1] + f * (q[1] - p[1])];
+                    if !seen.contains(&c) {
+                        seen.push(c);
+                        add("road", c, &mut out);
+                    }
+                    at += d;
+                }
+                walked += len;
+            }
+        }
+    }
+    let roads = out.len();
+    // The built-up areas: closed polylines' and polygons' rings, as the details are read.
+    let areas: Vec<Detail> = doc
+        .entities()
+        .filter(|e| on(&b.areas, e))
+        .filter_map(|e| match e {
+            Entity::Polygon(p) => Some(p),
+            Entity::Polyline(p) if p.closed => Some(p),
+            _ => None,
+        })
+        .map(|p| {
+            let mut rings = vec![p.pts.iter().map(|v| [v.x, v.y]).collect::<Vec<P>>()];
+            for h in p.holes.iter().flatten() {
+                rings.push(h.pts.iter().map(|v| [v.x, v.y]).collect());
+            }
+            rings.into_iter().filter(|r| r.len() >= 3).collect::<Detail>()
+        })
+        .filter(|a: &Detail| !a.is_empty())
+        .collect();
+    // Docs/adr/5120: the grid runs from its origin, turned by its rotation; the corners are read in its own axes.
+    let o = b.origin.unwrap_or([0.0, 0.0]);
+    let (sin, cos) = b.rotation.unwrap_or(0.0).sin_cos();
+    let own = |c: &P| {
+        let (dx, dy) = (c[0] - o[0], c[1] - o[1]);
+        [dx * cos + dy * sin, dy * cos - dx * sin]
+    };
+    let corners = areas.iter().flatten().flatten().map(own);
+    let (lo, hi) = corners.fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), c| {
+        ([lo[0].min(c[0]), lo[1].min(c[1])], [hi[0].max(c[0]), hi[1].max(c[1])])
+    });
+    if lo[0].is_finite() {
+        let (i0, i1, j0, j1) = ((lo[0] / d).ceil(), (hi[0] / d).floor(), (lo[1] / d).ceil(), (hi[1] / d).floor());
+        if (i1 - i0 + 1.0).max(0.0) * (j1 - j0 + 1.0).max(0.0) > MAX_GRID {
+            return Err(fail(
+                codes::INVALID_CONTOURS,
+                "Yerleşik alanlar bu aralıkla 1 000 000'dan çok ızgara noktası tutar; aralığı büyütün.".into(),
+                "builtUp.every",
+            ));
+        }
+        let near = |c: P, list: &[SheetSpot]| list.iter().any(|s| (s.x - c[0]).hypot(s.y - c[1]) < d / 2.0);
+        let mut j = j0;
+        while j <= j1 {
+            let mut i = i0;
+            while i <= i1 {
+                let (u, v) = (i * d, j * d);
+                let c = [o[0] + u * cos - v * sin, o[1] + u * sin + v * cos];
+                if areas.iter().any(|a| inside(a, c))
+                    && !details.iter().any(|x| inside(x, c))
+                    && !near(c, placed)
+                    && !near(c, &out)
+                {
+                    add("builtUp", c, &mut out);
+                }
+                i += 1.0;
+            }
+            j += 1.0;
+        }
+    }
+    let grid = out.len() - roads;
+    Ok((out, roads, grid, off))
 }
 
 fn decimetre(z: f64) -> String {
@@ -336,6 +498,11 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         || rules.auxiliary_pattern.len() > 12
         || !rules.auxiliary_pattern.iter().all(|l| l.is_finite())
         || (!rules.auxiliary_pattern.is_empty() && !rules.auxiliary_pattern.iter().any(|l| *l > 0.0))
+        // Docs/adr/4740: the built-up heights' spacing and the section check's limit, when the package gives them.
+        || rules.height_every.is_some_and(|v| !positive(v))
+        || rules.section_check.as_ref().is_some_and(|c| {
+            !(c.xy.iter().all(|v| v.is_finite()) && positive(c.z_factor) && positive(c.factor) && c.spacing.is_none_or(positive))
+        })
     {
         return Err(fail(
             codes::INVALID_CONTOURS,
@@ -347,7 +514,8 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     let summits = input.spots.unwrap_or(false);
     let slopes = input.slopes.as_ref().filter(|s| !s.top.is_empty() || !s.bottom.is_empty());
     let chosen = !input.points.is_empty();
-    let spot_height = match (summits || slopes.is_some() || chosen, rules.spot_height) {
+    let built = input.built_up.as_ref();
+    let spot_height = match (summits || slopes.is_some() || chosen || built.is_some(), rules.spot_height) {
         (false, _) => None,
         (true, Some(h)) if positive(h) => Some(h),
         (true, _) => {
@@ -356,7 +524,15 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
                 format!(
                     "{} paketi kot noktası yazısının yüksekliğini (spotHeight, Ek-3 0004) vermiyor; {} kotları yazılmaz.",
                     rules.id,
-                    if summits { "tepe ve çukur" } else if slopes.is_some() { "şev" } else { "seçilen noktaların" }
+                    if summits {
+                        "tepe ve çukur"
+                    } else if slopes.is_some() {
+                        "şev"
+                    } else if chosen {
+                        "seçilen noktaların"
+                    } else {
+                        "yerleşik alan ve yol"
+                    }
                 ),
                 "rules",
             ));
@@ -401,6 +577,46 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     if let Some(l) = input.points.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
         return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), "points"));
     }
+    // Docs/adr/4740 (m. 63(2)): the built-up areas' and roads' layers and the spacing on the sheet.
+    let built_every = match built {
+        None => None,
+        Some(b) => {
+            if b.areas.is_empty() && b.roads.is_empty() {
+                return Err(fail(
+                    codes::INVALID_CONTOURS,
+                    "Yerleşik alan ve yol kotları için yerleşik alan sınırlarının ya da yolların katmanını seçin.".into(),
+                    "builtUp",
+                ));
+            }
+            let every = match (b.every, rules.height_every) {
+                (Some(v), _) if positive(v) => v,
+                (Some(_), _) => {
+                    return Err(fail(codes::INVALID_CONTOURS, "Kotların paftadaki aralığı 0'dan büyük olmalı.".into(), "builtUp.every"));
+                }
+                (None, Some(v)) => v,
+                (None, None) => {
+                    return Err(fail(
+                        codes::INVALID_CONTOURS,
+                        format!("{} paketi yerleşik alan kotlarının aralığını (heightEvery, m. 63(2)) vermiyor; aralığı yazın.", rules.id),
+                        "builtUp.every",
+                    ));
+                }
+            };
+            // Docs/adr/5120: the grid's origin and rotation, the surveyor's.
+            if b.origin.is_some_and(|o| !(o[0].is_finite() && o[1].is_finite())) {
+                return Err(fail(codes::INVALID_CONTOURS, "Izgaranın başlangıç noktası sonlu olmalı.".into(), "builtUp.origin"));
+            }
+            if b.rotation.is_some_and(|r| !r.is_finite()) {
+                return Err(fail(codes::INVALID_CONTOURS, "Izgaranın dönme açısı sonlu olmalı.".into(), "builtUp.rotation"));
+            }
+            for (at, layers) in [("builtUp.areas", &b.areas), ("builtUp.roads", &b.roads)] {
+                if let Some(l) = layers.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
+                    return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), at));
+                }
+            }
+            Some(every)
+        }
+    };
     checks::revision(doc, input.expected_revision.as_deref())?;
     let own = common::surfaces(doc);
     let name = input.surface.as_str();
@@ -499,7 +715,18 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         }
         (chosen_found.len(), measured, parts.concat())
     });
+    // Docs/adr/4740: the chosen points' own heights against the surface's, by m. 93(1)(c)'s limit.
+    let check = rules.section_check.as_ref().and_then(|c| height_check(surface, &chosen_found, c, scale));
+    let corners_only = chosen_found.iter().any(|s| s.surface.is_some()) && check.is_none() && rules.section_check.is_some();
     spots.extend(chosen_found);
+    // Docs/adr/4740 (m. 63(2)): heights along the roads and on the grid of the built-up areas.
+    let built_found = match (built, built_every) {
+        (Some(b), Some(every)) => Some(built_up_spots(doc, surface, b, every / mm, &details, &spots)?),
+        _ => None,
+    };
+    if let Some((found, ..)) = &built_found {
+        spots.extend(found.iter().cloned());
+    }
     let every = rules.label_every / mm;
     let labels: Vec<SheetContourLabel> = if labels_on {
         lines.iter().filter(|l| l.kind == "major").flat_map(|l| labels(surface, &l.points, l.closed, l.z, every)).collect()
@@ -546,6 +773,47 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             "Ölçmecinin seçtiği {n} noktanın kotu dm'ye kadar yazıldı ({h} mm, m. 78(1)(ğ)): kendi kotu olan {measured} nokta kendi kotuyla, öbürleri yüzeyden; yalnız kot yazılır, nokta ölçmecinindir.{tail}"
         ));
     }
+    let mut warnings = warnings;
+    if let Some(c) = &check {
+        notes.push(format!(
+            "Seçilen noktalardan kendi kotu olan ve yüzeyin köşesi olmayan {} noktada ölçülen kot ile yüzeyin kotu arasındaki farkların karesel ortalaması {:.3} m (en büyük {:.3} m, Y {:.3}, X {:.3}); m. 93(1)(c)'nin 1/{scale} için sınırı {} · KOH_Z = {:.3} m (KOH_Z m. 91(2)'den {:.3} m): {}. Bu bir karşılaştırmadır; m. 93'ün kesit kontrolü yüksekliği bilinen iki kontrol noktası arasında, en çok 20 m aralıklı ve nivelmanla ölçülmüş noktalarla yapılır.{}",
+            c.compared,
+            c.rms,
+            c.largest,
+            c.at[0],
+            c.at[1],
+            rules.section_check.as_ref().map_or(0.0, |s| s.factor),
+            c.limit,
+            c.koh_z,
+            if c.within { "sınırın altında" } else { "sınırı aşıyor" },
+            if c.corners > 0 { format!(" Yüzeyin köşesi olan {} nokta karşılaştırılmadı (farkı sıfırdır).", c.corners) } else { String::new() }
+        ));
+        if !c.within {
+            warnings.push(kentos_commands::CommandWarning {
+                code: codes::SECTION_CHECK_EXCEEDED.into(),
+                message: format!(
+                    "Seçilen noktaların ölçülen kotlarıyla yüzeyin kotu arasındaki farkların karesel ortalaması {:.3} m, m. 93(1)(c)'nin sınırını ({:.3} m) aşıyor; yüzeyin kaynaklarını ve noktaların kotlarını denetleyin.",
+                    c.rms, c.limit
+                ),
+                path: Some("points".into()),
+            });
+        }
+    } else if corners_only {
+        notes.push(
+            "Kendi kotu olan seçilen noktaların hepsi yüzeyin köşesi; ölçülen kotla yüzeyin karşılaştırması yüzeye girmeyen noktalarla yapılır."
+                .to_owned(),
+        );
+    }
+    if let (Some(h), Some((_, roads, grid, off)), Some(every)) = (spot_height, &built_found, built_every) {
+        let mut note = format!(
+            "Yollarda {roads}, yerleşik alanlarda {grid} kot dm'ye kadar yazıldı ({h} mm, m. 63(2)): paftada yaklaşık {every} mm'de bir (arazide {} m), kotlar yüzeyden; yerleşik alandaki ızgara noktası detayın içinde ya da başka bir kota aralığın yarısından yakınsa yazılmaz. Çatı ve terasların uygun köşeleri ölçmecinin seçtiği noktalardır. m. 63 fotogrametrik üretimin maddesidir; yersel alımda m. 45(1)(c) uygulanır.",
+            every / mm
+        );
+        if *off > 0 {
+            note.push_str(&format!(" Yüzeyin dışındaki {off} yer yazılmadı."));
+        }
+        notes.push(note);
+    }
     // docs/adr/2720: the auxiliary lines drawn with the package's pattern as a project line type of its own name.
     let pattern = (!rules.auxiliary_pattern.is_empty() && lines.iter().any(|l| l.kind == "auxiliary"))
         .then(|| pattern_name(&rules));
@@ -573,6 +841,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             cut,
             spots,
             pattern,
+            check,
             uids: Vec::new(),
             revision: doc.revision().to_string(),
             notes,
@@ -713,14 +982,31 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsSheetContours) -> Command
     }
 }
 
-/// Writes the lines and labels, one undo step “Pafta eş yükselti eğrileri”, recorded as the command.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/4740).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &TerrainsSheetContours) -> CommandResult<TerrainsSheetContoured> {
+    write(cx, input.clone())
+}
+
+/// Writes the lines and labels, one undo step “Pafta eş yükselti eğrileri”, recorded as the command; the drawing kept
+/// with its surface and the layers it read (docs/adr/4740), so that it goes stale when they change and draws again.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> CommandResult<TerrainsSheetContoured> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS,
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS_VERSION,
         input,
-        |cx, input| write(cx, input.clone()),
+        |cx, input| {
+            let r = write(cx, input.clone());
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS,
+                &input,
+                (kentos_commands::RoadSourceKind::Surface, "surface"),
+                r,
+                |o| &o.uids,
+            )
+        },
     )
 }
 
@@ -745,9 +1031,13 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> Command
         operation: Some(CreateOperation::SheetContours),
         expected_revision: None,
     };
+    // The check's own warnings (docs/adr/4740: m. 93(1)(c)'s); the layer's come from the write.
+    let own: Vec<kentos_commands::CommandWarning> =
+        c.warnings.iter().filter(|w| w.code == codes::SECTION_CHECK_EXCEEDED).cloned().collect();
     match crate::create::write_in(cx, create) {
-        CommandResult::Completed { output, warnings } => {
+        CommandResult::Completed { output, mut warnings } => {
             cx.doc.end_group(step);
+            warnings.extend(own);
             CommandResult::Completed {
                 output: TerrainsSheetContoured { uids: output.created, revision: cx.doc.revision().to_string(), ..c.out },
                 warnings,

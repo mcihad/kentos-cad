@@ -1,5 +1,5 @@
 //! File exchange (the web's `app/fileExchange.ts` and `ui/io/`): coordinate
-//! lists (Netcad NCN, TXT, CSV) and DXF, in and out; Netcad NCZ in
+//! lists (NCN, TXT, CSV) and DXF, in and out; NCZ in
 //! (docs/adr/0138); GeoJSON in and out and Shapefile in, from its files or a
 //! zip archive; GNSS (GPX, NMEA) in, moved from WGS 84 into the project's
 //! system (docs/adr/0169 §6); KML and KMZ in and out and GPX out
@@ -28,6 +28,8 @@ pub(crate) mod sheet_publish;
 mod atlas_tests;
 #[cfg(test)]
 mod atlas_update_pdf_tests;
+#[cfg(test)]
+mod atlas_look_tests;
 // Tables bound on a thread of their own (docs/adr/0757).
 pub(crate) mod binding;
 pub(crate) mod coord_export;
@@ -118,7 +120,7 @@ pub struct Picked {
 pub enum Kind {
     Dxf,
     Dwg,
-    /// A Netcad NCZ drawing (docs/adr/0138).
+    /// An NCZ drawing (docs/adr/0138).
     Ncz,
     Coords,
     /// A coordinate list for Noktalar's İçe aktar: once the points are in,
@@ -469,9 +471,9 @@ impl App {
             });
         }
         let (title, filter, extensions): (&str, &str, &[&str]) = match kind {
-            Kind::Dxf => ("DXF içe aktar", "AutoCAD DXF", &["dxf"]),
-            Kind::Dwg => ("DWG içe aktar", "AutoCAD DWG", &["dwg"]),
-            Kind::Ncz => ("NCZ içe aktar", "Netcad çizimi (NCZ)", &["ncz"]),
+            Kind::Dxf => ("DXF içe aktar", "DXF çizimi", &["dxf"]),
+            Kind::Dwg => ("DWG içe aktar", "DWG çizimi", &["dwg"]),
+            Kind::Ncz => ("NCZ içe aktar", "NCZ çizimi", &["ncz"]),
             Kind::Coords | Kind::TableCoords => (
                 "Koordinat listesi içe aktar",
                 "Koordinat listesi (NCN, TXT, CSV)",

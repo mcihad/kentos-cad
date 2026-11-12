@@ -1,12 +1,12 @@
 //! `cad.rasters.mosaic` v1 (docs/adr/0517; plan/gis.md `CBS-28`): GeoTIFF files made one virtual mosaic, written as
-//! GDAL's VRT (`kentos_formats::raster::vrt`). Each file's header is read (its directories, never its pixels); the
-//! mosaic's extent is the files' union and its pixel the finest, coarsest or mean of theirs, by gdalbuildvrt's rule
+//! a VRT file (`kentos_formats::raster::vrt`). Each file's header is read (its directories, never its pixels); the
+//! mosaic's extent is the files' union and its pixel the finest, coarsest or mean of theirs, by the VRT builders' rule
 //! (`(int)(0.5 + extent / pixel)` pixels, each file's DstRect its offset and size in mosaic pixels); the files are
 //! written bottom first, so that the one on top (by the order given, the finer pixel or the newer DateTime) is last,
 //! as a VRT lays a later source over the earlier. The file is written beside its place, read back and checked, then
 //! moved there. With `layer` the mosaic is added as a raster linked to the file, as one undo step “Sanal mozaik”.
 //! The shared cases are `fixtures/commands/v1/cad.rasters.mosaic.json` (`scripts/fixtures/raster_mosaic_cases.py`,
-//! from GDAL's own gdalbuildvrt).
+//! checked against an independent VRT builder).
 
 use std::fs::File;
 use std::path::{Component, Path, PathBuf};
@@ -243,7 +243,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     if !text.to_ascii_lowercase().ends_with(".vrt") {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{}” bir .vrt dosyası değil; mozaik GDAL'ın VRT dosyası olarak yazılır.", file_name(text)),
+            format!("“{}” bir .vrt dosyası değil; mozaik VRT dosyası olarak yazılır.", file_name(text)),
             "path",
         ));
     }
@@ -311,7 +311,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
         }
         files.push(f);
     }
-    // The extent (the union) and the pixel, by gdalbuildvrt's rule; sums in the order given.
+    // The extent (the union) and the pixel, by the VRT builders' rule; sums in the order given.
     let (mut min_x, mut max_y) = (f64::INFINITY, f64::NEG_INFINITY);
     let (mut max_x, mut min_y) = (f64::NEG_INFINITY, f64::INFINITY);
     for f in &files {
@@ -375,7 +375,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     let mut sources = Vec::with_capacity(ranked.len());
     let mut vrt_sources = Vec::with_capacity(ranked.len());
     for f in &ranked {
-        // gdalbuildvrt's windows: the file's pixels scaled to the mosaic's, cut where the mosaic's rounded size
+        // The VRT builders' windows: the file's pixels scaled to the mosaic's, cut where the mosaic's rounded size
         // ends; a file left with nothing on the mosaic is left out.
         let [x0, a, _, y0, _, d] = f.affine;
         let (rx, ry) = (a / we, -d / ns);

@@ -197,6 +197,8 @@ impl Tool for Vertex {
             through: None,
             radius: None,
             widths: None,
+            // Two arcs of one circle stay one arc within Topolojik temizlik's tolerance (docs/adr/5000).
+            join_arcs: (action == VertexAction::Remove).then_some(cx.memory.topology_tolerance),
             topology: None,
             expected_revision: None,
         };

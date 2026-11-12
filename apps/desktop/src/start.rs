@@ -1,5 +1,5 @@
 //! Başlangıç (the web's `ui/start/StartScreen.ts`): what to do first, as
-//! AutoCAD's and Netcad's start pages offer it: a new project, a drawing
+//! a desktop CAD program's start page offers it: a new project, a drawing
 //! file, a cloud project, a DXF, the recent files, or on with the drawing on
 //! screen. It opens with the program when the preference says so
 //! (`appearance.startScreen`), unless a drawing was named on the command
@@ -209,7 +209,7 @@ impl App {
                 "file.import.dxf",
                 Icon::Import,
                 "DXF içe aktar",
-                "AutoCAD ve Netcad çizimleri, katmanlarıyla".to_owned(),
+                "DXF, DWG ve NCZ çizimleri, katmanlarıyla".to_owned(),
             ));
         if let Some(doc) = &self.document {
             let keep = row![

@@ -39,117 +39,114 @@ if TYPE_CHECKING:
 
 
 class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
-    """``cad.arch.audit`` v1. Mimari denetim: Çizimin mimari sorunlarını tek listede verir
-    (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls
-    (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç
-    arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her
-    kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces
-    (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni
-    2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number),
-    tags (tag_target_gone), dimensions (arch_dimension_set_broken,
-    arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve
-    sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı
-    olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır
-    cad.arch.edit), columns (arch_column_grid_gone), viewmarks
+    """``cad.arch.audit`` v1. Mimari denetim: Çizimin mimari sorunlarını tek listede verir;
+    çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar
+    wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama
+    buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken,
+    tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük
+    arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow),
+    numbers (tag_duplicate_number), tags (tag_target_gone), dimensions
+    (arch_dimension_set_broken, arch_dimension_broken), grids (aynı katta aynı etiketli
+    ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve
+    kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete
+    adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks
     (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, kiriş,
     merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
     düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
-    olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility
-    (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti
-    — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den
-    uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa
-    ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin
-    düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit).
-    docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short
-    (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst
-    üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki
-    mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş
-    etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları
-    stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu
-    ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework
-    grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release).
-    Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her
-    bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer
-    #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi
-    varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input);
-    step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat
-    kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o
-    nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside.
-    Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions:
-    hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız
-    istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı,
-    bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/8033):
-    Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m²,
-    yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en
-    büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below,
-    bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti
-    karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği
-    3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), adı ya da
-    kullanımı olan mahalin iç yüksekliği bitmiş döşemesinden tavanına (asma tavan,
-    yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân edilen
-    mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte
-    2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6)
-    paiy_inside_height_below (docs/adr/8040 §3; balkon, teras, sığınak, şaft, çatı arası
-    ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m paiy_door_height_below
-    (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00,
-    öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule
-    alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut
-    olmayan bölümün piyesleri okunmaz. docs/adr/8034: merdiven 31 — ortak merdiven kolu
-    ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde
-    1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin
-    bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz
-    binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27,
-    döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak merdivende iki
-    yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az bir (38/1)
-    paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12;
-    2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin kattan yukarıda
-    denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1); Işıklık adlı boşluk
-    1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m² paiy_lightwell_small
-    (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); bodrumları (teknik
-    hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve daha fazlada
-    asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü konut hariç),
-    Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da kitaplığın
-    Asansör bloğunun (docs/adr/8045 §5) kabini bundan, kapısı 0,90 m'den küçük
+    olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (yalnız
+    profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot
+    farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan
+    dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen
+    rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit;
+    katalogda olmayan profile invalid_arch_audit). walls'ta minLength'ten (0.05 m) kısa
+    açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz
+    duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini
+    siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap;
+    tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi
+    uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel);
+    ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler);
+    casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit
+    release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength
+    0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end,
+    ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık
+    bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı:
+    command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within:
+    levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o
+    katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı
+    sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu
+    exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler,
+    only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve
+    exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. regulation
+    (Mevzuat): Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00
+    m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar
+    kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below,
+    paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az
+    odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3),
+    konutta kat yüksekliği 3,60 m (bodrum hariç üç kata kadar 4,00)
+    paiy_storey_height_over (28/1-c), adı ya da kullanımı olan mahalin iç yüksekliği
+    bitmiş döşemesinden tavanına (asma tavan, yazılan iç yükseklik, üst döşemenin sıvalı
+    altı; yoksa kattan kata) iskân edilen mahalde 2,60 (28/4), banyo, tuvalet, lavabo,
+    kiler, depo, merdiven altı ve geçitte 2,20 (28/5), garaj, otopark, kazan dairesi ve
+    teknik mahalde 2,20 m (28/6) paiy_inside_height_below (balkon, teras, sığınak, şaft,
+    çatı arası ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m
+    paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız
+    bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c;
+    13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire,
+    mesken ya da konut olmayan bölümün piyesleri okunmaz. Merdiven 31 — ortak merdiven
+    kolu ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm
+    içinde 1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu
+    mahalin bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht
+    asansörsüz binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64,
+    basamak 0,27, döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak
+    merdivende iki yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az
+    bir (38/1) paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5
+    paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin
+    kattan yukarıda denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1);
+    Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m²
+    paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3);
+    bodrumları (teknik hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve
+    daha fazlada asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü
+    konut hariç), Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da
+    kitaplığın Asansör bloğunun kabini bundan, kapısı 0,90 m'den küçük
     paiy_elevator_small (kuyu net ölçüsüyle, içindeki blok kabin ve kapısıyla ölçülür;
     bloğun düzeltmesi parametreleri, cad.blocks.parameters), asansör kapısının açıldığı
     sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow
     (34/2); duvarı olan çizimde Kesit çıkar'ın çıkardığı kesit ikiden azsa
     paiy_sections_missing, çıkarılmış kesitlerin hiçbirinin çizgisi ortak merdivenin
-    kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6,
-    docs/adr/8042 §7); binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre
-    sekiz yönden en uzunun beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş
-    çıkar'ın çıkardığı bir görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri
-    sayıda görünüş; Mimarlar Odası: bütün görünüşler çizilir; docs/adr/8043 §9). Çatılar
-    (docs/adr/8044 §9): mahya saçak seviyesinden (son kat tavan döşemesinin üstü,
-    çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00
-    m), binadan çizilen çatının saçağı 1,00 m'den genişse paiy_eaves_wide (42/1), hava
-    bacası çatı örtüsünü 0,60 m'den çok aşarsa paiy_roof_vent_high (40/5; düzeltmesi
-    0,60 m), duman bacası mahyanın 0,80 m üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2;
-    düzeltmesi 0,80 m); yerel yönetmelik Sivas ise eğim %40'ı aşarsa
-    local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a indirir), eğimli
-    çatıda kar siperliği yoksa local_snow_guard_missing (42/5; düzeltmesi saçaktan 30
-    cm), çatı penceresi 1,20 × 1,50 m'den büyükse local_roof_window_large, bina cephe
-    hattına 1 m'den ya da başka bir pencereye çatının üstünde 2 m'den yakınsa
-    local_roof_window_close (40/5-e). Korkuluklar (docs/adr/8045 §4): döşemesinden 1,10
-    m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m), dikey çubuklarının
-    arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme
-    boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki
-    kenarlarının ya da kenarı olmayan balkonun, terasın serbest kenarlarının 0,10 m ve
-    daha uzunu katının korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda
-    ve terasta düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk
-    aracının Boşluktan'ı). Asansör (docs/adr/8045 §5): kitaplığın Asansör bloğu
-    asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı binada en
-    az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m değilse
-    paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne getirir).
-    Otopark yerleri (docs/adr/8045 §6): kitaplığın Otopark yeri blokları çizimin park
-    yerleridir (Otopark hesabı onları sayar; yoksa mahal alanı ÷ 20 m²); kısa kenarı
-    2,40 m'den (engellide 3,50, kamyonette 3,00) ya da uzun kenarı 4,90 m'den
-    (kamyonette 6,00) küçükse parking_space_small (5/1-h-8, 9; düzeltmesi bloğun En ve
-    Boy'u), Otopark ya da Garaj adlı mahaldeki yer sayısı net alanı ÷ 20 m²'yi aşarsa
-    parking_area_short (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her
-    20 yerde 1 ve en az 1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu
-    otopark 20 ve üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short
-    (5/1-j; düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
+    kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6);
+    binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre sekiz yönden en uzunun
+    beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş çıkar'ın çıkardığı bir
+    görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri sayıda görünüş; Mimarlar
+    Odası: bütün görünüşler çizilir). Çatılar: mahya saçak seviyesinden (son kat tavan
+    döşemesinin üstü, çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4;
+    Sivas 40/5-g 4,00 m), binadan çizilen çatının saçağı 1,00 m'den genişse
+    paiy_eaves_wide (42/1), hava bacası çatı örtüsünü 0,60 m'den çok aşarsa
+    paiy_roof_vent_high (40/5; düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m üstüne
+    çıkmazsa bykhy_chimney_low (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik Sivas
+    ise eğim %40'ı aşarsa local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a
+    indirir), eğimli çatıda kar siperliği yoksa local_snow_guard_missing (42/5;
+    düzeltmesi saçaktan 30 cm), çatı penceresi 1,20 × 1,50 m'den büyükse
+    local_roof_window_large, bina cephe hattına 1 m'den ya da başka bir pencereye
+    çatının üstünde 2 m'den yakınsa local_roof_window_close (40/5-e). Korkuluklar:
+    döşemesinden 1,10 m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m),
+    dikey çubuklarının arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4;
+    düzeltmesi 0,10 m), döşeme boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen
+    merdivenin çıkışı dışındaki kenarlarının ya da kenarı olmayan balkonun, terasın
+    serbest kenarlarının 0,10 m ve daha uzunu katının korkuluklarınca tutulmuyorsa
+    paiy_railing_missing (38/1; balkonda ve terasta düzeltmesi döşemeye korkuluk kenarı,
+    cad.slabs.edit; boşlukta Korkuluk aracının Boşluktan'ı). Asansör: kitaplığın Asansör
+    bloğu asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı
+    binada en az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m
+    değilse paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne
+    getirir). Otopark yerleri: kitaplığın Otopark yeri blokları çizimin park yerleridir
+    (Otopark hesabı onları sayar; yoksa mahal alanı ÷ 20 m²); kısa kenarı 2,40 m'den
+    (engellide 3,50, kamyonette 3,00) ya da uzun kenarı 4,90 m'den (kamyonette 6,00)
+    küçükse parking_space_small (5/1-h-8, 9; düzeltmesi bloğun En ve Boy'u), Otopark ya
+    da Garaj adlı mahaldeki yer sayısı net alanı ÷ 20 m²'yi aşarsa parking_area_short
+    (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her 20 yerde 1 ve en az
+    1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu otopark 20 ve
+    üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short (5/1-j;
+    düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
     5.8.2026/33331) EK-9 model kalite kontrol formunun çizimin bozduğu soruları,
     cad.arch.ifc'nin yazdığı modelden: künyede EK-7'nin proje bilgileri eksikse
     digital_project_info_missing (Md. 13), proje kodu yoksa ya da 000000 ise
@@ -164,8 +161,8 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
     regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
     0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
-    cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların
-    Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve
+    cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). Yangın (Binaların Yangından
+    Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve
     boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta duvardan 0,40 m içeride
     (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven adlı mahal, açık
     merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı açılan kapı; bir
@@ -183,16 +180,16 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
     kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
     yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
-    çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark ve Sığınak Yönetmelikleri
-    — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m²
-    üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50
-    m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m²
-    (otopark yeri blokları çizildiyse onların sayısı) az ise parking_short; konutta oda
-    sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷
-    20'den kişi başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short
-    (7/a–c muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count
-    (8/c), iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures
-    gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+    çizimden okunmaz; bulguda yazılır. Otopark ve Sığınak Yönetmelikleri — bölümlerin
+    Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye
+    2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam
+    bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² (otopark yeri
+    blokları çizildiyse onların sayısı) az ise parking_short; konutta oda sayısından (1
+    oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi
+    başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short (7/a–c
+    muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count (8/c),
+    iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures gibi
+    yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
     değildir.
     """
     __slots__ = ()
@@ -222,116 +219,114 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ArchAudited:
-        """Mimari denetim: Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi
-        değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*,
-        öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan
-        uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken,
+        """Mimari denetim: Çizimin mimari sorunlarını tek listede verir; çizimi değiştirmez.
+        Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara
+        maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar
+        arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken,
         tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük
         arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow),
         numbers (tag_duplicate_number), tags (tag_target_gone), dimensions
-        (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı
-        katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi
-        üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü
-        sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone),
-        viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal,
-        kolon, kiriş, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir
-        katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu
-        0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility
-        (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti
-        — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den
-        uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa
-        ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin
-        düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit).
-        docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short
-        (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst
-        üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki
-        mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş
-        etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları
-        stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu
-        ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework
-        grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release).
-        Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her
-        bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer
-        #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi
-        varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input);
-        step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat
-        kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o
-        nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside.
-        Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions:
-        hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız
-        istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı,
-        bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/8033):
-        Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m²,
-        yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en
-        büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below,
-        bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti
-        karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği
-        3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), adı ya da
-        kullanımı olan mahalin iç yüksekliği bitmiş döşemesinden tavanına (asma tavan,
-        yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân edilen
-        mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte
-        2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6)
-        paiy_inside_height_below (docs/adr/8040 §3; balkon, teras, sığınak, şaft, çatı arası
-        ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m paiy_door_height_below
-        (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00,
-        öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule
-        alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut
-        olmayan bölümün piyesleri okunmaz. docs/adr/8034: merdiven 31 — ortak merdiven kolu
-        ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde
-        1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin
-        bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz
-        binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27,
-        döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak merdivende iki
-        yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az bir (38/1)
-        paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12;
-        2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin kattan yukarıda
-        denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1); Işıklık adlı boşluk
-        1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m² paiy_lightwell_small
-        (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); bodrumları (teknik
-        hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve daha fazlada
-        asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü konut hariç),
-        Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da kitaplığın
-        Asansör bloğunun (docs/adr/8045 §5) kabini bundan, kapısı 0,90 m'den küçük
+        (arch_dimension_set_broken, arch_dimension_broken), grids (aynı katta aynı etiketli
+        ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve
+        kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete
+        adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks
+        (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, kiriş,
+        merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta;
+        düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0
+        olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (yalnız
+        profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot
+        farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan
+        dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen
+        rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit;
+        katalogda olmayan profile invalid_arch_audit). walls'ta minLength'ten (0.05 m) kısa
+        açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz
+        duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini
+        siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap;
+        tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi
+        uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel);
+        ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler);
+        casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit
+        release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength
+        0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end,
+        ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık
+        bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı:
+        command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within:
+        levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o
+        katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı
+        sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu
+        exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler,
+        only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve
+        exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. regulation
+        (Mevzuat): Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00
+        m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar
+        kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below,
+        paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az
+        odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3),
+        konutta kat yüksekliği 3,60 m (bodrum hariç üç kata kadar 4,00)
+        paiy_storey_height_over (28/1-c), adı ya da kullanımı olan mahalin iç yüksekliği
+        bitmiş döşemesinden tavanına (asma tavan, yazılan iç yükseklik, üst döşemenin sıvalı
+        altı; yoksa kattan kata) iskân edilen mahalde 2,60 (28/4), banyo, tuvalet, lavabo,
+        kiler, depo, merdiven altı ve geçitte 2,20 (28/5), garaj, otopark, kazan dairesi ve
+        teknik mahalde 2,20 m (28/6) paiy_inside_height_below (balkon, teras, sığınak, şaft,
+        çatı arası ve asma kattaki mahal okunmaz), kapı yüksekliği 2,10 m
+        paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız
+        bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c;
+        13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire,
+        mesken ya da konut olmayan bölümün piyesleri okunmaz. Merdiven 31 — ortak merdiven
+        kolu ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız bölüm
+        içinde 1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu
+        mahalin bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht
+        asansörsüz binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64,
+        basamak 0,27, döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak
+        merdivende iki yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az
+        bir (38/1) paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5
+        paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin
+        kattan yukarıda denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1);
+        Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m²
+        paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3);
+        bodrumları (teknik hacimler dışında mahali olanlar) dahil 3 katta asansör yeri, 4 ve
+        daha fazlada asansör paiy_elevator_missing (34/1, 1.7.2026; tek bağımsız bölümlü
+        konut hariç), Asansör adlı mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da
+        kitaplığın Asansör bloğunun kabini bundan, kapısı 0,90 m'den küçük
         paiy_elevator_small (kuyu net ölçüsüyle, içindeki blok kabin ve kapısıyla ölçülür;
         bloğun düzeltmesi parametreleri, cad.blocks.parameters), asansör kapısının açıldığı
         sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow
         (34/2); duvarı olan çizimde Kesit çıkar'ın çıkardığı kesit ikiden azsa
         paiy_sections_missing, çıkarılmış kesitlerin hiçbirinin çizgisi ortak merdivenin
-        kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6,
-        docs/adr/8042 §7); binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre
-        sekiz yönden en uzunun beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş
-        çıkar'ın çıkardığı bir görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri
-        sayıda görünüş; Mimarlar Odası: bütün görünüşler çizilir; docs/adr/8043 §9). Çatılar
-        (docs/adr/8044 §9): mahya saçak seviyesinden (son kat tavan döşemesinin üstü,
-        çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00
-        m), binadan çizilen çatının saçağı 1,00 m'den genişse paiy_eaves_wide (42/1), hava
-        bacası çatı örtüsünü 0,60 m'den çok aşarsa paiy_roof_vent_high (40/5; düzeltmesi
-        0,60 m), duman bacası mahyanın 0,80 m üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2;
-        düzeltmesi 0,80 m); yerel yönetmelik Sivas ise eğim %40'ı aşarsa
-        local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a indirir), eğimli
-        çatıda kar siperliği yoksa local_snow_guard_missing (42/5; düzeltmesi saçaktan 30
-        cm), çatı penceresi 1,20 × 1,50 m'den büyükse local_roof_window_large, bina cephe
-        hattına 1 m'den ya da başka bir pencereye çatının üstünde 2 m'den yakınsa
-        local_roof_window_close (40/5-e). Korkuluklar (docs/adr/8045 §4): döşemesinden 1,10
-        m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m), dikey çubuklarının
-        arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme
-        boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki
-        kenarlarının ya da kenarı olmayan balkonun, terasın serbest kenarlarının 0,10 m ve
-        daha uzunu katının korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda
-        ve terasta düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk
-        aracının Boşluktan'ı). Asansör (docs/adr/8045 §5): kitaplığın Asansör bloğu
-        asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı binada en
-        az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m değilse
-        paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne getirir).
-        Otopark yerleri (docs/adr/8045 §6): kitaplığın Otopark yeri blokları çizimin park
-        yerleridir (Otopark hesabı onları sayar; yoksa mahal alanı ÷ 20 m²); kısa kenarı
-        2,40 m'den (engellide 3,50, kamyonette 3,00) ya da uzun kenarı 4,90 m'den
-        (kamyonette 6,00) küçükse parking_space_small (5/1-h-8, 9; düzeltmesi bloğun En ve
-        Boy'u), Otopark ya da Garaj adlı mahaldeki yer sayısı net alanı ÷ 20 m²'yi aşarsa
-        parking_area_short (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her
-        20 yerde 1 ve en az 1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu
-        otopark 20 ve üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short
-        (5/1-j; düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
+        kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6);
+        binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre sekiz yönden en uzunun
+        beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş çıkar'ın çıkardığı bir
+        görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri sayıda görünüş; Mimarlar
+        Odası: bütün görünüşler çizilir). Çatılar: mahya saçak seviyesinden (son kat tavan
+        döşemesinin üstü, çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4;
+        Sivas 40/5-g 4,00 m), binadan çizilen çatının saçağı 1,00 m'den genişse
+        paiy_eaves_wide (42/1), hava bacası çatı örtüsünü 0,60 m'den çok aşarsa
+        paiy_roof_vent_high (40/5; düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m üstüne
+        çıkmazsa bykhy_chimney_low (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik Sivas
+        ise eğim %40'ı aşarsa local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a
+        indirir), eğimli çatıda kar siperliği yoksa local_snow_guard_missing (42/5;
+        düzeltmesi saçaktan 30 cm), çatı penceresi 1,20 × 1,50 m'den büyükse
+        local_roof_window_large, bina cephe hattına 1 m'den ya da başka bir pencereye
+        çatının üstünde 2 m'den yakınsa local_roof_window_close (40/5-e). Korkuluklar:
+        döşemesinden 1,10 m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m),
+        dikey çubuklarının arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4;
+        düzeltmesi 0,10 m), döşeme boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen
+        merdivenin çıkışı dışındaki kenarlarının ya da kenarı olmayan balkonun, terasın
+        serbest kenarlarının 0,10 m ve daha uzunu katının korkuluklarınca tutulmuyorsa
+        paiy_railing_missing (38/1; balkonda ve terasta düzeltmesi döşemeye korkuluk kenarı,
+        cad.slabs.edit; boşlukta Korkuluk aracının Boşluktan'ı). Asansör: kitaplığın Asansör
+        bloğu asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı
+        binada en az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m
+        değilse paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne
+        getirir). Otopark yerleri: kitaplığın Otopark yeri blokları çizimin park yerleridir
+        (Otopark hesabı onları sayar; yoksa mahal alanı ÷ 20 m²); kısa kenarı 2,40 m'den
+        (engellide 3,50, kamyonette 3,00) ya da uzun kenarı 4,90 m'den (kamyonette 6,00)
+        küçükse parking_space_small (5/1-h-8, 9; düzeltmesi bloğun En ve Boy'u), Otopark ya
+        da Garaj adlı mahaldeki yer sayısı net alanı ÷ 20 m²'yi aşarsa parking_area_short
+        (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her 20 yerde 1 ve en az
+        1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu otopark 20 ve
+        üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short (5/1-j;
+        düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
         5.8.2026/33331) EK-9 model kalite kontrol formunun çizimin bozduğu soruları,
         cad.arch.ifc'nin yazdığı modelden: künyede EK-7'nin proje bilgileri eksikse
         digital_project_info_missing (Md. 13), proje kodu yoksa ya da 000000 ise
@@ -346,8 +341,8 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
         regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
         0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
-        cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). docs/adr/8035 (Binaların
-        Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve
+        cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). Yangın (Binaların Yangından
+        Korunması Hakkında Yönetmelik): kaçış yolu mahallerin net içinden, kapı ve
         boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta duvardan 0,40 m içeride
         (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven adlı mahal, açık
         merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı açılan kapı; bir
@@ -365,16 +360,16 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
         kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
         yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
-        çizimden okunmaz; bulguda yazılır. docs/adr/8036: Otopark ve Sığınak Yönetmelikleri
-        — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m²
-        üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50
-        m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m²
-        (otopark yeri blokları çizildiyse onların sayısı) az ise parking_short; konutta oda
-        sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷
-        20'den kişi başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short
-        (7/a–c muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count
-        (8/c), iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures
-        gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+        çizimden okunmaz; bulguda yazılır. Otopark ve Sığınak Yönetmelikleri — bölümlerin
+        Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye
+        2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam
+        bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² (otopark yeri
+        blokları çizildiyse onların sayısı) az ise parking_short; konutta oda sayısından (1
+        oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi
+        başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short (7/a–c
+        muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count (8/c),
+        iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures gibi
+        yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
         değildir.
 
         Args:
@@ -529,28 +524,27 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
     nesneyi düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label,
     bubbles, bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları
     kaldırır), width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar),
-    rotation, type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin
-    width, risers, riserHeight, tread, landing, cut, winders (docs/adr/8045 §1: dönüşün
-    iki yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner),
-    numbering; rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset
-    (katına bağlar; null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez),
-    landing; kirişin width, height, justify, offset, role (beam, lintel, bondBeam:
-    kiriş, lento, hatıl), baseOffset (alt yüzünün katın döşemesinden yüksekliği; null
-    döşemeden asılır; kot farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3;
-    hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill
-    (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY
-    38/4'ün 0,10 m'si), offset (docs/adr/8045 §3; hatalı korkuluk invalid_railing);
-    hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan
-    field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla
-    start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach
-    (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach
-    (bağı koparır, kolon yerinde kalır), distance (docs/adr/0712: tek kolon, yanı side —
-    0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle — baktığı paralel yüzden distance
-    metre olacak kadar o yana dik kayar, karşıdaki yüz sabit; cad.columns.distances aynı
-    mesafeyi okur. Akslara bağlı kolon column_on_grids, kolon olmayan not_a_column, o
-    yanda paralel yüz yoksa ya da eksi mesafe invalid_column, sıfır kaydırma
-    nothing_to_set). Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve
-    rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir.
+    rotation, type, tag, fill, material (null Betonarme); merdivenin width, risers,
+    riserHeight, tread, landing, cut, winders (dönüşün iki yanında dengelenen basamak;
+    sahanlığı kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope,
+    base (kat bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot
+    yerinde kalır; base ile birlikte verilmez), landing; kirişin width, height, justify,
+    offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün
+    katın döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz),
+    tag, material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height,
+    infill (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null
+    PAİY 38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); hepsinin level,
+    phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind),
+    renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi
+    değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine
+    bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
+    distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle
+    — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz
+    sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon
+    column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi
+    mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
+    bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
+    nesneleri olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.arch.edit"
@@ -577,26 +571,25 @@ class _ArchEdit(LocalCommand[ArchEdit, ArchEdited, ArchEdited]):
         düzenle”, hepsi ya da hiçbiri. operation: set (türün alanları: aksın label, bubbles,
         bubbleSize, ends (null bütün aks); kolonun shape (L olmayan biçim kolları kaldırır),
         width, depth, legs, anchor (yeri kalır, gövdesi onun çevresinde kayar), rotation,
-        type, tag, fill, material (docs/adr/8041 §2; null Betonarme); merdivenin width,
-        risers, riserHeight, tread, landing, cut, winders (docs/adr/8045 §1: dönüşün iki
-        yanında dengelenen basamak; sahanlığı kaldırır; null sahanlığa döner), numbering;
-        rampanın width, rise, slope, base (kat bağını kaldırır), baseOffset (katına bağlar;
-        null bağı kaldırır, kot yerinde kalır; base ile birlikte verilmez), landing; kirişin
-        width, height, justify, offset, role (beam, lintel, bondBeam: kiriş, lento, hatıl),
-        baseOffset (alt yüzünün katın döşemesinden yüksekliği; null döşemeden asılır; kot
-        farkıyla birlikte olmaz), tag, material (docs/adr/8041 §1, §3; hatalı kiriş
-        invalid_beam); korkuluğun width (küpeşte eni), height, infill (balusters, glass,
-        solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY 38/4'ün 0,10 m'si),
-        offset (docs/adr/8045 §3; hatalı korkuluk invalid_railing); hepsinin level, phase;
+        type, tag, fill, material (null Betonarme); merdivenin width, risers, riserHeight,
+        tread, landing, cut, winders (dönüşün iki yanında dengelenen basamak; sahanlığı
+        kaldırır; null sahanlığa döner), numbering; rampanın width, rise, slope, base (kat
+        bağını kaldırır), baseOffset (katına bağlar; null bağı kaldırır, kot yerinde kalır;
+        base ile birlikte verilmez), landing; kirişin width, height, justify, offset, role
+        (beam, lintel, bondBeam: kiriş, lento, hatıl), baseOffset (alt yüzünün katın
+        döşemesinden yüksekliği; null döşemeden asılır; kot farkıyla birlikte olmaz), tag,
+        material (hatalı kiriş invalid_beam); korkuluğun width (küpeşte eni), height, infill
+        (balusters, glass, solid: dikey çubuk, cam, dolu), gap (çubuk aralığı; null PAİY
+        38/4'ün 0,10 m'si), offset (hatalı korkuluk invalid_railing); hepsinin level, phase;
         null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber
         (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince
         bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar,
         merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır),
-        distance (docs/adr/0712: tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3
-        solu, dönüşüyle — baktığı paralel yüzden distance metre olacak kadar o yana dik
-        kayar, karşıdaki yüz sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı
-        kolon column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da
-        eksi mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
+        distance (tek kolon, yanı side — 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, dönüşüyle
+        — baktığı paralel yüzden distance metre olacak kadar o yana dik kayar, karşıdaki yüz
+        sabit; cad.columns.distances aynı mesafeyi okur. Akslara bağlı kolon
+        column_on_grids, kolon olmayan not_a_column, o yanda paralel yüz yoksa ya da eksi
+        mesafe invalid_column, sıfır kaydırma nothing_to_set). Kilitli katmandaki nesne
         bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan
         nesneleri olacakları gibi gösterir.
 
@@ -689,18 +682,18 @@ edit = _ArchEdit()
 
 class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExceptionsEdited]):
     """``cad.arch.exceptions`` v1. Denetim istisnası: Mimari denetimin bulgularını bilerek
-    bırakılmış sayar ya da işareti kaldırır (docs/adr/0732 §3); tek geri alma adımı.
-    operation: mark (İstisna yap: keys cad.arch.audit'in verdiği anahtarlar, note isteğe
-    bağlı not; istisna bulgunun o anki kodu, nesneleri, iletisi ve yerinin özetine
-    bağlanır, bulgu değişince düşer), unmark (İstisnayı kaldır: keys istisnaların
-    anahtarları), prune (İstisnaları temizle: bulgusu artık olmayanlar). audit bulguları
-    bulan denetimin girdisidir (yok: bütün gruplar, varsayılan eşikler, profilsiz);
-    within ve exceptions okunmaz. İstisnalar projenin ayarıdır (arch.auditExceptions,
-    KCAD 130). Retler: invalid_input (anahtar yok ya da yineleniyor, not 1000
-    karakterden uzun), denetimin retleri audit. yoluyla, finding_not_found (keys[i]:
-    bulgu ya da istisna yok). Zaten öyle olanlar değişmez, değişen yoksa adım yazılmaz.
-    Çıktı değişen anahtarlar (changed), istisna sayısı ve revizyon. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    bırakılmış sayar ya da işareti kaldırır; tek geri alma adımı. operation: mark
+    (İstisna yap: keys cad.arch.audit'in verdiği anahtarlar, note isteğe bağlı not;
+    istisna bulgunun o anki kodu, nesneleri, iletisi ve yerinin özetine bağlanır, bulgu
+    değişince düşer), unmark (İstisnayı kaldır: keys istisnaların anahtarları), prune
+    (İstisnaları temizle: bulgusu artık olmayanlar). audit bulguları bulan denetimin
+    girdisidir (yok: bütün gruplar, varsayılan eşikler, profilsiz); within ve exceptions
+    okunmaz. İstisnalar projenin ayarıdır (arch.auditExceptions, KCAD 130). Retler:
+    invalid_input (anahtar yok ya da yineleniyor, not 1000 karakterden uzun), denetimin
+    retleri audit. yoluyla, finding_not_found (keys[i]: bulgu ya da istisna yok). Zaten
+    öyle olanlar değişmez, değişen yoksa adım yazılmaz. Çıktı değişen anahtarlar
+    (changed), istisna sayısı ve revizyon. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.arch.exceptions"
@@ -725,18 +718,18 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
         expected: Expected | None = None,
     ) -> ArchExceptionsEdited:
         """Denetim istisnası: Mimari denetimin bulgularını bilerek bırakılmış sayar ya da
-        işareti kaldırır (docs/adr/0732 §3); tek geri alma adımı. operation: mark (İstisna
-        yap: keys cad.arch.audit'in verdiği anahtarlar, note isteğe bağlı not; istisna
-        bulgunun o anki kodu, nesneleri, iletisi ve yerinin özetine bağlanır, bulgu
-        değişince düşer), unmark (İstisnayı kaldır: keys istisnaların anahtarları), prune
-        (İstisnaları temizle: bulgusu artık olmayanlar). audit bulguları bulan denetimin
-        girdisidir (yok: bütün gruplar, varsayılan eşikler, profilsiz); within ve exceptions
-        okunmaz. İstisnalar projenin ayarıdır (arch.auditExceptions, KCAD 130). Retler:
-        invalid_input (anahtar yok ya da yineleniyor, not 1000 karakterden uzun), denetimin
-        retleri audit. yoluyla, finding_not_found (keys[i]: bulgu ya da istisna yok). Zaten
-        öyle olanlar değişmez, değişen yoksa adım yazılmaz. Çıktı değişen anahtarlar
-        (changed), istisna sayısı ve revizyon. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        işareti kaldırır; tek geri alma adımı. operation: mark (İstisna yap: keys
+        cad.arch.audit'in verdiği anahtarlar, note isteğe bağlı not; istisna bulgunun o anki
+        kodu, nesneleri, iletisi ve yerinin özetine bağlanır, bulgu değişince düşer), unmark
+        (İstisnayı kaldır: keys istisnaların anahtarları), prune (İstisnaları temizle:
+        bulgusu artık olmayanlar). audit bulguları bulan denetimin girdisidir (yok: bütün
+        gruplar, varsayılan eşikler, profilsiz); within ve exceptions okunmaz. İstisnalar
+        projenin ayarıdır (arch.auditExceptions, KCAD 130). Retler: invalid_input (anahtar
+        yok ya da yineleniyor, not 1000 karakterden uzun), denetimin retleri audit. yoluyla,
+        finding_not_found (keys[i]: bulgu ya da istisna yok). Zaten öyle olanlar değişmez,
+        değişen yoksa adım yazılmaz. Çıktı değişen anahtarlar (changed), istisna sayısı ve
+        revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

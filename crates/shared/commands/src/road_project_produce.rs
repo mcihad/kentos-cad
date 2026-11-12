@@ -21,8 +21,9 @@ pub const ROAD_PROJECT_PRODUCE_VERSION: u32 = 1;
 
 /// Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
 /// `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;
-/// `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the
-/// Layer Translator); a layer not given goes by its name (Map Same) or is added.
+/// `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (a layer mapping); a
+/// layer not given goes by its name or is added; `addFields` (docs/adr/5240), a layer found here takes the recipe's fields
+/// it lacks.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
 /// `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
@@ -45,6 +46,11 @@ pub struct RoadProjectProduce {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub layers: BTreeMap<String, String>,
+    /// Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the
+    /// lists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub add_fields: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
@@ -90,6 +96,19 @@ pub struct RoadProducedLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_added: Option<String>,
+    /// A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
+    /// here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub domains_added: Vec<String>,
+    /// A layer added (docs/adr/5240): the forms added with it, by their names; empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub forms_added: Vec<String>,
+    /// A layer found here with `addFields` (docs/adr/5240): the recipe's fields it took, by their names.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub fields_added: Vec<String>,
 }
 
 /// The main source a produced drawing was drawn from in this project: its kind, id and name.

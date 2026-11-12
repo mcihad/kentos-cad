@@ -29,11 +29,10 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
     noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) bir çoklu çizgi
     ekler; tek geri alma adımıdır. closed: true son noktayı ilkine bağlar (kapalı çizgi;
     alan değildir). widths kenar başına başlangıç ve bitiş genişliğidir, çizimin
-    uzunluğunda; kâğıdın çizgi kalınlığı (lineWeight) ayrıdır (ADR 0258). Katman girdide
-    açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-    ile gider.
+    uzunluğunda; kâğıdın çizgi kalınlığı (lineWeight) ayrıdır. Katman girdide açıkça
+    verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.polyline.create"
@@ -68,10 +67,10 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         değerleriyle (kenar başına bir tane) bir çoklu çizgi ekler; tek geri alma adımıdır.
         closed: true son noktayı ilkine bağlar (kapalı çizgi; alan değildir). widths kenar
         başına başlangıç ve bitiş genişliğidir, çizimin uzunluğunda; kâğıdın çizgi kalınlığı
-        (lineWeight) ayrıdır (ADR 0258). Katman girdide açıkça verilir: kilitli katmana
-        yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
-        bulut projesine değişiklik project.changes ile gider.
+        (lineWeight) ayrıdır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli
+        katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
+        değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.

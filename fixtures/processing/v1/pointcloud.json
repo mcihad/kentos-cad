@@ -2509,6 +2509,381 @@
    }
   },
   {
+   "id": "transform-euler",
+   "title": "Euler açıları: sapma 0,5°, yunuslama −0,1°, yatış 0,05°, merkez boş (bulutun kutusunun ortası), öteleme 1 −2 0,5 m; geçmişte yapılan matris",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "euler",
+    "yaw": 0.5,
+    "pitch": -0.1,
+    "roll": 0.05,
+    "translation": "1 -2 0.5",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 2,291 m kaydı, dönüklük 0,5124°; “koy-donusmus.laz” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 2.2912878474779697,
+     "angle": 0.5123900401736333
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.laz": {
+      "count": 71212,
+      "points": "7a0e55b58d8f461f"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999604000354535 -0.008728055203693637 -0.0017376459067253171 38602.80488746712 0.008726522207103673 0.9999615290156542 -0.0008878619509863246 -4086.7646924452856 0.0017453283658983088 0.0008726631860914221 0.9999980961421171 -4708.097420618473 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.laz",
+        "format": "laz",
+        "count": 71212,
+        "bounds": [
+         487600.652,
+         4420297.513,
+         839.381,
+         487721.219,
+         4420388.465,
+         863.164
+        ]
+       }
+      ],
+      "bounds": [
+       487600.652,
+       4420297.513,
+       839.381,
+       487721.219,
+       4420388.465,
+       863.164
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-euler-centre",
+   "title": "Euler açıları: yalnız sapma −0,3°, verilen merkez, öteleme yok; çizime eklenmez",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "euler",
+    "yaw": -0.3,
+    "pitch": 0.0,
+    "roll": 0.0,
+    "center": "487030 4420040 850",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 3,665 m kaydı, dönüklük 0,3000°; “koy-donusmus.laz” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 3.6645238638373105,
+     "angle": 0.3
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.laz": {
+      "count": 71212,
+      "points": "fd6b890a6607aa10"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "transform-euler-inverse",
+   "title": "Euler açıları, Tersini uygula: üç dönmenin ve ötelemenin tersi",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "euler",
+    "yaw": 0.5,
+    "pitch": -0.1,
+    "roll": 0.05,
+    "translation": "1 -2 0.5",
+    "invert": true,
+    "format": "las",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 2,291 m kaydı, dönüklük 0,5124°; “koy-donusmus.las” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 2.291287847799576,
+     "angle": 0.5123900401736333
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.las": {
+      "count": 71212,
+      "points": "248760270e7cb693"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999604000354535 0.008726522207103673 0.0017453283658983088 -38557.395798940735 -0.008728055203693637 0.9999615290156542 0.0008726631860914222 4427.643465955511 -0.0017376459067253173 -0.0008878619509863246 0.9999980961421171 4771.537980097853 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.las",
+        "format": "las",
+        "count": 71212,
+        "bounds": [
+         487598.631,
+         4420301.487,
+         838.601,
+         487719.232,
+         4420392.493,
+         862.072
+        ]
+       }
+      ],
+      "bounds": [
+       487598.631,
+       4420301.487,
+       838.601,
+       487719.232,
+       4420392.493,
+       862.072
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-placed",
+   "title": "Konumu nesnede tutulan bulut, birim matris: konum dosyaya yazılır; geçmişte konum ve matris",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "konumlu"
+    },
+    "matrix": "1.0 0.0 0.0 0.0\n0.0 1.0 0.0 0.0\n0.0 0.0 1.0 0.0\n0.0 0.0 0.0 1.0",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 0,148 m kaydı, dönüklük 0,1237°; “koy-donusmus.laz” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 0.14751610085275502,
+     "angle": 0.1236879321223688
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     },
+     {
+      "level": "info",
+      "text": "Bulutun nesnedeki konumu da dosyaya yazıldı; yazılan bulutun konumu yok."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.laz": {
+      "count": 71212,
+      "points": "fec7fb71c87d75c3"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.99999775000091 -0.002100118288230866 -0.0002991593106401065 9284.479134201538 0.0020999983620004106 0.999997714748988 -0.0004006291068107812 -1013.5625761831179 0.0002999999955 0.00039999997133333403 0.999999875000005 -1914.4047402384188 0 0 0 1 | 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.laz",
+        "format": "laz",
+        "count": 71212,
+        "bounds": [
+         487599.798,
+         4420299.975,
+         838.994,
+         487719.805,
+         4420390.182,
+         862.666
+        ]
+       }
+      ],
+      "bounds": [
+       487599.798,
+       4420299.975,
+       838.994,
+       487719.805,
+       4420390.182,
+       862.666
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-placed-undo",
+   "title": "Konumu nesnede tutulan bulutta Son dönüşümü geri al: ret",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "konumlu"
+    },
+    "undoLast": true
+   },
+   "expect": {
+    "status": "error",
+    "message": "Bulutun konumu nesnede tutuluyor; Son dönüşümü geri al dosyanın geçmişini geri alır. Önce Bulutu konumla'da konumu kaldırın."
+   }
+  },
+  {
+   "id": "thin-placed",
+   "title": "Konumu nesnede tutulan bulutu Seyrelt: dosyanın noktaları çizimdeki yerinde değil, ret",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.thin"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "konumlu"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Bulutun konumu nesnede tutuluyor: dosyasının noktaları çizimde gösterildiği yerde değil, bu araç ise dosyanın kendi noktalarını okur. Önce Dönüşüm uygula ile konumu dosyaya yazın ya da Bulutu konumla'da konumu kaldırın."
+   }
+  },
+  {
    "id": "transform-axis-zero",
    "title": "Eksen ve açı, uzunluğu sıfır eksen: ret",
    "document": "pointcloud.kcad",

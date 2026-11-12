@@ -157,8 +157,7 @@ def problem(indexes):
             if k in fields[:j]:
                 return f"{at}/fields/{j}", f"“{x['name']}” dizininde “{label(f)}” alanı iki kez var."
             if f["kind"] == "binary":
-                return f"{at}/fields/{j}", (f"“{label(f)}” alanı bayt tutar; dizine girmez (ArcGIS de BLOB alanına dizin "
-                                            "kurmaz).")
+                return f"{at}/fields/{j}", f"“{label(f)}” alanı bayt tutar; dizine girmez."
         if x.get("nullsEqual") and not x.get("unique"):
             return f"{at}/nullsEqual", f"“{x['name']}” dizini tekil değil; boşların aynı sayılması yalnız tekil dizinin olur."
         o = next((o for o in indexes[:i] if o["fields"] == fields), None)
@@ -355,7 +354,7 @@ def indexes_file():
         "“Bina” dizininin “Bina no” alanı katmanda yok.")
     bad("aynı alan iki kez", [x(fields=["Ada", "Ada"])], "0/fields/1", "“Ada ve parsel” dizininde “Ada” alanı iki kez var.")
     bad("bayt alanı", [{"name": "Belge", "fields": ["Belge"]}], "0/fields/0",
-        "“Belge” alanı bayt tutar; dizine girmez (ArcGIS de BLOB alanına dizin kurmaz).")
+        "“Belge” alanı bayt tutar; dizine girmez.")
     bad("tekil olmayan dizinde boşlar aynı", [{"name": "Mahalle", "fields": ["Mahalle"], "nullsEqual": True}], "0/nullsEqual",
         "“Mahalle” dizini tekil değil; boşların aynı sayılması yalnız tekil dizinin olur.")
     bad("aynı alanlar aynı sırayla iki dizinde", [KEY, {"name": "Yine ada", "fields": ["Ada", "Parsel"]}], "1/fields",

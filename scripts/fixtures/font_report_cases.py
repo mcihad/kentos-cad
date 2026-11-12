@@ -179,7 +179,7 @@ def report(doc, names=()):
             named, how = s["font"], "own"
         shx = how == "shx" and embedded(doc, s)
         if named != s["font"] and not shx:
-            what = {"shx": "AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor", "missing": "KentOS'ta yok"}.get(how, "stil başka bir yazı tipine çevrilmiş")
+            what = {"shx": "SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor", "missing": "KentOS'ta yok"}.get(how, "stil başka bir yazı tipine çevrilmiş")
             warnings.append({"code": "font_substituted",
                              "message": f"“{s['name']}” stili {s.get('fontFile', '')} yazı tipini adlandırıyor ({what}); yazıları {LABELS[s['font']]} ile çizilir.",
                              "path": f"styles[{i}]"})

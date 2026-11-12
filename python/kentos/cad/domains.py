@@ -23,17 +23,16 @@ if TYPE_CHECKING:
 
 
 class _DomainsEdit(LocalCommand[DomainsEdit, DomainsEdited, DomainsEdited]):
-    """``cad.domains.edit`` v1. Değer listeleri: Projenin değer listelerini düzenler
-    (ArcGIS'in domain'i): bir kod listesi (values) ya da aralık (min, max) projede bir
-    kez tutulur,                       birçok katmanın alanı ona bağlanır; bağlı alanın
-    değerleri listenin kopyasıdır ve liste değişince aynı adımda yeniden yazılır.
-    create yeni liste (domainKind: uyduğu alan türü), fromField bir alanın kendi
-    listesinden liste yapıp alanı bağlar, update listeyi
-    değiştirir (türü değişmez; kayıtların tuttuğu kod listeden çıkamaz: recode ile başka
-    koda taşınır ya da kullanımdan kaldırılır),                       remove bağlı alanı
-    olmayan listeyi siler (detach: alanlar kopyalarını tutar), link alanı bir listeye
-    bağlar ya da bağı çözer.                       Tek geri alma adımı “Değer
-    listeleri”.
+    """``cad.domains.edit`` v1. Değer listeleri: Projenin değer listelerini düzenler: bir
+    kod listesi (values) ya da aralık (min, max) projede bir kez tutulur,
+    birçok katmanın alanı ona bağlanır; bağlı alanın değerleri listenin kopyasıdır ve
+    liste değişince aynı adımda yeniden yazılır.                       create yeni liste
+    (domainKind: uyduğu alan türü), fromField bir alanın kendi listesinden liste yapıp
+    alanı bağlar, update listeyi                       değiştirir (türü değişmez;
+    kayıtların tuttuğu kod listeden çıkamaz: recode ile başka koda taşınır ya da
+    kullanımdan kaldırılır),                       remove bağlı alanı olmayan listeyi
+    siler (detach: alanlar kopyalarını tutar), link alanı bir listeye bağlar ya da bağı
+    çözer.                       Tek geri alma adımı “Değer listeleri”.
     """
     __slots__ = ()
     id = "cad.domains.edit"
@@ -54,16 +53,16 @@ class _DomainsEdit(LocalCommand[DomainsEdit, DomainsEdited, DomainsEdited]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> DomainsEdited:
-        """Değer listeleri: Projenin değer listelerini düzenler (ArcGIS'in domain'i): bir kod
-        listesi (values) ya da aralık (min, max) projede bir kez tutulur,
-        birçok katmanın alanı ona bağlanır; bağlı alanın değerleri listenin kopyasıdır ve
-        liste değişince aynı adımda yeniden yazılır.                       create yeni liste
-        (domainKind: uyduğu alan türü), fromField bir alanın kendi listesinden liste yapıp
-        alanı bağlar, update listeyi                       değiştirir (türü değişmez;
-        kayıtların tuttuğu kod listeden çıkamaz: recode ile başka koda taşınır ya da
-        kullanımdan kaldırılır),                       remove bağlı alanı olmayan listeyi
-        siler (detach: alanlar kopyalarını tutar), link alanı bir listeye bağlar ya da bağı
-        çözer.                       Tek geri alma adımı “Değer listeleri”.
+        """Değer listeleri: Projenin değer listelerini düzenler: bir kod listesi (values) ya da
+        aralık (min, max) projede bir kez tutulur,                       birçok katmanın
+        alanı ona bağlanır; bağlı alanın değerleri listenin kopyasıdır ve liste değişince
+        aynı adımda yeniden yazılır.                       create yeni liste (domainKind:
+        uyduğu alan türü), fromField bir alanın kendi listesinden liste yapıp alanı bağlar,
+        update listeyi                       değiştirir (türü değişmez; kayıtların tuttuğu
+        kod listeden çıkamaz: recode ile başka koda taşınır ya da kullanımdan kaldırılır),
+        remove bağlı alanı olmayan listeyi siler (detach: alanlar kopyalarını tutar), link
+        alanı bir listeye bağlar ya da bağı çözer.                       Tek geri alma adımı
+        “Değer listeleri”.
 
         Args:
             doc: The drawing it works on.

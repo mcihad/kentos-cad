@@ -2,6 +2,6 @@
 
 /**
  * A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
- * fill areas (m²).
+ * fill areas (m²); along a drawn axis (docs/adr/4760) the axis's place there and the section's left and right ends.
  */
-export type TerrainSection = { station: number, cutArea: number, fillArea: number, };
+export type TerrainSection = { station: number, cutArea: number, fillArea: number, at?: [number, number], ends?: [[number, number], [number, number]], };

@@ -4,7 +4,10 @@
 //! choice shows the measures, the areas by use or the decisions that changed. Raporu kaydet writes them all as CSV
 //! with the stamp and keeps the stamp for the next comparison; Erişimi çizimde göster leaves the scenario's access on
 //! the drawing (impact_reach_marks.rs, docs/adr/2260). No score picks a plan. docs/adr/4260: the terrain slope on a
-//! surface of the project, with the user's steep threshold.
+//! surface of the project, with the user's steep threshold. Docs/adr/5060: the access along a network of the project
+//! (Erişim ağı, with the user's leg to it); Eğimi çizimde göster leaves the scenario's slope classes on the drawing;
+//! Ölçüleri çizime yaz writes the comparison as a table on “Senaryo ölçüleri” (`cad.scenarios.record`, one undo step)
+//! and the summary says, for each table of the scenario in the drawing, whether it still holds.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -31,6 +34,10 @@ const SAVE: &str = "Raporu kaydet…";
 pub const SHOW_ACCESS: &str = "Erişimi çizimde göster";
 /// Altyapıyı çizimde göster (docs/adr/3060).
 pub const SHOW_NEAR: &str = "Altyapıyı çizimde göster";
+/// Eğimi çizimde göster and Ölçüleri çizime yaz (docs/adr/5060), and the layer the table goes on.
+pub const SHOW_SLOPE: &str = "Eğimi çizimde göster";
+pub const RECORD: &str = "Ölçüleri çizime yaz";
+pub const RECORD_LAYER: &str = "Senaryo ölçüleri";
 
 /// What the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -51,12 +58,35 @@ impl std::fmt::Display for View {
     }
 }
 
+/// Which measure's values the form shows: one group at a time, so the window stays short on a small screen.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Group {
+    #[default]
+    Access,
+    Infra,
+    Slope,
+    Shares,
+}
+
+impl std::fmt::Display for Group {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Group::Access => "Erişim",
+            Group::Infra => "Altyapı",
+            Group::Slope => "Eğim",
+            Group::Shares => "Geçirimsizlik",
+        })
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct State {
     /// The scenarios: id and name.
     pub scenarios: Vec<(String, String)>,
     pub scenario: String,
     pub view: View,
+    /// The measure whose values the form shows.
+    pub group: Group,
     pub answer: Option<Result<ScenariosImpacted, String>>,
     /// docs/adr/2040, the user's values: the impervious shares (“konut 0,6; park 0,1”), the access's uses and distance.
     pub shares: String,
@@ -80,12 +110,18 @@ pub struct State {
     pub slope_aspect: bool,
     /// The project's terrain surfaces: id and name (“—” first, none).
     pub surfaces: Vec<(String, String)>,
+    /// Docs/adr/5060, the user's: the network the access runs along (its id; empty: straight) and the most a centroid
+    /// may be from it (m); the project's networks: id and name (“düz uzaklık” first).
+    pub network: String,
+    pub connect: String,
+    pub networks: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Scenario(String),
     View(View),
+    Group(Group),
     Shares(String),
     From(String),
     To(String),
@@ -107,6 +143,11 @@ pub enum Event {
     DrawAccess,
     /// Altyapıyı çizimde göster (docs/adr/3060).
     DrawNear,
+    /// Docs/adr/5060: the access's network and leg; Eğimi çizimde göster; Ölçüleri çizime yaz.
+    Network(String),
+    Connect(String),
+    DrawSlope,
+    Record,
     Close,
 }
 
@@ -216,8 +257,18 @@ impl App {
         let access = if s.distance.trim().is_empty() {
             None
         } else {
+            // Docs/adr/5060: along the chosen network, the leg the user allows.
+            let (network, connect) = if s.network.is_empty() {
+                (None, None)
+            } else {
+                match s.connect.trim().replace(',', ".").parse::<f64>() {
+                    Ok(c) => (Some(s.network.clone()), Some(c)),
+                    Err(_) if s.connect.trim().is_empty() => (Some(s.network.clone()), None),
+                    Err(_) => return Err(format!("Ağa bağlanma uzaklığı “{}” bir sayı değil.", s.connect.trim())),
+                }
+            };
             match s.distance.trim().replace(',', ".").parse::<f64>() {
-                Ok(distance) => Some(ImpactAccess { distance, from: uses_of(&s.from), to: uses_of(&s.to) }),
+                Ok(distance) => Some(ImpactAccess { distance, from: uses_of(&s.from), to: uses_of(&s.to), network, connect }),
                 Err(_) => return Err(format!("Erişim uzaklığı “{}” bir sayı değil.", s.distance.trim())),
             }
         };
@@ -251,6 +302,7 @@ impl App {
                     from: uses_of(&s.slope_from),
                     classes,
                     aspect: s.slope_aspect,
+                    map: false,
                 }),
                 Err(_) => return Err(format!("Dik eğim eşiği “{}” bir sayı değil.", s.slope_threshold.trim())),
             }
@@ -303,7 +355,11 @@ impl App {
         let surfaces = std::iter::once((String::new(), "—".to_owned()))
             .chain(doc.model.settings().road.iter().flat_map(|r| r.surfaces.iter()).map(|s| (s.id.clone(), s.name.clone())))
             .collect();
-        self.impact = State { scenarios, scenario: first, layers, surfaces, ..State::default() };
+        // Docs/adr/5060: the project's networks, straight first.
+        let networks = std::iter::once((String::new(), "düz uzaklık".to_owned()))
+            .chain(doc.model.settings().networks.iter().map(|n| (n.id.clone(), n.name.clone())))
+            .collect();
+        self.impact = State { scenarios, scenario: first, layers, surfaces, networks, ..State::default() };
         self.impact_run();
         self.dialog = Some(Dialog::Impact);
         Task::none()
@@ -331,6 +387,7 @@ impl App {
                 self.impact_run();
             }
             Event::View(v) => self.impact.view = v,
+            Event::Group(g) => self.impact.group = g,
             Event::Shares(v) => {
                 self.impact.shares = v;
                 self.impact_run();
@@ -438,12 +495,98 @@ impl App {
                     ),
                 );
             }
+            Event::Network(v) => {
+                self.impact.network = v;
+                self.impact_run();
+            }
+            Event::Connect(v) => {
+                self.impact.connect = v;
+                self.impact_run();
+            }
+            Event::DrawSlope => self.impact_draw_slope(),
+            Event::Record => self.impact_record(),
             Event::Close => {
                 self.impact = State::default();
                 self.dialog = None;
             }
         }
         Task::none()
+    }
+
+    /// Eğimi çizimde göster (docs/adr/5060): the window closes and the scenario's slope classes stay on the drawing,
+    /// worked out again as it changes, until İşareti kaldır.
+    fn impact_draw_slope(&mut self) {
+        let (Some(Ok(answer)), Ok(input)) = (&self.impact.answer, self.impact_input()) else { return };
+        if !answer.measures.iter().any(|m| m.id == "slopeMean") {
+            return;
+        }
+        let Some(doc) = self.document.as_ref() else { return };
+        let shown = crate::impact_reach_marks::Shown::slope(doc.session, input);
+        let marks = scenarios_impact::preview(&doc.model, &shown.input)
+            .ok()
+            .map(|a| crate::impact_reach_marks::ReachMarks::of_slope(&a, &self.format()));
+        let classes = marks.as_ref().map_or(0, |m| m.key.len());
+        self.impact_reach = Some(shown);
+        self.impact = State::default();
+        self.dialog = None;
+        if let Some([x0, y0, x1, y1]) = marks.as_ref().and_then(|m| m.bounds()) {
+            let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
+            let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+            self.navigating(|app| app.zoom_to_bounds(&b));
+        }
+        self.say(
+            Level::Info,
+            format!(
+                "{TITLE}: senaryonun ölçülen alanları {classes} eğim sınıfına göre boyandı (yeşilden kırmızıya, dikleştikçe); alanlar sol alttaki anahtarda. İşareti kaldır işaretleri siler."
+            ),
+        );
+    }
+
+    /// Ölçüleri çizime yaz (docs/adr/5060): the comparison as a table on “Senaryo ölçüleri” (made when missing), right
+    /// of the compared objects, one undo step; the window stays and reads the table back.
+    pub(crate) fn impact_record(&mut self) {
+        let Ok(impact) = self.impact_input() else { return };
+        let impact = ScenariosImpact { since: None, ..impact };
+        let Some(doc) = self.document.as_mut() else { return };
+        let model = &mut doc.model;
+        let step = model.begin_group(RECORD);
+        let existing = model.layers().leaves().into_iter().find(|l| l.name == RECORD_LAYER).map(|l| l.id.clone());
+        let layer = match existing {
+            Some(id) => id,
+            None => match model.add_layer(kentos_domain::NewLayer::layer(RECORD_LAYER), None, false) {
+                Ok(id) => id,
+                Err(refused) => {
+                    model.cancel_group(step);
+                    self.warn(refused.to_string());
+                    return;
+                }
+            },
+        };
+        let input = kentos_commands::ScenariosRecord { impact, layer_id: layer, at: None, expected_revision: None };
+        match kentos_native_application::scenarios_record::execute(&mut ExecutionContext::new(model), input) {
+            CommandResult::Completed { output, .. } => {
+                model.end_group(step);
+                self.say(
+                    Level::Success,
+                    format!(
+                        "{RECORD}: {} satırlık tablo “{RECORD_LAYER}” katmanına yazıldı, taban damgası {} (tek geri alma adımı).",
+                        output.cells.len(),
+                        output.stamp
+                    ),
+                );
+                self.impact_run();
+            }
+            other => {
+                model.cancel_group(step);
+                let why = match other {
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                        error.message
+                    }
+                    _ => "Ölçü tablosu yazılamadı.".to_owned(),
+                };
+                self.warn(why);
+            }
+        }
     }
 
     pub(crate) fn impact_view(&self) -> Element<'_, Message> {
@@ -453,50 +596,49 @@ impl App {
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
             container(crate::style::fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)
         };
-        // docs/adr/2040: the measures that take the user's values; empty ones are not computed.
-        let form = Form::new()
-            .label_width(170.0)
-            .field("Senaryo", container(pick).width(300))
-            .section("Ölçüler (değerler sizin)")
-            .field("Geçirimsizlik payları", text(&s.shares, "konut 0,6; park 0,1; yesil 0,05", Event::Shares, 420.0))
-            .field(
-                "Erişim kimden / kime",
-                iced::widget::row![text(&s.from, "konut", Event::From, 205.0), text(&s.to, "park, yesil", Event::To, 205.0)]
-                    .spacing(10),
-            )
-            .field("Erişim uzaklığı (m)", text(&s.distance, "—", Event::Distance, 120.0))
-            .field(
-                "Altyapı katmanı / uzaklığı",
-                iced::widget::row![
-                    container(crate::style::fields::select_owned(s.layers.clone(), &s.infra_layer, |id| msg(Event::InfraLayer(id))))
-                        .width(290),
-                    text(&s.infra_distance, "m", Event::InfraDistance, 120.0)
-                ]
-                .spacing(10),
-            )
-            .field("Altyapıda ölçülen kullanımlar", text(&s.infra_from, "boş: bütün alanlar", Event::InfraFrom, 420.0))
-            // docs/adr/4260: the slope on a terrain surface; only Harita and Yol projects have surfaces.
-            .field(
-                "Eğim yüzeyi / dik eşik (%)",
-                iced::widget::row![
-                    container(crate::style::fields::select_owned(s.surfaces.clone(), &s.slope_surface, |id| msg(Event::SlopeSurface(id))))
-                        .width(290),
-                    text(&s.slope_threshold, "%", Event::SlopeThreshold, 120.0)
-                ]
-                .spacing(10),
-            )
-            .field("Eğimde ölçülen kullanımlar", text(&s.slope_from, "boş: bütün alanlar", Event::SlopeFrom, 420.0))
-            // docs/adr/4660: the areas by slope class (the user's breaks) and by aspect.
-            .field(
-                "Eğim sınıfları (%) / bakı",
-                iced::widget::row![
-                    text(&s.slope_classes, "5; 15; 30", Event::SlopeClasses, 290.0),
-                    kentos_ui::widget::switch::Switch::new(s.slope_aspect, |on| msg(Event::SlopeAspect(on))).label("Bakıya göre alanlar")
-                ]
-                .spacing(10)
-                .align_y(iced::Center),
-            )
-            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık. Altyapı: alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir. Eğim: alanın yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden.");
+        // docs/adr/2040: the measures that take the user's values; empty ones are not computed. One measure's values at a
+        // time, chosen above them, so the window stays short; the others keep theirs.
+        let pair = |a: Element<'static, Message>, b: Element<'static, Message>| -> Element<'static, Message> {
+            iced::widget::row![a, b].spacing(10).align_y(iced::Center).into()
+        };
+        let choice = |list: &[(String, String)], value: &str, on: fn(String) -> Event| -> Element<'static, Message> {
+            container(crate::style::fields::select_owned(list.to_vec(), value, move |id| msg(on(id)))).width(290).into()
+        };
+        let form = Form::new().label_width(170.0).field("Senaryo", container(pick).width(300));
+        let groups = [Group::Access, Group::Infra, Group::Slope, Group::Shares];
+        let tabs = Segmented::new(groups, s.group, |g| msg(Event::Group(g)));
+        let values = match s.group {
+            Group::Access => Form::new()
+                .label_width(170.0)
+                .field("Kimden / kime", pair(text(&s.from, "konut", Event::From, 205.0).into(), text(&s.to, "park, yesil", Event::To, 205.0).into()))
+                .field("Uzaklık (m)", text(&s.distance, "—", Event::Distance, 120.0))
+                // Docs/adr/5060: along a network of the project, the leg from a centroid to it.
+                .field("Ağ / bağlanma (m)", pair(choice(&s.networks, &s.network, Event::Network), text(&s.connect, "m", Event::Connect, 120.0).into()))
+                .help("Kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık; ağ seçilince ağ boyunca, merkezlerin ağa bağlanma uzaklığı dahil."),
+            Group::Infra => Form::new()
+                .label_width(170.0)
+                .field("Katman / uzaklık (m)", pair(choice(&s.layers, &s.infra_layer, Event::InfraLayer), text(&s.infra_distance, "m", Event::InfraDistance, 120.0).into()))
+                .field("Ölçülen kullanımlar", text(&s.infra_from, "boş: bütün alanlar", Event::InfraFrom, 420.0))
+                .help("Alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir."),
+            // docs/adr/4260, 4660: the slope on a terrain surface (only Harita and Yol projects have surfaces); the areas by
+            // slope class (the user's breaks) and by aspect.
+            Group::Slope => Form::new()
+                .label_width(170.0)
+                .field("Yüzey / dik eşik (%)", pair(choice(&s.surfaces, &s.slope_surface, Event::SlopeSurface), text(&s.slope_threshold, "%", Event::SlopeThreshold, 120.0).into()))
+                .field("Ölçülen kullanımlar", text(&s.slope_from, "boş: bütün alanlar", Event::SlopeFrom, 420.0))
+                .field(
+                    "Sınıflar (%) / bakı",
+                    pair(
+                        text(&s.slope_classes, "5; 15; 30", Event::SlopeClasses, 290.0).into(),
+                        kentos_ui::widget::switch::Switch::new(s.slope_aspect, |on| msg(Event::SlopeAspect(on))).label("Bakıya göre alanlar").into(),
+                    ),
+                )
+                .help("Alanın yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden."),
+            Group::Shares => Form::new()
+                .label_width(170.0)
+                .field("Geçirimsizlik payları", text(&s.shares, "konut 0,6; park 0,1; yesil 0,05", Event::Shares, 420.0))
+                .help("Kullanım başına geçirimsiz pay; alanla çarpılıp toplanır."),
+        };
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Karşılaştırma yok.");
         match &s.answer {
@@ -509,6 +651,24 @@ impl App {
                 };
                 lines.push(words::text_line(Kind::Info, format!("Mevcut durumla karşılaştırılan katmanlar: {}.", layers.join(", "))));
                 lines.push(words::text_line(kind, stamp));
+                // Docs/adr/5060: the scenario's tables in the drawing.
+                for rec in &r.records {
+                    let (kind, said) = match (rec.base_changed, rec.scenario_changed) {
+                        (false, false) => (Kind::Ok, format!("Çizimdeki ölçü tablosu güncel (taban {}, senaryo {}).", rec.stamp, rec.scenario_stamp)),
+                        (b, a) => (
+                            Kind::Error,
+                            format!(
+                                "Çizimdeki ölçü tablosu eskidi: {} yazıldıktan sonra değişti; sayıları bugünkü değil, kendiliğinden güncellenmez. {RECORD} ile yeniden yazın.",
+                                match (b, a) {
+                                    (true, true) => "taban ve senaryo",
+                                    (true, false) => "taban",
+                                    _ => "senaryo",
+                                }
+                            ),
+                        ),
+                    };
+                    lines.push(words::text_line(kind, said));
+                }
                 for g in &r.gaps {
                     lines.push(words::text_line(Kind::Warn, g.clone()));
                 }
@@ -573,17 +733,23 @@ impl App {
             .width(iced::Fill)
             .push(kentos_ui::label::caption(LEAD))
             .push(form)
+            .push(kentos_ui::label::caption("Ölçülerin değerleri sizindir; boş bırakılan ölçü hesaplanmaz."))
+            .push(tabs)
+            .push(values)
             .push(words::summary(lines))
             .push(Segmented::new(views, s.view, |v| msg(Event::View(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         let ready = matches!(s.answer, Some(Ok(_)));
         let reached = matches!(&s.answer, Some(Ok(r)) if r.reach.is_some());
         let near = matches!(&s.answer, Some(Ok(r)) if r.near.is_some());
+        let sloped = matches!(&s.answer, Some(Ok(r)) if r.measures.iter().any(|m| m.id == "slopeMean"));
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
+            .aside(words::secondary(RECORD, ready.then(|| msg(Event::Record))))
             .aside(words::secondary(SHOW_ACCESS, reached.then(|| msg(Event::DrawAccess))))
             .aside(words::secondary(SHOW_NEAR, near.then(|| msg(Event::DrawNear))))
+            .aside(words::secondary(SHOW_SLOPE, sloped.then(|| msg(Event::DrawSlope))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(900.0)
             .modal(msg(Event::Close))
@@ -595,10 +761,13 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SHOW_ACCESS) => Some(msg(Event::DrawAccess)),
             Control::Press(SHOW_NEAR) => Some(msg(Event::DrawNear)),
+            Control::Press(SHOW_SLOPE) => Some(msg(Event::DrawSlope)),
+            Control::Press(RECORD) => Some(msg(Event::Record)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
 }
 
-/// The stamps kept this session, by scenario id (docs/adr/1440 §3: kept in the drawing is later work).
+/// The stamps kept this session, by scenario id (docs/adr/1440 §3); a table written in the drawing keeps its own
+/// (docs/adr/5060).
 pub type Stamps = BTreeMap<String, String>;

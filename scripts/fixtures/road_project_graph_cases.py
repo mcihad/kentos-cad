@@ -12,7 +12,9 @@ road_project_cases.py's (ADR 0911's rules, the stamps by hand); the graph is bui
   drew keeps the version that drew it (1) and the revision its write made (docs/adr/2840): the revision a
   `captureRevision` step takes right after the step that drew it, or drew it again; and (docs/adr/3640) its layer's
   definition (id, name, colour, line type, line weight), as the setup's layer holds it, with (docs/adr/4040) the
-  groups it is in from the top, its whole style and the definition of the project line type the style names;
+  groups it is in from the top, its whole style and the definition of the project line type the style names, and
+  (docs/adr/4860) its fields without a bound table's column (a link to a list the project lacks taken away), the
+  project's lists they link (in the order they first link them) and its subtypes;
 - edges: a surface's layers build it; a row is made on its parent in the tree (not a drawing: its sources say it); every
   source a drawing keeps, in the record's order, the first the main one, its stamp then and now (none: gone; a
   definition's stamp of its grades as KentOS holds them, road_grades.py, as the file is written); a sheet's
@@ -200,6 +202,35 @@ def layer_def(st, lid):
         out["geometry"] = n["geometry"]
     if n.get("plot") is False:
         out["plot"] = False
+    # Docs/adr/4860: its fields without a bound table's column, a link to a list the project lacks taken away (the field
+    # keeps its copy); the lists the fields link, as the project defines them, in the order they first link them; its
+    # subtypes.
+    lists = {d["id"]: d for d in st.setup["settings"].get("domains", [])}
+    fields, domains = [], []
+    for f in n.get("fields", []):
+        f = {k: copy.deepcopy(v) for k, v in f.items() if k != "column"}
+        if "domain" in f:
+            if f["domain"] in lists:
+                if all(d["id"] != f["domain"] for d in domains):
+                    domains.append(copy.deepcopy(lists[f["domain"]]))
+            else:
+                del f["domain"]
+        fields.append(f)
+    if fields:
+        out["fields"] = fields
+    if domains:
+        out["domains"] = domains
+    if n.get("subtypes") is not None:
+        out["subtypes"] = copy.deepcopy(n["subtypes"])
+    # Docs/adr/5240: its value combinations, record rules and indexes, and the drafts of the project's forms that edit
+    # it (id, name, draft; no release).
+    for key in ("contingents", "rules", "indexes"):
+        if n.get(key):
+            out[key] = copy.deepcopy(n[key])
+    forms = [{"id": f["id"], "name": f["name"], "draft": copy.deepcopy(f["draft"])}
+             for f in st.setup["settings"].get("forms", []) if f["layer"] == lid]
+    if forms:
+        out["forms"] = forms
     return out
 
 
@@ -348,6 +379,54 @@ def look_setup():
     return s
 
 
+# Docs/adr/4860: the zero line's layer's fields: a name, a kind linked to the project's list Sınır türü, a depth in
+# metres, a day the bound table makes itself (its column), a field linked to a list the project no longer has (its copy
+# kept); its subtypes by the kind (a cut's depth required); a list no field links.
+SINIR_TURU = {"id": "sinir-turu", "name": "Sınır türü", "kind": "text",
+              "values": [{"code": "K", "label": "Kazı"}, {"code": "D", "label": "Dolgu"}]}
+FIELDS = [{"name": "Ad", "kind": "text", "length": 40},
+          {"name": "Tür", "kind": "text", "values": copy.deepcopy(SINIR_TURU["values"]), "domain": "sinir-turu"},
+          {"name": "Derinlik", "kind": "decimal", "scale": 2, "unit": "m"},
+          {"name": "Kayıt günü", "kind": "date", "column": {"made": "now()"}},
+          {"name": "Eski", "kind": "text", "values": [{"code": "E", "label": "Eski"}], "domain": "silinen-liste"}]
+SUBTYPES = {"field": "Tür", "types": [{"code": "K", "label": "Kazı sınırı", "fields": [{"field": "Derinlik",
+                                                                                      "required": True}]},
+                                      {"code": "D", "label": "Dolgu sınırı"}]}
+
+
+def fields_setup():
+    """Docs/adr/4860: the map project with the zero line's layer's fields, subtypes and the project's lists."""
+    s = map_setup()
+    layer = next(n for n in s["layers"] if n["id"] == "sifir")
+    layer["fields"] = copy.deepcopy(FIELDS)
+    layer["subtypes"] = copy.deepcopy(SUBTYPES)
+    s["settings"]["domains"] = [copy.deepcopy(SINIR_TURU), {"id": "kullanilmayan", "name": "Kullanılmayan",
+                                                            "kind": "text", "values": [{"code": "X", "label": "X"}]}]
+    return s
+
+
+def shaped_setup():
+    """Docs/adr/5240: fields_setup's project with a ground field, the zero line's layer's value combination, record
+    rule and index, its form (published, enforced: the recipe keeps its draft only) and another layer's form."""
+    s = fields_setup()
+    layer = next(n for n in s["layers"] if n["id"] == "sifir")
+    layer["fields"].append({"name": "Zemin", "kind": "text", "values": [{"code": "T", "label": "Toprak"},
+                                                                       {"code": "Y", "label": "Kaya"}]})
+    layer["contingents"] = [{"name": "Tür ve zemin", "fields": ["Tür", "Zemin"], "restrictive": True,
+                             "rows": [{"cells": [{"kind": "code", "code": "K"}, {"kind": "any"}]},
+                                      {"cells": [{"kind": "code", "code": "D"}, {"kind": "code", "code": "T"}]}]}]
+    layer["rules"] = [{"id": "derinlik-arti", "name": "Derinlik artı", "rule": "Derinlik boş veya Derinlik > 0",
+                       "message": "Derinlik sıfırdan büyük olmalı.", "fields": ["Derinlik"]}]
+    layer["indexes"] = [{"name": "Ad", "fields": ["Ad"], "unique": True}]
+    body = {"revision": 1, "items": [{"type": "field", "id": "ad", "field": "Ad", "required": True},
+                                     {"type": "field", "id": "tur", "field": "Tür"}]}
+    s["settings"]["forms"] = [
+        {"id": "sinir-formu", "name": "Sınır formu", "layer": "sifir", "draft": copy.deepcopy(body)},
+        {"id": "baska", "name": "Başka", "layer": "0", "draft": {"revision": 1, "items": [
+            {"type": "note", "id": "not", "text": "Başka katman"}]}}]
+    return s
+
+
 def edit_height(st):
     """The mound's corner set lower by an edit of its surface (road_project_cases.py's): the mound's stamp changes."""
     t = st.find("surface", "t-10")
@@ -391,9 +470,13 @@ def cases():
     a = drawn(st, rp.ZEROLINE)
     b = edit_height(st)
     rp.rebuild(st, st.drawings[0])
-    cap = redrawn(st)
-    add("Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır", [*a, b, cap, asked(st, book_=BOOK, boxes=boxes)],
-        sa)
+    # Docs/adr/4740: drawing again by itself writes only what changed. The corner stays under the plane, so the zero
+    # line comes out as it was: nothing is written, the record takes the stamps now and keeps the revision of the write
+    # that made its objects (docs/adr/4320).
+    for d in st.drawings:
+        SNAP[(id(st), d["id"])] = copy.deepcopy(st.road)
+    add("Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır; aynı çıkan sıfır hattı yazılmaz",
+        [*a, b, asked(st, book_=BOOK, boxes=boxes)], sa)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     target = len(sm["entities"]) + 1
@@ -421,6 +504,16 @@ def cases():
     a = drawn(st, rp.ZEROLINE)
     add("Katmanın saydamlığı, karışım kipi, türü ve yazdırılmaması da tarifte; maskesi değil",
         [*a, asked(st, book_=BOOK, boxes=boxes)], slk)
+    sfd = fields_setup()
+    st = rp.State(sfd)
+    a = drawn(st, rp.ZEROLINE)
+    add("Katmanın alanları, bağladıkları değer listeleri ve alt türleri de tarifte; bağlı tablonun sütunu ve olmayan "
+        "listenin bağı değil", [*a, asked(st, book_=BOOK, boxes=boxes)], sfd)
+    ssh = shaped_setup()
+    st = rp.State(ssh)
+    a = drawn(st, rp.ZEROLINE)
+    add("Katmanın değer bileşimleri, kayıt kuralları, dizinleri ve onu düzenleyen formların taslağı da tarifte",
+        [*a, asked(st, book_=BOOK, boxes=boxes)], ssh)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     add("Derin okuma: kurulamayan yüzey grafikte de", [*a, asked(st, deep=True, book_=BOOK, boxes=boxes)], sm)

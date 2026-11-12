@@ -104,43 +104,45 @@ use kentos_native_application::{
     map_survey_network, map_work, map_work_edit, map_work_restore, materials_edit, modules_edit,
     modules_query, network_define, north, nurbs, objects_derive, offset, opening_types_edit,
     openings_create, openings_distances, openings_edit, openings_query, options_edit,
-    options_query, orthophoto_check, orthophoto_compare, parcel_register, parcels,
-    parcels_boundaries, parcels_check, pipes_check, pipes_profile, plot_styles_import, point,
-    pointcloud_overlap, pointcloud_register, points_construct, polygon, polygon_regular, polyline,
-    readjustment, readjustment_scope, readjustment_sheets, rectangle_create, revcloud_create,
-    revisions, road_alignments_check, road_alignments_create, road_alignments_edit,
-    road_alignments_fit, road_alignments_impact, road_alignments_import, road_alignments_label,
-    road_alignments_query, road_corridors_daylights, road_corridors_draw, road_corridors_edit,
-    road_corridors_preflight, road_corridors_protected, road_corridors_query, road_corridors_water,
-    road_culverts_closure, road_culverts_draw, road_culverts_edit, road_culverts_hydraulics,
-    road_culverts_query, road_drainage, road_drainage_draw, road_guardrails_draw,
-    road_guardrails_edit, road_guardrails_query, road_hauls_approve, road_hauls_edit,
-    road_hauls_network, road_hauls_plan, road_hauls_query, road_hauls_trucks, road_ifc,
-    road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_overlap,
-    road_junctions_query, road_junctions_tie, road_landxml, road_pay_edit, road_pay_query,
-    road_platforms_draw, road_platforms_edit, road_platforms_query, road_profiles_check,
-    road_profiles_create, road_profiles_draw, road_profiles_edit, road_profiles_fit,
-    road_profiles_impact, road_profiles_lengths, road_profiles_propose, road_profiles_query,
-    road_profiles_sight, road_project_edit, road_project_graph, road_project_produce,
-    road_project_query, road_project_rebuild, road_routes_draw, road_routes_find, road_scene,
-    road_sections_draw, road_sections_edit, road_sections_query, road_sheets, road_sheets_sections,
-    road_stakeout, road_stakeout_send, road_superelevations_check, road_superelevations_edit,
-    road_superelevations_query, road_superelevations_transitions, road_superelevations_widen,
-    road_swept, road_swept_draw, road_templates_edit, road_terrain_cloud, road_terrains_analysis,
-    road_terrains_compare, road_terrains_contours, road_terrains_coverage,
-    road_terrains_coverage_draw, road_terrains_create, road_terrains_cutfill,
-    road_terrains_density, road_terrains_edit, road_terrains_quality, road_terrains_query,
-    road_terrains_repair, road_terrains_sheet, road_terrains_sparse, road_terrains_stockpile,
-    road_terrains_zeroline, road_volumes_approve, road_volumes_compare, road_volumes_edit,
-    road_volumes_history, road_volumes_ledger, road_volumes_progress, road_volumes_query,
-    road_volumes_states, road_volumes_uncertainty, road_walls_draw, road_walls_edit,
-    road_walls_query, roads_edit, scenarios_edit, scenarios_impact, sections_edit, sections_query,
+    options_query, orthophoto_check, orthophoto_compare, orthophoto_seamlines, parcel_register,
+    parcels, parcels_boundaries, parcels_check, pipes_check, pipes_profile, plot_styles_import,
+    point, pointcloud_network, pointcloud_overlap, pointcloud_place, pointcloud_register,
+    points_construct, polygon, polygon_regular, polyline, profiles_carry, profiles_compare,
+    profiles_names, readjustment, readjustment_scope, readjustment_sheets, rectangle_create,
+    revcloud_create, revisions, road_alignments_check, road_alignments_create,
+    road_alignments_edit, road_alignments_fit, road_alignments_impact, road_alignments_import,
+    road_alignments_label, road_alignments_query, road_corridors_daylights, road_corridors_draw,
+    road_corridors_edit, road_corridors_preflight, road_corridors_protected, road_corridors_query,
+    road_corridors_water, road_culverts_closure, road_culverts_draw, road_culverts_edit,
+    road_culverts_hydraulics, road_culverts_query, road_drainage, road_drainage_draw,
+    road_guardrails_draw, road_guardrails_edit, road_guardrails_query, road_hauls_approve,
+    road_hauls_edit, road_hauls_network, road_hauls_plan, road_hauls_query, road_hauls_trucks,
+    road_ifc, road_junctions_clearance, road_junctions_draw, road_junctions_edit,
+    road_junctions_overlap, road_junctions_query, road_junctions_tie, road_landxml, road_pay_edit,
+    road_pay_query, road_platforms_draw, road_platforms_edit, road_platforms_query,
+    road_profiles_check, road_profiles_create, road_profiles_draw, road_profiles_edit,
+    road_profiles_fit, road_profiles_impact, road_profiles_lengths, road_profiles_propose,
+    road_profiles_query, road_profiles_sight, road_project_edit, road_project_graph,
+    road_project_produce, road_project_query, road_project_rebuild, road_routes_draw,
+    road_routes_find, road_scene, road_sections_draw, road_sections_edit, road_sections_query,
+    road_sheets, road_sheets_sections, road_stakeout, road_stakeout_send,
+    road_superelevations_check, road_superelevations_edit, road_superelevations_query,
+    road_superelevations_transitions, road_superelevations_widen, road_swept, road_swept_draw,
+    road_templates_edit, road_terrain_cloud, road_terrains_analysis, road_terrains_compare,
+    road_terrains_contours, road_terrains_coverage, road_terrains_coverage_draw,
+    road_terrains_create, road_terrains_cutfill, road_terrains_density, road_terrains_edit,
+    road_terrains_quality, road_terrains_query, road_terrains_repair, road_terrains_section,
+    road_terrains_sheet, road_terrains_sparse, road_terrains_stockpile, road_terrains_zeroline,
+    road_volumes_approve, road_volumes_compare, road_volumes_edit, road_volumes_history,
+    road_volumes_ledger, road_volumes_progress, road_volumes_query, road_volumes_states,
+    road_volumes_uncertainty, road_walls_draw, road_walls_edit, road_walls_query, roads_edit,
+    scenarios_edit, scenarios_impact, scenarios_record, sections_edit, sections_query,
     sector_create, set, settings_set, shape_edits, sheets_create, sheets_details, sheets_edit,
     sheets_fit, sheets_levels, slabs_create, slabs_edit, snap_find, spaces_create, spaces_edit,
     spaces_quantities, styles_edit, survey_adjust, survey_baselines, survey_points, tables_edit,
     texts_check, texts_edit, time_version, topology_clean, transform, ucs_set, units_change,
     views_edit, walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins,
-    walls_partition, walls_rectangle, zoning_check, zoning_symbolize,
+    walls_partition, walls_rectangle, zoning_check, zoning_draft, zoning_symbolize,
 };
 use kentos_native_application::{
     arch_edit, beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create, stairs_create,
@@ -2433,6 +2435,22 @@ impl Input for kentos_commands::SurveyAdjust {
                 known.get_mut(i)?.at.as_mut().map(|a| &mut a.x)
             }
             (W::Level { rows, .. }, "rows", "dh") => Some(&mut rows.get_mut(i)?.dh),
+            // docs/adr/5300: a leap-frog setup's sight.
+            (W::Level { leapfrog, .. }, "leapfrog", f) => {
+                let setup = leapfrog.get_mut(i)?;
+                let (side, what) = f.split_once('.')?;
+                let s = match side {
+                    "back" => &mut setup.back,
+                    "fore" => &mut setup.fore,
+                    _ => return None,
+                };
+                match what {
+                    "distance" => Some(&mut s.distance),
+                    "zenith" => Some(&mut s.zenith),
+                    "target" => Some(&mut s.target),
+                    _ => None,
+                }
+            }
             _ => None,
         }
     }
@@ -2637,7 +2655,7 @@ impl Input for kentos_commands::RegularPolygonCreate {
 }
 
 impl Input for kentos_commands::EntitiesVertex {
-    /// `radius`, `through.x`, `through.y`, `widths[0]`, `widths[1]` (docs/adr/0288).
+    /// `radius`, `through.x`, `through.y`, `widths[0]`, `widths[1]` (docs/adr/0288), `joinArcs` (docs/adr/5000).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "radius" => self.radius.as_mut(),
@@ -2645,6 +2663,7 @@ impl Input for kentos_commands::EntitiesVertex {
             "through.y" => self.through.as_mut().map(|p| &mut p.y),
             "widths[0]" => self.widths.as_mut().map(|w| &mut w[0]),
             "widths[1]" => self.widths.as_mut().map(|w| &mut w[1]),
+            "joinArcs" => self.join_arcs.as_mut(),
             _ => None,
         }
     }
@@ -4219,8 +4238,11 @@ impl Input for kentos_commands::MapWorkRestore {
     }
 }
 impl Input for kentos_commands::MapWorkQuery {
-    fn number(&mut self, _path: &str) -> Option<&mut f64> {
-        None
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "limit.metres" => self.limit.as_mut()?.metres.as_mut(),
+            _ => None,
+        }
     }
 }
 impl Input for kentos_commands::MapWorkEdit {
@@ -4284,6 +4306,40 @@ impl Input for kentos_commands::PointCloudsOverlap {
         None
     }
 }
+impl Input for kentos_commands::ProfilesCompare {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ProfilesCarry {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ProfilesNames {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::PointCloudsNetwork {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::PointCloudsPlace {
+    /// `place.yaw`, `place.angle`, `place.matrix[i]` (the shared cases spoil only these).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (&mut self.place, path) {
+            (kentos_commands::CloudPlaceBy::Euler { yaw, .. }, "place.yaw") => Some(yaw),
+            (kentos_commands::CloudPlaceBy::AxisAngle { angle, .. }, "place.angle") => Some(angle),
+            (kentos_commands::CloudPlaceBy::Matrix { matrix }, p) => {
+                let i = p.strip_prefix("place.matrix[")?.strip_suffix(']')?.parse::<usize>().ok()?;
+                matrix.get_mut(i)
+            }
+            _ => None,
+        }
+    }
+}
 impl Input for kentos_commands::PointCloudsRegister {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -4295,6 +4351,21 @@ impl Input for kentos_commands::OrthophotoCheck {
     }
 }
 impl Input for kentos_commands::OrthophotoCompare {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::OrthophotoSeamlines {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::OrthophotoNetwork {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::OrthophotoFootprint {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -4325,6 +4396,11 @@ impl Input for kentos_commands::ScenariosImpact {
         None
     }
 }
+impl Input for kentos_commands::ScenariosRecord {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::ZoningCheck {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -4349,6 +4425,34 @@ impl Input for kentos_commands::ParcelsRecord {
     }
 }
 impl Input for kentos_commands::ZoningSymbolize {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::TerrainsSectionCheck {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "corridor" => self.corridor.as_mut(),
+            _ => None,
+        }
+    }
+}
+impl Input for kentos_commands::ParcelsApprove {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::AsbuiltReview {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ParcelsWithdraw {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ZoningDraft {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -5820,6 +5924,9 @@ fn run_op(
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS => {
             run!(road_terrains_sheet, kentos_commands::TerrainsSheetContours)
         }
+        kentos_commands::ROAD_TERRAINS_SECTIONCHECK => {
+            run!(road_terrains_section, kentos_commands::TerrainsSectionCheck)
+        }
         kentos_commands::ROAD_TERRAINS_ZEROLINE => {
             run!(road_terrains_zeroline, kentos_commands::TerrainsZeroLine)
         }
@@ -6127,6 +6234,18 @@ fn run_op(
             use kentos_native_application::parcel_register::list_cmd as parcel_register_list;
             run!(parcel_register_list, kentos_commands::ParcelsRecords)
         }
+        kentos_commands::CAD_PARCELS_APPROVE => {
+            use kentos_native_application::parcel_drafts as parcel_approve;
+            run!(parcel_approve, kentos_commands::ParcelsApprove)
+        }
+        kentos_commands::CAD_ASBUILT_REVIEW => {
+            use kentos_native_application::asbuilt_review;
+            run!(asbuilt_review, kentos_commands::AsbuiltReview)
+        }
+        kentos_commands::CAD_PARCELS_WITHDRAW => {
+            use kentos_native_application::parcel_drafts::withdraw as parcel_withdraw;
+            run!(parcel_withdraw, kentos_commands::ParcelsWithdraw)
+        }
         kentos_commands::CAD_PIPES_CHECK => {
             run!(pipes_check, kentos_commands::PipesCheck)
         }
@@ -6145,8 +6264,14 @@ fn run_op(
         kentos_commands::CAD_ZONING_SYMBOLIZE => {
             run!(zoning_symbolize, kentos_commands::ZoningSymbolize)
         }
+        kentos_commands::CAD_ZONING_DRAFT => {
+            run!(zoning_draft, kentos_commands::ZoningDraft)
+        }
         kentos_commands::CAD_SCENARIOS_IMPACT => {
             run!(scenarios_impact, kentos_commands::ScenariosImpact)
+        }
+        kentos_commands::CAD_SCENARIOS_RECORD => {
+            run!(scenarios_record, kentos_commands::ScenariosRecord)
         }
         kentos_commands::CAD_READJUSTMENT_DISTRIBUTE => {
             run!(readjustment, kentos_commands::ReadjustmentDistribute)
@@ -6163,11 +6288,37 @@ fn run_op(
         kentos_commands::CAD_ORTHOPHOTO_COMPARE => {
             run!(orthophoto_compare, kentos_commands::OrthophotoCompare)
         }
+        kentos_commands::CAD_ORTHOPHOTO_SEAMLINES => {
+            run!(orthophoto_seamlines, kentos_commands::OrthophotoSeamlines)
+        }
+        kentos_commands::CAD_ORTHOPHOTO_NETWORK => {
+            use kentos_native_application::orthophoto_network::network as orthophoto_network;
+            run!(orthophoto_network, kentos_commands::OrthophotoNetwork)
+        }
+        kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT => {
+            use kentos_native_application::orthophoto_network::outline as orthophoto_footprint;
+            run!(orthophoto_footprint, kentos_commands::OrthophotoFootprint)
+        }
         kentos_commands::CAD_POINTCLOUDS_OVERLAP => {
             run!(pointcloud_overlap, kentos_commands::PointCloudsOverlap)
         }
         kentos_commands::CAD_POINTCLOUDS_REGISTER => {
             run!(pointcloud_register, kentos_commands::PointCloudsRegister)
+        }
+        kentos_commands::CAD_POINTCLOUDS_NETWORK => {
+            run!(pointcloud_network, kentos_commands::PointCloudsNetwork)
+        }
+        kentos_commands::CAD_POINTCLOUDS_PLACE => {
+            run!(pointcloud_place, kentos_commands::PointCloudsPlace)
+        }
+        kentos_commands::CAD_PROFILES_COMPARE => {
+            run!(profiles_compare, kentos_commands::ProfilesCompare)
+        }
+        kentos_commands::CAD_PROFILES_CARRY => {
+            run!(profiles_carry, kentos_commands::ProfilesCarry)
+        }
+        kentos_commands::CAD_PROFILES_NAMES => {
+            run!(profiles_names, kentos_commands::ProfilesNames)
         }
         kentos_commands::MAP_SURVEY_QUERY => {
             run!(map_survey, kentos_commands::MapSurveyQuery)
@@ -6757,7 +6908,7 @@ fn run_step(
                 .ok_or(format!("{at}: {index}. mutfak dizisi yok"))?;
             state.uids.insert(name.to_owned(), Uuid::from_bytes(run.id.0));
         }
-        // A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538): a
+        // A file changed by someone else between two steps (another program's edit of a bound table, docs/adr/0538): a
         // fixture's bytes over a `$tmp:` file.
         "copyFile" => {
             let from = with_fixtures(step["from"].as_str().ok_or(format!("{at}: “from” yok"))?);
@@ -7277,7 +7428,7 @@ fn check(
                     .map_err(|e| format!("{at}: {e}"))?;
                 let wanted = fill(want, doc, state, at)?;
                 // What the road commands drew (docs/adr/0911 §1) is compared only where a case names it.
-                for key in ["drawings", "autoRebuild"] {
+                for key in ["drawings", "autoRebuild", "rebuildWhole"] {
                     if wanted.get(key).is_none()
                         && let Some(o) = got.as_object_mut()
                     {

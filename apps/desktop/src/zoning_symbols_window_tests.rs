@@ -53,7 +53,7 @@ fn the_rows_are_the_levels_and_uses_of_the_case() {
         )
     );
     let table = kentos_commands::builtin_zoning_symbols().expect("the table");
-    let shown = rows(&r, &table);
+    let shown = rows(&r, &table, &[]);
     let konut = shown.iter().find(|row| row[1] == "Konut alanı").expect("a konut row");
     assert_eq!((konut[0].as_str(), konut[2].as_str(), konut[3].as_str()), ("Uygulama imar planı", "— seçilmedi", "—"));
     let park = shown.iter().find(|row| row[1] == "Park" && row[0] == "Uygulama imar planı").expect("a park row");
@@ -83,6 +83,35 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
     assert_eq!(after.iter().map(|(_, _, a)| a.clone()).collect::<Vec<_>>(), before.iter().map(|(_, _, a)| a.clone()).collect::<Vec<_>>());
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(symbols(&app), before);
+}
+
+/// docs/adr/5040: Gelişme konut alanı chosen for konut and kept (the switch is on): the project keeps the choice in the
+/// same undo step as the symbols; the window opened again starts from it and says Projede; one undo takes both back.
+#[test]
+fn a_kept_choice_is_read_when_the_window_opens_again() {
+    let mut app = opened();
+    assert!(app.zoning_symbols.keep);
+    let r = app.zoning_symbols.answer.clone().expect("an answer").expect("plans");
+    let at = pairs(&r).iter().position(|p| p.level == "uip" && p.usage == "konut").expect("the konut row");
+    let _ = app.update(Message::ZoningSymbols(Z::Choose(at)));
+    let _ = app.update(Message::ZoningSymbols(Z::Pick("mpyy.uip.konut.gelisme-konut-alani".into())));
+    let _ = app.update(Message::ZoningSymbols(Z::Write));
+    let kept = |app: &App| {
+        app.document.as_ref().expect("a drawing").model.zoning_plan().map(|z| serde_json::to_value(&z.symbols).expect("json"))
+    };
+    assert_eq!(
+        kept(&app),
+        Some(serde_json::json!([{"level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani"}]))
+    );
+    let _ = app.update(Message::ZoningSymbols(Z::Open));
+    let r = app.zoning_symbols.answer.clone().expect("an answer").expect("plans");
+    let table = kentos_commands::builtin_zoning_symbols().expect("the table");
+    let shown = rows(&r, &table, &app.zoning_symbols.kept);
+    let konut = shown.iter().find(|row| row[1] == "Konut alanı").expect("a konut row");
+    assert_eq!((konut[2].as_str(), konut[3].as_str()), ("Gelişme konut alanı", "Projede"));
+    let _ = app.update(Message::ZoningSymbols(Z::Close));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(kept(&app), None);
 }
 
 /// `.run/gui-evidence/sembol-karar-4240/`: İmar planı denetimi with its new button; the window with the open konut

@@ -1,8 +1,8 @@
 //! The approved shapes of the objects whose geometry changed since their item's approval, over the drawing
 //! (plan/map-cad.md MAP-01, docs/adr/4480). Harita işi's Değişenler selects the changed objects (their shapes now drawn
-//! as the selection) and draws each geometry-changed one's shape as approved, dashed in the warning colour, beside it:
-//! ArcGIS Pro's change display puts an edited feature's earlier state on the map beside its current one. The shapes are
-//! drawn while the selection is the one Değişenler made; any other selection takes them away.
+//! as the selection) and draws each geometry-changed one's shape as approved, dashed in the warning colour, beside it,
+//! so its earlier state stands on the map beside its current one; since docs/adr/4880 the removed objects' approved
+//! shapes too. The shapes are drawn while the selection is the one Değişenler made; any other selection takes them away.
 //!
 //! An approved object comes as `map.work.query` gives it (its snapshot form as approved); its outline is the geometry
 //! core's edges of it, arcs as short chords (a picture's, not a measure), a point a small ring.
@@ -108,8 +108,10 @@ impl canvas::Program<Message> for Layer<'_> {
                 line_dash: LineDash { segments: &[7.0, 4.0], offset: 0 },
                 ..Stroke::default().with_width(1.8).with_color(self.color)
             };
-            let lines = Path::new(|b| {
-                for line in &self.approved.lines {
+            // Each outline its own path: a dashed stroke of one path joins its parts' ends (two shapes showed a solid
+            // line from one to the next).
+            for line in &self.approved.lines {
+                let path = Path::new(|b| {
                     let mut pts = line.iter().map(|p| screen(*p));
                     if let Some(first) = pts.next() {
                         b.move_to(first);
@@ -117,9 +119,9 @@ impl canvas::Program<Message> for Layer<'_> {
                             b.line_to(p);
                         }
                     }
-                }
-            });
-            frame.stroke(&lines, dashed);
+                });
+                frame.stroke(&path, dashed.clone());
+            }
             for p in &self.approved.points {
                 let ring = Path::circle(screen(*p), 6.0);
                 frame.stroke(&ring, Stroke::default().with_width(1.8).with_color(self.color));

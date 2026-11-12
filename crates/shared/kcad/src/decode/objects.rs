@@ -407,9 +407,20 @@ pub(super) struct Features {
     pub(super) cutfill_drawings: bool,
     /// Schema 212: a pipe run profile kept as a drawing, a network its source (docs/adr/3560).
     pub(super) pipe_profile_drawings: bool,
+    pub(super) sheet_contour_drawings: bool,
     pub(super) work_stamps: bool,
     /// Schema 207: a known point's own velocity (docs/adr/2520).
     pub(super) known_velocities: bool,
+    /// Schema 248: a GNSS archive's baseline sessions, kept limits, a network point's velocity (docs/adr/4920).
+    pub(super) gnss_sessions: bool,
+    /// Schema 249: the parcel register's stated lengths, drafts and approvals (docs/adr/5020).
+    pub(super) parcel_drafts: bool,
+    /// Schema 251: a point cloud file's place in the drawing (docs/adr/5100).
+    pub(super) cloud_poses: bool,
+    /// Schema 252: the adjustments the project keeps (docs/adr/5200).
+    pub(super) kept_adjustments: bool,
+    /// Schema 253: the reviews the project keeps of its monitoring jobs (docs/adr/5220).
+    pub(super) monitoring_reviews: bool,
     /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
     pub(super) drawing_provenance: bool,
     /// Schema 210: a map work approval's objects' digests (docs/adr/2880).
@@ -418,12 +429,16 @@ pub(super) struct Features {
     pub(super) approved_parts: bool,
     /// Schema 213: a map work approval's objects' values (docs/adr/3680).
     pub(super) approved_values: bool,
+    /// Schema 247: a map work item's typed layers' profile (docs/adr/4880).
+    pub(super) work_profiles: bool,
     /// Schema 214: a terrain surface's edit that pastes another surface (docs/adr/3920).
     pub(super) surface_pastes: bool,
     /// Schema 215: a review note's decision (docs/adr/4140).
     pub(super) review_decisions: bool,
     /// Schema 216: the parcel register (docs/adr/4220).
     pub(super) parcel_register: bool,
+    /// Schema 250: a zoning plan's kept symbol choices and plan change drafts (docs/adr/5040).
+    pub(super) zoning_drafts: bool,
     /// Schema 208: a constraint naming a boundary edge, a map bond (docs/adr/2580).
     pub(super) boundary_bonds: bool,
     /// Schema 217 (docs/adr/8012): the project's plan cut height.
@@ -584,7 +599,7 @@ pub(super) struct Features {
     /// Schema 50: the drawing units `in` and `ft` and the settings' `lengthStyle` (docs/adr/0262).
     pub(super) imperial: bool,
     /// Schema 30: the settings' annotation heights, a dimension's and a
-    /// dimension style's line fields, a leader's `arrowSize` and AutoCAD's
+    /// dimension style's line fields, a leader's `arrowSize` and the DXF
     /// arrowheads (docs/adr/0205).
     pub(super) annotation: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
@@ -765,15 +780,23 @@ impl Features {
             road_approval_sources: schema >= crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
             cutfill_drawings: schema >= crate::SCHEMA_WITH_CUTFILL_DRAWINGS,
             pipe_profile_drawings: schema >= crate::SCHEMA_WITH_PIPE_PROFILE_DRAWINGS,
+            sheet_contour_drawings: schema >= crate::SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
             work_stamps: schema >= crate::SCHEMA_WITH_WORK_STAMPS,
             known_velocities: schema >= crate::SCHEMA_WITH_KNOWN_VELOCITIES,
+            gnss_sessions: schema >= crate::SCHEMA_WITH_GNSS_SESSIONS,
+            parcel_drafts: schema >= crate::SCHEMA_WITH_PARCEL_DRAFTS,
+            cloud_poses: schema >= crate::SCHEMA_WITH_CLOUD_POSES,
+            kept_adjustments: schema >= crate::SCHEMA_WITH_KEPT_ADJUSTMENTS,
+            monitoring_reviews: schema >= crate::SCHEMA_WITH_MONITORING_REVIEWS,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
             approved_values: schema >= crate::SCHEMA_WITH_APPROVED_VALUES,
+            work_profiles: schema >= crate::SCHEMA_WITH_WORK_PROFILES,
             surface_pastes: schema >= crate::SCHEMA_WITH_SURFACE_PASTES,
             review_decisions: schema >= crate::SCHEMA_WITH_REVIEW_DECISIONS,
             parcel_register: schema >= crate::SCHEMA_WITH_PARCEL_REGISTER,
+            zoning_drafts: schema >= crate::SCHEMA_WITH_ZONING_DRAFTS,
             boundary_bonds: schema >= crate::SCHEMA_WITH_BOUNDARY_BONDS,
             plan_cut: schema >= crate::SCHEMA_WITH_PLAN_CUT,
             line_groups: schema >= crate::SCHEMA_WITH_LINE_GROUPS,
@@ -1606,7 +1629,7 @@ pub(super) fn object(
             "georef" => f.raster.georef = Some(Box::new(raster_georef(r, has.georef_crs)?)),
             "tiles" => f.raster.tiles = Some(raster_tiles(r)?),
             "style" if kind == Kind::PointCloud => f.cloud.style = Some(cloud_style(r)?),
-            "sources" => f.cloud.sources = Some(cloud_sources(r)?),
+            "sources" => f.cloud.sources = Some(cloud_sources(r, has)?),
             "bounds" => f.cloud.bounds = Some(bounds6(r)?),
             "count" => f.cloud.count = Some(r.uint(u64::MAX)?),
             "url" => f.url = Some(text(r)?),
@@ -3406,11 +3429,21 @@ fn bounds6(r: &mut Reader<'_>) -> Result<[f64; 6], KcadError> {
     })
 }
 
-/// A point cloud's files (§6.6, docs/adr/0207 §3): each its one source, format, points and bounds.
-fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
+/// Sixteen numbers: a cloud file's place, row by row (schema 251, docs/adr/5100).
+fn pose16(r: &mut Reader<'_>) -> Result<[f64; 16], KcadError> {
+    let at = r.position();
+    let v = floats(r)?;
+    v.as_slice().try_into().map_err(|_| {
+        r.fail_at(Code::BadValue, at, &format!("konum 16 sayı olmalı, {} var", v.len()))
+    })
+}
+
+/// A point cloud's files (§6.6, docs/adr/0207 §3): each its one source, format, points and bounds; from schema 251
+/// its place (docs/adr/5100).
+fn cloud_sources(r: &mut Reader<'_>, has: Features) -> Result<Vec<CloudSource>, KcadError> {
     list(r, |r, _| {
         let (mut asset, mut file, mut url) = (None, None, None);
-        let (mut format, mut count, mut bounds) = (None, None, None);
+        let (mut format, mut count, mut bounds, mut pose) = (None, None, None, None);
         map(r, |r, key| {
             match key {
                 "asset" => asset = Some(text(r)?),
@@ -3423,6 +3456,8 @@ fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
                 }
                 "count" => count = Some(r.uint(u64::MAX)?),
                 "bounds" => bounds = Some(bounds6(r)?),
+                // Schema 251 (docs/adr/5100): the file's place in the drawing, 16 numbers row by row.
+                "pose" if has.cloud_poses => pose = Some(pose16(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -3434,6 +3469,7 @@ fn cloud_sources(r: &mut Reader<'_>) -> Result<Vec<CloudSource>, KcadError> {
             format: required(r, format, "format")?,
             count: required(r, count, "count")?,
             bounds: required(r, bounds, "bounds")?,
+            pose,
         })
     })
 }
@@ -4437,7 +4473,7 @@ fn text_run(r: &mut Reader<'_>, stacks: bool) -> Result<TextRun, KcadError> {
 
 /// A text's alignment by its name (§6.6); an unknown name is `bad_value`.
 /// A leader's arrowhead (§6.6, docs/adr/0146): its name; the filled arrow
-/// has none. AutoCAD's arrowheads beside the first three come with schema 30
+/// has none. The DXF arrowheads beside the first three come with schema 30
 /// (docs/adr/0205 §7): an older payload naming one is `bad_value`.
 fn leader_arrow(r: &mut Reader<'_>, has: Features) -> Result<LeaderArrow, KcadError> {
     let names: Vec<(&str, LeaderArrow)> = LeaderArrow::ALL

@@ -47,7 +47,8 @@ pub const ASBUILT_FLAGS: [&str; 8] = [
 /// attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
 /// job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
 /// monitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that
-/// is no `YYYY-MM-DD` day); the package's (docs/adr/2420;
+/// is no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a
+/// threshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;
 /// at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
 /// field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
 /// `lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
@@ -134,6 +135,122 @@ pub struct AsbuiltCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub date: Option<String>,
+    /// A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and
+    /// which components move at the confidence asked. Needs a series (`epochs`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub trend: Option<AsbuiltTrendAsk>,
+    /// Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest
+    /// level it goes beyond. Needs a series (`epochs`). No threshold is the program's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub thresholds: Option<AsbuiltThresholds>,
+}
+
+/// The line fitted through a point's epochs (docs/adr/4840): the confidence its velocity's test is made at.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltTrendAsk {
+    /// The confidence, between 0 and 1 (0.95: a component moves when its velocity is more than Student's t at 0.975
+    /// with n − 2 degrees of freedom times its standard deviation). The user's: no regulation gives one for monitoring.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub confidence: f64,
+}
+
+/// A threshold level's limits; a limit not given is not checked at that level.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltLevel {
+    /// The horizontal movement from the point's reference at this epoch (m).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub horizontal: Option<f64>,
+    /// The height movement from the point's reference at this epoch, either way (m).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub vertical: Option<f64>,
+    /// The horizontal speed (m a year): the fitted line's when there is one, else the mean rate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub horizontal_rate: Option<f64>,
+    /// The vertical speed, either way (m a year): the fitted line's when there is one, else the mean rate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub vertical_rate: Option<f64>,
+}
+
+/// The two thresholds (docs/adr/4840); each limit given in both must be smaller at the warning.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltThresholds {
+    /// The warning level (Trimble's yellow).
+    pub warning: AsbuiltLevel,
+    /// The alarm level (Trimble's red).
+    pub alarm: AsbuiltLevel,
+}
+
+/// A point's state against the thresholds (docs/adr/4840): the highest level any of its values goes beyond.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AsbuiltState {
+    Normal,
+    Warning,
+    Alarm,
+}
+
+/// The line fitted through a point's dated epochs (docs/adr/4840): by least squares, its movement from its reference
+/// against the years since its first dated epoch, east, north and (with both heights) up apart.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltFit {
+    /// The dated epochs the point was measured in (3 or more).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub epochs: u32,
+    /// The velocity east and north (m a year).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub east: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub north: f64,
+    /// The velocity up (m a year), when 3 dated epochs or more have both heights.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub up: Option<f64>,
+    /// Their standard deviations from the residuals: s / √Σ(t − t̄)², s² = Σr² / (n − 2) (m a year).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub sigma_east: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub sigma_north: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub sigma_up: Option<f64>,
+    /// The horizontal speed, √(east² + north²) (m a year).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub speed: f64,
+    /// The components whose velocity is more than Student's t times its standard deviation (`east`, `north`, `up`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub moving: Vec<String>,
 }
 
 /// An earlier epoch of a monitoring job's series (docs/adr/4420): its points' layer and its day (`YYYY-MM-DD`).
@@ -171,6 +288,19 @@ pub struct AsbuiltTrack {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub rate_vertical: Option<f64>,
+    /// The line fitted through its dated epochs (docs/adr/4840), asked and with 3 of them or more.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fit: Option<AsbuiltFit>,
+    /// Its state against the thresholds (docs/adr/4840), asked.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub state: Option<AsbuiltState>,
+    /// The limits of its state's level its values go beyond (`horizontal`, `vertical`, `horizontalRate`,
+    /// `verticalRate`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub exceeded: Vec<String>,
 }
 
 /// A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)

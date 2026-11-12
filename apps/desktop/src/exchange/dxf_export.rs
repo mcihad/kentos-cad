@@ -1,6 +1,6 @@
 //! DXF dışa aktar (the web's `ui/io/DxfExportDialog.ts`): the objects of the
 //! selection, of the visible layers or of the whole drawing, with their
-//! layers, as an AutoCAD 2007 DXF (UTF-8, the local drawing's unit or CRS metres; the shared writer, off the
+//! layers, as a DXF R2007 (UTF-8, the local drawing's unit or CRS metres; the shared writer, off the
 //! UI thread). Coordinates are written as the shortest decimal that reads
 //! back to the same float64 (CLAUDE.md §23). What DXF cannot hold (labels,
 //! attributes, symbols, theme colours, holes) rides along as KentOS data
@@ -234,7 +234,7 @@ impl App {
                     }
                     s.written = Some((report, layers));
                     let name = self.export_name(".dxf");
-                    return self.save_export(bytes, name, ("AutoCAD DXF", "dxf"));
+                    return self.save_export(bytes, name, ("DXF çizimi", "dxf"));
                 }
                 return Task::none();
             }
@@ -310,7 +310,7 @@ impl App {
                     let file = rfd::AsyncFileDialog::new()
                         .set_title("DWG dışa aktar")
                         .set_file_name(suggested)
-                        .add_filter("AutoCAD DWG", &["dwg"])
+                        .add_filter("DWG çizimi", &["dwg"])
                         .save_file()
                         .await?;
                     let mut path = file.path().to_path_buf();
@@ -410,7 +410,7 @@ impl App {
             Some(Err(e)) => s.status = Some((true, format!("Yazılamadı: {e}"))),
             Some(Ok(name)) => {
                 let format = s.dwg.map_or_else(
-                    || "AutoCAD 2007 DXF".to_owned(),
+                    || "DXF R2007".to_owned(),
                     |v| format!("DWG {}", v.label()),
                 );
                 let (report, layers) = s.written.take().unwrap_or_default();
@@ -475,7 +475,7 @@ impl App {
                 Some(if s.dwg.is_some() {
                     "Seçili DWG sürümüne dönüştürülür; sürüm ve aktarım kayıpları raporlanır.".to_owned()
                 } else {
-                    format!("AutoCAD 2007 DXF (UTF-8, birim {}); koordinatlar yuvarlanmadan, tam yazılır.", unit.mark())
+                    format!("DXF R2007 (UTF-8, birim {}); koordinatlar yuvarlanmadan, tam yazılır.", unit.mark())
                 }),
             ));
         // Disclose behavior loss before the layer/options table and before asking for an output path.

@@ -28,6 +28,7 @@ fn approved(values: &[&str], kept: Vec<String>) -> MapWork {
             approved_objects: pairs,
             approved_parts: Vec::new(),
             approved_values: kept,
+            profile: None,
         }],
         derivations: Vec::new(),
     }

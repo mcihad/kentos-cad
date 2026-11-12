@@ -25,10 +25,9 @@ if TYPE_CHECKING:
 
 class _MapFeaturesCode(LocalCommand[FeaturesCode, FeaturesCoded, FeaturesCoded]):
     """``map.features.code`` v1. Kodla çiz: Sahada kodla alınmış noktaları veri profilinin
-    sınıflarına göre işler (TBC'nin özellik kodları, Civil 3D'nin açıklama anahtarları
-    gibi; ADR 1360). Noktanın kodu field alanındadır (yoksa Kod): ilk sözcük büyük
-    harfli kod ve ardından dizinin numarası (BRD1), sonraki sözcükler denetim kodu: B
-    yeni dizi başlatır, K diziyi kapatır, S bitirir. Kod profilin bir sınıfının
+    sınıflarına göre işler. Noktanın kodu field alanındadır (yoksa Kod): ilk sözcük
+    büyük harfli kod ve ardından dizinin numarası (BRD1), sonraki sözcükler denetim
+    kodu: B yeni dizi başlatır, K diziyi kapatır, S bitirir. Kod profilin bir sınıfının
     codes'unda aranır. Nokta sınıfının noktaları sınıfın katmanına taşınır; çizgi
     sınıfının dizileri çoklu çizgi (K ile kapalı), alan sınıfının K ile kapatılmış
     dizileri alan olarak sınıfın katmanına çizilir, noktalar yerinde kalır; bütün
@@ -63,8 +62,7 @@ class _MapFeaturesCode(LocalCommand[FeaturesCode, FeaturesCoded, FeaturesCoded])
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> FeaturesCoded:
-        """Kodla çiz: Sahada kodla alınmış noktaları veri profilinin sınıflarına göre işler
-        (TBC'nin özellik kodları, Civil 3D'nin açıklama anahtarları gibi; ADR 1360).
+        """Kodla çiz: Sahada kodla alınmış noktaları veri profilinin sınıflarına göre işler.
         Noktanın kodu field alanındadır (yoksa Kod): ilk sözcük büyük harfli kod ve ardından
         dizinin numarası (BRD1), sonraki sözcükler denetim kodu: B yeni dizi başlatır, K
         diziyi kapatır, S bitirir. Kod profilin bir sınıfının codes'unda aranır. Nokta

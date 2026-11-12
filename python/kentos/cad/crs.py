@@ -35,24 +35,24 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
     haritadaki uzunluk). height verilmezse projenin ortalama elipsoit yüksekliği (Proje
     ayarları › Ölçme); ikisi de yoksa yalnız scale. Cevap sistemin adını, kullanılan
     yüksekliği ve ölçme pencerelerinin uzunlukları projeksiyona indirip indirmediğini
-    (reducesToGrid) de verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez (ADR
-    1231). Sistemin ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Her
-    noktanın kendi yüksekliği (ADR 2900): heights noktaların elipsoit yükseklikleri;
-    elevations çizimin kotları, projenin kotlarıyla elipsoit yüksekliğine çevrilir
-    (elipsoit yüksekliğiyse olduğu gibi, ortometrikse projenin geoit modelinin noktadaki
-    N'i eklenerek; cevapta height ve undulation). lines noktalar arasındaki çizgileri
-    sıralarıyla [a, b] verir: her çizginin ölçeği (uçlarının ve ortasının ölçeğiyle
-    Simpson), yükseklik çarpanı (jeodeziğin ortasında doğrultusundaki Euler yarıçapı,
-    uçlarının yüksekliklerinin ortalamasında) ve birleşik çarpanı; Kutupsal alım ölçülen
-    uzunluğu bu çarpanlarla indirir. Geoit ızgarasının dışındaki noktanın kotu
-    çevrilmez, uyarı points_outside. Retler: invalid_input (nokta yok, 10 000'den çok,
-    sonlu olmayan koordinat ya da yükseklik, yükseklik −500…9000 m dışında; height,
-    heights ve elevations'tan birden çoğu; nokta başına bir değer değil; çizginin ucu
-    nokta değil, iki ucu aynı yerde, 10 000'den çok çizgi; kotlar metre değil),
-    no_system (proje yerel koordinatlarda), no_point_scale (coğrafi sistem,
-    Pseudo-Mercator ya da afinle bağlı yerel sistem), heights_unknown (elevations:
-    projenin kotlarının ne olduğu söylenmemiş), geoid_required (ortometrik kot, geoit
-    modeli yok), geoid_missing (geoit modelinin ızgarası bu cihazda yok).
+    (reducesToGrid) de verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez. Sistemin
+    ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Her noktanın kendi
+    yüksekliği: heights noktaların elipsoit yükseklikleri; elevations çizimin kotları,
+    projenin kotlarıyla elipsoit yüksekliğine çevrilir (elipsoit yüksekliğiyse olduğu
+    gibi, ortometrikse projenin geoit modelinin noktadaki N'i eklenerek; cevapta height
+    ve undulation). lines noktalar arasındaki çizgileri sıralarıyla [a, b] verir: her
+    çizginin ölçeği (uçlarının ve ortasının ölçeğiyle Simpson), yükseklik çarpanı
+    (jeodeziğin ortasında doğrultusundaki Euler yarıçapı, uçlarının yüksekliklerinin
+    ortalamasında) ve birleşik çarpanı; Kutupsal alım ölçülen uzunluğu bu çarpanlarla
+    indirir. Geoit ızgarasının dışındaki noktanın kotu çevrilmez, uyarı points_outside.
+    Retler: invalid_input (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da
+    yükseklik, yükseklik −500…9000 m dışında; height, heights ve elevations'tan birden
+    çoğu; nokta başına bir değer değil; çizginin ucu nokta değil, iki ucu aynı yerde, 10
+    000'den çok çizgi; kotlar metre değil), no_system (proje yerel koordinatlarda),
+    no_point_scale (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem),
+    heights_unknown (elevations: projenin kotlarının ne olduğu söylenmemiş),
+    geoid_required (ortometrik kot, geoit modeli yok), geoid_missing (geoit modelinin
+    ızgarası bu cihazda yok).
     """
     __slots__ = ()
     id = "cad.crs.factors"
@@ -85,24 +85,23 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         verilmezse projenin ortalama elipsoit yüksekliği (Proje ayarları › Ölçme); ikisi de
         yoksa yalnız scale. Cevap sistemin adını, kullanılan yüksekliği ve ölçme
         pencerelerinin uzunlukları projeksiyona indirip indirmediğini (reducesToGrid) de
-        verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez (ADR 1231). Sistemin
-        ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Her noktanın kendi
-        yüksekliği (ADR 2900): heights noktaların elipsoit yükseklikleri; elevations çizimin
-        kotları, projenin kotlarıyla elipsoit yüksekliğine çevrilir (elipsoit yüksekliğiyse
-        olduğu gibi, ortometrikse projenin geoit modelinin noktadaki N'i eklenerek; cevapta
-        height ve undulation). lines noktalar arasındaki çizgileri sıralarıyla [a, b] verir:
-        her çizginin ölçeği (uçlarının ve ortasının ölçeğiyle Simpson), yükseklik çarpanı
-        (jeodeziğin ortasında doğrultusundaki Euler yarıçapı, uçlarının yüksekliklerinin
-        ortalamasında) ve birleşik çarpanı; Kutupsal alım ölçülen uzunluğu bu çarpanlarla
-        indirir. Geoit ızgarasının dışındaki noktanın kotu çevrilmez, uyarı points_outside.
-        Retler: invalid_input (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da
-        yükseklik, yükseklik −500…9000 m dışında; height, heights ve elevations'tan birden
-        çoğu; nokta başına bir değer değil; çizginin ucu nokta değil, iki ucu aynı yerde, 10
-        000'den çok çizgi; kotlar metre değil), no_system (proje yerel koordinatlarda),
-        no_point_scale (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem),
-        heights_unknown (elevations: projenin kotlarının ne olduğu söylenmemiş),
-        geoid_required (ortometrik kot, geoit modeli yok), geoid_missing (geoit modelinin
-        ızgarası bu cihazda yok).
+        verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez. Sistemin ulaşmadığı nokta
+        çarpansız kalır, uyarı point_beyond_system. Her noktanın kendi yüksekliği: heights
+        noktaların elipsoit yükseklikleri; elevations çizimin kotları, projenin kotlarıyla
+        elipsoit yüksekliğine çevrilir (elipsoit yüksekliğiyse olduğu gibi, ortometrikse
+        projenin geoit modelinin noktadaki N'i eklenerek; cevapta height ve undulation).
+        lines noktalar arasındaki çizgileri sıralarıyla [a, b] verir: her çizginin ölçeği
+        (uçlarının ve ortasının ölçeğiyle Simpson), yükseklik çarpanı (jeodeziğin ortasında
+        doğrultusundaki Euler yarıçapı, uçlarının yüksekliklerinin ortalamasında) ve
+        birleşik çarpanı; Kutupsal alım ölçülen uzunluğu bu çarpanlarla indirir. Geoit
+        ızgarasının dışındaki noktanın kotu çevrilmez, uyarı points_outside. Retler:
+        invalid_input (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da yükseklik,
+        yükseklik −500…9000 m dışında; height, heights ve elevations'tan birden çoğu; nokta
+        başına bir değer değil; çizginin ucu nokta değil, iki ucu aynı yerde, 10 000'den çok
+        çizgi; kotlar metre değil), no_system (proje yerel koordinatlarda), no_point_scale
+        (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem), heights_unknown
+        (elevations: projenin kotlarının ne olduğu söylenmemiş), geoid_required (ortometrik
+        kot, geoit modeli yok), geoid_missing (geoit modelinin ızgarası bu cihazda yok).
 
         Args:
             doc: The drawing it works on.
@@ -232,18 +231,18 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
     kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın
     belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin
     toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  Zincir
-    (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası,
-    datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği;
-    okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı;
-    karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi.
-    Sınırlı zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar (ADR
-    3700): her dönüştürülen nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak
-    sistemin ve datum dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin
-    alanı vardığı yerde; kenara 10⁻⁹° yakın kenardadır); dışında kalan flagged'de sırası
-    ve notlarıyla (outside_source_area, outside_operation_area, outside_target_area)
-    söylenir, yine dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu
-    KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan
-    aynı cevabı verir.
+    (chain): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum
+    topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan
+    ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar
+    (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı
+    zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar: her dönüştürülen
+    nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak sistemin ve datum
+    dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin alanı vardığı yerde;
+    kenara 10⁻⁹° yakın kenardadır; datum dönüşümünün alanı EPSG alanının çokgenidir,
+    kaydın area.extent'i); dışında kalan flagged'de sırası ve notlarıyla
+    (outside_source_area, outside_operation_area, outside_target_area) söylenir, yine
+    dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu KentOS'un çözdüğü
+    sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.crs.transform"
@@ -290,18 +289,18 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın
         belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin
         toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  Zincir
-        (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası,
-        datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği;
-        okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı;
-        karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi.
-        Sınırlı zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar (ADR
-        3700): her dönüştürülen nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak
-        sistemin ve datum dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin
-        alanı vardığı yerde; kenara 10⁻⁹° yakın kenardadır); dışında kalan flagged'de sırası
-        ve notlarıyla (outside_source_area, outside_operation_area, outside_target_area)
-        söylenir, yine dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu
-        KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan
-        aynı cevabı verir.
+        (chain): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum
+        topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan
+        ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar
+        (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı
+        zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar: her dönüştürülen
+        nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak sistemin ve datum
+        dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin alanı vardığı yerde;
+        kenara 10⁻⁹° yakın kenardadır; datum dönüşümünün alanı EPSG alanının çokgenidir,
+        kaydın area.extent'i); dışında kalan flagged'de sırası ve notlarıyla
+        (outside_source_area, outside_operation_area, outside_target_area) söylenir, yine
+        dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu KentOS'un çözdüğü
+        sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir.
 
         Args:
             doc: The drawing it works on.

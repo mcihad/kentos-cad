@@ -5,7 +5,8 @@ code: numpy's weighted least squares, scipy's χ² quantile and PROJ's (pyproj) 
     python3 scripts/fixtures/survey_baselines_cases.py           # writes fixtures/commands/v1/cad.survey.baselines.json
     python3 scripts/fixtures/survey_baselines_cases.py --check   # writes nothing; compares
 
-Without numpy, scipy and pyproj here the script runs itself again under QGIS's Python on macOS. The rules (ADR 1380):
+Without numpy, scipy and pyproj here the script runs itself again under the Python bundled with a desktop GIS
+application on macOS (found by its install path). The rules (ADR 1380):
 
 - unknowns: X, Y, Z of every station not fixed (a weighted one too); a baseline's equations X_to − X_from = d with the
   covariance Σ = scale·C; a weighted station's three pseudo-observations X = X₀ with its σ²;
@@ -15,7 +16,11 @@ Without numpy, scipy and pyproj here the script runs itself again under QGIS's P
 - the tests on each baseline's components decorrelated by its covariance's Cholesky factor (lower, L·Lᵀ): Qvv̄ = I −
   ĀQĀᵀ, r = diag, w = |v̄|/√q̄vv (σ0 a priori 1), r < 1e-4 uncontrolled, w > 3.29 blunder; a baseline's w the largest
   of its components', `blunder` when one is, `uncontrolled` when all are;
-- the worst: the baseline of the flagged observation with the largest w.
+- the worst: the baseline of the flagged observation with the largest w;
+- robust estimation (ADR 4960), iteratively reweighted: each round the baselines' covariances divided by their factor
+  (1 at first), adjusted, each baseline's standardised residual the largest of its components' |v|/σ (σ from the
+  given covariance by the variance factor, σ0 a priori 1), the next factor Huber c/|w| or Danish exp(−((|w| − c)/c)²) when |w| > c, else 1; the rounds stop when no factor moves by
+  more than 1e-9 (at most 100); the answer is the round whose factors are reported.
 """
 
 import json
@@ -29,14 +34,14 @@ try:
     import scipy  # noqa: F401
     import pyproj  # noqa: F401
 except ImportError:
-    qgis = sorted(Path("/Applications").glob("QGIS*.app/Contents"))
-    if not qgis or os.environ.get("KENTOS_QGIS_PYTHON"):
+    bundle = sorted(Path("/Applications").glob("QGIS*.app/Contents"))
+    if not bundle or os.environ.get("KENTOS_QGIS_PYTHON"):
         raise
-    res = qgis[-1] / "Resources"
+    res = bundle[-1] / "Resources"
     env = dict(os.environ, KENTOS_QGIS_PYTHON="1", PYTHONHOME=str(res),
                PYTHONPATH=os.pathsep.join(str(res / p) for p in ("python3.12", "python3.12/site-packages",
                                                                  "python3.12/lib-dynload")))
-    exe = qgis[-1] / "MacOS" / "python3.12"
+    exe = bundle[-1] / "MacOS" / "python3.12"
     os.execve(str(exe), [str(exe), *sys.argv], env)
 
 sys.dont_write_bytecode = True
@@ -110,8 +115,43 @@ def full(c):
     return np.array([[c[0], c[1], c[2]], [c[1], c[3], c[4]], [c[2], c[4], c[5]]])
 
 
-def adjust(stations, baselines, scale=1.0, minimal=False):
-    """The answer of ADR 1380's rules, or (code, message, path)."""
+def robust_factor(method, c, w):
+    """ADR 4960's weight functions, written here from their formulas."""
+    if w is None or abs(w) <= c:
+        return 1.0
+    if method == "huber":
+        return c / abs(w)
+    return math.exp(-((abs(w) - c) / c) ** 2)
+
+
+def adjust(stations, baselines, scale=1.0, minimal=False, robust=None):
+    """The answer of ADR 1380's rules (and ADR 4960's when `robust` is (method, c)), or (code, message, path)."""
+    if robust is None:
+        r = adjust_once(stations, baselines, scale, minimal, None)
+        return r if isinstance(r[0], str) else r[0]
+    method, c = robust
+    factors = [1.0] * len(baselines)
+    rounds = 0
+    while True:
+        out, ws = adjust_once(stations, baselines, scale, minimal, factors)
+        rounds += 1
+        nxt = [float(robust_factor(method, c, w)) for w in ws]
+        moved = max(abs(a - b) for a, b in zip(nxt, factors))
+        if moved <= 1e-9 or rounds == 100:
+            break
+        factors = nxt
+    for row, f in zip(out["baselines"], factors):
+        row["factor"] = f
+    out["robust"] = {"method": method, "c": c, "rounds": rounds, "converged": bool(moved <= 1e-9),
+                     "downweighted": sum(1 for f in factors if f < 1.0)}
+    rev = out.pop("revision")
+    out["revision"] = rev
+    return out
+
+
+def adjust_once(stations, baselines, scale, minimal, factors):
+    """One adjustment with the baselines' covariances divided by `factors` (none: 1), and each baseline's standardised
+    residual (ADR 4960)."""
     names = [s["name"] for s in stations]
     fixed = [bool(s.get("fixed")) for s in stations]
     held = None
@@ -151,7 +191,7 @@ def adjust(stations, baselines, scale=1.0, minimal=False):
                 a[k, slot[i] + k] = -1.0
         rows_a.append(a)
         rows_l.append(l)
-        blocks.append(full(b["cov"]) * scale)
+        blocks.append(full(b["cov"]) * scale / (factors[len(blocks)] if factors else 1.0))
     for i, s in enumerate(stations):
         if s.get("sigma") and slot[i] is not None:
             a = np.zeros((3, u))
@@ -234,13 +274,18 @@ def adjust(stations, baselines, scale=1.0, minimal=False):
         out.update(m0=m0, chi2=q2, passed=omega <= q2)
     if worst is not None and worst < 3 * len(baselines):
         out["worst"] = worst // 3
-    return out
+    # The standardised residuals (ADR 4960): each baseline's largest |v| / σ of its components as given.
+    std = []
+    for k in range(len(baselines)):
+        qll = full(baselines[k]["cov"]) * scale
+        std.append(max(abs(float(v[3 * k + c])) / math.sqrt(qll[c, c]) for c in range(3)))
+    return out, std
 
 
 SAME = {"revision": "same", "canUndo": False}
 
 
-def ok_case(name, stations, baselines, scale=None, minimal=False, op="execute", note=None, text=None):
+def ok_case(name, stations, baselines, scale=None, minimal=False, op="execute", note=None, text=None, robust=None):
     input_ = {}
     if text is not None:
         input_["text"] = text
@@ -251,7 +296,11 @@ def ok_case(name, stations, baselines, scale=None, minimal=False, op="execute", 
         input_["scale"] = scale
     if minimal:
         input_["datum"] = "minimal"
-    out = adjust(stations, baselines, scale or 1.0, minimal)
+    if robust is not None:
+        input_["robust"] = {"method": robust[0]}
+        if robust[2]:
+            input_["robust"]["c"] = robust[1]
+    out = adjust(stations, baselines, scale or 1.0, minimal, robust[:2] if robust else None)
     result = {"status": "completed", "output": None if op == "validate" else out, "warnings": []}
     c = {"name": name}
     if note:
@@ -315,6 +364,14 @@ def cases():
         ok_case("Metinle: noktalı virgül", one, net(*ALL), text=text_of(one, net(*ALL))),
         ok_case("Metinle: virgül ve sekme ayraç, açıklama satırı", one, net(*ALL),
                 text=text_of(one, net(*ALL), sep=",").replace("N,B", "N\tB")),
+        # ADR 4960: robust estimation; (method, c, whether c is given).
+        ok_case("Dayanıklı kestirim, Huber (c 1,5): kaba hatalı bazın ağırlığı düşer, silinmez", one,
+                net(*ALL, blunder=("B", "C")), robust=("huber", 1.5, False)),
+        ok_case("Dayanıklı kestirim, Danimarka (c 2,0)", one, net(*ALL, blunder=("B", "C")), robust=("danish", 2.0, False)),
+        ok_case("Dayanıklı kestirim, Huber c 2,5 verilmiş", one, net(*ALL, blunder=("B", "C")), robust=("huber", 2.5, True)),
+        ok_case("Dayanıklı kestirim kaba hatasız ağda", one, net(*ALL), robust=("huber", 1.5, False)),
+        ok_case("Dayanıklı kestirim metinle verilen ağda (Danimarka)", one, net(*ALL, blunder=("B", "C")),
+                text=text_of(one, net(*ALL, blunder=("B", "C"))), robust=("danish", 2.0, False)),
     ]
     two = [station("A", fixed=True), station("B", known=False)]
     ab = net(("A", "B"))
@@ -341,6 +398,9 @@ def cases():
                 "invalid_input", "“A” hem sabit hem ağırlıklı olamaz.", "stations[0]"),
         refused("Varyans çarpanı sıfır", {"stations": two, "baselines": ab, "scale": 0.0}, "invalid_input",
                 "Varyans çarpanı sıfırdan büyük bir sayı olmalı.", "scale"),
+        refused("Dayanıklı kestirimin c sabiti sıfır", {"stations": two, "baselines": ab,
+                                                         "robust": {"method": "huber", "c": 0.0}}, "invalid_input",
+                "Dayanıklı kestirimin c sabiti sıfırdan büyük bir sayı olmalı.", "robust.c"),
         refused("Metin ve liste birlikte", {"stations": two, "text": "N;C\n"}, "invalid_input",
                 "Ağı ya metinle (text) ya da istasyon ve baz listeleriyle verin, ikisiyle birden değil.", "text"),
         refused("Metinde sayı olmayan değer", {"text": "K;A;1;2;x\n"}, "invalid_input",

@@ -1,0 +1,145 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İzleme incelemeleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "monitoringReviews": [
+      {
+        "name": "Temmuz incelemesi",
+        "job": {
+          "measured": "donem3",
+          "design": "donem2",
+          "epochs": [
+            {
+              "layer": "donem1",
+              "date": "2026-01-15"
+            },
+            {
+              "layer": "donem2",
+              "date": "2026-04-15"
+            }
+          ],
+          "date": "2026-07-15",
+          "control": [
+            "K1",
+            "K2"
+          ],
+          "horizontal": 0.008,
+          "vertical": 0.01,
+          "confidence": 0.95,
+          "thresholds": {
+            "warning": {
+              "horizontal": 0.0075,
+              "vertical": 0.012
+            },
+            "alarm": {
+              "horizontal": 0.03,
+              "vertical": 0.04
+            },
+            "source": "İdarenin izleme şartnamesi (2026/14), madde 7"
+          }
+        },
+        "digest": "6afa7635116f1df0a50c02eba7406a42989499ea796d3614d038eb1fb3ac6d78",
+        "marks": [
+          {
+            "name": "M1",
+            "horizontal": 0.01,
+            "vertical": -0.005,
+            "speed": 0.0258,
+            "state": "warning",
+            "exceeded": [
+              "horizontal"
+            ]
+          },
+          {
+            "name": "K1",
+            "horizontal": 0.0,
+            "vertical": 0.0,
+            "speed": 0.0,
+            "state": "normal"
+          }
+        ],
+        "reviewer": {
+          "role": "control",
+          "title": "Harita Mühendisi",
+          "name": "A. Yılmaz",
+          "date": "2026-10-20",
+          "phrase": "checked",
+          "signature": "wet"
+        }
+      },
+      {
+        "name": "Nisan incelemesi",
+        "job": {
+          "measured": "donem2",
+          "design": "donem1"
+        },
+        "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+        "marks": [
+          {
+            "name": "M1",
+            "horizontal": 0.005,
+            "vertical": -0.002
+          }
+        ],
+        "reviewer": {
+          "role": "approver",
+          "title": "Müdür",
+          "name": "B. Kaya",
+          "date": "2026-04-20",
+          "phrase": "seen",
+          "signature": "electronic",
+          "note": "Ek ölçü istendi.\nİkinci satır."
+        }
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "P1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

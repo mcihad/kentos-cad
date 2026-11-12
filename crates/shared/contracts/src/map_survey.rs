@@ -25,6 +25,12 @@ pub const MAX_SURVEY_USES: usize = 10_000;
 pub const MAX_SURVEY_BASELINES: usize = 100_000;
 pub const MAX_SURVEY_KNOWN: usize = 10_000;
 pub const MAX_SURVEY_ADJUSTMENTS: usize = 1000;
+/// At most this many baseline sessions, and baselines in one (docs/adr/4920): a session's full covariance is factored
+/// whole, 3n × 3n.
+pub const MAX_BASELINE_SESSIONS: usize = 10_000;
+pub const MAX_SESSION_BASELINES: usize = 100;
+/// The fastest velocity a point may be given (m/yr): plates move centimetres a year.
+pub const MOST_POINT_VELOCITY: f64 = 1.0;
 /// The longest baseline component (m): more than the Earth's diameter is not a baseline.
 pub const MOST_BASELINE_COMPONENT: f64 = 2.0e7;
 /// At most this many positions in one session: a day at one a second.
@@ -539,6 +545,23 @@ pub struct SurveyResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub adjustment: Option<String>,
+    /// Its velocity, read from the velocity grid the user gave (docs/adr/4920), never made up.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub velocity: Option<PointVelocity>,
+}
+
+/// A point's velocity east, north, up (m/yr) and the velocity grid it was read from, by its name and SHA-256
+/// (docs/adr/4920): the grid's displacement over one year at the point, by the coordinate chain itself.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PointVelocity {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub enu: [f64; 3],
+    pub grid: SurveyGrid,
 }
 
 /// A point accepted into the project: its mark, its object, its result now and its older ones (oldest first).
@@ -725,6 +748,90 @@ pub struct SurveyAdjustment {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub epoch: Option<f64>,
+    /// The baseline sessions `bo-N` whose full covariance it was adjusted with (docs/adr/4920); none: each baseline's
+    /// own 3×3 alone.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub sessions: Vec<String>,
+}
+
+/// A baseline session `bo-N` (docs/adr/4920): baselines processed together from simultaneous observations of common
+/// satellites, as GVX 1.0 keeps a `SESSION`: its id in the file, its time, its baselines and the cross-correlation
+/// blocks between them. A block's nine numbers go row by row, the rows the `row` baseline's X, Y, Z and the columns the
+/// `col` baseline's; a complete session of n baselines has n(n − 1)/2 blocks.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyBaselineSession {
+    /// `bo-N`.
+    pub id: String,
+    pub campaign: String,
+    /// Its id in the file (GVX's `SESSION ID`).
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end: Option<String>,
+    pub baselines: Vec<String>,
+    pub blocks: Vec<CorrelationBlock>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<SurveyFile>,
+}
+
+/// The correlations between two baselines of a session, X, Y, Z by X, Y, Z, row by row.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CorrelationBlock {
+    pub row: String,
+    pub col: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub r: [f64; 9],
+}
+
+/// The limits a known point's place may lie from its mark's accepted point (docs/adr/4520), kept in the project with
+/// where they come from (docs/adr/4920): a regulation's article, an administration's stricter specification
+/// (BÖHHBÜY Madde 103(1)(c)).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyTolerance {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub horizontal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub vertical: Option<f64>,
+    pub source: String,
+}
+
+impl SurveyTolerance {
+    /// Why the limits cannot be kept: the field and the words.
+    pub fn problem(&self) -> Option<(&'static str, &'static str)> {
+        if self.horizontal.is_none() && self.vertical.is_none() {
+            return Some(("horizontal", "yatay ya da düşey sınırdan en az biri verilmeli"));
+        }
+        for (field, v) in [("horizontal", self.horizontal), ("vertical", self.vertical)] {
+            if v.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
+                return Some((field, "sınır 0'dan büyük sonlu bir uzunluk olmalı"));
+            }
+        }
+        if !survey_text_ok(&self.source, MOST_REASON_TEXT) {
+            return Some(("source", "kaynak boşlukla başlayıp bitmeyen 1–500 karakter olmalı"));
+        }
+        None
+    }
 }
 
 /// Objects made from accepted points (a surface, a contour): the operation, the objects and each point's revision.
@@ -772,6 +879,14 @@ pub struct MapSurvey {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyAdjustment>>"))]
     pub adjustments: Vec<SurveyAdjustment>,
+    /// Baseline sessions with their cross-correlations (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyBaselineSession>>"))]
+    pub baseline_sessions: Vec<SurveyBaselineSession>,
+    /// The known points' place limits kept in the project (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tolerance: Option<SurveyTolerance>,
 }
 
 impl MapSurvey {
@@ -785,6 +900,29 @@ impl MapSurvey {
             && self.baselines.is_empty()
             && self.known.is_empty()
             && self.adjustments.is_empty()
+            && self.baseline_sessions.is_empty()
+            && self.tolerance.is_none()
+    }
+
+    pub fn baseline_session(&self, id: &str) -> Option<&SurveyBaselineSession> {
+        self.baseline_sessions.iter().find(|s| s.id == id)
+    }
+
+    /// The baseline session a baseline is in.
+    pub fn session_of(&self, baseline: &str) -> Option<&SurveyBaselineSession> {
+        self.baseline_sessions.iter().find(|s| s.baselines.iter().any(|b| b == baseline))
+    }
+
+    /// Whether it holds what schema 248 brought (docs/adr/4920): baseline sessions, an adjustment made with them, the
+    /// place limits kept, a point's velocity.
+    pub fn has_sessions(&self) -> bool {
+        !self.baseline_sessions.is_empty()
+            || self.tolerance.is_some()
+            || self.adjustments.iter().any(|a| !a.sessions.is_empty())
+            || self
+                .points
+                .iter()
+                .any(|p| std::iter::once(&p.result).chain(&p.history).any(|r| r.velocity.is_some()))
     }
 
     pub fn campaign(&self, id: &str) -> Option<&SurveyCampaign> {
@@ -986,6 +1124,7 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
         ("baselines", survey.baselines.len(), MAX_SURVEY_BASELINES),
         ("known", survey.known.len(), MAX_SURVEY_KNOWN),
         ("adjustments", survey.adjustments.len(), MAX_SURVEY_ADJUSTMENTS),
+        ("baselineSessions", survey.baseline_sessions.len(), MAX_BASELINE_SESSIONS),
     ];
     for (field, n, most) in limits {
         if n > most {
@@ -1315,6 +1454,90 @@ fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Op
         }
         if let Some(why) = a.epoch.and_then(crate::epoch_problem) {
             return fail(at("epoch"), &why);
+        }
+    }
+    sessions_problem(survey, ids)
+}
+
+/// docs/adr/4920: the baseline sessions, the kept place limits, the adjustments' sessions, the points' velocities.
+fn sessions_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Option<(String, String)> {
+    let mut taken = BTreeSet::new();
+    for (i, s) in survey.baseline_sessions.iter().enumerate() {
+        let at = |f: &str| format!("baselineSessions[{i}].{f}");
+        if !survey_numbered(&s.id, "bo-") || !ids.insert(s.id.as_str()) {
+            return fail(at("id"), "baz oturumunun kimliği bo-1, bo-2 … biçiminde ve tek olmalı");
+        }
+        if survey.campaign(&s.campaign).is_none() {
+            return fail(at("campaign"), "baz oturumunun arazi ölçümü arşivde olmalı");
+        }
+        if !survey_text_ok(&s.name, MOST_SURVEY_TEXT) {
+            return fail(at("name"), "oturumun dosyadaki kimliği boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+        }
+        let start = s.start.as_deref().map(survey_time);
+        let end = s.end.as_deref().map(survey_time);
+        if matches!(start, Some(None)) || matches!(end, Some(None)) {
+            return fail(at("start"), "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı");
+        }
+        if let (Some(Some(a)), Some(Some(z))) = (&start, &end)
+            && z < a
+        {
+            return fail(at("end"), "bitiş başlangıçtan önce olamaz");
+        }
+        if s.baselines.len() < 2 || s.baselines.len() > MAX_SESSION_BASELINES {
+            return fail(at("baselines"), &format!("bir baz oturumunda 2 ile {MAX_SESSION_BASELINES} arasında baz olur"));
+        }
+        for b in &s.baselines {
+            if survey.baseline(b).is_none_or(|x| x.campaign != s.campaign) {
+                return fail(at("baselines"), "oturumun bazları arşivde ve oturumun arazi ölçümünde olmalı");
+            }
+            if !taken.insert(b.as_str()) {
+                return fail(at("baselines"), "bir baz en çok bir oturumda olur");
+            }
+        }
+        let n = s.baselines.len();
+        if s.blocks.len() > n * (n - 1) / 2 {
+            return fail(at("blocks"), "n bazlı oturumda en çok n(n − 1)/2 korelasyon bloğu olur");
+        }
+        let mut pairs = BTreeSet::new();
+        for (j, b) in s.blocks.iter().enumerate() {
+            let at = |f: &str| format!("baselineSessions[{i}].blocks[{j}].{f}");
+            if b.row == b.col || !s.baselines.contains(&b.row) || !s.baselines.contains(&b.col) {
+                return fail(at("col"), "bloğun iki bazı oturumun iki ayrı bazı olmalı");
+            }
+            let pair = if b.row < b.col { (b.row.as_str(), b.col.as_str()) } else { (b.col.as_str(), b.row.as_str()) };
+            if !pairs.insert(pair) {
+                return fail(at("col"), "iki baz arasında tek korelasyon bloğu olur");
+            }
+            if !b.r.iter().all(|r| r.is_finite() && (-1.0..=1.0).contains(r)) {
+                return fail(at("r"), "korelasyonlar −1 ile 1 arasında olmalı");
+            }
+        }
+        if let Some(f) = &s.file
+            && (file_problem(f).is_some() || f.format != SurveyFileFormat::Gvx)
+        {
+            return fail(at("file"), "oturumun dosyası mutlak yolu ve SHA-256'sıyla verilen bir GVX dosyasıdır");
+        }
+    }
+    for (i, a) in survey.adjustments.iter().enumerate() {
+        if a.sessions.iter().any(|s| survey.baseline_session(s).is_none()) {
+            return fail(format!("adjustments[{i}].sessions"), "dengelemenin baz oturumları arşivde olmalı");
+        }
+    }
+    if let Some((field, why)) = survey.tolerance.as_ref().and_then(SurveyTolerance::problem) {
+        return fail(format!("tolerance.{field}"), why);
+    }
+    for (i, p) in survey.points.iter().enumerate() {
+        for r in std::iter::once(&p.result).chain(&p.history) {
+            if let Some(v) = &r.velocity
+                && (!v.enu.iter().all(|x| x.is_finite() && x.abs() <= MOST_POINT_VELOCITY)
+                    || !survey_text_ok(&v.grid.name, MOST_SURVEY_TEXT)
+                    || !is_sha256_text(&v.grid.sha256))
+            {
+                return fail(
+                    format!("points[{i}].result.velocity"),
+                    "hız en çok 1 m/yıl olan sonlu sayılar, ızgaranın adı ve SHA-256'sıyla olmalı",
+                );
+            }
         }
     }
     None

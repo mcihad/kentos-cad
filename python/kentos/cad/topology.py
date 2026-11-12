@@ -34,27 +34,27 @@ if TYPE_CHECKING:
 class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecked]):
     """``cad.topology.check`` v1. Topolojiyi denetle: Projenin topoloji kurallarını (rules:
     bazılarının kimlikleri; verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez.
-    Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant
-    kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının
-    bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki
-    bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez.
-    Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor,
-    parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini
-    söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. Her bulgu
-    kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle
+    Bağlı katmanın alan sınırlı parçasında alanın çevresindeki bant kaynağından okunur
+    (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve
+    komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur,
+    dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. Komşular tam
+    okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın
+    nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve
+    topology_incomplete uyarısı verilir: o katman temiz sayılmaz. Her bulgu kalıcı
+    anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle
     (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir;
     ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir.
     Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu
     açık ve lapsed olur (exception_lapsed uyarısı); kural sürümüyle yapılmış işaret
-    kural değişince de düşer. Her bulgunun state'i yaşam döngüsündeki yeridir (ADR
-    1260): open (değerlendirilmedi), error (hata diye onaylandı, düzeltilecek),
-    exception (bilerek bırakıldı), lapsed (işaretlendikten sonra geometrisi ya da kuralı
-    değişti, yeniden değerlendirilmeli); reason işaretin gerekçesidir, errors onaylanmış
-    hata sayısı. stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların,
-    toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın
-    özeti. preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler
-    alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı
-    katmanlar (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit,
+    kural değişince de düşer. Her bulgunun state'i yaşam döngüsündeki yeridir: open
+    (değerlendirilmedi), error (hata diye onaylandı, düzeltilecek), exception (bilerek
+    bırakıldı), lapsed (işaretlendikten sonra geometrisi ya da kuralı değişti, yeniden
+    değerlendirilmeli); reason işaretin gerekçesidir, errors onaylanmış hata sayısı.
+    stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve
+    istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. preview
+    bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da
+    uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar
+    (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit,
     topology_rule_not_found, finding_not_found, fix_unavailable.
     """
     __slots__ = ()
@@ -80,9 +80,9 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
     ) -> TopologyChecked:
         """Topolojiyi denetle: Projenin topoloji kurallarını (rules: bazılarının kimlikleri;
         verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez. Bağlı katmanın alan
-        sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın
-        katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır:
-        parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi
+        sınırlı parçasında alanın çevresindeki bant kaynağından okunur (dosyanın katmanın
+        son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın
+        nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi
         aralarındaki bulgu parçanın değildir, verilmez. Komşular tam okunamazsa (dosya yok
         ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına
         uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete
@@ -92,15 +92,15 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
         varsayılan 1 000) listelenir, sayılar hepsinindir. Geometri özetiyle yapılmış
         istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur
         (exception_lapsed uyarısı); kural sürümüyle yapılmış işaret kural değişince de
-        düşer. Her bulgunun state'i yaşam döngüsündeki yeridir (ADR 1260): open
-        (değerlendirilmedi), error (hata diye onaylandı, düzeltilecek), exception (bilerek
-        bırakıldı), lapsed (işaretlendikten sonra geometrisi ya da kuralı değişti, yeniden
-        değerlendirilmeli); reason işaretin gerekçesidir, errors onaylanmış hata sayısı.
-        stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve
-        istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. preview
-        bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da
-        uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar
-        (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit,
+        düşer. Her bulgunun state'i yaşam döngüsündeki yeridir: open (değerlendirilmedi),
+        error (hata diye onaylandı, düzeltilecek), exception (bilerek bırakıldı), lapsed
+        (işaretlendikten sonra geometrisi ya da kuralı değişti, yeniden değerlendirilmeli);
+        reason işaretin gerekçesidir, errors onaylanmış hata sayısı. stamp denetimin gördüğü
+        durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı
+        katmanların kaynak sürümü ve okunan bandın özeti. preview bir bulgunun bir
+        düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce
+        ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak
+        cad.entities.edit'in topologyFix'idir). Retler: invalid_limit,
         topology_rule_not_found, finding_not_found, fix_unavailable.
 
         Args:
@@ -200,15 +200,15 @@ check = _TopologyCheck()
 
 class _TopologyClean(LocalCommand[TopologyClean, TopologyCleaned, TopologyCleaned]):
     """``cad.topology.clean`` v1. Topolojik temizlik (taşınma raporu): Çizgi ağını ve alan
-    sınırlarını verilen toleransla düzeltir (ADR 0148'in kuralları: Uçlar, Köşeler,
-    Uzat, Buda; Topolojik temizlik aracıyla aynı çekirdek) ve büyük toplu temizlikte
-    yazmadan önce taşınmayı raporlar: her taşınma (nesne, tür, nereden, nereye,
-    uzaklık), değişen her nesnenin yerinde kalan ve taşınan kaynak köşeleri, en uzak ve
-    toplam taşınması, alanı ya da uzunluğu önce ve sonra, alanların toplamındaki
+    sınırlarını verilen toleransla düzeltir (topolojik temizliğin kuralları: Uçlar,
+    Köşeler, Uzat, Buda; Topolojik temizlik aracıyla aynı çekirdek) ve büyük toplu
+    temizlikte yazmadan önce taşınmayı raporlar: her taşınma (nesne, tür, nereden,
+    nereye, uzaklık), değişen her nesnenin yerinde kalan ve taşınan kaynak köşeleri, en
+    uzak ve toplam taşınması, alanı ya da uzunluğu önce ve sonra, alanların toplamındaki
     değişim. Köşe hiçbir zaman ortalamaya ya da yuvarlanmış koordinata değil var olan
-    bir köşeye gider. Kalite profili (ADR 1260) varsa kabul eşiği ve onu aşan taşınma
-    sayısı (beyond) söylenir; plan yine raporlar, yazma reddeder. uids yoksa görünen,
-    kilitsiz katmandaki bütün çizgi, çoklu çizgi, yay ve alan düzeltilir; verilenlerden
+    bir köşeye gider. Kalite profili varsa kabul eşiği ve onu aşan taşınma sayısı
+    (beyond) söylenir; plan yine raporlar, yazma reddeder. uids yoksa görünen, kilitsiz
+    katmandaki bütün çizgi, çoklu çizgi, yay ve alan düzeltilir; verilenlerden
     düzeltilemeyenler skipped sayılır. Tek geri alma adımı “Topolojik temizlik”. Retler:
     invalid_input (tolerance), invalid_revision, revision_conflict, invalid_uid,
     entity_not_found (uids[i]), clean_beyond_acceptance.
@@ -238,18 +238,18 @@ class _TopologyClean(LocalCommand[TopologyClean, TopologyCleaned, TopologyCleane
         expected: Expected | None = None,
     ) -> TopologyCleaned:
         """Topolojik temizlik (taşınma raporu): Çizgi ağını ve alan sınırlarını verilen
-        toleransla düzeltir (ADR 0148'in kuralları: Uçlar, Köşeler, Uzat, Buda; Topolojik
-        temizlik aracıyla aynı çekirdek) ve büyük toplu temizlikte yazmadan önce taşınmayı
-        raporlar: her taşınma (nesne, tür, nereden, nereye, uzaklık), değişen her nesnenin
-        yerinde kalan ve taşınan kaynak köşeleri, en uzak ve toplam taşınması, alanı ya da
-        uzunluğu önce ve sonra, alanların toplamındaki değişim. Köşe hiçbir zaman ortalamaya
-        ya da yuvarlanmış koordinata değil var olan bir köşeye gider. Kalite profili (ADR
-        1260) varsa kabul eşiği ve onu aşan taşınma sayısı (beyond) söylenir; plan yine
-        raporlar, yazma reddeder. uids yoksa görünen, kilitsiz katmandaki bütün çizgi, çoklu
-        çizgi, yay ve alan düzeltilir; verilenlerden düzeltilemeyenler skipped sayılır. Tek
-        geri alma adımı “Topolojik temizlik”. Retler: invalid_input (tolerance),
-        invalid_revision, revision_conflict, invalid_uid, entity_not_found (uids[i]),
-        clean_beyond_acceptance.
+        toleransla düzeltir (topolojik temizliğin kuralları: Uçlar, Köşeler, Uzat, Buda;
+        Topolojik temizlik aracıyla aynı çekirdek) ve büyük toplu temizlikte yazmadan önce
+        taşınmayı raporlar: her taşınma (nesne, tür, nereden, nereye, uzaklık), değişen her
+        nesnenin yerinde kalan ve taşınan kaynak köşeleri, en uzak ve toplam taşınması,
+        alanı ya da uzunluğu önce ve sonra, alanların toplamındaki değişim. Köşe hiçbir
+        zaman ortalamaya ya da yuvarlanmış koordinata değil var olan bir köşeye gider.
+        Kalite profili varsa kabul eşiği ve onu aşan taşınma sayısı (beyond) söylenir; plan
+        yine raporlar, yazma reddeder. uids yoksa görünen, kilitsiz katmandaki bütün çizgi,
+        çoklu çizgi, yay ve alan düzeltilir; verilenlerden düzeltilemeyenler skipped
+        sayılır. Tek geri alma adımı “Topolojik temizlik”. Retler: invalid_input
+        (tolerance), invalid_revision, revision_conflict, invalid_uid, entity_not_found
+        (uids[i]), clean_beyond_acceptance.
 
         Args:
             doc: The drawing it works on.
@@ -377,9 +377,9 @@ class _TopologyExceptions(LocalCommand[TopologyExceptions, TopologyExceptionsEdi
     anılır. İşaret gerekçeyi (reason; projenin kalite profili varsa zorunlu, yoksa
     reason_required), kuralın sürümünü ve istisnada kapsamı (scope: finding yerindeki
     bulgu, objects aynı nesneler arasındaki kuralın her bulgusu) taşır; kural değişince
-    de düşer (ADR 1260). İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin
-    geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır;
-    düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark
+    de düşer. İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin
+    özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş
+    istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark
     kaldırır. Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz.
     İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir.
     Retler: invalid_input (anahtar yok ya da iki kez), finding_not_found;
@@ -413,14 +413,14 @@ class _TopologyExceptions(LocalCommand[TopologyExceptions, TopologyExceptionsEdi
         anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. İşaret gerekçeyi (reason;
         projenin kalite profili varsa zorunlu, yoksa reason_required), kuralın sürümünü ve
         istisnada kapsamı (scope: finding yerindeki bulgu, objects aynı nesneler arasındaki
-        kuralın her bulgusu) taşır; kural değişince de düşer (ADR 1260). İstisna bulgunun
-        kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri
-        değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark
-        bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. Zaten istisna olan
-        (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. İstisnalar proje ayarıdır:
-        yazmak çizimi kirli yapar, geri alma adımı değildir. Retler: invalid_input (anahtar
-        yok ya da iki kez), finding_not_found; expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        kuralın her bulgusu) taşır; kural değişince de düşer. İstisna bulgunun kuralını,
+        nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince
+        istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü
+        geometriyle yeniden istisna yapar, unmark kaldırır. Zaten istisna olan (mark) ya da
+        istisnası olmayan (unmark) bulgu sayılmaz. İstisnalar proje ayarıdır: yazmak çizimi
+        kirli yapar, geri alma adımı değildir. Retler: invalid_input (anahtar yok ya da iki
+        kez), finding_not_found; expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

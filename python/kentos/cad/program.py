@@ -25,35 +25,35 @@ if TYPE_CHECKING:
 
 class _ProgramCheck(LocalCommand[ProgramCheck, ProgramChecked, ProgramChecked]):
     """``cad.program.check`` v1. Bina programını denetle: Bina programını çizimle
-    karşılaştırır (salt okunur, docs/adr/0773). units: bölümlerin toplamları, her mahal
-    bir kez: rooms (odalar), outdoor (hedefi outdoor olan balkon, teras), voids (şaft),
-    methods (alanın alındığı yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler;
-    birden çok ise karışık), levels (mahallerinin katları), recordedArea ve
-    recordedDifference (kayıtlı alan yalnız okunur). totals: units, unitOutdoor, common,
-    outdoor, voids, unassigned, all (boşluklar dışı hepsi; ortak alan bölüme girmez).
-    spaces: mahal başına area (kendi yöntemiyle), width (içindeki en büyük dairenin
-    çapı, net en), doors (kapılar ve başka mahale açık geçişler: ayırıcı), passage ve
-    passageAt (hedefi minPassage olan mahalde kapılar arası en geniş geçiş ve en dar
-    yeri), targetMin, targetMax, targetDifference (aralığın altı eksi, üstü artı, içi
-    0), passageDifference, adjacent ve reach (istenen kullanımlar ve onları karşılayan
-    mahaller). findings: Mimari denetim'in program grubu: program_unit_missing (Düzelt:
-    bölümden çıkar), program_area_below, program_area_above, program_width_narrow,
+    karşılaştırır (salt okunur). units: bölümlerin toplamları, her mahal bir kez: rooms
+    (odalar), outdoor (hedefi outdoor olan balkon, teras), voids (şaft), methods (alanın
+    alındığı yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler; birden çok ise
+    karışık), levels (mahallerinin katları), recordedArea ve recordedDifference (kayıtlı
+    alan yalnız okunur). totals: units, unitOutdoor, common, outdoor, voids, unassigned,
+    all (boşluklar dışı hepsi; ortak alan bölüme girmez). spaces: mahal başına area
+    (kendi yöntemiyle), width (içindeki en büyük dairenin çapı, net en), doors (kapılar
+    ve başka mahale açık geçişler: ayırıcı), passage ve passageAt (hedefi minPassage
+    olan mahalde kapılar arası en geniş geçiş ve en dar yeri), targetMin, targetMax,
+    targetDifference (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent
+    ve reach (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari
+    denetim'in program grubu: program_unit_missing (Düzelt: bölümden çıkar),
+    program_area_below, program_area_above, program_width_narrow,
     program_passage_narrow, program_adjacent_missing, program_reach_missing,
     program_no_door, program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın
     sürümünü (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır
     değildir. findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve
-    levels süzer. shares (programın shareRule'u varsa, docs/adr/0784): kentos.share/1
-    kuralı: her ortak alan kendi havuzudur, kapsamı kanadı, yoksa binası, yoksa bütün
-    program; odaları (şaft ve dış mahal dışı) 0,01 m² adıma, tam ikili değeri yarıda
-    çifte yuvarlanır; kapsamdaki bağımsız bölümlere ağırlıklarıyla (eşit 1, net alan
-    adımda, pay ağırlığı tam ondalık) T·w/W tam payı, tabanı ve kalan adımlar en büyük
-    artıklara (eşitlikte programdaki sıra); paylar havuzun alanına tam eşittir. pools:
-    havuzun alanı, bölüm payları (weight, share, exact: m² kesri), unshared (neden);
-    net, shared, unshared, gross toplamları ondalık metin. Bölüm satırının share'i: net,
-    share, gross (süzgeç ne olursa olsun bütün mahalleriyle). Paylaştırılamayan havuz
-    share_unshared uyarısı. program_level_outside: mahal bölümünün binasının ya da
-    kanadının katlarında değil. Uzun iş olarak çalışabilir: ilerlemesini söyler,
-    durdurulunca cancelled. Retler: unit_not_found, level_not_found.
+    levels süzer. shares (programın shareRule'u varsa): kentos.share/1 kuralı: her ortak
+    alan kendi havuzudur, kapsamı kanadı, yoksa binası, yoksa bütün program; odaları
+    (şaft ve dış mahal dışı) 0,01 m² adıma, tam ikili değeri yarıda çifte yuvarlanır;
+    kapsamdaki bağımsız bölümlere ağırlıklarıyla (eşit 1, net alan adımda, pay ağırlığı
+    tam ondalık) T·w/W tam payı, tabanı ve kalan adımlar en büyük artıklara (eşitlikte
+    programdaki sıra); paylar havuzun alanına tam eşittir. pools: havuzun alanı, bölüm
+    payları (weight, share, exact: m² kesri), unshared (neden); net, shared, unshared,
+    gross toplamları ondalık metin. Bölüm satırının share'i: net, share, gross (süzgeç
+    ne olursa olsun bütün mahalleriyle). Paylaştırılamayan havuz share_unshared uyarısı.
+    program_level_outside: mahal bölümünün binasının ya da kanadının katlarında değil.
+    Uzun iş olarak çalışabilir: ilerlemesini söyler, durdurulunca cancelled. Retler:
+    unit_not_found, level_not_found.
     """
     __slots__ = ()
     id = "cad.program.check"
@@ -75,36 +75,36 @@ class _ProgramCheck(LocalCommand[ProgramCheck, ProgramChecked, ProgramChecked]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ProgramChecked:
-        """Bina programını denetle: Bina programını çizimle karşılaştırır (salt okunur,
-        docs/adr/0773). units: bölümlerin toplamları, her mahal bir kez: rooms (odalar),
-        outdoor (hedefi outdoor olan balkon, teras), voids (şaft), methods (alanın alındığı
-        yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler; birden çok ise karışık),
-        levels (mahallerinin katları), recordedArea ve recordedDifference (kayıtlı alan
-        yalnız okunur). totals: units, unitOutdoor, common, outdoor, voids, unassigned, all
-        (boşluklar dışı hepsi; ortak alan bölüme girmez). spaces: mahal başına area (kendi
-        yöntemiyle), width (içindeki en büyük dairenin çapı, net en), doors (kapılar ve
-        başka mahale açık geçişler: ayırıcı), passage ve passageAt (hedefi minPassage olan
-        mahalde kapılar arası en geniş geçiş ve en dar yeri), targetMin, targetMax,
-        targetDifference (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent
-        ve reach (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari
-        denetim'in program grubu: program_unit_missing (Düzelt: bölümden çıkar),
-        program_area_below, program_area_above, program_width_narrow,
-        program_passage_narrow, program_adjacent_missing, program_reach_missing,
-        program_no_door, program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın
-        sürümünü (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır
-        değildir. findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve
-        levels süzer. shares (programın shareRule'u varsa, docs/adr/0784): kentos.share/1
-        kuralı: her ortak alan kendi havuzudur, kapsamı kanadı, yoksa binası, yoksa bütün
-        program; odaları (şaft ve dış mahal dışı) 0,01 m² adıma, tam ikili değeri yarıda
-        çifte yuvarlanır; kapsamdaki bağımsız bölümlere ağırlıklarıyla (eşit 1, net alan
-        adımda, pay ağırlığı tam ondalık) T·w/W tam payı, tabanı ve kalan adımlar en büyük
-        artıklara (eşitlikte programdaki sıra); paylar havuzun alanına tam eşittir. pools:
-        havuzun alanı, bölüm payları (weight, share, exact: m² kesri), unshared (neden);
-        net, shared, unshared, gross toplamları ondalık metin. Bölüm satırının share'i: net,
-        share, gross (süzgeç ne olursa olsun bütün mahalleriyle). Paylaştırılamayan havuz
-        share_unshared uyarısı. program_level_outside: mahal bölümünün binasının ya da
-        kanadının katlarında değil. Uzun iş olarak çalışabilir: ilerlemesini söyler,
-        durdurulunca cancelled. Retler: unit_not_found, level_not_found.
+        """Bina programını denetle: Bina programını çizimle karşılaştırır (salt okunur). units:
+        bölümlerin toplamları, her mahal bir kez: rooms (odalar), outdoor (hedefi outdoor
+        olan balkon, teras), voids (şaft), methods (alanın alındığı yöntemler: net iç
+        yüzler, duvar ekseni, brüt dış yüzler; birden çok ise karışık), levels (mahallerinin
+        katları), recordedArea ve recordedDifference (kayıtlı alan yalnız okunur). totals:
+        units, unitOutdoor, common, outdoor, voids, unassigned, all (boşluklar dışı hepsi;
+        ortak alan bölüme girmez). spaces: mahal başına area (kendi yöntemiyle), width
+        (içindeki en büyük dairenin çapı, net en), doors (kapılar ve başka mahale açık
+        geçişler: ayırıcı), passage ve passageAt (hedefi minPassage olan mahalde kapılar
+        arası en geniş geçiş ve en dar yeri), targetMin, targetMax, targetDifference
+        (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent ve reach
+        (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari denetim'in
+        program grubu: program_unit_missing (Düzelt: bölümden çıkar), program_area_below,
+        program_area_above, program_width_narrow, program_passage_narrow,
+        program_adjacent_missing, program_reach_missing, program_no_door,
+        program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın sürümünü
+        (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır değildir.
+        findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve levels süzer.
+        shares (programın shareRule'u varsa): kentos.share/1 kuralı: her ortak alan kendi
+        havuzudur, kapsamı kanadı, yoksa binası, yoksa bütün program; odaları (şaft ve dış
+        mahal dışı) 0,01 m² adıma, tam ikili değeri yarıda çifte yuvarlanır; kapsamdaki
+        bağımsız bölümlere ağırlıklarıyla (eşit 1, net alan adımda, pay ağırlığı tam
+        ondalık) T·w/W tam payı, tabanı ve kalan adımlar en büyük artıklara (eşitlikte
+        programdaki sıra); paylar havuzun alanına tam eşittir. pools: havuzun alanı, bölüm
+        payları (weight, share, exact: m² kesri), unshared (neden); net, shared, unshared,
+        gross toplamları ondalık metin. Bölüm satırının share'i: net, share, gross (süzgeç
+        ne olursa olsun bütün mahalleriyle). Paylaştırılamayan havuz share_unshared uyarısı.
+        program_level_outside: mahal bölümünün binasının ya da kanadının katlarında değil.
+        Uzun iş olarak çalışabilir: ilerlemesini söyler, durdurulunca cancelled. Retler:
+        unit_not_found, level_not_found.
 
         Args:
             doc: The drawing it works on.
@@ -195,25 +195,25 @@ check = _ProgramCheck()
 
 class _ProgramEdit(LocalCommand[ProgramEdit, ProgramEdited, ProgramEdited]):
     """``cad.program.edit`` v1. Bina programı: Bina programını ve bölümlerine verilen
-    mahalleri yazar (docs/adr/0773); tek geri alma adımı “Bina programı”, hepsi ya da
-    hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad,
-    levels: kapladıkları katların kimlikleri, kanadınki binasınınkilerden;
-    docs/adr/0784), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara,
-    ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç
-    yazılmaz, shareWeight: ağırlığa göre paylaştırmada bölümün pay ağırlığı, ondalık
-    metin), shareRule (ortak alanların bağımsız bölümlere paylaştırılması: equal eşit,
-    net net alana göre, weight ağırlığa göre; kural kentos.share/1), briefs (kullanıma
-    göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası
-    net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak
-    kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok
-    adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve
-    sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur:
-    bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit
-    bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa
-    unit_in_use (uids); kaldırılan bina ya da kanat hâlâ bölümlerde yazılıysa
-    building_in_use (bölümlerin numaraları iletide). Retler: nothing_to_set,
-    building_in_use, invalid_program (programın yolu), level_not_found (binanın ya da
-    kanadın katı projede yok), no_entities, invalid_uid, entity_not_found, not_a_space,
+    mahalleri yazar; tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program
+    (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad, levels:
+    kapladıkları katların kimlikleri, kanadınki binasınınkilerden), units (bağımsız
+    bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor,
+    bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz, shareWeight:
+    ağırlığa göre paylaştırmada bölümün pay ağırlığı, ondalık metin), shareRule (ortak
+    alanların bağımsız bölümlere paylaştırılması: equal eşit, net net alana göre, weight
+    ağırlığa göre; kural kentos.share/1), briefs (kullanıma göre tasarım hedefi:
+    areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent
+    komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor
+    balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının
+    önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü,
+    bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün
+    katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne
+    verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use
+    (uids); kaldırılan bina ya da kanat hâlâ bölümlerde yazılıysa building_in_use
+    (bölümlerin numaraları iletide). Retler: nothing_to_set, building_in_use,
+    invalid_program (programın yolu), level_not_found (binanın ya da kanadın katı
+    projede yok), no_entities, invalid_uid, entity_not_found, not_a_space,
     unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen
     mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde
     değilse hiçbir şey yazılmaz, sonuç conflict olur.
@@ -238,29 +238,28 @@ class _ProgramEdit(LocalCommand[ProgramEdit, ProgramEdited, ProgramEdited]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ProgramEdited:
-        """Bina programı: Bina programını ve bölümlerine verilen mahalleri yazar
-        (docs/adr/0773); tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program
-        (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad, levels:
-        kapladıkları katların kimlikleri, kanadınki binasınınkilerden; docs/adr/0784), units
-        (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind
-        unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç
-        yazılmaz, shareWeight: ağırlığa göre paylaştırmada bölümün pay ağırlığı, ondalık
-        metin), shareRule (ortak alanların bağımsız bölümlere paylaştırılması: equal eşit,
-        net net alana göre, weight ağırlığa göre; kural kentos.share/1), briefs (kullanıma
-        göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası
-        net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak
-        kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok
-        adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve
-        sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur:
-        bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit
-        bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa
-        unit_in_use (uids); kaldırılan bina ya da kanat hâlâ bölümlerde yazılıysa
-        building_in_use (bölümlerin numaraları iletide). Retler: nothing_to_set,
-        building_in_use, invalid_program (programın yolu), level_not_found (binanın ya da
-        kanadın katı projede yok), no_entities, invalid_uid, entity_not_found, not_a_space,
-        unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen
-        mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Bina programı: Bina programını ve bölümlerine verilen mahalleri yazar; tek geri alma
+        adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi):
+        buildings (bina ve kanatları: kimlik, ad, levels: kapladıkları katların kimlikleri,
+        kanadınki binasınınkilerden), units (bağımsız bölüm, ortak alan ya da dış alan:
+        kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan
+        m²: ölçümle hiç yazılmaz, shareWeight: ağırlığa göre paylaştırmada bölümün pay
+        ağırlığı, ondalık metin), shareRule (ortak alanların bağımsız bölümlere
+        paylaştırılması: equal eşit, net net alana göre, weight ağırlığa göre; kural
+        kentos.share/1), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m²,
+        minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar,
+        reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal;
+        yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı:
+        width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile
+        bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur
+        (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden
+        çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids); kaldırılan bina
+        ya da kanat hâlâ bölümlerde yazılıysa building_in_use (bölümlerin numaraları
+        iletide). Retler: nothing_to_set, building_in_use, invalid_program (programın yolu),
+        level_not_found (binanın ya da kanadın katı projede yok), no_entities, invalid_uid,
+        entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı
+        yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

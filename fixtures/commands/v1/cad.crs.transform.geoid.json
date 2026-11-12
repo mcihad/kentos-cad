@@ -959,7 +959,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği",
         "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
@@ -2360,7 +2361,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği @ 1990",
         "to": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği @ 2024",

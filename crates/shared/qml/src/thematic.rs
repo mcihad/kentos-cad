@@ -1,4 +1,4 @@
-//! Thematic renderers in QML (docs/adr/0635 §5): KentOS's heat map as QGIS's `heatmapRenderer` (its radius, weight,
+//! Thematic renderers in QML (docs/adr/0635 §5): KentOS's heat map as QML's `heatmapRenderer` (its radius, weight,
 //! maximum, quality and colour ramp), its inverted areas as `invertedPolygonRenderer`, its clusters as `pointCluster`
 //! and its displaced points as `pointDisplacement` (each wrapping its inner renderer and centre symbol), and back. The
 //! other thematic renderers (continuous colour, proportional symbol, bivariate colour, dot density, chart) are named
@@ -20,7 +20,7 @@ fn r3(v: f64) -> f64 {
     (v * 1000.0).round() / 1000.0
 }
 
-/// A distance's QGIS unit: KentOS's screen px or metres.
+/// A distance's QML unit: KentOS's screen px or metres.
 fn unit_out(renderer: &Value) -> &'static str {
     if renderer.get("unit").and_then(Value::as_str) == Some("m") {
         "RenderMetersInMapUnits"
@@ -53,7 +53,7 @@ fn inner_xml(
     super::element(v, key, library, lost)
 }
 
-/// A centre symbol (a marker or a reference to one) as QGIS's `centerSymbol`.
+/// A centre symbol (a marker or a reference to one) as QML's `centerSymbol`.
 fn centre_xml(
     sym: Option<&Value>,
     library: &dyn Fn(&str) -> Option<Value>,
@@ -71,7 +71,7 @@ fn centre_xml(
 
 const OPEN: &str = "enableorderby=\"0\" forceraster=\"0\" symbollevels=\"0\" referencescale=\"-1\"";
 
-/// A thematic renderer as QGIS's `<renderer-v2>` element and the classes it writes (one for a heat map).
+/// A thematic renderer as QML's `<renderer-v2>` element and the classes it writes (one for a heat map).
 pub(super) fn element(
     renderer: &Value,
     key: &'static str,
@@ -97,7 +97,7 @@ pub(super) fn element(
                     Some(q) => q,
                     None => {
                         lost.push(format!(
-                            "{what}: ağırlığın “{w}” ifadesi QGIS'in ifadesine çevrilemedi; ağırlıksız yazıldı"
+                            "{what}: ağırlığın “{w}” ifadesi QML'in ifadesine çevrilemedi; ağırlıksız yazıldı"
                         ));
                         String::new()
                     }
@@ -106,7 +106,7 @@ pub(super) fn element(
             };
             if num_of("opacity").is_some_and(|o| o < 1.0) {
                 lost.push(format!(
-                    "{what}: saydamlığı QGIS'te katmanın saydamlığıdır; yazılmadı"
+                    "{what}: saydamlığı QML'de katmanın saydamlığıdır; yazılmadı"
                 ));
             }
             let ramp: Vec<String> = renderer
@@ -168,7 +168,7 @@ pub(super) fn element(
             }
             if renderer.get("count") != Some(&Value::Bool(false)) {
                 lost.push(format!(
-                    "{what}: kümenin sayısı QGIS'te kümenin simgesindeki yazı işaretidir; yazılmadı"
+                    "{what}: kümenin sayısı QML'de kümenin simgesindeki yazı işaretidir; yazılmadı"
                 ));
             }
             if renderer.get("grow") == Some(&Value::Bool(true)) {
@@ -230,7 +230,7 @@ fn attr_num(n: Node<'_, '_>, name: &str) -> Option<f64> {
         .filter(|v| v.is_finite())
 }
 
-/// A distance in QGIS's unit as KentOS's: (value, `px` or `m`); none for another.
+/// A distance in QML's unit as KentOS's: (value, `px` or `m`); none for another.
 fn distance_in(v: f64, unit: Option<&str>) -> Option<(f64, &'static str)> {
     Some(match unit.unwrap_or("MM") {
         "Pixel" => (v, "px"),
@@ -255,7 +255,7 @@ fn ramp_colour(text: Option<&str>) -> Option<String> {
     colour_in(Some(t))
 }
 
-/// The ramp of QGIS's gradient colour ramp: its first colour, its stops, its last; offsets other than even ones said.
+/// The ramp of QML's gradient colour ramp: its first colour, its stops, its last; offsets other than even ones said.
 fn ramp_of(r: Node<'_, '_>, lost: &mut Vec<String>) -> Vec<String> {
     let Some(cr) = child(r, "colorramp") else {
         return Vec::new();
@@ -291,7 +291,7 @@ fn ramp_of(r: Node<'_, '_>, lost: &mut Vec<String>) -> Vec<String> {
         .and_then(Value::as_str)
         .filter(|s| !s.is_empty())
     {
-        // QGIS 4 writes a stop's colour with its spec (`r,g,b,a,rgb:…`): a piece not starting with an offset is the
+        // QML 4 writes a stop's colour with its spec (`r,g,b,a,rgb:…`): a piece not starting with an offset is the
         // colour's tail.
         let mut list: Vec<String> = Vec::new();
         for piece in stops.split(':') {

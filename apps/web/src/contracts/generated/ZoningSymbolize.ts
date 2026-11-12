@@ -3,7 +3,8 @@ import type { ZoningSymbolPick } from "./ZoningSymbolPick";
 
 /**
  * Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the
- * user's symbols, which go before KentOS's table.
+ * user's symbols, which go before the project's kept ones and KentOS's table; `keep` (docs/adr/5040): the given symbols
+ * become the project's kept choices (none given: the project keeps none), and the old kept ones are not read.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS
  * has symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol
@@ -11,4 +12,4 @@ import type { ZoningSymbolPick } from "./ZoningSymbolPick";
  * `invalid_input` (given twice), `invalid_uid`, `entity_not_found`, `not_a_decision` (not an area on the decision
  * layer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).
  */
-export type ZoningSymbolize = { uids?: Array<string>, symbols?: Array<ZoningSymbolPick>, expectedRevision?: string, };
+export type ZoningSymbolize = { uids?: Array<string>, symbols?: Array<ZoningSymbolPick>, keep?: boolean, expectedRevision?: string, };

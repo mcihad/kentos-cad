@@ -11,11 +11,15 @@
 //! tick through them at every node, each node's values at it and each pipe's at its middle. Asked (docs/adr/2760),
 //! another network's pipes crossing the run in plan (the clearances' crossings) are drawn where they cross: an ellipse
 //! of the diameter, its height times the exaggeration, the name and invert above; with its wall thickness asked and read
-//! (docs/adr/4360), its outer wall about the same centre and the ring between the two filled. One undo step “Hat profili” through
+//! (docs/adr/4360), its outer wall about the same centre and the ring between the two filled. The run's own pipes
+//! whose wall is asked and known above zero (docs/adr/4780: their wall attribute or their outer diameter's, as the
+//! check reads them) have their outer walls drawn too, thin red lines the wall under the invert and over the crown
+//! (Civil 3D's “Outside Pipe Walls”), and their cover is over the top outside. One undo step “Hat profili” through
 //! `cad.entities.create`'s write. The shared cases are `fixtures/commands/v1/cad.pipes.profile.json`.
 
 use std::collections::{HashMap, HashSet};
 
+use kentos_commands::CrossingHatch;
 use kentos_commands::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, PIPE_PROFILE_BANDS,
     PIPE_LIMIT, PIPE_PROFILE_LIMIT, PipeClearanceAsk, PipeGround, PipeInverts, PipeProfileCrossing, PipeProfileGround,
@@ -27,7 +31,7 @@ use kentos_geometry_core::ops::network::Dir;
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::pipes_check::{self as pipes, attr, path_of};
+use crate::pipes_check::{self as pipes, attr, path_of, wall_of};
 use crate::pipes_clearance;
 use crate::road_profiles_draw::{grid_step, line, masked, turned};
 
@@ -40,9 +44,9 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 
 struct Checked {
     out: PipesProfiled,
-    /// The inverts' points along the run (station, invert, crown): each pipe's ends, or its vertices when its vertices'
-    /// heights are the inverts; a pipe without inverts a gap.
-    inverts: Vec<(f64, Option<f64>, Option<f64>)>,
+    /// The inverts' points along the run (station, invert, crown, wall above zero): each pipe's ends, or its vertices
+    /// when its vertices' heights are the inverts; a pipe without inverts a gap.
+    inverts: Vec<(f64, Option<f64>, Option<f64>, Option<f64>)>,
     /// Texts' paper height (mm).
     height: f64,
     warnings: Vec<CommandWarning>,
@@ -74,7 +78,9 @@ fn asked(input: &PipesProfile) -> Result<(), Stop> {
     Ok(())
 }
 
-fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
+/// Checks `input` and reads the run's profile, telling `told` the run's pipes one at a time (docs/adr/4860: its
+/// crossings with the other network and the ground along it); `told` answering true stops it there, cancelled.
+fn check(doc: &Document, input: &PipesProfile, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     asked(input)?;
     let (def, made, session) = pipes::load(doc, &input.network, input.ground.as_ref())?;
     let surface = match &made {
@@ -165,9 +171,12 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
     let mut ground: Vec<PipeProfileGround> = Vec::new();
     // Each node's place and node (first the run's start), and the invert polylines' points.
     let mut nodes: Vec<([f64; 2], Option<u32>)> = Vec::new();
-    let mut inverts: Vec<(f64, Option<f64>, Option<f64>)> = Vec::new();
+    let mut inverts: Vec<(f64, Option<f64>, Option<f64>, Option<f64>)> = Vec::new();
     let mut s0 = 0.0;
     for (i, &k) in run.iter().enumerate() {
+        if told(i as u64, run.len() as u64) {
+            return Err(Stop::Cancelled);
+        }
         let edge = &g.edges[k];
         let e = doc.get(slot(edge.id));
         let path = path_of(e, [edge.a.x, edge.a.y], [edge.b.x, edge.b.y]);
@@ -207,6 +216,11 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
             None => Some(0.0),
             Some(_) => diameter,
         };
+        // Docs/adr/4780: its wall as the check reads it (its attribute or its outer diameter's); the cover over its top
+        // outside, its outer walls drawn when above zero.
+        let wall = input.diameter.as_ref().and_then(|d| wall_of(e, d)).and_then(Result::ok);
+        let top_outside = crown.map(|c| c + wall.unwrap_or(0.0));
+        let drawn_wall = wall.filter(|w| *w > 0.0);
         // The inverts' points: the ends, and a polyline's vertices when its heights are the inverts.
         let mut points: Vec<(f64, f64)> = match (&input.inverts, &path.heights) {
             (PipeInverts::Heights, Some(h)) => path.stations.iter().zip(h).map(|(st, z)| (along(*st), *z)).collect(),
@@ -214,10 +228,10 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
         };
         points.sort_by(|a, b| a.0.total_cmp(&b.0));
         if points.is_empty() {
-            inverts.push((s0, None, None));
+            inverts.push((s0, None, None, None));
         }
         for (s, z) in points {
-            inverts.push((s, Some(z), crown.map(|c| z + c)));
+            inverts.push((s, Some(z), crown.map(|c| z + c), drawn_wall));
         }
         // The ground along it, the way it flows, and the least cover over it.
         let mut samples: Vec<(f64, [f64; 2], Option<f64>)> = Vec::new();
@@ -241,7 +255,7 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
             _ => {}
         }
         let mut min_cover: Option<f64> = None;
-        if let Some(c) = crown {
+        if let Some(c) = top_outside {
             for (st, _, z) in &samples {
                 if let (Some(z), Some(inv)) = (z, path.invert(ends_read, *st)) {
                     let cover = z - (inv + c);
@@ -269,6 +283,7 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
             downstream: down,
             slope,
             diameter,
+            wall,
             min_cover,
         });
         s0 += l;
@@ -307,7 +322,14 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
     crossings.sort_by(|a, b| a.station.total_cmp(&b.station).then_with(|| a.uid.cmp(&b.uid)));
     // The elevations shown, the datum and the top: the crossing pipes' inverts and tops too.
     let mut zs: Vec<f64> = ground.iter().filter_map(|p| p.z).collect();
-    zs.extend(inverts.iter().flat_map(|(_, i, c)| [*i, *c]).flatten());
+    zs.extend(inverts.iter().flat_map(|(_, i, c, _)| [*i, *c]).flatten());
+    // Docs/adr/4780: the run's outer walls, the bottom outside and the top outside.
+    for (_, i, c, w) in &inverts {
+        if let (Some(i), Some(w)) = (i, w) {
+            zs.push(i - w);
+            zs.extend(c.map(|c| c + w));
+        }
+    }
     zs.extend(structures.iter().filter_map(|s| s.ground));
     for c in &crossings {
         if let Some(i) = c.invert {
@@ -437,7 +459,7 @@ pub(crate) fn grid_heights(datum: f64, top: f64) -> Vec<f64> {
     out
 }
 
-fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewObject> {
+fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool, hatch: CrossingHatch) -> Vec<NewObject> {
     let o = &c.out;
     let inverts = &c.inverts;
     let mm = doc.settings().plot_scale / 1000.0;
@@ -462,12 +484,19 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
     for r in runs(o.ground.iter().map(|p| (p.station, p.z))) {
         out.push(polyline(&r.iter().map(|(s, z)| [x(*s), y(*z)]).collect::<Vec<_>>(), false, None, 0.25));
     }
-    for r in runs(inverts.iter().map(|(s, i, _)| (*s, *i))) {
+    for r in runs(inverts.iter().map(|(s, i, _, _)| (*s, *i))) {
         out.push(polyline(&r.iter().map(|(s, z)| [x(*s), y(*z)]).collect::<Vec<_>>(), false, Some(RED), 0.5));
     }
     if crowns {
-        for r in runs(inverts.iter().map(|(s, _, c)| (*s, *c))) {
+        for r in runs(inverts.iter().map(|(s, _, c, _)| (*s, *c))) {
             out.push(polyline(&r.iter().map(|(s, z)| [x(*s), y(*z)]).collect::<Vec<_>>(), false, Some(RED), 0.25));
+        }
+        // Docs/adr/4780: the outer walls (Civil 3D's “Outside Pipe Walls”), the wall under the invert and over the
+        // crown, thin; a pipe whose wall is not known above zero a gap.
+        let bottom = runs(inverts.iter().map(|(s, i, _, w)| (*s, i.zip(*w).map(|(i, w)| i - w))));
+        let top = runs(inverts.iter().map(|(s, _, c, w)| (*s, c.zip(*w).map(|(c, w)| c + w))));
+        for r in bottom.into_iter().chain(top) {
+            out.push(polyline(&r.iter().map(|(s, z)| [x(*s), y(*z)]).collect::<Vec<_>>(), false, Some(RED), 0.13));
         }
     }
     // Each structure from its lowest invert to the ground.
@@ -488,16 +517,24 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
                 let centre = Vec2 { x: xs, y: y(inv) + d / 2.0 * o.exaggeration };
                 let (major, ratio) = axes(d / 2.0, o.exaggeration);
                 out.push(drawn(EntityGeometry::Ellipse { c: centre, major, ratio, t0: 0.0, t1: std::f64::consts::TAU }));
-                match c.wall.filter(|w| *w > 0.0) {
-                    // Docs/adr/4360: the outer wall about the same centre and the ring between the two filled.
-                    Some(w) => {
-                        let (outer, outer_ratio) = axes(d / 2.0 + w, o.exaggeration);
-                        out.push(drawn(EntityGeometry::Ellipse { c: centre, major: outer, ratio: outer_ratio, t0: 0.0, t1: std::f64::consts::TAU }));
-                        out.push(drawn(wall_ring(centre, (outer, outer_ratio), (major, ratio))));
-                        centre.y + (d / 2.0 + w) * o.exaggeration
-                    }
-                    None => centre.y + d / 2.0 * o.exaggeration,
+                let wall = c.wall.filter(|w| *w > 0.0);
+                // Docs/adr/4360: the outer wall about the same centre.
+                let outer = wall.map(|w| {
+                    let (outer, outer_ratio) = axes(d / 2.0 + w, o.exaggeration);
+                    out.push(drawn(EntityGeometry::Ellipse { c: centre, major: outer, ratio: outer_ratio, t0: 0.0, t1: std::f64::consts::TAU }));
+                    (outer, outer_ratio)
+                });
+                // Docs/adr/5160: the fill the user chose; the ring between the two walls when none was (docs/adr/4360).
+                let fill = match (hatch, outer) {
+                    (CrossingHatch::Wall, Some(o)) => Some(filled(centre, &[o, (major, ratio)])),
+                    (CrossingHatch::Inside, _) | (CrossingHatch::Whole, None) => Some(filled(centre, &[(major, ratio)])),
+                    (CrossingHatch::Whole, Some(o)) => Some(filled(centre, &[o])),
+                    (CrossingHatch::Wall, None) | (CrossingHatch::None, _) => None,
+                };
+                if let Some(f) = fill {
+                    out.push(drawn(f));
                 }
+                centre.y + (d / 2.0 + wall.unwrap_or(0.0)) * o.exaggeration
             }
             None => {
                 out.push(drawn(EntityGeometry::Point { p: Vec2 { x: xs, y: y(inv) }, z: None, parts: None }));
@@ -560,7 +597,7 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -568,7 +605,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResul
 
 /// The profile execute would draw; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<PipesProfiled> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -576,13 +613,20 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<Pi
 
 /// Writes the profile's objects in the step it runs in (`road.project.rebuild` draws a kept profile again with it).
 pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<PipesProfiled> {
-    let c = match check(cx.doc, input) {
+    let checked = check(cx.doc, input, &cx.told());
+    let c = match checked {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
-        objects: objects(cx.doc, &c, input.at, input.diameter.is_some()),
+        objects: objects(
+            cx.doc,
+            &c,
+            input.at,
+            input.diameter.is_some(),
+            input.crossing.as_ref().and_then(|x| x.hatch).unwrap_or_default(),
+        ),
         operation: Some(CreateOperation::PipeProfile),
         expected_revision: None,
     };
@@ -621,10 +665,10 @@ fn axes(r: f64, exaggeration: f64) -> (Vec2, f64) {
     if ry >= rx { (Vec2 { x: 0.0, y: ry }, rx / ry) } else { (Vec2 { x: rx, y: 0.0 }, ry / rx) }
 }
 
-/// The ring between a crossing pipe's outer and inner walls, filled (docs/adr/4360): its boundary exact, the outer
-/// ellipse then the inner one as a hole, each a loop of one point that is one closed curve.
-fn wall_ring(c: Vec2, outer: (Vec2, f64), inner: (Vec2, f64)) -> EntityGeometry {
-    let whole = |(major, ratio): (Vec2, f64)| kentos_commands::HatchLoop {
+/// A crossing pipe's fill (docs/adr/4360, 5160): its boundary exact, the given ellipses about `c` (the first the outline,
+/// a second its hole: the ring between the walls), each a loop of one point that is one closed curve.
+fn filled(c: Vec2, ellipses: &[(Vec2, f64)]) -> EntityGeometry {
+    let whole = |&(major, ratio): &(Vec2, f64)| kentos_commands::HatchLoop {
         pts: vec![Vec2 { x: c.x + major.x, y: c.y + major.y }],
         bulges: None,
         curves: Some(vec![Some(kentos_commands::HatchCurve::Ellipse { c, major, ratio, t0: 0.0, t1: std::f64::consts::TAU })]),
@@ -634,7 +678,7 @@ fn wall_ring(c: Vec2, outer: (Vec2, f64), inner: (Vec2, f64)) -> EntityGeometry 
         holes: None,
         pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
         assoc: None,
-        boundary: Some(vec![whole(outer), whole(inner)]),
+        boundary: Some(ellipses.iter().map(whole).collect()),
         annotative: None,
     }
 }

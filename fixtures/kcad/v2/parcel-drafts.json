@@ -1,0 +1,330 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Parsel taslakları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "parcelRegister": {
+      "documents": [
+        {
+          "number": 1,
+          "name": "Kadastro 1985",
+          "kind": "Tapu planı",
+          "date": "1985-06-12"
+        },
+        {
+          "number": 2,
+          "name": "2026/145 ifraz",
+          "kind": "Değişiklik",
+          "date": "2026-03-14",
+          "note": "Ölçü krokisi 2026/145.",
+          "approval": {
+            "reference": "2026/145-K",
+            "date": "2026-03-20",
+            "by": "Kadastro Müdürlüğü"
+          }
+        }
+      ],
+      "boundaries": [
+        {
+          "number": 1,
+          "from": {
+            "x": 500000.0,
+            "y": 4400000.0
+          },
+          "to": {
+            "x": 500020.0,
+            "y": 4400000.0
+          },
+          "createdBy": 1,
+          "closedBy": 2
+        },
+        {
+          "number": 2,
+          "from": {
+            "x": 500020.0,
+            "y": 4400000.0
+          },
+          "to": {
+            "x": 500020.0,
+            "y": 4400010.0
+          },
+          "createdBy": 1
+        },
+        {
+          "number": 3,
+          "from": {
+            "x": 500000.0,
+            "y": 4400010.0
+          },
+          "to": {
+            "x": 500020.0,
+            "y": 4400010.0
+          },
+          "createdBy": 1,
+          "closedBy": 2
+        },
+        {
+          "number": 4,
+          "from": {
+            "x": 500000.0,
+            "y": 4400000.0
+          },
+          "to": {
+            "x": 500000.0,
+            "y": 4400010.0
+          },
+          "createdBy": 1
+        },
+        {
+          "number": 5,
+          "from": {
+            "x": 500000.0,
+            "y": 4400000.0
+          },
+          "to": {
+            "x": 500010.0,
+            "y": 4400000.0
+          },
+          "createdBy": 2
+        },
+        {
+          "number": 6,
+          "from": {
+            "x": 500010.0,
+            "y": 4400000.0
+          },
+          "to": {
+            "x": 500020.0,
+            "y": 4400000.0
+          },
+          "createdBy": 2
+        },
+        {
+          "number": 7,
+          "from": {
+            "x": 500010.0,
+            "y": 4400000.0
+          },
+          "to": {
+            "x": 500010.0,
+            "y": 4400010.0
+          },
+          "createdBy": 2
+        },
+        {
+          "number": 8,
+          "from": {
+            "x": 500000.0,
+            "y": 4400010.0
+          },
+          "to": {
+            "x": 500010.0,
+            "y": 4400010.0
+          },
+          "createdBy": 2
+        },
+        {
+          "number": 9,
+          "from": {
+            "x": 500010.0,
+            "y": 4400010.0
+          },
+          "to": {
+            "x": 500020.0,
+            "y": 4400010.0
+          },
+          "createdBy": 2
+        }
+      ],
+      "parcels": [
+        {
+          "number": 1,
+          "il": "Ankara",
+          "ilce": "Çankaya",
+          "mahalle": "Kızılay",
+          "ada": "101",
+          "parsel": "7",
+          "createdBy": 1,
+          "closedBy": 2,
+          "statedArea": "200.00",
+          "rings": [
+            {
+              "edges": [
+                1,
+                2,
+                -3,
+                -4
+              ]
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "il": "Ankara",
+          "ilce": "Çankaya",
+          "mahalle": "Kızılay",
+          "ada": "101",
+          "parsel": "8",
+          "createdBy": 2,
+          "statedArea": "100,02",
+          "uid": "0192f5c0-4220-7000-8000-000000000101",
+          "rings": [
+            {
+              "edges": [
+                5,
+                7,
+                -8,
+                -4
+              ]
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "il": "Ankara",
+          "ilce": "Çankaya",
+          "mahalle": "Kızılay",
+          "ada": "101",
+          "parsel": "9",
+          "createdBy": 2,
+          "uid": "0192f5c0-4220-7000-8000-000000000102",
+          "rings": [
+            {
+              "edges": [
+                6,
+                2,
+                -9,
+                -7
+              ]
+            }
+          ]
+        }
+      ],
+      "lengths": [
+        {
+          "boundary": 5,
+          "document": 2,
+          "length": "10,00"
+        },
+        {
+          "boundary": 6,
+          "document": 2,
+          "length": "10.00"
+        },
+        {
+          "boundary": 7,
+          "document": 2,
+          "length": "10,01"
+        },
+        {
+          "boundary": 8,
+          "document": 2,
+          "length": "10,00"
+        },
+        {
+          "boundary": 9,
+          "document": 2,
+          "length": "9,99"
+        }
+      ],
+      "drafts": [
+        {
+          "number": 1,
+          "name": "2026/160 tevhit",
+          "kind": "Değişiklik",
+          "close": [
+            2,
+            3
+          ],
+          "create": [
+            {
+              "uid": "0192f5c0-4220-7000-8000-000000000103",
+              "il": "Ankara",
+              "ilce": "Çankaya",
+              "mahalle": "Kızılay",
+              "ada": "101",
+              "parsel": "10",
+              "statedArea": "200,01",
+              "rings": [
+                {
+                  "pts": [
+                    {
+                      "x": 500000.0,
+                      "y": 4400000.0
+                    },
+                    {
+                      "x": 500020.0,
+                      "y": 4400000.0
+                    },
+                    {
+                      "x": 500020.0,
+                      "y": 4400010.0
+                    },
+                    {
+                      "x": 500000.0,
+                      "y": 4400010.0
+                    }
+                  ]
+                }
+              ],
+              "lengths": [
+                {
+                  "edge": 0,
+                  "length": "20,00"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "P1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -58,10 +58,37 @@ fn network_stamp(doc: &Document, id: &str) -> Option<String> {
     Some(stamp(&serde_json::json!({ "network": def, "objects": objects })))
 }
 
+/// A layer's stamp (docs/adr/4740): of the geometries of its objects as they are, in the drawing's order; none when the
+/// drawing has no such layer. Only the geometry counts: a building recoloured does not move a contour line, a building
+/// moved does. Every object of the layer counts, the ones a drawing does not read too (a stamp that changes for nothing
+/// only says stale; one that missed a change would say current). Docs/adr/5120: the objects are read from the layer's
+/// index, in the drawing's order, not by walking the whole drawing.
+fn layer_stamp(doc: &Document, id: &str) -> Option<String> {
+    doc.layers().get(id).filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)?;
+    let geometries: Vec<Value> = doc
+        .by_layer(id)
+        .map(|e| {
+            // The object's JSON without what its base holds (its number, layer, look, attributes, label): its kind and
+            // geometry.
+            let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
+            if let (Value::Object(o), Ok(Value::Object(base))) = (&mut v, serde_json::to_value(e.base())) {
+                for k in base.keys() {
+                    o.remove(k);
+                }
+            }
+            v
+        })
+        .collect();
+    Some(stamp(&Value::Array(geometries)))
+}
+
 /// A source's stamp now; none when the project has no such source.
 pub(crate) fn stamp_now(doc: &Document, kind: RoadSourceKind, id: &str) -> Option<String> {
     if kind == RoadSourceKind::Network {
         return network_stamp(doc, id);
+    }
+    if kind == RoadSourceKind::Layer {
+        return layer_stamp(doc, id);
     }
     let road = doc.settings().road.as_ref()?;
     Some(match kind {
@@ -80,7 +107,7 @@ pub(crate) fn stamp_now(doc: &Document, kind: RoadSourceKind, id: &str) -> Optio
         RoadSourceKind::Wall => stamp(find(&road.walls, id, |s| &s.id)?),
         RoadSourceKind::Junction => stamp(find(&road.junctions, id, |s| &s.id)?),
         RoadSourceKind::Platform => stamp(find(&road.platforms, id, |s| &s.id)?),
-        RoadSourceKind::Network => return None,
+        RoadSourceKind::Network | RoadSourceKind::Layer => return None,
     })
 }
 
@@ -101,7 +128,7 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
     let Some(road) = doc.settings().road.as_ref() else { return };
     let mut named: Vec<(K, String)> = Vec::new();
     match kind {
-        K::Surface | K::Template | K::Network => {}
+        K::Surface | K::Template | K::Network | K::Layer => {}
         K::Alignment => {
             if let Some(o) = find(&road.alignments, id, |s| &s.id).and_then(|a| a.offset_of.as_ref()) {
                 named.push((K::Alignment, o.alignment.clone()));
@@ -204,6 +231,7 @@ pub(crate) fn main_of(command: &str) -> Option<(RoadSourceKind, &'static str)> {
         "road.terrains.zeroline" => (K::Surface, "base"),
         "road.terrains.cutfill" => (K::Surface, "base"),
         "cad.pipes.profile" => (K::Network, "network"),
+        "road.terrains.sheetcontours" => (K::Surface, "surface"),
         _ => return None,
     })
 }
@@ -225,6 +253,7 @@ pub(crate) fn version_of(command: &str) -> u32 {
         "road.terrains.zeroline" => kentos_commands::ROAD_TERRAINS_ZEROLINE_VERSION,
         "road.terrains.cutfill" => kentos_commands::ROAD_TERRAINS_CUTFILL_VERSION,
         "cad.pipes.profile" => kentos_commands::CAD_PIPES_PROFILE_VERSION,
+        "road.terrains.sheetcontours" => kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS_VERSION,
         _ => 1,
     }
 }
@@ -234,6 +263,9 @@ fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
     use RoadSourceKind as K;
     if kind == K::Network {
         return doc.settings().networks.iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+    }
+    if kind == K::Layer {
+        return doc.layers().leaves().iter().map(|l| (l.id.clone(), l.name.clone())).collect();
     }
     let Some(r) = doc.settings().road.as_ref() else { return Vec::new() };
     fn pairs<T>(list: &[T], f: impl Fn(&T) -> (&String, &String)) -> Vec<(String, String)> {
@@ -252,7 +284,7 @@ fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
         K::Wall => pairs(&r.walls, |x| (&x.id, &x.name)),
         K::Junction => pairs(&r.junctions, |x| (&x.id, &x.name)),
         K::Platform => pairs(&r.platforms, |x| (&x.id, &x.name)),
-        K::Network => Vec::new(),
+        K::Network | K::Layer => Vec::new(),
     }
 }
 
@@ -369,6 +401,19 @@ fn record<I: Serialize>(
                     add(doc, RoadSourceKind::Network, &id, &mut all);
                 }
             }
+            // Docs/adr/4740: a sheet's contour lines follow every layer they read: the details, the slopes' tops and
+            // bottoms, the chosen points, the built-up areas and the roads, each once.
+            if command == kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS {
+                for id in sheet_layers(input) {
+                    add(doc, RoadSourceKind::Layer, &id, &mut all);
+                }
+            }
+            // Docs/adr/4760: a cut and fill drawing's sections and materials follow their axis's and boundaries' layers.
+            if command == kentos_commands::ROAD_TERRAINS_CUTFILL {
+                for id in cutfill_layers(doc, input) {
+                    add(doc, RoadSourceKind::Layer, &id, &mut all);
+                }
+            }
             all
         },
         uids: uids.to_vec(),
@@ -379,6 +424,42 @@ fn record<I: Serialize>(
         revision: Some(doc.revision().to_string()),
     };
     Ok(drawing)
+}
+
+/// The layers a sheet's contour lines read (docs/adr/4740), from their input: the details, the slopes' tops and bottoms,
+/// the chosen points, the built-up areas and the roads (BÖHHBÜY m. 63(2)), in that order, each id once.
+fn sheet_layers<I: Serialize>(input: &I) -> Vec<String> {
+    let v = serde_json::to_value(input).unwrap_or(Value::Null);
+    let mut out: Vec<String> = Vec::new();
+    for at in ["/details", "/slopes/top", "/slopes/bottom", "/points", "/builtUp/areas", "/builtUp/roads"] {
+        for id in v.pointer(at).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str) {
+            let id = id.trim();
+            if !id.is_empty() && !out.iter().any(|x| x == id) {
+                out.push(id.to_owned());
+            }
+        }
+    }
+    out
+}
+
+/// The layers of the objects a cut and fill drawing reads (docs/adr/4760): its sections' axis's, then its materials'
+/// boundaries', each once.
+fn cutfill_layers<I: Serialize>(doc: &Document, input: &I) -> Vec<String> {
+    let v = serde_json::to_value(input).unwrap_or(Value::Null);
+    let mut uids: Vec<&str> = v.pointer("/sections/axis").and_then(Value::as_str).into_iter().collect();
+    for m in v.get("materials").and_then(Value::as_array).into_iter().flatten() {
+        uids.extend(m.get("boundary").and_then(Value::as_str));
+    }
+    let mut out: Vec<String> = Vec::new();
+    for u in uids {
+        let layer = Uuid::parse_str(u).ok().and_then(|id| doc.slot_of(id)).and_then(|s| doc.get(s)).map(|e| e.base().layer_id.clone());
+        if let Some(l) = layer
+            && !out.contains(&l)
+        {
+            out.push(l);
+        }
+    }
+    out
 }
 
 /// `result` of a command that drew, its drawing kept when it completed (the step undoes both when it cannot be).

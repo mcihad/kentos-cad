@@ -9459,7 +9459,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 63 yer; 36 sayıldı, 25 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: örtüşmede 63 yer; 36 sayıldı, 25 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -10437,7 +10437,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 63 yer; 61 sayıldı, 0 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: örtüşmede 63 yer; 61 sayıldı, 0 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -11416,7 +11416,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 63 yer; 51 sayıldı, 10 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: örtüşmede 63 yer; 51 sayıldı, 10 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -12395,7 +12395,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 80 yer; 0 sayıldı, 0 korelasyonu düşük, 78 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: örtüşmede 80 yer; 0 sayıldı, 0 korelasyonu düşük, 78 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -13354,7 +13354,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş hattı boyunca (15.31 m) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: birleşme çizgisi boyunca (15.31 m) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -13735,7 +13735,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş hattı boyunca (15.51 m) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 5 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: birleşme çizgisi boyunca (15.51 m) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 5 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -14089,7 +14089,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 30 yer; 23 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: örtüşmede 30 yer; 23 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -14677,7 +14677,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 30 yer; 23 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle)."
+        "Kayıklık ölçümü: örtüşmede 30 yer; 23 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle)."
        ],
        "seam": {
         "patches": [
@@ -15265,7 +15265,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 20 yer; 15 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle)."
+        "Kayıklık ölçümü: örtüşmede 20 yer; 15 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle)."
        ],
        "seam": {
         "patches": [
@@ -15733,7 +15733,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 48 yer; 40 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
+        "Kayıklık ölçümü: örtüşmede 48 yer; 40 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
         "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü."
        ],
        "seam": {
@@ -16535,7 +16535,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 55 yer; 47 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
+        "Kayıklık ölçümü: örtüşmede 55 yer; 47 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
         "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü."
        ],
        "seam": {
@@ -17444,7 +17444,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş hattı boyunca (15.31 m) örtüşmede 5 yer, 3 yer örtüşmenin dışında; 5 sayıldı, 0 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle).",
+        "Kayıklık ölçümü: birleşme çizgisi boyunca (15.31 m) örtüşmede 5 yer, 3 yer örtüşmenin dışında; 5 sayıldı, 0 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle).",
         "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü."
        ],
        "seam": {
@@ -17749,7 +17749,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 63 yer; 36 sayıldı, 25 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: örtüşmede 63 yer; 36 sayıldı, 25 korelasyonu düşük, 0 tepe arama sınırında, 2 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -18729,7 +18729,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 56 yer; 43 sayıldı, 12 korelasyonu düşük, 1 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
+        "Kayıklık ölçümü: örtüşmede 56 yer; 43 sayıldı, 12 korelasyonu düşük, 1 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
         "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü.",
         "Birinci görüntü dönük: yerler ve eşleme onun pikselleriyle; kayma doğu ve kuzey olarak verildi."
        ],
@@ -19635,7 +19635,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: örtüşmede 56 yer; 43 sayıldı, 12 korelasyonu düşük, 1 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle).",
+        "Kayıklık ölçümü: örtüşmede 56 yer; 43 sayıldı, 12 korelasyonu düşük, 1 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle).",
         "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü.",
         "Birinci görüntü dönük: yerler ve eşleme onun pikselleriyle; kayma doğu ve kuzey olarak verildi."
        ],
@@ -20563,7 +20563,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş hattı boyunca (15.31 m) örtüşmede 5 yer, 3 yer örtüşmenin dışında; 5 sayıldı, 0 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle).",
+        "Kayıklık ölçümü: birleşme çizgisi boyunca (15.31 m) örtüşmede 5 yer, 3 yer örtüşmenin dışında; 5 sayıldı, 0 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle).",
         "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü.",
         "Birinci görüntü dönük: yerler ve eşleme onun pikselleriyle; kayma doğu ve kuzey olarak verildi."
        ],
@@ -20931,7 +20931,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş çokgenlerinin ortak sınırı boyunca (15.31 m, 1 parça) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: mozaik elemanlarının ortak sınırı boyunca (15.31 m, 1 parça) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -21375,7 +21375,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş çokgenlerinin ortak sınırı boyunca (15.31 m, 1 parça) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 5 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: mozaik elemanlarının ortak sınırı boyunca (15.31 m, 1 parça) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 5 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -21828,7 +21828,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş çokgenlerinin ortak sınırı boyunca (12.25 m, 2 parça) örtüşmede 6 yer, 8 yer örtüşmenin dışında; 3 sayıldı, 3 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: mozaik elemanlarının ortak sınırı boyunca (12.25 m, 2 parça) örtüşmede 6 yer, 8 yer örtüşmenin dışında; 3 sayıldı, 3 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -22236,7 +22236,7 @@
         "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
         "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
-        "Dikiş ölçümü: dikiş çokgenlerinin ortak sınırı boyunca (15.31 m, 1 parça) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+        "Kayıklık ölçümü: mozaik elemanlarının ortak sınırı boyunca (15.31 m, 1 parça) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
        ],
        "seam": {
         "patches": [
@@ -22441,7 +22441,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
+       "message": "Kayıklık ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
        "path": "seam.step"
       }
      },
@@ -23185,7 +23185,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.",
+       "message": "Kayıklık ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.",
        "path": "seam"
       }
      },
@@ -23371,7 +23371,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.",
+       "message": "Kayıklık ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.",
        "path": "seam"
       }
      },
@@ -23930,7 +23930,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "“0192f5c0-1780-7000-8000-000000000009” kimlikli dikiş hattı çizimde yok.",
+       "message": "“0192f5c0-1780-7000-8000-000000000009” kimlikli birleşme çizgisi çizimde yok.",
        "path": "seam.line"
       }
      },
@@ -24117,7 +24117,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.",
+       "message": "Birleşme çizgisi bir çizgi ya da çoklu çizgi olmalı.",
        "path": "seam.line"
       }
      },
@@ -24317,7 +24317,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı örtüşmeden geçirin ya da adımı küçültün.",
+       "message": "Birleşme çizgisinin hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); çizgiyi örtüşmeden geçirin ya da adımı küçültün.",
        "path": "seam.line"
       }
      },
@@ -24525,7 +24525,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikişi ya çizilmiş bir hatla (line) ya da iki dikiş çokgeniyle (polygons) verin; ikisi birden olmaz.",
+       "message": "Ölçüyü ya çizilmiş bir birleşme çizgisi (line) ya da iki mozaik elemanı (polygons) boyunca isteyin; ikisi birden olmaz.",
        "path": "seam.polygons"
       }
      },
@@ -24773,7 +24773,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "İki dikiş çokgeni aynı nesne; iki görüntünün ayrı dikiş çokgenlerini verin.",
+       "message": "İki mozaik elemanı aynı nesne; iki görüntünün ayrı mozaik elemanlarını verin.",
        "path": "seam.polygons"
       }
      },
@@ -25021,7 +25021,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "“0192f5c0-1780-7000-8000-000000000009” kimlikli dikiş çokgeni çizimde yok.",
+       "message": "“0192f5c0-1780-7000-8000-000000000009” kimlikli mozaik elemanı çizimde yok.",
        "path": "seam.polygons[1]"
       }
      },
@@ -25269,7 +25269,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "“0192f5c0-1780-7000-8000-000000000003” bir alan ya da kapalı çoklu çizgi değil; dikiş çokgeni olamaz.",
+       "message": "“0192f5c0-1780-7000-8000-000000000003” bir alan ya da kapalı çoklu çizgi değil; mozaik elemanı olamaz.",
        "path": "seam.polygons[0]"
       }
      },
@@ -25509,7 +25509,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "“0192f5c0-1780-7000-8000-000000000004” dikiş çokgeninin yaylı kenarı var; kenarları düz olmalı.",
+       "message": "“0192f5c0-1780-7000-8000-000000000004” mozaik elemanının yaylı kenarı var; kenarları düz olmalı.",
        "path": "seam.polygons[1]"
       }
      },
@@ -25765,7 +25765,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "İki dikiş çokgeninin ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki görüntünün dikiş çokgenlerini verin.",
+       "message": "İki mozaik elemanının ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki görüntünün mozaik elemanlarını verin.",
        "path": "seam.polygons"
       }
      },
@@ -26013,7 +26013,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "Dikiş çokgenlerinin ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); örtüşmede buluşan dikiş çokgenlerini verin ya da adımı küçültün.",
+       "message": "Mozaik elemanlarının ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); örtüşmede buluşan mozaik elemanlarını verin ya da adımı küçültün.",
        "path": "seam.polygons"
       }
      },

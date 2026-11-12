@@ -171,7 +171,7 @@ pub fn files_of(
                 (None, None, Some(u)) => (Origin::Url(u.clone()), None),
                 (None, None, None) => (Origin::Asset(String::new()), None),
             };
-            (origin, s.format, name, embedded)
+            (origin, s.format, name, embedded, s.pose)
         })
         .collect()
 }

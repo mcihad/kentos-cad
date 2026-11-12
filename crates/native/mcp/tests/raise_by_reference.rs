@@ -2,6 +2,7 @@
 //! writes over what is there; the shared cases' drawing opened as a .kcad file over MCP; the plan of the two-part area
 //! by the typed reference gives the case's answer and writes nothing; execute moves the area whole, and the saved file
 //! holds the outer ring's, the hole's and the other part's elevations as the case leaves them.
+//! Docs/adr/4980: the first part's hole's vertex as the one the reference gives, every elevation moved as the case's.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -67,4 +68,39 @@ fn an_area_raised_by_a_reference_over_mcp_is_the_case_s() {
     }
     let _ = std::fs::remove_file(path);
     let _ = std::fs::remove_file(saved);
+}
+
+#[test]
+fn a_hole_s_vertex_raised_by_a_reference_over_mcp_is_the_case_s() {
+    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.entities.raise.json")).unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Alan: ilk parçanın deliğinin")))
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!("kentos-raise-hole-{}.kcad", std::process::id()));
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path": path}));
+    let _ = std::fs::remove_file(&path);
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let step = &case["steps"][0];
+    let mut args = step["input"].clone();
+    args["drawing"] = drawing.clone();
+    let r = call(&mut server, "cad.entities.raise", args);
+    assert_eq!(r["isError"], false, "{r}");
+    let want = &step["result"]["output"];
+    for k in ["distance", "before", "after", "by", "moved", "unset"] {
+        assert!(close(&r["structuredContent"]["output"][k], &want[k], 1e-9), "{k}: {r}");
+    }
+    let uid = step["input"]["uid"].as_str().unwrap();
+    let e = call(&mut server, "drawing.entity", json!({"drawing": drawing, "uid": uid}));
+    let fields = &step["expect"]["fields"]["3"];
+    for k in ["zs", "holes", "parts"] {
+        assert!(close(&e["structuredContent"]["entity"][k], &fields[k], 1e-9), "{k}: {e}");
+    }
 }

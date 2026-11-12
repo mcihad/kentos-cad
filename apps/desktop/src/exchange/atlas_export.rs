@@ -17,7 +17,9 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, container, row, scrollable};
 use iced::{Element, Fill, Task};
-use kentos_commands::{AtlasChanges, AtlasExported, AtlasPageState, AtlasRecord, CommandResult, CommandWarning, ExportAtlas};
+use kentos_commands::{
+    AtlasChanges, AtlasExported, AtlasLook, AtlasPageState, AtlasRecord, CommandResult, CommandWarning, ExportAtlas,
+};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 use kentos_plot::atlas::{AtlasInput, AtlasPlanned};
@@ -537,6 +539,9 @@ impl App {
                         let numbers: Vec<String> = out.written.iter().map(u32::to_string).collect();
                         format!("güncelleme, {} sayfanın {}'i (sayfa {})", out.pages.len(), out.written.len(), numbers.join(", "))
                     };
+                    // Docs/adr/4820: of the pages changed since the previous atlas, those that also look other.
+                    let looks = out.changes.as_ref().map(look_words).unwrap_or_default();
+                    let held = format!("{held}{looks}");
                     self.announce(
                         if warnings.is_empty() && !moved {
                             Level::Success
@@ -1027,6 +1032,19 @@ impl App {
                 .on_close(Some(message(Exchange::Close))),
         )
     }
+}
+
+/// Docs/adr/4820: how the changed pages look against the previous atlas, in words: empty when no changed page's look
+/// is known (a previous record written before looks were kept).
+pub(crate) fn look_words(c: &AtlasChanges) -> String {
+    let known = |look: AtlasLook| c.pages.iter().filter(|p| p.state == AtlasPageState::Changed && p.look == Some(look)).count();
+    let (other, same) = (known(AtlasLook::Changed), known(AtlasLook::Same));
+    if other + same == 0 {
+        return String::new();
+    }
+    format!(
+        "; önceki atlasa göre değişen sayfalar: görünüşü değişen {other}, görünüşü aynı kalan {same} (yalnız çizmedikleri değişti)"
+    )
 }
 
 /// A page's change in words (docs/adr/4000): empty without a previous record.

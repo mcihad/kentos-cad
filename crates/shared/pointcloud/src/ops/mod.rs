@@ -16,6 +16,7 @@ pub mod convert;
 pub mod grid;
 pub mod ground;
 pub mod height;
+pub mod network;
 pub mod query;
 pub mod raster;
 pub mod region;

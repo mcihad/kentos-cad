@@ -1,4 +1,4 @@
-//! Baskı stili tablosu (`sheet.plotStyles`, docs/adr/1130; plan/cad-advanced.md CAD-ADV-16): an AutoCAD `.ctb`/`.stb`
+//! Baskı stili tablosu (`sheet.plotStyles`, docs/adr/1130; plan/cad-advanced.md CAD-ADV-16): a `.ctb`/`.stb` plot style table
 //! read by `cad.plotstyles.import`'s plan as it is chosen — its pens or styles as KentOS will plot them and every field
 //! it plots otherwise, by name — its pens given to the drawing's layers by hand (never guessed from a layer's colour)
 //! and the sheets it is applied to; İçe aktar writes the profile and the sheets' plot settings as one change of the
@@ -254,7 +254,7 @@ impl App {
                     async {
                         rfd::AsyncFileDialog::new()
                             .set_title("Baskı stili tablosunu seçin")
-                            .add_filter("AutoCAD baskı stili tablosu (.ctb, .stb)", &["ctb", "stb"])
+                            .add_filter("Baskı stili tablosu (.ctb, .stb)", &["ctb", "stb"])
                             .pick_file()
                             .await
                             .map(|f| f.path().to_path_buf())
@@ -407,7 +407,7 @@ impl App {
                 // One line says how much differs; the report's lines are a table beside the styles' (Rapor / Stiller).
                 let (lost_n, near_n) = (lost("lost"), lost("approximate"));
                 d = d.note(if lost_n == "0" && near_n == "0" {
-                    Banner::info("Bütün stiller AutoCAD'in bastığı gibi alınır.".to_owned())
+                    Banner::info("Bütün stiller tablonun kalemlerinin bastığı gibi alınır.".to_owned())
                 } else {
                     Banner::warning(format!(
                         "{lost_n} alan türü KentOS'ta basılmıyor (nesnenin görünüşü kalır), {near_n} alan türü yaklaşık basılıyor; her biri Rapor'da adıyla."

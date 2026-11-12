@@ -313,7 +313,7 @@ impl App {
                 move |t| t != Target::Shp || one,
             ),
             Some(match s.target {
-                Target::Zip => "Bütün Shapefile'lar tek .zip arşivinde; QGIS ve ArcGIS arşivi açmadan okur.",
+                Target::Zip => "Bütün Shapefile'lar tek .zip arşivinde; CBS yazılımları arşivi açmadan okur.",
                 Target::Folder => "Yeni bir klasör açılır; her Shapefile katmanın adıyla. Var olan bir klasörün üzerine yazılmaz.",
                 Target::Shp => "Tek Shapefile verilen adla, parçaları (.shx, .dbf, .prj, .cpg) yanında.",
             }

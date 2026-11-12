@@ -138,7 +138,7 @@ pub fn plain_for_export(
                 what: "Dinamik blok".into(),
                 count: *all,
                 reason: format!(
-                    "“{}”: parametreleri ve eylemleri DXF'e yazılmadı; {drawn}. Sayı, çizimdeki ve yazılan tanımlardaki yerleştirme kayıtlarıdır. İç içe yerleştirmeler de kendi görünüş ve değerleriyle sabittir. AutoCAD'de dinamik blok olarak açılmaz, KentOS'ta yeniden alınınca düz bloklardır.",
+                    "“{}”: parametreleri ve eylemleri DXF'e yazılmadı; {drawn}. Sayı, çizimdeki ve yazılan tanımlardaki yerleştirme kayıtlarıdır. İç içe yerleştirmeler de kendi görünüş ve değerleriyle sabittir. Başka programlarda dinamik blok olarak açılmaz, KentOS'ta yeniden alınınca düz bloklardır.",
                     source.name
                 ),
                 lines: Vec::new(),

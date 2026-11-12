@@ -2,6 +2,6 @@
 
 /**
  * A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and
- * what it says (`ok`, `blunder`, `uncontrolled`).
+ * what it says (`ok`, `blunder`, `uncontrolled`); with robust estimation its weight factor in the solution.
  */
-export type BaselineResult = { from: string, to: string, v: [number, number, number], w?: number, flag: string, };
+export type BaselineResult = { from: string, to: string, v: [number, number, number], w?: number, flag: string, factor?: number, };

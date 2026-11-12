@@ -1,6 +1,7 @@
 //! GNSS baz ağı (baselines_window.rs, docs/adr/1380): the sample network with a 6 cm blunder on B → C read from its
 //! file; the window says the χ² test failed and names B → C the worst baseline; Minimal datum and the variance factor
-//! adjust again; nothing is written. Harita and GIS offer it, Mimari and Yol do not. And its pictures.
+//! adjust again; robust estimation (docs/adr/4960) weighs B → C down without removing it; nothing is written. Harita
+//! and GIS offer it, Mimari and Yol do not. And its pictures.
 
 use kentos_launch::Module;
 
@@ -38,13 +39,46 @@ fn the_blunder_is_named_and_nothing_is_written() {
 }
 
 #[test]
+fn robust_estimation_weighs_the_blunder_down() {
+    use crate::baselines_window::Robust;
+    let mut app = opened(Some(Module::Map));
+    let revision = app.document.as_ref().expect("a drawing").model.revision();
+    let _ = app.update(Message::Run("survey.baselines"));
+    app.baselines_file(sample());
+    let _ = app.update(Message::Baselines(B::Robust(Robust::Huber)));
+    let a = app.baselines.answer.clone().expect("an answer").expect("adjusted");
+    let r = a.robust.clone().expect("robust rounds");
+    assert!(r.converged);
+    assert_eq!((r.c, r.downweighted), (1.5, 1));
+    for b in &a.baselines {
+        let f = b.factor.expect("a factor");
+        assert_eq!(f < 1.0, (b.from.as_str(), b.to.as_str()) == ("B", "C"), "{} → {}: {f}", b.from, b.to);
+    }
+    assert_eq!(a.baselines.len(), 6, "nothing removed");
+    // The constant given: B → C's factor rises; Danish weighs it down further; off, plain least squares again.
+    let huber = a.baselines[1].factor.expect("a factor");
+    let _ = app.update(Message::Baselines(B::C(2.5)));
+    let b = app.baselines.answer.clone().expect("an answer").expect("adjusted");
+    assert_eq!(b.robust.as_ref().map(|r| r.c), Some(2.5));
+    assert!(b.baselines[1].factor.expect("a factor") > huber);
+    let _ = app.update(Message::Baselines(B::Robust(Robust::Danish)));
+    let d = app.baselines.answer.clone().expect("an answer").expect("adjusted");
+    assert_eq!(d.robust.as_ref().map(|r| r.c), Some(2.0), "the method's own constant");
+    assert!(d.baselines[1].factor.expect("a factor") < huber);
+    let _ = app.update(Message::Baselines(B::Robust(Robust::Off)));
+    let off = app.baselines.answer.clone().expect("an answer").expect("adjusted");
+    assert!(off.robust.is_none() && off.baselines.iter().all(|b| b.factor.is_none()));
+    assert_eq!(app.document.as_ref().expect("a drawing").model.revision(), revision, "read only");
+}
+
+#[test]
 fn harita_and_gis_offer_it_mimari_and_yol_do_not() {
     for (module, yes) in [(Module::Map, true), (Module::Gis, true), (Module::Architecture, false), (Module::Road, false)] {
         assert_eq!(opened(Some(module)).offers("survey.baselines"), yes, "{module:?}");
     }
 }
 
-/// `.run/gui-evidence/gnss-ag-1380/`:
+/// `.run/gui-evidence/gnss-ag-1380/` (robust estimation: `dayanikli-*`, docs/adr/4960):
 ///
 /// ```text
 /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib baselines_window_tests::screens -- --ignored --nocapture
@@ -69,6 +103,11 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("kaba-hata-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::Baselines(B::Robust(crate::baselines_window::Robust::Huber)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("dayanikli-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

@@ -72,6 +72,7 @@ fn cloud(fields: impl FnOnce(&mut PointCloudFields)) -> Entity {
             format: CloudFormat::Laz,
             count: 71_212,
             bounds: BOUNDS,
+            pose: None,
         }],
         bounds: BOUNDS,
         count: 71_212,
@@ -157,6 +158,7 @@ fn only_a_drawing_with_a_cloud_or_an_address_is_schema_31() {
                 4_420_320.5,
                 844.25,
             ],
+            pose: None,
         });
         c.sources[0].file = None;
         c.sources[0].url = Some("https://ornek.org/koy.copc.laz".into());

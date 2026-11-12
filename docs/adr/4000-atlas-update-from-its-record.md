@@ -81,7 +81,7 @@ bir kayıt dosyası gerekir.”
 
 - Yalnız değişen ve yeni sayfaların ayrı bir PDF'e yazılması (güncelleme teslimi), sayfa numaralarıyla:
   [ADR 4400](4400-atlas-update-pdf-of-changed-pages.md)'de.
-- Atlas sayfalarının bayt özetiyle “görünüşü değişti” ayrımı (ADR 1320'nin pafta yayınındaki gibi).
+- Atlas sayfalarının bayt özetiyle “görünüşü değişti” ayrımı (ADR 1320'nin pafta yayınındaki gibi): [ADR 4820](4820-atlas-page-look.md)'de (bayt yerine çizdiğinin özeti).
 - Total station ve nivelman kalitesi (MAP-18'in öbür maddesi): projede karasal ve nivelman dengelemelerinin
   doğrulukları saklanmalı.
 - Web (TODOS §0.2).

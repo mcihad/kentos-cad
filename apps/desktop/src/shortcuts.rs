@@ -327,9 +327,9 @@ impl App {
                 blocks.push((rows.len(), group(names.title, rows)));
             }
         }
-        // AutoCAD's names in the command line, or where to turn them on (docs/adr/0282).
-        let autocad: Vec<Element<'_, Message>> =
-            crate::alias_profile::shortcut_rows(self.autocad_names())
+        // The classic CAD command names in the command line, or where to turn them on (docs/adr/0282).
+        let classic: Vec<Element<'_, Message>> =
+            crate::alias_profile::shortcut_rows(self.classic_names())
                 .into_iter()
                 .filter(|(what, how)| {
                     query.is_empty()
@@ -343,10 +343,10 @@ impl App {
                         .into()
                 })
                 .collect();
-        if !autocad.is_empty() {
+        if !classic.is_empty() {
             blocks.push((
-                autocad.len(),
-                group("AutoCAD adları (komut satırı)", autocad),
+                classic.len(),
+                group("Klasik CAD komut adları (komut satırı)", classic),
             ));
         }
         // Two columns, the groups dealt to the shorter one (the web's grid).

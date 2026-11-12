@@ -8,9 +8,17 @@
 //! the horizontal), flagged beyond the job's limits. A name found twice in an epoch is not matched there. With the days
 //! of a point's reference and of this epoch, its mean rates: its last movement over the years between (a year
 //! 365.25 days). A day is `YYYY-MM-DD`, a real one (the proleptic Gregorian calendar), told apart by its day number.
+//!
+//! Asked (docs/adr/4840): a line fitted through each point's dated epochs (the shared core's `survey::trend`: its
+//! movement from its reference against the years since its first dated epoch, east, north and up apart; three such
+//! epochs at least), the components that move at the confidence asked, and its state against two thresholds, warning
+//! and alarm: the highest level its last movement or its speed (the line's, else the mean rate) goes beyond.
 
-use kentos_commands::{AsbuiltCheck, AsbuiltKind, AsbuiltStep, AsbuiltTrack};
+use kentos_commands::{
+    AsbuiltCheck, AsbuiltFit, AsbuiltKind, AsbuiltLevel, AsbuiltState, AsbuiltStep, AsbuiltThresholds, AsbuiltTrack,
+};
 use kentos_domain::Document;
+use kentos_geometry_core::survey::trend::{moves, velocity};
 
 use crate::asbuilt_check::{Point, points};
 use crate::checks::{Stop, error};
@@ -76,7 +84,125 @@ pub(crate) fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     {
         return Err(bad(d, "date"));
     }
+    trend_asked(input)
+}
+
+/// The words of a threshold's limits, in the order they are checked.
+const LIMITS: [(&str, &str); 4] = [
+    ("horizontal", "Yatay hareketin"),
+    ("vertical", "Düşey hareketin"),
+    ("horizontalRate", "Yatay hızın"),
+    ("verticalRate", "Düşey hızın"),
+];
+
+fn limit_of(level: &AsbuiltLevel, key: &str) -> Option<f64> {
+    match key {
+        "horizontal" => level.horizontal,
+        "vertical" => level.vertical,
+        "horizontalRate" => level.horizontal_rate,
+        _ => level.vertical_rate,
+    }
+}
+
+/// Docs/adr/4840's refusals: a trend or thresholds without a series, a confidence not between 0 and 1, a limit not
+/// above zero, a warning not below its alarm.
+fn trend_asked(input: &AsbuiltCheck) -> Result<(), Stop> {
+    let bad = |message: String, path: &str| Err(refuse(codes::INVALID_ASBUILT_CHECK, message, path));
+    let series = input.kind == Some(AsbuiltKind::Monitoring) && !input.epochs.is_empty();
+    for (asked, path) in [(input.trend.is_some(), "trend"), (input.thresholds.is_some(), "thresholds")] {
+        if asked && !series {
+            return bad(
+                "Doğru uydurma ve eşikler izleme işinin dönem dizisinindir (kind: monitoring ve önceki dönemler, epochs).".into(),
+                path,
+            );
+        }
+    }
+    if let Some(t) = &input.trend
+        && !(t.confidence.is_finite() && t.confidence > 0.0 && t.confidence < 1.0)
+    {
+        return bad("Güven düzeyi 0 ile 1 arasında bir sayı olmalı (ör. 0.95).".into(), "trend.confidence");
+    }
+    let Some(AsbuiltThresholds { warning, alarm }) = &input.thresholds else { return Ok(()) };
+    for (level, name, words) in [(warning, "warning", "uyarı"), (alarm, "alarm", "alarm")] {
+        for (key, what) in LIMITS {
+            if limit_of(level, key).is_some_and(|v| !(v.is_finite() && v > 0.0)) {
+                return bad(
+                    format!("{what} {words} eşiği 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın."),
+                    &format!("thresholds.{name}.{key}"),
+                );
+            }
+        }
+    }
+    for (key, what) in LIMITS {
+        if let (Some(w), Some(a)) = (limit_of(warning, key), limit_of(alarm, key))
+            && w >= a
+        {
+            return bad(format!("{what} uyarı eşiği alarm eşiğinden küçük olmalı."), &format!("thresholds.warning.{key}"));
+        }
+    }
     Ok(())
+}
+
+/// The line through a point's dated epochs (docs/adr/4840): `steps` and `days` along the series.
+fn fit_of(steps: &[Option<AsbuiltStep>], days: &[Option<i64>], confidence: f64) -> Option<AsbuiltFit> {
+    let dated: Vec<(i64, &AsbuiltStep)> = steps.iter().zip(days).filter_map(|(s, d)| Some(((*d)?, s.as_ref()?))).collect();
+    if dated.len() < 3 {
+        return None;
+    }
+    let first = dated[0].0;
+    let t: Vec<f64> = dated.iter().map(|(d, _)| (d - first) as f64 / 365.25).collect();
+    let column = |f: fn(&AsbuiltStep) -> f64| dated.iter().map(|(_, s)| f(s)).collect::<Vec<f64>>();
+    let east = velocity(&t, &column(|s| s.de))?;
+    let north = velocity(&t, &column(|s| s.dn))?;
+    let heights: Vec<(f64, f64)> = t.iter().zip(&dated).filter_map(|(t, (_, s))| s.dz.map(|z| (*t, z))).collect();
+    let up = velocity(&heights.iter().map(|p| p.0).collect::<Vec<_>>(), &heights.iter().map(|p| p.1).collect::<Vec<_>>());
+    let mut moving = Vec::new();
+    for (name, v, n) in [("east", Some(east), dated.len()), ("north", Some(north), dated.len()), ("up", up, heights.len())] {
+        if v.is_some_and(|v| moves(v, n, confidence)) {
+            moving.push(name.to_owned());
+        }
+    }
+    Some(AsbuiltFit {
+        epochs: u32::try_from(dated.len()).unwrap_or(u32::MAX),
+        east: east.rate,
+        north: north.rate,
+        up: up.map(|v| v.rate),
+        sigma_east: east.sigma,
+        sigma_north: north.sigma,
+        sigma_up: up.map(|v| v.sigma),
+        speed: east.rate.hypot(north.rate),
+        moving,
+    })
+}
+
+/// A point's state against the thresholds (docs/adr/4840): its last horizontal movement, its last height movement
+/// either way, its horizontal and vertical speed (the line's, else the mean rate); the highest level any goes beyond,
+/// and the limits of that level it goes beyond.
+fn state_of(t: &AsbuiltThresholds, track: &AsbuiltTrack) -> (AsbuiltState, Vec<String>) {
+    let last = track.steps.last().cloned().flatten();
+    let fit = track.fit.as_ref();
+    let values = [
+        ("horizontal", last.as_ref().map(|s| s.horizontal)),
+        ("vertical", last.as_ref().and_then(|s| s.dz).map(f64::abs)),
+        ("horizontalRate", fit.map(|f| f.speed).or(track.rate_horizontal)),
+        ("verticalRate", fit.and_then(|f| f.up).or(track.rate_vertical).map(f64::abs)),
+    ];
+    let beyond = |level: &AsbuiltLevel| -> Vec<String> {
+        values
+            .iter()
+            .filter(|(k, v)| limit_of(level, k).zip(*v).is_some_and(|(l, v)| v > l))
+            .map(|(k, _)| (*k).to_owned())
+            .collect()
+    };
+    let alarm = beyond(&t.alarm);
+    if !alarm.is_empty() {
+        return (AsbuiltState::Alarm, alarm);
+    }
+    let warning = beyond(&t.warning);
+    if !warning.is_empty() {
+        return (AsbuiltState::Warning, warning);
+    }
+    (AsbuiltState::Normal, Vec::new())
 }
 
 /// The epochs' layers are the drawing's (`layer_not_found` at `epochs[k].layer`).
@@ -143,13 +269,24 @@ pub(crate) fn tracks(doc: &Document, input: &AsbuiltCheck, field: &str, measured
             (Some(y), Some(s)) => (Some(s.horizontal / y), s.dz.map(|dz| dz / y)),
             _ => (None, None),
         };
-        out.push(AsbuiltTrack {
+        // Docs/adr/4840: the line through its dated epochs, asked.
+        let fit = input.trend.as_ref().and_then(|tr| fit_of(&steps, &days, tr.confidence));
+        let mut track = AsbuiltTrack {
             name: p.name.clone(),
             from: u32::try_from(from).unwrap_or(u32::MAX),
             steps,
             rate_horizontal,
             rate_vertical,
-        });
+            fit,
+            state: None,
+            exceeded: Vec::new(),
+        };
+        if let Some(th) = &input.thresholds {
+            let (state, exceeded) = state_of(th, &track);
+            track.state = Some(state);
+            track.exceeded = exceeded;
+        }
+        out.push(track);
     }
     out
 }

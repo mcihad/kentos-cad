@@ -26,21 +26,21 @@ if TYPE_CHECKING:
 
 class _OptionsEdit(LocalCommand[OptionsEdit, OptionsEdited, OptionsEdited]):
     """``cad.options.edit`` v1. Tasarım seçeneği: Planın bir parçası için sınırlı
-    alternatifler (mutfak A/B) kurar ve yönetir (docs/adr/0788); her yazma tek geri alma
-    adımı “Tasarım seçeneği”. Çizim, paftalar, metraj ve çizelgeler ana modeli ve her
-    kümenin birincil seçeneğini gösterir; görünüş tarifi (cad.views.edit recipe.options)
-    başka bir seçeneği seçebilir. Aynı kümenin seçenekleri birbirini görmez: duvarları
-    birleşmez, açıklıkları çakışmaz, mahal sınırını ana model ve kendi seçeneğinin
-    duvarlarında bulur. operation: define (name, id ve option isteğe bağlı, uids: hiçbir
-    seçenekte olmayan nesneler; ilk seçenek birincil), copy (set, option, name, primary:
-    seçeneğin nesnelerinin bağımsız kopyası aynı yerde, aralarındaki bağlar kopyalara
-    çevrilir), addMembers (set, option, uids: ana modelden seçeneğe), removeMembers
-    (set, uids: seçenekten ana modele), primary (set, option), accept (set, option yoksa
-    birincil: seçenek ana model olur, öbür seçeneklerin nesneleri silinir, küme kalkar),
-    delete (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set,
-    option isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir
-    seçeneğin nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik
-    birleştirme yoktur. Tadilat durumu seçenek kimliği değildir.
+    alternatifler (mutfak A/B) kurar ve yönetir; her yazma tek geri alma adımı “Tasarım
+    seçeneği”. Çizim, paftalar, metraj ve çizelgeler ana modeli ve her kümenin birincil
+    seçeneğini gösterir; görünüş tarifi (cad.views.edit recipe.options) başka bir
+    seçeneği seçebilir. Aynı kümenin seçenekleri birbirini görmez: duvarları birleşmez,
+    açıklıkları çakışmaz, mahal sınırını ana model ve kendi seçeneğinin duvarlarında
+    bulur. operation: define (name, id ve option isteğe bağlı, uids: hiçbir seçenekte
+    olmayan nesneler; ilk seçenek birincil), copy (set, option, name, primary: seçeneğin
+    nesnelerinin bağımsız kopyası aynı yerde, aralarındaki bağlar kopyalara çevrilir),
+    addMembers (set, option, uids: ana modelden seçeneğe), removeMembers (set, uids:
+    seçenekten ana modele), primary (set, option), accept (set, option yoksa birincil:
+    seçenek ana model olur, öbür seçeneklerin nesneleri silinir, küme kalkar), delete
+    (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set, option
+    isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir seçeneğin
+    nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik birleştirme
+    yoktur. Tadilat durumu seçenek kimliği değildir.
     """
     __slots__ = ()
     id = "cad.options.edit"
@@ -62,21 +62,21 @@ class _OptionsEdit(LocalCommand[OptionsEdit, OptionsEdited, OptionsEdited]):
         expected: Expected | None = None,
     ) -> OptionsEdited:
         """Tasarım seçeneği: Planın bir parçası için sınırlı alternatifler (mutfak A/B) kurar
-        ve yönetir (docs/adr/0788); her yazma tek geri alma adımı “Tasarım seçeneği”. Çizim,
-        paftalar, metraj ve çizelgeler ana modeli ve her kümenin birincil seçeneğini
-        gösterir; görünüş tarifi (cad.views.edit recipe.options) başka bir seçeneği
-        seçebilir. Aynı kümenin seçenekleri birbirini görmez: duvarları birleşmez,
-        açıklıkları çakışmaz, mahal sınırını ana model ve kendi seçeneğinin duvarlarında
-        bulur. operation: define (name, id ve option isteğe bağlı, uids: hiçbir seçenekte
-        olmayan nesneler; ilk seçenek birincil), copy (set, option, name, primary: seçeneğin
-        nesnelerinin bağımsız kopyası aynı yerde, aralarındaki bağlar kopyalara çevrilir),
-        addMembers (set, option, uids: ana modelden seçeneğe), removeMembers (set, uids:
-        seçenekten ana modele), primary (set, option), accept (set, option yoksa birincil:
-        seçenek ana model olur, öbür seçeneklerin nesneleri silinir, küme kalkar), delete
-        (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set, option
-        isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir seçeneğin
-        nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik birleştirme
-        yoktur. Tadilat durumu seçenek kimliği değildir.
+        ve yönetir; her yazma tek geri alma adımı “Tasarım seçeneği”. Çizim, paftalar,
+        metraj ve çizelgeler ana modeli ve her kümenin birincil seçeneğini gösterir; görünüş
+        tarifi (cad.views.edit recipe.options) başka bir seçeneği seçebilir. Aynı kümenin
+        seçenekleri birbirini görmez: duvarları birleşmez, açıklıkları çakışmaz, mahal
+        sınırını ana model ve kendi seçeneğinin duvarlarında bulur. operation: define (name,
+        id ve option isteğe bağlı, uids: hiçbir seçenekte olmayan nesneler; ilk seçenek
+        birincil), copy (set, option, name, primary: seçeneğin nesnelerinin bağımsız kopyası
+        aynı yerde, aralarındaki bağlar kopyalara çevrilir), addMembers (set, option, uids:
+        ana modelden seçeneğe), removeMembers (set, uids: seçenekten ana modele), primary
+        (set, option), accept (set, option yoksa birincil: seçenek ana model olur, öbür
+        seçeneklerin nesneleri silinir, küme kalkar), delete (set, option: birincil olmayan
+        seçenek nesneleriyle silinir), rename (set, option isteğe bağlı, name). Ana modelin
+        bir nesnesi seçeneğin nesnesine ya da bir seçeneğin nesnesi başka bir seçeneğinkine
+        bağlıysa option_leaning. Otomatik birleştirme yoktur. Tadilat durumu seçenek kimliği
+        değildir.
 
         Args:
             doc: The drawing it works on.
@@ -159,12 +159,12 @@ edit = _OptionsEdit()
 
 class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
     """``cad.options.query`` v1. Tasarım seçeneklerini oku: Projenin tasarım seçeneği
-    kümelerini okur (docs/adr/0788); çizimi değiştirmez. set ile tek küme; her seçeneğin
-    nesne sayısı, türlere göre sayıları, mahallerinin alanı (çizim biriminin karesi),
-    duvarlarının boyu, silinmiş nesneleri. uid ile nesnenin kümesi ve seçeneği. compare
-    (set, a, b, search, tolerance) iki seçeneği Veri karşılaştır'ın kuralıyla konumdan
-    eşler: aynı sayısı, yalnız b'de (added), yalnız a'da (removed), değişen çiftler,
-    alan ve duvar boyu farkı (b − a), sayısı farklı türler.
+    kümelerini okur; çizimi değiştirmez. set ile tek küme; her seçeneğin nesne sayısı,
+    türlere göre sayıları, mahallerinin alanı (çizim biriminin karesi), duvarlarının
+    boyu, silinmiş nesneleri. uid ile nesnenin kümesi ve seçeneği. compare (set, a, b,
+    search, tolerance) iki seçeneği Veri karşılaştır'ın kuralıyla konumdan eşler: aynı
+    sayısı, yalnız b'de (added), yalnız a'da (removed), değişen çiftler, alan ve duvar
+    boyu farkı (b − a), sayısı farklı türler.
     """
     __slots__ = ()
     id = "cad.options.query"
@@ -187,13 +187,13 @@ class _OptionsQuery(LocalCommand[OptionsQuery, OptionsQueried, OptionsQueried]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> OptionsQueried:
-        """Tasarım seçeneklerini oku: Projenin tasarım seçeneği kümelerini okur
-        (docs/adr/0788); çizimi değiştirmez. set ile tek küme; her seçeneğin nesne sayısı,
-        türlere göre sayıları, mahallerinin alanı (çizim biriminin karesi), duvarlarının
-        boyu, silinmiş nesneleri. uid ile nesnenin kümesi ve seçeneği. compare (set, a, b,
-        search, tolerance) iki seçeneği Veri karşılaştır'ın kuralıyla konumdan eşler: aynı
-        sayısı, yalnız b'de (added), yalnız a'da (removed), değişen çiftler, alan ve duvar
-        boyu farkı (b − a), sayısı farklı türler.
+        """Tasarım seçeneklerini oku: Projenin tasarım seçeneği kümelerini okur; çizimi
+        değiştirmez. set ile tek küme; her seçeneğin nesne sayısı, türlere göre sayıları,
+        mahallerinin alanı (çizim biriminin karesi), duvarlarının boyu, silinmiş nesneleri.
+        uid ile nesnenin kümesi ve seçeneği. compare (set, a, b, search, tolerance) iki
+        seçeneği Veri karşılaştır'ın kuralıyla konumdan eşler: aynı sayısı, yalnız b'de
+        (added), yalnız a'da (removed), değişen çiftler, alan ve duvar boyu farkı (b − a),
+        sayısı farklı türler.
 
         Args:
             doc: The drawing it works on.

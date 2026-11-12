@@ -6,7 +6,7 @@
 //! (`rasters_georef::fit`): every row's residual or error, m0, the check points' errors, a resampling's grid. Uygula
 //! writes by the command: Helmert and the affine at once; the others resample the source on a thread of its own
 //! (`rasters::jobs`) by the command's plan (its grid, its inverse), then hand the output to the command (`made`). A
-//! raster with a record opens with its points; Noktaları al… and Noktaları kaydet… read and write QGIS's `.points`.
+//! raster with a record opens with its points; Noktaları al… and Noktaları kaydet… read and write a `.points` control point file.
 
 use iced::widget::tooltip::Position;
 use iced::widget::{button, column, container, row};
@@ -951,7 +951,7 @@ impl App {
             async {
                 rfd::AsyncFileDialog::new()
                     .set_title("Kontrol noktalarını kaydet")
-                    .add_filter("QGIS kontrol noktaları (.points)", &["points"])
+                    .add_filter("Kontrol noktaları (.points)", &["points"])
                     .set_file_name("kontrol-noktalari.points")
                     .save_file()
                     .await
@@ -971,7 +971,7 @@ impl App {
             Some(Ok(f)) => f.residuals.iter().map(|v| Some([v.dx?, v.dy?])).collect(),
             _ => vec![None; points.len()],
         };
-        // The targets' system as QGIS reads it (docs/adr/0594 §2): the definition, the code's WKT, the project's.
+        // The targets' system as the `.points` file's readers take it (docs/adr/0594 §2): the definition, the code's WKT, the project's.
         let crs = form.crs.clone().or_else(|| {
             let srid = form
                 .srid

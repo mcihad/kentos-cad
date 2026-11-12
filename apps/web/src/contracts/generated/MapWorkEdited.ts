@@ -23,4 +23,12 @@ links?: number,
 /**
  * How many objects a release let go of.
  */
-freed?: number, stale: number, revision: string, };
+freed?: number, stale: number, 
+/**
+ * The layers a profile added (docs/adr/4880).
+ */
+layers?: Array<string>, 
+/**
+ * The fields a profile added, `layer.field`.
+ */
+fields?: Array<string>, revision: string, };

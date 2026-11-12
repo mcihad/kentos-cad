@@ -33,6 +33,21 @@ impl Stop {
         Stop::Conflict(Box::new(error))
     }
 
+    /// The same stop with its error at `path` (a check shared by commands whose inputs name the field otherwise).
+    pub(crate) fn at(self, path: &str) -> Self {
+        match self {
+            Stop::Failed(mut e) => {
+                e.path = Some(path.to_owned());
+                Stop::Failed(e)
+            }
+            Stop::Conflict(mut e) => {
+                e.path = Some(path.to_owned());
+                Stop::Conflict(e)
+            }
+            Stop::Cancelled => Stop::Cancelled,
+        }
+    }
+
     /// The error it stops with, whichever way; a stop asked has none of its own.
     pub(crate) fn into_error(self) -> CommandError {
         match self {

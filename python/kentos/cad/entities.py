@@ -386,11 +386,11 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
     taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır.
     Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki
     nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey
-    yazılmaz. associative ile (ilişkili dizi, docs/adr/0300) nesneler “Dizi n” bloğu
-    olur ve her yere bloğun bir yerleştirmesi konur; dizi çizimde kalır (çıktının
-    array'i) ve cad.arrays.edit ile düzenlenir. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
-    bulut projesine değişiklik project.changes ile gider.
+    yazılmaz. associative ile (ilişkili dizi) nesneler “Dizi n” bloğu olur ve her yere
+    bloğun bir yerleştirmesi konur; dizi çizimde kalır (çıktının array'i) ve
+    cad.arrays.edit ile düzenlenir. expectedRevision verilmişse ve çizim o sürümde
+    değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
+    projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.array"
@@ -432,11 +432,11 @@ class _EntitiesArray(LocalCommand[EntitiesArray, EntitiesArrayed, EntitiesArrayP
         geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. Kopya aslının
         bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası
         yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz.
-        associative ile (ilişkili dizi, docs/adr/0300) nesneler “Dizi n” bloğu olur ve her
-        yere bloğun bir yerleştirmesi konur; dizi çizimde kalır (çıktının array'i) ve
-        cad.arrays.edit ile düzenlenir. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
-        projesine değişiklik project.changes ile gider.
+        associative ile (ilişkili dizi) nesneler “Dizi n” bloğu olur ve her yere bloğun bir
+        yerleştirmesi konur; dizi çizimde kalır (çıktının array'i) ve cad.arrays.edit ile
+        düzenlenir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
+        project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -746,11 +746,11 @@ class _EntitiesBreak(LocalCommand[EntitiesBreak, EntitiesEdited, EntitiesEditPla
     alma adımı “Kır”. Çizgi, çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi,
     yardımcı çizgi ve ışın kırılır; öbürleri not_breakable. Kilitli katmandaki nesne
     kırılmaz. Nesnenin yerini ilk parça alır, öbür parçalar ondan yeni nesnelerdir. Her
-    parça nesnenin taşıdıklarını alır (ADR 0296): katman, renk, kalınlık, çizgi tipi,
-    saydamlık, sembol, öznitelikler, etiket ve ekler; kot, ölçü (M) ve genişlikler
-    köşeleriyle gider. İlişkili ölçünün nesnedeki noktası üstünde durduğu parçayı izler,
-    silinen kısımdaysa kopar (vertex_gone). Parçaları paylaşılan geometri çekirdeği
-    bulur; bulamadığında break_failed çekirdeğin sözüyle döner. Çıktı ve plan
+    parça nesnenin taşıdıklarını alır: katman, renk, kalınlık, çizgi tipi, saydamlık,
+    sembol, öznitelikler, etiket ve ekler; kot, ölçü (M) ve genişlikler köşeleriyle
+    gider. İlişkili ölçünün nesnedeki noktası üstünde durduğu parçayı izler, silinen
+    kısımdaysa kopar (vertex_gone). Parçaları paylaşılan geometri çekirdeği bulur;
+    bulamadığında break_failed çekirdeğin sözüyle döner. Çıktı ve plan
     cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
     hiçbir şey yazılmaz, sonuç conflict olur.
     """
@@ -779,14 +779,13 @@ class _EntitiesBreak(LocalCommand[EntitiesBreak, EntitiesEdited, EntitiesEditPla
         siler; second yoksa nesneyi first'te ikiye böler. Tek geri alma adımı “Kır”. Çizgi,
         çoklu çizgi, alan, yay, daire, elips, NURBS eğrisi, yardımcı çizgi ve ışın kırılır;
         öbürleri not_breakable. Kilitli katmandaki nesne kırılmaz. Nesnenin yerini ilk parça
-        alır, öbür parçalar ondan yeni nesnelerdir. Her parça nesnenin taşıdıklarını alır
-        (ADR 0296): katman, renk, kalınlık, çizgi tipi, saydamlık, sembol, öznitelikler,
-        etiket ve ekler; kot, ölçü (M) ve genişlikler köşeleriyle gider. İlişkili ölçünün
-        nesnedeki noktası üstünde durduğu parçayı izler, silinen kısımdaysa kopar
-        (vertex_gone). Parçaları paylaşılan geometri çekirdeği bulur; bulamadığında
-        break_failed çekirdeğin sözüyle döner. Çıktı ve plan cad.entities.edit'inkidir.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        alır, öbür parçalar ondan yeni nesnelerdir. Her parça nesnenin taşıdıklarını alır:
+        katman, renk, kalınlık, çizgi tipi, saydamlık, sembol, öznitelikler, etiket ve
+        ekler; kot, ölçü (M) ve genişlikler köşeleriyle gider. İlişkili ölçünün nesnedeki
+        noktası üstünde durduğu parçayı izler, silinen kısımdaysa kopar (vertex_gone).
+        Parçaları paylaşılan geometri çekirdeği bulur; bulamadığında break_failed çekirdeğin
+        sözüyle döner. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -1026,20 +1025,20 @@ chamfer = _EntitiesChamfer()
 
 class _EntitiesCleanup(LocalCommand[EntitiesCleanup, EntitiesCleaned, EntitiesCleanupPlan]):
     """``cad.entities.cleanup`` v1. Çizimi temizle: Toleransla boş ve yinelenen nesneleri
-    siler, aynı doğrudaki çizgileri birleştirir, yolların gereksiz köşelerini atar
-    (AutoCAD'in OVERKILL'i); tek geri alma adımı “Çizimi temizle”. Kapsam uids ya da
-    verilmezse görünen ve kilitsiz katmanlardaki bütün nesneler. tolerance (metre, 0 ile
-    10; verilmezse 0,000001) içinde: boş nesne (çizgi, yol ve yay tolerans kadar kısa,
-    daire tolerans kadar küçük, sözsüz yazı) gider; aynı türden, noktaları tolerans
-    içinde, öbür alanları, ignore dışındaki kendi özellikleri ve verisi (öznitelik,
-    etiket, ekler) eşit nesne yinelenendir ve gider, ilki kalır. overlaps (varsayılan
-    açık) aynı doğrudaki üst üste binen çizgileri ilkine katar, endToEnd uç uca olanları
-    da; kotlu ya da ölçülü çizgi katılmaz. straightVertices (varsayılan açık) yolun
-    komşularının arasındaki doğrudaki köşelerini, her zaman yinelenen köşelerini atar;
-    kendi kotu ya da ölçüsü olan, genişliğin değiştiği köşe kalır. Rapor sayıları ve
-    kaybı verir (gidenin kalandan en uzak noktası). Retler: invalid_uid, no_entities,
-    not_finite, invalid_tolerance, entity_not_found, layer_locked. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    siler, aynı doğrudaki çizgileri birleştirir, yolların gereksiz köşelerini atar; tek
+    geri alma adımı “Çizimi temizle”. Kapsam uids ya da verilmezse görünen ve kilitsiz
+    katmanlardaki bütün nesneler. tolerance (metre, 0 ile 10; verilmezse 0,000001)
+    içinde: boş nesne (çizgi, yol ve yay tolerans kadar kısa, daire tolerans kadar
+    küçük, sözsüz yazı) gider; aynı türden, noktaları tolerans içinde, öbür alanları,
+    ignore dışındaki kendi özellikleri ve verisi (öznitelik, etiket, ekler) eşit nesne
+    yinelenendir ve gider, ilki kalır. overlaps (varsayılan açık) aynı doğrudaki üst
+    üste binen çizgileri ilkine katar, endToEnd uç uca olanları da; kotlu ya da ölçülü
+    çizgi katılmaz. straightVertices (varsayılan açık) yolun komşularının arasındaki
+    doğrudaki köşelerini, her zaman yinelenen köşelerini atar; kendi kotu ya da ölçüsü
+    olan, genişliğin değiştiği köşe kalır. Rapor sayıları ve kaybı verir (gidenin
+    kalandan en uzak noktası). Retler: invalid_uid, no_entities, not_finite,
+    invalid_tolerance, entity_not_found, layer_locked. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.cleanup"
@@ -1066,20 +1065,20 @@ class _EntitiesCleanup(LocalCommand[EntitiesCleanup, EntitiesCleaned, EntitiesCl
         expected: Expected | None = None,
     ) -> EntitiesCleaned:
         """Çizimi temizle: Toleransla boş ve yinelenen nesneleri siler, aynı doğrudaki
-        çizgileri birleştirir, yolların gereksiz köşelerini atar (AutoCAD'in OVERKILL'i);
-        tek geri alma adımı “Çizimi temizle”. Kapsam uids ya da verilmezse görünen ve
-        kilitsiz katmanlardaki bütün nesneler. tolerance (metre, 0 ile 10; verilmezse
-        0,000001) içinde: boş nesne (çizgi, yol ve yay tolerans kadar kısa, daire tolerans
-        kadar küçük, sözsüz yazı) gider; aynı türden, noktaları tolerans içinde, öbür
-        alanları, ignore dışındaki kendi özellikleri ve verisi (öznitelik, etiket, ekler)
-        eşit nesne yinelenendir ve gider, ilki kalır. overlaps (varsayılan açık) aynı
-        doğrudaki üst üste binen çizgileri ilkine katar, endToEnd uç uca olanları da; kotlu
-        ya da ölçülü çizgi katılmaz. straightVertices (varsayılan açık) yolun komşularının
-        arasındaki doğrudaki köşelerini, her zaman yinelenen köşelerini atar; kendi kotu ya
-        da ölçüsü olan, genişliğin değiştiği köşe kalır. Rapor sayıları ve kaybı verir
-        (gidenin kalandan en uzak noktası). Retler: invalid_uid, no_entities, not_finite,
-        invalid_tolerance, entity_not_found, layer_locked. expectedRevision verilmişse ve
-        çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        çizgileri birleştirir, yolların gereksiz köşelerini atar; tek geri alma adımı
+        “Çizimi temizle”. Kapsam uids ya da verilmezse görünen ve kilitsiz katmanlardaki
+        bütün nesneler. tolerance (metre, 0 ile 10; verilmezse 0,000001) içinde: boş nesne
+        (çizgi, yol ve yay tolerans kadar kısa, daire tolerans kadar küçük, sözsüz yazı)
+        gider; aynı türden, noktaları tolerans içinde, öbür alanları, ignore dışındaki kendi
+        özellikleri ve verisi (öznitelik, etiket, ekler) eşit nesne yinelenendir ve gider,
+        ilki kalır. overlaps (varsayılan açık) aynı doğrudaki üst üste binen çizgileri
+        ilkine katar, endToEnd uç uca olanları da; kotlu ya da ölçülü çizgi katılmaz.
+        straightVertices (varsayılan açık) yolun komşularının arasındaki doğrudaki
+        köşelerini, her zaman yinelenen köşelerini atar; kendi kotu ya da ölçüsü olan,
+        genişliğin değiştiği köşe kalır. Rapor sayıları ve kaybı verir (gidenin kalandan en
+        uzak noktası). Retler: invalid_uid, no_entities, not_finite, invalid_tolerance,
+        entity_not_found, layer_locked. expectedRevision verilmişse ve çizim o sürümde
+        değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -1203,13 +1202,12 @@ cleanup = _EntitiesCleanup()
 
 class _EntitiesCopy(LocalCommand[EntitiesCopy, Clip, Clip]):
     """``cad.entities.copy`` v1. Panoya kopyala: Kalıcı kimlikleriyle verilen nesnelerin
-    kopyasını kullandıklarıyla birlikte verir (AutoCAD'in COPYCLIP'i ve COPYBASE'i);
-    çizim değişmez. Kopya (Clip) nesneleri çizimdeki sıralarıyla, kaynaktaki
-    kimliklerini, bulundukları katmanları gruplarıyla ve görünüşleriyle,
-    yerleştirdikleri blokları (iç içe olanlar da), adını andıkları yazı ve ölçü
-    stillerini, çizdikleri kitaplık öğelerini, kaynağın birimini ve taban noktasını
-    taşır. Taban noktası base'dir; verilmezse nesnelerin kutusunun sol alt köşesi.
-    cad.entities.paste kopyayı aynı ya da başka bir çizime yapıştırır.
+    kopyasını kullandıklarıyla birlikte verir; çizim değişmez. Kopya (Clip) nesneleri
+    çizimdeki sıralarıyla, kaynaktaki kimliklerini, bulundukları katmanları gruplarıyla
+    ve görünüşleriyle, yerleştirdikleri blokları (iç içe olanlar da), adını andıkları
+    yazı ve ölçü stillerini, çizdikleri kitaplık öğelerini, kaynağın birimini ve taban
+    noktasını taşır. Taban noktası base'dir; verilmezse nesnelerin kutusunun sol alt
+    köşesi. cad.entities.paste kopyayı aynı ya da başka bir çizime yapıştırır.
     """
     __slots__ = ()
     id = "cad.entities.copy"
@@ -1231,12 +1229,12 @@ class _EntitiesCopy(LocalCommand[EntitiesCopy, Clip, Clip]):
         expected: Expected | None = None,
     ) -> Clip:
         """Panoya kopyala: Kalıcı kimlikleriyle verilen nesnelerin kopyasını kullandıklarıyla
-        birlikte verir (AutoCAD'in COPYCLIP'i ve COPYBASE'i); çizim değişmez. Kopya (Clip)
-        nesneleri çizimdeki sıralarıyla, kaynaktaki kimliklerini, bulundukları katmanları
-        gruplarıyla ve görünüşleriyle, yerleştirdikleri blokları (iç içe olanlar da), adını
-        andıkları yazı ve ölçü stillerini, çizdikleri kitaplık öğelerini, kaynağın birimini
-        ve taban noktasını taşır. Taban noktası base'dir; verilmezse nesnelerin kutusunun
-        sol alt köşesi. cad.entities.paste kopyayı aynı ya da başka bir çizime yapıştırır.
+        birlikte verir; çizim değişmez. Kopya (Clip) nesneleri çizimdeki sıralarıyla,
+        kaynaktaki kimliklerini, bulundukları katmanları gruplarıyla ve görünüşleriyle,
+        yerleştirdikleri blokları (iç içe olanlar da), adını andıkları yazı ve ölçü
+        stillerini, çizdikleri kitaplık öğelerini, kaynağın birimini ve taban noktasını
+        taşır. Taban noktası base'dir; verilmezse nesnelerin kutusunun sol alt köşesi.
+        cad.entities.paste kopyayı aynı ya da başka bir çizime yapıştırır.
 
         Args:
             doc: The drawing it works on.
@@ -1331,11 +1329,11 @@ class _EntitiesCreate(LocalCommand[EntitiesCreate, EntitiesCreated, EntitiesCrea
     menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme)
     bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler.
     Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. Nesnenin kendi
-    çizgi tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır (ADR
-    0313, 2720): tek başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur;
-    projede olmayan ad line_type_not_found (objects[i].linePattern). expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
-    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
+    çizgi tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır: tek
+    başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur; projede olmayan ad
+    line_type_not_found (objects[i].linePattern). expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
+    bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.create"
@@ -1371,11 +1369,11 @@ class _EntitiesCreate(LocalCommand[EntitiesCreate, EntitiesCreated, EntitiesCrea
         pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu
         noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli
         katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. Nesnenin kendi çizgi
-        tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır (ADR 0313,
-        2720): tek başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur; projede
-        olmayan ad line_type_not_found (objects[i].linePattern). expectedRevision verilmişse
-        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim
-        izin istemez; bulut projesine değişiklik project.changes ile gider.
+        tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır: tek başına
+        verilen desenin en yakın yerleşik tipi nesnenin tipi olur; projede olmayan ad
+        line_type_not_found (objects[i].linePattern). expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
+        bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -1833,23 +1831,21 @@ divide = _EntitiesDivide()
 class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]):
     """``cad.entities.drape`` v1. Yüzeyden kot ver: Noktaların, çizgilerin, çoklu
     çizgilerin ve alanların her köşesine (her parça ve delik) projenin arazi yüzeyinin
-    altındaki kotunu verir (Civil 3D'nin Elevations From Surface'ı gibi; ADR 4180);
-    yüzeyin dışındaki köşe kendi kotunu korur. surface Harita ya da Yol projesinin
-    yüzeyinin kimliği ya da adıdır. breaks ile düz bir kenarın yüzeyin üçgenlerinin
-    kenarlarını kestiği her yere kotlu ara köşe eklenir (Insert Intermediate Grade Break
-    Points gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü (M) ya da genişlikli çoklu
-    çizgi bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz. Cevap: her nesnenin kot
-    verilen, yüzey dışında kalan ve eklenen köşe sayısı ve toplamlar. Tek geri alma
-    adımı “Yüzeyden kot ver”. offset (ADR 4580, Civil 3D'nin Relative Elevation to
-    Surface farkı) köşelere yüzeyin kotu artı bu farkı verir (artı üstte, eksi altta);
-    range (Partial) tek nesnenin from ile to arasındaki köşelerine (çizginin uçları,
-    çoklu çizginin ya da alanın dış halkası, 0'dan) kot verir, ara kırık noktası yalnız
-    aradaki kenarlara girer. Retler: invalid_revision, revision_conflict,
-    not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10 000'den çok, biri
-    iki kez, kot farkı sonlu değil, aralık birden çok nesneye), invalid_uid,
-    entity_not_found, not_a_path (noktaya aralık da), wrong_place (aralık köşelerin
-    dışında ya da başı sonundan önce değil), terrain_unbuildable, off_surface (yüzeyde
-    köşe yok), layer_locked.
+    altındaki kotunu verir; yüzeyin dışındaki köşe kendi kotunu korur. surface Harita ya
+    da Yol projesinin yüzeyinin kimliği ya da adıdır. breaks ile düz bir kenarın yüzeyin
+    üçgenlerinin kenarlarını kestiği her yere kotlu ara köşe eklenir (Insert
+    Intermediate Grade Break Points gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü
+    (M) ya da genişlikli çoklu çizgi bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz.
+    Cevap: her nesnenin kot verilen, yüzey dışında kalan ve eklenen köşe sayısı ve
+    toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. offset köşelere yüzeyin kotu artı
+    bu farkı verir (artı üstte, eksi altta); range (Partial) tek nesnenin from ile to
+    arasındaki köşelerine (çizginin uçları, çoklu çizginin ya da alanın dış halkası,
+    0'dan) kot verir, ara kırık noktası yalnız aradaki kenarlara girer. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, unknown_terrain,
+    invalid_input (nesne yok, 10 000'den çok, biri iki kez, kot farkı sonlu değil,
+    aralık birden çok nesneye), invalid_uid, entity_not_found, not_a_path (noktaya
+    aralık da), wrong_place (aralık köşelerin dışında ya da başı sonundan önce değil),
+    terrain_unbuildable, off_surface (yüzeyde köşe yok), layer_locked.
     """
     __slots__ = ()
     id = "cad.entities.drape"
@@ -1875,18 +1871,17 @@ class _EntitiesDrape(LocalCommand[EntitiesDrape, EntitiesDraped, EntitiesDraped]
         expected: Expected | None = None,
     ) -> EntitiesDraped:
         """Yüzeyden kot ver: Noktaların, çizgilerin, çoklu çizgilerin ve alanların her köşesine
-        (her parça ve delik) projenin arazi yüzeyinin altındaki kotunu verir (Civil 3D'nin
-        Elevations From Surface'ı gibi; ADR 4180); yüzeyin dışındaki köşe kendi kotunu
-        korur. surface Harita ya da Yol projesinin yüzeyinin kimliği ya da adıdır. breaks
-        ile düz bir kenarın yüzeyin üçgenlerinin kenarlarını kestiği her yere kotlu ara köşe
-        eklenir (Insert Intermediate Grade Break Points gibi); yay bölünmez, çizgi iki ucunu
-        tutar, ölçülü (M) ya da genişlikli çoklu çizgi bölünmez (unsplit). Kotlar yüzeye
-        bağlı kalmaz. Cevap: her nesnenin kot verilen, yüzey dışında kalan ve eklenen köşe
-        sayısı ve toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. offset (ADR 4580, Civil
-        3D'nin Relative Elevation to Surface farkı) köşelere yüzeyin kotu artı bu farkı
-        verir (artı üstte, eksi altta); range (Partial) tek nesnenin from ile to arasındaki
-        köşelerine (çizginin uçları, çoklu çizginin ya da alanın dış halkası, 0'dan) kot
-        verir, ara kırık noktası yalnız aradaki kenarlara girer. Retler: invalid_revision,
+        (her parça ve delik) projenin arazi yüzeyinin altındaki kotunu verir; yüzeyin
+        dışındaki köşe kendi kotunu korur. surface Harita ya da Yol projesinin yüzeyinin
+        kimliği ya da adıdır. breaks ile düz bir kenarın yüzeyin üçgenlerinin kenarlarını
+        kestiği her yere kotlu ara köşe eklenir (Insert Intermediate Grade Break Points
+        gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü (M) ya da genişlikli çoklu çizgi
+        bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz. Cevap: her nesnenin kot verilen,
+        yüzey dışında kalan ve eklenen köşe sayısı ve toplamlar. Tek geri alma adımı
+        “Yüzeyden kot ver”. offset köşelere yüzeyin kotu artı bu farkı verir (artı üstte,
+        eksi altta); range (Partial) tek nesnenin from ile to arasındaki köşelerine
+        (çizginin uçları, çoklu çizginin ya da alanın dış halkası, 0'dan) kot verir, ara
+        kırık noktası yalnız aradaki kenarlara girer. Retler: invalid_revision,
         revision_conflict, not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10
         000'den çok, biri iki kez, kot farkı sonlu değil, aralık birden çok nesneye),
         invalid_uid, entity_not_found, not_a_path (noktaya aralık da), wrong_place (aralık
@@ -2032,11 +2027,11 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
     değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3
     köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan
     nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. Tablonun
-    geometrisindeki tableStyle izlediği tablo stilinin kimliğidir (docs/adr/1127 §3):
-    verilmezse tablonunki kalır, null stili kaldırır, projede olmayan kimlik
-    unknown_style ile reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
-    değişiklik project.changes ile gider.
+    geometrisindeki tableStyle izlediği tablo stilinin kimliğidir: verilmezse tablonunki
+    kalır, null stili kaldırır, projede olmayan kimlik unknown_style ile reddedilir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
+    ile gider.
     """
     __slots__ = ()
     id = "cad.entities.edit"
@@ -2084,11 +2079,11 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
         Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın
         halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne
         değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz.
-        Tablonun geometrisindeki tableStyle izlediği tablo stilinin kimliğidir
-        (docs/adr/1127 §3): verilmezse tablonunki kalır, null stili kaldırır, projede
-        olmayan kimlik unknown_style ile reddedilir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
-        bulut projesine değişiklik project.changes ile gider.
+        Tablonun geometrisindeki tableStyle izlediği tablo stilinin kimliğidir: verilmezse
+        tablonunki kalır, null stili kaldırır, projede olmayan kimlik unknown_style ile
+        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
+        project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -2186,16 +2181,16 @@ edit = _EntitiesEdit()
 
 class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEditPlan]):
     """``cad.entities.explode`` v1. Nesneleri patlat: Kalıcı kimlikleriyle verilen
-    nesneleri bir düzey parçalar (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”.
-    Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve parçalar da), daire, yay,
-    elips, eliptik yay, eğri ve NURBS eğrisi köşeleri üstünde olan bir çoklu çizgiye
-    (daire ve tam elips kapalı), ölçü çizgilerine, oklarına ve yazısına, desenli tarama
-    çizgilerine, kılavuz çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına,
-    bloğun yerleştirmesi tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini
-    ve kalınlığını alır; bloğun nesnesi çizimde varsa kendi katmanını, rengini,
-    kalınlığını, özniteliklerini ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili
-    dizinin (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her
-    öğe açılır, dizi aynı adımda kalkar. Eğrinin nokta sıklığı density'dir: count (eşit
+    nesneleri bir düzey parçalar; tek geri alma adımı “Patlat”. Çoklu çizgi ve alan
+    kenarlarına (çizgi ve yay; delikler ve parçalar da), daire, yay, elips, eliptik yay,
+    eğri ve NURBS eğrisi köşeleri üstünde olan bir çoklu çizgiye (daire ve tam elips
+    kapalı), ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz
+    çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi
+    tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini ve kalınlığını alır;
+    bloğun nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini
+    ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili dizinin
+    (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her öğe
+    açılır, dizi aynı adımda kalkar. Eğrinin nokta sıklığı density'dir: count (eşit
     bölüm sayısı), step (bölümün en büyük uzunluğu) ya da deviation (kirişlerin eğriden
     en büyük uzaklığı); verilmezse daire, yay ve elipste kirişler eğriye 0,01 m'den,
     eğri ve NURBS'te 0,1 mm'den yakın. Bölümler eğri boyunca eşit uzunluktadır; bir eğri
@@ -2225,25 +2220,24 @@ class _EntitiesExplode(LocalCommand[EntitiesExplode, EntitiesEdited, EntitiesEdi
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesEdited:
-        """Nesneleri patlat: Kalıcı kimlikleriyle verilen nesneleri bir düzey parçalar
-        (AutoCAD'in EXPLODE'u); tek geri alma adımı “Patlat”. Çoklu çizgi ve alan
-        kenarlarına (çizgi ve yay; delikler ve parçalar da), daire, yay, elips, eliptik yay,
-        eğri ve NURBS eğrisi köşeleri üstünde olan bir çoklu çizgiye (daire ve tam elips
-        kapalı), ölçü çizgilerine, oklarına ve yazısına, desenli tarama çizgilerine, kılavuz
-        çizgisine, okuna ve notuna, tablo çizgilerine ve yazılarına, bloğun yerleştirmesi
-        tanımın nesnelerine açılır. Parça nesnenin katmanını, rengini ve kalınlığını alır;
-        bloğun nesnesi çizimde varsa kendi katmanını, rengini, kalınlığını, özniteliklerini
-        ve etiketini (yoksa yerleştirmeninkini) alır. İlişkili dizinin
-        (cad.entities.array'in associative'i) bir öğesi bütün diziyi patlatır: her öğe
-        açılır, dizi aynı adımda kalkar. Eğrinin nokta sıklığı density'dir: count (eşit
-        bölüm sayısı), step (bölümün en büyük uzunluğu) ya da deviation (kirişlerin eğriden
-        en büyük uzaklığı); verilmezse daire, yay ve elipste kirişler eğriye 0,01 m'den,
-        eğri ve NURBS'te 0,1 mm'den yakın. Bölümler eğri boyunca eşit uzunluktadır; bir eğri
-        en çok 100 000 köşe olur, ötesi invalid_density. Patlamayan nesne (çizgi, nokta,
-        yazı, dolu tarama …) ve kilitli katmandaki nesne uyarıyla atlanır; hiçbiri
-        patlamazsa not_explodable, hepsi kilitliyse layer_locked. Çıktı ve plan
-        cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        """Nesneleri patlat: Kalıcı kimlikleriyle verilen nesneleri bir düzey parçalar; tek
+        geri alma adımı “Patlat”. Çoklu çizgi ve alan kenarlarına (çizgi ve yay; delikler ve
+        parçalar da), daire, yay, elips, eliptik yay, eğri ve NURBS eğrisi köşeleri üstünde
+        olan bir çoklu çizgiye (daire ve tam elips kapalı), ölçü çizgilerine, oklarına ve
+        yazısına, desenli tarama çizgilerine, kılavuz çizgisine, okuna ve notuna, tablo
+        çizgilerine ve yazılarına, bloğun yerleştirmesi tanımın nesnelerine açılır. Parça
+        nesnenin katmanını, rengini ve kalınlığını alır; bloğun nesnesi çizimde varsa kendi
+        katmanını, rengini, kalınlığını, özniteliklerini ve etiketini (yoksa
+        yerleştirmeninkini) alır. İlişkili dizinin (cad.entities.array'in associative'i) bir
+        öğesi bütün diziyi patlatır: her öğe açılır, dizi aynı adımda kalkar. Eğrinin nokta
+        sıklığı density'dir: count (eşit bölüm sayısı), step (bölümün en büyük uzunluğu) ya
+        da deviation (kirişlerin eğriden en büyük uzaklığı); verilmezse daire, yay ve
+        elipste kirişler eğriye 0,01 m'den, eğri ve NURBS'te 0,1 mm'den yakın. Bölümler eğri
+        boyunca eşit uzunluktadır; bir eğri en çok 100 000 köşe olur, ötesi invalid_density.
+        Patlamayan nesne (çizgi, nokta, yazı, dolu tarama …) ve kilitli katmandaki nesne
+        uyarıyla atlanır; hiçbiri patlamazsa not_explodable, hepsi kilitliyse layer_locked.
+        Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -2338,9 +2332,9 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
     """``cad.entities.extend`` v1. Nesneleri uzat: Kalıcı kimlikleriyle verilen açık
     çizgileri, çoklu çizgileri ve yayları tıklanan yere yakın uçlarından ilk sınıra
     kadar uzatır; tek geri alma adımı “Uzat”. Seçimler, sınırlar, fence (Çit), crossing
-    (Kesişen: penceredeki her uç uzar) ve edgeMode cad.entities.trim'deki gibidir (ADR
-    0294); eraseUncut yok sayılır. Aynı nesnenin iki seçimi iki ucunu uzatabilir, bir uç
-    bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla atlanır;
+    (Kesişen: penceredeki her uç uzar) ve edgeMode cad.entities.trim'deki gibidir;
+    eraseUncut yok sayılır. Aynı nesnenin iki seçimi iki ucunu uzatabilir, bir uç bir
+    kez uzar. Uç hiçbir sınıra ulaşmıyorsa seçim extend_failed uyarısıyla atlanır;
     hiçbir uç uzamazsa hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o
     sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
@@ -2371,11 +2365,11 @@ class _EntitiesExtend(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPl
         """Nesneleri uzat: Kalıcı kimlikleriyle verilen açık çizgileri, çoklu çizgileri ve
         yayları tıklanan yere yakın uçlarından ilk sınıra kadar uzatır; tek geri alma adımı
         “Uzat”. Seçimler, sınırlar, fence (Çit), crossing (Kesişen: penceredeki her uç uzar)
-        ve edgeMode cad.entities.trim'deki gibidir (ADR 0294); eraseUncut yok sayılır. Aynı
-        nesnenin iki seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra
-        ulaşmıyorsa seçim extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey
-        yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        ve edgeMode cad.entities.trim'deki gibidir; eraseUncut yok sayılır. Aynı nesnenin
+        iki seçimi iki ucunu uzatabilir, bir uç bir kez uzar. Uç hiçbir sınıra ulaşmıyorsa
+        seçim extend_failed uyarısıyla atlanır; hiçbir uç uzamazsa hiçbir şey yazılmaz.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -2784,24 +2778,22 @@ flatten = _EntitiesFlatten()
 
 class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]):
     """``cad.entities.grade`` v1. Eğimle kot ver: Bir çizginin, çoklu çizginin ya da alanın
-    dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set
-    Grade/Slope Between Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin
-    kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü
-    yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca
-    yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını
-    korur. Yüksek/alçak nokta (Civil 3D'nin Insert High/Low Elevation Point'i gibi; ADR
-    3380): grade yerine ahead (başlangıçtan aralığın içine eğim) ve back (bitişten
-    başlangıca doğru eğim), artı yukarı; bitiş kotu end ya da bitiş köşesinin kendi
-    kotu. İki eğimin kesiştiği yere köşe eklenir (yaylı kenarda iki yarı yayın
-    çemberinde kalır; çizgi Köşe ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa
-    ona kot verilir; ona kadar köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın
-    yatay uzunluğu, başlangıç ve bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back
-    geri eğim), köşelerin yeni kotları (eklenen dahil) ve point: noktanın köşe sırası,
-    eklenip eklenmediği, başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break).
-    Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict,
-    invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input,
-    elevation_missing, no_intersection (eğimler paralel ya da aralığın içinde
-    kesişmiyor), layer_locked.
+    dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir: başlangıç kotu
+    start (yoksa köşenin kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim
+    grade (düşey bölü yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe
+    başlangıçtan yol boyunca yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık
+    dışındaki köşeler kotlarını korur. Yüksek/alçak nokta: grade yerine ahead
+    (başlangıçtan aralığın içine eğim) ve back (bitişten başlangıca doğru eğim), artı
+    yukarı; bitiş kotu end ya da bitiş köşesinin kendi kotu. İki eğimin kesiştiği yere
+    köşe eklenir (yaylı kenarda iki yarı yayın çemberinde kalır; çizgi Köşe ekle'deki
+    gibi çoklu çizgi olur), orada bir köşe varsa ona kot verilir; ona kadar köşeler
+    ileri, sonrakiler geri eğimle. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş
+    kotu, eğim (yüksek/alçak noktada ileri eğim, back geri eğim), köşelerin yeni kotları
+    (eklenen dahil) ve point: noktanın köşe sırası, eklenip eklenmediği, başlangıçtan
+    uzaklığı, yeri, kotu ve türü (high, low, break). Tek geri alma adımı “Eğimle kot
+    ver”. Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found,
+    not_a_path, wrong_place, invalid_input, elevation_missing, no_intersection (eğimler
+    paralel ya da aralığın içinde kesişmiyor), layer_locked.
     """
     __slots__ = ()
     id = "cad.entities.grade"
@@ -2825,28 +2817,29 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesGraded:
         """Eğimle kot ver: Bir çizginin, çoklu çizginin ya da alanın dış halkasının from'dan
-        to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set Grade/Slope Between
-        Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya
-        bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir;
-        bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla
-        (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Yüksek/alçak
-        nokta (Civil 3D'nin Insert High/Low Elevation Point'i gibi; ADR 3380): grade yerine
-        ahead (başlangıçtan aralığın içine eğim) ve back (bitişten başlangıca doğru eğim),
-        artı yukarı; bitiş kotu end ya da bitiş köşesinin kendi kotu. İki eğimin kesiştiği
-        yere köşe eklenir (yaylı kenarda iki yarı yayın çemberinde kalır; çizgi Köşe
-        ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa ona kot verilir; ona kadar
-        köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın yatay uzunluğu, başlangıç ve
-        bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back geri eğim), köşelerin yeni
-        kotları (eklenen dahil) ve point: noktanın köşe sırası, eklenip eklenmediği,
-        başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break). Tek geri alma adımı
-        “Eğimle kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid,
-        entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing,
-        no_intersection (eğimler paralel ya da aralığın içinde kesişmiyor), layer_locked.
+        to'ya köşelerine sabit eğimle kot verir: başlangıç kotu start (yoksa köşenin kendi
+        kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay:
+        0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay
+        uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur.
+        Yüksek/alçak nokta: grade yerine ahead (başlangıçtan aralığın içine eğim) ve back
+        (bitişten başlangıca doğru eğim), artı yukarı; bitiş kotu end ya da bitiş köşesinin
+        kendi kotu. İki eğimin kesiştiği yere köşe eklenir (yaylı kenarda iki yarı yayın
+        çemberinde kalır; çizgi Köşe ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa
+        ona kot verilir; ona kadar köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın
+        yatay uzunluğu, başlangıç ve bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back
+        geri eğim), köşelerin yeni kotları (eklenen dahil) ve point: noktanın köşe sırası,
+        eklenip eklenmediği, başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break).
+        Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict,
+        invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input,
+        elevation_missing, no_intersection (eğimler paralel ya da aralığın içinde
+        kesişmiyor), layer_locked.
 
         Args:
             doc: The drawing it works on.
@@ -2858,6 +2851,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end: Unit: elevation.
             expected_revision:
             grade: Unit: grade.
+            part: Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+            ring: Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
             start: Unit: elevation.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -2880,6 +2875,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ), request_id=request_id, expected=expected)
 
@@ -2896,6 +2893,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
     ) -> EntitiesGraded:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -2910,6 +2909,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ))
 
@@ -2926,6 +2927,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -2940,6 +2943,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ))
 
@@ -2956,6 +2961,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         start: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -2975,6 +2982,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             end=end,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
             start=start,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -3352,16 +3361,15 @@ class _EntitiesJoin(LocalCommand[EntitiesJoin, EntitiesEdited, EntitiesEditPlan]
     uyarısıyla dışarıda kalır; hiç zincir kurulamazsa nothing_to_join. chain verilirse
     (Zincir) uids tek nesnedir, tohum: ona uç uca bağlı nesneler chain'in nesneleri
     arasında (all, area ya da objects) serbest uca, kavşağa, kilitli nesneye ya da başa
-    dönene kadar onunla birleşir; tohum yerini, kimliğini ve verisini verir. AutoCAD'in
-    JOIN'i gibi (ADR 0296): aynı doğrudaki çizgiler tek çizgi, aynı çemberin yayları tek
-    yay, kapanırsa daire olur; öbür zincirler çoklu çizgi. Birleşen nesne ilk nesnenin
-    taşıdıklarını korur; öbürlerinin kot, ölçü ve genişlikleri köşeleriyle gelir,
-    öznitelik ve etiketleri gelmez: değeri ayrışan anahtar data_conflict uyarısıyla
-    söylenir. Hiçbir şeyle birleşmeyen nesne not_joined uyarısıyla nedeni söylenerek
-    kalır. İlişkili ölçünün birleşen nesnedeki noktası birleşen nesneyi izler.
-    Zincirleri paylaşılan geometri çekirdeği bulur. Çıktı ve plan
-    cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    dönene kadar onunla birleşir; tohum yerini, kimliğini ve verisini verir. Birleştirme
+    kuralı: aynı doğrudaki çizgiler tek çizgi, aynı çemberin yayları tek yay, kapanırsa
+    daire olur; öbür zincirler çoklu çizgi. Birleşen nesne ilk nesnenin taşıdıklarını
+    korur; öbürlerinin kot, ölçü ve genişlikleri köşeleriyle gelir, öznitelik ve
+    etiketleri gelmez: değeri ayrışan anahtar data_conflict uyarısıyla söylenir. Hiçbir
+    şeyle birleşmeyen nesne not_joined uyarısıyla nedeni söylenerek kalır. İlişkili
+    ölçünün birleşen nesnedeki noktası birleşen nesneyi izler. Zincirleri paylaşılan
+    geometri çekirdeği bulur. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.join"
@@ -3392,14 +3400,14 @@ class _EntitiesJoin(LocalCommand[EntitiesJoin, EntitiesEdited, EntitiesEditPlan]
         hiç zincir kurulamazsa nothing_to_join. chain verilirse (Zincir) uids tek nesnedir,
         tohum: ona uç uca bağlı nesneler chain'in nesneleri arasında (all, area ya da
         objects) serbest uca, kavşağa, kilitli nesneye ya da başa dönene kadar onunla
-        birleşir; tohum yerini, kimliğini ve verisini verir. AutoCAD'in JOIN'i gibi (ADR
-        0296): aynı doğrudaki çizgiler tek çizgi, aynı çemberin yayları tek yay, kapanırsa
-        daire olur; öbür zincirler çoklu çizgi. Birleşen nesne ilk nesnenin taşıdıklarını
-        korur; öbürlerinin kot, ölçü ve genişlikleri köşeleriyle gelir, öznitelik ve
-        etiketleri gelmez: değeri ayrışan anahtar data_conflict uyarısıyla söylenir. Hiçbir
-        şeyle birleşmeyen nesne not_joined uyarısıyla nedeni söylenerek kalır. İlişkili
-        ölçünün birleşen nesnedeki noktası birleşen nesneyi izler. Zincirleri paylaşılan
-        geometri çekirdeği bulur. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
+        birleşir; tohum yerini, kimliğini ve verisini verir. Birleştirme kuralı: aynı
+        doğrudaki çizgiler tek çizgi, aynı çemberin yayları tek yay, kapanırsa daire olur;
+        öbür zincirler çoklu çizgi. Birleşen nesne ilk nesnenin taşıdıklarını korur;
+        öbürlerinin kot, ölçü ve genişlikleri köşeleriyle gelir, öznitelik ve etiketleri
+        gelmez: değeri ayrışan anahtar data_conflict uyarısıyla söylenir. Hiçbir şeyle
+        birleşmeyen nesne not_joined uyarısıyla nedeni söylenerek kalır. İlişkili ölçünün
+        birleşen nesnedeki noktası birleşen nesneyi izler. Zincirleri paylaşılan geometri
+        çekirdeği bulur. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
         verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
@@ -3501,19 +3509,19 @@ join = _EntitiesJoin()
 
 class _EntitiesLengthen(LocalCommand[EntitiesLengthen, EntitiesEdited, EntitiesEditPlan]):
     """``cad.entities.lengthen`` v1. Uzat-kısalt: Kalıcı kimliğiyle verilen nesnenin
-    uzunluğunu bir ucunda (end: start ya da end) değiştirir (AutoCAD'in LENGTHEN'i); tek
-    geri alma adımı “Uzat-kısalt”. change: delta (length kadar uzar, eksiyle kısalır;
-    yayda angle radyan kadar açısı değişir), percent (uzunluğun yüzdesi), total (yeni
-    toplam length ya da yayın açısı angle), dynamic (uç to noktasına nesnenin kendi yolu
-    boyunca en yakın yere gider). Çizgi, yay, elips yayı ve tek parçalı açık çoklu çizgi
-    uzar ya da kısalır; kapalı çoklu çizgi, alan, daire, bütün elips ve eğri
-    not_lengthenable. Uzatma uç kenarı kendi doğrusunda, çemberinde ya da elipsinde
-    sürdürür: kenarlar genişliklerini korur, taşınan ucun kotu ve ölçüsü (M) uç kenar
-    boyunca uzunlukla sürer. Kısaltma yolu keser: kalan köşeler kendilerininkini, yeni
-    uç kesilen kenarınkini uzunlukla alır. Yeni uzunluk sıfırdan büyük değilse
-    invalid_length, yay ya da yaylı kenar kendini kapatırsa arc_closes, açı yay dışında
-    angle_needs_arc. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    uzunluğunu bir ucunda (end: start ya da end) değiştirir; tek geri alma adımı
+    “Uzat-kısalt”. change: delta (length kadar uzar, eksiyle kısalır; yayda angle radyan
+    kadar açısı değişir), percent (uzunluğun yüzdesi), total (yeni toplam length ya da
+    yayın açısı angle), dynamic (uç to noktasına nesnenin kendi yolu boyunca en yakın
+    yere gider). Çizgi, yay, elips yayı ve tek parçalı açık çoklu çizgi uzar ya da
+    kısalır; kapalı çoklu çizgi, alan, daire, bütün elips ve eğri not_lengthenable.
+    Uzatma uç kenarı kendi doğrusunda, çemberinde ya da elipsinde sürdürür: kenarlar
+    genişliklerini korur, taşınan ucun kotu ve ölçüsü (M) uç kenar boyunca uzunlukla
+    sürer. Kısaltma yolu keser: kalan köşeler kendilerininkini, yeni uç kesilen
+    kenarınkini uzunlukla alır. Yeni uzunluk sıfırdan büyük değilse invalid_length, yay
+    ya da yaylı kenar kendini kapatırsa arc_closes, açı yay dışında angle_needs_arc.
+    Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.lengthen"
@@ -3537,19 +3545,19 @@ class _EntitiesLengthen(LocalCommand[EntitiesLengthen, EntitiesEdited, EntitiesE
         expected: Expected | None = None,
     ) -> EntitiesEdited:
         """Uzat-kısalt: Kalıcı kimliğiyle verilen nesnenin uzunluğunu bir ucunda (end: start ya
-        da end) değiştirir (AutoCAD'in LENGTHEN'i); tek geri alma adımı “Uzat-kısalt”.
-        change: delta (length kadar uzar, eksiyle kısalır; yayda angle radyan kadar açısı
-        değişir), percent (uzunluğun yüzdesi), total (yeni toplam length ya da yayın açısı
-        angle), dynamic (uç to noktasına nesnenin kendi yolu boyunca en yakın yere gider).
-        Çizgi, yay, elips yayı ve tek parçalı açık çoklu çizgi uzar ya da kısalır; kapalı
-        çoklu çizgi, alan, daire, bütün elips ve eğri not_lengthenable. Uzatma uç kenarı
-        kendi doğrusunda, çemberinde ya da elipsinde sürdürür: kenarlar genişliklerini
-        korur, taşınan ucun kotu ve ölçüsü (M) uç kenar boyunca uzunlukla sürer. Kısaltma
-        yolu keser: kalan köşeler kendilerininkini, yeni uç kesilen kenarınkini uzunlukla
-        alır. Yeni uzunluk sıfırdan büyük değilse invalid_length, yay ya da yaylı kenar
-        kendini kapatırsa arc_closes, açı yay dışında angle_needs_arc. Çıktı ve plan
-        cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        da end) değiştirir; tek geri alma adımı “Uzat-kısalt”. change: delta (length kadar
+        uzar, eksiyle kısalır; yayda angle radyan kadar açısı değişir), percent (uzunluğun
+        yüzdesi), total (yeni toplam length ya da yayın açısı angle), dynamic (uç to
+        noktasına nesnenin kendi yolu boyunca en yakın yere gider). Çizgi, yay, elips yayı
+        ve tek parçalı açık çoklu çizgi uzar ya da kısalır; kapalı çoklu çizgi, alan, daire,
+        bütün elips ve eğri not_lengthenable. Uzatma uç kenarı kendi doğrusunda, çemberinde
+        ya da elipsinde sürdürür: kenarlar genişliklerini korur, taşınan ucun kotu ve ölçüsü
+        (M) uç kenar boyunca uzunlukla sürer. Kısaltma yolu keser: kalan köşeler
+        kendilerininkini, yeni uç kesilen kenarınkini uzunlukla alır. Yeni uzunluk sıfırdan
+        büyük değilse invalid_length, yay ya da yaylı kenar kendini kapatırsa arc_closes,
+        açı yay dışında angle_needs_arc. Çıktı ve plan cad.entities.edit'inkidir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -3650,13 +3658,13 @@ lengthen = _EntitiesLengthen()
 
 class _EntitiesMatch(LocalCommand[EntitiesMatch, EntitiesEdited, EntitiesEditPlan]):
     """``cad.entities.match`` v1. Özellik kopyala: Kalıcı kimliğiyle verilen kaynak
-    nesnenin seçilen özelliklerini öbür nesnelere verir (AutoCAD'in MATCHPROP'u); tek
-    geri alma adımı “Özellik kopyala”. Özellikler (properties; verilmezse hepsi): layer,
-    color, lineType, lineTypeScale, lineWeight (yalnız çizgiyle çizilenler arasında),
-    transparency, symbol; text (yazının yüzü, yüksekliği ve genişlik çarpanı, yazılara),
-    dimension (ölçünün görünüşü, değer yüksekliği ve zemini, ölçülere), hatch (taramanın
-    deseni, taramalara; bölgeleri kalır), leader (kılavuzun oku, ok boyu, not yüksekliği
-    ve zemini, kılavuzlara). Kaynakta olmayan değer (katmanın rengi, sembol yok)
+    nesnenin seçilen özelliklerini öbür nesnelere verir; tek geri alma adımı “Özellik
+    kopyala”. Özellikler (properties; verilmezse hepsi): layer, color, lineType,
+    lineTypeScale, lineWeight (yalnız çizgiyle çizilenler arasında), transparency,
+    symbol; text (yazının yüzü, yüksekliği ve genişlik çarpanı, yazılara), dimension
+    (ölçünün görünüşü, değer yüksekliği ve zemini, ölçülere), hatch (taramanın deseni,
+    taramalara; bölgeleri kalır), leader (kılavuzun oku, ok boyu, not yüksekliği ve
+    zemini, kılavuzlara). Kaynakta olmayan değer (katmanın rengi, sembol yok)
     hedeftekini kaldırır. Kaynak hedeflerin arasındaysa atlanır, kilitli katmandaki
     hedef uyarıyla atlanır; katmana taşıma cad.entities.set'in kurallarıyla (kilitli,
     gizli, alanlar). Retler: invalid_uid, no_entities, no_properties, entity_not_found,
@@ -3685,18 +3693,18 @@ class _EntitiesMatch(LocalCommand[EntitiesMatch, EntitiesEdited, EntitiesEditPla
         expected: Expected | None = None,
     ) -> EntitiesEdited:
         """Özellik kopyala: Kalıcı kimliğiyle verilen kaynak nesnenin seçilen özelliklerini
-        öbür nesnelere verir (AutoCAD'in MATCHPROP'u); tek geri alma adımı “Özellik
-        kopyala”. Özellikler (properties; verilmezse hepsi): layer, color, lineType,
-        lineTypeScale, lineWeight (yalnız çizgiyle çizilenler arasında), transparency,
-        symbol; text (yazının yüzü, yüksekliği ve genişlik çarpanı, yazılara), dimension
-        (ölçünün görünüşü, değer yüksekliği ve zemini, ölçülere), hatch (taramanın deseni,
-        taramalara; bölgeleri kalır), leader (kılavuzun oku, ok boyu, not yüksekliği ve
-        zemini, kılavuzlara). Kaynakta olmayan değer (katmanın rengi, sembol yok)
-        hedeftekini kaldırır. Kaynak hedeflerin arasındaysa atlanır, kilitli katmandaki
-        hedef uyarıyla atlanır; katmana taşıma cad.entities.set'in kurallarıyla (kilitli,
-        gizli, alanlar). Retler: invalid_uid, no_entities, no_properties, entity_not_found,
-        layer_locked. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse
-        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        öbür nesnelere verir; tek geri alma adımı “Özellik kopyala”. Özellikler (properties;
+        verilmezse hepsi): layer, color, lineType, lineTypeScale, lineWeight (yalnız
+        çizgiyle çizilenler arasında), transparency, symbol; text (yazının yüzü, yüksekliği
+        ve genişlik çarpanı, yazılara), dimension (ölçünün görünüşü, değer yüksekliği ve
+        zemini, ölçülere), hatch (taramanın deseni, taramalara; bölgeleri kalır), leader
+        (kılavuzun oku, ok boyu, not yüksekliği ve zemini, kılavuzlara). Kaynakta olmayan
+        değer (katmanın rengi, sembol yok) hedeftekini kaldırır. Kaynak hedeflerin
+        arasındaysa atlanır, kilitli katmandaki hedef uyarıyla atlanır; katmana taşıma
+        cad.entities.set'in kurallarıyla (kilitli, gizli, alanlar). Retler: invalid_uid,
+        no_entities, no_properties, entity_not_found, layer_locked. Çıktı ve plan
+        cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -4141,20 +4149,20 @@ order = _EntitiesOrder()
 
 class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePlan]):
     """``cad.entities.paste`` v1. Yapıştır: cad.entities.copy'nin verdiği kopyayı bu çizime
-    yapıştırır (AutoCAD'in PASTECLIP, PASTEORIG ve PASTEBLOCK'u); tek geri alma adımı
-    “Yapıştır”. Kopyanın taban noktası at'a gelir; at verilmezse nesneler
-    kopyalandıkları yerde kalır. Her nesne bu çizimde kendi katmanının yolundaki katmana
-    gider (adlar büyük küçük harf ve Türkçe harf farkı gözetmeden); olmayan yol kaynağın
-    görünüşüyle ve gruplarıyla açılır. Bu çizimde aynı adlı blok varsa bu çizimin tanımı
-    kullanılır (report.kept), yoksa eklenir (report.blocks); stiller de adıyla,
-    olmayanlar eklenir (proje ayarı). conflicts: rename ile aynı adlı blok ve stil
-    kopyanınkiyle “Ad (2)” gibi boş bir adla gelir, nesneler onu kullanır
-    (report.renamed, names_renamed uyarısı). Nesneler yeni kimlik alır; kopyanın dışına
-    bağlar düşer. asBlock ile nesneler o adla (boş bir ad: “Ad (2)” …) tek blok olur,
-    tabanı kopyanın taban noktası, etkin katmanda at'a yerleştirilir. Uzunluklar her
-    çizimde metre olduğundan başka birimli çizimden gelen nesneler boylarını korur
-    (units_differ uyarısı). Retler: no_entities, invalid_clip, not_finite, empty_name,
-    invalid_revision, revision_conflict, not_a_layer, layer_locked.
+    yapıştırır; tek geri alma adımı “Yapıştır”. Kopyanın taban noktası at'a gelir; at
+    verilmezse nesneler kopyalandıkları yerde kalır. Her nesne bu çizimde kendi
+    katmanının yolundaki katmana gider (adlar büyük küçük harf ve Türkçe harf farkı
+    gözetmeden); olmayan yol kaynağın görünüşüyle ve gruplarıyla açılır. Bu çizimde aynı
+    adlı blok varsa bu çizimin tanımı kullanılır (report.kept), yoksa eklenir
+    (report.blocks); stiller de adıyla, olmayanlar eklenir (proje ayarı). conflicts:
+    rename ile aynı adlı blok ve stil kopyanınkiyle “Ad (2)” gibi boş bir adla gelir,
+    nesneler onu kullanır (report.renamed, names_renamed uyarısı). Nesneler yeni kimlik
+    alır; kopyanın dışına bağlar düşer. asBlock ile nesneler o adla (boş bir ad: “Ad
+    (2)” …) tek blok olur, tabanı kopyanın taban noktası, etkin katmanda at'a
+    yerleştirilir. Uzunluklar her çizimde metre olduğundan başka birimli çizimden gelen
+    nesneler boylarını korur (units_differ uyarısı). Retler: no_entities, invalid_clip,
+    not_finite, empty_name, invalid_revision, revision_conflict, not_a_layer,
+    layer_locked.
     """
     __slots__ = ()
     id = "cad.entities.paste"
@@ -4178,21 +4186,20 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesPasted:
-        """Yapıştır: cad.entities.copy'nin verdiği kopyayı bu çizime yapıştırır (AutoCAD'in
-        PASTECLIP, PASTEORIG ve PASTEBLOCK'u); tek geri alma adımı “Yapıştır”. Kopyanın
-        taban noktası at'a gelir; at verilmezse nesneler kopyalandıkları yerde kalır. Her
-        nesne bu çizimde kendi katmanının yolundaki katmana gider (adlar büyük küçük harf ve
-        Türkçe harf farkı gözetmeden); olmayan yol kaynağın görünüşüyle ve gruplarıyla
-        açılır. Bu çizimde aynı adlı blok varsa bu çizimin tanımı kullanılır (report.kept),
-        yoksa eklenir (report.blocks); stiller de adıyla, olmayanlar eklenir (proje ayarı).
-        conflicts: rename ile aynı adlı blok ve stil kopyanınkiyle “Ad (2)” gibi boş bir
-        adla gelir, nesneler onu kullanır (report.renamed, names_renamed uyarısı). Nesneler
-        yeni kimlik alır; kopyanın dışına bağlar düşer. asBlock ile nesneler o adla (boş bir
-        ad: “Ad (2)” …) tek blok olur, tabanı kopyanın taban noktası, etkin katmanda at'a
-        yerleştirilir. Uzunluklar her çizimde metre olduğundan başka birimli çizimden gelen
-        nesneler boylarını korur (units_differ uyarısı). Retler: no_entities, invalid_clip,
-        not_finite, empty_name, invalid_revision, revision_conflict, not_a_layer,
-        layer_locked.
+        """Yapıştır: cad.entities.copy'nin verdiği kopyayı bu çizime yapıştırır; tek geri alma
+        adımı “Yapıştır”. Kopyanın taban noktası at'a gelir; at verilmezse nesneler
+        kopyalandıkları yerde kalır. Her nesne bu çizimde kendi katmanının yolundaki katmana
+        gider (adlar büyük küçük harf ve Türkçe harf farkı gözetmeden); olmayan yol kaynağın
+        görünüşüyle ve gruplarıyla açılır. Bu çizimde aynı adlı blok varsa bu çizimin tanımı
+        kullanılır (report.kept), yoksa eklenir (report.blocks); stiller de adıyla,
+        olmayanlar eklenir (proje ayarı). conflicts: rename ile aynı adlı blok ve stil
+        kopyanınkiyle “Ad (2)” gibi boş bir adla gelir, nesneler onu kullanır
+        (report.renamed, names_renamed uyarısı). Nesneler yeni kimlik alır; kopyanın dışına
+        bağlar düşer. asBlock ile nesneler o adla (boş bir ad: “Ad (2)” …) tek blok olur,
+        tabanı kopyanın taban noktası, etkin katmanda at'a yerleştirilir. Uzunluklar her
+        çizimde metre olduğundan başka birimli çizimden gelen nesneler boylarını korur
+        (units_differ uyarısı). Retler: no_entities, invalid_clip, not_finite, empty_name,
+        invalid_revision, revision_conflict, not_a_layer, layer_locked.
 
         Args:
             doc: The drawing it works on.
@@ -4436,19 +4443,19 @@ pick = _EntitiesPick()
 
 class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]):
     """``cad.entities.raise`` v1. Referanstan kot ver: Bir çizgiyi, çoklu çizgiyi ya da
-    alanı bir referans noktasına göre bütünüyle yükseltir ya da alçaltır (Civil 3D'nin
-    Raise/Lower by Reference'ı gibi; ADR 3780): at köşesi (0'dan; çizginin uçları, çoklu
-    çizginin ilk parçası, alanın dış halkası) referansın kotu artı eğim × referanstan
-    yatay uzaklığı (grade, düşey bölü yatay, referanstan köşeye doğru artı yukarı: 0,02
-    %2'dir) ya da artı kot farkı (difference, m) olur; nesnenin öbür bütün kotları
-    (alanın delikleri, her parçası) aynı farkla kayar, kendi eğimleri değişmez. Kotsuz
-    köşeler kotsuz kalır (Kot ver'in Artır'ı gibi). Referans x, y, z ile verilir (bir
-    noktanın, bir köşenin ya da yazılan). Cevap: yatay uzaklık, köşenin önceki ve yeni
-    kotu, fark (by), referanstan köşeye eğim (köşe referansın üstündeyse yok), kayan kot
-    ve kotsuz köşe sayısı. Tek geri alma adımı “Referanstan kot ver”. Retler:
-    invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path,
-    wrong_place, invalid_input (grade ile difference birlikte ya da hiçbiri; sonlu
-    olmayan sonuç), elevation_missing (köşenin kotu yok), layer_locked.
+    alanı bir referans noktasına göre bütünüyle yükseltir ya da alçaltır: at köşesi
+    (0'dan; çizginin uçları, çoklu çizginin ilk parçası, alanın dış halkası) referansın
+    kotu artı eğim × referanstan yatay uzaklığı (grade, düşey bölü yatay, referanstan
+    köşeye doğru artı yukarı: 0,02 %2'dir) ya da artı kot farkı (difference, m) olur;
+    nesnenin öbür bütün kotları (alanın delikleri, her parçası) aynı farkla kayar, kendi
+    eğimleri değişmez. Kotsuz köşeler kotsuz kalır (Kot ver'in Artır'ı gibi). Referans
+    x, y, z ile verilir (bir noktanın, bir köşenin ya da yazılan). Cevap: yatay uzaklık,
+    köşenin önceki ve yeni kotu, fark (by), referanstan köşeye eğim (köşe referansın
+    üstündeyse yok), kayan kot ve kotsuz köşe sayısı. Tek geri alma adımı “Referanstan
+    kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid,
+    entity_not_found, not_a_path, wrong_place, invalid_input (grade ile difference
+    birlikte ya da hiçbiri; sonlu olmayan sonuç), elevation_missing (köşenin kotu yok),
+    layer_locked.
     """
     __slots__ = ()
     id = "cad.entities.raise"
@@ -4470,23 +4477,24 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesRaised:
         """Referanstan kot ver: Bir çizgiyi, çoklu çizgiyi ya da alanı bir referans noktasına
-        göre bütünüyle yükseltir ya da alçaltır (Civil 3D'nin Raise/Lower by Reference'ı
-        gibi; ADR 3780): at köşesi (0'dan; çizginin uçları, çoklu çizginin ilk parçası,
-        alanın dış halkası) referansın kotu artı eğim × referanstan yatay uzaklığı (grade,
-        düşey bölü yatay, referanstan köşeye doğru artı yukarı: 0,02 %2'dir) ya da artı kot
-        farkı (difference, m) olur; nesnenin öbür bütün kotları (alanın delikleri, her
-        parçası) aynı farkla kayar, kendi eğimleri değişmez. Kotsuz köşeler kotsuz kalır
-        (Kot ver'in Artır'ı gibi). Referans x, y, z ile verilir (bir noktanın, bir köşenin
-        ya da yazılan). Cevap: yatay uzaklık, köşenin önceki ve yeni kotu, fark (by),
-        referanstan köşeye eğim (köşe referansın üstündeyse yok), kayan kot ve kotsuz köşe
-        sayısı. Tek geri alma adımı “Referanstan kot ver”. Retler: invalid_revision,
-        revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place,
-        invalid_input (grade ile difference birlikte ya da hiçbiri; sonlu olmayan sonuç),
-        elevation_missing (köşenin kotu yok), layer_locked.
+        göre bütünüyle yükseltir ya da alçaltır: at köşesi (0'dan; çizginin uçları, çoklu
+        çizginin ilk parçası, alanın dış halkası) referansın kotu artı eğim × referanstan
+        yatay uzaklığı (grade, düşey bölü yatay, referanstan köşeye doğru artı yukarı: 0,02
+        %2'dir) ya da artı kot farkı (difference, m) olur; nesnenin öbür bütün kotları
+        (alanın delikleri, her parçası) aynı farkla kayar, kendi eğimleri değişmez. Kotsuz
+        köşeler kotsuz kalır (Kot ver'in Artır'ı gibi). Referans x, y, z ile verilir (bir
+        noktanın, bir köşenin ya da yazılan). Cevap: yatay uzaklık, köşenin önceki ve yeni
+        kotu, fark (by), referanstan köşeye eğim (köşe referansın üstündeyse yok), kayan kot
+        ve kotsuz köşe sayısı. Tek geri alma adımı “Referanstan kot ver”. Retler:
+        invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path,
+        wrong_place, invalid_input (grade ile difference birlikte ya da hiçbiri; sonlu
+        olmayan sonuç), elevation_missing (köşenin kotu yok), layer_locked.
 
         Args:
             doc: The drawing it works on.
@@ -4496,6 +4504,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference: Unit: length.
             expected_revision:
             grade: Unit: grade.
+            part: Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+            ring: Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -4515,6 +4525,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -4528,6 +4540,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
     ) -> EntitiesRaised:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -4539,6 +4553,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ))
 
     def validate(
@@ -4552,6 +4568,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -4563,6 +4581,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ))
 
     def answer(
@@ -4576,6 +4596,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
         difference: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
+        part: int | Unset = UNSET,
+        ring: int | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -4592,6 +4614,8 @@ class _EntitiesRaise(LocalCommand[EntitiesRaise, EntitiesRaised, EntitiesRaised]
             difference=difference,
             expected_revision=expected_revision,
             grade=grade,
+            part=part,
+            ring=ring,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -4740,15 +4764,15 @@ relate = _EntitiesRelate()
 
 class _EntitiesReverse(LocalCommand[EntitiesReverse, EntitiesEdited, EntitiesEditPlan]):
     """``cad.entities.reverse`` v1. Yönü çevir: Kalıcı kimlikleriyle verilen nesneleri aynı
-    biçimde, öbür yöne çevirir (AutoCAD'in REVERSE'ü); tek geri alma adımı “Yönü çevir”.
-    Çizginin uçları yer değiştirir; çoklu çizgi, kapalı çoklu çizgi, alan
-    (delikleriyle), eğri ve NURBS eğrisi geriye doğru gider, yayları öbür yöne döner.
-    Her nesne kimliğini ve taşıdıklarını korur; kot, ölçü (M) ve genişlikler köşeleriyle
-    gider, yani onlar da tersine döner; ilişkili ölçünün noktası nesnedeki yerinde kalır
-    (ADR 0296). Yay, daire ve elips hep saat yönünün tersine gider: onlar ve yönsüz
-    türler not_reversible, kilitli katmandakiler layer_locked uyarısıyla atlanır;
-    hiçbiri çevrilemezse ret. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    biçimde, öbür yöne çevirir; tek geri alma adımı “Yönü çevir”. Çizginin uçları yer
+    değiştirir; çoklu çizgi, kapalı çoklu çizgi, alan (delikleriyle), eğri ve NURBS
+    eğrisi geriye doğru gider, yayları öbür yöne döner. Her nesne kimliğini ve
+    taşıdıklarını korur; kot, ölçü (M) ve genişlikler köşeleriyle gider, yani onlar da
+    tersine döner; ilişkili ölçünün noktası nesnedeki yerinde kalır. Yay, daire ve elips
+    hep saat yönünün tersine gider: onlar ve yönsüz türler not_reversible, kilitli
+    katmandakiler layer_locked uyarısıyla atlanır; hiçbiri çevrilemezse ret. Çıktı ve
+    plan cad.entities.edit'inkidir. expectedRevision verilmişse ve çizim o sürümde
+    değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.reverse"
@@ -4769,16 +4793,16 @@ class _EntitiesReverse(LocalCommand[EntitiesReverse, EntitiesEdited, EntitiesEdi
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesEdited:
-        """Yönü çevir: Kalıcı kimlikleriyle verilen nesneleri aynı biçimde, öbür yöne çevirir
-        (AutoCAD'in REVERSE'ü); tek geri alma adımı “Yönü çevir”. Çizginin uçları yer
-        değiştirir; çoklu çizgi, kapalı çoklu çizgi, alan (delikleriyle), eğri ve NURBS
-        eğrisi geriye doğru gider, yayları öbür yöne döner. Her nesne kimliğini ve
-        taşıdıklarını korur; kot, ölçü (M) ve genişlikler köşeleriyle gider, yani onlar da
-        tersine döner; ilişkili ölçünün noktası nesnedeki yerinde kalır (ADR 0296). Yay,
-        daire ve elips hep saat yönünün tersine gider: onlar ve yönsüz türler
-        not_reversible, kilitli katmandakiler layer_locked uyarısıyla atlanır; hiçbiri
-        çevrilemezse ret. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Yönü çevir: Kalıcı kimlikleriyle verilen nesneleri aynı biçimde, öbür yöne çevirir;
+        tek geri alma adımı “Yönü çevir”. Çizginin uçları yer değiştirir; çoklu çizgi,
+        kapalı çoklu çizgi, alan (delikleriyle), eğri ve NURBS eğrisi geriye doğru gider,
+        yayları öbür yöne döner. Her nesne kimliğini ve taşıdıklarını korur; kot, ölçü (M)
+        ve genişlikler köşeleriyle gider, yani onlar da tersine döner; ilişkili ölçünün
+        noktası nesnedeki yerinde kalır. Yay, daire ve elips hep saat yönünün tersine gider:
+        onlar ve yönsüz türler not_reversible, kilitli katmandakiler layer_locked uyarısıyla
+        atlanır; hiçbiri çevrilemezse ret. Çıktı ve plan cad.entities.edit'inkidir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -5298,10 +5322,10 @@ class _EntitiesStretch(LocalCommand[EntitiesStretch, EntitiesStretched, Entities
     köşeleri paylaşan görünen komşular aynı adımda izler; points noktaları da köşe
     sayar. Kilitli ya da geçersiz kalacak komşu uyarıyla değişmez; topology.stopOnLocked
     ile kilitli komşu bütün düzenlemeyi reddeder, ortak sınır ayrılmaz
-    (shared_boundary_locked, ADR 1261). Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni
-    şekilleri paylaşılan geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı
-    isteğe aynı şekilleri alır. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    (shared_boundary_locked). Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni şekilleri
+    paylaşılan geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı isteğe aynı
+    şekilleri alır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.stretch"
@@ -5338,11 +5362,10 @@ class _EntitiesStretch(LocalCommand[EntitiesStretch, EntitiesStretched, Entities
         nothing_to_stretch. topology verilirse (Topolojik düzenleme) taşınan köşeleri
         paylaşan görünen komşular aynı adımda izler; points noktaları da köşe sayar. Kilitli
         ya da geçersiz kalacak komşu uyarıyla değişmez; topology.stopOnLocked ile kilitli
-        komşu bütün düzenlemeyi reddeder, ortak sınır ayrılmaz (shared_boundary_locked, ADR
-        1261). Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni şekilleri paylaşılan
-        geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı isteğe aynı şekilleri
-        alır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
-        sonuç conflict olur.
+        komşu bütün düzenlemeyi reddeder, ortak sınır ayrılmaz (shared_boundary_locked). Yer
+        değiştirme sıfırsa hiçbir şey yazılmaz. Yeni şekilleri paylaşılan geometri çekirdeği
+        bulur: Esnet aracı, Python ve ajan aynı isteğe aynı şekilleri alır. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -5467,18 +5490,17 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
     Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu
     komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne
     türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat
-    yönünün tersine kalır. Aynanın text alanı yazıların ne olacağıdır (AutoCAD'in
-    MIRRTEXT'i): readable (varsayılan) yazıyı aynadaki yerinde okunur, baş aşağı
-    olmadan, hizası o yeri dolduracak biçimde yazar; mirrored yazıyı çizimle döndürür;
-    yazıların metni ve bloğun öznitelik değerleri hiç değişmez, bloğun kendi yazıları
-    her zaman okunurdur. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür
-    alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. layerId
-    (Katmana kopyala) yalnız kopyayla verilir: kopyalar o katmana gider, katman yeni
-    nesnenin katmanı gibi denetlenir, adım Katmana kopyala. Kilitli katmandaki nesne ne
-    değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey
-    yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
-    project.changes ile gider.
+    yönünün tersine kalır. Aynanın text alanı yazıların ne olacağıdır: readable
+    (varsayılan) yazıyı aynadaki yerinde okunur, baş aşağı olmadan, hizası o yeri
+    dolduracak biçimde yazar; mirrored yazıyı çizimle döndürür; yazıların metni ve
+    bloğun öznitelik değerleri hiç değişmez, bloğun kendi yazıları her zaman okunurdur.
+    Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya
+    bütün alanları alır, yeni bir kalıcı kimlik alır. layerId (Katmana kopyala) yalnız
+    kopyayla verilir: kopyalar o katmana gider, katman yeni nesnenin katmanı gibi
+    denetlenir, adım Katmana kopyala. Kilitli katmandaki nesne ne değişir ne kopyalanır:
+    öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.transform"
@@ -5511,17 +5533,17 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını
         taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri,
         yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır. Aynanın
-        text alanı yazıların ne olacağıdır (AutoCAD'in MIRRTEXT'i): readable (varsayılan)
-        yazıyı aynadaki yerinde okunur, baş aşağı olmadan, hizası o yeri dolduracak biçimde
-        yazar; mirrored yazıyı çizimle döndürür; yazıların metni ve bloğun öznitelik
-        değerleri hiç değişmez, bloğun kendi yazıları her zaman okunurdur. Yerinde değişen
-        nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları
-        alır, yeni bir kalıcı kimlik alır. layerId (Katmana kopyala) yalnız kopyayla
-        verilir: kopyalar o katmana gider, katman yeni nesnenin katmanı gibi denetlenir,
-        adım Katmana kopyala. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri
-        uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse
-        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim
-        izin istemez; bulut projesine değişiklik project.changes ile gider.
+        text alanı yazıların ne olacağıdır: readable (varsayılan) yazıyı aynadaki yerinde
+        okunur, baş aşağı olmadan, hizası o yeri dolduracak biçimde yazar; mirrored yazıyı
+        çizimle döndürür; yazıların metni ve bloğun öznitelik değerleri hiç değişmez, bloğun
+        kendi yazıları her zaman okunurdur. Yerinde değişen nesne yuvasını, kalıcı kimliğini
+        ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır.
+        layerId (Katmana kopyala) yalnız kopyayla verilir: kopyalar o katmana gider, katman
+        yeni nesnenin katmanı gibi denetlenir, adım Katmana kopyala. Kilitli katmandaki
+        nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir
+        şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
+        project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -5642,18 +5664,18 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
     sınırlamaz; her nesne komuttan önceki çizimle sınırlanır. Nesnenin yerini kalan ilk
     parça alır, öbür parçalar ondan yeni nesnelerdir; tek parça kalırsa özellikleri
     korunur (kapalı alan değilse). Adalı alan budanmaz. Sonraki seçimin durduğu parçayı
-    hiçbir sınır kesmiyorsa parça bütünüyle kalkar: uçları önceki kesimlerdir.
-    AutoCAD'in TRIM seçenekleri (ADR 0294): fence (Çit) açık bir yoldur, geçtiği her
-    görünen nesne geçtiği yerden seçilir; crossing (Kesişen) bir penceredir, ona değen
-    her görünen nesnenin sınırlar arasındaki pencereye değen her parçası kalkar. Çit ve
-    pencerenin kilitli katmandaki nesneleri sayılarak atlanır (layer_locked uyarısı).
-    edgeMode extend (AutoCAD'in EDGEMODE 1'i) sınırları uzantılarıyla da sayar: çizgi
-    bütün doğrusuyla, yay çemberiyle, açık çoklu çizginin ilk ve son kenarı uçlarının
-    ötesine. eraseUncut (hızlı kip) hiçbir sınırın kesmediği nesneyi seçildiği yerden
-    bütünüyle siler. Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir
-    şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur:
-    Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    hiçbir sınır kesmiyorsa parça bütünüyle kalkar: uçları önceki kesimlerdir. Buda'nın
+    seçenekleri: fence (Çit) açık bir yoldur, geçtiği her görünen nesne geçtiği yerden
+    seçilir; crossing (Kesişen) bir penceredir, ona değen her görünen nesnenin sınırlar
+    arasındaki pencereye değen her parçası kalkar. Çit ve pencerenin kilitli katmandaki
+    nesneleri sayılarak atlanır (layer_locked uyarısı). edgeMode extend sınırları
+    uzantılarıyla da sayar: çizgi bütün doğrusuyla, yay çemberiyle, açık çoklu çizginin
+    ilk ve son kenarı uçlarının ötesine. eraseUncut (hızlı kip) hiçbir sınırın kesmediği
+    nesneyi seçildiği yerden bütünüyle siler. Bir şey yapamayan seçim trim_failed
+    uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir şey yazılmaz. Parçaları
+    paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve ajan aynı isteğe aynı
+    parçaları alır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.trim"
@@ -5690,18 +5712,17 @@ class _EntitiesTrim(LocalCommand[EntitiesTrim, EntitiesTrimmed, EntitiesTrimPlan
         önceki çizimle sınırlanır. Nesnenin yerini kalan ilk parça alır, öbür parçalar ondan
         yeni nesnelerdir; tek parça kalırsa özellikleri korunur (kapalı alan değilse). Adalı
         alan budanmaz. Sonraki seçimin durduğu parçayı hiçbir sınır kesmiyorsa parça
-        bütünüyle kalkar: uçları önceki kesimlerdir. AutoCAD'in TRIM seçenekleri (ADR 0294):
-        fence (Çit) açık bir yoldur, geçtiği her görünen nesne geçtiği yerden seçilir;
-        crossing (Kesişen) bir penceredir, ona değen her görünen nesnenin sınırlar
-        arasındaki pencereye değen her parçası kalkar. Çit ve pencerenin kilitli katmandaki
-        nesneleri sayılarak atlanır (layer_locked uyarısı). edgeMode extend (AutoCAD'in
-        EDGEMODE 1'i) sınırları uzantılarıyla da sayar: çizgi bütün doğrusuyla, yay
-        çemberiyle, açık çoklu çizginin ilk ve son kenarı uçlarının ötesine. eraseUncut
-        (hızlı kip) hiçbir sınırın kesmediği nesneyi seçildiği yerden bütünüyle siler. Bir
-        şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir şey yapamazsa hiçbir
-        şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur: Buda aracı, Python ve
-        ajan aynı isteğe aynı parçaları alır. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        bütünüyle kalkar: uçları önceki kesimlerdir. Buda'nın seçenekleri: fence (Çit) açık
+        bir yoldur, geçtiği her görünen nesne geçtiği yerden seçilir; crossing (Kesişen) bir
+        penceredir, ona değen her görünen nesnenin sınırlar arasındaki pencereye değen her
+        parçası kalkar. Çit ve pencerenin kilitli katmandaki nesneleri sayılarak atlanır
+        (layer_locked uyarısı). edgeMode extend sınırları uzantılarıyla da sayar: çizgi
+        bütün doğrusuyla, yay çemberiyle, açık çoklu çizginin ilk ve son kenarı uçlarının
+        ötesine. eraseUncut (hızlı kip) hiçbir sınırın kesmediği nesneyi seçildiği yerden
+        bütünüyle siler. Bir şey yapamayan seçim trim_failed uyarısıyla atlanır; hiçbiri bir
+        şey yapamazsa hiçbir şey yazılmaz. Parçaları paylaşılan geometri çekirdeği bulur:
+        Buda aracı, Python ve ajan aynı isteğe aynı parçaları alır. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -5836,10 +5857,14 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
     yolun sağına büker, through ile verilen noktadan, radius ile verilen yarıçapla
     (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar
     genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir;
-    çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır;
+    çizgiye köşe eklenince çoklu çizgi olur. Köşeyi sil iki kenarı düz bir kenar yapar;
+    joinArcs (uzunluk toleransı) ile iki yanı aynı yöne dönen ve merkezleri ile
+    yarıçapları tolerans içinde aynı olan iki yay tek yay olur (süpürmeleri toplanır),
+    olmazsa kenar düz kalır ve arcs_not_joined uyarısı nedenini söyler; aynı yayları
+    paylaşan komşu topology ile tek yayı alır. Alanın delikleri ve öbür parçaları kalır;
     topology ile ortak köşe ve kenarları olan komşular aynı adımda izler;
     topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder
-    (shared_boundary_locked, ADR 1261). Tek geri alma adımı.
+    (shared_boundary_locked). Tek geri alma adımı.
     """
     __slots__ = ()
     id = "cad.entities.vertex"
@@ -5859,6 +5884,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5873,10 +5899,14 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         biri sehimle halkanın dışına ya da açık yolun sağına büker, through ile verilen
         noktadan, radius ile verilen yarıçapla (artı: kenarın sağına) geçen yay yapar, yay
         kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına
-        başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın
+        başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Köşeyi
+        sil iki kenarı düz bir kenar yapar; joinArcs (uzunluk toleransı) ile iki yanı aynı
+        yöne dönen ve merkezleri ile yarıçapları tolerans içinde aynı olan iki yay tek yay
+        olur (süpürmeleri toplanır), olmazsa kenar düz kalır ve arcs_not_joined uyarısı
+        nedenini söyler; aynı yayları paylaşan komşu topology ile tek yayı alır. Alanın
         delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan
         komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi
-        reddeder (shared_boundary_locked, ADR 1261). Tek geri alma adımı.
+        reddeder (shared_boundary_locked). Tek geri alma adımı.
 
         Args:
             doc: The drawing it works on.
@@ -5885,6 +5915,10 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
                 `along` place too (a point inside the edge, docs/adr/0263 §1).
             expected_revision: The document revision the input was prepared against, as decimal text.
+            join_arcs: Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex
+                are arcs turning the same way whose centres and radii are within it of each other, they become one arc of
+                both sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a
+                warning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil. Unit: length.
             radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
                 the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
                 chord; not with `through`. Unit: length.
@@ -5910,6 +5944,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
@@ -5925,6 +5960,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5938,6 +5974,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
@@ -5953,6 +5990,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5966,6 +6004,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,
@@ -5981,6 +6020,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         action: VertexAction | VertexActionName,
         place: SubPlace,
         expected_revision: str | None | Unset = UNSET,
+        join_arcs: float | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         through: Vec2Like | None | Unset = UNSET,
         topology: StretchTopology | None | Unset = UNSET,
@@ -5999,6 +6039,7 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
             action=action,
             place=place,
             expected_revision=expected_revision,
+            join_arcs=join_arcs,
             radius=radius,
             through=_opt(through, lambda x: Vec2.of(x)),
             topology=topology,

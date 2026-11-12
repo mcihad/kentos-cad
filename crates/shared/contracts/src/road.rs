@@ -128,10 +128,15 @@ pub struct RoadSettings {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub auto_rebuild: bool,
+    /// Drawing again, by hand from the project tree or by itself, draws each drawing whole (docs/adr/4740); unless
+    /// chosen, only what changed is written (docs/adr/4320). Since `.kcad` schema 238.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub rebuild_whole: bool,
 }
 
 /// The road commands that draw (docs/adr/0911 §1): what a drawing's `command` is.
-pub const ROAD_DRAWING_COMMANDS: [&str; 13] = [
+pub const ROAD_DRAWING_COMMANDS: [&str; 14] = [
     "road.alignments.label",
     "road.profiles.draw",
     "road.sections.draw",
@@ -149,6 +154,9 @@ pub const ROAD_DRAWING_COMMANDS: [&str; 13] = [
     // A utility network's pipe run profile (docs/adr/1860), kept with its network since `.kcad` schema 212
     // (docs/adr/3560).
     "cad.pipes.profile",
+    // A sheet's contour lines (docs/adr/1820), kept with their surface and the layers they read since `.kcad` schema 246
+    // (docs/adr/4740).
+    "road.terrains.sheetcontours",
 ];
 /// The most drawings a project keeps, sources a drawing names and objects it holds.
 pub const MAX_ROAD_DRAWINGS: usize = 1000;
@@ -176,6 +184,9 @@ pub enum RoadSourceKind {
     Platform,
     /// A utility network (docs/adr/3560): its definition and the objects of its layers.
     Network,
+    /// A layer of the drawing (docs/adr/4740): the geometries of its objects in the drawing's order. A sheet's
+    /// contour lines read their details, slopes, chosen points, built-up areas and roads from layers.
+    Layer,
 }
 
 /// A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
@@ -280,8 +291,15 @@ impl RoadSettings {
     /// stale ones are drawn again by themselves (`autoRebuild`), so that a map project's drawing knows when its sources
     /// changed.
     pub fn map_drawn_only(&self) -> bool {
-        Self { surfaces: Vec::new(), platforms: Vec::new(), drawings: Vec::new(), auto_rebuild: false, ..self.clone() }
-            .is_empty()
+        Self {
+            surfaces: Vec::new(),
+            platforms: Vec::new(),
+            drawings: Vec::new(),
+            auto_rebuild: false,
+            rebuild_whole: false,
+            ..self.clone()
+        }
+        .is_empty()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -303,6 +321,7 @@ impl RoadSettings {
             && self.junctions.is_empty()
             && self.drawings.is_empty()
             && !self.auto_rebuild
+            && !self.rebuild_whole
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -2039,7 +2058,9 @@ fn drawings_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         let mut seen = std::collections::BTreeSet::new();
         for (k, s) in d.sources.iter().enumerate() {
-            if !word_ok(&s.id) || !stamp_ok(&s.digest) || !seen.insert((s.kind, s.id.as_str())) {
+            // A layer's id is the drawing's own (docs/adr/4740): it may hold spaces.
+            let id_ok = if s.kind == RoadSourceKind::Layer { !s.id.is_empty() && s.id.chars().count() <= 256 } else { word_ok(&s.id) };
+            if !id_ok || !stamp_ok(&s.digest) || !seen.insert((s.kind, s.id.as_str())) {
                 return fail(
                     format!("drawings[{i}].sources[{k}]"),
                     "kaynağın kimliği bir sözcük, özeti 16 onaltılık hane olur; aynı kaynak iki kez yazılmaz",

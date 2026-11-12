@@ -80,6 +80,11 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "events_dirty",
     // Every write that changes or removes a kitchen run's object apart from its run (docs/adr/0727 §5).
     "casework_owned",
+    // Every write that leaves a project's drawings stale while it draws them again by itself (docs/adr/0911 §3,
+    // docs/adr/4740): what was drawn again, left as changed by hand, or could not be drawn.
+    "drawings_rebuilt",
+    "drawing_edited",
+    "drawing_not_rebuilt",
 ];
 
 /// The revision's two, every writing command's.
@@ -1646,9 +1651,10 @@ const ENTRIES: &[Entry] = &[
             &["not_a_road_project"],
             LAYER,
             REVISION,
-            &["invalid_analysis", "unknown_terrain", "terrain_unbuildable", "no_cut_fill"],
+            // Docs/adr/4760: the sections' axis and a material's boundary missing.
+            &["invalid_analysis", "unknown_terrain", "entity_not_found", "terrain_unbuildable", "no_cut_fill"],
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "compare_uncovered"],
         targets: none,
     },
     Entry {
@@ -1671,7 +1677,21 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &["unknown_terrain", "terrain_unbuildable", "no_contours"],
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "section_check_exceeded"],
+        targets: none,
+    },
+    // Kesit kontrolü (plan/map-cad.md MAP-14, docs/adr/5120): read only.
+    Entry {
+        id: "road.terrains.sectioncheck",
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_height_point",
+            "invalid_input",
+            "layer_not_found",
+            "invalid_contours",
+        ]],
+        warnings: &["section_check_exceeded", "section_spacing_exceeded"],
         targets: none,
     },
     Entry {
@@ -2436,7 +2456,8 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     // A recipe's drawings drawn in another project (plan/map-cad.md MAP-20, docs/adr/3240): the drawing commands'
-    // refusals come through with the recipe's drawing named; its layers by name, given or added (docs/adr/3640).
+    // refusals come through with the recipe's drawing named; its layers by name, given or added (docs/adr/3640); a layer
+    // found here keeping fields other than the recipe's is said (docs/adr/4860).
     Entry {
         id: "road.project.produce",
         refusals: &[
@@ -2445,7 +2466,7 @@ const ENTRIES: &[Entry] = &[
             &["unknown_recipe_layer", "ambiguous_recipe_layer"],
             REVISION,
         ],
-        warnings: &["recipe_other_system", "layer_hidden", "recipe_layer_created"],
+        warnings: &["recipe_other_system", "layer_hidden", "recipe_layer_created", "recipe_layer_fields", "recipe_layer_fields_added"],
         targets: none,
     },
     Entry {
@@ -2511,7 +2532,24 @@ const ENTRIES: &[Entry] = &[
         warnings: &["cloud_source_unreadable"],
         targets: none,
     },
+    // Bulutu konumla (plan/map-cad.md MAP-13, docs/adr/5100).
+    Entry {
+        id: "cad.pointclouds.place",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "not_a_pointcloud", "layer_locked", "not_finite", "invalid_input"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+    },
     // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
+    // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720); the registration's own refusals and warnings.
+    Entry {
+        id: "cad.pointclouds.network",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.pointclouds.register",
         refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input", "layer_not_found", "too_many_cloud_points"]],
@@ -2533,11 +2571,34 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Mozaik birleşme çizgisi (plan/map-cad.md MAP-12, docs/adr/4700).
+    Entry {
+        id: "cad.orthophoto.seamlines",
+        // The radiometric seam's image files: invalid_file_path, file_not_found, import_unreadable.
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    // Birleşme çizgisi ağı ve ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
+    Entry {
+        id: "cad.orthophoto.network",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.orthophoto.footprint",
+        // The image's file: invalid_file_path, file_not_found, import_unreadable.
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
     // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
     Entry {
         id: "cad.readjustment.distribute",
         refusals: &[&["invalid_input", "area_mismatch", "duplicate_holder", "shares_not_whole", "needs_rule"]],
-        warnings: &[],
+        // docs/adr/5080: an answer by value is no rule of the regulation.
+        warnings: &["value_basis_not_a_rule"],
         targets: none,
     },
     // Düzenleme kapsamı (plan/map-cad.md MAP-11, docs/adr/2060).
@@ -2558,7 +2619,8 @@ const ENTRIES: &[Entry] = &[
             &["unknown_template", "unknown_variable", "invalid_options", "not_fixed_map", "separation_sheet_exists"],
             &["book_unreadable", "bad_asset"],
         ],
-        warnings: &[],
+        // docs/adr/5080: a number outside that touches something wherever it goes.
+        warnings: &["number_crowded"],
         targets: none,
     },
     // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
@@ -2572,6 +2634,31 @@ const ENTRIES: &[Entry] = &[
             "not_a_road_project",
             "unknown_terrain",
             "terrain_unbuildable",
+            // Docs/adr/5060: the access along a network.
+            "unknown_network",
+            "invalid_network",
+            "tools_unavailable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    // Ölçüleri çizime yaz (plan/map-cad.md MAP-10, docs/adr/5060).
+    Entry {
+        id: "cad.scenarios.record",
+        // The comparison's own, then the table's layer and corner, the revision and the write's.
+        refusals: &[&[
+            "invalid_input",
+            "scenario_not_found",
+            "nothing_to_compare",
+            "not_a_road_project",
+            "unknown_terrain",
+            "terrain_unbuildable",
+            "unknown_network",
+            "invalid_network",
+            "tools_unavailable",
+            "invalid_revision",
+            "revision_conflict",
+            "layer_locked",
         ]],
         warnings: &[],
         targets: none,
@@ -2596,6 +2683,24 @@ const ENTRIES: &[Entry] = &[
                 "entity_not_found",
                 "not_a_decision",
                 "layer_locked",
+            ],
+        ],
+        warnings: &["kept_symbol_ignored"],
+        targets: none,
+    },
+    // Plan değişikliği taslağı (plan/map-cad.md MAP-09, docs/adr/5040).
+    Entry {
+        id: "cad.zoning.draft",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "unknown_draft",
+                "layer_not_found",
+                "unknown_plan",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_decision",
             ],
         ],
         warnings: &[],
@@ -2630,6 +2735,13 @@ const ENTRIES: &[Entry] = &[
             "unknown_terrain",
             "terrain_unbuildable",
         ]],
+        warnings: &[],
+        targets: none,
+    },
+    // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
+    Entry {
+        id: "cad.asbuilt.review",
+        refusals: &[REVISION, &["invalid_input", "unknown_monitoring_review", "invalid_asbuilt_check", "layer_not_found"]],
         warnings: &[],
         targets: none,
     },
@@ -2702,6 +2814,31 @@ const ENTRIES: &[Entry] = &[
                 "parcel_identity_taken",
             ],
         ],
+        warnings: &[],
+        targets: none,
+    },
+    // Belgenin onayı (plan/map-cad.md MAP-08, docs/adr/5020).
+    Entry {
+        id: "cad.parcels.approve",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "unknown_parcel_draft",
+                "unknown_parcel_document",
+                "document_approved",
+                "parcel_closed",
+                "parcel_recorded",
+                "parcel_identity_taken",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    // Taslağı geri çek (plan/map-cad.md MAP-08, docs/adr/5020).
+    Entry {
+        id: "cad.parcels.withdraw",
+        refusals: &[REVISION, &["unknown_parcel_draft"]],
         warnings: &[],
         targets: none,
     },
@@ -2818,15 +2955,20 @@ const ENTRIES: &[Entry] = &[
                 "network_disconnected",
                 "network_blunder",
                 "network_test_failed",
+                "session_blocks_missing",
+                "session_covariance_invalid",
+                "no_velocity_grid",
             ],
         ],
         warnings: &[
             "rinex_differs",
             "gnss_lines_skipped",
             "gvx_correlations_ignored",
+            "gvx_session_incomplete",
             "baseline_text_stations",
             "network_rules_failed",
             "network_unchecked",
+            "session_correlations_unused",
         ],
         targets: none,
     },
@@ -2868,8 +3010,11 @@ const ENTRIES: &[Entry] = &[
             "invalid_covariance",
             "network_too_large",
             "network_disconnected",
+            "session_blocks_missing",
+            "session_covariance_invalid",
+            "no_velocity_grid",
         ]],
-        warnings: &["network_rules_failed", "network_unchecked"],
+        warnings: &["network_rules_failed", "network_unchecked", "session_correlations_unused"],
         targets: none,
     },
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
@@ -2901,11 +3046,22 @@ const ENTRIES: &[Entry] = &[
                 "own_content",
                 "not_derived",
                 "approval_stale",
+                "unknown_profile",
+                "invalid_profile",
+                "unknown_profile_class",
+                "approval_profile",
+                "layer_refused",
                 "layer_locked",
                 "work_full",
             ],
         ],
-        warnings: &["source_content_changed", "link_not_followed"],
+        warnings: &[
+            "source_content_changed",
+            "link_not_followed",
+            "profile_field_differs",
+            "profile_domain_differs",
+            "profile_layer_skipped",
+        ],
         targets: none,
     },
     // An approved item's objects put back as approved (plan/map-cad.md MAP-01, docs/adr/4080).
@@ -4995,6 +5151,27 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    // Kurumdaki alan adları (plan/map-cad.md MAP-17, docs/adr/5180): read-only.
+    Entry {
+        id: "cad.profiles.names",
+        refusals: &[&["unknown_profile", "invalid_profile", "unknown_mapping", "invalid_profile_mapping"]],
+        warnings: &[],
+        targets: none,
+    },
+    // Katalog geçiş raporu (plan/map-cad.md MAP-04, docs/adr/4940): read-only.
+    Entry {
+        id: "cad.profiles.compare",
+        refusals: &[&["unknown_profile", "invalid_profile"]],
+        warnings: &[],
+        targets: none,
+    },
+    // Kataloğa taşı (plan/map-cad.md MAP-04, docs/adr/5340).
+    Entry {
+        id: "cad.profiles.carry",
+        refusals: &[REVISION, &["unknown_profile", "invalid_profile", "layer_locked", "layer_refused", "nothing_to_set"]],
+        warnings: &["catalog_objects_left", "profile_field_differs", "profile_domain_differs"],
+        targets: none,
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",
@@ -6118,6 +6295,7 @@ const ENTRIES: &[Entry] = &[
                 "level_in_use",
                 "invalid_heights",
                 "invalid_epoch",
+                "invalid_refraction",
                 "heights_need_system",
             ],
             REVISION,
@@ -7160,7 +7338,7 @@ const ENTRIES: &[Entry] = &[
             "too_few_points",
             "shared_boundary_locked",
         ]],
-        warnings: &["neighbour_locked", "neighbour_invalid"],
+        warnings: &["neighbour_locked", "neighbour_invalid", "arcs_not_joined"],
         targets: || {
             vec![target(
                 None,

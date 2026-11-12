@@ -272,7 +272,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
     kutusu, düzeyin ızgarasına kesilir) tek raster olarak output'a kuzeyi yukarıda,
     tablonun sisteminde, dört bantlı (kırmızı, yeşil, mavi, alfa) 8 bitlik GeoTIFF
     yazılır; dosyada karosu olmayan yer saydamdır (alfa 0, tiles_missing). Pencerenin
-    sınırı GDAL'ın GeoPackage sürücüsünün kuralıyla pikselin tamına yuvarlanır
+    sınırı GeoPackage karo okuyucularının kuralıyla pikselin tamına yuvarlanır
     (başlangıç (min − küme başlangıcı) / piksel'in yuvarlağı, boy (en büyük − en küçük)
     / piksel + 0,5'in tamı) ve ızgaradan taşan yer kesilir. Karolar PNG olmalı ve
     matrisin karo boyunda olmalı (8 bit gri, gri+alfa, RGB, RGBA ve paletli); JPEG, WebP
@@ -319,7 +319,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
         veri kutusu, o da yoksa karo matrisi kümesinin kutusu, düzeyin ızgarasına kesilir)
         tek raster olarak output'a kuzeyi yukarıda, tablonun sisteminde, dört bantlı
         (kırmızı, yeşil, mavi, alfa) 8 bitlik GeoTIFF yazılır; dosyada karosu olmayan yer
-        saydamdır (alfa 0, tiles_missing). Pencerenin sınırı GDAL'ın GeoPackage sürücüsünün
+        saydamdır (alfa 0, tiles_missing). Pencerenin sınırı GeoPackage karo okuyucularının
         kuralıyla pikselin tamına yuvarlanır (başlangıç (min − küme başlangıcı) / piksel'in
         yuvarlağı, boy (en büyük − en küçük) / piksel + 0,5'in tamı) ve ızgaradan taşan yer
         kesilir. Karolar PNG olmalı ve matrisin karo boyunda olmalı (8 bit gri, gri+alfa,
@@ -664,8 +664,8 @@ gpkgwrite = _RastersGpkgwrite()
 
 class _RastersMosaic(LocalCommand[RastersMosaic, RastersMosaicked, RastersMosaicked]):
     """``cad.rasters.mosaic`` v1. Sanal mozaik: Birçok GeoTIFF dosyasını tek raster gibi
-    gösterilen ve çözümlenen sanal mozaik yapar: path'e GDAL'ın VRT dosyası yazılır
-    (piksel kopyalanmaz; GDAL ve QGIS de açar). sources kuzeyi yukarıda, GeoTIFF
+    gösterilen ve çözümlenen sanal mozaik yapar: path'e VRT dosyası yazılır (piksel
+    kopyalanmaz; CBS yazılımları da açar). sources kuzeyi yukarıda, GeoTIFF
     etiketleriyle yerinde, aynı koordinat sisteminde, bant sayısında ve veri türünde
     dosyalardır (mutlak ya da drawing'in klasöründen göreli). Örtüşen yerde üstteki:
     order given (sources'un sırası, ilki üstte), finest (küçük piksel üstte) ya da
@@ -708,14 +708,14 @@ class _RastersMosaic(LocalCommand[RastersMosaic, RastersMosaicked, RastersMosaic
         expected: Expected | None = None,
     ) -> RastersMosaicked:
         """Sanal mozaik: Birçok GeoTIFF dosyasını tek raster gibi gösterilen ve çözümlenen
-        sanal mozaik yapar: path'e GDAL'ın VRT dosyası yazılır (piksel kopyalanmaz; GDAL ve
-        QGIS de açar). sources kuzeyi yukarıda, GeoTIFF etiketleriyle yerinde, aynı
-        koordinat sisteminde, bant sayısında ve veri türünde dosyalardır (mutlak ya da
-        drawing'in klasöründen göreli). Örtüşen yerde üstteki: order given (sources'un
-        sırası, ilki üstte), finest (küçük piksel üstte) ya da newest (TIFF DateTime'ı yeni
-        olan üstte; tarihsizler en altta, mosaic_undated). Bir dosyanın nodata'sı alttakini
-        gösterir; hiçbir dosyanın örtmediği yer mozaiğin nodata'sıdır (nodata, yoksa sırayla
-        ilk nodata'lı dosyanınki). Mozaiğin pikseli resolution highest (en ince), lowest (en
+        sanal mozaik yapar: path'e VRT dosyası yazılır (piksel kopyalanmaz; CBS yazılımları
+        da açar). sources kuzeyi yukarıda, GeoTIFF etiketleriyle yerinde, aynı koordinat
+        sisteminde, bant sayısında ve veri türünde dosyalardır (mutlak ya da drawing'in
+        klasöründen göreli). Örtüşen yerde üstteki: order given (sources'un sırası, ilki
+        üstte), finest (küçük piksel üstte) ya da newest (TIFF DateTime'ı yeni olan üstte;
+        tarihsizler en altta, mosaic_undated). Bir dosyanın nodata'sı alttakini gösterir;
+        hiçbir dosyanın örtmediği yer mozaiğin nodata'sıdır (nodata, yoksa sırayla ilk
+        nodata'lı dosyanınki). Mozaiğin pikseli resolution highest (en ince), lowest (en
         kaba) ya da average (ortalama), ya da pixelSize; kapsamı dosyaların birleşimi
         (gdalbuildvrt'nin kuralı). Pikseli başka olan dosya en yakın pikselden okunur
         (mosaic_resampled). Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir,

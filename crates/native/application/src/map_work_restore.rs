@@ -1,7 +1,6 @@
 //! `map.work.restore` v1 (plan/map-cad.md MAP-01, docs/adr/4080): Onaylı hâline getir. An approved item's objects put
 //! back as its approval kept them (their values, docs/adr/3680), in one undo step: an approved object no longer in the
-//! drawing made again with its persistent id (as ArcGIS's restoreRows brings rows back from a common ancestor by their
-//! object ids), one changed or moved off the item's layers set back to its value. Objects added since the approval
+//! drawing made again with its persistent id (rows brought back from the common ancestor by their ids), one changed or moved off the item's layers set back to its value. Objects added since the approval
 //! stay. All or none: every object put back lands on a layer that takes it (there, a layer, unlocked, of its kind), and
 //! a changed one is not on a locked layer now. The shared cases are `fixtures/commands/v1/map.work.restore.json`.
 

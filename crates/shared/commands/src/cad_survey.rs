@@ -249,6 +249,52 @@ pub struct SurveyPointsWritten {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<f64>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub refractions: Vec<Option<f64>>,
+    /// The legs' measured refraction coefficients together (docs/adr/4900), when at least one pair gives one: the
+    /// value a project may take (`cad.settings.set`'s `refraction`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refraction: Option<MeasuredRefraction>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// The pairs' refraction coefficients together (docs/adr/4900): their mean k̄ = Σkᵢ/n, how many pairs, and with two or
+/// more their standard deviation s = √(Σ(kᵢ − k̄)²/(n − 1)) and the mean's s/√n. Each pair weighs the same (no source
+/// weighs them otherwise).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MeasuredRefraction {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub mean: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub pairs: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub sd: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub sigma: Option<f64>,
+}
+
+impl MeasuredRefraction {
+    /// The pairs' coefficients together; none without one.
+    pub fn of(ks: &[f64]) -> Option<Self> {
+        if ks.is_empty() {
+            return None;
+        }
+        let n = ks.len() as f64;
+        let mean = ks.iter().sum::<f64>() / n;
+        let sd = (ks.len() > 1).then(|| (ks.iter().map(|k| (k - mean) * (k - mean)).sum::<f64>() / (n - 1.0)).sqrt());
+        Some(MeasuredRefraction {
+            mean,
+            pairs: u32::try_from(ks.len()).unwrap_or(u32::MAX),
+            sd,
+            sigma: sd.map(|s| s / n.sqrt()),
+        })
+    }
 }

@@ -26,8 +26,9 @@ const DECODED_BUDGET: usize = 512 * 1024 * 1024;
 const COLOURED_BUDGET: usize = 256 * 1024 * 1024;
 
 /// A file of a cloud as the service opens it: where it is read from, its
-/// format, its name, and an embedded one's bytes.
-pub type MemberFile = (Origin, CloudFormat, String, Option<Arc<Vec<u8>>>);
+/// format, its name, an embedded one's bytes, and its place in the drawing
+/// (docs/adr/5100: 16 numbers row by row; none: where the file says).
+pub type MemberFile = (Origin, CloudFormat, String, Option<Arc<Vec<u8>>>, Option<[f64; 16]>);
 
 /// What a file of a cloud is doing.
 #[derive(Clone, Debug)]
@@ -60,6 +61,8 @@ pub struct Member {
     pub name: String,
     /// Its bytes when embedded (the library's).
     pub embedded: Option<Arc<Vec<u8>>>,
+    /// Its place in the drawing (docs/adr/5100): its nodes are decoded there.
+    pub pose: Option<[f64; 16]>,
     pub state: Mutex<State>,
 }
 
@@ -274,13 +277,14 @@ impl Service {
         }
         let members: Vec<Arc<Member>> = files()
             .into_iter()
-            .map(|(origin, format, name, embedded)| {
+            .map(|(origin, format, name, embedded, pose)| {
                 Arc::new(Member {
                     id: self.shared.next_id.fetch_add(1, Ordering::Relaxed),
                     origin,
                     format,
                     name,
                     embedded,
+                    pose,
                     state: Mutex::new(State::Waiting),
                 })
             })
@@ -383,6 +387,7 @@ impl Service {
                     _ => None,
                 })
                 .collect(),
+            poses: entry.members.iter().map(|m| m.pose).collect(),
             z: entry.z,
         });
         *t = Some((rev, trees.clone()));
@@ -601,20 +606,37 @@ fn decoded(
         .view_records(&run, &bytes, &mut records, needs)
         .map_err(|e| e.0)?;
     let center = o.tree.node_center(*k);
-    let points = Arc::new(nodes::decode(
+    let mut made = nodes::decode(
         &o.cloud.layout,
         &records,
         o.cloud.head.scale,
         o.cloud.head.offset,
         center,
         needs,
-    ));
+    );
+    // docs/adr/5100: a file placed in the drawing has its node's points there (a look by height colours them there).
+    if let Some(pose) = &m.pose {
+        placed(&mut made, pose);
+    }
+    let points = Arc::new(made);
     shared
         .decoded
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
         .put(nk, points.clone(), points.bytes(), DECODED_BUDGET);
     Ok(points)
+}
+
+/// A node's points taken through its file's place (docs/adr/5100): its centre moved, each point's offset from it
+/// turned (a rigid map keeps the offsets as short as they were, so f32 holds them as well).
+fn placed(p: &mut nodes::NodePoints, m: &[f64; 16]) {
+    p.center = kentos_commands::pose_apply(m, p.center);
+    for q in p.xyz.chunks_exact_mut(3) {
+        let (x, y, z) = (f64::from(q[0]), f64::from(q[1]), f64::from(q[2]));
+        q[0] = (m[0] * x + m[1] * y + m[2] * z) as f32;
+        q[1] = (m[4] * x + m[5] * y + m[6] * z) as f32;
+        q[2] = (m[8] * x + m[9] * y + m[10] * z) as f32;
+    }
 }
 
 /// The colour a CSS hex colour names (`#rrggbb`); grey otherwise.

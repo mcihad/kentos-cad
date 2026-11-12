@@ -120,7 +120,7 @@ SCHEMA_WITH_SURVEY_SIGMAS = 28
 SCHEMA_WITH_RASTERS = 29
 # Schema 30: schema 29 and the project's annotation heights, the settings' `annotation`; a dimension's and a dimension
 # style's lines (`dimLineColor`, `dimLineWeight`, `dimLineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
-# leader's AutoCAD arrowheads and `arrowSize` (docs/adr/0205).
+# leader's DXF arrowheads and `arrowSize` (docs/adr/0205).
 SCHEMA_WITH_ANNOTATION = 30
 # Schema 31: schema 30 and the `pointcloud` kind, only in the drawing, and a raster's `url` (docs/adr/0207 §1, §3).
 SCHEMA_WITH_POINT_CLOUDS = 31
@@ -667,6 +667,27 @@ SCHEMA_WITH_COLUMN_SIDE_BONDS = 244
 # Docs/adr/8050: a room module's columns, stairs, ramps, slabs and room separators, and its kitchen runs (`runs` of a
 # module, its recipes; of an instance, its runs' ids).
 SCHEMA_WITH_MODULE_SCOPE = 245
+# Harita's schemas, written as 238–245 on map-cad-bitir beside Mimari's own on main, follow Mimari's from 246 (the
+# merge of 12 November 2026).
+# Docs/adr/4740: a sheet's contour lines kept as a drawing (`road.terrains.sheetcontours`), a layer as a drawing's source
+# (`layer`), and drawing again whole (`road.rebuildWhole`).
+SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS = 246
+# Docs/adr/4880: a map work item's typed layers' profile (`profile`: a data profile's name and its classes).
+SCHEMA_WITH_WORK_PROFILES = 247
+# Docs/adr/4920: a GNSS archive's baseline sessions with their cross-correlations (`baselineSessions`), an adjustment's
+# sessions, the known points' place limits kept with their source (`tolerance`) and a network point's velocity.
+SCHEMA_WITH_GNSS_SESSIONS = 248
+# Docs/adr/5020: the parcel register's stated lengths (`lengths`), drafts (`drafts`) and a document's approval
+# (`approval`).
+SCHEMA_WITH_PARCEL_DRAFTS = 249
+# Docs/adr/5040: a zoning plan's kept symbol choices and plan change drafts (`settings.zoningPlan`).
+SCHEMA_WITH_ZONING_DRAFTS = 250
+# Docs/adr/5100: a point cloud file's place in the drawing, kept without writing the file (`pose`).
+SCHEMA_WITH_CLOUD_POSES = 251
+# Docs/adr/5200: the adjustments the project keeps (`surveyAdjustments`).
+SCHEMA_WITH_KEPT_ADJUSTMENTS = 252
+# Docs/adr/5220: the reviews the project keeps of its monitoring jobs (`monitoringReviews`).
+SCHEMA_WITH_MONITORING_REVIEWS = 253
 # The plan cut height's range in metres (docs/adr/8012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
@@ -823,7 +844,7 @@ ARCH_STATUSES = ("proposed", "approved", "underConstruction", "built")
 ARCH_DISCIPLINES = ("architecture", "structure", "mechanical", "electrical", "plumbing", "landscape", "interior")
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
-# A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
+# A pattern has at most 12 elements (a LIN file's limit, kentos_contracts::MAX_PATTERN_ELEMENTS).
 MOST_PATTERN_ELEMENTS = 12
 # From schema 181 (docs/adr/1001 §1) a drawing keeps up to 256 (a DXF/DWG LTYPE's).
 MOST_STORED_PATTERN_ELEMENTS = 256
@@ -979,7 +1000,7 @@ MAX_DIMENSION_DECIMALS = 8
 MAX_AFFIX = 32
 MAX_STYLE_NAME = 64
 MAX_STYLE_MM = 1000.0
-# A multi-line text's line spacing's bounds (AutoCAD's own).
+# A multi-line text's line spacing's bounds (docs/adr/0205).
 MIN_LINE_SPACING = 0.25
 MAX_LINE_SPACING = 4.0
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
@@ -988,8 +1009,8 @@ LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "p
 # A dimension's kinds; schema 9 added the last five.
 DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope",
                     "centerMark", "centerLine", "elevation")
-# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added AutoCAD's others
-# (docs/adr/0205 §7).
+# A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added the common
+# others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
 LEADER_ARROWS_30 = LEADER_ARROWS + ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
 # A table's bounds (kentos_contracts::table): rows, columns, cells, a cell's letters, a size (m), a source's objects.
@@ -1043,7 +1064,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES, SCHEMA_WITH_ROOFS, SCHEMA_WITH_ROOF_PARTS, SCHEMA_WITH_ROOF_EDGES, SCHEMA_WITH_ROOF_DOWNPIPES, SCHEMA_WITH_STAIR_WINDERS, SCHEMA_WITH_RAILING_OBJECTS, SCHEMA_WITH_GRID_BONDS, SCHEMA_WITH_COLUMN_SIDE_BONDS, SCHEMA_WITH_MODULE_SCOPE)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES, SCHEMA_WITH_ROOFS, SCHEMA_WITH_ROOF_PARTS, SCHEMA_WITH_ROOF_EDGES, SCHEMA_WITH_ROOF_DOWNPIPES, SCHEMA_WITH_STAIR_WINDERS, SCHEMA_WITH_RAILING_OBJECTS, SCHEMA_WITH_GRID_BONDS, SCHEMA_WITH_COLUMN_SIDE_BONDS, SCHEMA_WITH_MODULE_SCOPE, SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS, SCHEMA_WITH_WORK_PROFILES, SCHEMA_WITH_GNSS_SESSIONS, SCHEMA_WITH_PARCEL_DRAFTS, SCHEMA_WITH_ZONING_DRAFTS, SCHEMA_WITH_CLOUD_POSES, SCHEMA_WITH_KEPT_ADJUSTMENTS, SCHEMA_WITH_MONITORING_REVIEWS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3608,6 +3629,7 @@ class _Schema:
         self.map_drawings = version >= SCHEMA_WITH_MAP_DRAWINGS
         self.cutfill_drawings = version >= SCHEMA_WITH_CUTFILL_DRAWINGS
         self.pipe_profile_drawings = version >= SCHEMA_WITH_PIPE_PROFILE_DRAWINGS
+        self.sheet_contour_drawings = version >= SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS
         self.work_stamps = version >= SCHEMA_WITH_WORK_STAMPS
         self.known_velocities = version >= SCHEMA_WITH_KNOWN_VELOCITIES
         self.gnss_network = version >= SCHEMA_WITH_GNSS_NETWORK
@@ -3750,9 +3772,16 @@ class _Schema:
         self.approved_objects = version >= SCHEMA_WITH_APPROVED_OBJECTS
         self.approved_parts = version >= SCHEMA_WITH_APPROVED_PARTS
         self.approved_values = version >= SCHEMA_WITH_APPROVED_VALUES
+        self.work_profiles = version >= SCHEMA_WITH_WORK_PROFILES
+        self.gnss_sessions = version >= SCHEMA_WITH_GNSS_SESSIONS
+        self.parcel_drafts = version >= SCHEMA_WITH_PARCEL_DRAFTS
         self.surface_pastes = version >= SCHEMA_WITH_SURFACE_PASTES
         self.review_decisions = version >= SCHEMA_WITH_REVIEW_DECISIONS
         self.parcel_register = version >= SCHEMA_WITH_PARCEL_REGISTER
+        self.zoning_drafts = version >= SCHEMA_WITH_ZONING_DRAFTS
+        self.cloud_poses = version >= SCHEMA_WITH_CLOUD_POSES
+        self.kept_adjustments = version >= SCHEMA_WITH_KEPT_ADJUSTMENTS
+        self.monitoring_reviews = version >= SCHEMA_WITH_MONITORING_REVIEWS
         self.building_parts = version >= SCHEMA_WITH_BUILDING_PARTS
         self.opening_types = version >= SCHEMA_WITH_OPENING_TYPES
         self.building_program = version >= SCHEMA_WITH_BUILDING_PROGRAM
@@ -4677,6 +4706,9 @@ class _Schema:
                 **({"mapWork": (self.map_work_, False)} if self.map_work else {}),
                 **({"mapSurvey": (self.map_survey_, False)} if self.map_survey else {}),
                 **({"parcelRegister": (self.parcel_register_, False)} if self.parcel_register else {}),
+                **({"zoningPlan": (self.zoning_plan_, False)} if self.zoning_drafts else {}),
+                **({"surveyAdjustments": (self.kept_adjustments_, False)} if self.kept_adjustments else {}),
+                **({"monitoringReviews": (self.monitoring_reviews_, False)} if self.monitoring_reviews else {}),
             }
         )(v)
         # A map's work structure is a map project's (docs/adr/1200 §2).
@@ -4692,7 +4724,7 @@ class _Schema:
         if "road" in s and s.get("cadWork") != "road":
             on_map = s.get("cadWork") == "map" and self.map_surfaces
             # Since schema 197 its graded pads, since 198 what its commands drew from them (docs/adr/1580, 1720).
-            allowed = ({"surfaces", "platforms", "drawings", "autoRebuild"} if self.map_drawings
+            allowed = ({"surfaces", "platforms", "drawings", "autoRebuild", "rebuildWhole"} if self.map_drawings
                        else {"surfaces", "platforms"} if self.map_platforms else {"surfaces"})
             if not (on_map and set(s["road"]) <= allowed):
                 self.path.append("road")
@@ -6527,6 +6559,185 @@ class _Schema:
                 self.fail("bad_value", "profiller ve eşlemeler adlarının sırasıyla yazılır (aynı adda önce profil)")
         return lst
 
+    def monitoring_reviews_(self, v):
+        """Schema 253 (docs/adr/5220): the reviews the project keeps of its monitoring jobs, never empty, at most 1000:
+        each a name (a short label of at most 120 characters, unique); the job (its layers, the names' attribute and the
+        control marks short labels, its days Gregorian days YYYY-MM-DD, at most 1000 earlier epochs, the limits finite
+        and not below nought, the confidence between 0 and 1, the thresholds' limits above nought with a source of at
+        most 500 characters); the digest (64 lowercase hex); the marks (at most 100 000, names unique short labels, the
+        movement and the speed finite and not below nought, the height movement finite, the limits beyond only with a
+        state and of the four kinds); the reviewer (role, title and name short labels, a day, phrase, signature, a note
+        of at most 500 characters)."""
+        def label_ok(t):
+            return t != "" and t.strip() == t and len(t) <= 120 and not any(unicodedata.category(c) == "Cc" for c in t)
+
+        def text_ok(t):
+            return (t != "" and t.strip() == t and len(t) <= 500
+                    and not any(unicodedata.category(c) == "Cc" and c != "\n" for c in t))
+
+        def day_ok(t):
+            if len(t) != 10 or t[4] != "-" or t[7] != "-" or not (t[:4] + t[5:7] + t[8:]).isdigit() or not t.isascii():
+                return False
+            y, m, d = int(t[:4]), int(t[5:7]), int(t[8:])
+            leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0
+            days = {1: 31, 2: 29 if leap else 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+            return m in days and 1 <= d <= days[m]
+
+        limits = ("horizontal", "vertical", "horizontalRate", "verticalRate")
+        level = self.fields({k: (self.float, False) for k in limits})
+        thresholds = self.fields({"warning": (level, True), "alarm": (level, True), "source": (self.text, True)})
+        epoch = self.fields({"layer": (self.text, True), "date": (self.text, False)})
+        job = self.fields({"measured": (self.text, True), "design": (self.text, True), "epochs": (self.array(epoch), False),
+                           "date": (self.text, False), "field": (self.text, False),
+                           "control": (self.array(self.text), False), "horizontal": (self.float, False),
+                           "vertical": (self.float, False), "confidence": (self.float, False),
+                           "thresholds": (thresholds, False)})
+        states = ("normal", "warning", "alarm")
+        mark = self.fields({"name": (self.text, True), "horizontal": (self.float, True), "vertical": (self.float, False),
+                            "speed": (self.float, False), "state": (self.enum(states), False),
+                            "exceeded": (self.array(self.text), False)})
+        reviewer = self.fields({"role": (self.enum(("responsible", "control", "staff", "approver")), True),
+                                "title": (self.text, True), "name": (self.text, True), "date": (self.text, True),
+                                "phrase": (self.enum(("checked", "seen")), True),
+                                "signature": (self.enum(("wet", "electronic")), True), "note": (self.text, False)})
+        review = self.fields({"name": (self.text, True), "job": (job, True), "digest": (self.text, True),
+                              "marks": (self.array(mark), True), "reviewer": (reviewer, True)})
+        out = self.array(review)(v)
+        if not out:
+            self.fail("bad_value", "boş izleme incelemeleri yazılmaz")
+        if len(out) > 1000:
+            self.fail("bad_value", "en çok 1000 izleme incelemesi olur")
+        names = set()
+        for r in out:
+            if not label_ok(r["name"]) or r["name"] in names:
+                self.fail("bad_value", f"“{r['name']}” izleme incelemesinin adı geçersiz ya da iki kez")
+            names.add(r["name"])
+            j = r["job"]
+            not_below = all(math.isfinite(j[k]) and j[k] >= 0 for k in ("horizontal", "vertical") if k in j)
+            levels_ok = "thresholds" not in j or (
+                all(math.isfinite(lv[k]) and lv[k] > 0 for lv in (j["thresholds"]["warning"], j["thresholds"]["alarm"])
+                    for k in limits if k in lv) and text_ok(j["thresholds"]["source"]))
+            if (not label_ok(j["measured"]) or not label_ok(j["design"]) or len(j.get("epochs", [])) > 1000
+                    or not all(label_ok(e["layer"]) and ("date" not in e or day_ok(e["date"])) for e in j.get("epochs", []))
+                    or ("date" in j and not day_ok(j["date"])) or ("field" in j and not label_ok(j["field"]))
+                    or not all(label_ok(c) for c in j.get("control", [])) or not not_below
+                    or ("confidence" in j and not (math.isfinite(j["confidence"]) and 0 < j["confidence"] < 1))
+                    or not levels_ok):
+                self.fail("bad_value", f"“{r['name']}” izleme incelemesinin işi geçersiz")
+            if len(r["digest"]) != 64 or any(c not in "0123456789abcdef" for c in r["digest"]):
+                self.fail("bad_value", "izleme incelemesinin özeti 64 küçük onaltılık hane olmalı")
+            if len(r["marks"]) > 100_000:
+                self.fail("bad_value", "izleme incelemesi en çok 100 000 nokta tutar")
+            seen = set()
+            for m in r["marks"]:
+                fine = lambda x: math.isfinite(x) and x >= 0  # noqa: E731
+                if (not label_ok(m["name"]) or m["name"] in seen or not fine(m["horizontal"])
+                        or ("vertical" in m and not math.isfinite(m["vertical"])) or ("speed" in m and not fine(m["speed"]))
+                        or ("state" not in m and m.get("exceeded")) or any(k not in limits for k in m.get("exceeded", []))):
+                    self.fail("bad_value", f"izleme incelemesinin “{m['name']}” noktası geçersiz")
+                seen.add(m["name"])
+            w = r["reviewer"]
+            if (not label_ok(w["title"]) or not label_ok(w["name"]) or not day_ok(w["date"])
+                    or ("note" in w and not text_ok(w["note"]))):
+                self.fail("bad_value", "izleme incelemesinin inceleyeni geçersiz")
+        return out
+
+    def kept_adjustments_(self, v):
+        """Schema 252 (docs/adr/5200): the adjustments the project keeps, never empty: each a name (a short label of at most
+        120 characters, unique), a kind (horizontal, height), the revision it was made on (a whole number's text), its
+        points (at most 100 000; a name unique in it; a horizontal one's place and no height, a height one's height and no
+        place; σ finite and not below nought), f, and m0 (finite, not below nought) and the test only with f above
+        nought."""
+        def label_ok(t):
+            return t != "" and t.strip() == t and len(t) <= 120 and not any(unicodedata.category(c) == "Cc" for c in t)
+
+        place = self.fields({"x": (self.float, True), "y": (self.float, True)})
+        point = self.fields({"name": (self.text, True), "at": (place, False), "h": (self.float, False),
+                             "sigma": (self.float, True)})
+        record = self.fields({"name": (self.text, True), "kind": (self.enum(("horizontal", "height")), True),
+                              "revision": (self.text, True), "points": (self.array(point), True),
+                              "f": (self.uint(32), True), "m0": (self.float, False), "passed": (self.bool, False)})
+        out = self.array(record)(v)
+        if not out:
+            self.fail("bad_value", "boş dengeleme kayıtları yazılmaz")
+        if len(out) > 1000:
+            self.fail("bad_value", "en çok 1000 dengeleme kaydı olur")
+        names = set()
+        for r in out:
+            if not label_ok(r["name"]) or r["name"] in names:
+                self.fail("bad_value", f"“{r['name']}” dengeleme kaydının adı geçersiz ya da iki kez")
+            names.add(r["name"])
+            if not r["revision"].isdigit() or not r["revision"].isascii():
+                self.fail("bad_value", "dengeleme kaydının sürümü tamsayı yazısı olmalı")
+            if len(r["points"]) > 100_000:
+                self.fail("bad_value", "dengeleme kaydı en çok 100 000 nokta tutar")
+            seen = set()
+            for p in r["points"]:
+                horizontal = r["kind"] == "horizontal"
+                placed = ("at" in p and "h" not in p) if horizontal else ("h" in p and "at" not in p)
+                if (not label_ok(p["name"]) or p["name"] in seen or not placed or not math.isfinite(p["sigma"])
+                        or p["sigma"] < 0 or (horizontal and not all(math.isfinite(c) for c in p["at"].values()))
+                        or (not horizontal and not math.isfinite(p["h"]))):
+                    self.fail("bad_value", f"dengeleme kaydının “{p['name']}” noktası geçersiz")
+                seen.add(p["name"])
+            if ("m0" in r and not (math.isfinite(r["m0"]) and r["m0"] >= 0)) or (
+                    r["f"] == 0 and ("m0" in r or "passed" in r)):
+                self.fail("bad_value", "dengeleme kaydının m0'ı ya da testi geçersiz")
+        return out
+
+    def zoning_plan_(self, v):
+        """Schema 250 (docs/adr/5040): a zoning plan's data, never empty: symbol choices (level, use and symbol, each a
+        short label of at most 200 characters; a level and use once; at most 1000) and plan change drafts (at most 100;
+        an id of at most 64 characters, once; a plan id (200); the revision a run of digits; a reason of at most 4000
+        characters; 1–10000 changes, each a decision area's lowercase UUID, one of the nine fields a draft changes,
+        a value before (empty or a short label) and after (a short label) that differ, an area's field once)."""
+        def label_ok(t, most):
+            return t != "" and t.strip() == t and len(t) <= most and not any(unicodedata.category(c) == "Cc" for c in t)
+
+        fields_ = ("Kullanim", "Nizam", "TAKS", "KAKS", "KatAdedi", "Hmax", "OnCekme", "YanCekme", "ArkaCekme")
+        pick = self.fields({"level": (self.text, True), "use": (self.text, True), "symbol": (self.text, True)})
+        change = self.fields({"area": (self.text, True), "field": (self.text, True), "before": (self.text, False),
+                              "after": (self.text, True)})
+        draft = self.fields({"id": (self.text, True), "plan": (self.text, True), "revision": (self.text, True),
+                             "reason": (self.text, True), "changes": (self.array(change), True)})
+        data = self.fields({"symbols": (self.array(pick), False), "drafts": (self.array(draft), False)})(v)
+        symbols, drafts = data.get("symbols", []), data.get("drafts", [])
+        if not (symbols or drafts):
+            self.fail("bad_value", "boş imar planı verisi yazılmaz")
+        if len(symbols) > 1000 or len(drafts) > 100:
+            self.fail("bad_value", "imar planı verisi sınırlarını aşıyor")
+        seen = set()
+        for s in symbols:
+            if not all(label_ok(s[k], 200) for k in ("level", "use", "symbol")):
+                self.fail("bad_value", "sembol seçiminin kademesi, kullanımı ya da sembolü geçersiz")
+            if (s["level"], s["use"]) in seen:
+                self.fail("bad_value", "aynı kademe ve kullanımın sembolü iki kez yazılmış")
+            seen.add((s["level"], s["use"]))
+        ids = set()
+        for d in drafts:
+            if not label_ok(d["id"], 64) or d["id"] in ids:
+                self.fail("bad_value", "taslağın kimliği geçersiz ya da yinelenmiş")
+            ids.add(d["id"])
+            if not label_ok(d["plan"], 200) or re.fullmatch(r"[0-9]+", d["revision"]) is None:
+                self.fail("bad_value", "taslağın planı ya da sürümü geçersiz")
+            if not (d["reason"] != "" and d["reason"].strip() == d["reason"] and len(d["reason"]) <= 4000):
+                self.fail("bad_value", "taslağın gerekçesi boş ya da geçersiz")
+            if not 1 <= len(d["changes"]) <= 10_000:
+                self.fail("bad_value", "taslakta 1–10000 değişiklik olur")
+            pairs = set()
+            for c in d["changes"]:
+                before = c.get("before", "")
+                if re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", c["area"]) is None:
+                    self.fail("bad_value", "değişikliğin karar alanı bir UUID değil")
+                if c["field"] not in fields_:
+                    self.fail("bad_value", f"taslak “{c['field']}” alanını değiştirmez")
+                if (c["area"], c["field"]) in pairs:
+                    self.fail("bad_value", "aynı karar alanının aynı alanı iki kez değişiyor")
+                pairs.add((c["area"], c["field"]))
+                if not ((before == "" or label_ok(before, 200)) and label_ok(c["after"], 200)) or before == c["after"]:
+                    self.fail("bad_value", "değişikliğin değerleri geçersiz ya da aynı")
+        return v
+
     def parcel_register_(self, v):
         """Schema 216 (docs/adr/4220): the parcel register, never empty: documents (number 1 or more, unique; a name,
         unique, a short label of at most 120 characters; kind (120) and date (64) short labels; a note of at most 4000
@@ -6561,8 +6772,12 @@ class _Schema:
             return x
 
         place = self.fields({"x": (self.float, True), "y": (self.float, True)})
+        # Schema 249 (docs/adr/5020): a document's approval, the stated lengths, the drafts.
+        drafts_ok = self.parcel_drafts
+        approval = self.fields({"reference": (self.text, True), "date": (self.text, False), "by": (self.text, False)})
         document = self.fields({"number": (self.uint(32), True), "name": (self.text, True), "kind": (self.text, False),
-                                "date": (self.text, False), "note": (self.text, False)})
+                                "date": (self.text, False), "note": (self.text, False),
+                                **({"approval": (approval, False)} if drafts_ok else {})})
         boundary = self.fields({"number": (self.uint(32), True), "from": (place, True), "to": (place, True),
                                 "bulge": (self.float, False), "createdBy": (self.uint(32), True),
                                 "closedBy": (self.uint(32), False)})
@@ -6573,10 +6788,25 @@ class _Schema:
                               "createdBy": (self.uint(32), True), "closedBy": (self.uint(32), False),
                               "statedArea": (self.text, False), "uid": (self.text, False),
                               "rings": (self.array(ring), True)})
+        stated = self.fields({"boundary": (self.uint(32), True), "document": (self.uint(32), True),
+                              "length": (self.text, True)})
+        edge_length = self.fields({"ring": (self.uint(32), False), "edge": (self.uint(32), True),
+                                   "length": (self.text, True)})
+        draft_ring = self.fields({"part": (self.uint(32), False), "hole": (self.bool, False),
+                                  "pts": (self.array(place), True), "bulges": (self.array(self.float), False)})
+        draft_parcel = self.fields({"uid": (self.text, True), "il": (self.text, False), "ilce": (self.text, False),
+                                    "mahalle": (self.text, False), "ada": (self.text, True), "parsel": (self.text, True),
+                                    "statedArea": (self.text, False), "rings": (self.array(draft_ring), True),
+                                    "lengths": (self.array(edge_length), False)})
+        draft = self.fields({"number": (self.uint(32), True), "name": (self.text, True), "kind": (self.text, False),
+                             "date": (self.text, False), "note": (self.text, False),
+                             "create": (self.array(draft_parcel), False), "close": (self.array(self.uint(32)), False)})
         reg = self.fields({"documents": (self.array(document), True), "boundaries": (self.array(boundary), True),
-                           "parcels": (self.array(parcel), True)})(v)
+                           "parcels": (self.array(parcel), True),
+                           **({"lengths": (self.array(stated), False), "drafts": (self.array(draft), False)}
+                              if drafts_ok else {})})(v)
         docs, bounds, parcels = reg["documents"], reg["boundaries"], reg["parcels"]
-        if not (docs or bounds or parcels):
+        if not (docs or bounds or parcels or reg.get("drafts")):
             self.fail("bad_value", "boş parsel kayıtları yazılmaz")
         if len(docs) > 10_000 or len(parcels) > 100_000 or len(bounds) > 1_000_000:
             self.fail("bad_value", "parsel kayıtları sınırlarını aşıyor")
@@ -6591,6 +6821,10 @@ class _Schema:
             if d["name"] in names:
                 self.fail("bad_value", f"“{d['name']}” adlı parsel belgesi iki kez yazılmış")
             names.add(d["name"])
+            a = d.get("approval")
+            if a is not None and not (label_ok(a["reference"], 64) and maybe(a.get("date", ""), 64)
+                                      and maybe(a.get("by", ""), 120)):
+                self.fail("bad_value", f"{d['number']}. parsel belgesinin onayı geçersiz")
 
         def lived(x):
             made, closed = x["createdBy"], x.get("closedBy")
@@ -6660,6 +6894,78 @@ class _Schema:
         for b in bounds:
             if b["number"] not in used or ("closedBy" not in b and b["number"] not in used_now):
                 self.fail("bad_value", f"{b['number']}. sınırı hiçbir parsel kullanmıyor")
+        # Schema 249 (docs/adr/5020): each stated length a boundary's, of a document not before it, a plain decimal above
+        # 0, once per boundary and document; drafts numbered apart, named apart from the documents and each other, each
+        # making or closing something, closing recorded parcels once, its parcels' areas once, identities, rings of three
+        # vertices or more (finite, no two in one place, a bulge per edge or none, parts in order) and lengths on their
+        # edges once.
+        def length_ok(t):
+            return decimal_ok(t) and any(c in "123456789" for c in t)
+
+        lengths = reg.get("lengths", [])
+        if len(lengths) > 1_000_000:
+            self.fail("bad_value", "parsel kayıtları sınırlarını aşıyor")
+        pairs = set()
+        for x in lengths:
+            b = by.get(x["boundary"])
+            if b is None or x["document"] not in numbers or x["document"] < b["createdBy"]:
+                self.fail("bad_value", f"{x['boundary']}. sınırın ölçüsü geçersiz")
+            if not length_ok(x["length"]) or (x["boundary"], x["document"]) in pairs:
+                self.fail("bad_value", f"{x['boundary']}. sınırın ölçüsü geçersiz")
+            pairs.add((x["boundary"], x["document"]))
+        drafts = reg.get("drafts", [])
+        if len(docs) + len(drafts) > 10_000:
+            self.fail("bad_value", "parsel kayıtları sınırlarını aşıyor")
+        draft_numbers = set()
+        for d in drafts:
+            if d["number"] == 0 or d["number"] in draft_numbers:
+                self.fail("bad_value", f"{d['number']}. belge taslağının numarası sıfır ya da yinelenmiş")
+            draft_numbers.add(d["number"])
+            if not (label_ok(d["name"], 120) and maybe(d.get("kind", ""), 120) and maybe(d.get("date", ""), 64)
+                    and (d.get("note", "") == "" or text_ok(d["note"]))) or d["name"] in names:
+                self.fail("bad_value", f"{d['number']}. belge taslağının alanları geçersiz")
+            names.add(d["name"])
+            create, close = d.get("create", []), d.get("close", [])
+            if not create and not close:
+                self.fail("bad_value", f"{d['number']}. belge taslağı boş")
+            if len(set(close)) != len(close) or any(c not in seen for c in close):
+                self.fail("bad_value", f"{d['number']}. belge taslağının kapatacakları geçersiz")
+            uids = set()
+            for q in create:
+                if not uuid_ok(q["uid"]) or q["uid"] in uids:
+                    self.fail("bad_value", f"{d['number']}. belge taslağının alanı geçersiz")
+                uids.add(q["uid"])
+                if not (label_ok(q["ada"], 120) and label_ok(q["parsel"], 120)
+                        and all(maybe(q.get(k, ""), 120) for k in ("il", "ilce", "mahalle"))):
+                    self.fail("bad_value", f"{d['number']}. belge taslağının kimliği geçersiz")
+                if q.get("statedArea", "") != "" and not decimal_ok(q["statedArea"]):
+                    self.fail("bad_value", f"{d['number']}. belge taslağının alanı düz ondalık değil")
+                rings = q["rings"]
+                if not rings:
+                    self.fail("bad_value", f"{d['number']}. belge taslağının halkası yok")
+                part = 0
+                for i, r in enumerate(rings):
+                    rp, hole = r.get("part", 0), r.get("hole", False)
+                    opens = rp == 0 if i == 0 else rp == part + 1
+                    if not ((opens and not hole) or (i > 0 and rp == part and hole)):
+                        self.fail("bad_value", f"{d['number']}. belge taslağının parçaları sırasız")
+                    part = rp
+                    pts = [(t["x"], t["y"]) for t in r["pts"]]
+                    bulges = r.get("bulges", [])
+                    n = len(pts)
+                    if (n < 3 or bulges and len(bulges) != n
+                            or not all(math.isfinite(c) for t in pts for c in t)
+                            or not all(math.isfinite(w) for w in bulges)
+                            or any(pts[k] == pts[(k + 1) % n] for k in range(n))):
+                        self.fail("bad_value", f"{d['number']}. belge taslağının halkası geçersiz")
+                taken = set()
+                for x in q.get("lengths", []):
+                    ring = x.get("ring", 0)
+                    if ring >= len(rings) or x["edge"] >= len(rings[ring]["pts"]) or (ring, x["edge"]) in taken:
+                        self.fail("bad_value", f"{d['number']}. belge taslağının kenar ölçüsü geçersiz")
+                    taken.add((ring, x["edge"]))
+                    if not length_ok(x["length"]):
+                        self.fail("bad_value", f"{d['number']}. belge taslağının kenar ölçüsü geçersiz")
         return reg
 
     def map_survey_(self, v):
@@ -6737,7 +7043,9 @@ class _Schema:
             "targetEpoch": (number, False), "antenna": (self.array(used), True), "sigma": (self.array(number), False),
             "x": (number, True), "y": (number, True), "z": (number, False),
             "chain": (self.enum(("complete", "limited")), True), "reasons": (texts, False),
-            "adjustment": (self.text, False)})
+            "adjustment": (self.text, False),
+            **({"velocity": (self.fields({"enu": (self.array(number), True), "grid": (grid, True)}), False)}
+               if self.gnss_sessions else {})})
         point = self.fields({"id": (self.text, True), "mark": (self.text, True), "uid": (self.text, True),
                              "result": (result, True), "history": (self.array(result), False)})
         revision = self.fields({"point": (self.text, True), "revision": (u32, True)})
@@ -6761,11 +7069,21 @@ class _Schema:
             "id": (self.text, True), "baselines": (texts, True), "known": (texts, True), "hold": (self.text, True),
             "scale": (number, True), "class": (self.text, False), "rules": (self.text, False),
             "rulesPassed": (self.bool, False), "freeM0": (number, False), "freeDof": (u32, True),
-            "m0": (number, False), "dof": (u32, True), "srid": (u32, True), "epoch": (number, False)})
+            "m0": (number, False), "dof": (u32, True), "srid": (u32, True), "epoch": (number, False),
+            **({"sessions": (texts, False)} if self.gnss_sessions else {})})
+        # Schema 248 (docs/adr/4920): baseline sessions and the kept place limits.
+        block = self.fields({"row": (self.text, True), "col": (self.text, True), "r": (self.array(number), True)})
+        bsession = self.fields({
+            "id": (self.text, True), "campaign": (self.text, True), "name": (self.text, True),
+            "start": (self.text, False), "end": (self.text, False), "baselines": (texts, True),
+            "blocks": (self.array(block), True), "file": (file_, False)})
+        tolerance = self.fields({"horizontal": (number, False), "vertical": (number, False), "source": (self.text, True)})
         w = self.fields({"campaigns": (self.array(campaign), False), "sessions": (self.array(session), False),
                          "solutions": (self.array(solution), False), "points": (self.array(point), False),
                          "uses": (self.array(use), False), "baselines": (self.array(baseline), False),
-                         "known": (self.array(known), False), "adjustments": (self.array(adjustment), False)})(v)
+                         "known": (self.array(known), False), "adjustments": (self.array(adjustment), False),
+                         **({"baselineSessions": (self.array(bsession), False), "tolerance": (tolerance, False)}
+                            if self.gnss_sessions else {})})(v)
         if not any(w.values()):
             fail("boş GNSS arşivi yazılmaz")
         if any(k in w and not w[k] for k in w):
@@ -6987,6 +7305,59 @@ class _Schema:
                 p = points.get(pr["point"])
                 if p is None or not 1 <= pr["revision"] <= p["result"]["revision"]:
                     fail("dayananın noktası ve revizyonu geçerli olmalı")
+        # Schema 248 (docs/adr/4920): a baseline session names 2–100 of its campaign's baselines, each baseline in one
+        # session at most; at most n(n − 1)/2 blocks, each two different baselines of it once, nine correlations in
+        # [−1, 1]; its file a GVX file. The kept limits: one at least, above 0, a source. A velocity: three components
+        # of at most 1 m/yr and its grid.
+        bsessions = w.get("baselineSessions", [])
+        if len(bsessions) > 10_000:
+            fail("en çok 10000 kayıt olur")
+        by_id = {b["id"]: b for b in lists["baselines"]}
+        taken = set()
+        for b in bsessions:
+            if not numbered(b["id"], "bo-") or b["id"] in ids:
+                fail("baz oturumunun kimliği bo-N biçiminde ve tek olmalı")
+            ids.add(b["id"])
+            if b["campaign"] not in camps or not named(b["name"]):
+                fail("baz oturumunun arazi ölçümü ve adı geçerli olmalı")
+            if any(k in b and when(b[k]) is None for k in ("start", "end")) or (
+                    "start" in b and "end" in b and when(b["end"]) < when(b["start"])):
+                fail("baz oturumunun zamanı geçerli olmalı")
+            members = b["baselines"]
+            if not 2 <= len(members) <= 100 or any(
+                    m not in by_id or by_id[m]["campaign"] != b["campaign"] or m in taken for m in members):
+                fail("baz oturumunun bazları arşivde, arazi ölçümünün ve tek oturumda olmalı")
+            taken.update(members)
+            n = len(members)
+            if len(b["blocks"]) > n * (n - 1) // 2:
+                fail("baz oturumunda en çok n(n − 1)/2 blok olur")
+            pairs = set()
+            for x in b["blocks"]:
+                pair = tuple(sorted((x["row"], x["col"])))
+                if x["row"] == x["col"] or x["row"] not in members or x["col"] not in members or pair in pairs:
+                    fail("bloğun iki bazı oturumun iki ayrı bazı olmalı")
+                pairs.add(pair)
+                if len(x["r"]) != 9 or not all(finite(r) and -1 <= r <= 1 for r in x["r"]):
+                    fail("korelasyonlar −1 ile 1 arasında dokuz sayı olmalı")
+            if "file" in b and (b["file"]["format"] != "gvx" or b["file"]["path"].strip() != b["file"]["path"]
+                                or not b["file"]["path"] or re.fullmatch(r"[0-9a-f]{64}", b["file"]["revision"]) is None):
+                fail("oturumun dosyası bir GVX dosyasıdır")
+        for a in lists["adjustments"]:
+            if any(x not in {b["id"] for b in bsessions} for x in a.get("sessions", [])):
+                fail("dengelemenin baz oturumları arşivde olmalı")
+        if "tolerance" in w:
+            t = w["tolerance"]
+            if ("horizontal" not in t and "vertical" not in t) or any(
+                    k in t and not (finite(t[k]) and t[k] > 0) for k in ("horizontal", "vertical")) or not named(
+                    t["source"], 500):
+                fail("kabul farkı sınırı geçersiz")
+        for p in lists["points"]:
+            for r in [p["result"], *p.get("history", [])]:
+                if "velocity" in r:
+                    v = r["velocity"]
+                    if len(v["enu"]) != 3 or not all(finite(x) and abs(x) <= 1.0 for x in v["enu"]) or not named(
+                            v["grid"]["name"]) or re.fullmatch(r"[0-9a-f]{64}", v["grid"]["sha256"]) is None:
+                        fail("noktanın hızı geçersiz")
         return w
 
     def map_work_(self, v):
@@ -7024,7 +7395,9 @@ class _Schema:
             **({"approved": (self.text, False)} if self.work_stamps else {}),
             **({"approvedObjects": (self.array(self.array(self.text)), False)} if self.approved_objects else {}),
             **({"approvedParts": (self.array(self.array(self.text)), False)} if self.approved_parts else {}),
-            **({"approvedValues": (self.array(self.text), False)} if self.approved_values else {})})
+            **({"approvedValues": (self.array(self.text), False)} if self.approved_values else {}),
+            **({"profile": (self.fields({"name": (self.text, True), "classes": (self.array(self.text), False)}), False)}
+               if self.work_profiles else {})})
         derivation = self.fields({
             "id": (self.text, True), "source": (self.text, True), "revision": (self.text, True),
             "operation": (self.text, True), "uids": (self.array(self.text), True)})
@@ -7054,6 +7427,13 @@ class _Schema:
             f = i.get("file")
             if f is not None and (f["path"].strip() == "" or f["path"].strip() != f["path"] or not sha(f["revision"])):
                 self.fail("bad_value", "öğenin dosyası geçersiz")
+            # Schema 247 (docs/adr/4880): the typed layers' profile: a name, its classes each once (none written empty).
+            if "profile" in i:
+                pr = i["profile"]
+                cl = pr.get("classes")
+                if not named(pr["name"]) or (cl is not None and (not cl or len(cl) > 64 or len(set(cl)) != len(cl)
+                                                                  or not all(named(c) for c in cl))):
+                    self.fail("bad_value", "öğenin profili geçersiz")
             if "approved" in i and (i.get("status") != "approved" or not sha(i["approved"])):
                 self.fail("bad_value", "onay damgası yalnız onaylı öğede, SHA-256 olur")
             # Schema 210 (docs/adr/2880): the objects an approval stamped, the list its stamp is the SHA-256 of.
@@ -9108,6 +9488,8 @@ class _Schema:
                 "format": (self.enum(CLOUD_FORMATS), True),
                 "count": (self.uint(64), True),
                 "bounds": (self.bounds6, True),
+                # Schema 251 (docs/adr/5100): the file's place, 16 numbers row by row.
+                **({"pose": (self.array(self.float), False)} if self.cloud_poses else {}),
             }
         )(v)
 
@@ -9174,6 +9556,23 @@ class _Schema:
                 self.url_rule(given[2])
             if bad(f["bounds"]):
                 self.fail("bad_value", f"{i}. dosyanın kapsamı sonlu altı sayı olmalı, her eksende en küçük en büyükten büyük olmamalı.")
+            # Schema 251 (docs/adr/5100): a place is a rigid map, 16 numbers row by row: the bottom row 0 0 0 1, the
+            # rotation's columns orthonormal within 1e-9, its determinant above nought.
+            m = f.get("pose")
+            if m is not None:
+                if len(m) != 16 or not all(math.isfinite(x) for x in m) or m[12:] != [0.0, 0.0, 0.0, 1.0]:
+                    self.fail("bad_value", f"{i}. dosyanın konumu 16 sonlu sayı, son satırı 0 0 0 1 olmalı.")
+                cols = [[m[j], m[4 + j], m[8 + j]] for j in range(3)]
+                for a in range(3):
+                    for b in range(3):
+                        dot = sum(x * y for x, y in zip(cols[a], cols[b]))
+                        if abs(dot - (1.0 if a == b else 0.0)) > 1e-9:
+                            self.fail("bad_value", f"{i}. dosyanın konumu katı dönüşüm değil.")
+                r = [m[0:3], m[4:7], m[8:11]]
+                det = (r[0][0] * (r[1][1] * r[2][2] - r[1][2] * r[2][1]) - r[0][1] * (r[1][0] * r[2][2] - r[1][2] * r[2][0])
+                       + r[0][2] * (r[1][0] * r[2][1] - r[1][1] * r[2][0]))
+                if det <= 0:
+                    self.fail("bad_value", f"{i}. dosyanın konumu katı dönüşüm değil.")
         if bad(c["bounds"]):
             self.fail("bad_value", "Nokta bulutunun kapsamı sonlu altı sayı olmalı, her eksende en küçük en büyükten büyük olmamalı.")
         if sum(f["count"] for f in sources) != c["count"]:
@@ -11875,6 +12274,10 @@ class _Schema:
             if self.pipe_profile_drawings:
                 commands += ("cad.pipes.profile",)
                 kinds += ("network",)
+            # A sheet's contour lines' drawing and a layer as a source since schema 246 (docs/adr/4740); before it they
+            # are refused as values.
+            commands += ("road.terrains.sheetcontours",)
+            kinds += ("layer",)
             source = self.fields({"kind": (self.enum(kinds), True), "id": (self.text, True), "digest": (self.text, True)})
             t = self.fields({"id": (self.text, True), "command": (self.enum(commands), True), "input": (self.any, True),
                              "sources": (self.array(source), True), "uids": (self.array(self.text), False),
@@ -11898,6 +12301,9 @@ class _Schema:
                 self.fail("bad_value", "çizimin 1 ile 256 arası ayrı kaynağı olur, özetleri 16 onaltılık hane")
             if len(t.get("uids", [])) > 1_000_000:
                 self.fail("bad_value", "çizimin en çok 1 000 000 nesnesi olur")
+            if not self.sheet_contour_drawings and (t["command"] == "road.terrains.sheetcontours"
+                                                    or any(s["kind"] == "layer" for s in t["sources"])):
+                self.fail("bad_value", "pafta eğrileri çizimi ve katman kaynağı şema 246'dan önce yazılmaz")
             return t
 
         r = self.fields({"surfaces": (self.array(surface), False), "alignments": (self.array(alignment), False),
@@ -11912,7 +12318,11 @@ class _Schema:
                          "walls": (self.array(wall), False), "platforms": (self.array(platform), False),
                          "pay": (pay, False),
                          "junctions": (self.array(junction), False),
-                         "drawings": (self.array(drawing), False), "autoRebuild": (self.bool, False)})(v)
+                         "drawings": (self.array(drawing), False), "autoRebuild": (self.bool, False),
+                         "rebuildWhole": (self.bool, False)})(v)
+        # Drawing again whole is schema 246's (docs/adr/4740); a sheet's contour lines' drawing and a layer source too.
+        if not self.sheet_contour_drawings and r.get("rebuildWhole"):
+            self.fail("bad_value", "bütün yeniden üretim şema 246'dan önce yazılmaz")
         got = r.get("surfaces", [])
         lines = r.get("alignments", [])
         profiles = r.get("profiles", [])
@@ -11929,7 +12339,7 @@ class _Schema:
         platforms = r.get("platforms", [])
         if not (got or lines or profiles or templates or sets or supers or corridors or volumes or hauls or sheet_sets
                 or guardrails or culverts or walls or platforms or "pay" in r or r.get("junctions") or r.get("drawings")
-                or r.get("autoRebuild")):
+                or r.get("autoRebuild") or r.get("rebuildWhole")):
             self.fail("bad_value", "boş yol ayarı yazılmaz")
         if len(got) > 64 or ("surfaces" in r and not got):
             self.fail("bad_value", "yol ayarında 1 ile 64 arası yüzey olur")
@@ -13101,7 +13511,7 @@ ENTITY_KINDS = {
         "opening": (s.opening_fields, True),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
-    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
+    # Schema 30 (docs/adr/0205 §7): the common arrowheads, the arrowhead's size times the note's height.
     "leader": lambda s: {
         "pts": (s.leader_points, True),
         "text": (s.note, False),

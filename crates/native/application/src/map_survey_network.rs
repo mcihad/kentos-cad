@@ -13,6 +13,10 @@
 //!
 //! With three known points or more the given coordinates and the free stage's are related by a 3D similarity and its
 //! scale tested (Madde 15(1)(c), docs/adr/2160).
+//!
+//! docs/adr/4920: with `correlations: session` each baseline session's used baselines go in by their full covariance and
+//! are tested as correlated observations (`map_survey_sessions`); with `velocities` each new mark's velocity is read from
+//! the campaign's velocity grid.
 
 use std::collections::{HashMap, HashSet};
 
@@ -20,8 +24,8 @@ use kentos_commands::{
     BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide, CrsTransform,
     ErrorEllipse, GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, KnownMovedBy, MapSurvey,
     MapSurveyNetwork, MapSurveyNetworked, NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkSimilarity,
-    NetworkStage, NetworkStation, SimilarityResidual, SurveyBaseline, SurveyCampaign, SurveyKnown, VelocityModel,
-    gnss_rules_default,
+    NetworkCorrelations, NetworkCorrelationsUsed, NetworkStage, NetworkStation, SimilarityResidual, SurveyBaseline,
+    SurveyCampaign, SurveyGrid, SurveyKnown, VelocityModel, gnss_rules_default,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssResult, GnssStation};
@@ -43,6 +47,8 @@ pub(crate) struct NewMark {
     pub height: f64,
     pub sigma: [f64; 3],
     pub placed: Result<Placed, CommandError>,
+    /// Its velocity east, north, up (m/yr) from the campaign's grid, when asked for and read (docs/adr/4920).
+    pub velocity: Option<[f64; 3]>,
 }
 
 /// What the adjustment read and said, for the answer and for the write: the baselines and known points it rests on,
@@ -55,6 +61,10 @@ pub(crate) struct Analysis {
     pub scale: f64,
     pub class: Option<(String, String)>,
     pub new: Vec<NewMark>,
+    /// The baseline sessions whose full covariance went in (docs/adr/4920).
+    pub sessions: Vec<String>,
+    /// The velocity grid the new marks' velocities were read from.
+    pub velocity_grid: Option<SurveyGrid>,
 }
 
 pub(crate) const RAD: f64 = 180.0 / std::f64::consts::PI;
@@ -507,6 +517,11 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         ));
     }
     let campaign = survey.campaign(&used[0].campaign).cloned();
+    let velocity_grid = if input.velocities {
+        Some(velocity_of(campaign.as_ref()).ok_or_else(|| crate::map_survey_sessions::no_grid(&path("velocities")))?)
+    } else {
+        None
+    };
     for b in &used[1..] {
         let c = survey.campaign(&b.campaign);
         if c.map(|c| (c.epoch, &c.velocity)) != campaign.as_ref().map(|c| (c.epoch, &c.velocity)) {
@@ -656,10 +671,28 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             None => GnssStation { name: m.clone(), xyz: None, fixed: false, sigma: None, cov: None },
         })
         .collect();
+    // docs/adr/4920: the used baselines' sessions, their full covariance when asked for.
+    let relevant = crate::map_survey_sessions::sessions_of(survey, &used);
+    let mode = input.correlations.unwrap_or(NetworkCorrelations::None);
+    let correlated = mode == NetworkCorrelations::Session;
+    let sessions = if correlated {
+        let refuse = |code: &'static str, message: String| held_wrong(code, message, prefix);
+        crate::map_survey_sessions::core_sessions(survey, &used, &relevant, &refuse)?
+    } else {
+        Vec::new()
+    };
     let refused = |r: gnss::Refused| held_wrong(r.code, r.message, prefix);
-    let free = gnss::adjust(&GnssInput { stations: free_stations, baselines: baselines.clone(), scale, datum: Datum::Given })
-        .map_err(refused)?;
-    let held = gnss::adjust(&GnssInput { stations: held_stations, baselines, scale, datum: Datum::Given }).map_err(refused)?;
+    let core = |stations: Vec<GnssStation>, baselines: Vec<Baseline>| GnssInput {
+        stations,
+        baselines,
+        scale,
+        datum: Datum::Given,
+        sessions: sessions.clone(),
+        correlated,
+        robust: None,
+    };
+    let free = gnss::adjust(&core(free_stations, baselines.clone())).map_err(refused)?;
+    let held = gnss::adjust(&core(held_stations, baselines)).map_err(refused)?;
     let limit = w_limit(class);
     let ids: Vec<String> = used.iter().map(|b| b.id.clone()).collect();
     let known_ids: Vec<Option<String>> = marks.iter().map(|m| known_of(m).map(|k| k.id.clone())).collect();
@@ -712,6 +745,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let point_of: HashMap<&str, _> = survey.points.iter().rev().map(|p| (p.mark.as_str(), p)).collect();
     let mut stations = Vec::with_capacity(marks.len());
     let mut new = Vec::new();
+    let mut unread: Vec<String> = Vec::new();
     for (i, m) in marks.iter().enumerate() {
         let s = &held.stations[i];
         let (lat, lon, h) = gnss::to_geodetic(shape.0, shape.1, s.xyz);
@@ -737,6 +771,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             rules: None,
             // docs/adr/2560: the confidence region of a mark the stage moved.
             ellipse: (!s.held).then(|| error_ellipse(s.cenu, class.and_then(|c| c.confidence).unwrap_or(CONFIDENCE))),
+            velocity: None,
         };
         if k.is_none() {
             let placed = place(doc, campaign.as_ref(), (lat, lon, h), srid, epoch, "operation").map_err(Stop::into_error);
@@ -757,7 +792,26 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                     failed_stations += 1;
                 }
             }
-            new.push(NewMark { mark: m.clone(), lat, lon, height: h, sigma, placed });
+            // docs/adr/4920: its velocity from the campaign's grid, over a year from the network's epoch (TUREF's
+            // 2005.0 without one; the grid's velocity does not hang on the year).
+            let velocity = match &velocity_grid {
+                Some(grid) => {
+                    let years = epoch.unwrap_or(2005.0);
+                    match crate::map_survey_sessions::velocity_at(doc, grid, (lat, lon, h), srid, shape, years) {
+                        Ok(v) => Some(v),
+                        Err(stop) => {
+                            unread.push(format!(
+                                "“{m}” noktasının hızı hız ızgarasından okunamadı: {}",
+                                stop.into_error().message
+                            ));
+                            None
+                        }
+                    }
+                }
+                None => None,
+            };
+            row.velocity = velocity;
+            new.push(NewMark { mark: m.clone(), lat, lon, height: h, sigma, placed, velocity });
         }
         stations.push(row);
     }
@@ -780,6 +834,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     // The same network already accepted: the same baselines, known points, held point, factor and class, and every
     // new mark's point carrying that adjustment now.
     let class_of = class.map(|c| (c.id.clone(), format!("{}@{}", package.id, package.release)));
+    let used_sessions: Vec<String> = if correlated { relevant.iter().map(|(id, _)| id.clone()).collect() } else { Vec::new() };
     let known_ids_used: Vec<String> = known.iter().map(|k| k.id.clone()).collect();
     let current = survey
         .adjustments
@@ -792,9 +847,14 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                 && a.scale == scale
                 && a.epoch == epoch
                 && a.class.clone().zip(a.rules.clone()) == class_of
+                && a.sessions == used_sessions
                 && !new.is_empty()
                 && new.iter().all(|n| {
-                    survey.points.iter().any(|p| p.mark == n.mark && p.result.adjustment.as_deref() == Some(a.id.as_str()))
+                    survey.points.iter().any(|p| {
+                        p.mark == n.mark
+                            && p.result.adjustment.as_deref() == Some(a.id.as_str())
+                            && p.result.velocity.is_some() == input.velocities
+                    })
                 })
         })
         .map(|a| a.id.clone());
@@ -828,6 +888,16 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     if new.is_empty() {
         why.push("Ağda bilinen nokta olmayan işaret yok; dengelenecek nokta yok.".into());
     }
+    why.append(&mut unread);
+    // docs/adr/4920: which correlations, said when asked for or when the used baselines have sessions.
+    let correlations = (input.correlations.is_some() || !relevant.is_empty()).then(|| {
+        let ids: Vec<String> = relevant.iter().map(|(id, _)| id.clone()).collect();
+        NetworkCorrelationsUsed {
+            used: mode,
+            sessions: if correlated { ids.clone() } else { Vec::new() },
+            unused: if correlated { Vec::new() } else { ids },
+        }
+    });
     let out = MapSurveyNetworked {
         srid,
         epoch,
@@ -841,6 +911,8 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         similarity: similar,
         rules,
         current,
+        correlations,
+        velocity_grid: velocity_grid.as_ref().map(|g| SurveyGrid { name: g.name.clone(), sha256: g.sha256.clone() }),
         acceptable: why.is_empty(),
         why,
         revision: doc.revision().to_string(),
@@ -853,6 +925,8 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         scale,
         class: class.map(|c| (c.id.clone(), format!("{}@{}", package.id, package.release))),
         new,
+        sessions: used_sessions,
+        velocity_grid: velocity_grid.map(|g| SurveyGrid { name: g.name, sha256: g.sha256 }),
     })
 }
 
@@ -885,6 +959,16 @@ pub(crate) fn warnings_of(out: &MapSurveyNetworked, prefix: &str) -> Vec<Command
                 )
             },
             path: Some(format!("{prefix}class")),
+        });
+    }
+    if let Some(c) = out.correlations.as_ref().filter(|c| !c.unused.is_empty()) {
+        w.push(CommandWarning {
+            code: codes::SESSION_CORRELATIONS_UNUSED.into(),
+            message: format!(
+                "{} baz oturumunun korelasyonları kullanılmadı; aynı oturumun bazları birbirinden bağımsız sayıldı. Oturum korelasyonlarıyla dengelemek için correlations session verin.",
+                c.unused.join(", ")
+            ),
+            path: Some(format!("{prefix}correlations")),
         });
     }
     if out.free.dof == 0 {

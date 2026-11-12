@@ -15,6 +15,8 @@ mod tests;
 mod view;
 mod write;
 
+#[cfg(test)]
+mod leapfrog_tests;
 use iced::Task;
 use kentos_commands::{AngleUnit, Entity, ProjectSettings};
 use kentos_domain::Document as Model;
@@ -44,6 +46,8 @@ pub enum Sheet {
     NetworkRows,
     LevelKnown,
     LevelRows,
+    /// docs/adr/5300: Atlamalı nivelman's setups.
+    LevelLeapfrog,
 }
 
 impl Sheet {
@@ -182,6 +186,10 @@ pub const KNOWN_COLS: usize = 4;
 pub const ROW_COLS: usize = 4;
 pub const HEIGHT_COLS: usize = 3;
 pub const LEVEL_COLS: usize = 4;
+/// docs/adr/5300: a leap-frog setup's columns: Geri, İleri, then each sight's slope distance, zenith angle and target.
+pub const LEAPFROG_COLS: usize = 8;
+/// docs/adr/5300: a core row's table line from the leap-frog table is this plus its row there.
+pub const LEAPFROG_LINE: usize = 1 << 20;
 
 /// An adjustment's outcome: what does not hold in the tables (nothing is
 /// computed then), or the core's answer; each observation row's table line.
@@ -209,6 +217,8 @@ pub struct NetworkForm {
     pub known: Cells,
     pub rows: Cells,
     pub layer: Option<String>,
+    /// Docs/adr/5200: the name the adjustment is kept under in the project; empty: not kept.
+    pub keep: String,
     pub solved: Solved<NetworkResult>,
 }
 
@@ -218,6 +228,7 @@ impl Default for NetworkForm {
             known: Cells::new(KNOWN_COLS),
             rows: Cells::new(ROW_COLS),
             layer: None,
+            keep: String::new(),
             solved: Solved::default(),
         }
     }
@@ -229,6 +240,11 @@ pub struct LevelForm {
     pub kind: LevelKind,
     pub known: Cells,
     pub rows: Cells,
+    /// docs/adr/5300: Atlamalı nivelman's setups (Trigonometrik), and their height differences as last solved.
+    pub leapfrog: Cells,
+    pub leapfrog_dh: Vec<f64>,
+    /// Docs/adr/5200: the name the adjustment is kept under in the project; empty: not kept.
+    pub keep: String,
     pub solved: Solved<LevelResult>,
 }
 
@@ -238,6 +254,9 @@ impl Default for LevelForm {
             kind: LevelKind::default(),
             known: Cells::new(HEIGHT_COLS),
             rows: Cells::new(LEVEL_COLS),
+            leapfrog: Cells::new(LEAPFROG_COLS),
+            leapfrog_dh: Vec::new(),
+            keep: String::new(),
             solved: Solved::default(),
         }
     }
@@ -489,6 +508,44 @@ impl LevelForm {
             });
             lines.push(i);
         }
+        // docs/adr/5300: the leap-frog setups, Trigonometrik only: each a height difference after the rows.
+        if self.kind == LevelKind::Trigonometric {
+            let unit = match model.settings().angle_unit {
+                AngleUnit::Grad => kentos_geometry_core::survey::Unit::GRAD,
+                AngleUnit::Deg => kentos_geometry_core::survey::Unit::DEG,
+            };
+            for (i, r) in self.leapfrog.filled() {
+                let (from, to) = (cell(r, 0), cell(r, 1));
+                if from.is_empty() || to.is_empty() {
+                    problems.push(format!("{}. atlamalı kurulumda geri ya da ileri nokta yok.", i + 1));
+                    continue;
+                }
+                let n: Vec<Option<f64>> = (2..8).map(|c| number(cell(r, c)).filter(|v| v.is_finite())).collect();
+                let [Some(bs), Some(bz), Some(bt), Some(fs), Some(fz), Some(ft)] = n[..] else {
+                    problems.push(format!("{}. atlamalı kurulumda bir uzunluk, açı ya da işaret yüksekliği yok.", i + 1));
+                    continue;
+                };
+                let sight = |slope, zenith, target| kentos_geometry_core::survey::fieldbook::Sight { slope, zenith, target };
+                match kentos_geometry_core::survey::fieldbook::leapfrog(
+                    sight(bs, bz, bt),
+                    sight(fs, fz, ft),
+                    unit,
+                    model.settings().refraction(),
+                ) {
+                    Ok((dh, length)) => {
+                        rows.push(LevelRow {
+                            from: from.to_owned(),
+                            to: to.to_owned(),
+                            dh,
+                            length,
+                            line: Some(LEAPFROG_LINE + i + 1),
+                        });
+                        lines.push(LEAPFROG_LINE + i);
+                    }
+                    Err(e) => problems.push(format!("{}. atlamalı kurulum: {e}", i + 1)),
+                }
+            }
+        }
         if !problems.is_empty() {
             return (None, problems, lines);
         }
@@ -507,6 +564,17 @@ impl LevelForm {
 
     pub fn solve(&mut self, model: &Model) {
         let (input, problems, lines) = self.input(model);
+        // docs/adr/5300: the leap-frog setups' differences, by their table row.
+        self.leapfrog_dh = vec![f64::NAN; self.leapfrog.rows.len()];
+        if let Some(i) = &input {
+            for r in &i.rows {
+                if let Some(l) = r.line.filter(|l| *l > LEAPFROG_LINE)
+                    && let Some(d) = self.leapfrog_dh.get_mut(l - LEAPFROG_LINE - 1)
+                {
+                    *d = r.dh;
+                }
+            }
+        }
         self.solved = Solved {
             problems,
             result: input.map(|i| levelling::adjust(&i)),
@@ -680,6 +748,7 @@ impl crate::app::App {
             Sheet::NetworkRows => &mut self.calc.network.rows,
             Sheet::LevelKnown => &mut self.calc.level.known,
             Sheet::LevelRows => &mut self.calc.level.rows,
+            Sheet::LevelLeapfrog => &mut self.calc.level.leapfrog,
         }
     }
 
@@ -696,11 +765,11 @@ impl crate::app::App {
 
     /// ↑ or ↓ in a field of the windows: the table the field is in.
     pub(crate) fn network_arrow(&mut self, up: bool, from: &iced::widget::Id) -> Task<Message> {
-        let sheets = match self.calc.open {
-            Some(super::Window::Level) => [Sheet::LevelKnown, Sheet::LevelRows],
-            _ => [Sheet::NetworkKnown, Sheet::NetworkRows],
+        let sheets: &[Sheet] = match self.calc.open {
+            Some(super::Window::Level) => &[Sheet::LevelKnown, Sheet::LevelRows, Sheet::LevelLeapfrog],
+            _ => &[Sheet::NetworkKnown, Sheet::NetworkRows],
         };
-        for sheet in sheets {
+        for &sheet in sheets {
             let table = self.network_table(sheet);
             let owns = (0..table.rows())
                 .any(|r| (0..table.columns()).any(|c| sheet.cell_id(r, c) == *from));

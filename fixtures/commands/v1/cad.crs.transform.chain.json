@@ -418,7 +418,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "TUREF / TM30 (EPSG:5254)",
         "to": "WGS 84 / UTM 36N (EPSG:32636)",
@@ -569,7 +570,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "TUREF / TM30 (EPSG:5254)",
         "to": "ED50 / TM30 (EPSG:2320)",
@@ -931,7 +933,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "TUREF / TM27 (EPSG:5253)",
         "to": "WGS 84 / UTM 35N (EPSG:32635)",
@@ -1063,7 +1066,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "TUREF / TM45 (EPSG:5259)",
         "to": "WGS 84 / UTM 38N (EPSG:32638)",
@@ -1331,7 +1335,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "TUREF / TM45 (EPSG:5259)",
         "to": "ED50 / TM45 (EPSG:2325)",
@@ -1667,7 +1672,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "Şantiye (özel sistem)",
         "to": "WGS 84 (EPSG:4326)",
@@ -2024,7 +2030,8 @@
          "west": 25.62,
          "south": 34.42,
          "east": 44.83,
-         "north": 43.45
+         "north": 43.45,
+         "extent": 1237
         },
         "from": "TUREF / TM30 (EPSG:5254) @ 2023.5",
         "to": "WGS 84 / UTM 36N (EPSG:32636)",

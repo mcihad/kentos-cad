@@ -1,6 +1,6 @@
 //! Koordinat listesi dışa aktar (the web's `ui/io/CoordExportDialog.ts`):
 //! the point objects of the selection, of the visible layers or of the whole
-//! drawing, one per line (name, Y, X, Z) as Netcad NCN, TXT or CSV. Values
+//! drawing, one per line (name, Y, X, Z) as NCN, TXT or CSV. Values
 //! are written as the shortest decimal that reads back to the same float64:
 //! nothing is rounded (CLAUDE.md §23).
 //!
@@ -37,7 +37,7 @@ struct Format {
 
 const FORMATS: [Format; 4] = [
     Format {
-        label: "NCN (Netcad; boşlukla ayrılmış)",
+        label: "NCN (boşlukla ayrılmış)",
         delimiter: CoordDelimiter::Space,
         extension: "ncn",
         header: false,

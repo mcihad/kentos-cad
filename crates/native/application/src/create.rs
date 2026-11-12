@@ -212,6 +212,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Swept) => "Araç izi çiz",
         Some(CreateOperation::LowConfidence) => "Düşük güvenli alanları çiz",
         Some(CreateOperation::Sparse) => "Seyrek alanları çiz",
+        // Senaryo ölçüleri tablosu (docs/adr/5060).
+        Some(CreateOperation::ScenarioRecord) => "Ölçüleri çizime yaz",
     }
 }
 

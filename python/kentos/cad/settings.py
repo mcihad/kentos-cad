@@ -93,6 +93,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
+        refraction: float | None | Unset = UNSET,
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
@@ -148,6 +149,8 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             name:
             plot_scale: Unit: scale.
             project_type:
+            refraction: The refraction coefficient k of trigonometric heights (docs/adr/0169 §3, 4900), within [−1, 1]: a measured one
+                written to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting. Unit: 1.
             second_srid: Unit: epsg.
             srid: Unit: epsg.
             standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
@@ -182,6 +185,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
+            refraction=refraction,
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
@@ -209,6 +213,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
+        refraction: float | None | Unset = UNSET,
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
@@ -234,6 +239,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
+            refraction=refraction,
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
@@ -261,6 +267,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
+        refraction: float | None | Unset = UNSET,
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
@@ -286,6 +293,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
+            refraction=refraction,
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),
@@ -313,6 +321,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         name: str | None | Unset = UNSET,
         plot_scale: float | None | Unset = UNSET,
         project_type: Workspace | WorkspaceName | None | Unset = UNSET,
+        refraction: float | None | Unset = UNSET,
         second_srid: int | None | Unset = UNSET,
         srid: int | None | Unset = UNSET,
         standard_docs: Sequence[ProjectStandardDocument] | None | Unset = UNSET,
@@ -343,6 +352,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             name=name,
             plot_scale=plot_scale,
             project_type=project_type,
+            refraction=refraction,
             second_srid=second_srid,
             srid=srid,
             standard_docs=_opt(standard_docs, lambda x: list(x)),

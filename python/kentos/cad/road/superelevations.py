@@ -42,15 +42,15 @@ class _RoadSuperelevationsCheck(LocalCommand[SuperelevationsCheck, Superelevatio
     ya da dış kenar; kenar etrafında bütün genişlik döner) göre km başına yükselmesi,
     eğimin ve genişlemenin kırılma noktaları arasındaki her aralıkta iki yanın en
     büyüğü, kesin. speed (km/sa) verilirse, verilmezse kurbun kendi proje hızında
-    (PI'nın, yoksa aksın; ADR 0986) her kurbun yanal sürtünme ihtiyacı: nokta kütle
-    dengesi V²/(gR) = (e + f)/(1 − e·f), e merkeze doğru eğimi en az olan yanınki (ters
-    eğimli dış yan eksi), g 9,80665; daire kısmında kırılma noktalarında kesin,
-    klotoidde step metrede bir (öntanımlı 1). mostRelative (oran; 0,005 = 1:200) ve
-    mostFriction aşılan yerleri bulgu yapar; sınırlar tasarım standardınındır, KentOS
-    sayı vermez. Cevap: dönme ekseni, göreli eğim satırları, kurpların sürtünmesi (en
-    çok istendiği km, yarıçap, dever), bulgular ve adım. Uyarı:
-    superelevation_limit_broken. Retler: not_a_road_project, unknown_superelevation,
-    unknown_road_template, invalid_superelevation_check.
+    (PI'nın, yoksa aksın) her kurbun yanal sürtünme ihtiyacı: nokta kütle dengesi
+    V²/(gR) = (e + f)/(1 − e·f), e merkeze doğru eğimi en az olan yanınki (ters eğimli
+    dış yan eksi), g 9,80665; daire kısmında kırılma noktalarında kesin, klotoidde step
+    metrede bir (öntanımlı 1). mostRelative (oran; 0,005 = 1:200) ve mostFriction aşılan
+    yerleri bulgu yapar; sınırlar tasarım standardınındır, KentOS sayı vermez. Cevap:
+    dönme ekseni, göreli eğim satırları, kurpların sürtünmesi (en çok istendiği km,
+    yarıçap, dever), bulgular ve adım. Uyarı: superelevation_limit_broken. Retler:
+    not_a_road_project, unknown_superelevation, unknown_road_template,
+    invalid_superelevation_check.
     """
     __slots__ = ()
     id = "road.superelevations.check"
@@ -80,15 +80,15 @@ class _RoadSuperelevationsCheck(LocalCommand[SuperelevationsCheck, Superelevatio
         dönme eksenine (çizelgenin pivot'u: eksen, sol, sağ, iç ya da dış kenar; kenar
         etrafında bütün genişlik döner) göre km başına yükselmesi, eğimin ve genişlemenin
         kırılma noktaları arasındaki her aralıkta iki yanın en büyüğü, kesin. speed (km/sa)
-        verilirse, verilmezse kurbun kendi proje hızında (PI'nın, yoksa aksın; ADR 0986) her
-        kurbun yanal sürtünme ihtiyacı: nokta kütle dengesi V²/(gR) = (e + f)/(1 − e·f), e
-        merkeze doğru eğimi en az olan yanınki (ters eğimli dış yan eksi), g 9,80665; daire
-        kısmında kırılma noktalarında kesin, klotoidde step metrede bir (öntanımlı 1).
-        mostRelative (oran; 0,005 = 1:200) ve mostFriction aşılan yerleri bulgu yapar;
-        sınırlar tasarım standardınındır, KentOS sayı vermez. Cevap: dönme ekseni, göreli
-        eğim satırları, kurpların sürtünmesi (en çok istendiği km, yarıçap, dever), bulgular
-        ve adım. Uyarı: superelevation_limit_broken. Retler: not_a_road_project,
-        unknown_superelevation, unknown_road_template, invalid_superelevation_check.
+        verilirse, verilmezse kurbun kendi proje hızında (PI'nın, yoksa aksın) her kurbun
+        yanal sürtünme ihtiyacı: nokta kütle dengesi V²/(gR) = (e + f)/(1 − e·f), e merkeze
+        doğru eğimi en az olan yanınki (ters eğimli dış yan eksi), g 9,80665; daire kısmında
+        kırılma noktalarında kesin, klotoidde step metrede bir (öntanımlı 1). mostRelative
+        (oran; 0,005 = 1:200) ve mostFriction aşılan yerleri bulgu yapar; sınırlar tasarım
+        standardınındır, KentOS sayı vermez. Cevap: dönme ekseni, göreli eğim satırları,
+        kurpların sürtünmesi (en çok istendiği km, yarıçap, dever), bulgular ve adım. Uyarı:
+        superelevation_limit_broken. Retler: not_a_road_project, unknown_superelevation,
+        unknown_road_template, invalid_superelevation_check.
 
         Args:
             doc: The drawing it works on.
@@ -204,19 +204,19 @@ check = _RoadSuperelevationsCheck()
 class _RoadSuperelevationsEdit(LocalCommand[SuperelevationsEdit, SuperelevationsWritten, SuperelevationsWritten]):
     """``road.superelevations.edit`` v1. Deveri düzenle: Yol projesinin dever çizelgesini
     (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da
-    kaldırır. Enine eğim her yanda eksenden dışa orandır (−0,025 %−2,5'tir; ADR 0977),
-    dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp
-    için oran rate (eğim oranı, 0,06 %6'dır), geçiş boyu runoff (m, düz taçtan tam
-    devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda
-    genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz
-    taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method
-    stations: km, sol ve sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin
-    standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan
-    PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın
-    dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen
-    ya da ilk boş d-n. Tek geri alma adımı “Dever”. Retler: not_a_road_project,
-    unknown_superelevation, unknown_alignment, invalid_superelevation,
-    superelevation_in_use, invalid_revision, revision_conflict.
+    kaldırır. Enine eğim her yanda eksenden dışa orandır (−0,025 %−2,5'tir), dışa düşen
+    eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran
+    rate (eğim oranı, 0,06 %6'dır), geçiş boyu runoff (m, düz taçtan tam devere), teğet
+    payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening
+    (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla
+    aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve
+    sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin standardından ya da
+    projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden
+    küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş
+    reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n.
+    Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation,
+    unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision,
+    revision_conflict.
     """
     __slots__ = ()
     id = "road.superelevations.edit"
@@ -246,19 +246,18 @@ class _RoadSuperelevationsEdit(LocalCommand[SuperelevationsEdit, Superelevations
     ) -> SuperelevationsWritten:
         """Deveri düzenle: Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı;
         yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda
-        eksenden dışa orandır (−0,025 %−2,5'tir; ADR 0977), dışa düşen eksi; normalLeft ve
-        normalRight normal eğimdir. method curves: her kurp için oran rate (eğim oranı, 0,06
-        %6'dır), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1,
-        geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen
-        etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime
-        (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim
-        satırları; aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden
-        kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran,
-        kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir;
-        sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri
-        alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation,
-        unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision,
-        revision_conflict.
+        eksenden dışa orandır (−0,025 %−2,5'tir), dışa düşen eksi; normalLeft ve normalRight
+        normal eğimdir. method curves: her kurp için oran rate (eğim oranı, 0,06 %6'dır),
+        geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin
+        kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında
+        döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra
+        ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları;
+        aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar;
+        öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan
+        tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm
+        yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri alma adımı
+        “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment,
+        invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -512,21 +511,20 @@ query = _RoadSuperelevationsQuery()
 
 class _RoadSuperelevationsTransitions(LocalCommand[SuperelevationsTransitions, SuperelevationsTransitioned, SuperelevationsTransitioned]):
     """``road.superelevations.transitions`` v1. Geçiş öner: Kurplardan kurulan bir dever
-    çizelgesinin her kurbu için geçişi önerir; hiçbir şey yazmaz (docs/adr/0940). Geçiş
-    boyu (runoff) göreli eğimden: kurbun kendi geçişindeki en dik kenar eğimi G
-    çizelgenin dönme ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa geçiştir. Runout
-    L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6; kaydırmadan:
-    √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin üstündedir:
-    en az klotoid boyu, teğet payı 0. Klotoidsiz kurpta teğet payı onTangent'tir.
-    Ardışık iki kurbun teğetteki geçişleri (runout + payı) aradaki teğete sığmalıdır.
-    mostRelative, speed, comfort, shift, mostShift, onTangent ve step (yukarı yuvarlama)
-    standardındır, KentOS sayı vermez; speed verilmezse her kurp kendi proje hızıyla
-    okunur (ADR 0986). Cevap: her kurbun TS, ST, yarıçap, dever, klotoidleri, şimdiki
-    geçişi ve göreli eğimi, göreli eğimden geçiş, konfor ve kaydırma klotoidleri,
-    önerilen geçiş ve payı, runout ve tam deverli boy; bulgular (spiralShort,
-    spiralLong, full, tangent). Uyarılar: superelevation_transition_conflict. Retler:
-    invalid_superelevation_transition, not_a_road_project, unknown_superelevation,
-    unknown_road_template.
+    çizelgesinin her kurbu için geçişi önerir; hiçbir şey yazmaz. Geçiş boyu (runoff)
+    göreli eğimden: kurbun kendi geçişindeki en dik kenar eğimi G çizelgenin dönme
+    ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa geçiştir. Runout L·|n|/e. Klotoid
+    konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6; kaydırmadan: √(24·p·R) en az,
+    √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin üstündedir: en az klotoid
+    boyu, teğet payı 0. Klotoidsiz kurpta teğet payı onTangent'tir. Ardışık iki kurbun
+    teğetteki geçişleri (runout + payı) aradaki teğete sığmalıdır. mostRelative, speed,
+    comfort, shift, mostShift, onTangent ve step (yukarı yuvarlama) standardındır,
+    KentOS sayı vermez; speed verilmezse her kurp kendi proje hızıyla okunur. Cevap: her
+    kurbun TS, ST, yarıçap, dever, klotoidleri, şimdiki geçişi ve göreli eğimi, göreli
+    eğimden geçiş, konfor ve kaydırma klotoidleri, önerilen geçiş ve payı, runout ve tam
+    deverli boy; bulgular (spiralShort, spiralLong, full, tangent). Uyarılar:
+    superelevation_transition_conflict. Retler: invalid_superelevation_transition,
+    not_a_road_project, unknown_superelevation, unknown_road_template.
     """
     __slots__ = ()
     id = "road.superelevations.transitions"
@@ -555,18 +553,18 @@ class _RoadSuperelevationsTransitions(LocalCommand[SuperelevationsTransitions, S
         expected: Expected | None = None,
     ) -> SuperelevationsTransitioned:
         """Geçiş öner: Kurplardan kurulan bir dever çizelgesinin her kurbu için geçişi önerir;
-        hiçbir şey yazmaz (docs/adr/0940). Geçiş boyu (runoff) göreli eğimden: kurbun kendi
-        geçişindeki en dik kenar eğimi G çizelgenin dönme ekseni ve genişletmesiyle okunur
-        ve L·G/Δ en kısa geçiştir. Runout L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R −
-        g·e)/C, v = V/3,6; kaydırmadan: √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli
-        kurpta geçiş klotoidin üstündedir: en az klotoid boyu, teğet payı 0. Klotoidsiz
-        kurpta teğet payı onTangent'tir. Ardışık iki kurbun teğetteki geçişleri (runout +
-        payı) aradaki teğete sığmalıdır. mostRelative, speed, comfort, shift, mostShift,
-        onTangent ve step (yukarı yuvarlama) standardındır, KentOS sayı vermez; speed
-        verilmezse her kurp kendi proje hızıyla okunur (ADR 0986). Cevap: her kurbun TS, ST,
-        yarıçap, dever, klotoidleri, şimdiki geçişi ve göreli eğimi, göreli eğimden geçiş,
-        konfor ve kaydırma klotoidleri, önerilen geçiş ve payı, runout ve tam deverli boy;
-        bulgular (spiralShort, spiralLong, full, tangent). Uyarılar:
+        hiçbir şey yazmaz. Geçiş boyu (runoff) göreli eğimden: kurbun kendi geçişindeki en
+        dik kenar eğimi G çizelgenin dönme ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa
+        geçiştir. Runout L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6;
+        kaydırmadan: √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin
+        üstündedir: en az klotoid boyu, teğet payı 0. Klotoidsiz kurpta teğet payı
+        onTangent'tir. Ardışık iki kurbun teğetteki geçişleri (runout + payı) aradaki teğete
+        sığmalıdır. mostRelative, speed, comfort, shift, mostShift, onTangent ve step
+        (yukarı yuvarlama) standardındır, KentOS sayı vermez; speed verilmezse her kurp
+        kendi proje hızıyla okunur. Cevap: her kurbun TS, ST, yarıçap, dever, klotoidleri,
+        şimdiki geçişi ve göreli eğimi, göreli eğimden geçiş, konfor ve kaydırma
+        klotoidleri, önerilen geçiş ve payı, runout ve tam deverli boy; bulgular
+        (spiralShort, spiralLong, full, tangent). Uyarılar:
         superelevation_transition_conflict. Retler: invalid_superelevation_transition,
         not_a_road_project, unknown_superelevation, unknown_road_template.
 
@@ -715,10 +713,10 @@ class _RoadSuperelevationsWiden(LocalCommand[SuperelevationsWiden, Superelevatio
     da simple (N(U + C)). Taşıt road.swept.query'ninkidir; track lastiklerin dıştan dışa
     iz genişliğidir, yoksa taşıtın genişliği alınır. clearance (C, şerit başına), speed,
     step (yukarı yuvarlama) ve least (bunun altı yazılmaz) standardındır, KentOS sayı
-    vermez; speed verilmezse her kurp kendi proje hızıyla okunur (ADR 0986). drive:
-    taşıt her kurpta aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir;
-    kararlı duruma varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı,
-    teğet genişliği, her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki
+    vermez; speed verilmezse her kurp kendi proje hızıyla okunur. drive: taşıt her
+    kurpta aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı
+    duruma varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı, teğet
+    genişliği, her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki
     genişletmesi ve sürüşü; kararlı dönülemeyen kurplar. Uyarılar: widening_unturnable,
     superelevation_stale. Retler: invalid_widening, not_a_road_project,
     unknown_superelevation, unknown_road_template.
@@ -759,13 +757,12 @@ class _RoadSuperelevationsWiden(LocalCommand[SuperelevationsWiden, Superelevatio
         Taşıt road.swept.query'ninkidir; track lastiklerin dıştan dışa iz genişliğidir,
         yoksa taşıtın genişliği alınır. clearance (C, şerit başına), speed, step (yukarı
         yuvarlama) ve least (bunun altı yazılmaz) standardındır, KentOS sayı vermez; speed
-        verilmezse her kurp kendi proje hızıyla okunur (ADR 0986). drive: taşıt her kurpta
-        aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı duruma
-        varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı, teğet genişliği,
-        her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki genişletmesi ve
-        sürüşü; kararlı dönülemeyen kurplar. Uyarılar: widening_unturnable,
-        superelevation_stale. Retler: invalid_widening, not_a_road_project,
-        unknown_superelevation, unknown_road_template.
+        verilmezse her kurp kendi proje hızıyla okunur. drive: taşıt her kurpta aks üzerinde
+        sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı duruma varmayan kısa
+        kurpta formülün altında kalır. Cevap: şerit sayısı, teğet genişliği, her kurbun U,
+        F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki genişletmesi ve sürüşü; kararlı
+        dönülemeyen kurplar. Uyarılar: widening_unturnable, superelevation_stale. Retler:
+        invalid_widening, not_a_road_project, unknown_superelevation, unknown_road_template.
 
         Args:
             doc: The drawing it works on.

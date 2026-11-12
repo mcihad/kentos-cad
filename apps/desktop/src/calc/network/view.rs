@@ -54,6 +54,17 @@ const HEIGHTS: [Col; 3] = [
     col("Kot", Some("m"), true),
     col("σ", Some("mm"), true),
 ];
+/// docs/adr/5300: Atlamalı nivelman's columns.
+const LEAPS: [Col; 8] = [
+    col("Geri", None, false),
+    col("İleri", None, false),
+    col("Geri S", Some("m"), true),
+    col("Geri z", None, true),
+    col("Geri t", Some("m"), true),
+    col("İleri S", Some("m"), true),
+    col("İleri z", None, true),
+    col("İleri t", Some("m"), true),
+];
 const LEVELS: [Col; 4] = [
     col("Başlangıç", None, false),
     col("Bitiş", None, false),
@@ -107,10 +118,12 @@ fn titled<'a>(title: &'a str, note: &'a str, table: Element<'a, Message>) -> Ele
     .into()
 }
 
-/// The footer: Raporu kopyala, the layer (Yatay ağ), Çizime yaz, Kapat.
+/// The footer: Raporu kopyala, the layer (Yatay ağ), Projede sakla (docs/adr/5200: the kept adjustment's name), Çizime
+/// yaz, Kapat.
 fn footer<'a>(
     dialog: Dialog<'a, Message>,
     layer: Option<Element<'a, Message>>,
+    keep: &str,
     done: bool,
 ) -> Dialog<'a, Message> {
     let mut dialog = dialog.action(footer_button(
@@ -125,7 +138,13 @@ fn footer<'a>(
                 .align_y(Center),
         );
     }
+    let keep_box = iced::widget::container(
+        crate::style::fields::input(None, "boş: saklanmaz", keep, false, false)
+            .on_input(|v| event(Calc::Keep(v))),
+    )
+    .width(170);
     dialog
+        .action(row![label::caption(KEEP), keep_box].spacing(8).align_y(Center))
         .action(footer_button(
             "Çizime yaz",
             done.then(|| event(Calc::AddPoints)),
@@ -134,6 +153,9 @@ fn footer<'a>(
         .action(footer_button("Kapat", Some(event(Calc::Close)), false))
         .max_height(MAX_HEIGHT)
 }
+
+/// Docs/adr/5200: the footer's label of the kept adjustment's name.
+pub(crate) const KEEP: &str = "Projede sakla";
 
 /// An observation's kind as the table names it.
 fn kind_word(kind: &str) -> &'static str {
@@ -262,6 +284,7 @@ impl NetworkForm {
                 .on_close(crate::calc::event(crate::calc::Event::Close))
                 .scroll(body),
             Some(layer_select(model, self.layer.as_deref())),
+            &self.keep,
             done,
         )
         .width(1040.0)
@@ -426,8 +449,31 @@ impl LevelForm {
                     known,
                 ),
                 titled("Kot farkları", length_note, rows),
-            ))
-            .push(label::caption(sigma_line(model, Some(self.kind))).width(Fill));
+            ));
+        // docs/adr/5300: leap-frog setups, Trigonometrik only; each row's height difference beside it.
+        if self.kind == LevelKind::Trigonometric {
+            let leaps = grid::view_with(Sheet::LevelLeapfrog, &LEAPS, &self.leapfrog, |_, _| String::new(), 0, |_| Vec::new());
+            // Each setup's height difference as computed, in one line under the table.
+            let said: Vec<String> = self
+                .leapfrog
+                .rows
+                .iter()
+                .zip(&self.leapfrog_dh)
+                .filter(|(_, d)| d.is_finite())
+                .map(|(r, d)| format!("{} → {} {} m", kentos_interaction::js_trim(&r[0]), kentos_interaction::js_trim(&r[1]), fixed(*d, 4)))
+                .collect();
+            let mut leap_body = column![leaps].spacing(4);
+            if !said.is_empty() {
+                leap_body = leap_body.push(label::caption(format!("Kot farkları: {}", said.join(" · "))).width(Fill));
+            }
+            body = body.push(titled(
+                "Atlamalı nivelman",
+                "Alet iki noktanın arasında kurulur: kot farkı ileri nişanınkinden geri nişanınki çıkarılarak bulunur, \
+                 alet yüksekliği düşer. S eğik uzunluk, z başucu açısı, t işaret yüksekliği; projenin k'sı.",
+                leap_body.into(),
+            ));
+        }
+        body = body.push(label::caption(sigma_line(model, Some(self.kind))).width(Fill));
         let s = &self.solved;
         let lines: Vec<(Line, String)> = match &s.result {
             None => s
@@ -483,6 +529,7 @@ impl LevelForm {
                 .on_close(crate::calc::event(crate::calc::Event::Close))
                 .scroll(body),
             None,
+            &self.keep,
             done,
         )
         .width(1040.0)
@@ -532,11 +579,20 @@ impl LevelForm {
             } else {
                 let (a, b) = self.row_names(o.row);
                 let line = self.solved.lines.get(o.row).copied();
-                let dh = line
-                    .and_then(|l| self.rows.rows.get(l))
-                    .and_then(|r| r.get(2))
-                    .map(|t| kentos_interaction::js_trim(t).to_owned())
-                    .unwrap_or_default();
+                let dh = match line.and_then(|l| l.checked_sub(super::LEAPFROG_LINE)) {
+                    // docs/adr/5300: a leap-frog setup's difference as computed.
+                    Some(l) => self
+                        .leapfrog_dh
+                        .get(l)
+                        .copied()
+                        .filter(|d| d.is_finite())
+                        .map_or_else(String::new, |d| fixed(d, 4)),
+                    None => line
+                        .and_then(|l| self.rows.rows.get(l))
+                        .and_then(|r| r.get(2))
+                        .map(|t| kentos_interaction::js_trim(t).to_owned())
+                        .unwrap_or_default(),
+                };
                 (a, b, dh)
             };
             rows.push(vec![
@@ -568,7 +624,11 @@ impl LevelForm {
 
     fn row_names(&self, row: usize) -> (String, String) {
         let line = self.solved.lines.get(row).copied().unwrap_or(0);
-        let r = self.rows.rows.get(line);
+        // docs/adr/5300: a leap-frog setup's names from its own table.
+        let r = match line.checked_sub(super::LEAPFROG_LINE) {
+            Some(l) => self.leapfrog.rows.get(l),
+            None => self.rows.rows.get(line),
+        };
         let get = |c: usize| {
             r.and_then(|r| r.get(c))
                 .map(|t| kentos_interaction::js_trim(t).to_owned())

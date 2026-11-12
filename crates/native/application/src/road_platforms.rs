@@ -120,9 +120,18 @@ pub(crate) fn open_warning(def: &PlatformDef, g: &Graded) -> Option<CommandWarni
 
 /// The pad graded now on its terrain.
 pub(crate) fn read(doc: &Document, def: &PlatformDef) -> Result<Read, Stop> {
+    read_told(doc, def, &|_, _| false)
+}
+
+/// [`read`] telling `tick` how far it has come (docs/adr/4860): its terrain built (one step), then the grading, a
+/// corner's slope lines at a time, its design surface and its volumes (`grading::grade_told`); `tick` answering true
+/// stops it there, cancelled.
+pub(crate) fn read_told(doc: &Document, def: &PlatformDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
     let terrain = terrain_of(doc, def)?;
-    let g = grading::grade(&platform_of(def), &terrain, 0.0)
-        .map_err(|e| fail(codes::INVALID_PLATFORM, format!("“{}” platformu tesviye edilemiyor: {e}", def.name), "corners"))?;
+    let g = grading::grade_told(&platform_of(def), &terrain, 0.0, tick).map_err(|e| match e {
+        grading::GradingError::Stopped => Stop::Cancelled,
+        e => fail(codes::INVALID_PLATFORM, format!("“{}” platformu tesviye edilemiyor: {e}", def.name), "corners"),
+    })?;
     Ok(Read { warnings: open_warning(def, &g).into_iter().collect(), report: report_of(def, &g) })
 }
 

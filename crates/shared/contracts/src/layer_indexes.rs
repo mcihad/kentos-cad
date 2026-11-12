@@ -1,5 +1,5 @@
 //! A layer's indexes (Dizinler, docs/adr/0758): what its records are looked up by, one field or several in order, as
-//! ArcGIS's attribute index and a database's CREATE INDEX are. A unique one is the layer's key: no two records hold the
+//! an attribute index and a database's CREATE INDEX are. A unique one is the layer's key: no two records hold the
 //! same values in its fields, whatever writes them (a form, the table, a command, an import, Python or an agent). An
 //! empty value is no value, as SQL's NULL: a set with one is not compared unless the index takes empty values as the
 //! same (PostgreSQL's NULLS NOT DISTINCT). A GeoPackage the layer is written to gets its indexes, one read brings them.
@@ -103,7 +103,7 @@ pub fn layer_indexes_problem(
                 return Some((
                     format!("{at}/fields/{j}"),
                     format!(
-                        "“{}” alanı bayt tutar; dizine girmez (ArcGIS de BLOB alanına dizin kurmaz).",
+                        "“{}” alanı bayt tutar; dizine girmez.",
                         f.label()
                     ),
                 ));

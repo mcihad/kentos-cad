@@ -637,11 +637,11 @@ def profile_take(name, tables=None, routes=None, op="execute"):
         layer = by_table.get(table)
         if layer is None or layer not in made:
             continue
-        renderer, lost, _ = qml_cases.read(qml)
+        renderer, lost, _, _ = qml_cases.read(qml)
         nodes.setdefault(layer, {})["style"] = {**NEW_LAYER_STYLE, "renderer": renderer}
         out_styles += 1
         if lost:
-            left.append(f"“{table}” tablosunun QGIS stilinden alınamayanlar: {', '.join(lost)}")
+            left.append(f"“{table}” tablosunun katman stilinden (QML) alınamayanlar: {', '.join(lost)}")
     for t in output["tables"]:
         if t["layer"] in made:
             nodes.setdefault(t["layer"], {})["fields"] = layer_fields[t["table"]]

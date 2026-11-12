@@ -789,6 +789,7 @@ impl App {
                     params: self.param_grip_marks(),
                     hot: self.session.hot_grips(),
                     marked: self.marked_points(),
+                    ways: self.vertex_ways(),
                     range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     extent: self.extent_mark(),
@@ -1020,6 +1021,7 @@ impl App {
             params: self.param_grip_marks(),
             hot: self.session.hot_grips(),
             marked: self.marked_points(),
+            ways: self.vertex_ways(),
             range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
             extent: self.extent_mark(),
@@ -1356,7 +1358,7 @@ impl App {
                 let color = palette
                     .resolve(&node.style.color)
                     .map_or_else(|| hex_color(&node.style.color), rgba_color);
-                // A typed layer's glyph in its colour, as QGIS draws its symbol (docs/adr/0622 §5); a layer of
+                // A typed layer's glyph in its colour, as a map legend draws its symbol (docs/adr/0622 §5); a layer of
                 // any kind its colour's square.
                 let face: Element<'_, Message> = match node.geometry {
                     Some(g) => kentos_ui::icon::icon(crate::layer_types::glyph(Some(g)))
@@ -1396,7 +1398,7 @@ impl App {
         // the running command's (line_commands).
         // The catalog's commands, then the user's models (borrowed from the library).
         // A module's program lists only its own commands (docs/adr/0802).
-        let mut commands: Vec<LineCommand<'_>> = all_line_commands(self.autocad_names())
+        let mut commands: Vec<LineCommand<'_>> = all_line_commands(self.classic_names())
             .filter(|(id, _)| self.offers(id))
             .map(|(id, line)| self.module_line(id, line))
             .collect::<Vec<_>>();
@@ -1410,7 +1412,7 @@ impl App {
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
             .on_run(Message::CommandRun);
-        // As in AutoCAD, Space is a second Enter, except where the step asks for words (a
+        // As in the classic CAD programs, Space is a second Enter, except where the step asks for words (a
         // style's name, docs/adr/0183 §4); Esc clears what is typed, then on an empty line ends
         // the command (ADR 0018).
         let line = if self.session.takes_words() {
@@ -1665,7 +1667,7 @@ impl App {
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
-            // One scale (docs/adr/0626 §3): a CAD project's drawing scale (AutoCAD's annotation scale), the
+            // One scale (docs/adr/0626 §3): a CAD project's drawing scale (the annotation scale), the
             // scale its texts and dimensions are drawn at, chosen from its unit's scales or typed; a CBS
             // project's view at its scale (screen_scale.rs, docs/adr/0165 §5), chosen or typed.
             if self.work_mode() == kentos_commands::Workspace::Cad {
@@ -2203,13 +2205,19 @@ impl App {
             Asking::FeaturesReconcile => self.features_reconcile_view(),
             Asking::Zoning => self.zoning_view(),
             Asking::ZoningSymbols => self.zoning_symbols_view(),
+            Asking::ZoningDraft => self.zoning_draft_view(),
             Asking::Impact => self.impact_view(),
             Asking::Readjustment => self.readjustment_view(),
             Asking::Ortho => self.ortho_view(),
             Asking::OrthoCompare => self.ortho_compare_view(),
+            Asking::OrthoSeamlines => self.ortho_seamlines_view(),
             Asking::Overlap => self.overlap_view(),
             Asking::Register => self.register_view(),
+            Asking::ScanNetwork => self.scan_network_view(),
+            Asking::CloudPlace => self.cloud_place_view(),
+            Asking::CatalogReport => self.catalog_report_view(),
             Asking::SheetContours => self.sheet_contours_view(),
+            Asking::SectionCheck => self.section_check_view(),
             Asking::Stockpile => self.stockpile_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),
@@ -2440,7 +2448,7 @@ impl App {
         if self.session.is_running() {
             return Vec::new();
         }
-        all_line_commands(self.autocad_names())
+        all_line_commands(self.classic_names())
             .filter(|(id, _)| self.offers(id))
             .map(|(id, line)| self.module_line(id, line))
             .collect()
@@ -2472,13 +2480,13 @@ impl App {
 /// A row of the command line's list with the id of the command it runs.
 type Line = (&'static str, LineCommand<'static>);
 
-/// Every command as the command line lists it, with its command's id, made once; with AutoCAD's
+/// Every command as the command line lists it, with its command's id, made once; with the classic CAD
 /// names too when that profile is on (alias_profile.rs, docs/adr/0282).
-fn all_line_commands(autocad: bool) -> impl Iterator<Item = Line> {
+fn all_line_commands(classic: bool) -> impl Iterator<Item = Line> {
     static ALL: std::sync::OnceLock<Vec<Line>> = std::sync::OnceLock::new();
-    static AUTOCAD: std::sync::OnceLock<Vec<Line>> = std::sync::OnceLock::new();
-    let list = if autocad {
-        AUTOCAD.get_or_init(|| {
+    static CLASSIC: std::sync::OnceLock<Vec<Line>> = std::sync::OnceLock::new();
+    let list = if classic {
+        CLASSIC.get_or_init(|| {
             catalog()
                 .commands()
                 .iter()

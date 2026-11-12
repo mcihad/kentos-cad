@@ -330,6 +330,7 @@ fn members_of_vpc(path: &Path, sample: &mut Sample) -> Result<Vec<Member>, Strin
                 format: CloudFormat::Laz,
                 count: 0,
                 bounds: [0.0; 6],
+                pose: None,
             },
             None,
         );
@@ -386,6 +387,7 @@ pub fn inspect(paths: &[PathBuf], address: Option<&str>) -> Result<Read, String>
                 format: CloudFormat::Copc,
                 count: 0,
                 bounds: [0.0; 6],
+                pose: None,
             },
             None,
         );
@@ -722,6 +724,7 @@ impl App {
                 format: m.format,
                 count: m.count,
                 bounds: m.bounds,
+                pose: None,
             });
         }
         let make = |sources: Vec<CloudSource>, members: &[Member]| PointCloudFields {

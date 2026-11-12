@@ -276,7 +276,7 @@ pub const SCHEMA_WITH_RASTERS: u32 = 29;
 /// project's annotation heights, the settings' `annotation`; a dimension's
 /// and a dimension style's line fields (`dimLineColor`, `lineWeight`,
 /// `lineType`, `extColor`, `extWeight`, `extLineType`, `textColor`); a
-/// leader's `arrowSize` and the arrowheads AutoCAD has beside the first three
+/// leader's `arrowSize` and the arrowheads DXF names beside the first three
 /// (docs/adr/0205). A writer writes it only when a drawing has one of these:
 /// any other drawing stays 29 or older, byte for byte; a reader of those
 /// refuses them rather than draw another look.
@@ -956,11 +956,33 @@ pub const SCHEMA_WITH_COLUMN_SIDE_BONDS: u32 = 244;
 /// Schema 245 (docs/adr/8050): a room module's columns, stairs, ramps, slabs and room separators as members, and its
 /// kitchen runs (a module's `runs`, its recipes, and an instance's `runs`, its runs' ids).
 pub const SCHEMA_WITH_MODULE_SCOPE: u32 = 245;
+// Harita's schemas, written as 238–245 on map-cad-bitir beside Mimari's own 238–245 on main, follow Mimari's
+// from 246 (the merge of 12 November 2026), as Mimari's followed main's in a6e482f22.
+/// Schema 246 (docs/adr/4740): a sheet's contour lines kept as a drawing (`road.terrains.sheetcontours`), a layer as a
+/// drawing's source (`kind` `layer`), and drawing again whole (`road.rebuildWhole`).
+pub const SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS: u32 = 246;
+/// Schema 247 (docs/adr/4880): a map work item's typed layers' profile (`profile`).
+pub const SCHEMA_WITH_WORK_PROFILES: u32 = 247;
+/// Schema 248 (docs/adr/4920): a GNSS archive's baseline sessions with their cross-correlations (`baselineSessions`),
+/// an adjustment's sessions, the known points' place limits kept with their source (`tolerance`) and a network point's
+/// velocity read from a grid (`velocity`).
+pub const SCHEMA_WITH_GNSS_SESSIONS: u32 = 248;
+/// Schema 249 (docs/adr/5020): the parcel register's stated lengths (`lengths`), drafts (`drafts`) and a document's
+/// approval as written outside (`approval`).
+pub const SCHEMA_WITH_PARCEL_DRAFTS: u32 = 249;
+/// Schema 250 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts (`settings.zoningPlan`).
+pub const SCHEMA_WITH_ZONING_DRAFTS: u32 = 250;
+/// Schema 251 (docs/adr/5100): a point cloud file's place in the drawing, kept without writing the file (`pose`).
+pub const SCHEMA_WITH_CLOUD_POSES: u32 = 251;
+/// Schema 252 (docs/adr/5200): the adjustments the project keeps (`surveyAdjustments`).
+pub const SCHEMA_WITH_KEPT_ADJUSTMENTS: u32 = 252;
+/// Schema 253 (docs/adr/5220): the reviews the project keeps of its monitoring jobs (`monitoringReviews`).
+pub const SCHEMA_WITH_MONITORING_REVIEWS: u32 = 253;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 243] = [
+pub const SCHEMAS: [u32; 251] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1204,6 +1226,14 @@ pub const SCHEMAS: [u32; 243] = [
     SCHEMA_WITH_GRID_BONDS,
     SCHEMA_WITH_COLUMN_SIDE_BONDS,
     SCHEMA_WITH_MODULE_SCOPE,
+    SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
+    SCHEMA_WITH_WORK_PROFILES,
+    SCHEMA_WITH_GNSS_SESSIONS,
+    SCHEMA_WITH_PARCEL_DRAFTS,
+    SCHEMA_WITH_ZONING_DRAFTS,
+    SCHEMA_WITH_CLOUD_POSES,
+    SCHEMA_WITH_KEPT_ADJUSTMENTS,
+    SCHEMA_WITH_MONITORING_REVIEWS,
 ];
 
 /// The file a drawing is saved as.

@@ -12,7 +12,8 @@
 //! parcel's numbered pieces beside its points (“‹Ada/Parsel› dış parçalar”): the part as an area with its parcel, name
 //! and number as attributes, and a point inside it labelled with the number (`label_at`); the sheet's map shows both of
 //! the parcel's layers, its coordinate list the points only. docs/adr/4280: with the user's `numberHeight` the number is
-//! a text fitted inside its part instead of the point (`fitted`).
+//! a text fitted inside its part instead of the point (`fitted`). docs/adr/5080: a number outside on a leader
+//! (docs/adr/4680) is kept clear of what the sheet's map shows (`separation_number_clear`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -33,7 +34,7 @@ use kentos_sheet::template::{InstanceOptions, Template, VariableValue};
 use kentos_sheet::{ItemKind, MapView, create, expr, fit, template};
 
 use crate::checks::{self, Stop, error};
-use crate::{ExecutionContext, codes, readjustment_scope, sheets_edit, sheets_fit};
+use crate::{ExecutionContext, codes, readjustment_scope, separation_number_clear, sheets_edit, sheets_fit};
 
 /// The layer of a parcel's numbered pieces outside is named “‹Ada/Parsel› dış parçalar” (docs/adr/3480).
 const PIECES: &str = "dış parçalar";
@@ -106,7 +107,7 @@ pub fn label_at(part: &ScopePart) -> Option<[f64; 2]> {
 
 /// Where the horizontal line at `y` crosses a part's rings, sorted (a straight edge when its ends lie on either side,
 /// the upper end counted; an arc where its circle meets the line within its sweep, its end not counted).
-fn crossings_at(part: &ScopePart, y: f64) -> Vec<f64> {
+pub(crate) fn crossings_at(part: &ScopePart, y: f64) -> Vec<f64> {
     let mut xs: Vec<f64> = Vec::new();
     for r in &part.rings {
         let n = r.pts.len();
@@ -296,7 +297,9 @@ fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_cor
 }
 
 /// The numbered outside parts' labels (docs/adr/3480): each outside part given a number, its name and place; with the
-/// user's height (paper mm) at the sheet's scale, the number's fitted text (docs/adr/4280).
+/// user's height (paper mm) at the sheet's scale, the number's fitted text (docs/adr/4280). Docs/adr/5080: with a
+/// leader, the numbers that fit inside first, then each one going outside in the parts' order, placed clear of the
+/// drawing the sheet's map shows (`drawing`), the texts inside and the leaders placed before it.
 fn labels_of(
     p: &ReadjustmentScopeParcel,
     given: Option<&[String]>,
@@ -304,10 +307,13 @@ fn labels_of(
     leader: bool,
     scale: u32,
     font: kentos_geometry_core::text::Font,
+    drawing: Option<&dyn Fn(&[&ScopePart], f64, f64) -> separation_number_clear::Obstacles>,
 ) -> Vec<kentos_commands::SeparationLabel> {
     let Some(given) = given else { return Vec::new() };
     let names = part_names(&p.parts);
-    p.parts
+    let mut parts = Vec::new();
+    let mut labels: Vec<kentos_commands::SeparationLabel> = p
+        .parts
         .iter()
         .zip(&names)
         .filter(|(q, _)| q.side == "outside")
@@ -323,6 +329,8 @@ fn labels_of(
                 share: None,
                 fits: None,
                 leader: None,
+                clear: None,
+                clashes: Vec::new(),
             };
             if let Some(mm) = height {
                 let (at, turn, h, share, fits, tip) = fitted(q, &number, mm * f64::from(scale) / 1000.0, font, leader)?;
@@ -333,9 +341,42 @@ fn labels_of(
                 label.fits = Some(fits);
                 label.leader = tip;
             }
+            parts.push(q);
             Some(label)
         })
-        .collect()
+        .collect();
+    let (Some(drawing), Some(mm)) = (drawing, height) else { return labels };
+    let outside: Vec<usize> = (0..labels.len()).filter(|&i| labels[i].leader.is_some()).collect();
+    if outside.is_empty() {
+        return labels;
+    }
+    let h = mm * f64::from(scale) / 1000.0;
+    let widest = outside.iter().map(|&i| note_width(&labels[i].number, h, font)).fold(0.0, f64::max);
+    let mut obstacles = drawing(&outside.iter().map(|&i| parts[i]).collect::<Vec<_>>(), h, widest);
+    for l in labels.iter().filter(|l| l.leader.is_none()) {
+        if let (Some(h), Some(turn)) = (l.height, l.rotation) {
+            let text = number_text(&l.number, l.at, turn, h);
+            if let Some(t) = TextPlace::of(&crate::geometry::shape(&text)) {
+                obstacles.add_box(t.outline(font), &l.part);
+            }
+        }
+    }
+    for i in outside {
+        let Some(tip) = labels[i].leader else { continue };
+        let Some(placed) = separation_number_clear::place(parts[i], tip, &labels[i].number, h, font, &obstacles) else { continue };
+        let l = &mut labels[i];
+        l.at = placed.bend;
+        l.clear = Some(placed.clashes.is_empty());
+        l.clashes = placed.clashes.clone();
+        obstacles.add_leader(&placed, &l.part);
+    }
+    labels
+}
+
+/// A one-line text's width, `height` tall, as the drawing measures it.
+fn note_width(number: &str, height: f64, font: kentos_geometry_core::text::Font) -> f64 {
+    let ring = TextPlace::line(kentos_geometry_core::Vec2::new(0.0, 0.0), number, height, 0.0, None, None).outline(font);
+    ring.iter().map(|q| q.x).fold(f64::NEG_INFINITY, f64::max) - ring.iter().map(|q| q.x).fold(f64::INFINITY, f64::min)
 }
 
 /// The numbered outside parts as objects (docs/adr/3480): each part as an area and a point at its label's place, both
@@ -731,6 +772,13 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
     let group = group_of(doc);
     let layers: BTreeSet<&str> = group.map(|g| g.children.iter().map(|c| c.name.as_str()).collect()).unwrap_or_default();
     let mut laid = Laid { planned: Vec::new(), pictures: Vec::new(), group: group.map(|g| g.id.clone()) };
+    // docs/adr/5080: what the numbers outside must not touch: the drawing as the sheets' maps show it, but the
+    // separation sheets' own point and piece layers (each map freezes the other parcels').
+    let font = crate::geometry::drawing_font(doc.settings().drawing_font);
+    let own: BTreeSet<String> = group.map(|g| g.children.iter().map(|c| c.id.clone()).collect()).unwrap_or_default();
+    let drawing = |parts: &[&ScopePart], h: f64, width: f64| {
+        separation_number_clear::Obstacles::of_drawing(doc, &own, &separation_number_clear::reach_of(parts, h, width), font)
+    };
     for p in partial {
         let name = format!("{SHEET_WORD} {}", p.parcel);
         if names.contains(name.as_str()) {
@@ -819,12 +867,35 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
                     input.number_height,
                     input.number_leader,
                     scale,
-                    crate::geometry::drawing_font(doc.settings().drawing_font),
+                    font,
+                    Some(&drawing),
                 ),
             },
         });
     }
     Ok(laid)
+}
+
+/// docs/adr/5080: a warning for each number outside that touches something wherever it goes.
+fn crowded(laid: &Laid) -> Vec<kentos_commands::CommandWarning> {
+    let mut out = Vec::new();
+    for p in &laid.planned {
+        for l in p.out.labels.iter().filter(|l| l.clear == Some(false)) {
+            out.push(kentos_commands::CommandWarning {
+                code: "number_crowded".to_owned(),
+                message: format!(
+                    "“{}” parselinin {} parçasının numarası ({}) dışarıda hiçbir şeye değmeyen bir yere konamadı; en az şeye \
+                     değdiği yere kondu ({} nesne ya da numara). Numaranın yazı boyunu küçültün ya da kılavuzu çizimde taşıyın.",
+                    p.parcel.parcel,
+                    l.part,
+                    l.number,
+                    l.clashes.len()
+                ),
+                path: Some(format!("numbers.{}", p.parcel.uid)),
+            });
+        }
+    }
+    out
 }
 
 /// The answer a plan gives: the sheets without their layers, nothing written.
@@ -838,6 +909,7 @@ fn planned(doc: &Document, laid: Laid) -> ReadjustmentSheetsMade {
 }
 
 fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<ReadjustmentSheetsMade> {
+    let warnings = crowded(&laid);
     let Laid { planned, pictures, group } = laid;
     let step = cx.doc.begin_group(STEP);
     let group = match group {
@@ -943,7 +1015,7 @@ fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<Readjustmen
     cx.doc.end_group(step);
     CommandResult::Completed {
         output: ReadjustmentSheetsMade { group: Some(group), sheets, uids, revision: cx.doc.revision().to_string() },
-        warnings: Vec::new(),
+        warnings,
     }
 }
 
@@ -958,7 +1030,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ReadjustmentSheets) -> Comman
 /// The sheets execute would make now; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ReadjustmentSheets) -> CommandResult<ReadjustmentSheetsMade> {
     match prepare(cx.doc, input) {
-        Ok(laid) => CommandResult::Completed { output: planned(cx.doc, laid), warnings: Vec::new() },
+        Ok(laid) => {
+            let warnings = crowded(&laid);
+            CommandResult::Completed { output: planned(cx.doc, laid), warnings }
+        }
         Err(stop) => stop.into(),
     }
 }

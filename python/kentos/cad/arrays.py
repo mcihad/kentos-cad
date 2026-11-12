@@ -190,20 +190,19 @@ adopt = _ArraysAdopt()
 
 class _ArraysEdit(LocalCommand[ArraysEdit, EntitiesEdited, EntitiesEditPlan]):
     """``cad.arrays.edit`` v1. Diziyi düzenle: Kimliğiyle verilen ilişkili diziyi
-    (cad.entities.array'in associative'i) düzenler (AutoCAD'in ARRAYEDIT'i); tek geri
-    alma adımı “Diziyi düzenle”. Öğeler yerleşimin sırasıyla 0'dan numaralanır (ızgarada
-    satır satır: satır r, sütun c r × sütun + c). edit layout: yeni satır, sütun, adet,
-    aralık, açı ya da yol; her öğe yeniden yerleşir. Öğe numarasını (iki ızgarada
-    satırını ve sütununu) korur; elle silinen silinmiş, elle değişen (kept) yerinde
-    kalır; yeni yerlere yerleştirme eklenir, kalkan yerlerin yerleştirmeleri silinir.
-    edit placement: ilk yerin p, scale, rotation ve mirror'ı; silinmemiş ve değişmemiş
-    öğeler izler. edit replace: items öğeleri block adlı bloğu yerleştirir ve korunur.
-    edit remove: items öğelerinin yerleştirmeleri silinir, öğeler boş kalır. edit reset:
-    items (yoksa hepsi) yerleşimin verdiği gibi olur: silinen geri gelir, değişen
-    dizinin bloğuyla yerine döner. Dizinin katmanı ve dokunulan her yerleştirme kilitsiz
-    olmalı: hepsi ya da hiçbiri. Çıktı ve plan cad.entities.edit'inkidir.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    (cad.entities.array'in associative'i) düzenler; tek geri alma adımı “Diziyi
+    düzenle”. Öğeler yerleşimin sırasıyla 0'dan numaralanır (ızgarada satır satır: satır
+    r, sütun c r × sütun + c). edit layout: yeni satır, sütun, adet, aralık, açı ya da
+    yol; her öğe yeniden yerleşir. Öğe numarasını (iki ızgarada satırını ve sütununu)
+    korur; elle silinen silinmiş, elle değişen (kept) yerinde kalır; yeni yerlere
+    yerleştirme eklenir, kalkan yerlerin yerleştirmeleri silinir. edit placement: ilk
+    yerin p, scale, rotation ve mirror'ı; silinmemiş ve değişmemiş öğeler izler. edit
+    replace: items öğeleri block adlı bloğu yerleştirir ve korunur. edit remove: items
+    öğelerinin yerleştirmeleri silinir, öğeler boş kalır. edit reset: items (yoksa
+    hepsi) yerleşimin verdiği gibi olur: silinen geri gelir, değişen dizinin bloğuyla
+    yerine döner. Dizinin katmanı ve dokunulan her yerleştirme kilitsiz olmalı: hepsi ya
+    da hiçbiri. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.arrays.edit"
@@ -226,18 +225,18 @@ class _ArraysEdit(LocalCommand[ArraysEdit, EntitiesEdited, EntitiesEditPlan]):
         expected: Expected | None = None,
     ) -> EntitiesEdited:
         """Diziyi düzenle: Kimliğiyle verilen ilişkili diziyi (cad.entities.array'in
-        associative'i) düzenler (AutoCAD'in ARRAYEDIT'i); tek geri alma adımı “Diziyi
-        düzenle”. Öğeler yerleşimin sırasıyla 0'dan numaralanır (ızgarada satır satır: satır
-        r, sütun c r × sütun + c). edit layout: yeni satır, sütun, adet, aralık, açı ya da
-        yol; her öğe yeniden yerleşir. Öğe numarasını (iki ızgarada satırını ve sütununu)
-        korur; elle silinen silinmiş, elle değişen (kept) yerinde kalır; yeni yerlere
-        yerleştirme eklenir, kalkan yerlerin yerleştirmeleri silinir. edit placement: ilk
-        yerin p, scale, rotation ve mirror'ı; silinmemiş ve değişmemiş öğeler izler. edit
-        replace: items öğeleri block adlı bloğu yerleştirir ve korunur. edit remove: items
-        öğelerinin yerleştirmeleri silinir, öğeler boş kalır. edit reset: items (yoksa
-        hepsi) yerleşimin verdiği gibi olur: silinen geri gelir, değişen dizinin bloğuyla
-        yerine döner. Dizinin katmanı ve dokunulan her yerleştirme kilitsiz olmalı: hepsi ya
-        da hiçbiri. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve
+        associative'i) düzenler; tek geri alma adımı “Diziyi düzenle”. Öğeler yerleşimin
+        sırasıyla 0'dan numaralanır (ızgarada satır satır: satır r, sütun c r × sütun + c).
+        edit layout: yeni satır, sütun, adet, aralık, açı ya da yol; her öğe yeniden
+        yerleşir. Öğe numarasını (iki ızgarada satırını ve sütununu) korur; elle silinen
+        silinmiş, elle değişen (kept) yerinde kalır; yeni yerlere yerleştirme eklenir,
+        kalkan yerlerin yerleştirmeleri silinir. edit placement: ilk yerin p, scale,
+        rotation ve mirror'ı; silinmemiş ve değişmemiş öğeler izler. edit replace: items
+        öğeleri block adlı bloğu yerleştirir ve korunur. edit remove: items öğelerinin
+        yerleştirmeleri silinir, öğeler boş kalır. edit reset: items (yoksa hepsi)
+        yerleşimin verdiği gibi olur: silinen geri gelir, değişen dizinin bloğuyla yerine
+        döner. Dizinin katmanı ve dokunulan her yerleştirme kilitsiz olmalı: hepsi ya da
+        hiçbiri. Çıktı ve plan cad.entities.edit'inkidir. expectedRevision verilmişse ve
         çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:

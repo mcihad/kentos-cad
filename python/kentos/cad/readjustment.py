@@ -37,7 +37,16 @@ class _ReadjustmentDistribute(LocalCommand[ReadjustmentDistribute, ReadjustmentD
     Kesintinin kesin toplamı bir kez yuvarlanır ve parsellere alanlarıyla dağıtılır, net
     alan hak sahiplerine paylarıyla; her artığın kime gittiği söylenir. Toplamlar kesin
     denetlenir (conserved). Sayılar ondalık yazıdır, float değil. Sonuç her zaman
-    taslaktır (draft); resmî karar verilmez. Retler: invalid_input, area_mismatch,
+    taslaktır (draft); resmî karar verilmez. Değer esaslı karşılaştırma (rules.basis:
+    value; ilk değer area, yönetmeliğin alan esaslı dağıtımı): dağıtım kütlesi (tapu
+    toplamı − kesinti) parsellere düzenlemeden önceki değerleri oranında dağıtılır,
+    parselin kesintisi alanı − payıdır (alan kazanırsa eksi); her değer kullanıcınındır
+    (entries[i].value, parselin her kaydında aynı) ve kaynağıyla (rules.valueSource);
+    KentOS değer üretmez. Cevapta basis, valueSource, parsellerin value ve valueShare'i
+    (kesir), kütlenin artığı (massRemainder, massRemainderTo); her zaman
+    value_basis_not_a_rule uyarısı: yönetmelikte kural değildir. Retler: invalid_input
+    (değer esasında: bilinmeyen esas, kaynak yok, değeri olmayan, eksi ya da parselde
+    farklı değer, değerler toplamı sıfır; alan esasında verilen değer), area_mismatch,
     duplicate_holder, shares_not_whole, needs_rule.
     """
     __slots__ = ()
@@ -69,7 +78,16 @@ class _ReadjustmentDistribute(LocalCommand[ReadjustmentDistribute, ReadjustmentD
         bir kez yuvarlanır ve parsellere alanlarıyla dağıtılır, net alan hak sahiplerine
         paylarıyla; her artığın kime gittiği söylenir. Toplamlar kesin denetlenir
         (conserved). Sayılar ondalık yazıdır, float değil. Sonuç her zaman taslaktır
-        (draft); resmî karar verilmez. Retler: invalid_input, area_mismatch,
+        (draft); resmî karar verilmez. Değer esaslı karşılaştırma (rules.basis: value; ilk
+        değer area, yönetmeliğin alan esaslı dağıtımı): dağıtım kütlesi (tapu toplamı −
+        kesinti) parsellere düzenlemeden önceki değerleri oranında dağıtılır, parselin
+        kesintisi alanı − payıdır (alan kazanırsa eksi); her değer kullanıcınındır
+        (entries[i].value, parselin her kaydında aynı) ve kaynağıyla (rules.valueSource);
+        KentOS değer üretmez. Cevapta basis, valueSource, parsellerin value ve valueShare'i
+        (kesir), kütlenin artığı (massRemainder, massRemainderTo); her zaman
+        value_basis_not_a_rule uyarısı: yönetmelikte kural değildir. Retler: invalid_input
+        (değer esasında: bilinmeyen esas, kaynak yok, değeri olmayan, eksi ya da parselde
+        farklı değer, değerler toplamı sıfır; alan esasında verilen değer), area_mismatch,
         duplicate_holder, shares_not_whole, needs_rule.
 
         Args:
@@ -346,20 +364,28 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
     parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların
     tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların
     sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS
-    numara vermez; numaralı her dış parça parselin katmanına da yazılır (ADR 3480):
-    parça alan olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla
-    etiketli bir nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin
-    parçanın içindeki en geniş aralığının ortası); cevapta labels. numberHeight (kâğıt
-    mm, kullanıcının; ADR 4280) verilince numara nokta yerine parçanın içine sığan bir
-    yazıdır: boyu numberHeight × ölçek / 1000, sığana dek onda bir adımlarla küçülür;
-    önce yatay, sonra parçanın en uzun düz kenarı boyunca denenir; labels'ta height,
-    rotation, share ve fits. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla
-    birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri
-    (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template,
-    invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input
-    (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara;
-    numberHeight 0'dan büyük değil), not_fixed_map, separation_sheet_exists (pafta ya da
-    nokta katmanı zaten var).
+    numara vermez; numaralı her dış parça parselin katmanına da yazılır: parça alan
+    olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir
+    nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en
+    geniş aralığının ortası); cevapta labels. numberHeight (kâğıt mm, kullanıcının)
+    verilince numara nokta yerine parçanın içine sığan bir yazıdır: boyu numberHeight ×
+    ölçek / 1000, sığana dek onda bir adımlarla küçülür; önce yatay, sonra parçanın en
+    uzun düz kenarı boyunca denenir; labels'ta height, rotation, share ve fits.
+    numberLeader (numberHeight ile): tam boyda sığmayan numara küçülmez, parçanın dışına
+    kılavuzla yazılır; yerler en yakından denenir (çizgi parçanın sınırından 1, 2, 3
+    yazı boyu öte; doğu, batı, kuzey, güney, sonra ara yönler) ve kılavuzun parçanın
+    dışındaki çizgisi, inişi ve notu paftanın haritasının gösterdiği hiçbir şeye
+    (gösterilen katmanlardaki çizgiler ve alanların sınırları, yazılar, kılavuzlar,
+    noktalar; paftanın öbür numaraları) değmeyen ilk yer seçilir; labels'ta leader (uç)
+    ve clear. Hiçbir yer temiz değilse en az şeye değen yer: clear false, clashes
+    (nesnelerin kalıcı kimlikleri, numaraların parça adları) ve number_crowded uyarısı.
+    Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m.
+    13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…),
+    no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options
+    (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen
+    girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara; numberHeight 0'dan
+    büyük değil; numberHeight'sız numberLeader), not_fixed_map, separation_sheet_exists
+    (pafta ya da nokta katmanı zaten var).
     """
     __slots__ = ()
     id = "cad.readjustment.sheets"
@@ -402,19 +428,28 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel
         numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın
         yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez; numaralı her
-        dış parça parselin katmanına da yazılır (ADR 3480): parça alan olarak (Parsel,
-        Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın
-        köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş
-        aralığının ortası); cevapta labels. numberHeight (kâğıt mm, kullanıcının; ADR 4280)
-        verilince numara nokta yerine parçanın içine sığan bir yazıdır: boyu numberHeight ×
-        ölçek / 1000, sığana dek onda bir adımlarla küçülür; önce yatay, sonra parçanın en
-        uzun düz kenarı boyunca denenir; labels'ta height, rotation, share ve fits. Tek geri
-        alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2),
-        KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels,
-        no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da
-        parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça
-        sayısını tutmayan, boş ya da aynı numara; numberHeight 0'dan büyük değil),
-        not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).
+        dış parça parselin katmanına da yazılır: parça alan olarak (Parsel, Kısım, ParselNo
+        öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın köşelerinin
+        orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş aralığının ortası);
+        cevapta labels. numberHeight (kâğıt mm, kullanıcının) verilince numara nokta yerine
+        parçanın içine sığan bir yazıdır: boyu numberHeight × ölçek / 1000, sığana dek onda
+        bir adımlarla küçülür; önce yatay, sonra parçanın en uzun düz kenarı boyunca
+        denenir; labels'ta height, rotation, share ve fits. numberLeader (numberHeight ile):
+        tam boyda sığmayan numara küçülmez, parçanın dışına kılavuzla yazılır; yerler en
+        yakından denenir (çizgi parçanın sınırından 1, 2, 3 yazı boyu öte; doğu, batı,
+        kuzey, güney, sonra ara yönler) ve kılavuzun parçanın dışındaki çizgisi, inişi ve
+        notu paftanın haritasının gösterdiği hiçbir şeye (gösterilen katmanlardaki çizgiler
+        ve alanların sınırları, yazılar, kılavuzlar, noktalar; paftanın öbür numaraları)
+        değmeyen ilk yer seçilir; labels'ta leader (uç) ve clear. Hiçbir yer temiz değilse
+        en az şeye değen yer: clear false, clashes (nesnelerin kalıcı kimlikleri,
+        numaraların parça adları) ve number_crowded uyarısı. Tek geri alma adımı. Taslaktır:
+        çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez.
+        Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity,
+        duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin
+        özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını
+        tutmayan, boş ya da aynı numara; numberHeight 0'dan büyük değil; numberHeight'sız
+        numberLeader), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı
+        zaten var).
 
         Args:
             doc: The drawing it works on.
@@ -425,9 +460,11 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
                 straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480). Unit: paper-mm.
             number_leader: Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
                 along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
-                leader from the part's label place, its line running east to one text height past the part's boundary on that
-                line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
-                fit outside it, horizontal, at an offset from its boundary).
+                leader from the part's label place, its line running out of the part to one text height past its boundary, its
+                landing and note beyond it as a leader lays them out. Docs/adr/5080: the places are tried nearest first (one,
+                two, then three text heights past the boundary; east, west, north, south, then the four between) and the first
+                whose line outside the part, landing and note touch nothing the sheet's map shows is taken; none clear: the one
+                touching the fewest, said in the label (`clear`, `clashes`) and a warning `number_crowded`.
             numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
                 docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
                 outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.

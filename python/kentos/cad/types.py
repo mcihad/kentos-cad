@@ -592,6 +592,17 @@ AsbuiltKindName = Literal["asBuilt", "stakeout", "monitoring"]
 """The names of :class:`AsbuiltKind`, for a plain string."""
 
 
+class AsbuiltState(_StrEnum):
+    """A point's state against the thresholds (docs/adr/4840): the highest level any of its values goes beyond."""
+    NORMAL = "normal"
+    WARNING = "warning"
+    ALARM = "alarm"
+
+
+AsbuiltStateName = Literal["normal", "warning", "alarm"]
+"""The names of :class:`AsbuiltState`, for a plain string."""
+
+
 class AsbuiltSurfaceBy(_StrEnum):
     """What a point's surface difference is measured as (docs/adr/4020).
 
@@ -702,6 +713,20 @@ class AtlasLayerRole(_StrEnum):
 
 AtlasLayerRoleName = Literal["coverage", "map"]
 """The names of :class:`AtlasLayerRole`, for a plain string."""
+
+
+class AtlasLook(_StrEnum):
+    """Whether a changed page also looks other (docs/adr/4820): its look's digest against the previous atlas's.
+
+    - ``same``: It draws the same: only what it does not draw changed (an attribute no text, table or label shows).
+    - ``changed``: It draws otherwise.
+    """
+    SAME = "same"
+    CHANGED = "changed"
+
+
+AtlasLookName = Literal["same", "changed"]
+"""The names of :class:`AtlasLook`, for a plain string."""
 
 
 class AtlasPageState(_StrEnum):
@@ -1254,6 +1279,88 @@ CaseworkSideName = Literal["left", "right"]
 """The names of :class:`CaseworkSide`, for a plain string."""
 
 
+class CatalogClassChangeKind(_StrEnum):
+    """What became of an old class in the new catalog.
+
+    - ``same``: Aynı: the same id, layer, geometry, codes and fields.
+    - ``changed``: Değişti: the same id; its layer, geometry, codes or fields differ.
+    - ``renamed``: Yeniden adlandırıldı: another id holds its codes, and no other old class's.
+    - ``split``: Bölündü: its codes went to two classes or more.
+    - ``merged``: Birleşti: its codes went to a class that holds another old class's too.
+    - ``retired``: Kalktı: no class of the new catalog has its id or one of its codes.
+    - ``added``: Yeni: a class of the new catalog no old class leads to.
+    """
+    SAME = "same"
+    CHANGED = "changed"
+    RENAMED = "renamed"
+    SPLIT = "split"
+    MERGED = "merged"
+    RETIRED = "retired"
+    ADDED = "added"
+
+
+CatalogClassChangeKindName = Literal["same", "changed", "renamed", "split", "merged", "retired", "added"]
+"""The names of :class:`CatalogClassChangeKind`, for a plain string."""
+
+
+class CatalogCodeChangeKind(_StrEnum):
+    """What became of a value list's code.
+
+    - ``removed``: Kalktı: the new catalog's list (or the list itself) does not have it.
+    - ``retired``: Kullanımdan kalktı: the new list keeps it retired.
+    - ``added``: Yeni.
+    - ``relabelled``: Etiketi değişti.
+    """
+    REMOVED = "removed"
+    RETIRED = "retired"
+    ADDED = "added"
+    RELABELLED = "relabelled"
+
+
+CatalogCodeChangeKindName = Literal["removed", "retired", "added", "relabelled"]
+"""The names of :class:`CatalogCodeChangeKind`, for a plain string."""
+
+
+class CatalogDecisionChangeKind(_StrEnum):
+    """What becomes of a recorded reconcile decision.
+
+    - ``kept``: Korunur: its class is the same (or changed) and its fields are all there.
+    - ``follows``: Sınıfıyla gider: its class is renamed or merged; the decision holds under the new class.
+    - ``fieldDropped``: Alanı kalkar: a field it gave is removed.
+    - ``classRetired``: Sınıfı kalkar.
+    - ``classSplit``: Sınıfı bölünür: which new class it is, is a new decision.
+    """
+    KEPT = "kept"
+    FOLLOWS = "follows"
+    FIELD_DROPPED = "fieldDropped"
+    CLASS_RETIRED = "classRetired"
+    CLASS_SPLIT = "classSplit"
+
+
+CatalogDecisionChangeKindName = Literal["kept", "follows", "fieldDropped", "classRetired", "classSplit"]
+"""The names of :class:`CatalogDecisionChangeKind`, for a plain string."""
+
+
+class CatalogFieldChangeKind(_StrEnum):
+    """What became of an old class's field in its one new class.
+
+    - ``removed``: Kalktı: the new class has no field of the name.
+    - ``added``: Yeni: the new class's field the old one had not.
+    - ``kindChanged``: Türü değişti.
+    - ``listChanged``: Değer listesi değişti (another list, or none).
+    - ``nowRequired``: Zorunlu oldu.
+    """
+    REMOVED = "removed"
+    ADDED = "added"
+    KIND_CHANGED = "kindChanged"
+    LIST_CHANGED = "listChanged"
+    NOW_REQUIRED = "nowRequired"
+
+
+CatalogFieldChangeKindName = Literal["removed", "added", "kindChanged", "listChanged", "nowRequired"]
+"""The names of :class:`CatalogFieldChangeKind`, for a plain string."""
+
+
 class ChainStatus(_StrEnum):
     """Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights
     carried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.
@@ -1583,6 +1690,7 @@ class CreateOperation(_StrEnum):
     - ``drainage``: `road.drainage.draw` (plan/road.md Y16): a catchment's outline and flow path and the ponds, “Drenaj çiz”.
     - ``lowConfidence``: `road.terrains.lowconfidence` (plan/road.md Y19.2): a surface's estimated areas' outlines, “Düşük güvenli alanları
     - ``sparse``: `road.terrains.sparse` (plan/road.md Y19.3): a density grid's sparse cells' outlines, “Seyrek alanları çiz”.
+    - ``scenarioRecord``: `cad.scenarios.record` (docs/adr/5060): a comparison written as a table, “Ölçüleri çizime yaz”.
     """
     SWEPT = "swept"
     PARALLEL = "parallel"
@@ -1640,10 +1748,26 @@ class CreateOperation(_StrEnum):
     DRAINAGE = "drainage"
     LOW_CONFIDENCE = "lowConfidence"
     SPARSE = "sparse"
+    SCENARIO_RECORD = "scenarioRecord"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse", "scenarioRecord"]
 """The names of :class:`CreateOperation`, for a plain string."""
+
+
+class CrossingHatch(_StrEnum):
+    """How a crossing pipe is filled in the profile (docs/adr/5160): `wall` the ring between its outer and inner walls (its
+    wall known above nought; else nothing), `inside` the inside of its inner wall, `whole` the whole pipe (inside its
+    outer wall, or its inner one without a wall), `none` nothing; the walls' lines are drawn either way.
+    """
+    WALL = "wall"
+    INSIDE = "inside"
+    WHOLE = "whole"
+    NONE = "none"
+
+
+CrossingHatchName = Literal["wall", "inside", "whole", "none"]
+"""The names of :class:`CrossingHatch`, for a plain string."""
 
 
 class CrossingSide(_StrEnum):
@@ -2268,6 +2392,7 @@ class EditOperation(_StrEnum):
     - ``rasterStyle``: Raster stili (docs/adr/0204 §4): rasters' looks and opacities written in place.
     - ``rasterGeoref``: Raster oturt (docs/adr/0204 §6): a raster's affine set from control points, or the raster
     - ``pointCloudStyle``: Nokta bulutu stili (docs/adr/0207 §5): clouds' looks and opacities written in place.
+    - ``pointCloudPlace``: Bulutu konumla (docs/adr/5100): a cloud's files given a place in the drawing (or theirs taken away) without
     - ``annotationScale``: Yazı yüksekliklerini uydur (docs/adr/0205 §3): after the plot scale or
     - ``edgeWidth``: Kenar genişliği (docs/adr/0288): a polyline edge's start and end widths
     """
@@ -2328,11 +2453,12 @@ class EditOperation(_StrEnum):
     RASTER_STYLE = "rasterStyle"
     RASTER_GEOREF = "rasterGeoref"
     POINT_CLOUD_STYLE = "pointCloudStyle"
+    POINT_CLOUD_PLACE = "pointCloudPlace"
     ANNOTATION_SCALE = "annotationScale"
     EDGE_WIDTH = "edgeWidth"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "matchProperties", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "annotationScale", "edgeWidth"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "curveEdit", "matchProperties", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip", "textPath", "textTurn", "textStraighten", "roadJunctions", "medianClose", "topologyFix", "networkAdjust", "levelAdjust", "rasterStyle", "rasterGeoref", "pointCloudStyle", "pointCloudPlace", "annotationScale", "edgeWidth"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -3340,6 +3466,16 @@ JunctionRoleName = Literal["junction", "source", "valve"]
 """The names of :class:`JunctionRole`, for a plain string."""
 
 
+class KeptAdjustmentKind(_StrEnum):
+    """Which network an adjustment was."""
+    HORIZONTAL = "horizontal"
+    HEIGHT = "height"
+
+
+KeptAdjustmentKindName = Literal["horizontal", "height"]
+"""The names of :class:`KeptAdjustmentKind`, for a plain string."""
+
+
 class KnownMovedBy(_StrEnum):
     """What carried a known point to the measurement epoch (docs/adr/2520): its own velocity, or the campaign's
     velocity grid.
@@ -3826,6 +3962,24 @@ LibraryOperationName = Literal["create", "update", "duplicate", "rename", "move"
 """The names of :class:`LibraryOperation`, for a plain string."""
 
 
+class LimitBasis(_StrEnum):
+    """What a shift limit rests on.
+
+    - ``own``: The user's own value (`metres`).
+    - ``detail``: A detail's position: BÖHHBÜY m. 46(1).
+    - ``drawing``: A point's place on the drawing at `scale`: BÖHHBÜY m. 78(1)(h).
+    - ``method``: The point position accuracy of `method` at `scale`: the error limit regulation's m. 9(1) table.
+    """
+    OWN = "own"
+    DETAIL = "detail"
+    DRAWING = "drawing"
+    METHOD = "method"
+
+
+LimitBasisName = Literal["own", "detail", "drawing", "method"]
+"""The names of :class:`LimitBasis`, for a plain string."""
+
+
 class LineEnd(_StrEnum):
     """Which end of a line."""
     START = "start"
@@ -4275,6 +4429,64 @@ MosaicResolutionName = Literal["highest", "lowest", "average"]
 """The names of :class:`MosaicResolution`, for a plain string."""
 
 
+class NameCase(_StrEnum):
+    """How the words of a name are joined and cased.
+
+    - ``lowerCamelCase``: `kapiNo`: the first word small, every later word with a capital first letter; a word of capitals only (two
+    - ``upperSnakeCase``: `KAPI_NO`: every word in capitals, joined by `_`.
+    """
+    LOWER_CAMEL_CASE = "lowerCamelCase"
+    UPPER_SNAKE_CASE = "upperSnakeCase"
+
+
+NameCaseName = Literal["lowerCamelCase", "upperSnakeCase"]
+"""The names of :class:`NameCase`, for a plain string."""
+
+
+class NameLetters(_StrEnum):
+    """What becomes of the Turkish letters.
+
+    - ``keep``: Kept, cased the Turkish way (i ↔ İ, ı ↔ I).
+    - ``ascii``: ç, ğ, ı, İ, ö, ş, ü (and â, î, û) written c, g, i, I, o, s, u; any other letter beyond ASCII cannot be spelled.
+    """
+    KEEP = "keep"
+    ASCII = "ascii"
+
+
+NameLettersName = Literal["keep", "ascii"]
+"""The names of :class:`NameLetters`, for a plain string."""
+
+
+class NameProblem(_StrEnum):
+    """What is wrong with a field's name in the institution.
+
+    - ``unfit``: The form cannot spell the name: the mapping must write it.
+    - ``clash``: Another field of the class falls on the same name.
+    """
+    UNFIT = "unfit"
+    CLASH = "clash"
+
+
+NameProblemName = Literal["unfit", "clash"]
+"""The names of :class:`NameProblem`, for a plain string."""
+
+
+class NameSource(_StrEnum):
+    """Where a field's name in the institution comes from.
+
+    - ``profile``: The profile's own name: no mapping names it and no form is given.
+    - ``form``: The mapping's form spelled it.
+    - ``mapping``: The mapping writes it itself (`fields`).
+    """
+    PROFILE = "profile"
+    FORM = "form"
+    MAPPING = "mapping"
+
+
+NameSourceName = Literal["profile", "form", "mapping"]
+"""The names of :class:`NameSource`, for a plain string."""
+
+
 class NetworkConnect(_StrEnum):
     """Where edges connect (docs/adr/0209 §3).
 
@@ -4287,6 +4499,16 @@ class NetworkConnect(_StrEnum):
 
 NetworkConnectName = Literal["ends", "vertices"]
 """The names of :class:`NetworkConnect`, for a plain string."""
+
+
+class NetworkCorrelations(_StrEnum):
+    """Whether a network's baselines are adjusted with their sessions' cross-correlations (docs/adr/4920)."""
+    SESSION = "session"
+    NONE = "none"
+
+
+NetworkCorrelationsName = Literal["session", "none"]
+"""The names of :class:`NetworkCorrelations`, for a plain string."""
 
 
 class NetworkCostKind(_StrEnum):
@@ -4737,6 +4959,20 @@ class OrderTo(_StrEnum):
 
 OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
+
+
+class OrthoSeamMethod(_StrEnum):
+    """How the seam is drawn through the overlap (docs/adr/4700).
+
+    - ``voronoi``: Equally far from the two images' own parts (the area Voronoi diagram with overlap).
+    - ``radiometry``: The least-difference path between the Voronoi seam's ends (the bottleneck, then the least cost).
+    """
+    VORONOI = "voronoi"
+    RADIOMETRY = "radiometry"
+
+
+OrthoSeamMethodName = Literal["voronoi", "radiometry"]
+"""The names of :class:`OrthoSeamMethod`, for a plain string."""
 
 
 class OrthoSubpixel(_StrEnum):
@@ -5192,10 +5428,10 @@ PaperPlotLossKindName = Literal["colorKind", "modeColor", "grayscale", "grayscal
 
 
 class PaperPlotLossSeverity(_StrEnum):
-    """How much a reported field differs from what AutoCAD plots.
+    """How much a reported field differs from what the table's own program plots.
 
     - ``lost``: Not carried: the object's own look is plotted instead.
-    - ``approximate``: Carried by KentOS's nearest rule, which may differ from AutoCAD's.
+    - ``approximate``: Carried by KentOS's nearest rule, which may differ from the table's own program's.
     - ``note``: Said for the record; what is plotted is the same.
     """
     LOST = "lost"
@@ -5208,7 +5444,7 @@ PaperPlotLossSeverityName = Literal["lost", "approximate", "note"]
 
 
 class PaperPlotStyleFormat(_StrEnum):
-    """Which AutoCAD table a file is."""
+    """Which plot style table a file is."""
     CTB = "ctb"
     STB = "stb"
 
@@ -6409,6 +6645,16 @@ ReviewOriginName = Literal["user", "pdf", "ai"]
 """The names of :class:`ReviewOrigin`, for a plain string."""
 
 
+class ReviewPhrase(_StrEnum):
+    """The phrase written over the signature (Genelge 2025/4 m. 12(20)): “Kontrol edilmiştir” or “Görülmüştür”."""
+    CHECKED = "checked"
+    SEEN = "seen"
+
+
+ReviewPhraseName = Literal["checked", "seen"]
+"""The names of :class:`ReviewPhrase`, for a plain string."""
+
+
 class ReviewStatus(_StrEnum):
     """Where a note stands.
 
@@ -6423,6 +6669,31 @@ class ReviewStatus(_StrEnum):
 
 ReviewStatusName = Literal["open", "answered", "resolved"]
 """The names of :class:`ReviewStatus`, for a plain string."""
+
+
+class ReviewedState(_StrEnum):
+    """A mark's state against the thresholds, as kept."""
+    NORMAL = "normal"
+    WARNING = "warning"
+    ALARM = "alarm"
+
+
+ReviewedStateName = Literal["normal", "warning", "alarm"]
+"""The names of :class:`ReviewedState`, for a plain string."""
+
+
+class ReviewerRole(_StrEnum):
+    """Who reviewed, as the regulations name them (Genelge 2025/4 m. 3, m. 12(16)–(20); BÖHHBÜY m. 76): the engineer
+    responsible for the job, the control engineer, the technical staff with the control, the one who approves.
+    """
+    RESPONSIBLE = "responsible"
+    CONTROL = "control"
+    STAFF = "staff"
+    APPROVER = "approver"
+
+
+ReviewerRoleName = Literal["responsible", "control", "staff", "approver"]
+"""The names of :class:`ReviewerRole`, for a plain string."""
 
 
 class RoadEdgeKind(_StrEnum):
@@ -6618,6 +6889,7 @@ class RoadSourceKind(_StrEnum):
     - ``junction``
     - ``platform``
     - ``network``: A utility network (docs/adr/3560): its definition and the objects of its layers.
+    - ``layer``: A layer of the drawing (docs/adr/4740): the geometries of its objects in the drawing's order. A sheet's
     """
     SURFACE = "surface"
     ALIGNMENT = "alignment"
@@ -6632,10 +6904,23 @@ class RoadSourceKind(_StrEnum):
     JUNCTION = "junction"
     PLATFORM = "platform"
     NETWORK = "network"
+    LAYER = "layer"
 
 
-RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform", "network"]
+RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform", "network", "layer"]
 """The names of :class:`RoadSourceKind`, for a plain string."""
+
+
+class RobustMethod(_StrEnum):
+    """Robust estimation's weight function (docs/adr/4960): `huber` c / |w|, `danish` exp(−((|w| − c) / c)²); 1 when
+    |w| ≤ c.
+    """
+    HUBER = "huber"
+    DANISH = "danish"
+
+
+RobustMethodName = Literal["huber", "danish"]
+"""The names of :class:`RobustMethod`, for a plain string."""
 
 
 class RoofPartKind(_StrEnum):
@@ -6893,12 +7178,17 @@ SchemaKindName = Literal["layers", "forms", "domains", "relations"]
 class SectionFormula(_StrEnum):
     """The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
     `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
+
+    - ``endArea``
+    - ``prismoidal``
+    - ``frustum``: Docs/adr/5140: the frustum's `L/3·(A₀ + A₁ + √(A₀·A₁))`.
     """
     END_AREA = "endArea"
     PRISMOIDAL = "prismoidal"
+    FRUSTUM = "frustum"
 
 
-SectionFormulaName = Literal["endArea", "prismoidal"]
+SectionFormulaName = Literal["endArea", "prismoidal", "frustum"]
 """The names of :class:`SectionFormula`, for a plain string."""
 
 
@@ -7103,6 +7393,16 @@ class SightUntil(_StrEnum):
 
 SightUntilName = Literal["hidden", "reach", "end"]
 """The names of :class:`SightUntil`, for a plain string."""
+
+
+class SignatureKind(_StrEnum):
+    """How the reviewer signed, as stated: by hand on the paper, or with a secure electronic signature (5070 m. 5)."""
+    WET = "wet"
+    ELECTRONIC = "electronic"
+
+
+SignatureKindName = Literal["wet", "electronic"]
+"""The names of :class:`SignatureKind`, for a plain string."""
 
 
 class SinkDimension(_StrEnum):
@@ -9429,6 +9729,30 @@ class ClipBoundary(_Union):
         return _variant(_CLIP_BOUNDARY, "ClipBoundary", "kind", data).from_json(data)
 
 
+class CloudPlaceBy(_Union):
+    """How the map is given (docs/adr/5100). A centre left out is the middle of the cloud's box in the drawing; a
+    translation left out is none.
+
+    One of:
+
+    - :class:`MatrixCloudPlaceBy` (``kind: matrix``)
+    - :class:`AxisAngleCloudPlaceBy` (``kind: axisAngle``)
+    - :class:`EulerCloudPlaceBy` (``kind: euler``)
+    - :class:`RemoveCloudPlaceBy` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudPlaceBy:
+        return _variant(_CLOUD_PLACE_BY, "CloudPlaceBy", "kind", data).from_json(data)
+
+
 class CompareAgainst(_Union):
     """The state the drawing is compared with.
 
@@ -10605,6 +10929,8 @@ class MapSurveyOperation(_Union):
     - :class:`AcceptMapSurveyOperation` (``op: accept``)
     - :class:`RegenerateMapSurveyOperation` (``op: regenerate``)
     - :class:`UseMapSurveyOperation` (``op: use``)
+    - :class:`ToleranceMapSurveyOperation` (``op: tolerance``)
+    - :class:`IndependentMapSurveyOperation` (``op: independent``)
     - :class:`RemoveMapSurveyOperation` (``op: remove``)
     """
     __slots__ = ()
@@ -10627,6 +10953,7 @@ class MapWorkOperation(_Union):
 
     - :class:`AddMapWorkOperation` (``op: add``)
     - :class:`SetMapWorkOperation` (``op: set``)
+    - :class:`ProfileMapWorkOperation` (``op: profile``)
     - :class:`RemoveMapWorkOperation` (``op: remove``)
     - :class:`RelinkMapWorkOperation` (``op: relink``)
     - :class:`RefreshMapWorkOperation` (``op: refresh``)
@@ -13643,6 +13970,36 @@ class AdjustKnownPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AdjustLeapfrog(_Model):
+    """A leap-frog setup (atlamalı trigonometrik nivelman, docs/adr/5300): the instrument set up between two points, on
+    neither, sighting `from` back and `to` forward. The height difference from `from` to `to` is the fore sight's less
+    the back sight's, each `S·cos z + (1 − k)·D²/2R − t` (D = S·sin z, the project's k, R 6 371 000 m): the instrument's
+    height falls out. Its length is the two horizontal distances' sum.
+    """
+    from_: str
+    to: str
+    back: AdjustSight
+    fore: AdjustSight
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["back"] = self.back.to_json()
+        out["fore"] = self.fore.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustLeapfrog:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            back=AdjustSight.from_json(data["back"]),
+            fore=AdjustSight.from_json(data["fore"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AdjustObservation(_Model):
     """An observation of a horizontal network: from the station to the target, a direction reading in the input's angle
     unit, a horizontal distance (m), either or both.
@@ -13672,6 +14029,35 @@ class AdjustObservation(_Model):
             target=data["target"],
             direction=UNSET if "direction" not in data else None if data["direction"] is None else float(data["direction"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustSight(_Model):
+    """One sight of a leap-frog setup (docs/adr/5300): the slope distance (m), the zenith angle (the adjustment's angle
+    unit, 0 straight up) and the target's height (m).
+    Attributes:
+        distance: Unit: m.
+        zenith: Unit: survey-angle.
+        target: Unit: m.
+    """
+    distance: float
+    zenith: float
+    target: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["zenith"] = float(self.zenith)
+        out["target"] = float(self.target)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustSight:
+        return cls(
+            distance=float(data["distance"]),
+            zenith=float(data["zenith"]),
+            target=float(data["target"]),
         )
 
 
@@ -16930,12 +17316,14 @@ class AreaOfUse(_Model):
         south: Unit: deg.
         east: Unit: deg.
         north: Unit: deg.
+        extent: docs/adr/5300: the EPSG extent whose polygon a point is read against (the box: approximate, for selecting). Unit: 1.
     """
     name: str
     west: float
     south: float
     east: float
     north: float
+    extent: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -16944,6 +17332,8 @@ class AreaOfUse(_Model):
         out["south"] = float(self.south)
         out["east"] = float(self.east)
         out["north"] = float(self.north)
+        if self.extent is not UNSET:
+            out["extent"] = self.extent
         return out
 
     @classmethod
@@ -16954,6 +17344,7 @@ class AreaOfUse(_Model):
             south=float(data["south"]),
             east=float(data["east"]),
             north=float(data["north"]),
+            extent=data.get("extent", UNSET),
         )
 
 
@@ -17464,7 +17855,8 @@ class AsbuiltCheck(_Model):
     attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
     job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
     monitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that
-    is no `YYYY-MM-DD` day); the package's (docs/adr/2420;
+    is no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a
+    threshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;
     at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
     field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
     `lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
@@ -17493,6 +17885,10 @@ class AsbuiltCheck(_Model):
         search: Unit: length.
         surface_by: What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the
             nearest distance to the surface (`nearest`, Trimble Access's Measure to surface).
+        thresholds: Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest
+            level it goes beyond. Needs a series (`epochs`). No threshold is the program's.
+        trend: A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and
+            which components move at the confidence asked. Needs a series (`epochs`).
         vertical: Unit: length.
     """
     measured: str
@@ -17512,6 +17908,8 @@ class AsbuiltCheck(_Model):
     search: float | None | Unset = UNSET
     surface: str | None | Unset = UNSET
     surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET
+    thresholds: AsbuiltThresholds | None | Unset = UNSET
+    trend: AsbuiltTrendAsk | None | Unset = UNSET
     vertical: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17549,6 +17947,10 @@ class AsbuiltCheck(_Model):
             out["surface"] = self.surface
         if self.surface_by is not UNSET:
             out["surfaceBy"] = None if self.surface_by is None else _enum_out(self.surface_by)
+        if self.thresholds is not UNSET:
+            out["thresholds"] = None if self.thresholds is None else self.thresholds.to_json()
+        if self.trend is not UNSET:
+            out["trend"] = None if self.trend is None else self.trend.to_json()
         if self.vertical is not UNSET:
             out["vertical"] = None if self.vertical is None else float(self.vertical)
         return out
@@ -17573,6 +17975,8 @@ class AsbuiltCheck(_Model):
             search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
             surface=data.get("surface", UNSET),
             surface_by=UNSET if "surfaceBy" not in data else None if data["surfaceBy"] is None else _enum_in(AsbuiltSurfaceBy, data["surfaceBy"]),
+            thresholds=UNSET if "thresholds" not in data else None if data["thresholds"] is None else AsbuiltThresholds.from_json(data["thresholds"]),
+            trend=UNSET if "trend" not in data else None if data["trend"] is None else AsbuiltTrendAsk.from_json(data["trend"]),
             vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
@@ -17717,6 +18121,98 @@ class AsbuiltEpoch(_Model):
         return cls(
             layer=data["layer"],
             date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltFit(_Model):
+    """The line fitted through a point's dated epochs (docs/adr/4840): by least squares, its movement from its reference
+    against the years since its first dated epoch, east, north and (with both heights) up apart.
+    Attributes:
+        epochs: The dated epochs the point was measured in (3 or more). Unit: count.
+        east: The velocity east and north (m a year). Unit: m/yr.
+        north: Unit: m/yr.
+        sigma_east: Their standard deviations from the residuals: s / √Σ(t − t̄)², s² = Σr² / (n − 2) (m a year). Unit: m/yr.
+        sigma_north: Unit: m/yr.
+        speed: The horizontal speed, √(east² + north²) (m a year). Unit: m/yr.
+        moving: The components whose velocity is more than Student's t times its standard deviation (`east`, `north`, `up`).
+        sigma_up: Unit: m/yr.
+        up: The velocity up (m a year), when 3 dated epochs or more have both heights. Unit: m/yr.
+    """
+    epochs: int
+    east: float
+    north: float
+    sigma_east: float
+    sigma_north: float
+    speed: float
+    moving: list[str] | Unset = UNSET
+    sigma_up: float | None | Unset = UNSET
+    up: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["epochs"] = self.epochs
+        out["east"] = float(self.east)
+        out["north"] = float(self.north)
+        out["sigmaEast"] = float(self.sigma_east)
+        out["sigmaNorth"] = float(self.sigma_north)
+        out["speed"] = float(self.speed)
+        if self.moving is not UNSET:
+            out["moving"] = list(self.moving)
+        if self.sigma_up is not UNSET:
+            out["sigmaUp"] = None if self.sigma_up is None else float(self.sigma_up)
+        if self.up is not UNSET:
+            out["up"] = None if self.up is None else float(self.up)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltFit:
+        return cls(
+            epochs=data["epochs"],
+            east=float(data["east"]),
+            north=float(data["north"]),
+            sigma_east=float(data["sigmaEast"]),
+            sigma_north=float(data["sigmaNorth"]),
+            speed=float(data["speed"]),
+            moving=list(data["moving"]) if "moving" in data else UNSET,
+            sigma_up=UNSET if "sigmaUp" not in data else None if data["sigmaUp"] is None else float(data["sigmaUp"]),
+            up=UNSET if "up" not in data else None if data["up"] is None else float(data["up"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltLevel(_Model):
+    """A threshold level's limits; a limit not given is not checked at that level.
+    Attributes:
+        horizontal: The horizontal movement from the point's reference at this epoch (m). Unit: m.
+        horizontal_rate: The horizontal speed (m a year): the fitted line's when there is one, else the mean rate. Unit: m/yr.
+        vertical: The height movement from the point's reference at this epoch, either way (m). Unit: m.
+        vertical_rate: The vertical speed, either way (m a year): the fitted line's when there is one, else the mean rate. Unit: m/yr.
+    """
+    horizontal: float | None | Unset = UNSET
+    horizontal_rate: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+    vertical_rate: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.horizontal_rate is not UNSET:
+            out["horizontalRate"] = None if self.horizontal_rate is None else float(self.horizontal_rate)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        if self.vertical_rate is not UNSET:
+            out["verticalRate"] = None if self.vertical_rate is None else float(self.vertical_rate)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltLevel:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            horizontal_rate=UNSET if "horizontalRate" not in data else None if data["horizontalRate"] is None else float(data["horizontalRate"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+            vertical_rate=UNSET if "verticalRate" not in data else None if data["verticalRate"] is None else float(data["verticalRate"]),
         )
 
 
@@ -17918,6 +18414,122 @@ class AsbuiltPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AsbuiltReview(_Model):
+    """Input of `cad.asbuilt.review` v1. To keep: `check` (a monitoring job), `reviewer` and, with the check's thresholds,
+    `thresholdsSource` (who set them, by which document, when; the program gives none). To remove: `remove` alone.
+    """
+    name: str
+    check: AsbuiltCheck | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    remove: bool | Unset = UNSET
+    reviewer: MonitoringReviewer | None | Unset = UNSET
+    thresholds_source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.check is not UNSET:
+            out["check"] = None if self.check is None else self.check.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.remove is not UNSET:
+            out["remove"] = self.remove
+        if self.reviewer is not UNSET:
+            out["reviewer"] = None if self.reviewer is None else self.reviewer.to_json()
+        if self.thresholds_source is not UNSET:
+            out["thresholdsSource"] = self.thresholds_source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltReview:
+        return cls(
+            name=data["name"],
+            check=UNSET if "check" not in data else None if data["check"] is None else AsbuiltCheck.from_json(data["check"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            remove=data.get("remove", UNSET),
+            reviewer=UNSET if "reviewer" not in data else None if data["reviewer"] is None else MonitoringReviewer.from_json(data["reviewer"]),
+            thresholds_source=data.get("thresholdsSource", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltReviewRow(_Model):
+    """A kept review in the list: its name, the reviewer's name, day and phrase, its marks in alarm and warning, and
+    whether the points its job reads are the ones reviewed.
+    Attributes:
+        alarm: Unit: count.
+        warning: Unit: count.
+    """
+    name: str
+    reviewer: str
+    date: str
+    phrase: ReviewPhrase | ReviewPhraseName
+    alarm: int
+    warning: int
+    current: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["reviewer"] = self.reviewer
+        out["date"] = self.date
+        out["phrase"] = _enum_out(self.phrase)
+        out["alarm"] = self.alarm
+        out["warning"] = self.warning
+        out["current"] = self.current
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltReviewRow:
+        return cls(
+            name=data["name"],
+            reviewer=data["reviewer"],
+            date=data["date"],
+            phrase=_enum_in(ReviewPhrase, data["phrase"]),
+            alarm=data["alarm"],
+            warning=data["warning"],
+            current=data["current"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltReviewed(_Model):
+    """Output of `cad.asbuilt.review` v1: the review kept (none when removed), whether one of its name was replaced or
+    removed, every kept review in the project's order and the revision after the write.
+    """
+    name: str
+    reviews: list[AsbuiltReviewRow]
+    revision: str
+    kept: MonitoringReview | None | Unset = UNSET
+    removed: bool | Unset = UNSET
+    replaced: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["reviews"] = [e0.to_json() for e0 in self.reviews]
+        out["revision"] = self.revision
+        if self.kept is not UNSET:
+            out["kept"] = None if self.kept is None else self.kept.to_json()
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
+        if self.replaced is not UNSET:
+            out["replaced"] = self.replaced
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltReviewed:
+        return cls(
+            name=data["name"],
+            reviews=[AsbuiltReviewRow.from_json(e0) for e0 in data["reviews"]],
+            revision=data["revision"],
+            kept=UNSET if "kept" not in data else None if data["kept"] is None else MonitoringReview.from_json(data["kept"]),
+            removed=data.get("removed", UNSET),
+            replaced=data.get("replaced", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AsbuiltStep(_Model):
     """A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)
     and horizontal; `outside` when it is beyond the job's horizontal or vertical limit.
@@ -17956,6 +18568,30 @@ class AsbuiltStep(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AsbuiltThresholds(_Model):
+    """The two thresholds (docs/adr/4840); each limit given in both must be smaller at the warning.
+    Attributes:
+        warning: The warning level (Trimble's yellow).
+        alarm: The alarm level (Trimble's red).
+    """
+    warning: AsbuiltLevel
+    alarm: AsbuiltLevel
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["warning"] = self.warning.to_json()
+        out["alarm"] = self.alarm.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltThresholds:
+        return cls(
+            warning=AsbuiltLevel.from_json(data["warning"]),
+            alarm=AsbuiltLevel.from_json(data["alarm"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AsbuiltTrack(_Model):
     """A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was
     first measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch
@@ -17963,24 +18599,37 @@ class AsbuiltTrack(_Model):
     its mean rates (m a year: its last horizontal and vertical movement over the years between).
     Attributes:
         from_: Unit: index.
+        exceeded: The limits of its state's level its values go beyond (`horizontal`, `vertical`, `horizontalRate`,
+            `verticalRate`).
+        fit: The line fitted through its dated epochs (docs/adr/4840), asked and with 3 of them or more.
         rate_horizontal: Unit: m.
         rate_vertical: Unit: m.
+        state: Its state against the thresholds (docs/adr/4840), asked.
     """
     name: str
     from_: int
     steps: list[AsbuiltStep | None]
+    exceeded: list[str] | Unset = UNSET
+    fit: AsbuiltFit | None | Unset = UNSET
     rate_horizontal: float | None | Unset = UNSET
     rate_vertical: float | None | Unset = UNSET
+    state: AsbuiltState | AsbuiltStateName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
         out["from"] = self.from_
         out["steps"] = [None if e0 is None else e0.to_json() for e0 in self.steps]
+        if self.exceeded is not UNSET:
+            out["exceeded"] = list(self.exceeded)
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else self.fit.to_json()
         if self.rate_horizontal is not UNSET:
             out["rateHorizontal"] = None if self.rate_horizontal is None else float(self.rate_horizontal)
         if self.rate_vertical is not UNSET:
             out["rateVertical"] = None if self.rate_vertical is None else float(self.rate_vertical)
+        if self.state is not UNSET:
+            out["state"] = None if self.state is None else _enum_out(self.state)
         return out
 
     @classmethod
@@ -17989,8 +18638,32 @@ class AsbuiltTrack(_Model):
             name=data["name"],
             from_=data["from"],
             steps=[None if e0 is None else AsbuiltStep.from_json(e0) for e0 in data["steps"]],
+            exceeded=list(data["exceeded"]) if "exceeded" in data else UNSET,
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else AsbuiltFit.from_json(data["fit"]),
             rate_horizontal=UNSET if "rateHorizontal" not in data else None if data["rateHorizontal"] is None else float(data["rateHorizontal"]),
             rate_vertical=UNSET if "rateVertical" not in data else None if data["rateVertical"] is None else float(data["rateVertical"]),
+            state=UNSET if "state" not in data else None if data["state"] is None else _enum_in(AsbuiltState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltTrendAsk(_Model):
+    """The line fitted through a point's epochs (docs/adr/4840): the confidence its velocity's test is made at.
+    Attributes:
+        confidence: The confidence, between 0 and 1 (0.95: a component moves when its velocity is more than Student's t at 0.975
+            with n − 2 degrees of freedom times its standard deviation). The user's: no regulation gives one for monitoring. Unit: 1.
+    """
+    confidence: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["confidence"] = float(self.confidence)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltTrendAsk:
+        return cls(
+            confidence=float(data["confidence"]),
         )
 
 
@@ -18407,12 +19080,15 @@ class AtlasPageChange(_Model):
     persistent id in the order listed; `changed` too when the project's parts the pages read changed.
     Attributes:
         index: Unit: index.
+        look: A changed page's look against the previous atlas's (docs/adr/4820), when both runs made the page and knew its
+            look; none otherwise (a previous record without looks, a page the previous update did not make).
     """
     index: int
     feature: str
     state: AtlasPageState | AtlasPageStateName
     added: list[str] | Unset = UNSET
     changed: list[str] | Unset = UNSET
+    look: AtlasLook | AtlasLookName | None | Unset = UNSET
     removed: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18424,6 +19100,8 @@ class AtlasPageChange(_Model):
             out["added"] = list(self.added)
         if self.changed is not UNSET:
             out["changed"] = list(self.changed)
+        if self.look is not UNSET:
+            out["look"] = None if self.look is None else _enum_out(self.look)
         if self.removed is not UNSET:
             out["removed"] = list(self.removed)
         return out
@@ -18436,6 +19114,7 @@ class AtlasPageChange(_Model):
             state=_enum_in(AtlasPageState, data["state"]),
             added=list(data["added"]) if "added" in data else UNSET,
             changed=list(data["changed"]) if "changed" in data else UNSET,
+            look=UNSET if "look" not in data else None if data["look"] is None else _enum_in(AtlasLook, data["look"]),
             removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
@@ -18450,6 +19129,11 @@ class AtlasPageInfo(_Model):
         scale: The first atlas map's scale, the denominator (1000 is 1/1000). Unit: scale.
         center: The map's centre: the middle of the object's box. Unit: length.
         bbox: The object's box: minimum east, north, maximum east, north. Unit: length.
+        look: The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list
+            with the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an
+            empty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps
+            that stand still on every page. None where the pages were not made (a check), and for a page an update did not
+            make whose previous record had none.
         sources: The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects
             its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
             when they are not listed (a check that makes no pages).
@@ -18460,6 +19144,7 @@ class AtlasPageInfo(_Model):
     scale: int
     center: Vec2
     bbox: list[float]
+    look: str | None | Unset = UNSET
     sources: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18470,6 +19155,8 @@ class AtlasPageInfo(_Model):
         out["scale"] = self.scale
         out["center"] = _vec2_out(self.center)
         out["bbox"] = [float(e0) for e0 in self.bbox]
+        if self.look is not UNSET:
+            out["look"] = self.look
         if self.sources is not UNSET:
             out["sources"] = list(self.sources)
         return out
@@ -18483,6 +19170,7 @@ class AtlasPageInfo(_Model):
             scale=data["scale"],
             center=Vec2.from_json(data["center"]),
             bbox=[float(e0) for e0 in data["bbox"]],
+            look=data.get("look", UNSET),
             sources=list(data["sources"]) if "sources" in data else UNSET,
         )
 
@@ -19003,15 +19691,17 @@ class AuditedRecord(_Model):
 @dataclass(kw_only=True, slots=True)
 class BaselineResult(_Model):
     """A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and
-    what it says (`ok`, `blunder`, `uncontrolled`).
+    what it says (`ok`, `blunder`, `uncontrolled`); with robust estimation its weight factor in the solution.
     Attributes:
         v: Unit: m.
+        factor: Unit: 1.
         w: Unit: 1.
     """
     from_: str
     to: str
     v: list[float]
     flag: str
+    factor: float | None | Unset = UNSET
     w: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -19020,6 +19710,8 @@ class BaselineResult(_Model):
         out["to"] = self.to
         out["v"] = [float(e0) for e0 in self.v]
         out["flag"] = self.flag
+        if self.factor is not UNSET:
+            out["factor"] = None if self.factor is None else float(self.factor)
         if self.w is not UNSET:
             out["w"] = None if self.w is None else float(self.w)
         return out
@@ -19031,7 +19723,34 @@ class BaselineResult(_Model):
             to=data["to"],
             v=[float(e0) for e0 in data["v"]],
             flag=data["flag"],
+            factor=UNSET if "factor" not in data else None if data["factor"] is None else float(data["factor"]),
             w=UNSET if "w" not in data else None if data["w"] is None else float(data["w"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineRobust(_Model):
+    """Robust estimation (docs/adr/4960): the baselines reweighted round by round by the weight function of their
+    standardised residual (the largest component's |v| / √q_vv, a priori σ0 = 1); `c` the constant (default Huber 1.5,
+    Danish 2.0). Nothing is removed; a baseline whose factor fell below 1 is to be checked.
+    Attributes:
+        c: Unit: 1.
+    """
+    method: RobustMethod | RobustMethodName
+    c: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        if self.c is not UNSET:
+            out["c"] = None if self.c is None else float(self.c)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineRobust:
+        return cls(
+            method=_enum_in(RobustMethod, data["method"]),
+            c=UNSET if "c" not in data else None if data["c"] is None else float(data["c"]),
         )
 
 
@@ -21159,6 +21878,42 @@ class BlocksReplaced(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BoundaryLengthRow(_Model):
+    """A length a document states for a boundary against the boundary's length now (docs/adr/5020): the document, the
+    length as written, the boundary's length less it, and the frontage check's limit d = 0,05 + 0,001·S m (S the stated
+    length in metres); `within` when the difference's size is no more than the limit.
+    Attributes:
+        document: Unit: id.
+        difference: Unit: length.
+        limit: Unit: length.
+    """
+    document: int
+    length: str
+    difference: float
+    limit: float
+    within: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["document"] = self.document
+        out["length"] = self.length
+        out["difference"] = float(self.difference)
+        out["limit"] = float(self.limit)
+        out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoundaryLengthRow:
+        return cls(
+            document=data["document"],
+            length=data["length"],
+            difference=float(data["difference"]),
+            limit=float(data["limit"]),
+            within=data["within"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BoundaryProblem(_Model):
     """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap`, `arcChord` or `approxArc`;
     where; the parcels.
@@ -21569,6 +22324,39 @@ class CandidateSource(_Model):
         return cls(
             layer=data["layer"],
             name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CarriedClass(_Model):
+    """What became of an old class's objects: its id, the new classes, the report's kind, how many moved and stayed.
+    Attributes:
+        moved: Unit: count.
+        left: Unit: count.
+    """
+    from_: str
+    to: list[str]
+    kind: CatalogClassChangeKind | CatalogClassChangeKindName
+    moved: int
+    left: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = list(self.to)
+        out["kind"] = _enum_out(self.kind)
+        out["moved"] = self.moved
+        out["left"] = self.left
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CarriedClass:
+        return cls(
+            from_=data["from"],
+            to=list(data["to"]),
+            kind=_enum_in(CatalogClassChangeKind, data["kind"]),
+            moved=data["moved"],
+            left=data["left"],
         )
 
 
@@ -22123,6 +22911,221 @@ class CaseworkTie(_Model):
             wall=data["wall"],
             edge=data["edge"],
             face=_enum_in(CaseworkFace, data["face"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogClassChange(_Model):
+    """A class's row.
+    Attributes:
+        to: The new classes it leads to, in the new catalog's order (an added class: itself).
+        title: The old class's title (an added class: the new one's).
+        layer: The old class's layer path, `A › B` (an added class: the new one's).
+        to_layer: The new class's layer path when it leads to one; empty otherwise.
+        codes: The old class's field codes (an added class: the new one's).
+        to_codes: The new classes' codes, in their order.
+        objects: The drawing's objects on the old class's layer (an added class: none). Unit: count.
+        uids: Those objects, in the drawing's order, at most 1000.
+        decide: Whether someone must decide before the data moves: a retired or split class, or one whose geometry changes,
+            with objects.
+        from_: The old class's id; none for an added class.
+    """
+    to: list[str]
+    kind: CatalogClassChangeKind | CatalogClassChangeKindName
+    title: str
+    layer: str
+    to_layer: str
+    codes: list[str]
+    to_codes: list[str]
+    objects: int
+    uids: list[str]
+    decide: bool
+    note: str
+    from_: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["to"] = list(self.to)
+        out["kind"] = _enum_out(self.kind)
+        out["title"] = self.title
+        out["layer"] = self.layer
+        out["toLayer"] = self.to_layer
+        out["codes"] = list(self.codes)
+        out["toCodes"] = list(self.to_codes)
+        out["objects"] = self.objects
+        out["uids"] = list(self.uids)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogClassChange:
+        return cls(
+            to=list(data["to"]),
+            kind=_enum_in(CatalogClassChangeKind, data["kind"]),
+            title=data["title"],
+            layer=data["layer"],
+            to_layer=data["toLayer"],
+            codes=list(data["codes"]),
+            to_codes=list(data["toCodes"]),
+            objects=data["objects"],
+            uids=list(data["uids"]),
+            decide=data["decide"],
+            note=data["note"],
+            from_=data.get("from", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogCodeChange(_Model):
+    """A value list's code's row.
+    Attributes:
+        domain: The list's id.
+        label: The old label (an added code: the new one).
+        to_label: The new label; empty for a removed code.
+        objects: The objects of the old catalog's classes whose field linked to the list holds the code. Unit: count.
+        decide: Whether someone must decide: a removed or retired code that objects hold.
+    """
+    domain: str
+    code: str
+    kind: CatalogCodeChangeKind | CatalogCodeChangeKindName
+    label: str
+    to_label: str
+    objects: int
+    uids: list[str]
+    decide: bool
+    note: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["domain"] = self.domain
+        out["code"] = self.code
+        out["kind"] = _enum_out(self.kind)
+        out["label"] = self.label
+        out["toLabel"] = self.to_label
+        out["objects"] = self.objects
+        out["uids"] = list(self.uids)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogCodeChange:
+        return cls(
+            domain=data["domain"],
+            code=data["code"],
+            kind=_enum_in(CatalogCodeChangeKind, data["kind"]),
+            label=data["label"],
+            to_label=data["toLabel"],
+            objects=data["objects"],
+            uids=list(data["uids"]),
+            decide=data["decide"],
+            note=data["note"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogDecisionChange(_Model):
+    """A recorded decision's row.
+    Attributes:
+        number: The review note's number. Unit: id.
+        candidate: The candidate's persistent id.
+        class_: The old class it concerns: its correction, else the class whose layer holds the asset.
+        to: The new classes it leads to.
+        fields: The fields it gave that the new class drops.
+        asset: The asset's persistent id, when the decision wrote or tied one.
+    """
+    number: int
+    candidate: str
+    class_: str
+    to: list[str]
+    kind: CatalogDecisionChangeKind | CatalogDecisionChangeKindName
+    fields: list[str]
+    decide: bool
+    note: str
+    asset: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["candidate"] = self.candidate
+        out["class"] = self.class_
+        out["to"] = list(self.to)
+        out["kind"] = _enum_out(self.kind)
+        out["fields"] = list(self.fields)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogDecisionChange:
+        return cls(
+            number=data["number"],
+            candidate=data["candidate"],
+            class_=data["class"],
+            to=list(data["to"]),
+            kind=_enum_in(CatalogDecisionChangeKind, data["kind"]),
+            fields=list(data["fields"]),
+            decide=data["decide"],
+            note=data["note"],
+            asset=data.get("asset", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogFieldChange(_Model):
+    """A field's row.
+    Attributes:
+        class_: The old class's id.
+        to_class: The new class's id.
+        was: The old field's kind and list (`metin`, `metin, sebeke`); empty for an added field.
+        becomes: The new field's; empty for a removed field.
+        objects: The objects the change touches: a removed, retyped or relisted field's objects holding a value; an added or
+            newly required field's objects without one. Unit: count.
+        decide: Whether someone must decide: values dropped or to be read anew, or required values missing.
+    """
+    class_: str
+    to_class: str
+    field: str
+    kind: CatalogFieldChangeKind | CatalogFieldChangeKindName
+    was: str
+    becomes: str
+    objects: int
+    uids: list[str]
+    decide: bool
+    note: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["toClass"] = self.to_class
+        out["field"] = self.field
+        out["kind"] = _enum_out(self.kind)
+        out["was"] = self.was
+        out["becomes"] = self.becomes
+        out["objects"] = self.objects
+        out["uids"] = list(self.uids)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogFieldChange:
+        return cls(
+            class_=data["class"],
+            to_class=data["toClass"],
+            field=data["field"],
+            kind=_enum_in(CatalogFieldChangeKind, data["kind"]),
+            was=data["was"],
+            becomes=data["becomes"],
+            objects=data["objects"],
+            uids=list(data["uids"]),
+            decide=data["decide"],
+            note=data["note"],
         )
 
 
@@ -23578,6 +24581,10 @@ class CloudSource(_Model):
         asset: The project library's asset its bytes are (embedded); exactly one of
             `asset`, `file` and `url` is given.
         file: The file (linked): absolute, or relative to the drawing's folder.
+        pose: Schema 251 (docs/adr/5100): the file's place in the drawing without writing it again — a rigid map of 16
+            numbers, row by row (rotation in the upper left 3 × 3, translation in the fourth column, the bottom row 0 0 0
+            1), taking the file's points to the drawing's; absent: where the file says. Its points are drawn, queried and
+            measured there; only Dönüşüm uygula writes them so. Unit: 1.
         url: An HTTP or HTTPS address read by ranges.
     """
     format: CloudFormat | CloudFormatName
@@ -23585,6 +24592,7 @@ class CloudSource(_Model):
     bounds: list[float]
     asset: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
+    pose: list[float] | None | Unset = UNSET
     url: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -23596,6 +24604,8 @@ class CloudSource(_Model):
             out["asset"] = self.asset
         if self.file is not UNSET:
             out["file"] = self.file
+        if self.pose is not UNSET:
+            out["pose"] = None if self.pose is None else [float(e0) for e0 in self.pose]
         if self.url is not UNSET:
             out["url"] = self.url
         return out
@@ -23608,6 +24618,7 @@ class CloudSource(_Model):
             bounds=[float(e0) for e0 in data["bounds"]],
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
+            pose=UNSET if "pose" not in data else None if data["pose"] is None else [float(e0) for e0 in data["pose"]],
             url=data.get("url", UNSET),
         )
 
@@ -24507,6 +25518,32 @@ class CompareZone(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ComparedCatalog(_Model):
+    """A catalog as the report names it.
+    Attributes:
+        release: Unit: count.
+    """
+    name: str
+    title: str
+    release: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["title"] = self.title
+        out["release"] = self.release
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ComparedCatalog:
+        return cls(
+            name=data["name"],
+            title=data["title"],
+            release=data["release"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ComponentEdge(_Model):
     """The lines along a component's sides: its own colour, line weight and line type; absent fields the wall's.
     Attributes:
@@ -25114,7 +26151,9 @@ class ContourRules(_Model):
     lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'
     text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and
     the auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:
-    the built-in dashed type, docs/adr/2720).
+    the built-in dashed type, docs/adr/2720); docs/adr/4740: the spacing of the heights in built-up areas and along
+    roads (paper mm, m. 63(2)'s about 2 cm; none: such heights are refused) and the section check's limit (m. 91(2),
+    m. 93(1)(c); none: no comparison).
     Attributes:
         release: Unit: count.
         major_every: Unit: count.
@@ -25126,6 +26165,7 @@ class ContourRules(_Model):
         label_every: Unit: paper-mm.
         label_height: Unit: paper-mm.
         auxiliary_pattern: Unit: paper-mm.
+        height_every: Unit: paper-mm.
         spot_height: Unit: paper-mm.
     """
     id: str
@@ -25143,6 +26183,8 @@ class ContourRules(_Model):
     label_every: float
     label_height: float
     auxiliary_pattern: list[float] | Unset = UNSET
+    height_every: float | None | Unset = UNSET
+    section_check: SectionCheck | None | Unset = UNSET
     spot_height: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -25163,6 +26205,10 @@ class ContourRules(_Model):
         out["labelHeight"] = float(self.label_height)
         if self.auxiliary_pattern is not UNSET:
             out["auxiliaryPattern"] = [float(e0) for e0 in self.auxiliary_pattern]
+        if self.height_every is not UNSET:
+            out["heightEvery"] = None if self.height_every is None else float(self.height_every)
+        if self.section_check is not UNSET:
+            out["sectionCheck"] = None if self.section_check is None else self.section_check.to_json()
         if self.spot_height is not UNSET:
             out["spotHeight"] = None if self.spot_height is None else float(self.spot_height)
         return out
@@ -25185,7 +26231,35 @@ class ContourRules(_Model):
             label_every=float(data["labelEvery"]),
             label_height=float(data["labelHeight"]),
             auxiliary_pattern=[float(e0) for e0 in data["auxiliaryPattern"]] if "auxiliaryPattern" in data else UNSET,
+            height_every=UNSET if "heightEvery" not in data else None if data["heightEvery"] is None else float(data["heightEvery"]),
+            section_check=UNSET if "sectionCheck" not in data else None if data["sectionCheck"] is None else SectionCheck.from_json(data["sectionCheck"]),
             spot_height=UNSET if "spotHeight" not in data else None if data["spotHeight"] is None else float(data["spotHeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CorrelationBlock(_Model):
+    """The correlations between two baselines of a session, X, Y, Z by X, Y, Z, row by row.
+    Attributes:
+        r: Unit: 1.
+    """
+    row: str
+    col: str
+    r: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["r"] = [float(e0) for e0 in self.r]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CorrelationBlock:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            r=[float(e0) for e0 in data["r"]],
         )
 
 
@@ -28189,6 +29263,154 @@ class CutFillLabel(_Model):
         return cls(
             at=[float(e0) for e0 in data["at"]],
             text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CutFillSection(_Model):
+    """A section as written (docs/adr/4760): its station (from the axis's start) and its kilometre (the start's kilometre
+    added, as written: `k+mmm.cc`), the axis's place there, its left and right ends, its cut and fill areas (m²) and the
+    cut and fill volumes between it and the section before (m³; none for the first).
+    Attributes:
+        station: Unit: m.
+        at: Unit: length.
+        ends: Unit: length.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        cut_volume: Unit: volume.
+        fill_volume: Unit: volume.
+        mass: Docs/adr/5140: the Brückner value at the section, the running cut times its factor less the running fill times
+            its (m³; none for the first). Unit: volume.
+    """
+    station: float
+    km: str
+    at: list[float]
+    ends: list[list[float]]
+    cut_area: float
+    fill_area: float
+    cut_volume: float | None | Unset = UNSET
+    fill_volume: float | None | Unset = UNSET
+    mass: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = self.km
+        out["at"] = [float(e0) for e0 in self.at]
+        out["ends"] = [[float(e1) for e1 in e0] for e0 in self.ends]
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        if self.cut_volume is not UNSET:
+            out["cutVolume"] = None if self.cut_volume is None else float(self.cut_volume)
+        if self.fill_volume is not UNSET:
+            out["fillVolume"] = None if self.fill_volume is None else float(self.fill_volume)
+        if self.mass is not UNSET:
+            out["mass"] = None if self.mass is None else float(self.mass)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillSection:
+        return cls(
+            station=float(data["station"]),
+            km=data["km"],
+            at=[float(e0) for e0 in data["at"]],
+            ends=[[float(e1) for e1 in e0] for e0 in data["ends"]],
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+            cut_volume=UNSET if "cutVolume" not in data else None if data["cutVolume"] is None else float(data["cutVolume"]),
+            fill_volume=UNSET if "fillVolume" not in data else None if data["fillVolume"] is None else float(data["fillVolume"]),
+            mass=UNSET if "mass" not in data else None if data["mass"] is None else float(data["mass"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CutFillSectionLabel(_Model):
+    """A section's words as written (docs/adr/4760): its place (the section's end it stands beyond, half a text's height
+    out), its text, its turn (degrees counterclockwise from east, along the section, kept upright) and its alignment
+    (its end towards the section).
+    Attributes:
+        at: Unit: length.
+        rotation: Unit: deg.
+    """
+    at: list[float]
+    text: str
+    rotation: float
+    align: TextAlign | TextAlignName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["text"] = self.text
+        out["rotation"] = float(self.rotation)
+        out["align"] = _enum_out(self.align)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillSectionLabel:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            text=data["text"],
+            rotation=float(data["rotation"]),
+            align=_enum_in(TextAlign, data["align"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CutFillSections(_Model):
+    """The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
+    polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
+    take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
+    end area; docs/adr/5140: or the frustum's) and the kilometre of the axis's start (m; none: 0), which the sections'
+    kilometres count from; docs/adr/5140: the cut's swell and the fill's factor of the Brückner value (none: 1; above 0,
+    at most 10), KGM 2019's “yarma hacmi kabarma ya da sıkışma katsayısıyla çarpılır”.
+    Attributes:
+        interval: Unit: m.
+        left: Unit: m.
+        right: Unit: m.
+        cut_factor: Unit: 1.
+        fill_factor: Unit: 1.
+        start: Unit: m.
+    """
+    axis: str
+    interval: float
+    left: float
+    right: float
+    corners: bool | None | Unset = UNSET
+    cut_factor: float | None | Unset = UNSET
+    fill_factor: float | None | Unset = UNSET
+    formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
+    start: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["axis"] = self.axis
+        out["interval"] = float(self.interval)
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        if self.corners is not UNSET:
+            out["corners"] = self.corners
+        if self.cut_factor is not UNSET:
+            out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
+        if self.fill_factor is not UNSET:
+            out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        if self.formula is not UNSET:
+            out["formula"] = None if self.formula is None else _enum_out(self.formula)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else float(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillSections:
+        return cls(
+            axis=data["axis"],
+            interval=float(data["interval"]),
+            left=float(data["left"]),
+            right=float(data["right"]),
+            corners=data.get("corners", UNSET),
+            cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
+            fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+            formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )
 
 
@@ -31470,6 +32692,89 @@ class DoorSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DraftParcel(_Model):
+    """A parcel a draft would make: its area, identity and stated area as read when drafted, its rings as drawn then and the
+    lengths the document states.
+    """
+    uid: str
+    ada: str
+    parsel: str
+    rings: list[DraftRing]
+    il: str | Unset = UNSET
+    ilce: str | Unset = UNSET
+    lengths: list[StatedLength] | Unset = UNSET
+    mahalle: str | Unset = UNSET
+    stated_area: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["rings"] = [e0.to_json() for e0 in self.rings]
+        if self.il is not UNSET:
+            out["il"] = self.il
+        if self.ilce is not UNSET:
+            out["ilce"] = self.ilce
+        if self.lengths is not UNSET:
+            out["lengths"] = [e0.to_json() for e0 in self.lengths]
+        if self.mahalle is not UNSET:
+            out["mahalle"] = self.mahalle
+        if self.stated_area is not UNSET:
+            out["statedArea"] = self.stated_area
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DraftParcel:
+        return cls(
+            uid=data["uid"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            rings=[DraftRing.from_json(e0) for e0 in data["rings"]],
+            il=data.get("il", UNSET),
+            ilce=data.get("ilce", UNSET),
+            lengths=[StatedLength.from_json(e0) for e0 in data["lengths"]] if "lengths" in data else UNSET,
+            mahalle=data.get("mahalle", UNSET),
+            stated_area=data.get("statedArea", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DraftRing(_Model):
+    """A draft's ring as its area was when drafted: its part, whether a hole, its vertices and each edge's bulge (none: all
+    straight).
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+        part: Unit: index.
+    """
+    pts: list[Vec2]
+    bulges: list[float] | Unset = UNSET
+    hole: bool | Unset = UNSET
+    part: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = [float(e0) for e0 in self.bulges]
+        if self.hole is not UNSET:
+            out["hole"] = self.hole
+        if self.part is not UNSET:
+            out["part"] = self.part
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DraftRing:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=[float(e0) for e0 in data["bulges"]] if "bulges" in data else UNSET,
+            hole=data.get("hole", UNSET),
+            part=data.get("part", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DrainageCapacity(_Model):
     """A culvert's full-flow capacity by Manning: every barrel full at the culvert's slope and roughness; its discharge
     (m³/s), its velocity (m/s), and the peak flow over it.
@@ -31835,18 +33140,28 @@ class DrainageQuery(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DrapeRange(_Model):
-    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.
+    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based, of
+    the ring `ring` (0: the outer one, 1 on: the holes in order) of the part `part` (0: the first, the object's own
+    vertices; 1 on: the further parts in order), docs/adr/4980. A line has one part and one ring.
     Attributes:
         from_: Unit: index.
         to: Unit: index.
+        part: Docs/adr/4980: the part, 0-based; absent: the first. Unit: index.
+        ring: Docs/adr/4980: the ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
     """
     from_: int
     to: int
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["to"] = self.to
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         return out
 
     @classmethod
@@ -31854,6 +33169,8 @@ class DrapeRange(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
         )
 
 
@@ -34182,13 +35499,14 @@ class EntitiesDrape(_Model):
     the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
     only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
     keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
-    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
-    vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
+    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's ring's
+    vertices, 0-based, `from` < `to`; the closing edge is not in it. The ring is the first part's outer one unless
+    `part` and `ring` (docs/adr/4980) name another; the object's other rings keep theirs.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
     `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
     object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
-    range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+    range), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
     vertex of them, or of the range, on the surface), `layer_locked`.
     Attributes:
         offset: Docs/adr/4580: the height above (positive) or below (negative) the surface, m. Unit: m.
@@ -34581,14 +35899,15 @@ class EntitiesFlattened(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class EntitiesGrade(_Model):
-    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
-    outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
+    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`) on the ring
+    `ring` of the part `part` (docs/adr/4980, as `DrapeRange`'s: both 0 when absent, the first part's outer ring), the
+    start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
     or, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being
     `end` or else the end vertex's own.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
-    `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
+    (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or
+    `from` ≥ `to`), `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
     alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
     and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
     two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
@@ -34599,6 +35918,8 @@ class EntitiesGrade(_Model):
         back: The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end). Unit: grade.
         end: Unit: elevation.
         grade: Unit: grade.
+        part: Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+        ring: Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
         start: Unit: elevation.
     """
     uid: str
@@ -34609,6 +35930,8 @@ class EntitiesGrade(_Model):
     end: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
     start: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34626,6 +35949,10 @@ class EntitiesGrade(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         if self.start is not UNSET:
             out["start"] = None if self.start is None else float(self.start)
         return out
@@ -34641,6 +35968,8 @@ class EntitiesGrade(_Model):
             end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )
 
@@ -35483,18 +36812,21 @@ class EntitiesPropertiesSet(_Model):
 @dataclass(kw_only=True, slots=True)
 class EntitiesRaise(_Model):
     """Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given
-    (0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and
+    (0-based: a line's ends 0 and 1, a polyline's or an area's vertices of the ring `ring` of the part `part`,
+    docs/adr/4980, both 0 when absent: the first part's outer ring), the reference, and
     exactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the
     difference (the vertex's elevation minus the reference's, m).
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`
+    (not a line, a polyline or an area), `wrong_place` (no such part, ring or vertex), `invalid_input` (both or neither of `grade`
     and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
     from), `layer_locked`.
     Attributes:
         at: Unit: index.
         difference: Unit: length.
         grade: Unit: grade.
+        part: Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+        ring: Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
     """
     uid: str
     at: int
@@ -35502,6 +36834,8 @@ class EntitiesRaise(_Model):
     difference: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -35514,6 +36848,10 @@ class EntitiesRaise(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         return out
 
     @classmethod
@@ -35525,6 +36863,8 @@ class EntitiesRaise(_Model):
             difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
         )
 
 
@@ -36423,7 +37763,8 @@ class EntitiesVertex(_Model):
     not an edge's middle),
     `hole_edit` (a hole's place), `no_such_place` (no such part, vertex or edge, or a place along an edge at its vertex), `too_few_corners` (a ring left
     with fewer than three vertices), `too_few_points` (an open path left with fewer than two); docs/adr/0288's, before the
-    object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, both together, a radius not
+    object is looked up: `invalid_arc_edge` (`through` or `radius` with another action, docs/adr/5000's `joinArcs` with
+    another action, below zero or not finite, `through` and `radius` together, a radius not
     finite or of zero, a point not finite), `invalid_polyline` (`widths` with another action, Kenar genişliği without
     them, a width below zero or not finite); after the place: `not_a_polyline` (Kenar genişliği on an area or a line),
     `invalid_arc_edge` (the point on the edge's line or at an end, a radius below half the chord).
@@ -36432,6 +37773,10 @@ class EntitiesVertex(_Model):
         place: A `vertex` place for Köşeyi sil, a `mid` place (the edge from that vertex) for the others; Köşe ekle takes an
             `along` place too (a point inside the edge, docs/adr/0263 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
+        join_arcs: Köşeyi sil's arc tolerance (docs/adr/5000), the drawing's length, zero or more: when both edges at the vertex
+            are arcs turning the same way whose centres and radii are within it of each other, they become one arc of
+            both sweeps (bulge (b₁ + b₂)/(1 − b₁b₂)); otherwise the joined edge is straight as without it, with a
+            warning (`arcs_not_joined`) when both were arcs. Only with Köşeyi sil. Unit: length.
         radius: Yaya dönüştür with this radius (docs/adr/0288), the drawing's length: the shorter arc on the chord, bowing to
             the right of the edge's travel when positive (a positive bulge), to its left when negative. At least half the
             chord; not with `through`. Unit: length.
@@ -36445,6 +37790,7 @@ class EntitiesVertex(_Model):
     action: VertexAction | VertexActionName
     place: SubPlace
     expected_revision: str | None | Unset = UNSET
+    join_arcs: float | None | Unset = UNSET
     radius: float | None | Unset = UNSET
     through: Vec2 | None | Unset = UNSET
     topology: StretchTopology | None | Unset = UNSET
@@ -36457,6 +37803,8 @@ class EntitiesVertex(_Model):
         out["place"] = self.place.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.join_arcs is not UNSET:
+            out["joinArcs"] = None if self.join_arcs is None else float(self.join_arcs)
         if self.radius is not UNSET:
             out["radius"] = None if self.radius is None else float(self.radius)
         if self.through is not UNSET:
@@ -36474,6 +37822,7 @@ class EntitiesVertex(_Model):
             action=_enum_in(VertexAction, data["action"]),
             place=SubPlace.from_json(data["place"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            join_arcs=UNSET if "joinArcs" not in data else None if data["joinArcs"] is None else float(data["joinArcs"]),
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
             through=UNSET if "through" not in data else None if data["through"] is None else Vec2.from_json(data["through"]),
             topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
@@ -46809,18 +48158,30 @@ class ImagesEdited(_Model):
 class ImpactAccess(_Model):
     """Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)
     and the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).
+
+    Ağ üzerinden erişim (docs/adr/5060): with `network` (a network of the project, by id or name) the distance runs along
+    it instead: each area's centroid joins the network at its nearest place (a leg no longer than `connect` metres, the
+    user's; farther, the area is off the network), and the distance is the `from` area's leg, the way along the network
+    as its definition travels it, and the `to` area's leg. A network layer the scenario stands in for is each side's own.
     Attributes:
         distance: Unit: m.
+        connect: Unit: m.
     """
     distance: float
     from_: list[str]
     to: list[str]
+    connect: float | None | Unset = UNSET
+    network: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["distance"] = float(self.distance)
         out["from"] = list(self.from_)
         out["to"] = list(self.to)
+        if self.connect is not UNSET:
+            out["connect"] = None if self.connect is None else float(self.connect)
+        if self.network is not UNSET:
+            out["network"] = self.network
         return out
 
     @classmethod
@@ -46829,6 +48190,8 @@ class ImpactAccess(_Model):
             distance=float(data["distance"]),
             from_=list(data["from"]),
             to=list(data["to"]),
+            connect=UNSET if "connect" not in data else None if data["connect"] is None else float(data["connect"]),
+            network=data.get("network", UNSET),
         )
 
 
@@ -47134,6 +48497,10 @@ class ImpactOwn(_Model):
 class ImpactReach(_Model):
     """Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in
     the drawing's order, the `from` areas reached, those not reached, and the `to` areas.
+    Attributes:
+        base_off: The `from` areas off the network (their centroid farther from it than `connect`), by persistent id.
+        base_routes: Along a network (docs/adr/5060): each side's `from` areas on the network, in the drawing's order, with the
+            nearest `to` area they reach along it, however far; none off the network or with no way to a `to` area.
     """
     base_reached: list[str]
     base_unreached: list[str]
@@ -47141,6 +48508,10 @@ class ImpactReach(_Model):
     alternative_reached: list[str]
     alternative_unreached: list[str]
     alternative_targets: list[str]
+    alternative_off: list[str] | Unset = UNSET
+    alternative_routes: list[ImpactRoute] | Unset = UNSET
+    base_off: list[str] | Unset = UNSET
+    base_routes: list[ImpactRoute] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -47150,6 +48521,14 @@ class ImpactReach(_Model):
         out["alternativeReached"] = list(self.alternative_reached)
         out["alternativeUnreached"] = list(self.alternative_unreached)
         out["alternativeTargets"] = list(self.alternative_targets)
+        if self.alternative_off is not UNSET:
+            out["alternativeOff"] = list(self.alternative_off)
+        if self.alternative_routes is not UNSET:
+            out["alternativeRoutes"] = [e0.to_json() for e0 in self.alternative_routes]
+        if self.base_off is not UNSET:
+            out["baseOff"] = list(self.base_off)
+        if self.base_routes is not UNSET:
+            out["baseRoutes"] = [e0.to_json() for e0 in self.base_routes]
         return out
 
     @classmethod
@@ -47161,6 +48540,42 @@ class ImpactReach(_Model):
             alternative_reached=list(data["alternativeReached"]),
             alternative_unreached=list(data["alternativeUnreached"]),
             alternative_targets=list(data["alternativeTargets"]),
+            alternative_off=list(data["alternativeOff"]) if "alternativeOff" in data else UNSET,
+            alternative_routes=[ImpactRoute.from_json(e0) for e0 in data["alternativeRoutes"]] if "alternativeRoutes" in data else UNSET,
+            base_off=list(data["baseOff"]) if "baseOff" in data else UNSET,
+            base_routes=[ImpactRoute.from_json(e0) for e0 in data["baseRoutes"]] if "baseRoutes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactRecord(_Model):
+    """A comparison written in the drawing (docs/adr/5060, `cad.scenarios.record`): the table's persistent id, the base's
+    and the scenario's stamps it was written with, and whether each has changed since (the table is then stale: its
+    numbers are not the drawing's now and are not updated by themselves).
+    """
+    table: str
+    stamp: str
+    scenario_stamp: str
+    base_changed: bool
+    scenario_changed: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["stamp"] = self.stamp
+        out["scenarioStamp"] = self.scenario_stamp
+        out["baseChanged"] = self.base_changed
+        out["scenarioChanged"] = self.scenario_changed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactRecord:
+        return cls(
+            table=data["table"],
+            stamp=data["stamp"],
+            scenario_stamp=data["scenarioStamp"],
+            base_changed=data["baseChanged"],
+            scenario_changed=data["scenarioChanged"],
         )
 
 
@@ -47195,6 +48610,43 @@ class ImpactRegion(_Model):
             to=float(data["to"]),
             from_text=data["fromText"],
             to_text=data["toText"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactRoute(_Model):
+    """A `from` area's way to its nearest `to` area along the network (docs/adr/5060): both by persistent id, the
+    distance in all, the two legs (the `from` centroid to the network, the network to the `to` centroid), and the way
+    as points: the `from` centroid, its place on the network, the network's way, the `to` area's place on it, its
+    centroid.
+    Attributes:
+        distance: Unit: length.
+        legs: Unit: length.
+        path: Unit: length.
+    """
+    area: str
+    target: str
+    distance: float
+    legs: list[float]
+    path: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["target"] = self.target
+        out["distance"] = float(self.distance)
+        out["legs"] = [float(e0) for e0 in self.legs]
+        out["path"] = [[float(e1) for e1 in e0] for e0 in self.path]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactRoute:
+        return cls(
+            area=data["area"],
+            target=data["target"],
+            distance=float(data["distance"]),
+            legs=[float(e0) for e0 in data["legs"]],
+            path=[[float(e1) for e1 in e0] for e0 in data["path"]],
         )
 
 
@@ -47236,18 +48688,21 @@ class ImpactSlope(_Model):
     takes that slope. The surface is the same on both sides.
     Attributes:
         threshold: Unit: percent.
-        aspect: Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in ArcGIS's
-            Surface Aspect's eight directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
+        aspect: Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in eight
+            directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
             flat (a level triangle, no aspect).
-        classes: Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20), as ArcGIS's Surface
-            Slope's class breaks: the classes run from 0 to the first break, between two breaks and from the last one up,
+        classes: Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20):
+            the classes run from 0 to the first break, between two breaks and from the last one up,
             each holding its lower break. Unit: percent.
+        map: Docs/adr/5060: the slope map: each measured area's parts on the surface's triangles with their slope class and
+            aspect (`slopeMap`), so a host can colour them; their sizes are the class and aspect measures' own parts.
     """
     surface: str
     threshold: float
     aspect: bool | Unset = UNSET
     classes: list[float] | Unset = UNSET
     from_: list[str] | Unset = UNSET
+    map: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -47259,6 +48714,8 @@ class ImpactSlope(_Model):
             out["classes"] = [float(e0) for e0 in self.classes]
         if self.from_ is not UNSET:
             out["from"] = list(self.from_)
+        if self.map is not UNSET:
+            out["map"] = self.map
         return out
 
     @classmethod
@@ -47269,6 +48726,76 @@ class ImpactSlope(_Model):
             aspect=data.get("aspect", UNSET),
             classes=[float(e0) for e0 in data["classes"]] if "classes" in data else UNSET,
             from_=list(data["from"]) if "from" in data else UNSET,
+            map=data.get("map", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactSlopeMap(_Model):
+    """The slope map (docs/adr/5060): each side's measured areas cut by the surface's triangles, the areas in the drawing's
+    order, an area's parts by their first vertex (south first, then west).
+    """
+    base: list[ImpactSlopePiece]
+    alternative: list[ImpactSlopePiece]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = [e0.to_json() for e0 in self.base]
+        out["alternative"] = [e0.to_json() for e0 in self.alternative]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactSlopeMap:
+        return cls(
+            base=[ImpactSlopePiece.from_json(e0) for e0 in data["base"]],
+            alternative=[ImpactSlopePiece.from_json(e0) for e0 in data["alternative"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactSlopePiece(_Model):
+    """A measured area's part on one triangle of the surface (docs/adr/5060): the area's persistent id, the slope class
+    (0 the first, below the first break; 0 with no breaks) and the aspect (0 flat, 1–8 north … north-west), the
+    triangle's slope (percent), the part's size (m²) and its outer ring (counter-clockwise, from its lowest vertex, the
+    westmost of equals) and holes.
+    Attributes:
+        class_: Unit: index.
+        aspect: Unit: index.
+        slope: Unit: percent.
+        size: Unit: area.
+        ring: Unit: length.
+        holes: Unit: length.
+    """
+    area: str
+    class_: int
+    aspect: int
+    slope: float
+    size: float
+    ring: list[list[float]]
+    holes: list[list[list[float]]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["class"] = self.class_
+        out["aspect"] = self.aspect
+        out["slope"] = float(self.slope)
+        out["size"] = float(self.size)
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        if self.holes is not UNSET:
+            out["holes"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.holes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactSlopePiece:
+        return cls(
+            area=data["area"],
+            class_=data["class"],
+            aspect=data["aspect"],
+            slope=float(data["slope"]),
+            size=float(data["size"]),
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            holes=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
         )
 
 
@@ -50238,6 +51765,81 @@ class KcadRecovered(_Model):
             objects_read=data["objectsRead"],
             objects_kept=data["objectsKept"],
             lost=[RecoveredLoss.from_json(e0) for e0 in data["lost"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class KeptAdjustedPoint(_Model):
+    """A new point as adjusted: its name, its place (horizontal) or its height (height), its standard deviation (m).
+    Attributes:
+        sigma: Unit: m.
+        at: Unit: length.
+        h: Unit: m.
+    """
+    name: str
+    sigma: float
+    at: Vec2 | None | Unset = UNSET
+    h: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sigma"] = float(self.sigma)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.h is not UNSET:
+            out["h"] = None if self.h is None else float(self.h)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KeptAdjustedPoint:
+        return cls(
+            name=data["name"],
+            sigma=float(data["sigma"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            h=UNSET if "h" not in data else None if data["h"] is None else float(data["h"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class KeptAdjustment(_Model):
+    """An adjustment kept under its name (unique in the project): its kind, the drawing's revision it was made on, its new
+    points, the degrees of freedom, m0 and the model test (none without redundancy).
+    Attributes:
+        f: Unit: count.
+        m0: Unit: 1.
+    """
+    name: str
+    kind: KeptAdjustmentKind | KeptAdjustmentKindName
+    revision: str
+    points: list[KeptAdjustedPoint]
+    f: int
+    m0: float | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["revision"] = self.revision
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["f"] = self.f
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KeptAdjustment:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(KeptAdjustmentKind, data["kind"]),
+            revision=data["revision"],
+            points=[KeptAdjustedPoint.from_json(e0) for e0 in data["points"]],
+            f=data["f"],
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            passed=data.get("passed", UNSET),
         )
 
 
@@ -55708,20 +57310,28 @@ class LostPin(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class MapSurvey(_Model):
-    """A map project's GNSS campaign archive."""
+    """A map project's GNSS campaign archive.
+    Attributes:
+        baseline_sessions: Baseline sessions with their cross-correlations (docs/adr/4920).
+        tolerance: The known points' place limits kept in the project (docs/adr/4920).
+    """
     adjustments: list[SurveyAdjustment] | Unset = UNSET
+    baseline_sessions: list[SurveyBaselineSession] | Unset = UNSET
     baselines: list[SurveyBaseline] | Unset = UNSET
     campaigns: list[SurveyCampaign] | Unset = UNSET
     known: list[SurveyKnown] | Unset = UNSET
     points: list[SurveyPoint] | Unset = UNSET
     sessions: list[SurveySession] | Unset = UNSET
     solutions: list[SurveySolution] | Unset = UNSET
+    tolerance: SurveyTolerance | None | Unset = UNSET
     uses: list[SurveyUse] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.adjustments is not UNSET:
             out["adjustments"] = [e0.to_json() for e0 in self.adjustments]
+        if self.baseline_sessions is not UNSET:
+            out["baselineSessions"] = [e0.to_json() for e0 in self.baseline_sessions]
         if self.baselines is not UNSET:
             out["baselines"] = [e0.to_json() for e0 in self.baselines]
         if self.campaigns is not UNSET:
@@ -55734,6 +57344,8 @@ class MapSurvey(_Model):
             out["sessions"] = [e0.to_json() for e0 in self.sessions]
         if self.solutions is not UNSET:
             out["solutions"] = [e0.to_json() for e0 in self.solutions]
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else self.tolerance.to_json()
         if self.uses is not UNSET:
             out["uses"] = [e0.to_json() for e0 in self.uses]
         return out
@@ -55742,12 +57354,14 @@ class MapSurvey(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> MapSurvey:
         return cls(
             adjustments=[SurveyAdjustment.from_json(e0) for e0 in data["adjustments"]] if "adjustments" in data else UNSET,
+            baseline_sessions=[SurveyBaselineSession.from_json(e0) for e0 in data["baselineSessions"]] if "baselineSessions" in data else UNSET,
             baselines=[SurveyBaseline.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
             campaigns=[SurveyCampaign.from_json(e0) for e0 in data["campaigns"]] if "campaigns" in data else UNSET,
             known=[SurveyKnown.from_json(e0) for e0 in data["known"]] if "known" in data else UNSET,
             points=[SurveyPoint.from_json(e0) for e0 in data["points"]] if "points" in data else UNSET,
             sessions=[SurveySession.from_json(e0) for e0 in data["sessions"]] if "sessions" in data else UNSET,
             solutions=[SurveySolution.from_json(e0) for e0 in data["solutions"]] if "solutions" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else SurveyTolerance.from_json(data["tolerance"]),
             uses=[SurveyUse.from_json(e0) for e0 in data["uses"]] if "uses" in data else UNSET,
         )
 
@@ -55882,15 +57496,21 @@ class MapSurveyNetwork(_Model):
     `epoch_unsupported` (a known point at another epoch without its own velocity, the campaign without a velocity
     grid) and the grid's own refusals, `network_too_large`, `network_disconnected`.
     Attributes:
+        correlations: `session`: each baseline session's baselines whitened together by its full covariance, the baselines tested
+            component by component as correlated observations; `none` (when not given): each baseline by its own 3×3
+            (docs/adr/4920).
         epoch: The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120). Unit: year.
         scale: Unit: 1.
+        velocities: Each new point's velocity east, north, up read from the campaign's velocity grid (docs/adr/4920).
     """
     campaign: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
+    correlations: NetworkCorrelations | NetworkCorrelationsName | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
     hold: str | None | Unset = UNSET
     rules: GnssRules | None | Unset = UNSET
     scale: float | None | Unset = UNSET
+    velocities: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -55898,6 +57518,8 @@ class MapSurveyNetwork(_Model):
             out["campaign"] = self.campaign
         if self.class_ is not UNSET:
             out["class"] = self.class_
+        if self.correlations is not UNSET:
+            out["correlations"] = None if self.correlations is None else _enum_out(self.correlations)
         if self.epoch is not UNSET:
             out["epoch"] = None if self.epoch is None else float(self.epoch)
         if self.hold is not UNSET:
@@ -55906,6 +57528,8 @@ class MapSurveyNetwork(_Model):
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
+        if self.velocities is not UNSET:
+            out["velocities"] = self.velocities
         return out
 
     @classmethod
@@ -55913,10 +57537,12 @@ class MapSurveyNetwork(_Model):
         return cls(
             campaign=data.get("campaign", UNSET),
             class_=data.get("class", UNSET),
+            correlations=UNSET if "correlations" not in data else None if data["correlations"] is None else _enum_in(NetworkCorrelations, data["correlations"]),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             hold=data.get("hold", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else GnssRules.from_json(data["rules"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            velocities=data.get("velocities", UNSET),
         )
 
 
@@ -55930,7 +57556,9 @@ class MapSurveyNetworked(_Model):
     and, if not, why, and the drawing's revision.
     Attributes:
         srid: Unit: epsg.
+        correlations: Which correlations were used (docs/adr/4920): written when asked for or when the used baselines have sessions.
         epoch: Unit: year.
+        velocity_grid: With `velocities`: the velocity grid the new marks' velocities were read from (docs/adr/4920).
     """
     srid: int
     epoch_from: NetworkEpochFrom | NetworkEpochFromName
@@ -55941,11 +57569,13 @@ class MapSurveyNetworked(_Model):
     constrained: NetworkStage
     acceptable: bool
     revision: str
+    correlations: NetworkCorrelationsUsed | None | Unset = UNSET
     current: str | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
     moved: list[KnownMoved] | Unset = UNSET
     rules: NetworkRules | None | Unset = UNSET
     similarity: NetworkSimilarity | None | Unset = UNSET
+    velocity_grid: SurveyGrid | None | Unset = UNSET
     why: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -55959,6 +57589,8 @@ class MapSurveyNetworked(_Model):
         out["constrained"] = self.constrained.to_json()
         out["acceptable"] = self.acceptable
         out["revision"] = self.revision
+        if self.correlations is not UNSET:
+            out["correlations"] = None if self.correlations is None else self.correlations.to_json()
         if self.current is not UNSET:
             out["current"] = self.current
         if self.epoch is not UNSET:
@@ -55969,6 +57601,8 @@ class MapSurveyNetworked(_Model):
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.similarity is not UNSET:
             out["similarity"] = None if self.similarity is None else self.similarity.to_json()
+        if self.velocity_grid is not UNSET:
+            out["velocityGrid"] = None if self.velocity_grid is None else self.velocity_grid.to_json()
         if self.why is not UNSET:
             out["why"] = list(self.why)
         return out
@@ -55985,11 +57619,13 @@ class MapSurveyNetworked(_Model):
             constrained=NetworkStage.from_json(data["constrained"]),
             acceptable=data["acceptable"],
             revision=data["revision"],
+            correlations=UNSET if "correlations" not in data else None if data["correlations"] is None else NetworkCorrelationsUsed.from_json(data["correlations"]),
             current=data.get("current", UNSET),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             moved=[KnownMoved.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
             rules=UNSET if "rules" not in data else None if data["rules"] is None else NetworkRules.from_json(data["rules"]),
             similarity=UNSET if "similarity" not in data else None if data["similarity"] is None else NetworkSimilarity.from_json(data["similarity"]),
+            velocity_grid=UNSET if "velocityGrid" not in data else None if data["velocityGrid"] is None else SurveyGrid.from_json(data["velocityGrid"]),
             why=list(data["why"]) if "why" in data else UNSET,
         )
 
@@ -56037,7 +57673,10 @@ class MapSurveyTree(_Model):
     was deep, and the revision read.
     Attributes:
         stale: Unit: count.
+        baseline_sessions: The baseline sessions with their cross-correlations (docs/adr/4920).
         known_places: With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.
+        tolerance: The place limits kept in the project, with their source (docs/adr/4920); `places` reads them when the input
+            gives none.
     """
     campaigns: list[SurveyCampaignRow]
     sessions: list[SurveySessionRow]
@@ -56048,10 +57687,12 @@ class MapSurveyTree(_Model):
     deep: bool
     revision: str
     adjustments: list[SurveyAdjustment] | Unset = UNSET
+    baseline_sessions: list[SurveyBaselineSession] | Unset = UNSET
     baselines: list[SurveyBaselineRow] | Unset = UNSET
     known: list[SurveyKnown] | Unset = UNSET
     known_places: list[SurveyKnownPlace] | Unset = UNSET
     object: SurveyObject | None | Unset = UNSET
+    tolerance: SurveyTolerance | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -56065,6 +57706,8 @@ class MapSurveyTree(_Model):
         out["revision"] = self.revision
         if self.adjustments is not UNSET:
             out["adjustments"] = [e0.to_json() for e0 in self.adjustments]
+        if self.baseline_sessions is not UNSET:
+            out["baselineSessions"] = [e0.to_json() for e0 in self.baseline_sessions]
         if self.baselines is not UNSET:
             out["baselines"] = [e0.to_json() for e0 in self.baselines]
         if self.known is not UNSET:
@@ -56073,6 +57716,8 @@ class MapSurveyTree(_Model):
             out["knownPlaces"] = [e0.to_json() for e0 in self.known_places]
         if self.object is not UNSET:
             out["object"] = None if self.object is None else self.object.to_json()
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else self.tolerance.to_json()
         return out
 
     @classmethod
@@ -56087,10 +57732,12 @@ class MapSurveyTree(_Model):
             deep=data["deep"],
             revision=data["revision"],
             adjustments=[SurveyAdjustment.from_json(e0) for e0 in data["adjustments"]] if "adjustments" in data else UNSET,
+            baseline_sessions=[SurveyBaselineSession.from_json(e0) for e0 in data["baselineSessions"]] if "baselineSessions" in data else UNSET,
             baselines=[SurveyBaselineRow.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
             known=[SurveyKnown.from_json(e0) for e0 in data["known"]] if "known" in data else UNSET,
             known_places=[SurveyKnownPlace.from_json(e0) for e0 in data["knownPlaces"]] if "knownPlaces" in data else UNSET,
             object=UNSET if "object" not in data else None if data["object"] is None else SurveyObject.from_json(data["object"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else SurveyTolerance.from_json(data["tolerance"]),
         )
 
 
@@ -56128,16 +57775,23 @@ class MapWorkEdit(_Model):
     `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
     refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
     another derivation names), `own_content` (an object of the source's own layers, the source without a file),
-    `not_derived` (release of an object no derivation names), `approval_stale`,
-    `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
+    `not_derived` (release of an object no derivation names), `approval_stale`, `unknown_profile` and `invalid_profile`
+    (a profile, `operation.name`; an approved item's, `operation.status`), `unknown_profile_class` (`operation.classes[i]`),
+    `approval_profile` (approving an item whose typed layers break its profile), `layer_refused` (a class's layer or
+    field the drawing refuses), `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
     `work_full`.
+    Attributes:
+        drawing: The open project's file, an absolute path (docs/adr/4880): a profile not built in is looked for in its folder.
     """
     operation: MapWorkOperation
+    drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = self.operation.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -56146,6 +57800,7 @@ class MapWorkEdit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> MapWorkEdit:
         return cls(
             operation=MapWorkOperation.from_json(data["operation"]),
+            drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -56161,7 +57816,9 @@ class MapWorkEdited(_Model):
         stale: Unit: count.
         approved: The stamp an approval wrote (docs/adr/2080 §3).
         content: Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).
+        fields: The fields a profile added, `layer.field`.
         freed: How many objects a release let go of. Unit: count.
+        layers: The layers a profile added (docs/adr/4880).
         links: How many external references a relink pointed at the new file (docs/adr/1201 §2). Unit: count.
         released: Unit: count.
         relinked: Unit: count.
@@ -56171,9 +57828,11 @@ class MapWorkEdited(_Model):
     approved: str | None | Unset = UNSET
     content: str | None | Unset = UNSET
     derivation: str | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
     file_revision: str | None | Unset = UNSET
     freed: int | Unset = UNSET
     item: str | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
     links: int | Unset = UNSET
     released: int | Unset = UNSET
     relinked: int | Unset = UNSET
@@ -56188,12 +57847,16 @@ class MapWorkEdited(_Model):
             out["content"] = self.content
         if self.derivation is not UNSET:
             out["derivation"] = self.derivation
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
         if self.file_revision is not UNSET:
             out["fileRevision"] = self.file_revision
         if self.freed is not UNSET:
             out["freed"] = self.freed
         if self.item is not UNSET:
             out["item"] = self.item
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
         if self.links is not UNSET:
             out["links"] = self.links
         if self.released is not UNSET:
@@ -56210,9 +57873,11 @@ class MapWorkEdited(_Model):
             approved=data.get("approved", UNSET),
             content=data.get("content", UNSET),
             derivation=data.get("derivation", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
             file_revision=data.get("fileRevision", UNSET),
             freed=data.get("freed", UNSET),
             item=data.get("item", UNSET),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
             links=data.get("links", UNSET),
             released=data.get("released", UNSET),
             relinked=data.get("relinked", UNSET),
@@ -56226,16 +57891,21 @@ class MapWorkQuery(_Model):
     is only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a
     derivation comes from, an approved item with a stamp; docs/adr/2080 §1).
     `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
-    paths and the search paths (docs/adr/1201 §1).
+    paths and the search paths (docs/adr/1201 §1). `limit` (docs/adr/5280) sets each changed object's shift against a
+    limit; `suggest` lists, for an item without a profile, the profiles whose classes say they suit its kind.
 
-    Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,
-    `entity_not_found`.
+    Refusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_input`
+    (`limit`), `invalid_uid`, `entity_not_found`.
     Attributes:
         drawing: The open project's file, an absolute path (docs/adr/1201 §1): an item's file not at its path is looked for at
             its relative path from this file's folder, then in the project's search paths. None: only at its path.
+        limit: The limit each changed object's shift is set against (docs/adr/5280).
+        suggest: List the suggested profiles of the items without one (docs/adr/5280).
     """
     deep: bool | Unset = UNSET
     drawing: str | None | Unset = UNSET
+    limit: ShiftLimit | None | Unset = UNSET
+    suggest: bool | Unset = UNSET
     uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -56244,6 +57914,10 @@ class MapWorkQuery(_Model):
             out["deep"] = self.deep
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else self.limit.to_json()
+        if self.suggest is not UNSET:
+            out["suggest"] = self.suggest
         if self.uid is not UNSET:
             out["uid"] = self.uid
         return out
@@ -56253,6 +57927,8 @@ class MapWorkQuery(_Model):
         return cls(
             deep=data.get("deep", UNSET),
             drawing=data.get("drawing", UNSET),
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else ShiftLimit.from_json(data["limit"]),
+            suggest=data.get("suggest", UNSET),
             uid=data.get("uid", UNSET),
         )
 
@@ -56341,6 +58017,7 @@ class MapWorkTree(_Model):
     Attributes:
         stale: Unit: count.
         problems: Unit: count.
+        limit: The limit the shifts were set against, and its source (docs/adr/5280).
     """
     items: list[WorkRow]
     derivations: list[WorkDerivationRow]
@@ -56348,6 +58025,7 @@ class MapWorkTree(_Model):
     problems: int
     deep: bool
     revision: str
+    limit: ShiftLimitUsed | None | Unset = UNSET
     object: WorkObjectSource | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -56358,6 +58036,8 @@ class MapWorkTree(_Model):
         out["problems"] = self.problems
         out["deep"] = self.deep
         out["revision"] = self.revision
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else self.limit.to_json()
         if self.object is not UNSET:
             out["object"] = None if self.object is None else self.object.to_json()
         return out
@@ -56371,6 +58051,7 @@ class MapWorkTree(_Model):
             problems=data["problems"],
             deep=data["deep"],
             revision=data["revision"],
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else ShiftLimitUsed.from_json(data["limit"]),
             object=UNSET if "object" not in data else None if data["object"] is None else WorkObjectSource.from_json(data["object"]),
         )
 
@@ -56642,6 +58323,26 @@ class MappingField(_Model):
         return cls(
             profile=data["profile"],
             name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MappingNames(_Model):
+    """A mapping's form for the names it does not write itself."""
+    case: NameCase | NameCaseName
+    letters: NameLetters | NameLettersName = NameLetters.KEEP
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["case"] = _enum_out(self.case)
+        out["letters"] = _enum_out(self.letters)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MappingNames:
+        return cls(
+            case=_enum_in(NameCase, data["case"]),
+            letters=_enum_in(NameLetters, data["letters"]) if "letters" in data else NameLetters.KEEP,
         )
 
 
@@ -56921,6 +58622,42 @@ class MaterialsFile(_Model):
             version=data["version"],
             library=data["library"],
             materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeasuredRefraction(_Model):
+    """The pairs' refraction coefficients together (docs/adr/4900): their mean k̄ = Σkᵢ/n, how many pairs, and with two or
+    more their standard deviation s = √(Σ(kᵢ − k̄)²/(n − 1)) and the mean's s/√n. Each pair weighs the same (no source
+    weighs them otherwise).
+    Attributes:
+        mean: Unit: 1.
+        pairs: Unit: count.
+        sd: Unit: 1.
+        sigma: Unit: 1.
+    """
+    mean: float
+    pairs: int
+    sd: float | None | Unset = UNSET
+    sigma: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mean"] = float(self.mean)
+        out["pairs"] = self.pairs
+        if self.sd is not UNSET:
+            out["sd"] = None if self.sd is None else float(self.sd)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else float(self.sigma)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeasuredRefraction:
+        return cls(
+            mean=float(data["mean"]),
+            pairs=data["pairs"],
+            sd=UNSET if "sd" not in data else None if data["sd"] is None else float(data["sd"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
         )
 
 
@@ -58575,6 +60312,73 @@ class ModulesQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MonitoringReview(_Model):
+    """A review kept under its name (unique in the project): the job, the digest of the points it read (SHA-256, 64
+    lowercase hex), its marks and the reviewer's statement.
+    """
+    name: str
+    job: ReviewedJob
+    digest: str
+    marks: list[ReviewedMark]
+    reviewer: MonitoringReviewer
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["job"] = self.job.to_json()
+        out["digest"] = self.digest
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        out["reviewer"] = self.reviewer.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MonitoringReview:
+        return cls(
+            name=data["name"],
+            job=ReviewedJob.from_json(data["job"]),
+            digest=data["digest"],
+            marks=[ReviewedMark.from_json(e0) for e0 in data["marks"]],
+            reviewer=MonitoringReviewer.from_json(data["reviewer"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MonitoringReviewer(_Model):
+    """The reviewer's statement: role, title (unvan), name, day (`YYYY-MM-DD`), phrase, signature and a note."""
+    role: ReviewerRole | ReviewerRoleName
+    title: str
+    name: str
+    date: str
+    phrase: ReviewPhrase | ReviewPhraseName
+    signature: SignatureKind | SignatureKindName
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["role"] = _enum_out(self.role)
+        out["title"] = self.title
+        out["name"] = self.name
+        out["date"] = self.date
+        out["phrase"] = _enum_out(self.phrase)
+        out["signature"] = _enum_out(self.signature)
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MonitoringReviewer:
+        return cls(
+            role=_enum_in(ReviewerRole, data["role"]),
+            title=data["title"],
+            name=data["name"],
+            date=data["date"],
+            phrase=_enum_in(ReviewPhrase, data["phrase"]),
+            signature=_enum_in(SignatureKind, data["signature"]),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MosaicSource(_Model):
     """A file of the mosaic.
     Attributes:
@@ -59141,6 +60945,33 @@ class NetworkClosures(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NetworkCorrelationsUsed(_Model):
+    """Which correlations an adjustment used (docs/adr/4920): `session` or `none`, the baseline sessions whose full
+    covariance went in, and those of the used baselines that were left out (their sessions incomplete or `none`).
+    """
+    used: NetworkCorrelations | NetworkCorrelationsName
+    sessions: list[str] | Unset = UNSET
+    unused: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["used"] = _enum_out(self.used)
+        if self.sessions is not UNSET:
+            out["sessions"] = list(self.sessions)
+        if self.unused is not UNSET:
+            out["unused"] = list(self.unused)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkCorrelationsUsed:
+        return cls(
+            used=_enum_in(NetworkCorrelations, data["used"]),
+            sessions=list(data["sessions"]) if "sessions" in data else UNSET,
+            unused=list(data["unused"]) if "unused" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkCost(_Model):
     """A cost besides the length (docs/adr/0209 §2).
     Attributes:
@@ -59435,6 +61266,85 @@ class NetworkLevels(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NetworkLink(_Model):
+    """A link (docs/adr/4720): its two scans, its registration's pairs, overlap share, RMS after and strength
+    (`cad.pointclouds.register`'s), the second's correction relative to the first it observed (rotation, then
+    translation about the network's centre), the network's residual of it (adjusted − observed, the same order), and the
+    shift that residual makes along the pairs' normals (the square root of rᵀ·N·r over the pairs, metres).
+    Attributes:
+        pairs: Unit: count.
+        overlap: Unit: 1.
+        rms_after: Unit: length.
+        strength: Unit: 1.
+        observed: Unit: value.
+        residual: Unit: value.
+        shift: Unit: length.
+    """
+    scans: list[str]
+    pairs: int
+    overlap: float
+    rms_after: float
+    strength: float
+    observed: list[float]
+    residual: list[float]
+    shift: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scans"] = list(self.scans)
+        out["pairs"] = self.pairs
+        out["overlap"] = float(self.overlap)
+        out["rmsAfter"] = float(self.rms_after)
+        out["strength"] = float(self.strength)
+        out["observed"] = [float(e0) for e0 in self.observed]
+        out["residual"] = [float(e0) for e0 in self.residual]
+        out["shift"] = float(self.shift)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLink:
+        return cls(
+            scans=list(data["scans"]),
+            pairs=data["pairs"],
+            overlap=float(data["overlap"]),
+            rms_after=float(data["rmsAfter"]),
+            strength=float(data["strength"]),
+            observed=[float(e0) for e0 in data["observed"]],
+            residual=[float(e0) for e0 in data["residual"]],
+            shift=float(data["shift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkLoop(_Model):
+    """A loop of links (docs/adr/4720): the scans it passes through in order (a held scan stands for every held one, which
+    do not move against each other), and how far its observations fail to close: the rotation's length (radians) and
+    the translation's (metres) of the sum round it.
+    Attributes:
+        rotation: Unit: rad.
+        translation: Unit: length.
+    """
+    scans: list[str]
+    rotation: float
+    translation: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scans"] = list(self.scans)
+        out["rotation"] = float(self.rotation)
+        out["translation"] = float(self.translation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLoop:
+        return cls(
+            scans=list(data["scans"]),
+            rotation=float(data["rotation"]),
+            translation=float(data["translation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkPeriod(_Model):
     """A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their
     speed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).
@@ -59559,6 +61469,49 @@ class NetworkRules(_Model):
             stations=data["stations"],
             confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
             similarity=data.get("similarity", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkScan(_Model):
+    """A scan adjusted (docs/adr/4720): its id, whether it was held, its correction about the network's centre — the
+    rotation (ω, φ, κ; R = Rz(κ)·Ry(φ)·Rx(ω)) and the translation — and the matrix taking its points where they belong
+    (row by row, p ↦ R(p − centre) + centre + translation), for Dönüşüm uygula; for a free scan its horizontal strength in
+    the network: √(σz² / σh²) of its translation's covariance (σh² the larger plan eigenvalue), Tarama kaydı's
+    `horizontal` for the network — under 0.1 the network barely fixes it in plan (flat ground).
+    Attributes:
+        rotation: Unit: rad.
+        translation: Unit: length.
+        matrix: Unit: value.
+        horizontal: Unit: 1.
+    """
+    uid: str
+    fixed: bool
+    rotation: list[float]
+    translation: list[float]
+    matrix: list[float]
+    horizontal: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["fixed"] = self.fixed
+        out["rotation"] = [float(e0) for e0 in self.rotation]
+        out["translation"] = [float(e0) for e0 in self.translation]
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkScan:
+        return cls(
+            uid=data["uid"],
+            fixed=data["fixed"],
+            rotation=[float(e0) for e0 in data["rotation"]],
+            translation=[float(e0) for e0 in data["translation"]],
+            matrix=[float(e0) for e0 in data["matrix"]],
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
         )
 
 
@@ -59690,6 +61643,8 @@ class NetworkStation(_Model):
         dx: Unit: system.
         dy: Unit: system.
         dz: Unit: elevation.
+        velocity: With `velocities`: a new mark's velocity east, north, up (m/yr) read from the campaign's velocity grid
+            (docs/adr/4920). Unit: m/yr.
         x: Unit: system.
         y: Unit: system.
         z: Unit: elevation.
@@ -59707,6 +61662,7 @@ class NetworkStation(_Model):
     known: str | None | Unset = UNSET
     point: str | None | Unset = UNSET
     rules: bool | None | Unset = UNSET
+    velocity: list[float] | None | Unset = UNSET
     x: float | None | Unset = UNSET
     y: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
@@ -59733,6 +61689,8 @@ class NetworkStation(_Model):
             out["point"] = self.point
         if self.rules is not UNSET:
             out["rules"] = self.rules
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else [float(e0) for e0 in self.velocity]
         if self.x is not UNSET:
             out["x"] = None if self.x is None else float(self.x)
         if self.y is not UNSET:
@@ -59757,6 +61715,7 @@ class NetworkStation(_Model):
             known=data.get("known", UNSET),
             point=data.get("point", UNSET),
             rules=data.get("rules", UNSET),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else [float(e0) for e0 in data["velocity"]],
             x=UNSET if "x" not in data else None if data["x"] is None else float(data["x"]),
             y=UNSET if "y" not in data else None if data["y"] is None else float(data["y"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
@@ -63780,6 +65739,89 @@ class OrthoGsd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoNetworkElement(_Model):
+    """An image's mosaic element: its parts (each an outer ring, counter-clockwise, from its southernmost corner, the
+    westernmost of equals; and its holes, clockwise), its area, its footprint's centre, the ids written.
+    Attributes:
+        area: Unit: area.
+        centre: Unit: system.
+    """
+    image: str
+    parts: list[OrthoNetworkPart]
+    area: float
+    centre: list[float]
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["image"] = self.image
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["area"] = float(self.area)
+        out["centre"] = [float(e0) for e0 in self.centre]
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoNetworkElement:
+        return cls(
+            image=data["image"],
+            parts=[OrthoNetworkPart.from_json(e0) for e0 in data["parts"]],
+            area=float(data["area"]),
+            centre=[float(e0) for e0 in data["centre"]],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoNetworkJunction(_Model):
+    """A junction: a place three or more elements meet, and their images (in the input's order).
+    Attributes:
+        at: Unit: system.
+    """
+    at: list[float]
+    images: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["images"] = list(self.images)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoNetworkJunction:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            images=list(data["images"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoNetworkPart(_Model):
+    """A part of an element: its outer ring and holes.
+    Attributes:
+        ring: Unit: system.
+        holes: Unit: system.
+    """
+    ring: list[list[float]]
+    holes: list[list[list[float]]] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        if self.holes is not UNSET:
+            out["holes"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.holes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoNetworkPart:
+        return cls(
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            holes=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OrthoPair(_Model):
     """A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,
     and whether it is over the limit.
@@ -64105,6 +66147,72 @@ class OrthoSeamAsk(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoSeamDifference(_Model):
+    """The radiometric seam's differences (docs/adr/4700), in the images' values: the largest along the path (the
+    bottleneck no path between the ends goes under), the mean along it and over every searched cell; the path's cells,
+    the searched cells and a cell's side on the ground (metres).
+    Attributes:
+        bottleneck: Unit: 1.
+        mean: Unit: 1.
+        searched_mean: Unit: 1.
+        cells: Unit: count.
+        searched: Unit: count.
+        size: Unit: length.
+    """
+    bottleneck: float
+    mean: float
+    searched_mean: float
+    cells: int
+    searched: int
+    size: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["bottleneck"] = float(self.bottleneck)
+        out["mean"] = float(self.mean)
+        out["searchedMean"] = float(self.searched_mean)
+        out["cells"] = self.cells
+        out["searched"] = self.searched
+        out["size"] = float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamDifference:
+        return cls(
+            bottleneck=float(data["bottleneck"]),
+            mean=float(data["mean"]),
+            searched_mean=float(data["searchedMean"]),
+            cells=data["cells"],
+            searched=data["searched"],
+            size=float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamEnd(_Model):
+    """A seam's end (docs/adr/4700): where the two footprints' boundaries cross (`crossing`), or on a stretch the two
+    share (`shared`: the union's outer boundary), the point of it equally far from the two images' own parts.
+    Attributes:
+        at: Unit: system.
+    """
+    at: list[float]
+    kind: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamEnd:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            kind=data["kind"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OrthoSeamLine(_Model):
     """The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and
     how many of them lie outside the overlap (not measured).
@@ -64133,6 +66241,42 @@ class OrthoSeamLine(_Model):
             length=float(data["length"]),
             places=data["places"],
             outside=data["outside"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamPolygon(_Model):
+    """An image's seamline polygon: the raster's persistent id, its ring (east, north; counter-clockwise, closed back to
+    its start by its last edge), its area, the part of the overlap it keeps (m²), and the object written (execute).
+    Attributes:
+        ring: Unit: system.
+        area: Unit: area.
+        kept: Unit: area.
+    """
+    image: str
+    ring: list[list[float]]
+    area: float
+    kept: float
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["image"] = self.image
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        out["area"] = float(self.area)
+        out["kept"] = float(self.kept)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamPolygon:
+        return cls(
+            image=data["image"],
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            area=float(data["area"]),
+            kept=float(data["kept"]),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -64477,6 +66621,317 @@ class OrthophotoCompared(_Model):
             passed=data.get("passed", UNSET),
             seam=UNSET if "seam" not in data else None if data["seam"] is None else OrthoSeam.from_json(data["seam"]),
             second_check=UNSET if "secondCheck" not in data else None if data["secondCheck"] is None else OrthophotoChecked.from_json(data["secondCheck"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoFootprint(_Model):
+    """Input of `cad.orthophoto.footprint` v1: the raster, whether its convex hull is drawn instead of its outline, the
+    layer (none: `ayak-izleri`, made when the drawing has none) and, for a raster whose file is a relative path, the
+    drawing's folder. Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`raster`);
+    `file_not_found`, `invalid_file_path`, `import_unreadable` (its image); `invalid_input` (too many pixels, every
+    pixel NoData); `layer_not_found`, `layer_locked`; `invalid_revision`, `revision_conflict`. A raster without a NoData
+    value has every pixel valid: its footprint is its bounds.
+    """
+    raster: str
+    expected_revision: str | None | Unset = UNSET
+    folder: str | None | Unset = UNSET
+    hull: bool | Unset = UNSET
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["raster"] = self.raster
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        if self.hull is not UNSET:
+            out["hull"] = self.hull
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoFootprint:
+        return cls(
+            raster=data["raster"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            folder=data.get("folder", UNSET),
+            hull=data.get("hull", UNSET),
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoFootprintBuilt(_Model):
+    """Output of `cad.orthophoto.footprint` v1: the footprint's parts (as the network's elements'), its area, the pixels
+    read and valid, the NoData value, whether it is the hull, the layer, the id written, notes and the revision.
+    Attributes:
+        area: Unit: area.
+        pixels: Unit: count.
+        valid: Unit: count.
+        nodata: Unit: 1.
+    """
+    parts: list[OrthoNetworkPart]
+    area: float
+    pixels: int
+    valid: int
+    layer: str
+    notes: list[str]
+    revision: str
+    hull: bool | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    opened: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        out["area"] = float(self.area)
+        out["pixels"] = self.pixels
+        out["valid"] = self.valid
+        out["layer"] = self.layer
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.hull is not UNSET:
+            out["hull"] = self.hull
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.opened is not UNSET:
+            out["opened"] = self.opened
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoFootprintBuilt:
+        return cls(
+            parts=[OrthoNetworkPart.from_json(e0) for e0 in data["parts"]],
+            area=float(data["area"]),
+            pixels=data["pixels"],
+            valid=data["valid"],
+            layer=data["layer"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            hull=data.get("hull", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            opened=data.get("opened", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoNetwork(_Model):
+    """Input of `cad.orthophoto.network` v1: the orthophotos (2 to 50, rasters of the project's system), their footprints
+    in the same order (areas or closed polylines with straight edges, convex; none: the rasters' four corners), the
+    layer the elements are written on (none: `mozaik-elemanlari`, made when the drawing has none). Refusals:
+    `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`images[k]`); `invalid_input` (fewer than two or
+    more than 50 images, one twice, footprints not one each, a footprint not convex or covering nothing, an image whose
+    footprint is wholly another's nearer one: no element); `layer_not_found`, `layer_locked`; `invalid_revision`,
+    `revision_conflict`.
+    """
+    images: list[str]
+    expected_revision: str | None | Unset = UNSET
+    footprints: list[str] | Unset = UNSET
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["images"] = list(self.images)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.footprints is not UNSET:
+            out["footprints"] = list(self.footprints)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoNetwork:
+        return cls(
+            images=list(data["images"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            footprints=list(data["footprints"]) if "footprints" in data else UNSET,
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoNetworkBuilt(_Model):
+    """Output of `cad.orthophoto.network` v1: the elements in the input's order, the junctions (south to north, west to
+    east), the union's area, the layer (and whether it was made), notes and the revision.
+    Attributes:
+        covered: Unit: area.
+    """
+    elements: list[OrthoNetworkElement]
+    junctions: list[OrthoNetworkJunction]
+    covered: float
+    layer: str
+    notes: list[str]
+    revision: str
+    opened: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["elements"] = [e0.to_json() for e0 in self.elements]
+        out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        out["covered"] = float(self.covered)
+        out["layer"] = self.layer
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.opened is not UNSET:
+            out["opened"] = self.opened
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoNetworkBuilt:
+        return cls(
+            elements=[OrthoNetworkElement.from_json(e0) for e0 in data["elements"]],
+            junctions=[OrthoNetworkJunction.from_json(e0) for e0 in data["junctions"]],
+            covered=float(data["covered"]),
+            layer=data["layer"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            opened=data.get("opened", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoSeamlines(_Model):
+    """Input of `cad.orthophoto.seamlines` v1 (plan/map-cad.md MAP-12, docs/adr/4700): two orthophotos (rasters'
+    persistent ids; the first's polygon is written first), their footprints (areas or closed polylines of straight
+    edges, convex; none: each raster's extent), the method, and for Voronoi the spacing of a curved stretch's points
+    (metres; none: 1), for radiometry the cell's side in the first image's pixels (none: 1) and the corridor round the
+    Voronoi seam the path keeps to (metres; none: the whole overlap). `folder`: where a raster's relative file is looked
+    for (radiometry reads the pixels). `avoid` (radiometry): a layer whose areas the seam keeps out of. `layer`: the
+    layer's id the polygons are written on; none: `mozaik-elemanlari` (“Mozaik elemanları”), made in the same undo step
+    when missing.
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`first`, `second`); `invalid_input`
+    (one raster twice; `step` not above zero; `cell` outside 1..=64; `corridor` not above zero; `cell`, `corridor` or
+    `avoid` with Voronoi; a footprint twice, not in the drawing, not an area or a closed polyline, of arcs, holes or parts, not
+    convex; no overlap, one footprint inside the other, an overlap whose boundary changes hands more than twice; for
+    radiometry no cell to search, too many pixels, no path between the ends); `layer_not_found` (`layer`, `avoid`),
+    `layer_locked`;
+    `invalid_revision`, `revision_conflict`; the files' (`invalid_file_path`, `file_not_found`, `import_unreadable`).
+    Attributes:
+        avoid: Radiometry: a layer whose areas (and closed polylines) the seam keeps out of, as buildings and bridges (USGS:
+            a seam does not cut a roof): a cell with a pixel centre inside one is not searched.
+        cell: Radiometry: a cell's side in the first image's pixels. Unit: count.
+        corridor: Radiometry: how far from the Voronoi seam a searched cell's centre may lie. Unit: length.
+        footprints: The two images' footprints' persistent ids, in the images' order; none: each raster's extent.
+        step: Voronoi: a curved stretch's points every `step` metres along the line from the seam's start to its end. Unit: length.
+    """
+    first: str
+    second: str
+    avoid: str | None | Unset = UNSET
+    cell: int | None | Unset = UNSET
+    corridor: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    folder: str | None | Unset = UNSET
+    footprints: list[str] | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    method: OrthoSeamMethod | OrthoSeamMethodName = OrthoSeamMethod.VORONOI
+    step: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["first"] = self.first
+        out["second"] = self.second
+        if self.avoid is not UNSET:
+            out["avoid"] = self.avoid
+        if self.cell is not UNSET:
+            out["cell"] = self.cell
+        if self.corridor is not UNSET:
+            out["corridor"] = None if self.corridor is None else float(self.corridor)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        if self.footprints is not UNSET:
+            out["footprints"] = None if self.footprints is None else list(self.footprints)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        out["method"] = _enum_out(self.method)
+        if self.step is not UNSET:
+            out["step"] = None if self.step is None else float(self.step)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoSeamlines:
+        return cls(
+            first=data["first"],
+            second=data["second"],
+            avoid=data.get("avoid", UNSET),
+            cell=data.get("cell", UNSET),
+            corridor=UNSET if "corridor" not in data else None if data["corridor"] is None else float(data["corridor"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            folder=data.get("folder", UNSET),
+            footprints=UNSET if "footprints" not in data else None if data["footprints"] is None else list(data["footprints"]),
+            layer=data.get("layer", UNSET),
+            method=_enum_in(OrthoSeamMethod, data["method"]) if "method" in data else OrthoSeamMethod.VORONOI,
+            step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoSeamlinesBuilt(_Model):
+    """Output of `cad.orthophoto.seamlines` v1: the method, the overlap (its ring and area), the seam from its start to its
+    end (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for
+    radiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.
+    Attributes:
+        overlap: Unit: system.
+        overlap_area: Unit: area.
+        seam: Unit: system.
+        length: Unit: length.
+    """
+    method: OrthoSeamMethod | OrthoSeamMethodName
+    overlap: list[list[float]]
+    overlap_area: float
+    seam: list[list[float]]
+    length: float
+    ends: list[OrthoSeamEnd]
+    polygons: list[OrthoSeamPolygon]
+    layer: str
+    notes: list[str]
+    revision: str
+    difference: OrthoSeamDifference | None | Unset = UNSET
+    opened: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["overlap"] = [[float(e1) for e1 in e0] for e0 in self.overlap]
+        out["overlapArea"] = float(self.overlap_area)
+        out["seam"] = [[float(e1) for e1 in e0] for e0 in self.seam]
+        out["length"] = float(self.length)
+        out["ends"] = [e0.to_json() for e0 in self.ends]
+        out["polygons"] = [e0.to_json() for e0 in self.polygons]
+        out["layer"] = self.layer
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else self.difference.to_json()
+        if self.opened is not UNSET:
+            out["opened"] = self.opened
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoSeamlinesBuilt:
+        return cls(
+            method=_enum_in(OrthoSeamMethod, data["method"]),
+            overlap=[[float(e1) for e1 in e0] for e0 in data["overlap"]],
+            overlap_area=float(data["overlapArea"]),
+            seam=[[float(e1) for e1 in e0] for e0 in data["seam"]],
+            length=float(data["length"]),
+            ends=[OrthoSeamEnd.from_json(e0) for e0 in data["ends"]],
+            polygons=[OrthoSeamPolygon.from_json(e0) for e0 in data["polygons"]],
+            layer=data["layer"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else OrthoSeamDifference.from_json(data["difference"]),
+            opened=data.get("opened", UNSET),
         )
 
 
@@ -67458,6 +69913,58 @@ class ParametersEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelApproval(_Model):
+    """An approval written outside KentOS, as written (docs/adr/5020): its number (never empty), its date and who approved."""
+    reference: str
+    by: str | Unset = UNSET
+    date: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["reference"] = self.reference
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelApproval:
+        return cls(
+            reference=data["reference"],
+            by=data.get("by", UNSET),
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelApprovalInput(_Model):
+    """An approval as given (docs/adr/5020): its number (at most 64 characters), date (64) and who approved (120), as
+    written outside KentOS.
+    """
+    reference: str
+    by: str | None | Unset = UNSET
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["reference"] = self.reference
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelApprovalInput:
+        return cls(
+            reference=data["reference"],
+            by=data.get("by", UNSET),
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelAreaCheck(_Model):
     """A parcel as checked: its identity's parts as written (empty when missing), its geometric area (square metres),
     its recorded area's text as written and its value when it reads, the difference (geometric − recorded), the
@@ -67629,13 +70136,14 @@ class ParcelCreated(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelDocument(_Model):
-    """A document that made or closed parcels (ArcGIS's record): its name, unique in the drawing; its kind as the user
+    """A document that made or closed parcels: its name, unique in the drawing; its kind as the user
     writes it (a plan, a deed …); the date it gives, as written; a note.
     Attributes:
         number: Unit: id.
     """
     number: int
     name: str
+    approval: ParcelApproval | None | Unset = UNSET
     date: str | Unset = UNSET
     kind: str | Unset = UNSET
     note: str | Unset = UNSET
@@ -67644,6 +70152,8 @@ class ParcelDocument(_Model):
         out: dict[str, Any] = {}
         out["number"] = self.number
         out["name"] = self.name
+        if self.approval is not UNSET:
+            out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.date is not UNSET:
             out["date"] = self.date
         if self.kind is not UNSET:
@@ -67657,6 +70167,7 @@ class ParcelDocument(_Model):
         return cls(
             number=data["number"],
             name=data["name"],
+            approval=UNSET if "approval" not in data else None if data["approval"] is None else ParcelApproval.from_json(data["approval"]),
             date=data.get("date", UNSET),
             kind=data.get("kind", UNSET),
             note=data.get("note", UNSET),
@@ -67696,7 +70207,7 @@ class ParcelDocumentInput(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelDocumentRow(_Model):
-    """A document as listed: its fields and the parcels it made and closed.
+    """A document as listed: its fields, its approval as written (docs/adr/5020) and the parcels it made and closed.
     Attributes:
         number: Unit: id.
         created: Unit: id.
@@ -67706,6 +70217,7 @@ class ParcelDocumentRow(_Model):
     name: str
     created: list[int]
     closed: list[int]
+    approval: ParcelApproval | None | Unset = UNSET
     date: str | Unset = UNSET
     kind: str | Unset = UNSET
     note: str | Unset = UNSET
@@ -67716,6 +70228,8 @@ class ParcelDocumentRow(_Model):
         out["name"] = self.name
         out["created"] = list(self.created)
         out["closed"] = list(self.closed)
+        if self.approval is not UNSET:
+            out["approval"] = None if self.approval is None else self.approval.to_json()
         if self.date is not UNSET:
             out["date"] = self.date
         if self.kind is not UNSET:
@@ -67731,9 +70245,98 @@ class ParcelDocumentRow(_Model):
             name=data["name"],
             created=list(data["created"]),
             closed=list(data["closed"]),
+            approval=UNSET if "approval" not in data else None if data["approval"] is None else ParcelApproval.from_json(data["approval"]),
             date=data.get("date", UNSET),
             kind=data.get("kind", UNSET),
             note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelDraft(_Model):
+    """A document not yet approved (docs/adr/5020): its fields as a document's, the parcels it would make and the recorded
+    parcels it would close. Approving it writes it as a document with the next number; nothing current changes before.
+    Attributes:
+        number: Unit: id.
+        close: Unit: id.
+    """
+    number: int
+    name: str
+    close: list[int] | Unset = UNSET
+    create: list[DraftParcel] | Unset = UNSET
+    date: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    note: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["name"] = self.name
+        if self.close is not UNSET:
+            out["close"] = list(self.close)
+        if self.create is not UNSET:
+            out["create"] = [e0.to_json() for e0 in self.create]
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDraft:
+        return cls(
+            number=data["number"],
+            name=data["name"],
+            close=list(data["close"]) if "close" in data else UNSET,
+            create=[DraftParcel.from_json(e0) for e0 in data["create"]] if "create" in data else UNSET,
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelDraftRow(_Model):
+    """A draft as listed (docs/adr/5020): its number among the drafts, its fields, the identities (`Ada/Parsel`) of the
+    parcels it would make, the recorded parcels it would close, how many lengths it states.
+    Attributes:
+        number: Unit: id.
+        close: Unit: id.
+        lengths: Unit: count.
+    """
+    number: int
+    name: str
+    create: list[str]
+    close: list[int]
+    lengths: int
+    date: str | Unset = UNSET
+    kind: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["name"] = self.name
+        out["create"] = list(self.create)
+        out["close"] = list(self.close)
+        out["lengths"] = self.lengths
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDraftRow:
+        return cls(
+            number=data["number"],
+            name=data["name"],
+            create=list(data["create"]),
+            close=list(data["close"]),
+            lengths=data["lengths"],
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
         )
 
 
@@ -67800,16 +70403,24 @@ class ParcelPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelRegister(_Model):
-    """The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made."""
+    """The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made; the lengths
+    the documents state; the drafts, numbered apart (docs/adr/5020).
+    """
     documents: list[ParcelDocument]
     boundaries: list[RecordedBoundary]
     parcels: list[RecordedParcel]
+    drafts: list[ParcelDraft] | Unset = UNSET
+    lengths: list[RecordedLength] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["documents"] = [e0.to_json() for e0 in self.documents]
         out["boundaries"] = [e0.to_json() for e0 in self.boundaries]
         out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        if self.drafts is not UNSET:
+            out["drafts"] = [e0.to_json() for e0 in self.drafts]
+        if self.lengths is not UNSET:
+            out["lengths"] = [e0.to_json() for e0 in self.lengths]
         return out
 
     @classmethod
@@ -67818,20 +70429,27 @@ class ParcelRegister(_Model):
             documents=[ParcelDocument.from_json(e0) for e0 in data["documents"]],
             boundaries=[RecordedBoundary.from_json(e0) for e0 in data["boundaries"]],
             parcels=[RecordedParcel.from_json(e0) for e0 in data["parcels"]],
+            drafts=[ParcelDraft.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
+            lengths=[RecordedLength.from_json(e0) for e0 in data["lengths"]] if "lengths" in data else UNSET,
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class ParcelToRecord(_Model):
-    """A parcel the document makes: the area that draws it, and the area the document states, a plain decimal in square
-    metres as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none).
+    """A parcel the document makes: the area that draws it, the area the document states, a plain decimal in square metres
+    as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none), and the lengths it
+    states for the area's edges (none: the area's `Kenar ölçüleri (m)`, the outline's edges' lengths in order, separated
+    by `;`, an empty or `-` one unstated; empty: none).
     """
     uid: str
+    lengths: list[StatedLength] | None | Unset = UNSET
     stated_area: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uid"] = self.uid
+        if self.lengths is not UNSET:
+            out["lengths"] = None if self.lengths is None else [e0.to_json() for e0 in self.lengths]
         if self.stated_area is not UNSET:
             out["statedArea"] = self.stated_area
         return out
@@ -67840,7 +70458,77 @@ class ParcelToRecord(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ParcelToRecord:
         return cls(
             uid=data["uid"],
+            lengths=UNSET if "lengths" not in data else None if data["lengths"] is None else [StatedLength.from_json(e0) for e0 in data["lengths"]],
             stated_area=data.get("statedArea", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsApprove(_Model):
+    """Input of `cad.parcels.approve` v1: the draft (`draft`, its number) or the document (`document`) the approval is of,
+    one of the two; the approval.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (neither or both of `draft` and
+    `document`; the approval's number empty, past 64 characters or with a control character, its date or approver too
+    long); `unknown_parcel_draft` (`draft`), `unknown_parcel_document` (`document`); `document_approved` (the document has
+    its approval); for a draft, what `cad.parcels.record` refuses when it writes the draft today, at `draft`:
+    `parcel_closed` (a parcel it closes was closed since), `parcel_recorded`, `parcel_identity_taken`, `invalid_input`
+    (the register's limits).
+    Attributes:
+        document: Unit: id.
+        draft: Unit: id.
+    """
+    approval: ParcelApprovalInput
+    document: int | None | Unset = UNSET
+    draft: int | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["approval"] = self.approval.to_json()
+        if self.document is not UNSET:
+            out["document"] = self.document
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsApprove:
+        return cls(
+            approval=ParcelApprovalInput.from_json(data["approval"]),
+            document=data.get("document", UNSET),
+            draft=data.get("draft", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsApproved(_Model):
+    """Output of `cad.parcels.approve` v1: the approved document's number and, for a draft, what writing it did (as
+    `cad.parcels.record` answers; none for a document already recorded); the revision after.
+    Attributes:
+        document: Unit: id.
+    """
+    document: int
+    revision: str
+    recorded: ParcelsRecorded | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["document"] = self.document
+        out["revision"] = self.revision
+        if self.recorded is not UNSET:
+            out["recorded"] = None if self.recorded is None else self.recorded.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsApproved:
+        return cls(
+            document=data["document"],
+            revision=data["revision"],
+            recorded=UNSET if "recorded" not in data else None if data["recorded"] is None else ParcelsRecorded.from_json(data["recorded"]),
         )
 
 
@@ -68063,13 +70751,18 @@ class ParcelsRecord(_Model):
     Parsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a
     stated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not
     close), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);
-    `invalid_input` (the register would pass its limits: 10 000 documents, 100 000 parcels, 1 000 000 boundaries).
+    `invalid_input` for `create[i].lengths[j]` (the ring or edge not the area's, an edge given twice, not a plain decimal
+    above zero; or the area's `Kenar ölçüleri (m)` so, at `create[i].lengths`); `invalid_input` (the register would pass
+    its limits: 10 000 documents and drafts, 100 000 parcels, 1 000 000 boundaries). `document_name_taken` covers the
+    drafts' names too. With `draft` the same checks run and the answer is what approving would write today; only the
+    draft is written, numbered among the drafts.
     Attributes:
         close: Unit: id.
     """
     document: ParcelDocumentInput
     close: list[int] | Unset = UNSET
     create: list[ParcelToRecord] | Unset = UNSET
+    draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68079,6 +70772,8 @@ class ParcelsRecord(_Model):
             out["close"] = list(self.close)
         if self.create is not UNSET:
             out["create"] = [e0.to_json() for e0 in self.create]
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -68089,6 +70784,7 @@ class ParcelsRecord(_Model):
             document=ParcelDocumentInput.from_json(data["document"]),
             close=list(data["close"]) if "close" in data else UNSET,
             create=[ParcelToRecord.from_json(e0) for e0 in data["create"]] if "create" in data else UNSET,
+            draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -68106,6 +70802,9 @@ class ParcelsRecorded(_Model):
         boundaries_closed: Unit: count.
         boundaries_split: Docs/adr/4620: the earlier boundaries split at the document's new corners, and the current parcels whose rings
             took the pieces (not closed: their identity, document and stated area stay). Unit: count.
+        draft: Docs/adr/5020: written as a draft; `document` is then the draft's number and the rest what approving it would
+            write today.
+        lengths: Docs/adr/5020: the boundaries' lengths the document states. Unit: count.
         neighbours: Unit: id.
     """
     document: int
@@ -68116,6 +70815,8 @@ class ParcelsRecorded(_Model):
     boundaries_closed: int
     revision: str
     boundaries_split: int | Unset = UNSET
+    draft: bool | Unset = UNSET
+    lengths: int | Unset = UNSET
     neighbours: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68129,6 +70830,10 @@ class ParcelsRecorded(_Model):
         out["revision"] = self.revision
         if self.boundaries_split is not UNSET:
             out["boundariesSplit"] = self.boundaries_split
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.lengths is not UNSET:
+            out["lengths"] = self.lengths
         if self.neighbours is not UNSET:
             out["neighbours"] = list(self.neighbours)
         return out
@@ -68144,6 +70849,8 @@ class ParcelsRecorded(_Model):
             boundaries_closed=data["boundariesClosed"],
             revision=data["revision"],
             boundaries_split=data.get("boundariesSplit", UNSET),
+            draft=data.get("draft", UNSET),
+            lengths=data.get("lengths", UNSET),
             neighbours=list(data["neighbours"]) if "neighbours" in data else UNSET,
         )
 
@@ -68171,14 +70878,15 @@ class ParcelsRecords(_Model):
 @dataclass(kw_only=True, slots=True)
 class ParcelsRecordsListed(_Model):
     """Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with
-    `history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,
-    current boundaries no longer drawn as recorded.
+    `history`), the drafts, and the counts: current and closed parcels, current parcels drawn otherwise and without their
+    area, current boundaries no longer drawn as recorded, current boundaries with a stated length past its limit.
     Attributes:
         current: Unit: count.
         closed: Unit: count.
         changed: Unit: count.
         missing: Unit: count.
         moved: Unit: count.
+        over_limit: Unit: count.
     """
     documents: list[ParcelDocumentRow]
     parcels: list[RecordedParcelRow]
@@ -68188,6 +70896,8 @@ class ParcelsRecordsListed(_Model):
     changed: int
     missing: int
     moved: int
+    drafts: list[ParcelDraftRow] | Unset = UNSET
+    over_limit: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -68199,6 +70909,10 @@ class ParcelsRecordsListed(_Model):
         out["changed"] = self.changed
         out["missing"] = self.missing
         out["moved"] = self.moved
+        if self.drafts is not UNSET:
+            out["drafts"] = [e0.to_json() for e0 in self.drafts]
+        if self.over_limit is not UNSET:
+            out["overLimit"] = self.over_limit
         return out
 
     @classmethod
@@ -68212,6 +70926,53 @@ class ParcelsRecordsListed(_Model):
             changed=data["changed"],
             missing=data["missing"],
             moved=data["moved"],
+            drafts=[ParcelDraftRow.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
+            over_limit=data.get("overLimit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsWithdraw(_Model):
+    """Input of `cad.parcels.withdraw` v1: the draft to remove. Refusals: `invalid_revision`, `revision_conflict`,
+    `unknown_parcel_draft` (`draft`).
+    Attributes:
+        draft: Unit: id.
+    """
+    draft: int
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsWithdraw:
+        return cls(
+            draft=data["draft"],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsWithdrawn(_Model):
+    """Output of `cad.parcels.withdraw` v1: the removed draft's name; the revision after."""
+    name: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsWithdrawn:
+        return cls(
+            name=data["name"],
+            revision=data["revision"],
         )
 
 
@@ -69453,10 +72214,12 @@ class PinnedObject(_Model):
 class PipeCheck(_Model):
     """A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
     direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
-    diameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,
-    and its findings' kinds.
+    diameter and wall thickness (metres; the wall when asked and read, from its own attribute or the outer diameter's),
+    the least cover and where, the greatest cover, the rule package's slope class it is in (rules asked), and its
+    findings' kinds.
     Attributes:
         length: Unit: length.
+        class_: The rule package's slope class its diameter is in (docs/adr/4780); none: no rules asked, or none holds it.
         diameter: Unit: length.
         downstream: Unit: elevation.
         max_cover: Unit: length.
@@ -69470,6 +72233,7 @@ class PipeCheck(_Model):
     layer: str
     length: float
     findings: list[str]
+    class_: str | None | Unset = UNSET
     diameter: float | None | Unset = UNSET
     downstream: float | None | Unset = UNSET
     max_cover: float | None | Unset = UNSET
@@ -69486,6 +72250,8 @@ class PipeCheck(_Model):
         out["layer"] = self.layer
         out["length"] = float(self.length)
         out["findings"] = list(self.findings)
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
         if self.diameter is not UNSET:
             out["diameter"] = None if self.diameter is None else float(self.diameter)
         if self.downstream is not UNSET:
@@ -69513,6 +72279,7 @@ class PipeCheck(_Model):
             layer=data["layer"],
             length=float(data["length"]),
             findings=list(data["findings"]),
+            class_=data.get("class", UNSET),
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else float(data["diameter"]),
             downstream=UNSET if "downstream" not in data else None if data["downstream"] is None else float(data["downstream"]),
             max_cover=UNSET if "maxCover" not in data else None if data["maxCover"] is None else float(data["maxCover"]),
@@ -69643,15 +72410,22 @@ class PipeCrossing(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipeDiameter(_Model):
     """The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
-    optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
-    then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
-    outside to outside.
+    optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
+    pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
     Attributes:
-        catalog: Unit: value.
+        field: The attribute holding each pipe's inner diameter.
+        unit: The unit it is written in.
+        catalog: The sizes a pipe may have, in that unit (none: any). Unit: value.
+        outer: The attribute holding each pipe's outer diameter, in the diameter's unit (docs/adr/4780): its wall is half the
+            outer less the inner. With `wall` too, the two must agree (outer = inner + 2 × wall, to a billionth of the
+            outer): a pipe whose do not, or whose outer is below its inner, is said (`wallMismatch`) and its wall is not
+            taken from either.
+        wall: The attribute holding each pipe's wall thickness, in the diameter's unit, 0 or more (docs/adr/3960).
     """
     field: str
     unit: PipeUnit | PipeUnitName
     catalog: list[float] | Unset = UNSET
+    outer: str | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -69660,6 +72434,8 @@ class PipeDiameter(_Model):
         out["unit"] = _enum_out(self.unit)
         if self.catalog is not UNSET:
             out["catalog"] = [float(e0) for e0 in self.catalog]
+        if self.outer is not UNSET:
+            out["outer"] = self.outer
         if self.wall is not UNSET:
             out["wall"] = self.wall
         return out
@@ -69670,6 +72446,7 @@ class PipeDiameter(_Model):
             field=data["field"],
             unit=_enum_in(PipeUnit, data["unit"]),
             catalog=[float(e0) for e0 in data["catalog"]] if "catalog" in data else UNSET,
+            outer=data.get("outer", UNSET),
             wall=data.get("wall", UNSET),
         )
 
@@ -69832,11 +72609,12 @@ class PipeProfileGround(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipeProfileOther(_Model):
     """The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,
-    as the run's.
+    as the run's; docs/adr/5160: how a crossing pipe is filled (none: `wall`).
     """
     network: str
     inverts: PipeInverts
     diameter: PipeDiameter | None | Unset = UNSET
+    hatch: CrossingHatch | CrossingHatchName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69844,6 +72622,8 @@ class PipeProfileOther(_Model):
         out["inverts"] = self.inverts.to_json()
         if self.diameter is not UNSET:
             out["diameter"] = None if self.diameter is None else self.diameter.to_json()
+        if self.hatch is not UNSET:
+            out["hatch"] = None if self.hatch is None else _enum_out(self.hatch)
         return out
 
     @classmethod
@@ -69852,14 +72632,15 @@ class PipeProfileOther(_Model):
             network=data["network"],
             inverts=PipeInverts.from_json(data["inverts"]),
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
+            hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else _enum_in(CrossingHatch, data["hatch"]),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class PipeProfilePipe(_Model):
     """A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is
-    drawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown
-    (none asked: over the invert).
+    drawn against the flow, its inverts up and down the flow, its slope, diameter (m), wall and least cover over the
+    crown (none asked: over the invert; its wall known: over its top outside, as `cad.pipes.check` measures it).
     Attributes:
         from_: Unit: m.
         to: Unit: m.
@@ -69869,6 +72650,9 @@ class PipeProfilePipe(_Model):
         min_cover: Unit: m.
         slope: Unit: 1.
         upstream: Unit: elevation.
+        wall: Its wall thickness (m), when the diameter asks it (its own attribute or the outer diameter's) and the pipe's is
+            known (docs/adr/4780): above zero, its outer walls are drawn, the bottom outside under the invert and the top
+            outside over the crown. Unit: m.
     """
     uid: str
     from_: float
@@ -69881,6 +72665,7 @@ class PipeProfilePipe(_Model):
     reversed: bool | Unset = UNSET
     slope: float | None | Unset = UNSET
     upstream: float | None | Unset = UNSET
+    wall: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69902,6 +72687,8 @@ class PipeProfilePipe(_Model):
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.upstream is not UNSET:
             out["upstream"] = None if self.upstream is None else float(self.upstream)
+        if self.wall is not UNSET:
+            out["wall"] = None if self.wall is None else float(self.wall)
         return out
 
     @classmethod
@@ -69918,6 +72705,7 @@ class PipeProfilePipe(_Model):
             reversed=data.get("reversed", UNSET),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             upstream=UNSET if "upstream" not in data else None if data["upstream"] is None else float(data["upstream"]),
+            wall=UNSET if "wall" not in data else None if data["wall"] is None else float(data["wall"]),
         )
 
 
@@ -69972,11 +72760,222 @@ class PipeProfileStructure(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PipeRuleSystem(_Model):
+    """A system's rules. The first slope class holding a diameter is its; a diameter in none has no slope limit from the
+    package (`noRule`), and one in no spacing class no greatest span.
+    Attributes:
+        id: The system's id, asked by `rules.system` (`atiksu`, `yagmursuyu` in KentOS's package).
+        name: Its name in words.
+        source: The articles and tables its numbers come from.
+        effective: When its document holds (ISO date).
+        slopes: The slope classes, by diameter.
+        cover_note: The regulation's words about the least cover (when it may be less).
+        min_cover: The least cover (metres, over the pipe's top as `cad.pipes.check` measures it); none: the package gives none. Unit: m.
+        span_note: The regulation's words about the spacing (when it may be more).
+        spans: The structures' spacing, by diameter.
+    """
+    id: str
+    name: str
+    source: str
+    effective: str
+    slopes: list[PipeSlopeClass]
+    cover_note: str | None | Unset = UNSET
+    min_cover: float | None | Unset = UNSET
+    span_note: str | None | Unset = UNSET
+    spans: list[PipeSpanClass] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["slopes"] = [e0.to_json() for e0 in self.slopes]
+        if self.cover_note is not UNSET:
+            out["coverNote"] = self.cover_note
+        if self.min_cover is not UNSET:
+            out["minCover"] = None if self.min_cover is None else float(self.min_cover)
+        if self.span_note is not UNSET:
+            out["spanNote"] = self.span_note
+        if self.spans is not UNSET:
+            out["spans"] = [e0.to_json() for e0 in self.spans]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeRuleSystem:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            source=data["source"],
+            effective=data["effective"],
+            slopes=[PipeSlopeClass.from_json(e0) for e0 in data["slopes"]],
+            cover_note=data.get("coverNote", UNSET),
+            min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
+            span_note=data.get("spanNote", UNSET),
+            spans=[PipeSpanClass.from_json(e0) for e0 in data["spans"]] if "spans" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeRules(_Model):
+    """A gravity line rule package.
+    Attributes:
+        id: The package's id.
+        release: Its release. Unit: version.
+        jurisdiction: Whose rules they are.
+        source: The documents, and when they were read.
+        effective: When the oldest of them holds (ISO date).
+        systems: Its systems.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    systems: list[PipeRuleSystem]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["systems"] = [e0.to_json() for e0 in self.systems]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            systems=[PipeRuleSystem.from_json(e0) for e0 in data["systems"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeRulesAsk(_Model):
+    """The rules a check takes its limits from (docs/adr/4780). The limits the user gives (`minCover`, `minSlope`,
+    `maxSlope`) go before the package's.
+    Attributes:
+        system: The system's id in the package (`atiksu` or `yagmursuyu` in KentOS's).
+        package: The package; none: KentOS's (`catalog/v1/rules/kanal-csb-2017.json`).
+    """
+    system: str
+    package: PipeRules | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["system"] = self.system
+        if self.package is not UNSET:
+            out["package"] = None if self.package is None else self.package.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeRulesAsk:
+        return cls(
+            system=data["system"],
+            package=UNSET if "package" not in data else None if data["package"] is None else PipeRules.from_json(data["package"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeSlopeClass(_Model):
+    """A diameter class of a system's slopes and its slopes, written 1:A as the regulations write them.
+    Attributes:
+        name: The class's name as the table writes it (“Tali kanal”, “φ400”).
+        least: The least slope 1:A, by its A (300 is 1:300). Unit: 1.
+        greatest: The greatest slope 1:A, by its A (15 is 1:15). Unit: 1.
+        exceptional: The exceptional least slope 1:A, by its A: a slope between it and the least is allowed only by exception
+            (`exceptionalSlope`), one under it is too low. None: the table has no such column for the class. Unit: 1.
+        from_: The least diameter it holds, inclusive: millimetres as the table writes φ, compared with the pipe's diameter
+            attribute read in millimetres. At least one of `from`, `over` and `to` is given. Unit: value.
+        over: The diameter it holds those over, exclusive (millimetres; “> φ1000”). Unit: value.
+        to: The greatest diameter it holds, inclusive (millimetres). Unit: value.
+    """
+    name: str
+    least: float
+    greatest: float
+    exceptional: float | None | Unset = UNSET
+    from_: float | None | Unset = UNSET
+    over: float | None | Unset = UNSET
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["least"] = float(self.least)
+        out["greatest"] = float(self.greatest)
+        if self.exceptional is not UNSET:
+            out["exceptional"] = None if self.exceptional is None else float(self.exceptional)
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.over is not UNSET:
+            out["over"] = None if self.over is None else float(self.over)
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeSlopeClass:
+        return cls(
+            name=data["name"],
+            least=float(data["least"]),
+            greatest=float(data["greatest"]),
+            exceptional=UNSET if "exceptional" not in data else None if data["exceptional"] is None else float(data["exceptional"]),
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            over=UNSET if "over" not in data else None if data["over"] is None else float(data["over"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeSpanClass(_Model):
+    """The structures' spacing for a range of diameters: one every `least` to `greatest` metres. Only the greatest is
+    checked: a pipe between two structures longer than it is said (`longSpan`).
+    Attributes:
+        greatest: The greatest spacing (metres). Unit: m.
+        below: The diameters below it, exclusive (millimetres; “< φ1200”). At least one of `below` and `over` is given. Unit: value.
+        least: The least spacing the regulation names (metres), shown, not checked. Unit: m.
+        over: The diameters over it, exclusive (millimetres; “> φ1200”). Unit: value.
+    """
+    greatest: float
+    below: float | None | Unset = UNSET
+    least: float | None | Unset = UNSET
+    over: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["greatest"] = float(self.greatest)
+        if self.below is not UNSET:
+            out["below"] = None if self.below is None else float(self.below)
+        if self.least is not UNSET:
+            out["least"] = None if self.least is None else float(self.least)
+        if self.over is not UNSET:
+            out["over"] = None if self.over is None else float(self.over)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeSpanClass:
+        return cls(
+            greatest=float(data["greatest"]),
+            below=UNSET if "below" not in data else None if data["below"] is None else float(data["below"]),
+            least=UNSET if "least" not in data else None if data["least"] is None else float(data["least"]),
+            over=UNSET if "over" not in data else None if data["over"] is None else float(data["over"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PipesCheck(_Model):
     """Input of `cad.pipes.check` v1.
 
-    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
-    greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
+    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's and the outer diameter's too, a
+    limit not above zero, a least above a greatest, a catalogue of more than 200 sizes or a size not above zero; rules
+    asked without a diameter, of a system the package does not have, or of a package not whole, at `rules`,
+    docs/adr/4780); `unknown_network` (no network of the id or
     name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
     surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
     `tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's
@@ -69990,6 +72989,8 @@ class PipesCheck(_Model):
         max_slope: Unit: grade.
         min_cover: The least and the greatest cover over the crown (metres). Unit: length.
         min_slope: The least and the greatest slope, metres a metre (0.003 is 3 ‰). Unit: grade.
+        rules: The rule package the limits not given are taken from (docs/adr/4780): each pipe's least, exceptional least and
+            greatest slope by its diameter's class, the least cover, the greatest span between two structures.
     """
     network: str
     inverts: PipeInverts
@@ -70000,6 +73001,7 @@ class PipesCheck(_Model):
     max_slope: float | None | Unset = UNSET
     min_cover: float | None | Unset = UNSET
     min_slope: float | None | Unset = UNSET
+    rules: PipeRulesAsk | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -70019,6 +73021,8 @@ class PipesCheck(_Model):
             out["minCover"] = None if self.min_cover is None else float(self.min_cover)
         if self.min_slope is not UNSET:
             out["minSlope"] = None if self.min_slope is None else float(self.min_slope)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
         return out
 
     @classmethod
@@ -70033,6 +73037,7 @@ class PipesCheck(_Model):
             max_slope=UNSET if "maxSlope" not in data else None if data["maxSlope"] is None else float(data["maxSlope"]),
             min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
             min_slope=UNSET if "minSlope" not in data else None if data["minSlope"] is None else float(data["minSlope"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else PipeRulesAsk.from_json(data["rules"]),
         )
 
 
@@ -70258,6 +73263,66 @@ class PlaceOn(_Model):
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
             path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanDraft(_Model):
+    """A plan change draft: its id, the plan (`PlanKimlik`) it changes, the drawing's revision it was made from, its
+    reason and its changes.
+    """
+    id: str
+    plan: str
+    revision: str
+    reason: str
+    changes: list[PlanDraftChange]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["plan"] = self.plan
+        out["revision"] = self.revision
+        out["reason"] = self.reason
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanDraft:
+        return cls(
+            id=data["id"],
+            plan=data["plan"],
+            revision=data["revision"],
+            reason=data["reason"],
+            changes=[PlanDraftChange.from_json(e0) for e0 in data["changes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PlanDraftChange(_Model):
+    """A change a draft makes to a decision area: the field and its value before (empty: the area had none) and after.
+    Attributes:
+        area: The decision area's persistent id.
+    """
+    area: str
+    field: str
+    after: str
+    before: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["field"] = self.field
+        out["after"] = self.after
+        out["before"] = self.before
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanDraftChange:
+        return cls(
+            area=data["area"],
+            field=data["field"],
+            after=data["after"],
+            before=data["before"] if "before" in data else "",
         )
 
 
@@ -71281,6 +74346,133 @@ class PointCloudsDescribed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointCloudsNetwork(_Model):
+    """Input of `cad.pointclouds.network` v1 (plan/map-cad.md MAP-13, docs/adr/4720): the scans (point clouds' persistent
+    ids, at least three), those held where they are (at least one, not all), the links (pairs of scans; none: every
+    pair whose plan boxes overlap, in the scans' order), and the pairwise registration's own options (docs/adr/1800:
+    `spacing`, `reach`, `iterations`, `tolerance`, `neighbours`; docs/adr/2300 `robust`; docs/adr/2700 `reject`), the
+    same for every link. `drawing`: where a cloud's relative file is looked for.
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud` (`uids[i]`); `invalid_input` (fewer than three scans,
+    one twice; no fixed scan, every scan fixed, a fixed scan not among the scans; a link twice, of one scan, of a scan not
+    among them; a scan joined to no fixed scan by the links; a link whose registration found fewer than six pairs; a
+    network that does not fix every scan's position, as flat ground leaves a horizontal shift free); the registration's
+    own refusals at its option (`spacing` …); the files' (`file_not_found`, `import_unreadable`).
+    Attributes:
+        iterations: Unit: count.
+        links: The links, each two scans' ids (the first the one the second is registered to); none: every pair whose plan
+            boxes overlap.
+        neighbours: Unit: count.
+        reach: Unit: length.
+        rounds: docs/adr/5100: the outer loop's rounds at most (1–10; none: 1, as before). From the second round on, each link
+            is registered again where the last round put its scans; the rounds stop when no corner of a scan's box moves
+            as far as `tolerance` (the registration's own stop). Unit: count.
+        spacing: Unit: length.
+        tolerance: Unit: length.
+    """
+    uids: list[str]
+    fixed: list[str]
+    drawing: str | None | Unset = UNSET
+    iterations: int | None | Unset = UNSET
+    links: list[list[str]] | None | Unset = UNSET
+    neighbours: int | None | Unset = UNSET
+    reach: float | None | Unset = UNSET
+    reject: RegisterReject | None | Unset = UNSET
+    robust: RegisterRobust | None | Unset = UNSET
+    rounds: int | None | Unset = UNSET
+    spacing: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["fixed"] = list(self.fixed)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.iterations is not UNSET:
+            out["iterations"] = self.iterations
+        if self.links is not UNSET:
+            out["links"] = None if self.links is None else [list(e0) for e0 in self.links]
+        if self.neighbours is not UNSET:
+            out["neighbours"] = self.neighbours
+        if self.reach is not UNSET:
+            out["reach"] = None if self.reach is None else float(self.reach)
+        if self.reject is not UNSET:
+            out["reject"] = None if self.reject is None else self.reject.to_json()
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
+        if self.rounds is not UNSET:
+            out["rounds"] = self.rounds
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsNetwork:
+        return cls(
+            uids=list(data["uids"]),
+            fixed=list(data["fixed"]),
+            drawing=data.get("drawing", UNSET),
+            iterations=data.get("iterations", UNSET),
+            links=UNSET if "links" not in data else None if data["links"] is None else [list(e0) for e0 in data["links"]],
+            neighbours=data.get("neighbours", UNSET),
+            reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+            reject=UNSET if "reject" not in data else None if data["reject"] is None else RegisterReject.from_json(data["reject"]),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobust.from_json(data["robust"]),
+            rounds=data.get("rounds", UNSET),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsNetworked(_Model):
+    """Output of `cad.pointclouds.network` v1: the network's centre (the scans' plan boxes' middles' mean, their heights'
+    mean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's
+    pairs, metres), and notes.
+    Attributes:
+        centre: Unit: system.
+        shift: Unit: length.
+        rounds: docs/adr/5100: asked for more than one round, each round's largest move of a corner of a scan's box (m); the
+            scans' matrices are then the rounds' maps together, their rotation and translation those maps' about the
+            centre, and the links, residuals and loops the last round's. Unit: length.
+    """
+    centre: list[float]
+    scans: list[NetworkScan]
+    links: list[NetworkLink]
+    loops: list[NetworkLoop]
+    shift: float
+    notes: list[str]
+    rounds: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["centre"] = [float(e0) for e0 in self.centre]
+        out["scans"] = [e0.to_json() for e0 in self.scans]
+        out["links"] = [e0.to_json() for e0 in self.links]
+        out["loops"] = [e0.to_json() for e0 in self.loops]
+        out["shift"] = float(self.shift)
+        out["notes"] = list(self.notes)
+        if self.rounds is not UNSET:
+            out["rounds"] = None if self.rounds is None else [float(e0) for e0 in self.rounds]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsNetworked:
+        return cls(
+            centre=[float(e0) for e0 in data["centre"]],
+            scans=[NetworkScan.from_json(e0) for e0 in data["scans"]],
+            links=[NetworkLink.from_json(e0) for e0 in data["links"]],
+            loops=[NetworkLoop.from_json(e0) for e0 in data["loops"]],
+            shift=float(data["shift"]),
+            notes=list(data["notes"]),
+            rounds=UNSET if "rounds" not in data else None if data["rounds"] is None else [float(e0) for e0 in data["rounds"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCloudsOverlap(_Model):
     """Input of `cad.pointclouds.overlap` v1: the two clouds (`uids`, exactly two), the cell's side (metres; none: 2), the
     fewest points a cloud must have in a cell (none: 4), the classes taken (none: all), the layer of the control points
@@ -71443,6 +74635,83 @@ class PointCloudsOverlapped(_Model):
             control_a=UNSET if "controlA" not in data else None if data["controlA"] is None else OverlapControlStats.from_json(data["controlA"]),
             control_b=UNSET if "controlB" not in data else None if data["controlB"] is None else OverlapControlStats.from_json(data["controlB"]),
             passed=data.get("passed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsPlace(_Model):
+    """Input of `cad.pointclouds.place` v1: the cloud's persistent id and the map.
+
+    Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_locked` (`uid`);
+    `not_finite`, `invalid_input` (`place`: 16 numbers, an affine map, rigid; an axis of no length); `invalid_revision`,
+    `revision_conflict`.
+    """
+    uid: str
+    place: CloudPlaceBy
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["place"] = self.place.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsPlace:
+        return cls(
+            uid=data["uid"],
+            place=CloudPlaceBy.from_json(data["place"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsPlaced(_Model):
+    """What `cad.pointclouds.place` wrote: the map taken (16 numbers row by row; Konumu kaldır's is the inverse of the
+    first file's place, the move back), each file's place after it (none: where the file says), the cloud's box in the
+    drawing after it, how far the box's middle went (m) and the map's rotation angle (degrees); `changed` false when
+    nothing was written (taking away the place of a cloud with none).
+    Attributes:
+        matrix: Unit: 1.
+        poses: Unit: 1.
+        bounds: Unit: system.
+        shift: Unit: length.
+        angle: Unit: deg.
+    """
+    uid: str
+    matrix: list[float]
+    poses: list[list[float] | None]
+    bounds: list[float]
+    shift: float
+    angle: float
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        out["poses"] = [None if e0 is None else [float(e1) for e1 in e0] for e0 in self.poses]
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        out["shift"] = float(self.shift)
+        out["angle"] = float(self.angle)
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsPlaced:
+        return cls(
+            uid=data["uid"],
+            matrix=[float(e0) for e0 in data["matrix"]],
+            poses=[None if e0 is None else [float(e1) for e1 in e0] for e0 in data["poses"]],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            shift=float(data["shift"]),
+            angle=float(data["angle"]),
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -72307,6 +75576,30 @@ class PointStyle(_Model):
         return cls(
             symbol=_enum_in(PointSymbol, data["symbol"]),
             size=float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointVelocity(_Model):
+    """A point's velocity east, north, up (m/yr) and the velocity grid it was read from, by its name and SHA-256
+    (docs/adr/4920): the grid's displacement over one year at the point, by the coordinate chain itself.
+    Attributes:
+        enu: Unit: m/yr.
+    """
+    enu: list[float]
+    grid: SurveyGrid
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["enu"] = [float(e0) for e0 in self.enu]
+        out["grid"] = self.grid.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointVelocity:
+        return cls(
+            enu=[float(e0) for e0 in data["enu"]],
+            grid=SurveyGrid.from_json(data["grid"]),
         )
 
 
@@ -73401,10 +76694,12 @@ class ProfileClass(_Model):
         theme: The theme it belongs to, as the profile names it (“Kadastro”).
         layer: The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).
         color: The layer's colour when the profile adds it (a palette name or `#RRGGBB`).
-        codes: The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+        codes: The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; a feature code library's codes,
             description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
             point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
         key: The identifier field: unique among the class's objects.
+        work: The map work items' kinds the class suits (docs/adr/5280): `map.work.query`'s `suggest` offers the profile, with
+            these classes, to an item of the kind without a profile. A profile's (an office's) own choice, not a rule.
     """
     id: str
     title: str
@@ -73416,6 +76711,7 @@ class ProfileClass(_Model):
     codes: list[str] | Unset = UNSET
     key: str | None | Unset = UNSET
     registered_area: RegisteredArea | None | Unset = UNSET
+    work: list[WorkKind | WorkKindName] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -73432,6 +76728,8 @@ class ProfileClass(_Model):
             out["key"] = self.key
         if self.registered_area is not UNSET:
             out["registeredArea"] = None if self.registered_area is None else self.registered_area.to_json()
+        if self.work is not UNSET:
+            out["work"] = [_enum_out(e0) for e0 in self.work]
         return out
 
     @classmethod
@@ -73447,6 +76745,7 @@ class ProfileClass(_Model):
             codes=list(data["codes"]) if "codes" in data else UNSET,
             key=data.get("key", UNSET),
             registered_area=UNSET if "registeredArea" not in data else None if data["registeredArea"] is None else RegisteredArea.from_json(data["registeredArea"]),
+            work=[_enum_in(WorkKind, e0) for e0 in data["work"]] if "work" in data else UNSET,
         )
 
 
@@ -74037,6 +77336,8 @@ class ProfileMapping(_Model):
         version: Unit: count.
         name: Small letters, digits and `-`; the file's name.
         profile: The name of the profile it is for.
+        classes: Empty only with `names`: the form alone, every class at the profile's layer path.
+        names: The form of the names of the fields the mapping does not write itself (docs/adr/5180); none: the profile's.
     """
     format: str
     version: int
@@ -74045,6 +77346,7 @@ class ProfileMapping(_Model):
     profile: str
     classes: list[MappingClass]
     description: str | Unset = UNSET
+    names: MappingNames | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -74056,6 +77358,8 @@ class ProfileMapping(_Model):
         out["classes"] = [e0.to_json() for e0 in self.classes]
         if self.description is not UNSET:
             out["description"] = self.description
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else self.names.to_json()
         return out
 
     @classmethod
@@ -74068,6 +77372,7 @@ class ProfileMapping(_Model):
             profile=data["profile"],
             classes=[MappingClass.from_json(e0) for e0 in data["classes"]],
             description=data.get("description", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else MappingNames.from_json(data["names"]),
         )
 
 
@@ -74098,6 +77403,98 @@ class ProfileMigration(_Model):
             to=data["to"],
             title=data["title"],
             steps=[MigrationStep.from_json(e0) for e0 in data["steps"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileNameRow(_Model):
+    """A profile field and its name in the institution.
+    Attributes:
+        class_: The profile's class id and title.
+        field: The profile's field name.
+        name: The field's name in the institution; empty when the form cannot spell it.
+        message: The problem in words, with what to do.
+    """
+    class_: str
+    class_title: str
+    field: str
+    name: str
+    source: NameSource | NameSourceName
+    message: str | None | Unset = UNSET
+    problem: NameProblem | NameProblemName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["classTitle"] = self.class_title
+        out["field"] = self.field
+        out["name"] = self.name
+        out["source"] = _enum_out(self.source)
+        if self.message is not UNSET:
+            out["message"] = self.message
+        if self.problem is not UNSET:
+            out["problem"] = None if self.problem is None else _enum_out(self.problem)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileNameRow:
+        return cls(
+            class_=data["class"],
+            class_title=data["classTitle"],
+            field=data["field"],
+            name=data["name"],
+            source=_enum_in(NameSource, data["source"]),
+            message=data.get("message", UNSET),
+            problem=UNSET if "problem" not in data else None if data["problem"] is None else _enum_in(NameProblem, data["problem"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileNames(_Model):
+    """Output of `cad.profiles.names`.
+    Attributes:
+        profile: The profile's name.
+        renamed: Fields whose name in the institution is not the profile's, and that have no problem. Unit: count.
+        unfit: Fields the form cannot spell. Unit: count.
+        clashes: Fields that fall on another field's name. Unit: count.
+        holds: Whether every field has a name of its own: the mapping with this form holds.
+        mapping: The mapping's name, when one is read.
+        names: The form the names were read with, when there is one.
+    """
+    profile: str
+    rows: list[ProfileNameRow]
+    renamed: int
+    unfit: int
+    clashes: int
+    holds: bool
+    mapping: str | None | Unset = UNSET
+    names: MappingNames | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["renamed"] = self.renamed
+        out["unfit"] = self.unfit
+        out["clashes"] = self.clashes
+        out["holds"] = self.holds
+        if self.mapping is not UNSET:
+            out["mapping"] = self.mapping
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else self.names.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileNames:
+        return cls(
+            profile=data["profile"],
+            rows=[ProfileNameRow.from_json(e0) for e0 in data["rows"]],
+            renamed=data["renamed"],
+            unfit=data["unfit"],
+            clashes=data["clashes"],
+            holds=data["holds"],
+            mapping=data.get("mapping", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else MappingNames.from_json(data["names"]),
         )
 
 
@@ -74515,6 +77912,93 @@ class ProfilesApply(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfilesCarried(_Model):
+    """Output of `cad.profiles.carry` v1: each old class with objects (the old catalog's order), the objects moved and
+    left, the layers and fields made (`layer id`, `layer id/field`), the revision.
+    Attributes:
+        moved: Unit: count.
+        left: Unit: count.
+    """
+    classes: list[CarriedClass]
+    moved: int
+    left: int
+    revision: str
+    fields: list[str] | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["moved"] = self.moved
+        out["left"] = self.left
+        out["revision"] = self.revision
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCarried:
+        return cls(
+            classes=[CarriedClass.from_json(e0) for e0 in data["classes"]],
+            moved=data["moved"],
+            left=data["left"],
+            revision=data["revision"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCarry(_Model):
+    """Input of `cad.profiles.carry` v1: the old catalog (`from`, a profile's name, or `fromProfile`, the profile itself),
+    the new one (`to` or `toProfile`), the project's file for its folder's profiles (`drawing`), the field holding an
+    object's field code (none: `Kod`). Refusals, in this order: `invalid_revision`, `revision_conflict`;
+    `unknown_profile`, `invalid_profile` (as `cad.profiles.compare`'s); `layer_locked` (a layer an object leaves or
+    goes to is locked); `layer_refused` (a receiving class's path leads to a group or into a layer); `nothing_to_set`
+    (no object to carry).
+    """
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    from_profile: DataProfile | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+    to_profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.from_profile is not UNSET:
+            out["fromProfile"] = None if self.from_profile is None else self.from_profile.to_json()
+        if self.to is not UNSET:
+            out["to"] = self.to
+        if self.to_profile is not UNSET:
+            out["toProfile"] = None if self.to_profile is None else self.to_profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCarry:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            field=data.get("field", UNSET),
+            from_=data.get("from", UNSET),
+            from_profile=UNSET if "fromProfile" not in data else None if data["fromProfile"] is None else DataProfile.from_json(data["fromProfile"]),
+            to=data.get("to", UNSET),
+            to_profile=UNSET if "toProfile" not in data else None if data["toProfile"] is None else DataProfile.from_json(data["toProfile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesCheck(_Model):
     """Input of `cad.profiles.check` v1 (“Veri profilini denetle”): where the drawing's data departs from a profile. It
     changes nothing; its plan gives the same answer.
@@ -74553,6 +78037,96 @@ class ProfilesCheck(_Model):
             mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCompare(_Model):
+    """Input of `cad.profiles.compare` v1: the old catalog (`from`, a built-in or the project's profile by its name, or
+    `fromProfile`, the profile itself) and the new one (`to` or `toProfile`); the drawing's file for the project's
+    profiles. Reads only.
+
+    Refusals: `unknown_profile` (a catalog not named or not found; path `from` or `to`), `invalid_profile` (a
+    catalog that does not hold; path `fromProfile` or `toProfile`).
+    """
+    drawing: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    from_profile: DataProfile | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+    to_profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.from_profile is not UNSET:
+            out["fromProfile"] = None if self.from_profile is None else self.from_profile.to_json()
+        if self.to is not UNSET:
+            out["to"] = self.to
+        if self.to_profile is not UNSET:
+            out["toProfile"] = None if self.to_profile is None else self.to_profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCompare:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            from_=data.get("from", UNSET),
+            from_profile=UNSET if "fromProfile" not in data else None if data["fromProfile"] is None else DataProfile.from_json(data["fromProfile"]),
+            to=data.get("to", UNSET),
+            to_profile=UNSET if "toProfile" not in data else None if data["toProfile"] is None else DataProfile.from_json(data["toProfile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCompared(_Model):
+    """Output (and plan) of `cad.profiles.compare` v1.
+    Attributes:
+        classes: The old catalog's classes in its order, then the new catalog's added classes in its order.
+        fields: Per class row (in its order), the old fields' changes in the old class's order, then the added ones in the new
+            class's order; unchanged fields are left out.
+        codes: Per old list (in its order), its codes' changes in its order, then the added codes; a list only the new catalog
+            has, its codes as added.
+        decisions: The reconcile decisions recorded as resolved review notes, by number.
+        decide: The rows that need someone's decision. Unit: count.
+    """
+    from_: ComparedCatalog
+    to: ComparedCatalog
+    classes: list[CatalogClassChange]
+    fields: list[CatalogFieldChange]
+    codes: list[CatalogCodeChange]
+    decisions: list[CatalogDecisionChange]
+    decide: int
+    notes: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_.to_json()
+        out["to"] = self.to.to_json()
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        out["codes"] = [e0.to_json() for e0 in self.codes]
+        out["decisions"] = [e0.to_json() for e0 in self.decisions]
+        out["decide"] = self.decide
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCompared:
+        return cls(
+            from_=ComparedCatalog.from_json(data["from"]),
+            to=ComparedCatalog.from_json(data["to"]),
+            classes=[CatalogClassChange.from_json(e0) for e0 in data["classes"]],
+            fields=[CatalogFieldChange.from_json(e0) for e0 in data["fields"]],
+            codes=[CatalogCodeChange.from_json(e0) for e0 in data["codes"]],
+            decisions=[CatalogDecisionChange.from_json(e0) for e0 in data["decisions"]],
+            decide=data["decide"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
         )
 
 
@@ -75140,6 +78714,52 @@ class ProfilesMigrated(_Model):
             objects=data["objects"],
             revision=data["revision"],
             mapping=data.get("mapping", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesNames(_Model):
+    """Input of `cad.profiles.names` v1 (“Kurumdaki alan adları”): every field of the profile with its name in the
+    institution, where it comes from (the profile, the mapping's form, the mapping itself) and what is wrong with it; it
+    writes nothing. `names` previews another form than the mapping's own (without a mapping, the form alone). Refusals:
+    the profile's (`unknown_profile`, `invalid_profile`) and the mapping's (`unknown_mapping`, `invalid_profile_mapping`
+    for anything but its names: those are said row by row).
+    Attributes:
+        drawing: The open drawing's own file, an absolute path: the project's `profiller` folder is beside it.
+        names: The form to read the names with instead of the mapping's own.
+    """
+    drawing: str | None | Unset = UNSET
+    mapping: ProfileMapping | None | Unset = UNSET
+    mapping_name: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    names: MappingNames | None | Unset = UNSET
+    profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.mapping is not UNSET:
+            out["mapping"] = None if self.mapping is None else self.mapping.to_json()
+        if self.mapping_name is not UNSET:
+            out["mappingName"] = self.mapping_name
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else self.names.to_json()
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesNames:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
+            mapping_name=data.get("mappingName", UNSET),
+            name=data.get("name", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else MappingNames.from_json(data["names"]),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
         )
 
 
@@ -77232,7 +80852,7 @@ class ProjectSettings(_Model):
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
             only in an inch or foot drawing.
-        line_type_scale: The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
+        line_type_scale: The project's line type scale (the LTSCALE of DXF, docs/adr/0313 §3): every pattern's lengths times it, above 0;
             absent: 1. Unit: 1.
         line_types: The project's line types with patterns (docs/adr/0313 §1).
         lineage: What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
@@ -77245,6 +80865,8 @@ class ProjectSettings(_Model):
             schema 194).
         map_work: A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
             derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
+        monitoring_reviews: The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
+            (`.kcad` schema 253).
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -77274,6 +80896,7 @@ class ProjectSettings(_Model):
             the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
+        survey_adjustments: The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 252).
         table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
@@ -77287,6 +80910,8 @@ class ProjectSettings(_Model):
             (see [`ProjectSettings::project_type`]).
         xref_paths: The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
             to the project file's folder with `/` between their parts.
+        zoning_plan: A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
+            (`.kcad` schema 250).
     """
     srid: int
     length_decimals: int
@@ -77322,6 +80947,7 @@ class ProjectSettings(_Model):
     map_srid: int | None | Unset = UNSET
     map_survey: MapSurvey | None | Unset = UNSET
     map_work: MapWork | None | Unset = UNSET
+    monitoring_reviews: list[MonitoringReview] | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -77337,6 +80963,7 @@ class ProjectSettings(_Model):
     standard_docs: list[ProjectStandardDocument] | Unset = UNSET
     standard_exceptions: list[StandardException] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
+    survey_adjustments: list[KeptAdjustment] | Unset = UNSET
     table_styles: list[TableStyleDef] | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
@@ -77346,6 +80973,7 @@ class ProjectSettings(_Model):
     wall_styles: list[WallStyleDef] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
     xref_paths: list[str] | Unset = UNSET
+    zoning_plan: ZoningPlanData | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -77411,6 +81039,8 @@ class ProjectSettings(_Model):
             out["mapSurvey"] = None if self.map_survey is None else self.map_survey.to_json()
         if self.map_work is not UNSET:
             out["mapWork"] = None if self.map_work is None else self.map_work.to_json()
+        if self.monitoring_reviews is not UNSET:
+            out["monitoringReviews"] = [e0.to_json() for e0 in self.monitoring_reviews]
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -77441,6 +81071,8 @@ class ProjectSettings(_Model):
             out["standardExceptions"] = [e0.to_json() for e0 in self.standard_exceptions]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
+        if self.survey_adjustments is not UNSET:
+            out["surveyAdjustments"] = [e0.to_json() for e0 in self.survey_adjustments]
         if self.table_styles is not UNSET:
             out["tableStyles"] = [e0.to_json() for e0 in self.table_styles]
         if self.text_styles is not UNSET:
@@ -77459,6 +81091,8 @@ class ProjectSettings(_Model):
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         if self.xref_paths is not UNSET:
             out["xrefPaths"] = list(self.xref_paths)
+        if self.zoning_plan is not UNSET:
+            out["zoningPlan"] = None if self.zoning_plan is None else self.zoning_plan.to_json()
         return out
 
     @classmethod
@@ -77498,6 +81132,7 @@ class ProjectSettings(_Model):
             map_srid=data.get("mapSrid", UNSET),
             map_survey=UNSET if "mapSurvey" not in data else None if data["mapSurvey"] is None else MapSurvey.from_json(data["mapSurvey"]),
             map_work=UNSET if "mapWork" not in data else None if data["mapWork"] is None else MapWork.from_json(data["mapWork"]),
+            monitoring_reviews=[MonitoringReview.from_json(e0) for e0 in data["monitoringReviews"]] if "monitoringReviews" in data else UNSET,
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -77513,6 +81148,7 @@ class ProjectSettings(_Model):
             standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
             standard_exceptions=[StandardException.from_json(e0) for e0 in data["standardExceptions"]] if "standardExceptions" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
+            survey_adjustments=[KeptAdjustment.from_json(e0) for e0 in data["surveyAdjustments"]] if "surveyAdjustments" in data else UNSET,
             table_styles=[TableStyleDef.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
@@ -77522,6 +81158,7 @@ class ProjectSettings(_Model):
             wall_styles=[WallStyleDef.from_json(e0) for e0 in data["wallStyles"]] if "wallStyles" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
             xref_paths=list(data["xrefPaths"]) if "xrefPaths" in data else UNSET,
+            zoning_plan=UNSET if "zoningPlan" not in data else None if data["zoningPlan"] is None else ZoningPlanData.from_json(data["zoningPlan"]),
         )
 
 
@@ -80319,7 +83956,9 @@ class ReadjustmentDistribute(_Model):
     d > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),
     `duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's
     shares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is
-    `reject`).
+    `reject`). Docs/adr/5080: `invalid_input` at `rules.basis` (neither `area` nor `value`), `rules.valueSource` (empty
+    by value), `entries[i].value` (given by area; by value missing, not plain decimal text, below zero, or another on the
+    parcel's records), `entries` (by value, the values add up to zero).
     """
     rules: ReadjustmentRules
     entries: list[ReadjustmentEntry]
@@ -80346,6 +83985,8 @@ class ReadjustmentDistributed(_Model):
     records' order and the holders' totals in their first appearance's order.
     Attributes:
         release: Unit: count.
+        basis: docs/adr/5080, by value: `value`, the values' source as given, and the remainder of the mass's split over the
+            parcels and the parcels it went to (the deduction is then not split: its remainder is 0).
     """
     rules: str
     release: int
@@ -80360,6 +84001,10 @@ class ReadjustmentDistributed(_Model):
     conserved: bool
     parcels: list[ReadjustmentParcel]
     holders: list[ReadjustmentHolder]
+    basis: str | None | Unset = UNSET
+    mass_remainder: str | None | Unset = UNSET
+    mass_remainder_to: list[str] | Unset = UNSET
+    value_source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -80376,6 +84021,14 @@ class ReadjustmentDistributed(_Model):
         out["conserved"] = self.conserved
         out["parcels"] = [e0.to_json() for e0 in self.parcels]
         out["holders"] = [e0.to_json() for e0 in self.holders]
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        if self.mass_remainder is not UNSET:
+            out["massRemainder"] = self.mass_remainder
+        if self.mass_remainder_to is not UNSET:
+            out["massRemainderTo"] = list(self.mass_remainder_to)
+        if self.value_source is not UNSET:
+            out["valueSource"] = self.value_source
         return out
 
     @classmethod
@@ -80394,6 +84047,10 @@ class ReadjustmentDistributed(_Model):
             conserved=data["conserved"],
             parcels=[ReadjustmentParcel.from_json(e0) for e0 in data["parcels"]],
             holders=[ReadjustmentHolder.from_json(e0) for e0 in data["holders"]],
+            basis=data.get("basis", UNSET),
+            mass_remainder=data.get("massRemainder", UNSET),
+            mass_remainder_to=list(data["massRemainderTo"]) if "massRemainderTo" in data else UNSET,
+            value_source=data.get("valueSource", UNSET),
         )
 
 
@@ -80402,11 +84059,15 @@ class ReadjustmentEntry(_Model):
     """A record: the parcel, the holder (an id, not a name: personal data stays in its own access-controlled record), the
     parcel's registered area (decimal text, square metres; the same on every record of the parcel) and the holder's
     share (`n/d`).
+    Attributes:
+        value: docs/adr/5080, with `basis: value` only: the parcel's value before the readjustment (plain decimal text, not
+            below zero, the same on every record of the parcel; the user's, e.g. a valuation's).
     """
     parcel: str
     holder: str
     area: str
     share: str
+    value: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -80414,6 +84075,8 @@ class ReadjustmentEntry(_Model):
         out["holder"] = self.holder
         out["area"] = self.area
         out["share"] = self.share
+        if self.value is not UNSET:
+            out["value"] = self.value
         return out
 
     @classmethod
@@ -80423,6 +84086,7 @@ class ReadjustmentEntry(_Model):
             holder=data["holder"],
             area=data["area"],
             share=data["share"],
+            value=data.get("value", UNSET),
         )
 
 
@@ -80450,6 +84114,9 @@ class ReadjustmentHolder(_Model):
 class ReadjustmentParcel(_Model):
     """A parcel: its registered area, its deduction at the policy's places, its net area, the remainder its holders'
     split had and the holder it went to (none when there was none), and its holders' parts in the records' order.
+    Attributes:
+        value: docs/adr/5080, by value: the parcel's value as given and its exact share of the values (`n/d`); its deduction is
+            then its area − its net, below zero when it gains.
     """
     parcel: str
     area: str
@@ -80458,6 +84125,8 @@ class ReadjustmentParcel(_Model):
     remainder: str
     remainder_to: list[str]
     parts: list[ReadjustmentPart]
+    value: str | None | Unset = UNSET
+    value_share: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -80468,6 +84137,10 @@ class ReadjustmentParcel(_Model):
         out["remainder"] = self.remainder
         out["remainderTo"] = list(self.remainder_to)
         out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.value is not UNSET:
+            out["value"] = self.value
+        if self.value_share is not UNSET:
+            out["valueShare"] = self.value_share
         return out
 
     @classmethod
@@ -80480,6 +84153,8 @@ class ReadjustmentParcel(_Model):
             remainder=data["remainder"],
             remainder_to=list(data["remainderTo"]),
             parts=[ReadjustmentPart.from_json(e0) for e0 in data["parts"]],
+            value=data.get("value", UNSET),
+            value_share=data.get("valueShare", UNSET),
         )
 
 
@@ -80519,6 +84194,9 @@ class ReadjustmentRules(_Model):
     Attributes:
         release: Unit: count.
         scale: Unit: count.
+        basis: docs/adr/5080: what the distribution mass is shared by: `area` (none: the regulation's, by the parcels' areas) or
+            `value` (the user's alternative: by their values before the readjustment, `entries[i].value`).
+        value_source: docs/adr/5080, with `basis: value`: who determined the values and by what decision (KentOS makes none).
     """
     id: str
     release: int
@@ -80530,6 +84208,8 @@ class ReadjustmentRules(_Model):
     scale: int
     rounding: str
     remainder: str
+    basis: str | None | Unset = UNSET
+    value_source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -80543,6 +84223,10 @@ class ReadjustmentRules(_Model):
         out["scale"] = self.scale
         out["rounding"] = self.rounding
         out["remainder"] = self.remainder
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        if self.value_source is not UNSET:
+            out["valueSource"] = self.value_source
         return out
 
     @classmethod
@@ -80558,6 +84242,8 @@ class ReadjustmentRules(_Model):
             scale=data["scale"],
             rounding=data["rounding"],
             remainder=data["remainder"],
+            basis=data.get("basis", UNSET),
+            value_source=data.get("valueSource", UNSET),
         )
 
 
@@ -80818,9 +84504,11 @@ class ReadjustmentSheets(_Model):
             straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480). Unit: paper-mm.
         number_leader: Docs/adr/4680 (with `numberHeight`): a number that does not fit inside its part at the full height, horizontal or
             along its longest straight edge, is not stepped down: it is written outside at the full height, horizontal, on a
-            leader from the part's label place, its line running east to one text height past the part's boundary on that
-            line, its landing and note beyond it as a leader lays them out (as ArcGIS places a polygon's label that does not
-            fit outside it, horizontal, at an offset from its boundary).
+            leader from the part's label place, its line running out of the part to one text height past its boundary, its
+            landing and note beyond it as a leader lays them out. Docs/adr/5080: the places are tried nearest first (one,
+            two, then three text heights past the boundary; east, west, north, south, then the four between) and the first
+            whose line outside the part, landing and note touch nothing the sheet's map shows is taken; none clear: the one
+            touching the fewest, said in the label (`clear`, `clashes`) and a warning `number_crowded`.
         numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
             docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
             outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
@@ -81762,6 +85450,7 @@ class RecordedBoundaryRow(_Model):
     drawn: bool
     bulge: float | Unset = UNSET
     closed_by: int | None | Unset = UNSET
+    lengths: list[BoundaryLengthRow] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -81776,6 +85465,8 @@ class RecordedBoundaryRow(_Model):
             out["bulge"] = float(self.bulge)
         if self.closed_by is not UNSET:
             out["closedBy"] = self.closed_by
+        if self.lengths is not UNSET:
+            out["lengths"] = [e0.to_json() for e0 in self.lengths]
         return out
 
     @classmethod
@@ -81790,6 +85481,35 @@ class RecordedBoundaryRow(_Model):
             drawn=data["drawn"],
             bulge=float(data["bulge"]) if "bulge" in data else UNSET,
             closed_by=data.get("closedBy", UNSET),
+            lengths=[BoundaryLengthRow.from_json(e0) for e0 in data["lengths"]] if "lengths" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedLength(_Model):
+    """The length a document states for a boundary (docs/adr/5020): a plain decimal in metres as written, an arc's length
+    on an arc. One per boundary and document.
+    Attributes:
+        boundary: Unit: id.
+        document: Unit: id.
+    """
+    boundary: int
+    document: int
+    length: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["boundary"] = self.boundary
+        out["document"] = self.document
+        out["length"] = self.length
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedLength:
+        return cls(
+            boundary=data["boundary"],
+            document=data["document"],
+            length=data["length"],
         )
 
 
@@ -84006,6 +87726,186 @@ class ReviewReply(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReviewedEpoch(_Model):
+    """An earlier epoch of the job: its layer and day (`YYYY-MM-DD`)."""
+    layer: str
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedEpoch:
+        return cls(
+            layer=data["layer"],
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedJob(_Model):
+    """The job as it was checked: the layer measured now, the earlier epoch's (`design`), the earlier epochs and days, this
+    epoch's day, the names' attribute, the control marks, the limits (m), the line's confidence and the thresholds.
+    Attributes:
+        confidence: Unit: 1.
+        horizontal: Unit: m.
+        vertical: Unit: m.
+    """
+    measured: str
+    design: str
+    confidence: float | None | Unset = UNSET
+    control: list[str] | Unset = UNSET
+    date: str | None | Unset = UNSET
+    epochs: list[ReviewedEpoch] | Unset = UNSET
+    field: str | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    thresholds: ReviewedThresholds | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["measured"] = self.measured
+        out["design"] = self.design
+        if self.confidence is not UNSET:
+            out["confidence"] = None if self.confidence is None else float(self.confidence)
+        if self.control is not UNSET:
+            out["control"] = list(self.control)
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.epochs is not UNSET:
+            out["epochs"] = [e0.to_json() for e0 in self.epochs]
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.thresholds is not UNSET:
+            out["thresholds"] = None if self.thresholds is None else self.thresholds.to_json()
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedJob:
+        return cls(
+            measured=data["measured"],
+            design=data["design"],
+            confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+            control=list(data["control"]) if "control" in data else UNSET,
+            date=data.get("date", UNSET),
+            epochs=[ReviewedEpoch.from_json(e0) for e0 in data["epochs"]] if "epochs" in data else UNSET,
+            field=data.get("field", UNSET),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            thresholds=UNSET if "thresholds" not in data else None if data["thresholds"] is None else ReviewedThresholds.from_json(data["thresholds"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedLevel(_Model):
+    """A threshold level's limits as kept: horizontal and vertical movement (m), horizontal and vertical speed (m a year).
+    Attributes:
+        horizontal: Unit: m.
+        horizontal_rate: Unit: m/yr.
+        vertical: Unit: m.
+        vertical_rate: Unit: m/yr.
+    """
+    horizontal: float | None | Unset = UNSET
+    horizontal_rate: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+    vertical_rate: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.horizontal_rate is not UNSET:
+            out["horizontalRate"] = None if self.horizontal_rate is None else float(self.horizontal_rate)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        if self.vertical_rate is not UNSET:
+            out["verticalRate"] = None if self.vertical_rate is None else float(self.vertical_rate)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedLevel:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            horizontal_rate=UNSET if "horizontalRate" not in data else None if data["horizontalRate"] is None else float(data["horizontalRate"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+            vertical_rate=UNSET if "verticalRate" not in data else None if data["verticalRate"] is None else float(data["verticalRate"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedMark(_Model):
+    """A mark as reviewed: its last horizontal and vertical movement from its reference (m), its horizontal speed (m a
+    year; the line's, else the mean), its state and the limits it went beyond.
+    Attributes:
+        horizontal: Unit: m.
+        speed: Unit: m/yr.
+        vertical: Unit: m.
+    """
+    name: str
+    horizontal: float
+    exceeded: list[str] | Unset = UNSET
+    speed: float | None | Unset = UNSET
+    state: ReviewedState | ReviewedStateName | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["horizontal"] = float(self.horizontal)
+        if self.exceeded is not UNSET:
+            out["exceeded"] = list(self.exceeded)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
+        if self.state is not UNSET:
+            out["state"] = None if self.state is None else _enum_out(self.state)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedMark:
+        return cls(
+            name=data["name"],
+            horizontal=float(data["horizontal"]),
+            exceeded=list(data["exceeded"]) if "exceeded" in data else UNSET,
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
+            state=UNSET if "state" not in data else None if data["state"] is None else _enum_in(ReviewedState, data["state"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewedThresholds(_Model):
+    """The two thresholds as kept, with their source: who set them, by which document or decision, when."""
+    warning: ReviewedLevel
+    alarm: ReviewedLevel
+    source: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["warning"] = self.warning.to_json()
+        out["alarm"] = self.alarm.to_json()
+        out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewedThresholds:
+        return cls(
+            warning=ReviewedLevel.from_json(data["warning"]),
+            alarm=ReviewedLevel.from_json(data["alarm"]),
+            source=data["source"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RevisionMarked(_Model):
     """Output of `cad.revisions.mark` v1.
     Attributes:
@@ -84579,6 +88479,10 @@ class RoadProducedLayer(_Model):
     """A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how
     it was found; in the order the drawings first use them.
     Attributes:
+        domains_added: A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
+            here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
+        fields_added: A layer found here with `addFields` (docs/adr/5240): the recipe's fields it took, by their names.
+        forms_added: A layer added (docs/adr/5240): the forms added with it, by their names; empty: none.
         group: A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
             name, its name here); empty: at the top.
         groups_added: A layer added: those of its groups added with it (none of their names was here), from the top.
@@ -84589,6 +88493,9 @@ class RoadProducedLayer(_Model):
     to: str
     to_name: str
     how: RoadLayerMatch | RoadLayerMatchName
+    domains_added: list[str] | Unset = UNSET
+    fields_added: list[str] | Unset = UNSET
+    forms_added: list[str] | Unset = UNSET
     group: list[str] | Unset = UNSET
     groups_added: list[str] | Unset = UNSET
     line_type_added: str | None | Unset = UNSET
@@ -84600,6 +88507,12 @@ class RoadProducedLayer(_Model):
         out["to"] = self.to
         out["toName"] = self.to_name
         out["how"] = _enum_out(self.how)
+        if self.domains_added is not UNSET:
+            out["domainsAdded"] = list(self.domains_added)
+        if self.fields_added is not UNSET:
+            out["fieldsAdded"] = list(self.fields_added)
+        if self.forms_added is not UNSET:
+            out["formsAdded"] = list(self.forms_added)
         if self.group is not UNSET:
             out["group"] = list(self.group)
         if self.groups_added is not UNSET:
@@ -84616,6 +88529,9 @@ class RoadProducedLayer(_Model):
             to=data["to"],
             to_name=data["toName"],
             how=_enum_in(RoadLayerMatch, data["how"]),
+            domains_added=list(data["domainsAdded"]) if "domainsAdded" in data else UNSET,
+            fields_added=list(data["fieldsAdded"]) if "fieldsAdded" in data else UNSET,
+            forms_added=list(data["formsAdded"]) if "formsAdded" in data else UNSET,
             group=list(data["group"]) if "group" in data else UNSET,
             groups_added=list(data["groupsAdded"]) if "groupsAdded" in data else UNSET,
             line_type_added=data.get("lineTypeAdded", UNSET),
@@ -84884,12 +88800,16 @@ class RoadProfilesLengths(_Model):
 @dataclass(kw_only=True, slots=True)
 class RoadProjectEdit(_Model):
     """Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in
-    the step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.
+    the step of the write that left them stale, on or off; `regional` (docs/adr/4740) chooses whether drawing again, by
+    itself or from the project tree, writes only what changed (docs/adr/4320; the project's first choice) or draws each
+    drawing whole. One undo step: “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” or, both changed, “Yeniden üretim”.
 
-    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set` (neither
+    given, or what is given is already so: at `autoRebuild` when it is given, else at `regional`).
     """
     auto_rebuild: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    regional: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -84897,6 +88817,8 @@ class RoadProjectEdit(_Model):
             out["autoRebuild"] = self.auto_rebuild
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.regional is not UNSET:
+            out["regional"] = self.regional
         return out
 
     @classmethod
@@ -84904,18 +88826,23 @@ class RoadProjectEdit(_Model):
         return cls(
             auto_rebuild=data.get("autoRebuild", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            regional=data.get("regional", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class RoadProjectEdited(_Model):
-    """Output of `road.project.edit` v1: drawing again by itself now, and the revision after."""
+    """Output of `road.project.edit` v1: drawing again by itself now, whether drawing again writes only what changed
+    (docs/adr/4740), and the revision after.
+    """
     auto_rebuild: bool
+    regional: bool
     revision: str
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["autoRebuild"] = self.auto_rebuild
+        out["regional"] = self.regional
         out["revision"] = self.revision
         return out
 
@@ -84923,6 +88850,7 @@ class RoadProjectEdited(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProjectEdited:
         return cls(
             auto_rebuild=data["autoRebuild"],
+            regional=data["regional"],
             revision=data["revision"],
         )
 
@@ -85017,8 +88945,9 @@ class RoadProjectGraphQuery(_Model):
 class RoadProjectProduce(_Model):
     """Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
     `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;
-    `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the
-    Layer Translator); a layer not given goes by its name (Map Same) or is added.
+    `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (a layer mapping); a
+    layer not given goes by its name or is added; `addFields` (docs/adr/5240), a layer found here takes the recipe's fields
+    it lacks.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
     `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
@@ -85028,8 +88957,12 @@ class RoadProjectProduce(_Model):
     (at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a
     source not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is
     written.
+    Attributes:
+        add_fields: Docs/adr/5240: a layer found here (by its name or given) takes the recipe's fields it lacks, after its own, the
+            lists they link as an added layer's do; its own fields, value combinations, rules, indexes and forms stay.
     """
     path: str
+    add_fields: bool | Unset = UNSET
     drawings: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
@@ -85037,6 +88970,8 @@ class RoadProjectProduce(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.add_fields is not UNSET:
+            out["addFields"] = self.add_fields
         if self.drawings is not UNSET:
             out["drawings"] = None if self.drawings is None else list(self.drawings)
         if self.expected_revision is not UNSET:
@@ -85049,6 +88984,7 @@ class RoadProjectProduce(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProjectProduce:
         return cls(
             path=data["path"],
+            add_fields=data.get("addFields", UNSET),
             drawings=UNSET if "drawings" not in data else None if data["drawings"] is None else list(data["drawings"]),
             expected_revision=data.get("expectedRevision", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
@@ -85118,10 +89054,12 @@ class RoadProjectRebuild(_Model):
     its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
 
     `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
-    first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
-    drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
-    draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
-    changed is drawn whole, so its objects keep the command's drawing order.
+    first; one whose objects come out as they are is not written (its record takes its sources' stamps now). Otherwise,
+    in the command's order, a new object takes the first old one exactly alike not taken yet and stays where that is,
+    unless an object before it in the order is written, or stays from a later place, and the two could draw another
+    picture in the other order (docs/adr/4740): only lines and polylines without a label and of one colour and
+    transparency draw the same picture in any order. The old objects left are removed, the new ones left written at the
+    drawing's end in its order.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
     `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
@@ -85184,7 +89122,8 @@ class RoadProjectRebuilt(_Model):
 class RoadProjectTree(_Model):
     """Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are
     stale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be
-    drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.
+    drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, whether drawing again
+    writes only what changed (docs/adr/4740), and the revision read.
     Attributes:
         stale: Unit: count.
         problems: Unit: count.
@@ -85196,6 +89135,7 @@ class RoadProjectTree(_Model):
     rebuildable: int
     deep: bool
     auto_rebuild: bool
+    regional: bool
     revision: str
 
     def to_json(self) -> dict[str, Any]:
@@ -85206,6 +89146,7 @@ class RoadProjectTree(_Model):
         out["rebuildable"] = self.rebuildable
         out["deep"] = self.deep
         out["autoRebuild"] = self.auto_rebuild
+        out["regional"] = self.regional
         out["revision"] = self.revision
         return out
 
@@ -85218,7 +89159,33 @@ class RoadProjectTree(_Model):
             rebuildable=data["rebuildable"],
             deep=data["deep"],
             auto_rebuild=data["autoRebuild"],
+            regional=data["regional"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadRecipeForm(_Model):
+    """A form a recipe layer keeps (docs/adr/5240): its id and name in its project and its draft, bound to the layer's
+    fields by their keys.
+    """
+    id: str
+    name: str
+    draft: FormBody
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["draft"] = self.draft.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadRecipeForm:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            draft=FormBody.from_json(data["draft"]),
         )
 
 
@@ -85235,13 +89202,23 @@ class RoadRecipeLayer(_Model):
         line_weight: Unit: paper-mm.
         compose: How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask
             (a mask cuts into its project's other layers by their ids); none: opaque and normal.
+        contingents: Its value combinations (Değer bileşimleri, docs/adr/0423, 5240): the groups of fields whose values go together.
+        domains: The project's value lists its fields link (Değer listeleri, docs/adr/0430, 4860), as its project defines them.
+        fields: Its fields (Alanlar, docs/adr/0199, 4860), in their order, as its project keeps them but for a bound table's
+            column (the binding is its project's). A field linked to one of the project's value lists keeps the list's id;
+            the list is in `domains`. Empty: no fields.
+        forms: Its project's forms that edit it (Formlar, docs/adr/0401, 5240), each its id, name and draft; a release is its
+            project's decision and is not kept (the project it goes to publishes again).
         geometry: What it held (Katman türü): points, lines, areas or annotation; none: any kind.
         group: The names of the groups it was in, from the top of the tree; empty: at the top.
+        indexes: Its indexes (Dizinler, docs/adr/0758, 5240).
         line_type_def: The project line type its style names (`style.linePattern`), as its project defines it; none when the style
             names none or its project has no such line type.
         plot: Yazdır: `false`, it was drawn on screen but not printed; none: printed. Only `false` is written.
+        rules: Its record rules (Kayıt kuralları, docs/adr/0438, 5240).
         style: Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the
             fields above.
+        subtypes: Its subtypes (Alt türler, docs/adr/0422, 4860): its field that sorts the records and what each kind narrows.
     """
     id: str
     name: str
@@ -85249,11 +89226,18 @@ class RoadRecipeLayer(_Model):
     line_type: LineType | LineTypeName
     line_weight: float
     compose: LayerCompose | None | Unset = UNSET
+    contingents: list[FieldGroup] | Unset = UNSET
+    domains: list[FieldDomain] | Unset = UNSET
+    fields: list[LayerField] | Unset = UNSET
+    forms: list[RoadRecipeForm] | Unset = UNSET
     geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     group: list[str] | Unset = UNSET
+    indexes: list[LayerIndex] | Unset = UNSET
     line_type_def: LineTypeDef | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
+    rules: list[LayerRule] | Unset = UNSET
     style: LayerStyle | None | Unset = UNSET
+    subtypes: LayerSubtypes | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -85264,16 +89248,30 @@ class RoadRecipeLayer(_Model):
         out["lineWeight"] = float(self.line_weight)
         if self.compose is not UNSET:
             out["compose"] = None if self.compose is None else self.compose.to_json()
+        if self.contingents is not UNSET:
+            out["contingents"] = [e0.to_json() for e0 in self.contingents]
+        if self.domains is not UNSET:
+            out["domains"] = [e0.to_json() for e0 in self.domains]
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.forms is not UNSET:
+            out["forms"] = [e0.to_json() for e0 in self.forms]
         if self.geometry is not UNSET:
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.group is not UNSET:
             out["group"] = list(self.group)
+        if self.indexes is not UNSET:
+            out["indexes"] = [e0.to_json() for e0 in self.indexes]
         if self.line_type_def is not UNSET:
             out["lineTypeDef"] = None if self.line_type_def is None else self.line_type_def.to_json()
         if self.plot is not UNSET:
             out["plot"] = self.plot
+        if self.rules is not UNSET:
+            out["rules"] = [e0.to_json() for e0 in self.rules]
         if self.style is not UNSET:
             out["style"] = None if self.style is None else self.style.to_json()
+        if self.subtypes is not UNSET:
+            out["subtypes"] = None if self.subtypes is None else self.subtypes.to_json()
         return out
 
     @classmethod
@@ -85285,11 +89283,18 @@ class RoadRecipeLayer(_Model):
             line_type=_enum_in(LineType, data["lineType"]),
             line_weight=float(data["lineWeight"]),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
+            contingents=[FieldGroup.from_json(e0) for e0 in data["contingents"]] if "contingents" in data else UNSET,
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
+            fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            forms=[RoadRecipeForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             group=list(data["group"]) if "group" in data else UNSET,
+            indexes=[LayerIndex.from_json(e0) for e0 in data["indexes"]] if "indexes" in data else UNSET,
             line_type_def=UNSET if "lineTypeDef" not in data else None if data["lineTypeDef"] is None else LineTypeDef.from_json(data["lineTypeDef"]),
             plot=data.get("plot", UNSET),
+            rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
             style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
+            subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
         )
 
 
@@ -85308,6 +89313,8 @@ class RoadSettings(_Model):
         pay: The pay item book (docs/adr/0909 §4): the agency's items and the rules that give them KentOS's quantities.
         platforms: The graded pads (docs/adr/0927), each on a terrain surface.
         profiles: The vertical alignments (docs/adr/0902), each on an alignment, in the order the project tree shows them.
+        rebuild_whole: Drawing again, by hand from the project tree or by itself, draws each drawing whole (docs/adr/4740); unless
+            chosen, only what changed is written (docs/adr/4320). Since `.kcad` schema 238.
         sections: The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.
         sheet_sets: The plan–profile sheet sets (docs/adr/0908 §10), each along an alignment.
         superelevations: The superelevation schedules (docs/adr/0904), each on an alignment, in the order the project tree shows them.
@@ -85327,6 +89334,7 @@ class RoadSettings(_Model):
     pay: PayBookDef | None | Unset = UNSET
     platforms: list[PlatformDef] | Unset = UNSET
     profiles: list[ProfileDef] | Unset = UNSET
+    rebuild_whole: bool | Unset = UNSET
     sections: list[SectionSetDef] | Unset = UNSET
     sheet_sets: list[RoadSheetSetDef] | Unset = UNSET
     superelevations: list[SuperelevationDef] | Unset = UNSET
@@ -85359,6 +89367,8 @@ class RoadSettings(_Model):
             out["platforms"] = [e0.to_json() for e0 in self.platforms]
         if self.profiles is not UNSET:
             out["profiles"] = [e0.to_json() for e0 in self.profiles]
+        if self.rebuild_whole is not UNSET:
+            out["rebuildWhole"] = self.rebuild_whole
         if self.sections is not UNSET:
             out["sections"] = [e0.to_json() for e0 in self.sections]
         if self.sheet_sets is not UNSET:
@@ -85389,6 +89399,7 @@ class RoadSettings(_Model):
             pay=UNSET if "pay" not in data else None if data["pay"] is None else PayBookDef.from_json(data["pay"]),
             platforms=[PlatformDef.from_json(e0) for e0 in data["platforms"]] if "platforms" in data else UNSET,
             profiles=[ProfileDef.from_json(e0) for e0 in data["profiles"]] if "profiles" in data else UNSET,
+            rebuild_whole=data.get("rebuildWhole", UNSET),
             sections=[SectionSetDef.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             sheet_sets=[RoadSheetSetDef.from_json(e0) for e0 in data["sheetSets"]] if "sheetSets" in data else UNSET,
             superelevations=[SuperelevationDef.from_json(e0) for e0 in data["superelevations"]] if "superelevations" in data else UNSET,
@@ -85929,6 +89940,41 @@ class RoadsEdited(_Model):
             count=data["count"],
             skipped=data["skipped"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RobustRounds(_Model):
+    """How the robust rounds went: the weight function, its constant, the rounds, whether the factors settled (no factor
+    moved by more than 10⁻⁹; at most 100 rounds), how many baselines' factors are below 1.
+    Attributes:
+        c: Unit: 1.
+        rounds: Unit: count.
+        downweighted: Unit: count.
+    """
+    method: RobustMethod | RobustMethodName
+    c: float
+    rounds: int
+    converged: bool
+    downweighted: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["c"] = float(self.c)
+        out["rounds"] = self.rounds
+        out["converged"] = self.converged
+        out["downweighted"] = self.downweighted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RobustRounds:
+        return cls(
+            method=_enum_in(RobustMethod, data["method"]),
+            c=float(data["c"]),
+            rounds=data["rounds"],
+            converged=data["converged"],
+            downweighted=data["downweighted"],
         )
 
 
@@ -86753,7 +90799,9 @@ class ScenariosImpact(_Model):
     zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
     none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
     `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
-    `terrain_unbuildable` (the surface cannot be made).
+    `terrain_unbuildable` (the surface cannot be made). Along a network (docs/adr/5060): `invalid_input`
+    (`access.connect`: none or not above zero with a network), `unknown_network` (`access.network`), `invalid_network`
+    (`access.network`: the network cannot be built), `tools_unavailable` (no host here builds networks).
     Attributes:
         impervious: Unit: 1.
     """
@@ -86806,7 +90854,12 @@ class ScenariosImpacted(_Model):
     changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
     asked, docs/adr/2260), and the drawing's revision.
     Attributes:
+        scenario_stamp: The scenario layers' stamp now, made as the base's (docs/adr/5060): what a table written in the drawing is
+            checked against besides the base's.
         near: Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
+        records: The comparisons of this scenario written in the drawing (`cad.scenarios.record`, docs/adr/5060), in the drawing's
+            order.
+        slope_map: The slope map (only when `slope.map` is asked, docs/adr/5060).
     """
     scenario: str
     name: str
@@ -86819,9 +90872,12 @@ class ScenariosImpacted(_Model):
     gaps: list[str]
     assumptions: list[str]
     stamp: str
+    scenario_stamp: str
     revision: str
     near: ImpactNear | None | Unset = UNSET
     reach: ImpactReach | None | Unset = UNSET
+    records: list[ImpactRecord] | Unset = UNSET
+    slope_map: ImpactSlopeMap | None | Unset = UNSET
     stale: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -86837,11 +90893,16 @@ class ScenariosImpacted(_Model):
         out["gaps"] = list(self.gaps)
         out["assumptions"] = list(self.assumptions)
         out["stamp"] = self.stamp
+        out["scenarioStamp"] = self.scenario_stamp
         out["revision"] = self.revision
         if self.near is not UNSET:
             out["near"] = None if self.near is None else self.near.to_json()
         if self.reach is not UNSET:
             out["reach"] = None if self.reach is None else self.reach.to_json()
+        if self.records is not UNSET:
+            out["records"] = [e0.to_json() for e0 in self.records]
+        if self.slope_map is not UNSET:
+            out["slopeMap"] = None if self.slope_map is None else self.slope_map.to_json()
         if self.stale is not UNSET:
             out["stale"] = self.stale
         return out
@@ -86860,10 +90921,80 @@ class ScenariosImpacted(_Model):
             gaps=list(data["gaps"]),
             assumptions=list(data["assumptions"]),
             stamp=data["stamp"],
+            scenario_stamp=data["scenarioStamp"],
             revision=data["revision"],
             near=UNSET if "near" not in data else None if data["near"] is None else ImpactNear.from_json(data["near"]),
             reach=UNSET if "reach" not in data else None if data["reach"] is None else ImpactReach.from_json(data["reach"]),
+            records=[ImpactRecord.from_json(e0) for e0 in data["records"]] if "records" in data else UNSET,
+            slope_map=UNSET if "slopeMap" not in data else None if data["slopeMap"] is None else ImpactSlopeMap.from_json(data["slopeMap"]),
             stale=data.get("stale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosRecord(_Model):
+    """Input of `cad.scenarios.record` v1: the comparison as `cad.scenarios.impact` takes it, the layer the table is written
+    on (not one of the compared layers: the table would change their measures), the table's top left corner (none: two
+    table heights right of the compared layers' areas, at their top) and the revision the write expects.
+
+    Refusals, in this order: the comparison's own (their paths under `impact.`), `invalid_input` (`layerId`: no such
+    layer, a group, or a compared layer; `at`: not finite), `stale_revision`, and the write's (a locked layer).
+    Attributes:
+        at: Unit: length.
+    """
+    impact: ScenariosImpact
+    layer_id: str
+    at: list[float] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["impact"] = self.impact.to_json()
+        out["layerId"] = self.layer_id
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosRecord:
+        return cls(
+            impact=ScenariosImpact.from_json(data["impact"]),
+            layer_id=data["layerId"],
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosRecorded(_Model):
+    """Output of `cad.scenarios.record` v1: the table's persistent id, the stamps it keeps, its cells (the heading, a row
+    a measure, the stamps' row) and the drawing's revision after the write.
+    """
+    table: str
+    stamp: str
+    scenario_stamp: str
+    cells: list[list[str]]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["stamp"] = self.stamp
+        out["scenarioStamp"] = self.scenario_stamp
+        out["cells"] = [list(e0) for e0 in self.cells]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosRecorded:
+        return cls(
+            table=data["table"],
+            stamp=data["stamp"],
+            scenario_stamp=data["scenarioStamp"],
+            cells=[list(e0) for e0 in data["cells"]],
+            revision=data["revision"],
         )
 
 
@@ -87519,6 +91650,42 @@ class ScopeRing(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectionCheck(_Model):
+    """The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,
+    KOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences
+    between measured heights and the heights read from the contour lines is under `factor` times KOH_Z. Docs/adr/5120:
+    the section's points are at most `spacing` metres apart along it (m. 93(1)(b)'s 20 m; none: not checked).
+    Attributes:
+        xy: The formula's coefficients of S², S and 1, giving centimetres. Unit: 1.
+        z_factor: Unit: 1.
+        factor: Unit: 1.
+        spacing: Unit: length.
+    """
+    xy: list[float]
+    z_factor: float
+    factor: float
+    spacing: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["xy"] = [float(e0) for e0 in self.xy]
+        out["zFactor"] = float(self.z_factor)
+        out["factor"] = float(self.factor)
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionCheck:
+        return cls(
+            xy=[float(e0) for e0 in data["xy"]],
+            z_factor=float(data["zFactor"]),
+            factor=float(data["factor"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SectionCrossing(_Model):
     """Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far
     out on each.
@@ -87551,6 +91718,34 @@ class SectionCrossing(_Model):
             left=data["left"],
             at_first=float(data["atFirst"]),
             at_second=float(data["atSecond"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionGap(_Model):
+    """Two neighbouring places of the section farther apart than the package's spacing: how far along each is, and the gap.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        length: Unit: length.
+    """
+    from_: float
+    to: float
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionGap:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            length=float(data["length"]),
         )
 
 
@@ -87648,6 +91843,63 @@ class SectionPavement(_Model):
             bottoms=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["bottoms"]],
             formation_cut=float(data["formationCut"]),
             formation_fill=float(data["formationFill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionPointRow(_Model):
+    """A point of the section: its object, its place, how far along the section from `from` its foot is and how far off
+    the line it lies (metres), its measured height, the height read from the contour lines (none: no contour crossing on
+    one side of it, or the point is not on the section), the two contour heights it is read between, and the measured
+    less the read height. `state`: `compared`, `noContour` (no crossing on one side), `outside` (its foot before `from`
+    or after `to`), `offLine` (farther than the corridor).
+    Attributes:
+        at: Unit: length.
+        along: Unit: length.
+        offset: Unit: length.
+        measured: Unit: elevation.
+        between: Unit: elevation.
+        contour: Unit: elevation.
+        difference: Unit: length.
+    """
+    uid: str
+    at: list[float]
+    along: float
+    offset: float
+    measured: float
+    state: str
+    between: list[float] | None | Unset = UNSET
+    contour: float | None | Unset = UNSET
+    difference: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["at"] = [float(e0) for e0 in self.at]
+        out["along"] = float(self.along)
+        out["offset"] = float(self.offset)
+        out["measured"] = float(self.measured)
+        out["state"] = self.state
+        if self.between is not UNSET:
+            out["between"] = None if self.between is None else [float(e0) for e0 in self.between]
+        if self.contour is not UNSET:
+            out["contour"] = None if self.contour is None else float(self.contour)
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionPointRow:
+        return cls(
+            uid=data["uid"],
+            at=[float(e0) for e0 in data["at"]],
+            along=float(data["along"]),
+            offset=float(data["offset"]),
+            measured=float(data["measured"]),
+            state=data["state"],
+            between=UNSET if "between" not in data else None if data["between"] is None else [float(e0) for e0 in data["between"]],
+            contour=UNSET if "contour" not in data else None if data["contour"] is None else float(data["contour"]),
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
         )
 
 
@@ -88748,6 +93000,11 @@ class SeparationLabel(_Model):
     height of its outer ring's corners (inside the part whatever its shape).
     Attributes:
         at: Unit: m.
+        clashes: Docs/adr/5080: what a number that is not clear touches, sorted: the drawing's objects by their persistent ids,
+            this sheet's other numbers by their parts' names (“Girmeyen 2”).
+        clear: Docs/adr/5080, with a leader: whether its line outside the part, its landing and its note touch nothing the
+            sheet's map shows (the drawing's lines, texts, leaders and points on shown layers, and this sheet's other
+            numbers). False: no place tried was clear, and the number stands where it touches the fewest.
         height: With `numberHeight` (docs/adr/4280): the text's height, metres on the drawing, its turn (degrees, counter-clockwise
             from east), its share of the height asked (1, 0.9 … 0.1) and whether its box lies inside the part; `at` is then
             its middle. Unit: m.
@@ -88759,6 +93016,8 @@ class SeparationLabel(_Model):
     part: str
     number: str
     at: list[float]
+    clashes: list[str] | Unset = UNSET
+    clear: bool | None | Unset = UNSET
     fits: bool | None | Unset = UNSET
     height: float | None | Unset = UNSET
     leader: list[float] | None | Unset = UNSET
@@ -88770,6 +93029,10 @@ class SeparationLabel(_Model):
         out["part"] = self.part
         out["number"] = self.number
         out["at"] = [float(e0) for e0 in self.at]
+        if self.clashes is not UNSET:
+            out["clashes"] = list(self.clashes)
+        if self.clear is not UNSET:
+            out["clear"] = self.clear
         if self.fits is not UNSET:
             out["fits"] = self.fits
         if self.height is not UNSET:
@@ -88788,6 +93051,8 @@ class SeparationLabel(_Model):
             part=data["part"],
             number=data["number"],
             at=[float(e0) for e0 in data["at"]],
+            clashes=list(data["clashes"]) if "clashes" in data else UNSET,
+            clear=data.get("clear", UNSET),
             fits=data.get("fits", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             leader=UNSET if "leader" not in data else None if data["leader"] is None else [float(e0) for e0 in data["leader"]],
@@ -89228,6 +93493,7 @@ class SettingsSet(_Model):
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
     - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+    - `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).
     - `standardDocs`: the entire ordered list of versioned drawing-standard
       documents retained by the project; an empty list removes all bindings.
       An ordered, byte-identical subset may remove unsupported existing
@@ -89241,7 +93507,7 @@ class SettingsSet(_Model):
     (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
     (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
-    view without levels), `invalid_heights`, `invalid_epoch`; then
+    view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `project_type_locked` (an existing project type changed),
     `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
@@ -89269,6 +93535,8 @@ class SettingsSet(_Model):
             engineering and fractional feet and inches in an inch or foot drawing.
         map_srid: The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes. Unit: epsg.
         plot_scale: Unit: scale.
+        refraction: The refraction coefficient k of trigonometric heights (docs/adr/0169 §3, 4900), within [−1, 1]: a measured one
+            written to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting. Unit: 1.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
         standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
@@ -89291,6 +93559,7 @@ class SettingsSet(_Model):
     name: str | None | Unset = UNSET
     plot_scale: float | None | Unset = UNSET
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
+    refraction: float | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     srid: int | None | Unset = UNSET
     standard_docs: list[ProjectStandardDocument] | None | Unset = UNSET
@@ -89331,6 +93600,8 @@ class SettingsSet(_Model):
             out["plotScale"] = None if self.plot_scale is None else float(self.plot_scale)
         if self.project_type is not UNSET:
             out["projectType"] = None if self.project_type is None else _enum_out(self.project_type)
+        if self.refraction is not UNSET:
+            out["refraction"] = None if self.refraction is None else float(self.refraction)
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
         if self.srid is not UNSET:
@@ -89359,6 +93630,7 @@ class SettingsSet(_Model):
             name=data.get("name", UNSET),
             plot_scale=UNSET if "plotScale" not in data else None if data["plotScale"] is None else float(data["plotScale"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
+            refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else float(data["refraction"]),
             second_srid=data.get("secondSrid", UNSET),
             srid=data.get("srid", UNSET),
             standard_docs=UNSET if "standardDocs" not in data else None if data["standardDocs"] is None else [ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]],
@@ -89489,6 +93761,53 @@ class ShapesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetBuiltUp(_Model):
+    """The heights of built-up areas and roads (BÖHHBÜY m. 63(2): “yerleşik alanlar ve yollarda harita üzerinde yaklaşık 2
+    cm'de bir”, docs/adr/4740): the layers of the built-up areas' closed boundaries and of the roads' lines, and the
+    spacing on the sheet (paper mm; none: the package's `heightEvery`). Along each road line from its start a height
+    every spacing, the first at half of it; then on the grid of the spacing inside the built-up areas (even-odd over
+    their rings), outside the details and farther than half the spacing from every height already placed. Heights are
+    the surface's, written as the summits' are; a place off the surface is counted. Docs/adr/5120: the grid runs from
+    `origin` (none: the coordinates' origin), turned by `rotation` (radians counter-clockwise from east; none: 0); its
+    places are the origin plus whole multiples of the spacing along the turned east and north. The regulation gives
+    neither: they are the surveyor's.
+    Attributes:
+        every: Unit: paper-mm.
+        origin: Unit: length.
+        rotation: Unit: rad.
+    """
+    areas: list[str] | Unset = UNSET
+    every: float | None | Unset = UNSET
+    origin: list[float] | None | Unset = UNSET
+    roads: list[str] | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.areas is not UNSET:
+            out["areas"] = list(self.areas)
+        if self.every is not UNSET:
+            out["every"] = None if self.every is None else float(self.every)
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else [float(e0) for e0 in self.origin]
+        if self.roads is not UNSET:
+            out["roads"] = list(self.roads)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetBuiltUp:
+        return cls(
+            areas=list(data["areas"]) if "areas" in data else UNSET,
+            every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else [float(e0) for e0 in data["origin"]],
+            roads=list(data["roads"]) if "roads" in data else UNSET,
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetContourLabel(_Model):
     """A height written on a major line: its level, its text, where its middle is and its turn (degrees counter-clockwise
     from east, its top uphill).
@@ -89604,6 +93923,56 @@ class SheetDeliveryResources(_Model):
             project=data["project"],
             files=[SheetDeliveryResource.from_json(e0) for e0 in data["files"]],
             bytes=data["bytes"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetHeightCheck(_Model):
+    """The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points
+    compared (an own height, on the surface, not one of the surface's corners: a corner's difference is nought), the
+    corners left out, the RMS of the differences and the largest one with its place (metres), KOH_Z for the scale by
+    m. 91(2) and the limit, `factor` times it (metres), and whether the RMS is under the limit.
+    Attributes:
+        compared: Unit: count.
+        corners: Unit: count.
+        rms: Unit: length.
+        largest: Unit: length.
+        at: Unit: length.
+        koh_z: Unit: length.
+        limit: Unit: length.
+    """
+    compared: int
+    corners: int
+    rms: float
+    largest: float
+    at: list[float]
+    koh_z: float
+    limit: float
+    within: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["compared"] = self.compared
+        out["corners"] = self.corners
+        out["rms"] = float(self.rms)
+        out["largest"] = float(self.largest)
+        out["at"] = [float(e0) for e0 in self.at]
+        out["kohZ"] = float(self.koh_z)
+        out["limit"] = float(self.limit)
+        out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetHeightCheck:
+        return cls(
+            compared=data["compared"],
+            corners=data["corners"],
+            rms=float(data["rms"]),
+            largest=float(data["largest"]),
+            at=[float(e0) for e0 in data["at"]],
+            koh_z=float(data["kohZ"]),
+            limit=float(data["limit"]),
+            within=data["within"],
         )
 
 
@@ -90144,7 +94513,8 @@ class SheetSpot(_Model):
     """A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
     with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
     (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point
-    (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the
+    (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none), or (docs/adr/4740, m. 63(2)) a
+    `road` height along a road line or a `builtUp` one on the grid of a built-up area; its place and height, the
     height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
     Attributes:
         x: Unit: length.
@@ -90692,6 +95062,63 @@ class SheetsSetResult(_Model):
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
             standard_ratios=UNSET if "standardRatios" not in data else None if data["standardRatios"] is None else [PaperScaleRatio.from_json(e0) for e0 in data["standardRatios"]],
             templates=UNSET if "templates" not in data else None if data["templates"] is None else [PaperTemplate.from_json(e0) for e0 in data["templates"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShiftLimit(_Model):
+    """Input of a shift limit: its basis, and what the basis takes: `metres` (own), `scale` (drawing, method), `method`
+    (method: a table's method id).
+    Attributes:
+        metres: Unit: m.
+        scale: The scale's denominator (1000 for 1/1000). Unit: 1.
+    """
+    basis: LimitBasis | LimitBasisName
+    method: str | None | Unset = UNSET
+    metres: float | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["basis"] = _enum_out(self.basis)
+        if self.method is not UNSET:
+            out["method"] = self.method
+        if self.metres is not UNSET:
+            out["metres"] = None if self.metres is None else float(self.metres)
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShiftLimit:
+        return cls(
+            basis=_enum_in(LimitBasis, data["basis"]),
+            method=data.get("method", UNSET),
+            metres=UNSET if "metres" not in data else None if data["metres"] is None else float(data["metres"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShiftLimitUsed(_Model):
+    """The limit a query used: its value and what it rests on, in words.
+    Attributes:
+        metres: Unit: m.
+    """
+    metres: float
+    source: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["metres"] = float(self.metres)
+        out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShiftLimitUsed:
+        return cls(
+            metres=float(data["metres"]),
+            source=data["source"],
         )
 
 
@@ -96929,6 +101356,36 @@ class StandardsResolved(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StatedLength(_Model):
+    """A length stated for one edge of an area's ring (docs/adr/5020): the ring in the area's order (the outline, its holes,
+    then each further part's outline and holes; 0 first), the edge from the ring's vertex `edge` to the next, the length a
+    plain decimal in metres as written.
+    Attributes:
+        edge: Unit: index.
+        ring: Unit: index.
+    """
+    edge: int
+    length: str
+    ring: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edge"] = self.edge
+        out["length"] = self.length
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StatedLength:
+        return cls(
+            edge=data["edge"],
+            length=data["length"],
+            ring=data.get("ring", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StationEquationDef(_Model):
     """A station equation (docs/adr/0901 §6): the km where it is (read before it), the km after it, and whether the km
     grows after it.
@@ -98941,11 +103398,14 @@ class SurveyAdjust(_Model):
     writes': `layer_locked` (a point to move or a vertex on it on a locked layer), `no_layer` (new points and no layer),
     then `cad.entities.create`'s for the layer (`layer_not_found`, `not_a_layer`, `layer_locked` …).
     Attributes:
+        keep: Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+            name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
         layer_id: Yatay ağ: the layer of the new points the drawing has not.
         unit: The directions' unit; the project's when none.
     """
     work: AdjustWork
     expected_revision: str | None | Unset = UNSET
+    keep: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     unit: AngleUnit | AngleUnitName | None | Unset = UNSET
 
@@ -98954,6 +103414,8 @@ class SurveyAdjust(_Model):
         out["work"] = self.work.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
         if self.unit is not UNSET:
@@ -98965,6 +103427,7 @@ class SurveyAdjust(_Model):
         return cls(
             work=AdjustWork.from_json(data["work"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            keep=data.get("keep", UNSET),
             layer_id=data.get("layerId", UNSET),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(AngleUnit, data["unit"]),
         )
@@ -98981,6 +103444,8 @@ class SurveyAdjusted(_Model):
         absent: Kot ağı: the new points the drawing has not; their heights are not written.
         f: The degrees of freedom, the a posteriori standard deviation of unit weight and the model test (none without
             redundancy). Unit: count.
+        kept: Docs/adr/5200: the name the adjustment was kept under.
+        leapfrog: Kot ağı (docs/adr/5300): each leap-frog setup's height difference and length, as the adjustment took them.
         m0: Unit: 1.
     """
     points: list[SurveyAdjustedPoint]
@@ -98990,6 +103455,8 @@ class SurveyAdjusted(_Model):
     absent: list[str]
     f: int
     revision: str
+    kept: str | None | Unset = UNSET
+    leapfrog: list[AdjustDifference] | Unset = UNSET
     m0: float | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
 
@@ -99002,6 +103469,10 @@ class SurveyAdjusted(_Model):
         out["absent"] = list(self.absent)
         out["f"] = self.f
         out["revision"] = self.revision
+        if self.kept is not UNSET:
+            out["kept"] = self.kept
+        if self.leapfrog is not UNSET:
+            out["leapfrog"] = [e0.to_json() for e0 in self.leapfrog]
         if self.m0 is not UNSET:
             out["m0"] = None if self.m0 is None else float(self.m0)
         if self.passed is not UNSET:
@@ -99018,6 +103489,8 @@ class SurveyAdjusted(_Model):
             absent=list(data["absent"]),
             f=data["f"],
             revision=data["revision"],
+            kept=data.get("kept", UNSET),
+            leapfrog=[AdjustDifference.from_json(e0) for e0 in data["leapfrog"]] if "leapfrog" in data else UNSET,
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             passed=data.get("passed", UNSET),
         )
@@ -99072,6 +103545,8 @@ class SurveyAdjustment(_Model):
         epoch: Unit: year.
         free_m0: Unit: 1.
         m0: Unit: 1.
+        sessions: The baseline sessions `bo-N` whose full covariance it was adjusted with (docs/adr/4920); none: each baseline's
+            own 3×3 alone.
     """
     id: str
     baselines: list[str]
@@ -99087,6 +103562,7 @@ class SurveyAdjustment(_Model):
     m0: float | None | Unset = UNSET
     rules: str | None | Unset = UNSET
     rules_passed: bool | None | Unset = UNSET
+    sessions: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -99110,6 +103586,8 @@ class SurveyAdjustment(_Model):
             out["rules"] = self.rules
         if self.rules_passed is not UNSET:
             out["rulesPassed"] = self.rules_passed
+        if self.sessions is not UNSET:
+            out["sessions"] = list(self.sessions)
         return out
 
     @classmethod
@@ -99129,6 +103607,7 @@ class SurveyAdjustment(_Model):
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             rules=data.get("rules", UNSET),
             rules_passed=data.get("rulesPassed", UNSET),
+            sessions=list(data["sessions"]) if "sessions" in data else UNSET,
         )
 
 
@@ -99308,6 +103787,9 @@ class SurveyBaselineRow(_Model):
     Attributes:
         length: Unit: m.
         sigma: Unit: m.
+        independent: docs/adr/5320: in a session and not excluded, whether it is one of the session's n − 1 independent baselines
+            (the shortest spanning tree of the session's marks, by length, the lower id of equals) or a dependent one.
+        session: The baseline session `bo-N` it is in (docs/adr/4920).
     """
     id: str
     campaign: str
@@ -99319,6 +103801,8 @@ class SurveyBaselineRow(_Model):
     adjustments: list[str] | Unset = UNSET
     excluded: str | None | Unset = UNSET
     file: SurveyFileRow | None | Unset = UNSET
+    independent: bool | None | Unset = UNSET
+    session: str | None | Unset = UNSET
     source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -99336,6 +103820,10 @@ class SurveyBaselineRow(_Model):
             out["excluded"] = self.excluded
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
+        if self.independent is not UNSET:
+            out["independent"] = self.independent
+        if self.session is not UNSET:
+            out["session"] = self.session
         if self.source is not UNSET:
             out["source"] = self.source
         return out
@@ -99353,7 +103841,57 @@ class SurveyBaselineRow(_Model):
             adjustments=list(data["adjustments"]) if "adjustments" in data else UNSET,
             excluded=data.get("excluded", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else SurveyFileRow.from_json(data["file"]),
+            independent=data.get("independent", UNSET),
+            session=data.get("session", UNSET),
             source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyBaselineSession(_Model):
+    """A baseline session `bo-N` (docs/adr/4920): baselines processed together from simultaneous observations of common
+    satellites, as GVX 1.0 keeps a `SESSION`: its id in the file, its time, its baselines and the cross-correlation
+    blocks between them. A block's nine numbers go row by row, the rows the `row` baseline's X, Y, Z and the columns the
+    `col` baseline's; a complete session of n baselines has n(n − 1)/2 blocks.
+    Attributes:
+        id: `bo-N`.
+        name: Its id in the file (GVX's `SESSION ID`).
+    """
+    id: str
+    campaign: str
+    name: str
+    baselines: list[str]
+    blocks: list[CorrelationBlock]
+    end: str | None | Unset = UNSET
+    file: SurveyFile | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["campaign"] = self.campaign
+        out["name"] = self.name
+        out["baselines"] = list(self.baselines)
+        out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.start is not UNSET:
+            out["start"] = self.start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyBaselineSession:
+        return cls(
+            id=data["id"],
+            campaign=data["campaign"],
+            name=data["name"],
+            baselines=list(data["baselines"]),
+            blocks=[CorrelationBlock.from_json(e0) for e0 in data["blocks"]],
+            end=data.get("end", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else SurveyFile.from_json(data["file"]),
+            start=data.get("start", UNSET),
         )
 
 
@@ -99362,16 +103900,17 @@ class SurveyBaselines(_Model):
     """Input of `cad.survey.baselines` v1: the stations and baselines, or the same as `text` (lines `K;ad;X;Y;Z[;sX;sY;sZ]`
     a known station, fixed without standard deviations; `N;ad[;X;Y;Z]` a new one; `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`
     a baseline; `#` a remark; `;`, `,` or tabs between the values, a point before decimals); the variance factor the
-    covariances are multiplied by (default 1); the datum.
+    covariances are multiplied by (default 1); the datum; robust estimation when asked (docs/adr/4960).
 
     Refusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station
-    fixed and weighted …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive
+    fixed and weighted, robust estimation's c not above 0 …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive
     definite), `datum_missing`, `network_too_large` (the normal matrix's envelope above 30 million entries, docs/adr/4560), `network_disconnected`.
     Attributes:
         scale: Unit: 1.
     """
     baselines: list[BaselineVector] | Unset = UNSET
     datum: BaselineDatum | BaselineDatumName | Unset = UNSET
+    robust: BaselineRobust | None | Unset = UNSET
     scale: float | None | Unset = UNSET
     stations: list[BaselineStation] | Unset = UNSET
     text: str | None | Unset = UNSET
@@ -99382,6 +103921,8 @@ class SurveyBaselines(_Model):
             out["baselines"] = [e0.to_json() for e0 in self.baselines]
         if self.datum is not UNSET:
             out["datum"] = _enum_out(self.datum)
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
         if self.stations is not UNSET:
@@ -99395,6 +103936,7 @@ class SurveyBaselines(_Model):
         return cls(
             baselines=[BaselineVector.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
             datum=_enum_in(BaselineDatum, data["datum"]) if "datum" in data else UNSET,
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else BaselineRobust.from_json(data["robust"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
             stations=[BaselineStation.from_json(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
             text=data.get("text", UNSET),
@@ -99406,7 +103948,8 @@ class SurveyBaselinesAdjusted(_Model):
     """Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the
     minimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of
     freedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged
-    test value, and the drawing's revision.
+    test value, how the robust rounds went (when asked; the statistics are then the reweighted model's), and the
+    drawing's revision.
     Attributes:
         n: Unit: count.
         u: Unit: count.
@@ -99427,6 +103970,7 @@ class SurveyBaselinesAdjusted(_Model):
     held: str | None | Unset = UNSET
     m0: float | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
+    robust: RobustRounds | None | Unset = UNSET
     worst: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -99446,6 +103990,8 @@ class SurveyBaselinesAdjusted(_Model):
             out["m0"] = None if self.m0 is None else float(self.m0)
         if self.passed is not UNSET:
             out["passed"] = self.passed
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         if self.worst is not UNSET:
             out["worst"] = self.worst
         return out
@@ -99464,6 +104010,7 @@ class SurveyBaselinesAdjusted(_Model):
             held=data.get("held", UNSET),
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             passed=data.get("passed", UNSET),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else RobustRounds.from_json(data["robust"]),
             worst=data.get("worst", UNSET),
         )
 
@@ -99840,7 +104387,7 @@ class SurveyObject(_Model):
 @dataclass(kw_only=True, slots=True)
 class SurveyPlaceTolerance(_Model):
     """How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal
-    distance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a
+    distance and their height difference (m), as a point comparison report takes a horizontal and a
     vertical tolerance; either may be left out, not both.
     Attributes:
         horizontal: Unit: length.
@@ -99979,6 +104526,8 @@ class SurveyPointsWritten(_Model):
         angle_misclosure: Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one. Unit: survey-angle.
         height_misclosure: Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known. Unit: m.
         linear_misclosure: Unit: m.
+        refraction: The legs' measured refraction coefficients together (docs/adr/4900), when at least one pair gives one: the
+            value a project may take (`cad.settings.set`'s `refraction`).
         refractions: Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et
             al. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back. Unit: 1.
     """
@@ -99988,6 +104537,7 @@ class SurveyPointsWritten(_Model):
     angle_misclosure: float | None | Unset = UNSET
     height_misclosure: float | None | Unset = UNSET
     linear_misclosure: float | None | Unset = UNSET
+    refraction: MeasuredRefraction | None | Unset = UNSET
     refractions: list[float | None] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -100001,6 +104551,8 @@ class SurveyPointsWritten(_Model):
             out["heightMisclosure"] = None if self.height_misclosure is None else float(self.height_misclosure)
         if self.linear_misclosure is not UNSET:
             out["linearMisclosure"] = None if self.linear_misclosure is None else float(self.linear_misclosure)
+        if self.refraction is not UNSET:
+            out["refraction"] = None if self.refraction is None else self.refraction.to_json()
         if self.refractions is not UNSET:
             out["refractions"] = [None if e0 is None else float(e0) for e0 in self.refractions]
         return out
@@ -100014,6 +104566,7 @@ class SurveyPointsWritten(_Model):
             angle_misclosure=UNSET if "angleMisclosure" not in data else None if data["angleMisclosure"] is None else float(data["angleMisclosure"]),
             height_misclosure=UNSET if "heightMisclosure" not in data else None if data["heightMisclosure"] is None else float(data["heightMisclosure"]),
             linear_misclosure=UNSET if "linearMisclosure" not in data else None if data["linearMisclosure"] is None else float(data["linearMisclosure"]),
+            refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else MeasuredRefraction.from_json(data["refraction"]),
             refractions=[None if e0 is None else float(e0) for e0 in data["refractions"]] if "refractions" in data else UNSET,
         )
 
@@ -100095,6 +104648,7 @@ class SurveyResult(_Model):
         epoch: Unit: year.
         sigma: Unit: m.
         target_epoch: Unit: year.
+        velocity: Its velocity, read from the velocity grid the user gave (docs/adr/4920), never made up.
         z: Unit: elevation.
     """
     revision: int
@@ -100113,6 +104667,7 @@ class SurveyResult(_Model):
     reasons: list[str] | Unset = UNSET
     sigma: list[float] | None | Unset = UNSET
     target_epoch: float | None | Unset = UNSET
+    velocity: PointVelocity | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -100138,6 +104693,8 @@ class SurveyResult(_Model):
             out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
         if self.target_epoch is not UNSET:
             out["targetEpoch"] = None if self.target_epoch is None else float(self.target_epoch)
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else self.velocity.to_json()
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -100161,6 +104718,7 @@ class SurveyResult(_Model):
             reasons=list(data["reasons"]) if "reasons" in data else UNSET,
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
             target_epoch=UNSET if "targetEpoch" not in data else None if data["targetEpoch"] is None else float(data["targetEpoch"]),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else PointVelocity.from_json(data["velocity"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -100638,6 +105196,37 @@ class SurveySolutionRow(_Model):
             fix=data.get("fix", UNSET),
             mark_height=UNSET if "markHeight" not in data else None if data["markHeight"] is None else float(data["markHeight"]),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyTolerance(_Model):
+    """The limits a known point's place may lie from its mark's accepted point (docs/adr/4520), kept in the project with
+    where they come from (docs/adr/4920): a regulation's article, an administration's stricter specification
+    (BÖHHBÜY Madde 103(1)(c)).
+    Attributes:
+        horizontal: Unit: length.
+        vertical: Unit: length.
+    """
+    source: str
+    horizontal: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyTolerance:
+        return cls(
+            source=data["source"],
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
 
@@ -103740,21 +108329,29 @@ class TerrainRoughness(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainSection(_Model):
     """A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
-    fill areas (m²).
+    fill areas (m²); along a drawn axis (docs/adr/4760) the axis's place there and the section's left and right ends.
     Attributes:
         station: Unit: m.
         cut_area: Unit: area.
         fill_area: Unit: area.
+        at: Unit: length.
+        ends: Unit: length.
     """
     station: float
     cut_area: float
     fill_area: float
+    at: list[float] | None | Unset = UNSET
+    ends: list[list[float]] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["station"] = float(self.station)
         out["cutArea"] = float(self.cut_area)
         out["fillArea"] = float(self.fill_area)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else [[float(e1) for e1 in e0] for e0 in self.ends]
         return out
 
     @classmethod
@@ -103763,6 +108360,8 @@ class TerrainSection(_Model):
             station=float(data["station"]),
             cut_area=float(data["cutArea"]),
             fill_area=float(data["fillArea"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else [[float(e1) for e1 in e0] for e0 in data["ends"]],
         )
 
 
@@ -104206,37 +108805,52 @@ class TerrainsCompare(_Model):
     its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
     the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
     with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
+    `axis` (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the sections stand along a drawn axis instead,
+    a line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while
+    short of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along
+    its radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two
+    is their stations' difference along the axis.
 
     Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
     increasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an
-    interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; more than
-    10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
+    interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; an axis
+    without sections or with an azimuth, widths or corners without an axis, a width not a length of 0 or more or both 0;
+    more than 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
     comparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),
-    `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed
-    polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
+    `entity_not_found` (the axis), `invalid_analysis` (an axis not a line or a single-part open polyline, or without
+    length), `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged
+    single-part closed polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
     heights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a
     draft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:
     `compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).
     Attributes:
+        axis: A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
         azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
         cell: Unit: m.
+        corners: Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
         cut_factor: Unit: 1.
         fill_factor: Unit: 1.
         formula: How the volume between two sections is reckoned; none: the average end area.
         interval: The sections' spacing, m (docs/adr/4340; the section method's). Unit: m.
+        left: The sections' widths left and right of the axis, m (docs/adr/4760). Unit: m.
         ranges: Unit: m.
+        right: Unit: m.
     """
     base: str
     comparison: str
     assume_heights: bool | Unset = UNSET
+    axis: str | None | Unset = UNSET
     azimuth: float | None | Unset = UNSET
     cell: float | None | Unset = UNSET
+    corners: bool | None | Unset = UNSET
     cut_factor: float | None | Unset = UNSET
     fill_factor: float | None | Unset = UNSET
     formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
     interval: float | None | Unset = UNSET
+    left: float | None | Unset = UNSET
     method: CompareMethod | CompareMethodName | None | Unset = UNSET
     ranges: list[float] | None | Unset = UNSET
+    right: float | None | Unset = UNSET
     zones: list[CompareZone] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -104245,10 +108859,14 @@ class TerrainsCompare(_Model):
         out["comparison"] = self.comparison
         if self.assume_heights is not UNSET:
             out["assumeHeights"] = self.assume_heights
+        if self.axis is not UNSET:
+            out["axis"] = self.axis
         if self.azimuth is not UNSET:
             out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
         if self.cell is not UNSET:
             out["cell"] = None if self.cell is None else float(self.cell)
+        if self.corners is not UNSET:
+            out["corners"] = self.corners
         if self.cut_factor is not UNSET:
             out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
         if self.fill_factor is not UNSET:
@@ -104257,10 +108875,14 @@ class TerrainsCompare(_Model):
             out["formula"] = None if self.formula is None else _enum_out(self.formula)
         if self.interval is not UNSET:
             out["interval"] = None if self.interval is None else float(self.interval)
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else float(self.left)
         if self.method is not UNSET:
             out["method"] = None if self.method is None else _enum_out(self.method)
         if self.ranges is not UNSET:
             out["ranges"] = None if self.ranges is None else [float(e0) for e0 in self.ranges]
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else float(self.right)
         if self.zones is not UNSET:
             out["zones"] = [e0.to_json() for e0 in self.zones]
         return out
@@ -104271,14 +108893,18 @@ class TerrainsCompare(_Model):
             base=data["base"],
             comparison=data["comparison"],
             assume_heights=data.get("assumeHeights", UNSET),
+            axis=data.get("axis", UNSET),
             azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            corners=data.get("corners", UNSET),
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
             formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            left=UNSET if "left" not in data else None if data["left"] is None else float(data["left"]),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(CompareMethod, data["method"]),
             ranges=UNSET if "ranges" not in data else None if data["ranges"] is None else [float(e0) for e0 in data["ranges"]],
+            right=UNSET if "right" not in data else None if data["right"] is None else float(data["right"]),
             zones=[CompareZone.from_json(e0) for e0 in data["zones"]] if "zones" in data else UNSET,
         )
 
@@ -104302,9 +108928,11 @@ class TerrainsCompared(_Model):
         fill_area: Unit: area.
         covered: Unit: area.
         uncovered: Unit: area.
+        axis: The drawn axis the sections stood along and its length (docs/adr/4760).
         azimuth: Unit: deg.
         cell: Unit: m.
         interval: Unit: m.
+        length: Unit: m.
         outside_area: Unit: area.
     """
     base: str
@@ -104317,6 +108945,7 @@ class TerrainsCompared(_Model):
     covered: float
     uncovered: float
     adjusted: TerrainAdjusted | None | Unset = UNSET
+    axis: str | None | Unset = UNSET
     azimuth: float | None | Unset = UNSET
     bands: list[TerrainDifferenceBand] | Unset = UNSET
     cell: float | None | Unset = UNSET
@@ -104325,6 +108954,7 @@ class TerrainsCompared(_Model):
     interval: float | None | Unset = UNSET
     largest: TerrainDifferenceAt | None | Unset = UNSET
     least: TerrainDifferenceAt | None | Unset = UNSET
+    length: float | None | Unset = UNSET
     outside_area: float | None | Unset = UNSET
     rest: TerrainZoneRest | None | Unset = UNSET
     sections: list[TerrainSection] | Unset = UNSET
@@ -104344,6 +108974,8 @@ class TerrainsCompared(_Model):
         out["uncovered"] = float(self.uncovered)
         if self.adjusted is not UNSET:
             out["adjusted"] = None if self.adjusted is None else self.adjusted.to_json()
+        if self.axis is not UNSET:
+            out["axis"] = self.axis
         if self.azimuth is not UNSET:
             out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
         if self.bands is not UNSET:
@@ -104360,6 +108992,8 @@ class TerrainsCompared(_Model):
             out["largest"] = None if self.largest is None else self.largest.to_json()
         if self.least is not UNSET:
             out["least"] = None if self.least is None else self.least.to_json()
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
         if self.outside_area is not UNSET:
             out["outsideArea"] = None if self.outside_area is None else float(self.outside_area)
         if self.rest is not UNSET:
@@ -104385,6 +109019,7 @@ class TerrainsCompared(_Model):
             covered=float(data["covered"]),
             uncovered=float(data["uncovered"]),
             adjusted=UNSET if "adjusted" not in data else None if data["adjusted"] is None else TerrainAdjusted.from_json(data["adjusted"]),
+            axis=data.get("axis", UNSET),
             azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
             bands=[TerrainDifferenceBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
@@ -104393,6 +109028,7 @@ class TerrainsCompared(_Model):
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
             least=UNSET if "least" not in data else None if data["least"] is None else TerrainDifferenceAt.from_json(data["least"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
             outside_area=UNSET if "outsideArea" not in data else None if data["outsideArea"] is None else float(data["outsideArea"]),
             rest=UNSET if "rest" not in data else None if data["rest"] is None else TerrainZoneRest.from_json(data["rest"]),
             sections=[TerrainSection.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
@@ -104727,12 +109363,20 @@ class TerrainsCutFill(_Model):
     `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
     `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
     docs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;
-    docs/adr/2740).
+    docs/adr/2740). `sections` (docs/adr/4760): sections along a drawn axis, as `road.terrains.compare`'s, written as
+    their lines, each with its kilometre at its left end and its cut and fill areas at its right end (along the line,
+    kept upright), and with `table` a section volume table (kübaj cetveli). `materials` (docs/adr/4760): material zones,
+    as `road.terrains.compare`'s `zones` (docs/adr/3540), each one's name and cut and fill volumes written inside it, and
+    with `table` a material table.
 
     Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
-    `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
-    `invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),
-    `no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.
+    `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0; the sections' interval not over 0,
+    a width not a length of 0 or more or both 0, a formula's; a material without a name, a factor not over 0 or over 10),
+    `unknown_terrain`, `invalid_analysis` (the same surface twice), `entity_not_found` (the sections' axis, a material's
+    boundary), `invalid_analysis` (an axis not a line or a single-part open polyline; a boundary not a straight-edged
+    single-part closed polyline or area; two materials sharing more than 1 mm²), `terrain_unbuildable`,
+    `invalid_analysis` (more than 1000 bands, more than 10 000 sections), `no_cut_fill` (the surfaces do not overlap, or
+    coincide wherever they do). Warnings: `layer_hidden`, `compare_uncovered` (part of a material off the two surfaces).
     Attributes:
         layer_id: The layer the zones go on.
         interval: Unit: m.
@@ -104744,6 +109388,8 @@ class TerrainsCutFill(_Model):
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: bool | None | Unset = UNSET
+    materials: list[CompareZone] | Unset = UNSET
+    sections: CutFillSections | None | Unset = UNSET
     table: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -104759,6 +109405,10 @@ class TerrainsCutFill(_Model):
             out["interval"] = None if self.interval is None else float(self.interval)
         if self.labels is not UNSET:
             out["labels"] = self.labels
+        if self.materials is not UNSET:
+            out["materials"] = [e0.to_json() for e0 in self.materials]
+        if self.sections is not UNSET:
+            out["sections"] = None if self.sections is None else self.sections.to_json()
         if self.table is not UNSET:
             out["table"] = self.table
         return out
@@ -104773,6 +109423,8 @@ class TerrainsCutFill(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=data.get("labels", UNSET),
+            materials=[CompareZone.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
+            sections=UNSET if "sections" not in data else None if data["sections"] is None else CutFillSections.from_json(data["sections"]),
             table=data.get("table", UNSET),
         )
 
@@ -104800,6 +109452,13 @@ class TerrainsCutFilled(_Model):
             (asked for, docs/adr/2740).
         interval: Unit: m.
         labels: The zones' labels, in the zones' order (asked for, docs/adr/2340).
+        length: Unit: m.
+        materials: The materials (docs/adr/4760): `road.terrains.compare`'s zones, each one's words inside it, and the material
+            table's cells (asked for with `table`).
+        section_cut: Unit: volume.
+        section_fill: Unit: volume.
+        sections: The sections (docs/adr/4760), in station order; their volumes summed; the axis's length; each one's words (its
+            kilometre, then its areas); the section volume table's cells (asked for with `table`).
         table: The quantity table's cells, heading first (asked for, docs/adr/2340).
     """
     base: str
@@ -104819,6 +109478,15 @@ class TerrainsCutFilled(_Model):
     depths: list[CutFillLabel] | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: list[CutFillLabel] | Unset = UNSET
+    length: float | None | Unset = UNSET
+    material_labels: list[CutFillLabel] | Unset = UNSET
+    material_table: list[list[str]] | Unset = UNSET
+    materials: list[TerrainZoneVolumes] | Unset = UNSET
+    section_cut: float | None | Unset = UNSET
+    section_fill: float | None | Unset = UNSET
+    section_labels: list[CutFillSectionLabel] | Unset = UNSET
+    section_table: list[list[str]] | Unset = UNSET
+    sections: list[CutFillSection] | Unset = UNSET
     table: list[list[str]] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
@@ -104844,6 +109512,24 @@ class TerrainsCutFilled(_Model):
             out["interval"] = None if self.interval is None else float(self.interval)
         if self.labels is not UNSET:
             out["labels"] = [e0.to_json() for e0 in self.labels]
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.material_labels is not UNSET:
+            out["materialLabels"] = [e0.to_json() for e0 in self.material_labels]
+        if self.material_table is not UNSET:
+            out["materialTable"] = [list(e0) for e0 in self.material_table]
+        if self.materials is not UNSET:
+            out["materials"] = [e0.to_json() for e0 in self.materials]
+        if self.section_cut is not UNSET:
+            out["sectionCut"] = None if self.section_cut is None else float(self.section_cut)
+        if self.section_fill is not UNSET:
+            out["sectionFill"] = None if self.section_fill is None else float(self.section_fill)
+        if self.section_labels is not UNSET:
+            out["sectionLabels"] = [e0.to_json() for e0 in self.section_labels]
+        if self.section_table is not UNSET:
+            out["sectionTable"] = [list(e0) for e0 in self.section_table]
+        if self.sections is not UNSET:
+            out["sections"] = [e0.to_json() for e0 in self.sections]
         if self.table is not UNSET:
             out["table"] = [list(e0) for e0 in self.table]
         if self.uids is not UNSET:
@@ -104870,6 +109556,15 @@ class TerrainsCutFilled(_Model):
             depths=[CutFillLabel.from_json(e0) for e0 in data["depths"]] if "depths" in data else UNSET,
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=[CutFillLabel.from_json(e0) for e0 in data["labels"]] if "labels" in data else UNSET,
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            material_labels=[CutFillLabel.from_json(e0) for e0 in data["materialLabels"]] if "materialLabels" in data else UNSET,
+            material_table=[list(e0) for e0 in data["materialTable"]] if "materialTable" in data else UNSET,
+            materials=[TerrainZoneVolumes.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
+            section_cut=UNSET if "sectionCut" not in data else None if data["sectionCut"] is None else float(data["sectionCut"]),
+            section_fill=UNSET if "sectionFill" not in data else None if data["sectionFill"] is None else float(data["sectionFill"]),
+            section_labels=[CutFillSectionLabel.from_json(e0) for e0 in data["sectionLabels"]] if "sectionLabels" in data else UNSET,
+            section_table=[list(e0) for e0 in data["sectionTable"]] if "sectionTable" in data else UNSET,
+            sections=[CutFillSection.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             table=[list(e0) for e0 in data["table"]] if "table" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
@@ -105463,6 +110158,139 @@ class TerrainsRepaired(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainsSectionCheck(_Model):
+    """Input of `road.terrains.sectioncheck` v1: the section's two control points (`from`, `to`: points with their own
+    height), the points measured along it (`points`: points with their own height), the layers of the contour lines
+    (`contours`: polylines whose every vertex has one same height; others are counted, not read), the scale's
+    denominator (none: the project's plot scale), how far from the section's line a point may lie (`corridor`, metres;
+    none: no limit, the distance is only said) and the rule package (none: KentOS's BÖHHBÜY 2018).
+
+    Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_height_point` (`from`, `to`, `points[i]`: not a
+    point, or one without its own height), `invalid_input` (`to`: the same place as `from`; `points`: none, or a point
+    given twice or as an end; `corridor`: not above nought), `layer_not_found` (`contours[i]`; `contours`: none),
+    `invalid_contours` (a scale of 0; a package without `sectionCheck`). Warning `section_check_exceeded`: the RMS is not
+    under the limit; warning `section_spacing_exceeded`: two neighbouring places of the section (its ends and its points
+    on it) are farther apart than the package's spacing.
+    Attributes:
+        corridor: Unit: length.
+        scale: Unit: scale.
+    """
+    from_: str
+    to: str
+    points: list[str]
+    contours: list[str]
+    corridor: float | None | Unset = UNSET
+    rules: ContourRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["points"] = list(self.points)
+        out["contours"] = list(self.contours)
+        if self.corridor is not UNSET:
+            out["corridor"] = None if self.corridor is None else float(self.corridor)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSectionCheck:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            points=list(data["points"]),
+            contours=list(data["contours"]),
+            corridor=UNSET if "corridor" not in data else None if data["corridor"] is None else float(data["corridor"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else ContourRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsSectionChecked(_Model):
+    """Output of `road.terrains.sectioncheck` v1: the section's length and its ends' heights, each point in order along
+    it, the contour crossings found (how far along and the height), the contour lines not read (without one same
+    height), the gaps past the spacing, the scale and the package (`id release`), and the check: how many points
+    compared, their RMS and largest difference (metres; none without a compared point), KOH_Z and the limit
+    (`factor` · KOH_Z, metres), the spacing, and whether the RMS is under the limit (none without a compared point).
+    Attributes:
+        length: Unit: length.
+        ends: Unit: elevation.
+        crossings: Unit: length.
+        unlevelled: Unit: count.
+        scale: Unit: scale.
+        compared: Unit: count.
+        koh_z: Unit: length.
+        limit: Unit: length.
+        largest: Unit: length.
+        rms: Unit: length.
+        spacing: Unit: length.
+    """
+    length: float
+    ends: list[float]
+    points: list[SectionPointRow]
+    crossings: list[list[float]]
+    unlevelled: int
+    gaps: list[SectionGap]
+    scale: int
+    rules: str
+    compared: int
+    koh_z: float
+    limit: float
+    largest: float | None | Unset = UNSET
+    rms: float | None | Unset = UNSET
+    spacing: float | None | Unset = UNSET
+    within: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["ends"] = [float(e0) for e0 in self.ends]
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["crossings"] = [[float(e1) for e1 in e0] for e0 in self.crossings]
+        out["unlevelled"] = self.unlevelled
+        out["gaps"] = [e0.to_json() for e0 in self.gaps]
+        out["scale"] = self.scale
+        out["rules"] = self.rules
+        out["compared"] = self.compared
+        out["kohZ"] = float(self.koh_z)
+        out["limit"] = float(self.limit)
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else float(self.largest)
+        if self.rms is not UNSET:
+            out["rms"] = None if self.rms is None else float(self.rms)
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        if self.within is not UNSET:
+            out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSectionChecked:
+        return cls(
+            length=float(data["length"]),
+            ends=[float(e0) for e0 in data["ends"]],
+            points=[SectionPointRow.from_json(e0) for e0 in data["points"]],
+            crossings=[[float(e1) for e1 in e0] for e0 in data["crossings"]],
+            unlevelled=data["unlevelled"],
+            gaps=[SectionGap.from_json(e0) for e0 in data["gaps"]],
+            scale=data["scale"],
+            rules=data["rules"],
+            compared=data["compared"],
+            koh_z=float(data["kohZ"]),
+            limit=float(data["limit"]),
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else float(data["largest"]),
+            rms=UNSET if "rms" not in data else None if data["rms"] is None else float(data["rms"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+            within=data.get("within", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsSheetContoured(_Model):
     """Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,
     the lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in
@@ -105489,6 +110317,7 @@ class TerrainsSheetContoured(_Model):
     cut: float
     revision: str
     notes: list[str]
+    check: SheetHeightCheck | None | Unset = UNSET
     pattern: str | None | Unset = UNSET
     spots: list[SheetSpot] | Unset = UNSET
     uids: list[str] | Unset = UNSET
@@ -105506,6 +110335,8 @@ class TerrainsSheetContoured(_Model):
         out["cut"] = float(self.cut)
         out["revision"] = self.revision
         out["notes"] = list(self.notes)
+        if self.check is not UNSET:
+            out["check"] = None if self.check is None else self.check.to_json()
         if self.pattern is not UNSET:
             out["pattern"] = self.pattern
         if self.spots is not UNSET:
@@ -105528,6 +110359,7 @@ class TerrainsSheetContoured(_Model):
             cut=float(data["cut"]),
             revision=data["revision"],
             notes=list(data["notes"]),
+            check=UNSET if "check" not in data else None if data["check"] is None else SheetHeightCheck.from_json(data["check"]),
             pattern=data.get("pattern", UNSET),
             spots=[SheetSpot.from_json(e0) for e0 in data["spots"]] if "spots" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
@@ -105541,15 +110373,23 @@ class TerrainsSheetContours(_Model):
     (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
     the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
     (`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot
-    heights (`slopes`, none: no such heights; docs/adr/3120), the rule package (none: KentOS's BÖHHBÜY 2018).
+    heights (`slopes`, none: no such heights; docs/adr/3120), the built-up areas' and roads' heights (`builtUp`, none:
+    none; docs/adr/4740), the rule package (none: KentOS's BÖHHBÜY 2018).
+
+    Drawn, its drawing is kept with the surface and every layer it reads (docs/adr/4740): it goes stale when they
+    change and `road.project.rebuild` draws it again.
 
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
     the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
-    their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
-    `slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
-    `invalid_contours` (more than 10 000 levels), `no_contours`.
+    their text height, built-up heights asked without a spacing above nought or with neither areas nor roads, a grid
+    origin or rotation not finite),
+    `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,
+    `slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,
+    `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning
+    `section_check_exceeded`: the chosen points' RMS is not under the package's limit.
     Attributes:
         base: Unit: elevation.
+        built_up: The heights of built-up areas and roads (BÖHHBÜY m. 63(2), docs/adr/4740).
         interval: Unit: length.
         points: The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
             takes a spot height, its own measured height when it has one, else the surface's.
@@ -105559,6 +110399,7 @@ class TerrainsSheetContours(_Model):
     layer_id: str
     auxiliary: bool | None | Unset = UNSET
     base: float | None | Unset = UNSET
+    built_up: SheetBuiltUp | None | Unset = UNSET
     details: list[str] | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
@@ -105578,6 +110419,8 @@ class TerrainsSheetContours(_Model):
             out["auxiliary"] = self.auxiliary
         if self.base is not UNSET:
             out["base"] = None if self.base is None else float(self.base)
+        if self.built_up is not UNSET:
+            out["builtUp"] = None if self.built_up is None else self.built_up.to_json()
         if self.details is not UNSET:
             out["details"] = list(self.details)
         if self.expected_revision is not UNSET:
@@ -105607,6 +110450,7 @@ class TerrainsSheetContours(_Model):
             layer_id=data["layerId"],
             auxiliary=data.get("auxiliary", UNSET),
             base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            built_up=UNSET if "builtUp" not in data else None if data["builtUp"] is None else SheetBuiltUp.from_json(data["builtUp"]),
             details=list(data["details"]) if "details" in data else UNSET,
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
@@ -112821,12 +117665,15 @@ class WorkChangedObject(_Model):
     Attributes:
         approved: Its snapshot form as approved (without the slot id; docs/adr/4480), when its geometry changed and the approval
             kept its objects' values: the shape Harita işi draws over the drawing.
+        shift: How far its geometry moved from the approved one (docs/adr/4880), when its geometry changed and the approval kept
+            its objects' values.
     """
     uid: str
     parts: list[str]
     approved: Any | Unset = UNSET
     attachments: bool | Unset = UNSET
     attributes: list[WorkChangedAttribute] | Unset = UNSET
+    shift: WorkShift | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -112838,6 +117685,8 @@ class WorkChangedObject(_Model):
             out["attachments"] = self.attachments
         if self.attributes is not UNSET:
             out["attributes"] = [e0.to_json() for e0 in self.attributes]
+        if self.shift is not UNSET:
+            out["shift"] = None if self.shift is None else self.shift.to_json()
         return out
 
     @classmethod
@@ -112848,6 +117697,7 @@ class WorkChangedObject(_Model):
             approved=data.get("approved", UNSET),
             attachments=data.get("attachments", UNSET),
             attributes=[WorkChangedAttribute.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
+            shift=UNSET if "shift" not in data else None if data["shift"] is None else WorkShift.from_json(data["shift"]),
         )
 
 
@@ -112892,6 +117742,7 @@ class WorkChanges(_Model):
         added: Unit: count.
         removed: Unit: count.
         changed: Unit: count.
+        beyond: With a limit (docs/adr/5280): how many of the listed objects moved beyond it. Unit: count.
         objects: Each changed object with the parts that changed (docs/adr/3280), by id, at most [`WORK_CHANGES_LISTED`].
         parts: Of the changed objects, how many changed in each part (docs/adr/3280; an object may change in several), when the
             approval kept its objects' parts (schema 211).
@@ -112901,6 +117752,7 @@ class WorkChanges(_Model):
     added: int
     removed: int
     changed: int
+    beyond: int | None | Unset = UNSET
     objects: list[WorkChangedObject] | Unset = UNSET
     parts: WorkChangedParts | None | Unset = UNSET
     removed_objects: list[WorkRemovedObject] | Unset = UNSET
@@ -112911,6 +117763,8 @@ class WorkChanges(_Model):
         out["added"] = self.added
         out["removed"] = self.removed
         out["changed"] = self.changed
+        if self.beyond is not UNSET:
+            out["beyond"] = self.beyond
         if self.objects is not UNSET:
             out["objects"] = [e0.to_json() for e0 in self.objects]
         if self.parts is not UNSET:
@@ -112927,6 +117781,7 @@ class WorkChanges(_Model):
             added=data["added"],
             removed=data["removed"],
             changed=data["changed"],
+            beyond=data.get("beyond", UNSET),
             objects=[WorkChangedObject.from_json(e0) for e0 in data["objects"]] if "objects" in data else UNSET,
             parts=UNSET if "parts" not in data else None if data["parts"] is None else WorkChangedParts.from_json(data["parts"]),
             removed_objects=[WorkRemovedObject.from_json(e0) for e0 in data["removedObjects"]] if "removedObjects" in data else UNSET,
@@ -113011,6 +117866,34 @@ class WorkDerivationRow(_Model):
             recorded=data["recorded"],
             state=_enum_in(WorkState, data["state"]),
             why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkFarthest(_Model):
+    """The Hausdorff distance and where it is reached: `from` on the approved outline, `to` on the outline now.
+    Attributes:
+        d: Unit: m.
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    d: float
+    from_: list[float]
+    to: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["d"] = float(self.d)
+        out["from"] = [float(e0) for e0 in self.from_]
+        out["to"] = [float(e0) for e0 in self.to]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkFarthest:
+        return cls(
+            d=float(data["d"]),
+            from_=[float(e0) for e0 in data["from"]],
+            to=[float(e0) for e0 in data["to"]],
         )
 
 
@@ -113103,6 +117986,8 @@ class WorkItem(_Model):
             sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
             213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
         layers: Layer or group ids; a layer is in one item at most.
+        profile: Its typed layers' profile (schema 247, docs/adr/4880): a data profile by name whose classes type the item's
+            layers (each class's layer its kind of geometry and fields); the item's other layers stay free drawing layers.
     """
     id: str
     kind: WorkKind | WorkKindName
@@ -113113,6 +117998,7 @@ class WorkItem(_Model):
     approved_values: list[str] | Unset = UNSET
     file: WorkFile | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
+    profile: WorkProfile | None | Unset = UNSET
     status: WorkStatus | WorkStatusName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -113132,6 +118018,8 @@ class WorkItem(_Model):
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
         if self.status is not UNSET:
             out["status"] = _enum_out(self.status)
         return out
@@ -113148,6 +118036,7 @@ class WorkItem(_Model):
             approved_values=list(data["approvedValues"]) if "approvedValues" in data else UNSET,
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else WorkProfile.from_json(data["profile"]),
             status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
         )
 
@@ -113200,6 +118089,105 @@ class WorkObjectSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkProfile(_Model):
+    """An item's typed layers' profile (docs/adr/4880): a data profile (`catalog/v1/profiles/`, or the project's own) by
+    name and the classes of it the item holds; none listed, all of them.
+    Attributes:
+        name: The profile's name, 1–200 characters without space at its ends.
+        classes: Class ids, each once, at most [`MAX_PROFILE_CLASS_IDS`]; empty: every class of the profile.
+    """
+    name: str
+    classes: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.classes is not UNSET:
+            out["classes"] = list(self.classes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkProfile:
+        return cls(
+            name=data["name"],
+            classes=list(data["classes"]) if "classes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkProfileRow(_Model):
+    """An item's typed layers' profile as it stands (docs/adr/4880): the profile (its title and version, when it was
+    found), each class the item holds with its layer, objects and findings, all the findings, and the item's layers that
+    hold objects but no class: its free drawing layers.
+    Attributes:
+        found: The profile was found (built in, the drawing's copy or the project's folder) and holds.
+        findings: The classes' findings (`cad.profiles.check`'s), at most [`WORK_CHANGES_LISTED`].
+        free: The item's layers holding objects that no class of it types.
+        version: Unit: 1.
+    """
+    name: str
+    found: bool
+    classes: list[ProfileClassSummary] | Unset = UNSET
+    findings: list[ProfileFinding] | Unset = UNSET
+    free: list[str] | Unset = UNSET
+    title: str | None | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["found"] = self.found
+        if self.classes is not UNSET:
+            out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.findings is not UNSET:
+            out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.free is not UNSET:
+            out["free"] = list(self.free)
+        if self.title is not UNSET:
+            out["title"] = self.title
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkProfileRow:
+        return cls(
+            name=data["name"],
+            found=data["found"],
+            classes=[ProfileClassSummary.from_json(e0) for e0 in data["classes"]] if "classes" in data else UNSET,
+            findings=[ProfileFinding.from_json(e0) for e0 in data["findings"]] if "findings" in data else UNSET,
+            free=list(data["free"]) if "free" in data else UNSET,
+            title=data.get("title", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkProfileSuggestion(_Model):
+    """A profile suggested for an item's kind (docs/adr/5280): its name and title, and its classes that say they suit
+    the kind, in the profile's order.
+    """
+    name: str
+    title: str
+    classes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["title"] = self.title
+        out["classes"] = list(self.classes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkProfileSuggestion:
+        return cls(
+            name=data["name"],
+            title=data["title"],
+            classes=list(data["classes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkRemovedObject(_Model):
     """A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id)."""
     uid: str
@@ -113231,6 +118219,8 @@ class WorkRow(_Model):
             approval kept its objects' digests.
         content: Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
             read worked it out (deep, a source of a derivation, an approved item with a stamp).
+        profile: Its typed layers' profile and how its classes stand (docs/adr/4880).
+        suggested: With `suggest`, for an item without a profile: the profiles whose classes suit its kind (docs/adr/5280).
     """
     id: str
     kind: WorkKind | WorkKindName
@@ -113243,6 +118233,8 @@ class WorkRow(_Model):
     content: str | None | Unset = UNSET
     file: WorkFileRow | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
+    profile: WorkProfileRow | None | Unset = UNSET
+    suggested: list[WorkProfileSuggestion] | Unset = UNSET
     why: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -113263,6 +118255,10 @@ class WorkRow(_Model):
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        if self.suggested is not UNSET:
+            out["suggested"] = [e0.to_json() for e0 in self.suggested]
         if self.why is not UNSET:
             out["why"] = list(self.why)
         return out
@@ -113281,7 +118277,93 @@ class WorkRow(_Model):
             content=data.get("content", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else WorkProfileRow.from_json(data["profile"]),
+            suggested=[WorkProfileSuggestion.from_json(e0) for e0 in data["suggested"]] if "suggested" in data else UNSET,
             why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkShift(_Model):
+    """How far a changed object's geometry moved from the approved one (docs/adr/4880): with as many vertices of the same
+    kind, vertex by vertex (the largest move and its number, the moves' root mean square); always the two outlines'
+    Hausdorff distance (the farthest a point of either is from the other) and where it is reached.
+    Attributes:
+        paired: Its vertices pair one to one with the approved ones (same kind, as many).
+        vertices: How many vertices it had approved and has now. Unit: count.
+        beyond: With a limit (docs/adr/5280): whether it moved beyond it, by its largest vertex move when paired, else by the
+            Hausdorff distance; the full value is set against the limit, not a rounded one.
+        hausdorff: The outlines' Hausdorff distance, to a millionth of a millimetre; none for an object without a point (a text).
+        largest: The largest vertex move, when paired.
+        over: With a limit, when paired: how many vertices moved beyond it. Unit: count.
+        rms: The vertex moves' root mean square, when paired. Unit: m.
+    """
+    paired: bool
+    vertices: list[int]
+    beyond: bool | None | Unset = UNSET
+    hausdorff: WorkFarthest | None | Unset = UNSET
+    largest: WorkVertexMove | None | Unset = UNSET
+    over: int | None | Unset = UNSET
+    rms: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["paired"] = self.paired
+        out["vertices"] = list(self.vertices)
+        if self.beyond is not UNSET:
+            out["beyond"] = self.beyond
+        if self.hausdorff is not UNSET:
+            out["hausdorff"] = None if self.hausdorff is None else self.hausdorff.to_json()
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else self.largest.to_json()
+        if self.over is not UNSET:
+            out["over"] = self.over
+        if self.rms is not UNSET:
+            out["rms"] = None if self.rms is None else float(self.rms)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkShift:
+        return cls(
+            paired=data["paired"],
+            vertices=list(data["vertices"]),
+            beyond=data.get("beyond", UNSET),
+            hausdorff=UNSET if "hausdorff" not in data else None if data["hausdorff"] is None else WorkFarthest.from_json(data["hausdorff"]),
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else WorkVertexMove.from_json(data["largest"]),
+            over=data.get("over", UNSET),
+            rms=UNSET if "rms" not in data else None if data["rms"] is None else float(data["rms"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkVertexMove(_Model):
+    """One vertex's move: its number (from 0, in the object's vertex order), east and north, its length.
+    Attributes:
+        index: Unit: 1.
+        dx: Unit: m.
+        dy: Unit: m.
+        d: Unit: m.
+    """
+    index: int
+    dx: float
+    dy: float
+    d: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["d"] = float(self.d)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkVertexMove:
+        return cls(
+            index=data["index"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            d=float(data["d"]),
         )
 
 
@@ -113993,6 +119075,181 @@ class ZoningChecked(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ZoningDraft(_Model):
+    """Input of `cad.zoning.draft` v1: the draft's id; the plan (`PlanKimlik`), the reason and the changes it keeps (a draft
+    of the id is replaced); or `remove`, which takes it out of the project.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (`id` empty, with a space at its
+    ends or longer than 64 characters); with `remove`, `unknown_draft` (no draft of the id); `layer_not_found` (the
+    drawing has no plan boundary or decision layer); `invalid_input` (`plan` empty), `unknown_plan` (no plan boundary
+    of the id); `invalid_input` (`reason` empty or longer than 4000 characters; `changes` empty); for `changes[i]`:
+    `invalid_input` (the area's field given twice), `invalid_uid`, `entity_not_found`, `not_a_decision`, `invalid_input`
+    (an area of another plan, a field a draft does not change, a value empty, not in the list or not a number of 0 or
+    more, the area's value already).
+    """
+    id: str
+    changes: list[ZoningDraftChange] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    plan: str | Unset = UNSET
+    reason: str | Unset = UNSET
+    remove: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.changes is not UNSET:
+            out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.plan is not UNSET:
+            out["plan"] = self.plan
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.remove is not UNSET:
+            out["remove"] = self.remove
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraft:
+        return cls(
+            id=data["id"],
+            changes=[ZoningDraftChange.from_json(e0) for e0 in data["changes"]] if "changes" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            plan=data.get("plan", UNSET),
+            reason=data.get("reason", UNSET),
+            remove=data.get("remove", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDraftChange(_Model):
+    """A change the draft makes: a decision area, its field and the value it takes."""
+    uid: str
+    field: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["field"] = self.field
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraftChange:
+        return cls(
+            uid=data["uid"],
+            field=data["field"],
+            value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDraftFinding(_Model):
+    """What Mekânsal Planlar Yapım Yönetmeliği m. 26 asks of the draft: `infrastructureLess` (a social or technical
+    infrastructure use's area gets smaller: m. 26(3); `area` how much), `densityUp` (an area's KAKS or KatAdedi rises:
+    m. 26(5)(a)), `heightUp` (an area's KatAdedi or Hmax rises: m. 26(4), (5)(b)); the area's id where it is one area's.
+    Attributes:
+        area: Unit: area.
+    """
+    kind: str
+    message: str
+    area: float | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+    use: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["message"] = self.message
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        if self.use is not UNSET:
+            out["use"] = self.use
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraftFinding:
+        return cls(
+            kind=data["kind"],
+            message=data["message"],
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            uid=data.get("uid", UNSET),
+            use=data.get("use", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDraftUse(_Model):
+    """A use's area in the plan before and after the draft (square metres); the use empty for areas without one.
+    Attributes:
+        before: Unit: area.
+        after: Unit: area.
+        difference: Unit: area.
+    """
+    use: str
+    before: float
+    after: float
+    difference: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["use"] = self.use
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        out["difference"] = float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDraftUse:
+        return cls(
+            use=data["use"],
+            before=float(data["before"]),
+            after=float(data["after"]),
+            difference=float(data["difference"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningDrafted(_Model):
+    """Output of `cad.zoning.draft` v1: the draft as kept (none when removed), its plan's level, the plan's areas by use
+    (in the list's order, then areas without a use), what m. 26 asks, the project's drafts after it and the revision.
+    Attributes:
+        drafts: Unit: count.
+    """
+    level: str
+    uses: list[ZoningDraftUse]
+    findings: list[ZoningDraftFinding]
+    drafts: int
+    revision: str
+    draft: PlanDraft | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["uses"] = [e0.to_json() for e0 in self.uses]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["drafts"] = self.drafts
+        out["revision"] = self.revision
+        if self.draft is not UNSET:
+            out["draft"] = None if self.draft is None else self.draft.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningDrafted:
+        return cls(
+            level=data["level"],
+            uses=[ZoningDraftUse.from_json(e0) for e0 in data["uses"]],
+            findings=[ZoningDraftFinding.from_json(e0) for e0 in data["findings"]],
+            drafts=data["drafts"],
+            revision=data["revision"],
+            draft=UNSET if "draft" not in data else None if data["draft"] is None else PlanDraft.from_json(data["draft"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ZoningFinding(_Model):
     """A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,
     `overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,
@@ -114028,6 +119285,28 @@ class ZoningFinding(_Model):
             message=data["message"],
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
             regions=[ZoningRegion.from_json(e0) for e0 in data["regions"]] if "regions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningPlanData(_Model):
+    """The project's zoning plan data (schema 250): the kept symbol choices and the plan change drafts."""
+    drafts: list[PlanDraft] | Unset = UNSET
+    symbols: list[ZoningSymbolPick] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drafts is not UNSET:
+            out["drafts"] = [e0.to_json() for e0 in self.drafts]
+        if self.symbols is not UNSET:
+            out["symbols"] = [e0.to_json() for e0 in self.symbols]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningPlanData:
+        return cls(
+            drafts=[PlanDraft.from_json(e0) for e0 in data["drafts"]] if "drafts" in data else UNSET,
+            symbols=[ZoningSymbolPick.from_json(e0) for e0 in data["symbols"]] if "symbols" in data else UNSET,
         )
 
 
@@ -114081,7 +119360,7 @@ class ZoningSymbolPick(_Model):
 @dataclass(kw_only=True, slots=True)
 class ZoningSymbolRow(_Model):
     """A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from
-    (`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
+    (`kentos`, `user` or, docs/adr/5040, `project`: the project's kept choice), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
     `unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the
     drawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).
     """
@@ -114126,7 +119405,8 @@ class ZoningSymbolRow(_Model):
 @dataclass(kw_only=True, slots=True)
 class ZoningSymbolize(_Model):
     """Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the
-    user's symbols, which go before KentOS's table.
+    user's symbols, which go before the project's kept ones and KentOS's table; `keep` (docs/adr/5040): the given symbols
+    become the project's kept choices (none given: the project keeps none), and the old kept ones are not read.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS
     has symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol
@@ -114135,6 +119415,7 @@ class ZoningSymbolize(_Model):
     layer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).
     """
     expected_revision: str | None | Unset = UNSET
+    keep: bool | Unset = UNSET
     symbols: list[ZoningSymbolPick] | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
@@ -114142,6 +119423,8 @@ class ZoningSymbolize(_Model):
         out: dict[str, Any] = {}
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         if self.symbols is not UNSET:
             out["symbols"] = [e0.to_json() for e0 in self.symbols]
         if self.uids is not UNSET:
@@ -114152,6 +119435,7 @@ class ZoningSymbolize(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ZoningSymbolize:
         return cls(
             expected_revision=data.get("expectedRevision", UNSET),
+            keep=data.get("keep", UNSET),
             symbols=[ZoningSymbolPick.from_json(e0) for e0 in data["symbols"]] if "symbols" in data else UNSET,
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
@@ -114166,6 +119450,7 @@ class ZoningSymbolized(_Model):
         same: Unit: count.
         unmapped: Unit: count.
         skipped: Unit: count.
+        kept: With `keep` (docs/adr/5040): the project's kept choices after it.
     """
     areas: list[ZoningSymbolRow]
     set: int
@@ -114173,6 +119458,7 @@ class ZoningSymbolized(_Model):
     unmapped: int
     skipped: int
     revision: str
+    kept: list[ZoningSymbolPick] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -114182,6 +119468,8 @@ class ZoningSymbolized(_Model):
         out["unmapped"] = self.unmapped
         out["skipped"] = self.skipped
         out["revision"] = self.revision
+        if self.kept is not UNSET:
+            out["kept"] = None if self.kept is None else [e0.to_json() for e0 in self.kept]
         return out
 
     @classmethod
@@ -114193,6 +119481,7 @@ class ZoningSymbolized(_Model):
             unmapped=data["unmapped"],
             skipped=data["skipped"],
             revision=data["revision"],
+            kept=UNSET if "kept" not in data else None if data["kept"] is None else [ZoningSymbolPick.from_json(e0) for e0 in data["kept"]],
         )
 
 
@@ -114219,16 +119508,22 @@ class HorizontalAdjustWork(AdjustWork):
 
 @dataclass(kw_only=True, slots=True)
 class LevelAdjustWork(AdjustWork):
-    """Kot ağı dengelemesi: height differences."""
+    """Kot ağı dengelemesi: height differences.
+    Attributes:
+        leapfrog: Leap-frog setups (docs/adr/5300), each a height difference after `rows`.
+    """
     TAG_VALUE: ClassVar[str] = "level"
     known: list[AdjustKnownHeight]
     rows: list[AdjustDifference]
+    leapfrog: list[AdjustLeapfrog] | Unset = UNSET
     method: LevelMethod | LevelMethodName = LevelMethod.GEOMETRIC
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "level"}
         out["known"] = [e0.to_json() for e0 in self.known]
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.leapfrog is not UNSET:
+            out["leapfrog"] = [e0.to_json() for e0 in self.leapfrog]
         out["method"] = _enum_out(self.method)
         return out
 
@@ -114237,6 +119532,7 @@ class LevelAdjustWork(AdjustWork):
         return cls(
             known=[AdjustKnownHeight.from_json(e0) for e0 in data["known"]],
             rows=[AdjustDifference.from_json(e0) for e0 in data["rows"]],
+            leapfrog=[AdjustLeapfrog.from_json(e0) for e0 in data["leapfrog"]] if "leapfrog" in data else UNSET,
             method=_enum_in(LevelMethod, data["method"]) if "method" in data else LevelMethod.GEOMETRIC,
         )
 
@@ -116193,6 +121489,117 @@ class PolygonClipBoundary(ClipBoundary):
         return cls(
             points=[Vec2.from_json(e0) for e0 in data["points"]],
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class MatrixCloudPlaceBy(CloudPlaceBy):
+    """Matris: 16 numbers row by row (Tarama kaydı's and Tarama ağı's matrix), a rotation and a translation only.
+    Attributes:
+        matrix: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "matrix"
+    matrix: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "matrix"}
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MatrixCloudPlaceBy:
+        return cls(
+            matrix=[float(e0) for e0 in data["matrix"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AxisAngleCloudPlaceBy(CloudPlaceBy):
+    """Eksen ve açı: a turn of `angle` degrees about `axis` (right-handed; its length does not matter) about `center`,
+    then `translation` (docs/adr/4300).
+    Attributes:
+        axis: Unit: 1.
+        angle: Unit: deg.
+        center: Unit: length.
+        translation: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "axisAngle"
+    axis: list[float]
+    angle: float
+    center: list[float] | None | Unset = UNSET
+    translation: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "axisAngle"}
+        out["axis"] = [float(e0) for e0 in self.axis]
+        out["angle"] = float(self.angle)
+        if self.center is not UNSET:
+            out["center"] = None if self.center is None else [float(e0) for e0 in self.center]
+        if self.translation is not UNSET:
+            out["translation"] = None if self.translation is None else [float(e0) for e0 in self.translation]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AxisAngleCloudPlaceBy:
+        return cls(
+            axis=[float(e0) for e0 in data["axis"]],
+            angle=float(data["angle"]),
+            center=UNSET if "center" not in data else None if data["center"] is None else [float(e0) for e0 in data["center"]],
+            translation=UNSET if "translation" not in data else None if data["translation"] is None else [float(e0) for e0 in data["translation"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EulerCloudPlaceBy(CloudPlaceBy):
+    """Euler açıları: `yaw` about Z, then `pitch` about the turned Y, then `roll` about the twice turned X, degrees,
+    each right-handed (X east, Y north, Z up): R = Rz(yaw)·Ry(pitch)·Rx(roll); about `center`, then `translation`.
+    Attributes:
+        yaw: Unit: deg.
+        pitch: Unit: deg.
+        roll: Unit: deg.
+        center: Unit: length.
+        translation: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "euler"
+    yaw: float
+    pitch: float
+    roll: float
+    center: list[float] | None | Unset = UNSET
+    translation: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "euler"}
+        out["yaw"] = float(self.yaw)
+        out["pitch"] = float(self.pitch)
+        out["roll"] = float(self.roll)
+        if self.center is not UNSET:
+            out["center"] = None if self.center is None else [float(e0) for e0 in self.center]
+        if self.translation is not UNSET:
+            out["translation"] = None if self.translation is None else [float(e0) for e0 in self.translation]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EulerCloudPlaceBy:
+        return cls(
+            yaw=float(data["yaw"]),
+            pitch=float(data["pitch"]),
+            roll=float(data["roll"]),
+            center=UNSET if "center" not in data else None if data["center"] is None else [float(e0) for e0 in data["center"]],
+            translation=UNSET if "translation" not in data else None if data["translation"] is None else [float(e0) for e0 in data["translation"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveCloudPlaceBy(CloudPlaceBy):
+    """Konumu kaldır: the files where they say again."""
+    TAG_VALUE: ClassVar[str] = "remove"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveCloudPlaceBy:
+        return cls()
 
 
 @dataclass(kw_only=True, slots=True)
@@ -123541,19 +128948,23 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
     is not a known point accepted (its object on `layer`, the active layer when not given) or made again, in one
     step. Refused while a baseline is a blunder or the model test fails.
     Attributes:
+        correlations: The sessions' cross-correlations used or not (docs/adr/4920), as `map.survey.network` takes them.
         ellipses: Each point's error ellipse drawn in the same step (docs/adr/2960).
         epoch: The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it. Unit: year.
         scale: Unit: 1.
+        velocities: Each new point's velocity read from the campaign's velocity grid and kept with it (docs/adr/4920).
     """
     TAG_VALUE: ClassVar[str] = "network"
     campaign: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
+    correlations: NetworkCorrelations | NetworkCorrelationsName | None | Unset = UNSET
     ellipses: NetworkEllipses | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
     hold: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     rules: GnssRules | None | Unset = UNSET
     scale: float | None | Unset = UNSET
+    velocities: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"op": "network"}
@@ -123561,6 +128972,8 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
             out["campaign"] = self.campaign
         if self.class_ is not UNSET:
             out["class"] = self.class_
+        if self.correlations is not UNSET:
+            out["correlations"] = None if self.correlations is None else _enum_out(self.correlations)
         if self.ellipses is not UNSET:
             out["ellipses"] = None if self.ellipses is None else self.ellipses.to_json()
         if self.epoch is not UNSET:
@@ -123573,6 +128986,8 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
+        if self.velocities is not UNSET:
+            out["velocities"] = self.velocities
         return out
 
     @classmethod
@@ -123580,12 +128995,14 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
         return cls(
             campaign=data.get("campaign", UNSET),
             class_=data.get("class", UNSET),
+            correlations=UNSET if "correlations" not in data else None if data["correlations"] is None else _enum_in(NetworkCorrelations, data["correlations"]),
             ellipses=UNSET if "ellipses" not in data else None if data["ellipses"] is None else NetworkEllipses.from_json(data["ellipses"]),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             hold=data.get("hold", UNSET),
             layer=data.get("layer", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else GnssRules.from_json(data["rules"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            velocities=data.get("velocities", UNSET),
         )
 
 
@@ -123671,9 +129088,63 @@ class UseMapSurveyOperation(MapSurveyOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class ToleranceMapSurveyOperation(MapSurveyOperation):
+    """The known points' place limits kept in the project with their source (docs/adr/4920): a regulation's article
+    or an administration's specification; none of the three takes the kept limits away.
+    Attributes:
+        horizontal: Unit: length.
+        vertical: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "tolerance"
+    horizontal: float | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "tolerance"}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToleranceMapSurveyOperation:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            source=data.get("source", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IndependentMapSurveyOperation(MapSurveyOperation):
+    """docs/adr/5320: a baseline session's (none: every session's) adjustment choice set to its independent baselines:
+    they go into the adjustment, its dependent ones do not (excluded baselines stay out). One undo step.
+    """
+    TAG_VALUE: ClassVar[str] = "independent"
+    session: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "independent"}
+        if self.session is not UNSET:
+            out["session"] = self.session
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IndependentMapSurveyOperation:
+        return cls(
+            session=data.get("session", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RemoveMapSurveyOperation(MapSurveyOperation):
-    """A record taken away: a campaign (with its sessions and solutions), a session (with its solutions), a solution,
-    an accepted point's record (its object stays) or a use. What an accepted point or a use rests on is not.
+    """A record taken away: a campaign (with its sessions, solutions, baselines and baseline sessions), a session (with
+    its solutions), a solution, an accepted point's record (its object stays), a use or a baseline session. What an
+    accepted point, a use or an adjustment rests on is not; nor is a baseline a session names.
     """
     TAG_VALUE: ClassVar[str] = "remove"
     id: str
@@ -123752,6 +129223,37 @@ class SetMapWorkOperation(MapWorkOperation):
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             name=data.get("name", UNSET),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(WorkStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileMapWorkOperation(MapWorkOperation):
+    """An item's typed layers' profile (docs/adr/4880): the data profile `name` (built in, the drawing's copy or the
+    project's folder by `drawing`) and its `classes` (none: all). Each class's layer the drawing lacks is added as the
+    profile places it, the fields a class's layer lacks are added (a layer's own field of another kind is kept,
+    warning `profile_field_differs`; a locked layer gets none, `profile_layer_skipped`), and the classes' layers join
+    the item; its other layers stay free drawing layers. Without `name` the profile is taken away; the layers stay.
+    """
+    TAG_VALUE: ClassVar[str] = "profile"
+    item: str
+    classes: list[str] | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "profile"}
+        out["item"] = self.item
+        if self.classes is not UNSET:
+            out["classes"] = list(self.classes)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileMapWorkOperation:
+        return cls(
+            item=data["item"],
+            classes=list(data["classes"]) if "classes" in data else UNSET,
+            name=data.get("name", UNSET),
         )
 
 
@@ -123864,7 +129366,7 @@ class ForgetMapWorkOperation(MapWorkOperation):
 
 @dataclass(kw_only=True, slots=True)
 class ReleaseMapWorkOperation(MapWorkOperation):
-    """Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation
+    """Objects let go of their derivations (promoted to the user's own drawing, docs/adr/1201 §3): each object out of the derivation
     that names it, a derivation left without objects taken away; the objects stay, the user's own drawing.
     """
     TAG_VALUE: ClassVar[str] = "release"
@@ -134789,6 +140291,9 @@ _CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": Code
 _CLIP_BOUNDARY: dict[str, type[ClipBoundary]] = {"rectangle": RectangleClipBoundary, "polygon": PolygonClipBoundary}
 
 
+_CLOUD_PLACE_BY: dict[str, type[CloudPlaceBy]] = {"matrix": MatrixCloudPlaceBy, "axisAngle": AxisAngleCloudPlaceBy, "euler": EulerCloudPlaceBy, "remove": RemoveCloudPlaceBy}
+
+
 _COMPARE_AGAINST: dict[str, type[CompareAgainst]] = {"history": HistoryCompareAgainst, "file": FileCompareAgainst}
 
 
@@ -134918,10 +140423,10 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
-_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "baselines": BaselinesMapSurveyOperation, "baseline": BaselineMapSurveyOperation, "known": KnownMapSurveyOperation, "network": NetworkMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "remove": RemoveMapSurveyOperation}
+_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "baselines": BaselinesMapSurveyOperation, "baseline": BaselineMapSurveyOperation, "known": KnownMapSurveyOperation, "network": NetworkMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "tolerance": ToleranceMapSurveyOperation, "independent": IndependentMapSurveyOperation, "remove": RemoveMapSurveyOperation}
 
 
-_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
+_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "profile": ProfileMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
 
 
 _MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
@@ -135237,8 +140742,10 @@ __all__ = [
     "AdjustDifference",
     "AdjustKnownHeight",
     "AdjustKnownPoint",
+    "AdjustLeapfrog",
     "AdjustMapSurveyOperation",
     "AdjustObservation",
+    "AdjustSight",
     "AdjustWork",
     "AdjustedGnssStation",
     "AdoptMaterialsOperation",
@@ -135424,15 +140931,24 @@ __all__ = [
     "AsbuiltChecked",
     "AsbuiltControl",
     "AsbuiltEpoch",
+    "AsbuiltFit",
     "AsbuiltKind",
     "AsbuiltKindName",
+    "AsbuiltLevel",
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",
+    "AsbuiltReview",
+    "AsbuiltReviewRow",
+    "AsbuiltReviewed",
+    "AsbuiltState",
+    "AsbuiltStateName",
     "AsbuiltStep",
     "AsbuiltSurfaceBy",
     "AsbuiltSurfaceByName",
+    "AsbuiltThresholds",
     "AsbuiltTrack",
+    "AsbuiltTrendAsk",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",
@@ -135455,6 +140971,8 @@ __all__ = [
     "AtlasGonePage",
     "AtlasLayerRole",
     "AtlasLayerRoleName",
+    "AtlasLook",
+    "AtlasLookName",
     "AtlasPageChange",
     "AtlasPageInfo",
     "AtlasPageState",
@@ -135494,12 +141012,14 @@ __all__ = [
     "AutoPaperAnnotationScale",
     "AutoPaperLegendEntries",
     "AutoPaperScaleBarLength",
+    "AxisAngleCloudPlaceBy",
     "AzimuthDimensionMeasure",
     "BaselineDatum",
     "BaselineDatumName",
     "BaselineDimensionMeasure",
     "BaselineMapSurveyOperation",
     "BaselineResult",
+    "BaselineRobust",
     "BaselineSigmaOf",
     "BaselineSigmaOfName",
     "BaselineSolution",
@@ -135589,6 +141109,7 @@ __all__ = [
     "BoundaryCadElement",
     "BoundaryForm",
     "BoundaryFormName",
+    "BoundaryLengthRow",
     "BoundaryProblem",
     "Bounds",
     "BoxCorner",
@@ -135623,6 +141144,7 @@ __all__ = [
     "CampaignMapSurveyOperation",
     "CandidateDecision",
     "CandidateSource",
+    "CarriedClass",
     "CaseworkBreak",
     "CaseworkBreakName",
     "CaseworkBuilt",
@@ -135656,6 +141178,18 @@ __all__ = [
     "CaseworkSide",
     "CaseworkSideName",
     "CaseworkTie",
+    "CatalogClassChange",
+    "CatalogClassChangeKind",
+    "CatalogClassChangeKindName",
+    "CatalogCodeChange",
+    "CatalogCodeChangeKind",
+    "CatalogCodeChangeKindName",
+    "CatalogDecisionChange",
+    "CatalogDecisionChangeKind",
+    "CatalogDecisionChangeKindName",
+    "CatalogFieldChange",
+    "CatalogFieldChangeKind",
+    "CatalogFieldChangeKindName",
     "Cell",
     "CellField",
     "CellFormula",
@@ -135728,6 +141262,7 @@ __all__ = [
     "CloudFormatName",
     "CloudHeights",
     "CloudMismatch",
+    "CloudPlaceBy",
     "CloudPoint",
     "CloudRange",
     "CloudRegionPart",
@@ -135778,6 +141313,7 @@ __all__ = [
     "CompareMethod",
     "CompareMethodName",
     "CompareZone",
+    "ComparedCatalog",
     "ComponentEdge",
     "ComponentHatch",
     "ComputedExtractValue",
@@ -135823,6 +141359,7 @@ __all__ = [
     "CornerHatchOrigin",
     "CornerPick",
     "CornersRectangleFrame",
+    "CorrelationBlock",
     "CorridorDaylights",
     "CorridorDef",
     "CorridorFeature",
@@ -135865,6 +141402,8 @@ __all__ = [
     "CreateRelationsOp",
     "CreateSpaceSeparatorOperation",
     "CrossfallZero",
+    "CrossingHatch",
+    "CrossingHatchName",
     "CrossingMargin",
     "CrossingSelectRegion",
     "CrossingSide",
@@ -135932,6 +141471,9 @@ __all__ = [
     "CutFillKind",
     "CutFillKindName",
     "CutFillLabel",
+    "CutFillSection",
+    "CutFillSectionLabel",
+    "CutFillSections",
     "DataProfile",
     "DatasetDescription",
     "DatasetDim",
@@ -136091,6 +141633,8 @@ __all__ = [
     "DomainsPackage",
     "DonutCreate",
     "DoorSource",
+    "DraftParcel",
+    "DraftRing",
     "DrainageCapacity",
     "DrainageCatchment",
     "DrainageCatchmentAsk",
@@ -136260,6 +141804,7 @@ __all__ = [
     "EpochSourceName",
     "EqualConstraintRule",
     "ErrorEllipse",
+    "EulerCloudPlaceBy",
     "EventLink",
     "EventLinkKind",
     "EventLinkKindName",
@@ -136682,9 +142227,13 @@ __all__ = [
     "ImpactNear",
     "ImpactOwn",
     "ImpactReach",
+    "ImpactRecord",
     "ImpactRegion",
+    "ImpactRoute",
     "ImpactSections",
     "ImpactSlope",
+    "ImpactSlopeMap",
+    "ImpactSlopePiece",
     "ImpactTarget",
     "ImpactTargetName",
     "ImpactUse",
@@ -136709,6 +142258,7 @@ __all__ = [
     "ImportSld",
     "ImportedLayer",
     "IncludeMapSurveyOperation",
+    "IndependentMapSurveyOperation",
     "InfoCard",
     "InputSpaceNumberOrder",
     "InputState",
@@ -136808,6 +142358,10 @@ __all__ = [
     "JunctionsTied",
     "JunctionsWritten",
     "KcadRecovered",
+    "KeptAdjustedPoint",
+    "KeptAdjustment",
+    "KeptAdjustmentKind",
+    "KeptAdjustmentKindName",
     "KeySourcesEditOp",
     "KindExtractValue",
     "KmAsk",
@@ -136988,6 +142542,8 @@ __all__ = [
     "LibraryEdited",
     "LibraryOperation",
     "LibraryOperationName",
+    "LimitBasis",
+    "LimitBasisName",
     "LinLineProblem",
     "LineArrayLayout",
     "LineCreate",
@@ -137078,6 +142634,7 @@ __all__ = [
     "MappingCode",
     "MappingCodes",
     "MappingField",
+    "MappingNames",
     "MarkReference",
     "MatchProperty",
     "MatchPropertyName",
@@ -137098,8 +142655,10 @@ __all__ = [
     "MaterialsEdited",
     "MaterialsFile",
     "MaterialsOperation",
+    "MatrixCloudPlaceBy",
     "MeasuredExtractValue",
     "MeasuredPoint",
+    "MeasuredRefraction",
     "MedianRoadWork",
     "Meeting",
     "MergeDuplicates",
@@ -137174,6 +142733,8 @@ __all__ = [
     "ModulesOperation",
     "ModulesQueried",
     "ModulesQuery",
+    "MonitoringReview",
+    "MonitoringReviewer",
     "MosaicOrder",
     "MosaicOrderName",
     "MosaicResolution",
@@ -137189,6 +142750,14 @@ __all__ = [
     "MoveSheetPaperOp",
     "MoveTextDimensionEdit",
     "MoveTransform",
+    "NameCase",
+    "NameCaseName",
+    "NameLetters",
+    "NameLettersName",
+    "NameProblem",
+    "NameProblemName",
+    "NameSource",
+    "NameSourceName",
     "NamedFont",
     "NamedKnownPoint",
     "NamedPaperPlotStyleKey",
@@ -137209,6 +142778,9 @@ __all__ = [
     "NetworkClosures",
     "NetworkConnect",
     "NetworkConnectName",
+    "NetworkCorrelations",
+    "NetworkCorrelationsName",
+    "NetworkCorrelationsUsed",
     "NetworkCost",
     "NetworkCostKind",
     "NetworkCostKindName",
@@ -137225,10 +142797,13 @@ __all__ = [
     "NetworkKindName",
     "NetworkLayer",
     "NetworkLevels",
+    "NetworkLink",
+    "NetworkLoop",
     "NetworkMapSurveyOperation",
     "NetworkPeriod",
     "NetworkProfile",
     "NetworkRules",
+    "NetworkScan",
     "NetworkSimilarity",
     "NetworkStage",
     "NetworkStation",
@@ -137388,13 +142963,21 @@ __all__ = [
     "OriginHatchEdit",
     "OriginUcsTo",
     "OrthoGsd",
+    "OrthoNetworkElement",
+    "OrthoNetworkJunction",
+    "OrthoNetworkPart",
     "OrthoPair",
     "OrthoPatch",
     "OrthoPoint",
     "OrthoRules",
     "OrthoSeam",
     "OrthoSeamAsk",
+    "OrthoSeamDifference",
+    "OrthoSeamEnd",
     "OrthoSeamLine",
+    "OrthoSeamMethod",
+    "OrthoSeamMethodName",
+    "OrthoSeamPolygon",
     "OrthoSeamShared",
     "OrthoStats",
     "OrthoSubpixel",
@@ -137403,6 +142986,12 @@ __all__ = [
     "OrthophotoChecked",
     "OrthophotoCompare",
     "OrthophotoCompared",
+    "OrthophotoFootprint",
+    "OrthophotoFootprintBuilt",
+    "OrthophotoNetwork",
+    "OrthophotoNetworkBuilt",
+    "OrthophotoSeamlines",
+    "OrthophotoSeamlinesBuilt",
     "OverlapCell",
     "OverlapControl",
     "OverlapControlStats",
@@ -137610,6 +143199,8 @@ __all__ = [
     "ParametersEdited",
     "ParametersOperation",
     "ParametersOperationName",
+    "ParcelApproval",
+    "ParcelApprovalInput",
     "ParcelAreaCheck",
     "ParcelBoundary",
     "ParcelCorner",
@@ -137617,10 +143208,14 @@ __all__ = [
     "ParcelDocument",
     "ParcelDocumentInput",
     "ParcelDocumentRow",
+    "ParcelDraft",
+    "ParcelDraftRow",
     "ParcelInGraph",
     "ParcelPlan",
     "ParcelRegister",
     "ParcelToRecord",
+    "ParcelsApprove",
+    "ParcelsApproved",
     "ParcelsBoundaries",
     "ParcelsBounded",
     "ParcelsCheck",
@@ -137630,6 +143225,8 @@ __all__ = [
     "ParcelsRecorded",
     "ParcelsRecords",
     "ParcelsRecordsListed",
+    "ParcelsWithdraw",
+    "ParcelsWithdrawn",
     "ParkedInfo",
     "ParkedPin",
     "ParkingTableSource",
@@ -137719,8 +143316,13 @@ __all__ = [
     "PipeProfileOther",
     "PipeProfilePipe",
     "PipeProfileStructure",
+    "PipeRuleSystem",
+    "PipeRules",
+    "PipeRulesAsk",
     "PipeRunEnd",
     "PipeRunEndName",
+    "PipeSlopeClass",
+    "PipeSpanClass",
     "PipeUnit",
     "PipeUnitName",
     "PipesCheck",
@@ -137733,6 +143335,8 @@ __all__ = [
     "PlacementArrayEdit",
     "PlanBox",
     "PlanBoxName",
+    "PlanDraft",
+    "PlanDraftChange",
     "PlanLayerRole",
     "PlanNorthDirection",
     "PlanRoadWork",
@@ -137764,8 +143368,12 @@ __all__ = [
     "PointCloudStyle",
     "PointCloudsDescribe",
     "PointCloudsDescribed",
+    "PointCloudsNetwork",
+    "PointCloudsNetworked",
     "PointCloudsOverlap",
     "PointCloudsOverlapped",
+    "PointCloudsPlace",
+    "PointCloudsPlaced",
     "PointCloudsProfile",
     "PointCloudsProfiled",
     "PointCloudsQueried",
@@ -137796,6 +143404,7 @@ __all__ = [
     "PointStyle",
     "PointSymbol",
     "PointSymbolName",
+    "PointVelocity",
     "PointcloudEntity",
     "PointcloudEntityGeometry",
     "PointsBetweenConstruction",
@@ -137865,8 +143474,11 @@ __all__ = [
     "ProfileImported",
     "ProfileLimit",
     "ProfileListed",
+    "ProfileMapWorkOperation",
     "ProfileMapping",
     "ProfileMigration",
+    "ProfileNameRow",
+    "ProfileNames",
     "ProfilePoint",
     "ProfileProposed",
     "ProfilePvi",
@@ -137880,7 +143492,11 @@ __all__ = [
     "ProfileStoreName",
     "ProfilesApplied",
     "ProfilesApply",
+    "ProfilesCarried",
+    "ProfilesCarry",
     "ProfilesCheck",
+    "ProfilesCompare",
+    "ProfilesCompared",
     "ProfilesCreate",
     "ProfilesDraw",
     "ProfilesDrawn",
@@ -137894,6 +143510,7 @@ __all__ = [
     "ProfilesListed",
     "ProfilesMigrate",
     "ProfilesMigrated",
+    "ProfilesNames",
     "ProfilesPropose",
     "ProfilesQueried",
     "ProfilesQuery",
@@ -138086,6 +143703,7 @@ __all__ = [
     "RecordTotal",
     "RecordedBoundary",
     "RecordedBoundaryRow",
+    "RecordedLength",
     "RecordedParcel",
     "RecordedParcelRow",
     "RecordedRing",
@@ -138159,6 +143777,7 @@ __all__ = [
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveAssetsPaperOp",
+    "RemoveCloudPlaceBy",
     "RemoveConstraintEdit",
     "RemoveControlCurveEdit",
     "RemoveDomainsOp",
@@ -138267,9 +143886,20 @@ __all__ = [
     "ReviewNotesListed",
     "ReviewOrigin",
     "ReviewOriginName",
+    "ReviewPhrase",
+    "ReviewPhraseName",
     "ReviewReply",
     "ReviewStatus",
     "ReviewStatusName",
+    "ReviewedEpoch",
+    "ReviewedJob",
+    "ReviewedLevel",
+    "ReviewedMark",
+    "ReviewedState",
+    "ReviewedStateName",
+    "ReviewedThresholds",
+    "ReviewerRole",
+    "ReviewerRoleName",
     "RevisionMarked",
     "RevisionPlan",
     "RevisionsMark",
@@ -138315,6 +143945,7 @@ __all__ = [
     "RoadProjectRebuild",
     "RoadProjectRebuilt",
     "RoadProjectTree",
+    "RoadRecipeForm",
     "RoadRecipeLayer",
     "RoadSettings",
     "RoadSheetDef",
@@ -138330,6 +143961,9 @@ __all__ = [
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",
+    "RobustMethod",
+    "RobustMethodName",
+    "RobustRounds",
     "RoofEntity",
     "RoofPart",
     "RoofPartKind",
@@ -138372,6 +144006,8 @@ __all__ = [
     "ScenariosEdited",
     "ScenariosImpact",
     "ScenariosImpacted",
+    "ScenariosRecord",
+    "ScenariosRecorded",
     "SceneMeshKind",
     "SceneMeshKindName",
     "SceneMeshWritten",
@@ -138403,12 +144039,15 @@ __all__ = [
     "SchemaKindName",
     "ScopePart",
     "ScopeRing",
+    "SectionCheck",
     "SectionCrossing",
     "SectionFormula",
     "SectionFormulaName",
+    "SectionGap",
     "SectionGround",
     "SectionLayer",
     "SectionPavement",
+    "SectionPointRow",
     "SectionRow",
     "SectionSetDef",
     "SectionSetReport",
@@ -138492,10 +144131,12 @@ __all__ = [
     "ShareRule",
     "ShareRuleName",
     "SharpRectangleCorners",
+    "SheetBuiltUp",
     "SheetContourLabel",
     "SheetContourLine",
     "SheetDeliveryResource",
     "SheetDeliveryResources",
+    "SheetHeightCheck",
     "SheetInfo",
     "SheetMapInfo",
     "SheetModelScope",
@@ -138530,6 +144171,8 @@ __all__ = [
     "SheetsSet",
     "SheetsSetResult",
     "ShelterTableSource",
+    "ShiftLimit",
+    "ShiftLimitUsed",
     "ShiftReference",
     "ShiftWallsOperation",
     "ShowHeaderPaperEmptyTable",
@@ -138549,6 +144192,8 @@ __all__ = [
     "SightSideName",
     "SightUntil",
     "SightUntilName",
+    "SignatureKind",
+    "SignatureKindName",
     "SimilarCriteria",
     "SimilarSelectRegion",
     "SimilarityCrsPlane",
@@ -138776,6 +144421,7 @@ __all__ = [
     "StandardsResolve",
     "StandardsResolved",
     "StartSubPlace",
+    "StatedLength",
     "StationEquationDef",
     "StationMapRow",
     "StationOwner",
@@ -138860,6 +144506,7 @@ __all__ = [
     "SurveyBackSight",
     "SurveyBaseline",
     "SurveyBaselineRow",
+    "SurveyBaselineSession",
     "SurveyBaselines",
     "SurveyBaselinesAdjusted",
     "SurveyCampaign",
@@ -138891,6 +144538,7 @@ __all__ = [
     "SurveySolutionRow",
     "SurveyState",
     "SurveyStateName",
+    "SurveyTolerance",
     "SurveyTraverseHeights",
     "SurveyUse",
     "SurveyUseRow",
@@ -139049,6 +144697,8 @@ __all__ = [
     "TerrainsQuery",
     "TerrainsRepair",
     "TerrainsRepaired",
+    "TerrainsSectionCheck",
+    "TerrainsSectionChecked",
     "TerrainsSheetContoured",
     "TerrainsSheetContours",
     "TerrainsSparseDraw",
@@ -139106,6 +144756,7 @@ __all__ = [
     "ToSplineCurveEdit",
     "ToleranceKind",
     "ToleranceKindName",
+    "ToleranceMapSurveyOperation",
     "ToolNote",
     "ToolPalette",
     "ToolParameter",
@@ -139380,6 +145031,7 @@ __all__ = [
     "WorkChanges",
     "WorkDerivation",
     "WorkDerivationRow",
+    "WorkFarthest",
     "WorkFile",
     "WorkFileRow",
     "WorkFileState",
@@ -139390,12 +145042,17 @@ __all__ = [
     "WorkObjectRole",
     "WorkObjectRoleName",
     "WorkObjectSource",
+    "WorkProfile",
+    "WorkProfileRow",
+    "WorkProfileSuggestion",
     "WorkRemovedObject",
     "WorkRow",
+    "WorkShift",
     "WorkState",
     "WorkStateName",
     "WorkStatus",
     "WorkStatusName",
+    "WorkVertexMove",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",
@@ -139442,7 +145099,13 @@ __all__ = [
     "Zoning",
     "ZoningCheck",
     "ZoningChecked",
+    "ZoningDraft",
+    "ZoningDraftChange",
+    "ZoningDraftFinding",
+    "ZoningDraftUse",
+    "ZoningDrafted",
     "ZoningFinding",
+    "ZoningPlanData",
     "ZoningRegion",
     "ZoningSymbolPick",
     "ZoningSymbolRow",

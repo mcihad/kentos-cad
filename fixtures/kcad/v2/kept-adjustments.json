@@ -1,0 +1,98 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Dengeleme kayıtları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "surveyAdjustments": [
+      {
+        "name": "Poligon 2026/1",
+        "kind": "horizontal",
+        "revision": "7",
+        "points": [
+          {
+            "name": "Y1",
+            "at": {
+              "x": 487029.9984,
+              "y": 4420350.0007
+            },
+            "sigma": 0.00197
+          },
+          {
+            "name": "Y2",
+            "at": {
+              "x": 487419.9988,
+              "y": 4420380.0005
+            },
+            "sigma": 0.00241
+          }
+        ],
+        "f": 10,
+        "m0": 0.4868,
+        "passed": true
+      },
+      {
+        "name": "Nivelman A",
+        "kind": "height",
+        "revision": "9",
+        "points": [
+          {
+            "name": "N1",
+            "h": 1012.3456,
+            "sigma": 0.0012
+          }
+        ],
+        "f": 2,
+        "m0": 1.1,
+        "passed": true
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "P1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

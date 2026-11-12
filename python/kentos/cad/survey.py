@@ -16,6 +16,7 @@ from .types import (  # noqa: F401
     AngleUnitName,
     BaselineDatum,
     BaselineDatumName,
+    BaselineRobust,
     BaselineStation,
     BaselineVector,
     EntitiesCreatePlan,
@@ -44,6 +45,11 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
     aynı adlı noktalara kotlarını, köşelerine ve Z (m)'lerine de yazar, çizimde
     olmayanları söyler. Çıktı yeni noktaların yerleri ya da kotları ve standart
     sapmaları, serbestlik, m0 ve model testi. Tek geri alma adımı, pencerenin adıyla.
+    Kot ağında leapfrog (atlamalı trigonometrik nivelman, yalnız method trigonometric):
+    alet iki noktanın arasında; her kurulumun geri ve ileri nişanı (eğik uzunluk, başucu
+    açısı, işaret yüksekliği); kot farkı ileri nişanın S·cos z + (1 − k)·D²/2R −
+    t'sinden geri nişanınki (projenin k'sı, alet yüksekliği düşer), uzunluğu iki yatay
+    uzunluğun toplamı; kot farklarının ardından dengelenir, çıktının leapfrog'u.
     """
     __slots__ = ()
     id = "cad.survey.adjust"
@@ -61,6 +67,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
         request_id: str | None = None,
@@ -75,12 +82,19 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         olmayanları layerId'ye Ağ noktası olarak ekler; kot ağı aynı adlı noktalara
         kotlarını, köşelerine ve Z (m)'lerine de yazar, çizimde olmayanları söyler. Çıktı
         yeni noktaların yerleri ya da kotları ve standart sapmaları, serbestlik, m0 ve model
-        testi. Tek geri alma adımı, pencerenin adıyla.
+        testi. Tek geri alma adımı, pencerenin adıyla. Kot ağında leapfrog (atlamalı
+        trigonometrik nivelman, yalnız method trigonometric): alet iki noktanın arasında;
+        her kurulumun geri ve ileri nişanı (eğik uzunluk, başucu açısı, işaret yüksekliği);
+        kot farkı ileri nişanın S·cos z + (1 − k)·D²/2R − t'sinden geri nişanınki (projenin
+        k'sı, alet yüksekliği düşer), uzunluğu iki yatay uzunluğun toplamı; kot farklarının
+        ardından dengelenir, çıktının leapfrog'u.
 
         Args:
             doc: The drawing it works on.
             work:
             expected_revision:
+            keep: Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+                name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
             layer_id: Yatay ağ: the layer of the new points the drawing has not.
             unit: The directions' unit; the project's when none.
             request_id: Names this write: sent again with the same call it is answered as
@@ -98,6 +112,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.execute_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ), request_id=request_id, expected=expected)
@@ -109,6 +124,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
     ) -> EntitiesEditPlan:
@@ -118,6 +134,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.plan_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ))
@@ -129,6 +146,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -138,6 +156,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.validate_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ))
@@ -149,6 +168,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         *,
         work: AdjustWork,
         expected_revision: str | None | Unset = UNSET,
+        keep: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
         op: str = "execute",
@@ -163,6 +183,7 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         return self.answer_input(doc, SurveyAdjust(
             work=work,
             expected_revision=expected_revision,
+            keep=keep,
             layer_id=layer_id,
             unit=unit,
         ), op=op, request_id=request_id, expected=expected)
@@ -174,7 +195,7 @@ adjust = _SurveyAdjust()
 
 class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, SurveyBaselinesAdjusted]):
     """``cad.survey.baselines`` v1. GNSS baz ağı dengelemesi: GNSS baz vektörlerinden
-    kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz, ADR 1380).
+    kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz).
     İstasyonlar ECEF X, Y, Z'de (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy,
     xz, yy, yz, zz, m²); scale kovaryansların çarpanı (varsayılan 1; işleyicinin
     kovaryansı çoğu kez iyimserdir). Bilinen istasyon fixed ile sabit, sigma ile
@@ -188,9 +209,16 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
     verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
     B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
     (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
-    okunan girdileri; ADR 4560); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
-    invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
-    datum_missing, network_too_large, network_disconnected.
+    okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. robust {method:
+    huber|danish, c} dayanıklı kestirimdir (yinelemeli yeniden ağırlıklandırma): her
+    adımda bazın standart artığı bileşenlerinin |v|/σ'sının en büyüğü (σ verilen
+    kovaryanstan, önsel σ0 = 1), |w| > c ise ağırlık çarpanı Huber c/|w|, Danimarka
+    exp(−((|w| − c)/c)²); c verilmezse Huber 1,5, Danimarka 2,0; hiçbir çarpan 10⁻⁹'dan
+    çok değişmeyince (en çok 100 adım) durur. Baz silinmez: cevapta her bazın factor'ı
+    ve robust (adım, oturdu mu, ağırlığı düşen baz sayısı); istatistikler yeniden
+    ağırlıklı modelindir. Retler: invalid_input, no_baselines, duplicate_station,
+    unknown_station, invalid_covariance, datum_missing, network_too_large,
+    network_disconnected.
     """
     __slots__ = ()
     id = "cad.survey.baselines"
@@ -208,6 +236,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -215,27 +244,35 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         expected: Expected | None = None,
     ) -> SurveyBaselinesAdjusted:
         """GNSS baz ağı dengelemesi: GNSS baz vektörlerinden kurulan ağı en küçük karelerle
-        dengeler; hiçbir şey yazmaz (önce analiz, ADR 1380). İstasyonlar ECEF X, Y, Z'de
-        (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale
-        kovaryansların çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir).
-        Bilinen istasyon fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum:
-        minimal koordinatı olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı
-        L·Lᵀ ayrıştırılıp üç denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95),
-        artık sayıları ve Baarda testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir,
-        bazın sonucu bileşenlerinin en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve
-        standart sapmaları (m0 ile ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları
-        (GRS80), bazların artık vektörü (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ²,
-        geçti mi, en kötü baz. Ağ metinle de verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
+        dengeler; hiçbir şey yazmaz (önce analiz). İstasyonlar ECEF X, Y, Z'de (m); baz ΔX,
+        ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale kovaryansların
+        çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir). Bilinen istasyon
+        fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum: minimal koordinatı
+        olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı L·Lᵀ ayrıştırılıp üç
+        denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95), artık sayıları ve Baarda
+        testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir, bazın sonucu bileşenlerinin
+        en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve standart sapmaları (m0 ile
+        ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları (GRS80), bazların artık vektörü
+        (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ², geçti mi, en kötü baz. Ağ metinle de
+        verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
         B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
         (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
-        okunan girdileri; ADR 4560); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
-        invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
-        datum_missing, network_too_large, network_disconnected.
+        okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. robust {method:
+        huber|danish, c} dayanıklı kestirimdir (yinelemeli yeniden ağırlıklandırma): her
+        adımda bazın standart artığı bileşenlerinin |v|/σ'sının en büyüğü (σ verilen
+        kovaryanstan, önsel σ0 = 1), |w| > c ise ağırlık çarpanı Huber c/|w|, Danimarka
+        exp(−((|w| − c)/c)²); c verilmezse Huber 1,5, Danimarka 2,0; hiçbir çarpan 10⁻⁹'dan
+        çok değişmeyince (en çok 100 adım) durur. Baz silinmez: cevapta her bazın factor'ı
+        ve robust (adım, oturdu mu, ağırlığı düşen baz sayısı); istatistikler yeniden
+        ağırlıklı modelindir. Retler: invalid_input, no_baselines, duplicate_station,
+        unknown_station, invalid_covariance, datum_missing, network_too_large,
+        network_disconnected.
 
         Args:
             doc: The drawing it works on.
             baselines:
             datum:
+            robust:
             scale: Unit: 1.
             stations:
             text:
@@ -254,6 +291,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.execute_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -266,6 +304,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -276,6 +315,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.plan_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -288,6 +328,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -298,6 +339,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.validate_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -310,6 +352,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -325,6 +368,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.answer_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -339,10 +383,10 @@ class _SurveyPoints(LocalCommand[SurveyPoints, SurveyPointsWritten, EntitiesCrea
     """``cad.survey.points`` v1. Ölçme hesabı: Ölçme pencerelerinin noktalarını hesaplayıp
     verilen katmana adlı noktalar olarak yazar; hesabı komut ortak çekirdekle yapar:
     Poligon hesabı (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar
-    uzunlukları, kapanma hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100;
+    uzunlukları, kapanma hataları dağıtılır; heights ile trigonometrik kotlar;
     heights.back ile karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün
-    ortalaması, k düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta,
-    ADR 4500), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu
+    ortalaması, k düşer, aynı iki uç arasındaki çiftin kırılma katsayısı
+    refractions'ta), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu
     açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen
     noktalar adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı
     biriminde. Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin
@@ -372,13 +416,13 @@ class _SurveyPoints(LocalCommand[SurveyPoints, SurveyPointsWritten, EntitiesCrea
         """Ölçme hesabı: Ölçme pencerelerinin noktalarını hesaplayıp verilen katmana adlı
         noktalar olarak yazar; hesabı komut ortak çekirdekle yapar: Poligon hesabı
         (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar uzunlukları, kapanma
-        hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100; heights.back ile
-        karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün ortalaması, k
-        düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta, ADR 4500),
-        Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot),
-        Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen noktalar adıyla
-        (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı biriminde.
-        Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin adıyla.
+        hataları dağıtılır; heights ile trigonometrik kotlar; heights.back ile karşılıklı
+        başucu açıları: geri nişanlı kenarın kot farkı iki yönün ortalaması, k düşer, aynı
+        iki uç arasındaki çiftin kırılma katsayısı refractions'ta), Kutupsal alım (polar:
+        bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot), Önden kestirme (forward)
+        ve Geriden kestirme (resection). Bilinen noktalar adıyla (named) ya da koordinatıyla
+        (at); açılar unit'te, yoksa projenin açı biriminde. Noktalar Ad, Tür ve kotuyla
+        yazılır. Tek geri alma adımı, pencerenin adıyla.
 
         Args:
             doc: The drawing it works on.

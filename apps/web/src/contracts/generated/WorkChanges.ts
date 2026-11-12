@@ -21,4 +21,8 @@ objects?: Array<WorkChangedObject>,
  * Each removed object as approved (docs/adr/3680), when the approval kept its objects' values (schema 213), by id,
  * at most [`WORK_CHANGES_LISTED`].
  */
-removedObjects?: Array<WorkRemovedObject>, };
+removedObjects?: Array<WorkRemovedObject>, 
+/**
+ * With a limit (docs/adr/5280): how many of the listed objects moved beyond it.
+ */
+beyond?: number, };

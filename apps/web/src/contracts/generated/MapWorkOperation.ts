@@ -5,4 +5,4 @@ import type { WorkStatus } from "./WorkStatus";
 /**
  * What `map.work.edit` does.
  */
-export type MapWorkOperation = { "op": "add", kind: WorkKind, name: string, layers?: Array<string>, file?: string, } | { "op": "set", item: string, name?: string, status?: WorkStatus, layers?: Array<string>, } | { "op": "remove", item: string, } | { "op": "relink", item: string, file: string, } | { "op": "refresh", item: string, } | { "op": "derive", source: string, uids: Array<string>, operation: string, } | { "op": "forget", derivation: string, } | { "op": "release", uids: Array<string>, };
+export type MapWorkOperation = { "op": "add", kind: WorkKind, name: string, layers?: Array<string>, file?: string, } | { "op": "set", item: string, name?: string, status?: WorkStatus, layers?: Array<string>, } | { "op": "profile", item: string, name?: string, classes?: Array<string>, } | { "op": "remove", item: string, } | { "op": "relink", item: string, file: string, } | { "op": "refresh", item: string, } | { "op": "derive", source: string, uids: Array<string>, operation: string, } | { "op": "forget", derivation: string, } | { "op": "release", uids: Array<string>, };

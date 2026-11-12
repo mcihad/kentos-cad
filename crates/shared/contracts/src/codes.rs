@@ -640,6 +640,12 @@ codes! {
     OWN_CONTENT = "own_content", Failed, false, "Nesne kaynağın kendi katmanında: dosyası olmayan öğe kendi nesnelerinin kaynağı olamaz.";
     /// Approving an item that holds derived objects whose source moved on.
     APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
+    /// A refraction coefficient outside [−1, 1] (docs/adr/4900).
+    INVALID_REFRACTION = "invalid_refraction", Failed, false, "Kırılma katsayısı k −1 ile 1 arasında olmalı (öntanımlı 0,13).";
+    /// Approving an item whose typed layers break its profile (docs/adr/4880).
+    APPROVAL_PROFILE = "approval_profile", Failed, false, "Öğenin tipli katmanlarında profiline uymayan nesne ya da eksik alan var; Profili denetle ile düzeltin, sonra onaylayın.";
+    /// A class an item's profile names is not in the profile (docs/adr/4880).
+    UNKNOWN_PROFILE_CLASS = "unknown_profile_class", Failed, false, "Bu kimlikte sınıf profilde yok; profilin sınıflarından birini verin.";
     /// The map's work would pass its most items or derivations.
     WORK_FULL = "work_full", Failed, false, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.";
     /// An item put back as approved that is not approved (docs/adr/4080).
@@ -712,6 +718,13 @@ codes! {
     INVALID_CONTOURS = "invalid_contours", Failed, false, "Eş yükselti aralığı 0'dan büyük olmalı; yüzeyi en çok 10 000 düzey keser.";
     /// No level of the interval crosses the surface.
     NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
+    /// A warning: the chosen points' own heights part from the surface's by more than BÖHHBÜY m. 93(1)(c)'s limit
+    /// (docs/adr/4740).
+    SECTION_CHECK_EXCEEDED = "section_check_exceeded", Warning, false, "Ölçülen kotlarla yüzeyin kotu arasındaki farkların karesel ortalaması m. 93(1)(c)'nin sınırını aşıyor.";
+    /// Kesit kontrolü (docs/adr/5120): two neighbouring places of the section farther apart than m. 93(1)(b)'s spacing.
+    SECTION_SPACING_EXCEEDED = "section_spacing_exceeded", Warning, false, "Kesitte iki komşu nokta m. 93(1)(b)'nin aralığından uzak.";
+    /// Kesit kontrolü (docs/adr/5120): not a point, or a point without its own height.
+    NOT_A_HEIGHT_POINT = "not_a_height_point", Failed, false, "Nesne kendi kotu olan bir nokta değil; kesitin uçları ve noktaları ölçülmüş kotu olan noktalardır.";
     /// Two surfaces whose difference changes sign nowhere: no cut and fill boundary (docs/adr/1620).
     NO_ZERO_LINE = "no_zero_line", Failed, false, "İki yüzeyin farkı hiçbir yerde işaret değiştirmiyor: sıfır hattı yok.";
     /// Two surfaces that do not overlap, or coincide wherever they do: no cut or fill zone (docs/adr/1840).
@@ -959,6 +972,11 @@ codes! {
     AMBIGUOUS_RECIPE_LAYER = "ambiguous_recipe_layer", Failed, false, "Tarifin katmanının adı bu projede birden çok katmanda var; layers ile hangisi olduğunu verin.";
     /// A warning: a recipe layer this project has none of by its name was added with the recipe's look (docs/adr/3640).
     RECIPE_LAYER_CREATED = "recipe_layer_created", Warning, false, "Tarifin katmanı bu projede yoktu; tarifteki tanımıyla eklendi.";
+    /// A warning: a recipe layer found here (by its name or given) keeps its own fields, and they are not the recipe's
+    /// (docs/adr/4860): the recipe's fields it lacks and those of another kind are said.
+    RECIPE_LAYER_FIELDS = "recipe_layer_fields", Warning, false, "Bulunan katmanın alanları tarifinkinden başka; katman kendi alanlarını korur.";
+    /// Tariften üret (docs/adr/5240): a layer found here took the recipe's fields it lacked (`addFields`).
+    RECIPE_LAYER_FIELDS_ADDED = "recipe_layer_fields_added", Warning, false, "Bulunan katmana tarifin onda olmayan alanları eklendi; kendi alanları değişmedi.";
     /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
     /// warning (docs/adr/0911 §3).
     DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";
@@ -1186,6 +1204,9 @@ codes! {
     SHARED_BOUNDARY_LOCKED = "shared_boundary_locked", Failed, false, "Ortak sınır kilitli katmandaki bir komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.";
     /// A neighbour that following would leave invalid (Topolojik düzenleme).
     NEIGHBOUR_INVALID = "neighbour_invalid", Warning, false, "Komşu nesne geçersiz kalacağı için değişmedi.";
+    /// Köşeyi sil's two arcs not joined into one (docs/adr/5000): not of one circle within the tolerance, turning
+    /// opposite ways or a whole turn together; the joined edge is straight.
+    ARCS_NOT_JOINED = "arcs_not_joined", Warning, false, "Köşenin iki yanındaki yaylar tek yay olmadı; birleşen kenar düz.";
     /// An object of a kind Kır does not break.
     NOT_BREAKABLE = "not_breakable", Failed, false, "Bu türdeki nesne kırılmaz: çizgi, çoklu çizgi, alan, yay, daire, elips, yardımcı çizgi ya da ışın olmalı.";
     /// The core could not break the object there.
@@ -2052,16 +2073,34 @@ codes! {
     PARCEL_CLOSED = "parcel_closed", Failed, false, "Parsel kaydı bir belgeyle kapatılmış; ancak güncel bir parsel kapatılır.";
     /// Parsel kaydı (docs/adr/4220): the area draws a current recorded parcel the document does not close.
     PARCEL_RECORDED = "parcel_recorded", Failed, false, "Alan güncel bir parsel kaydını çiziyor; belge önce o parseli kapatmalı.";
-    /// Parsel kaydı (docs/adr/4220): a current parcel, or another the document makes, has the identity.
     /// Sembolü karardan ver (docs/adr/4240): a symbol not among the level's MPYY area symbols.
     UNKNOWN_PLAN_SYMBOL = "unknown_plan_symbol", Failed, false, "Kademenin MPYY alan sembolleri arasında bu kimlikte sembol yok; kademenin sembollerinden birini seçin.";
     /// Sembolü karardan ver (docs/adr/4240): the object is not an area on the zoning plan's decision layer.
     NOT_A_DECISION = "not_a_decision", Failed, false, "Nesne imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir.";
+    /// Plan değişikliği taslağı (docs/adr/5040): no plan boundary of the id.
+    UNKNOWN_PLAN = "unknown_plan", Failed, false, "Çizimde bu kimlikte (PlanKimlik) plan sınırı yok; planın kimliğini plan sınırından alın.";
+    /// Plan değişikliği taslağı (docs/adr/5040): no draft of the id in the project.
+    UNKNOWN_DRAFT = "unknown_draft", Failed, false, "Projede bu kimlikte plan değişikliği taslağı yok.";
+    /// Sembolü karardan ver (docs/adr/5040): a kept choice that is no longer one of the level's area symbols.
+    KEPT_SYMBOL_IGNORED = "kept_symbol_ignored", Warning, false, "Projede saklanan bir sembol seçimi kademenin MPYY alan sembollerinden değil; kullanılmadı. Seçimi yeniden yapın.";
+    /// Parsel kaydı (docs/adr/4220): a current parcel, or another the document makes, has the identity.
     PARCEL_IDENTITY_TAKEN = "parcel_identity_taken", Failed, false, "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı.";
+    /// Belge taslağı (docs/adr/5020): no draft of the number in the parcel register.
+    UNKNOWN_PARCEL_DRAFT = "unknown_parcel_draft", Failed, false, "Parsel kayıtlarında bu numarada belge taslağı yok.";
+    /// Belgenin onayı (docs/adr/5020): no document of the number in the parcel register.
+    UNKNOWN_PARCEL_DOCUMENT = "unknown_parcel_document", Failed, false, "Parsel kayıtlarında bu numarada belge yok.";
+    /// Belgenin onayı (docs/adr/5020): the document's approval is written already.
+    DOCUMENT_APPROVED = "document_approved", Failed, false, "Belgenin onayı yazılmış; onay bir kez yazılır, değişirse yeni bir belgeyle kaydedin.";
+    /// İzleme incelemesi (docs/adr/5220): no review of the name kept in the project.
+    UNKNOWN_MONITORING_REVIEW = "unknown_monitoring_review", Failed, false, "Projede bu adla saklanan izleme incelemesi yok.";
     /// Senaryo ölçüleri (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
     /// Düzenleme dağıtım taslağı (docs/adr/1460): rounded values that do not add up while the remainder rule is `reject`.
     NEEDS_RULE = "needs_rule", Failed, false, "Yuvarlanan değerler toplamı tutmuyor ve artık kuralı yok; hiçbir şey dağıtılmadı.";
+    /// Düzenleme dağıtım taslağı by value (docs/adr/5080): the user's comparison, no rule of the regulation.
+    VALUE_BASIS_NOT_A_RULE = "value_basis_not_a_rule", Warning, false, "Değer esaslı dağıtım yönetmelikte bir kural değildir; sonuç kullanıcının seçtiği bir karşılaştırma taslağıdır.";
+    /// Ayırma çapı paftaları (docs/adr/5080): a number outside that touches something wherever it goes; placed where it touches the fewest.
+    NUMBER_CROWDED = "number_crowded", Warning, false, "Dışarıdaki numara hiçbir şeye değmeyen bir yere konamadı; en az şeye değdiği yere kondu.";
     /// A parcel's records that disagree on its registered area (docs/adr/1460).
     AREA_MISMATCH = "area_mismatch", Failed, false, "Parselin tapu alanı kayıtlarında farklı.";
     /// A holder twice in one parcel (docs/adr/1460).
@@ -2098,8 +2137,18 @@ codes! {
     KNOWN_DIFFER = "known_differ", Failed, false, "Bilinen noktalar aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin.";
     /// GNSS ağı: a class the rule package does not have.
     UNKNOWN_RULE_CLASS = "unknown_rule_class", Failed, false, "Kural paketinde bu sınıf yok (BÖHHBÜY 2018: C1, C2, C3).";
-    /// GNSS ağı: a GVX file's cross-correlations between vectors were not read.
-    GVX_CORRELATIONS_IGNORED = "gvx_correlations_ignored", Warning, false, "GVX oturumlarının vektörler arası çapraz korelasyonları okunmadı; vektörler birbirinden bağımsız dengelenir.";
+    /// GNSS ağı: a GVX session that names fewer than two of the file's vectors was not kept (docs/adr/4920).
+    GVX_CORRELATIONS_IGNORED = "gvx_correlations_ignored", Warning, false, "GVX oturumunun çapraz korelasyonları alınmadı: oturum dosyanın iki vektörünü bile anmıyor.";
+    /// GNSS ağı: a GVX session kept without all of its n(n − 1)/2 blocks (docs/adr/4920).
+    GVX_SESSION_INCOMPLETE = "gvx_session_incomplete", Warning, false, "GVX oturumunun korelasyon blokları eksik (n bazlı oturumda n(n − 1)/2 blok olur); oturum korelasyonlarıyla dengelenemez.";
+    /// GNSS ağı: a session the adjustment with session correlations needs lacks blocks (docs/adr/4920).
+    SESSION_BLOCKS_MISSING = "session_blocks_missing", Failed, false, "Baz oturumunun korelasyon blokları eksik; korelasyonsuz dengeleyin ya da dosyayı yeniden alın.";
+    /// GNSS ağı: a session's full covariance is not positive definite (docs/adr/4920).
+    SESSION_COVARIANCE_INVALID = "session_covariance_invalid", Failed, false, "Baz oturumunun tam kovaryansı pozitif tanımlı değil; dosyayı yeniden işleyin ya da korelasyonsuz dengeleyin.";
+    /// GNSS ağı: the baselines have sessions but the adjustment did not use their correlations (docs/adr/4920).
+    SESSION_CORRELATIONS_UNUSED = "session_correlations_unused", Warning, false, "Bazların oturum korelasyonları kullanılmadı; aynı oturumun bazları birbirinden bağımsız sayıldı.";
+    /// GNSS ağı: new points' velocities asked for without the campaign's velocity grid (docs/adr/4920).
+    NO_VELOCITY_GRID = "no_velocity_grid", Failed, false, "Yeni noktaların hızı arazi ölçümünün hız ızgarasından okunur; arazi ölçümüne hız ızgarasını verin.";
     /// GNSS ağı: a baseline text's K and N lines were not taken into the archive.
     BASELINE_TEXT_STATIONS = "baseline_text_stations", Warning, false, "Baz metninin K ve N satırları arşive alınmadı; bilinen noktaları çerçevesi ve epokuyla Bilinen nokta ekle ile girin.";
     /// GNSS ağı: the class's limits do not hold (a baseline's or a station's standard deviation).
@@ -2126,6 +2175,9 @@ codes! {
     PROFILE_FIELD_DIFFERS = "profile_field_differs", Warning, false, "Katmanın alanı profilinkinden başka türde; katmanınki korundu.";
     /// A value list the project has with other values than the profile's; the project's was kept (docs/adr/0541).
     PROFILE_DOMAIN_DIFFERS = "profile_domain_differs", Warning, false, "Projenin değer listesi profilinkinden farklı; projeninki korundu.";
+    /// docs/adr/5340: objects a catalog's carrying left where they were (a retired class's, a split class's whose code
+    /// no new class holds).
+    CATALOG_OBJECTS_LEFT = "catalog_objects_left", Warning, false, "Bazı nesneler yeni katalogda yeri olmadığı için yerinde kaldı.";
     /// A class left out: its path names something not a layer, or its layer is locked (docs/adr/0541).
     PROFILE_LAYER_SKIPPED = "profile_layer_skipped", Warning, false, "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler.";
     /// Nothing to import: no source file, no profile and no mapping given (docs/adr/0558).
@@ -2270,7 +2322,7 @@ codes! {
     /// An SLD whose look KentOS cannot read (docs/adr/0516).
     INVALID_SLD = "invalid_sld", Failed, false, "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok.";
     /// A QML whose look KentOS cannot read (docs/adr/0555).
-    INVALID_QML = "invalid_qml", Failed, false, "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok.";
+    INVALID_QML = "invalid_qml", Failed, false, "Dosya okunabilir bir QML stil dosyası değil ya da KentOS'un çizebileceği bir görünüşü yok.";
     /// A MapLibre style whose look KentOS cannot read (docs/adr/0560).
     INVALID_MAPLIBRE = "invalid_maplibre", Failed, false, "Dosya okunabilir bir MapLibre stili (sürüm 8) değil ya da KentOS'un çizebileceği bir katmanı yok.";
     /// A MapLibre style with no layer for the layers asked (docs/adr/0560).
@@ -3165,11 +3217,11 @@ codes! {
     EXTRACTION_TOO_DEEP = "extraction_too_deep", Warning, false, "En derin düzeyden daha derin iç içe bloklara bakılmadı.";
     /// A refresh that would lose a hand edit or a user's row: the table is kept as it is.
     REFRESH_KEPT = "refresh_kept", Warning, false, "Yenileme elle girilen bir değeri ya da kullanıcı satırını kaybettirecekti; tablo olduğu gibi kaldı.";
-    // AutoCAD plot style tables (docs/adr/1130).
+    // Plot style tables, colour-based and named (docs/adr/1130).
     /// A plot style table file larger than its limit.
     PLOT_STYLE_FILE_TOO_LARGE = "plot_style_file_too_large", Failed, false, "Baskı stili tablosu 4 MiB sınırını aşıyor.";
-    /// A file that is not an AutoCAD `.ctb`/`.stb` (its header).
-    UNSUPPORTED_PLOT_STYLE_FILE = "unsupported_plot_style_file", Failed, false, "Dosya bir AutoCAD baskı stili tablosu (.ctb/.stb) değil.";
+    /// A file that is not a `.ctb`/`.stb` plot style table (its header).
+    UNSUPPORTED_PLOT_STYLE_FILE = "unsupported_plot_style_file", Failed, false, "Dosya bir baskı stili tablosu (.ctb/.stb) değil.";
     /// A `.ctb`/`.stb` whose header, compressed text or fields do not read.
     BAD_PLOT_STYLE_FILE = "bad_plot_style_file", Failed, false, "Baskı stili tablosu okunamadı: üst bilgisi, sıkıştırılmış metni ya da bir alanı bozuk.";
     /// A table whose text is not UTF-8: its code page is unknown.
@@ -3184,7 +3236,7 @@ codes! {
     DUPLICATE_PLOT_PROFILE = "duplicate_plot_profile", Failed, false, "Kitapta bu adda ya da aynı dosyadan alınmış bir baskı profili var.";
     /// An assignment twice for one target, or to a pen or style the table lacks.
     BAD_PLOT_ASSIGNMENT = "bad_plot_assignment", Failed, false, "Atamanın hedefi tek olmalı; atanan kalem ya da stil tabloda bulunmalı.";
-    /// What a plot style table's reading could not carry as AutoCAD plots it.
+    /// What a plot style table's reading could not carry as the table's own pens plot it.
     PLOT_STYLE_LOSSES = "plot_style_losses", Warning, false, "Tablonun bazı alanları KentOS'ta aynı basılmıyor; rapor her birini adıyla söylüyor.";
     /// An old v1 file a save would write over.
     LEGACY_FILE = "legacy_file", Host, false, "Eski (v1) çizimin üzerine yazılmaz; kaydı yeni bir yola yapın.";

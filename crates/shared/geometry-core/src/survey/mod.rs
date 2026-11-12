@@ -13,6 +13,7 @@ pub mod fieldbook;
 pub mod intersection;
 pub mod polar;
 pub mod traverse;
+pub mod trend;
 
 use crate::api::Op;
 use crate::jsmath::{PI, TAU, atan2, js_hypot};

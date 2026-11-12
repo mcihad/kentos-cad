@@ -81,6 +81,7 @@ pub(crate) fn run_drawing(
         "road.terrains.zeroline" => again!(road_terrains_zeroline, k::TerrainsZeroLine),
         "road.terrains.cutfill" => again!(road_terrains_cutfill, k::TerrainsCutFill),
         "cad.pipes.profile" => again!(pipes_profile, k::PipesProfile),
+        "road.terrains.sheetcontours" => again!(road_terrains_sheet, k::TerrainsSheetContours),
         _ => again!(road_terrains_contours, k::TerrainsContours),
     })
 }
@@ -233,7 +234,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> Comm
 
 /// Drawing again by itself (docs/adr/0911 §3): after a write, when the project says so, the drawings it left stale are
 /// drawn again in its step; those changed by hand, those whose source is gone and those that do not draw now are left
-/// and said. The rebuild command and the drawing commands do not follow.
+/// and said. The rebuild command and the drawing commands do not follow. Docs/adr/4740: only what changed is written
+/// (docs/adr/4320) unless the project draws whole.
 pub(crate) fn follow(doc: &mut kentos_domain::Document, command: &str) -> Vec<CommandWarning> {
     if !doc.road_auto_rebuild()
         || command == kentos_commands::ROAD_PROJECT_REBUILD
@@ -257,9 +259,11 @@ pub(crate) fn follow(doc: &mut kentos_domain::Document, command: &str) -> Vec<Co
             });
         }
     }
+    let whole = doc.road_rebuild_whole();
     let mut cx = ExecutionContext::new(doc);
     for d in &stale {
-        match redraw(&mut cx, d) {
+        let drawn = if whole { redraw(&mut cx, d) } else { crate::road_project_regional::redraw_regional(&mut cx, d) };
+        match drawn {
             Ok(_) => names.push(d.id.clone()),
             Err(refused) => {
                 let why = match *refused {

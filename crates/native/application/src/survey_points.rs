@@ -510,6 +510,9 @@ fn write_execute(
                 angle_misclosure: laid.angle_misclosure,
                 linear_misclosure: laid.linear_misclosure,
                 height_misclosure: laid.height_misclosure,
+                refraction: kentos_commands::MeasuredRefraction::of(
+                    &laid.refractions.iter().flatten().copied().collect::<Vec<f64>>(),
+                ),
                 refractions: laid.refractions,
                 revision: output.revision,
             },

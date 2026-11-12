@@ -6,4 +6,13 @@ import type { SurveyFileRow } from "./SurveyFileRow";
  * deviations σX σY σZ (m), whether it is excluded and why, whether it goes into the adjustment, its file and its id
  * there, and the network adjustments (`da-N`) made with it.
  */
-export type SurveyBaselineRow = { id: string, campaign: string, from: string, to: string, length: number, sigma: [number, number, number], excluded?: string, adjust: boolean, file?: SurveyFileRow, source?: string, adjustments?: Array<string>, };
+export type SurveyBaselineRow = { id: string, campaign: string, from: string, to: string, length: number, sigma: [number, number, number], excluded?: string, adjust: boolean, file?: SurveyFileRow, source?: string, adjustments?: Array<string>, 
+/**
+ * The baseline session `bo-N` it is in (docs/adr/4920).
+ */
+session?: string, 
+/**
+ * docs/adr/5320: in a session and not excluded, whether it is one of the session's n − 1 independent baselines
+ * (the shortest spanning tree of the session's marks, by length, the lower id of equals) or a dependent one.
+ */
+independent?: boolean, };

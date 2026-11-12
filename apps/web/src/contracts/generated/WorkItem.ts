@@ -2,6 +2,7 @@
 import type { EntityId } from "./EntityId";
 import type { WorkFile } from "./WorkFile";
 import type { WorkKind } from "./WorkKind";
+import type { WorkProfile } from "./WorkProfile";
 import type { WorkStatus } from "./WorkStatus";
 
 /**
@@ -43,4 +44,9 @@ approvedParts?: Array<[string, string, string, string]>,
  * sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
  * 213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
  */
-approvedValues?: Array<string>, };
+approvedValues?: Array<string>, 
+/**
+ * Its typed layers' profile (schema 247, docs/adr/4880): a data profile by name whose classes type the item's
+ * layers (each class's layer its kind of geometry and fields); the item's other layers stay free drawing layers.
+ */
+profile?: WorkProfile, };

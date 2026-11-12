@@ -2,6 +2,7 @@
 import type { LayerField } from "./LayerField";
 import type { ProfileGeometry } from "./ProfileGeometry";
 import type { RegisteredArea } from "./RegisteredArea";
+import type { WorkKind } from "./WorkKind";
 
 /**
  * A class of the profile: a layer by its path, its objects' geometry, its fields.
@@ -28,8 +29,13 @@ color: string, geometry: ProfileGeometry,
  */
 key?: string, fields: Array<LayerField>, registeredArea?: RegisteredArea, 
 /**
- * The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+ * The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; a feature code library's codes,
  * description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
  * point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
  */
-codes?: Array<string>, };
+codes?: Array<string>, 
+/**
+ * The map work items' kinds the class suits (docs/adr/5280): `map.work.query`'s `suggest` offers the profile, with
+ * these classes, to an item of the kind without a profile. A profile's (an office's) own choice, not a rule.
+ */
+work?: Array<WorkKind>, };

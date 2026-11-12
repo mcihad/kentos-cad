@@ -70,12 +70,12 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     // Docs/adr/3680: the approval kept the values: the height by name, none then and “1060” now; the deleted line as it
     // was approved.
     let attributes = vec![kentos_commands::WorkChangedAttribute { name: "Kot".into(), approved: None, now: Some(json!("1060")) }];
-    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()], attributes, attachments: false, approved: None }];
+    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()], attributes, attachments: false, approved: None, shift: None }];
     let got = t.items[3].changes.clone().expect("changes");
     assert_eq!(got.removed_objects.len(), 1);
     assert_eq!(got.removed_objects[0].approved["kind"], "line");
     let removed_objects = got.removed_objects.clone();
-    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects, removed_objects };
+    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects, removed_objects, beyond: None };
     assert_eq!(t.items[3].changes.as_ref(), Some(&changes));
     assert_eq!(
         crate::map_work_panel::changes_words(&changes),
@@ -89,7 +89,7 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     assert_eq!(selected, [Slot(6), new]);
     assert_eq!(
         said(&app).last().map(String::as_str),
-        Some("Onaydan sonra değişen ya da eklenen 2 nesne seçildi; değişen: 1 nesnenin öznitelikleri (Kot: yok → “1060”); silinen 1 nesne çizimde yok, onaylanan hâli: Çizgi (tasarim).")
+        Some("Onaydan sonra değişen ya da eklenen 2 nesne seçildi; değişen: 1 nesnenin öznitelikleri (Kot: yok → “1060”); silinen 1 nesne çizimde yok, onaylanan hâli: Çizgi (tasarim). Silinen 1 nesnenin onaylanan şekli kesik çizgiyle gösteriliyor.")
     );
     // Yeniden onayla: today's objects kept, nothing changed since; one undo step back to the count.
     send(&mut app, P::Status("is-4".into(), W::Approved));

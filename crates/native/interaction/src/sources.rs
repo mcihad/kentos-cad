@@ -42,7 +42,7 @@ impl SourceKind {
             SourceKind::GeoJson => "GeoJSON",
             SourceKind::Shapefile => "Shapefile",
             SourceKind::Dxf => "DXF",
-            SourceKind::Ncz => "Netcad NCZ",
+            SourceKind::Ncz => "NCZ çizimi",
             SourceKind::Gnss => "GNSS (GPX, NMEA)",
             SourceKind::Coords => "Koordinat listesi",
             SourceKind::Kml => "KML/KMZ",

@@ -4,7 +4,7 @@
  "command": "cad.asbuilt.check",
  "commandVersion": 1,
  "title": "Uygulama kontrolü: izlemenin dönem dizisi",
- "note": "ADR 4420. scripts/fixtures/asbuilt_series_cases.py: asbuilt_cases.py'nin çizimi ve üçüncü dönem; izler elle (TBC'nin başvuru dönemi kuralı); KentOS kodu yok.",
+ "note": "ADR 4420. scripts/fixtures/asbuilt_series_cases.py: asbuilt_cases.py'nin çizimi ve üçüncü dönem; izler elle (TBC'nin başvuru dönemi kuralı); KentOS kodu yok. ADR 4840: günlü dönemlerden en küçük kareler doğrusu ve Student t'nin kapalı biçimleriyle anlamlılık, uyarı ve alarm eşikleri elle; dördüncü dönem kendi kurulumunda.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -12518,6 +12518,8371 @@
        "code": "invalid_asbuilt_check",
        "message": "İzleme işinde önceki dönemin noktalarının katmanını (design) verin; noktalar adla karşılaştırılır.",
        "path": "design"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğru: üç günlü dönem, güven %95; iki dönemli noktada doğru yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "trend": {
+       "confidence": 0.95
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "c3ced75a5e629a4e0d04c368f8dffe2f88233e5857e674088c757f1a0e7bb4de",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009c",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-000000000095",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0040000000000048885,
+         "horizontal": 0.005000000000003979,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009d",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-000000000096",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010000000000001563,
+         "dn": 0.006999999999997897,
+         "horizontal": 0.012206555615733777,
+         "dh": -0.001999999999995339,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009e",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-000000000097",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.015000000000000568,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009f",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-000000000098",
+         "designName": "M4",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0009999999999976694,
+         "dh": -0.000999999999990564,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a0",
+         "name": "M5",
+         "status": "unmatched",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a1",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-000000000099",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a2",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-00000000009a",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a3",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-00000000009b",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0040000000000048885,
+         "dn": 0.0,
+         "horizontal": 0.0040000000000048885,
+         "dh": -0.001999999999995339,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a4",
+         "name": "M7",
+         "status": "unmatched",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 5,
+       "outside": 2,
+       "unmatched": 2,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005223572942510246,
+       "rmsVertical": 0.005891883036371328,
+       "maxHorizontal": 0.012206555615733777,
+       "maxVertical": 0.015000000000000568,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": -0.010089779005515685,
+         "fit": {
+          "epochs": 3,
+          "east": 0.01210761161531933,
+          "north": 0.016143482153763915,
+          "up": -0.010093392617303935,
+          "sigmaEast": 3.862062334446466e-05,
+          "sigmaNorth": 5.149416445102307e-05,
+          "sigmaUp": 0.0011328716181098384,
+          "speed": 0.02017935269220273,
+          "moving": [
+           "east",
+           "north"
+          ]
+         }
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.07507229536556803,
+         "rateVertical": -0.004035911602200539,
+         "fit": {
+          "epochs": 3,
+          "east": 0.06050089536445633,
+          "north": 0.04436484575312049,
+          "up": -0.004043303080858266,
+          "sigmaEast": 0.011843657825632988,
+          "sigmaNorth": 0.00946205271939652,
+          "sigmaUp": 0.0023172374006623754,
+          "speed": 0.07502398202307757
+         }
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06053867403315147,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0,
+          "north": 0.0,
+          "up": -0.06053805807659665,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.00019310311672232633,
+          "speed": 0.0,
+          "moving": [
+           "up"
+          ]
+         }
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          }
+         ],
+         "rateHorizontal": 0.0028538204621854648,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.002014218998001085,
+          "north": 0.002021651540429133,
+          "up": -7.4325424279955e-06,
+          "sigmaEast": 0.0011714922414459788,
+          "sigmaNorth": 0.0011586187003311877,
+          "sigmaUp": 0.00233011094176061,
+          "speed": 0.002853796265122649
+         }
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0040359116022148775,
+         "rateVertical": -0.02017955801106005
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0,
+          "north": 0.0,
+          "up": 0.0,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0,
+          "speed": 0.0
+         }
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.012085313988035131,
+          "north": 0.016113751984051614,
+          "up": 0.0,
+          "sigmaEast": 0.00702895344869252,
+          "sigmaNorth": 0.009371937931592801,
+          "sigmaUp": 0.0,
+          "speed": 0.02014218998006237
+         }
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          }
+         ],
+         "rateHorizontal": 0.016054945054964676,
+         "rateVertical": -0.00802747252745382
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "doğru: dört dönem, serbestlik iki; oturan M3 anlamlı, K1 değil",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem4",
+      "design": "donem3",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       },
+       {
+        "layer": "donem3",
+        "date": "2026-07-15"
+       }
+      ],
+      "date": "2026-10-15",
+      "trend": {
+       "confidence": 0.95
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "976cf56b5e930211b177a93452c0360db9546ed70b837946c4216f9a11eee5c0",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a5",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-00000000009c",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.003999999999997783,
+         "horizontal": 0.004999999999998295,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a6",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-00000000009d",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010999999999999233,
+         "dn": 0.008000000000002672,
+         "horizontal": 0.013601470508736394,
+         "dh": -0.0010000000000047748,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a7",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-00000000009e",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.018000000000000682,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a8",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-00000000009f",
+         "designName": "M4",
+         "by": "name",
+         "de": -0.0009999999999976694,
+         "dn": 0.0010000000000047748,
+         "horizontal": 0.0014142135623748235,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a9",
+         "name": "M5",
+         "designUid": "0192f700-1700-7000-8000-0000000000a0",
+         "designName": "M5",
+         "by": "name",
+         "de": -0.0010000000000047748,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0014142135623748235,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000aa",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-0000000000a1",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000ab",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-0000000000a2",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000ac",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-0000000000a3",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0,
+         "horizontal": 0.0030000000000001137,
+         "dh": -0.0010000000000047748,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000ad",
+         "name": "M7",
+         "designUid": "0192f700-1700-7000-8000-0000000000a4",
+         "designName": "M7",
+         "by": "name",
+         "de": 0.001999999999995339,
+         "dn": 0.0,
+         "horizontal": 0.001999999999995339,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 7,
+       "outside": 2,
+       "unmatched": 0,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005022173057773128,
+       "rmsVertical": 0.006101001739241446,
+       "maxHorizontal": 0.013601470508736394,
+       "maxVertical": 0.018000000000000682,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.009000000000000341,
+           "dn": 0.012000000000000455,
+           "dz": -0.007999999999995566,
+           "horizontal": 0.015000000000000568,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.02006868131868208,
+         "rateVertical": -0.010703296703290772,
+         "fit": {
+          "epochs": 4,
+          "east": 0.012040917982901486,
+          "north": 0.016054557310537215,
+          "up": -0.010841236777273385,
+          "sigmaEast": 4.1842555983790606e-05,
+          "sigmaNorth": 5.579007464506075e-05,
+          "sigmaUp": 0.0006609858443141008,
+          "speed": 0.020068196638170662,
+          "moving": [
+           "east",
+           "north",
+           "up"
+          ]
+         }
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          },
+          {
+           "de": 0.04100000000000037,
+           "dn": 0.030000000000001137,
+           "dz": -0.0030000000000001137,
+           "horizontal": 0.05080354318352312,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.06797067453399934,
+         "rateVertical": -0.004013736263736416,
+         "fit": {
+          "epochs": 4,
+          "east": 0.053341707723519406,
+          "north": 0.038901427329373094,
+          "up": -0.004419413853063061,
+          "sigmaEast": 0.006672413335254625,
+          "sigmaNorth": 0.005242005621450626,
+          "sigmaUp": 0.001052820572515292,
+          "speed": 0.06602013958727947,
+          "moving": [
+           "east",
+           "north"
+          ]
+         }
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.04800000000000182,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06421978021978265,
+         "fit": {
+          "epochs": 4,
+          "east": 0.0,
+          "north": 0.0,
+          "up": -0.06383009708738106,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.001885284606418903,
+          "speed": 0.0,
+          "moving": [
+           "up"
+          ]
+         }
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0020000000000024443,
+           "dz": 0.0,
+           "horizontal": 0.0020000000000024443
+          }
+         ],
+         "rateHorizontal": 0.002675824175827446,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 4,
+          "east": -8.821185335437998e-06,
+          "north": 0.002813958122013332,
+          "up": -0.0004057745254272681,
+          "sigmaEast": 0.0012692241981719628,
+          "sigmaNorth": 0.0006862831168533383,
+          "sigmaUp": 0.0010610844670196785,
+          "speed": 0.0028139719482886674
+         }
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.001414213562369799,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0018920934199837696,
+         "rateVertical": -0.013379120879127725,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0017133813950253882,
+          "north": 0.001151720458901544,
+          "up": -0.014325509269665398,
+          "sigmaEast": 0.0019948383509446185,
+          "sigmaNorth": 0.0009892212096412523,
+          "sigmaUp": 0.005028085706478112,
+          "speed": 0.002064494083370434
+         }
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 4,
+          "east": 0.0,
+          "north": 0.0,
+          "up": 0.0,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0,
+          "speed": 0.0
+         }
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.013379120879123923,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 4,
+          "east": 0.007198087233734514,
+          "north": 0.009597449644982195,
+          "up": 0.0,
+          "sigmaEast": 0.004194035327552329,
+          "sigmaNorth": 0.005592047103404761,
+          "sigmaUp": 0.0,
+          "speed": 0.011996812056226465
+         }
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          },
+          {
+           "de": 0.007000000000005002,
+           "dn": 0.0,
+           "dz": -0.0030000000000001137,
+           "horizontal": 0.007000000000005002
+          }
+         ],
+         "rateHorizontal": 0.01397131147541982,
+         "rateVertical": -0.005987704918033014,
+         "fit": {
+          "epochs": 3,
+          "east": 0.013967536927190763,
+          "north": 0.0,
+          "up": -0.0059840098339772494,
+          "sigmaEast": 0.0011964008034281261,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0011712134180765083,
+          "speed": 0.013967536927190763
+         }
+        },
+        {
+         "name": "M7",
+         "from": 2,
+         "steps": [
+          null,
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.001999999999995339,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.001999999999995339
+          }
+         ],
+         "rateHorizontal": 0.007940217391285843,
+         "rateVertical": 0.0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Uygulama",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Tasarım",
+        "points": {
+         "layers": [
+          "zemin"
+         ]
+        }
+       },
+       {
+        "id": "t-2",
+        "name": "Boş",
+        "points": {
+         "layers": [
+          "bos"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Tasarım yüzeyi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "tasarim",
+      "name": "Tasarım noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bordur",
+      "name": "Bordür",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçülen",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bos",
+      "name": "Boş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem1",
+      "name": "Birinci dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem2",
+      "name": "İkinci dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem3",
+      "name": "Üçüncü dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem4",
+      "name": "Dördüncü dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "z": 100.0,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "z": 100.2,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420000.0
+      },
+      "z": 100.4,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420000.0
+      },
+      "z": 100.6,
+      "id": 4
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "z": 100.8,
+      "id": 5
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420000.0
+      },
+      "z": 101.0,
+      "id": 6
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420000.0
+      },
+      "z": 101.2,
+      "id": 7
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420000.0
+      },
+      "z": 101.4,
+      "id": 8
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420000.0
+      },
+      "z": 101.6,
+      "id": 9
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420000.0
+      },
+      "z": 101.8,
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420000.0
+      },
+      "z": 102.0,
+      "id": 11
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420010.0
+      },
+      "z": 100.1,
+      "id": 12
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      "z": 100.3,
+      "id": 13
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420010.0
+      },
+      "z": 100.5,
+      "id": 14
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420010.0
+      },
+      "z": 100.69999999999999,
+      "id": 15
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "z": 100.89999999999999,
+      "id": 16
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420010.0
+      },
+      "z": 101.1,
+      "id": 17
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420010.0
+      },
+      "z": 101.3,
+      "id": 18
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420010.0
+      },
+      "z": 101.5,
+      "id": 19
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420010.0
+      },
+      "z": 101.69999999999999,
+      "id": 20
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420010.0
+      },
+      "z": 101.89999999999999,
+      "id": 21
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420010.0
+      },
+      "z": 102.1,
+      "id": 22
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420020.0
+      },
+      "z": 100.2,
+      "id": 23
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420020.0
+      },
+      "z": 100.4,
+      "id": 24
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420020.0
+      },
+      "z": 100.60000000000001,
+      "id": 25
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420020.0
+      },
+      "z": 100.8,
+      "id": 26
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420020.0
+      },
+      "z": 101.0,
+      "id": 27
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420020.0
+      },
+      "z": 101.2,
+      "id": 28
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420020.0
+      },
+      "z": 101.4,
+      "id": 29
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420020.0
+      },
+      "z": 101.60000000000001,
+      "id": 30
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420020.0
+      },
+      "z": 101.8,
+      "id": 31
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420020.0
+      },
+      "z": 102.0,
+      "id": 32
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420020.0
+      },
+      "z": 102.2,
+      "id": 33
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420030.0
+      },
+      "z": 100.3,
+      "id": 34
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420030.0
+      },
+      "z": 100.5,
+      "id": 35
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420030.0
+      },
+      "z": 100.7,
+      "id": 36
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420030.0
+      },
+      "z": 100.89999999999999,
+      "id": 37
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420030.0
+      },
+      "z": 101.1,
+      "id": 38
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420030.0
+      },
+      "z": 101.3,
+      "id": 39
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420030.0
+      },
+      "z": 101.5,
+      "id": 40
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420030.0
+      },
+      "z": 101.7,
+      "id": 41
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420030.0
+      },
+      "z": 101.89999999999999,
+      "id": 42
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420030.0
+      },
+      "z": 102.1,
+      "id": 43
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420030.0
+      },
+      "z": 102.3,
+      "id": 44
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420040.0
+      },
+      "z": 100.4,
+      "id": 45
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "z": 100.60000000000001,
+      "id": 46
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420040.0
+      },
+      "z": 100.80000000000001,
+      "id": 47
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420040.0
+      },
+      "z": 101.0,
+      "id": 48
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420040.0
+      },
+      "z": 101.2,
+      "id": 49
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420040.0
+      },
+      "z": 101.4,
+      "id": 50
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420040.0
+      },
+      "z": 101.60000000000001,
+      "id": 51
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420040.0
+      },
+      "z": 101.80000000000001,
+      "id": 52
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420040.0
+      },
+      "z": 102.0,
+      "id": 53
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420040.0
+      },
+      "z": 102.2,
+      "id": 54
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420040.0
+      },
+      "z": 102.4,
+      "id": 55
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 100.5,
+      "id": 56
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420050.0
+      },
+      "z": 100.7,
+      "id": 57
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420050.0
+      },
+      "z": 100.9,
+      "id": 58
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420050.0
+      },
+      "z": 101.1,
+      "id": 59
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420050.0
+      },
+      "z": 101.3,
+      "id": 60
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420050.0
+      },
+      "z": 101.5,
+      "id": 61
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420050.0
+      },
+      "z": 101.7,
+      "id": 62
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420050.0
+      },
+      "z": 101.9,
+      "id": 63
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420050.0
+      },
+      "z": 102.1,
+      "id": 64
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420050.0
+      },
+      "z": 102.3,
+      "id": 65
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420050.0
+      },
+      "z": 102.5,
+      "id": 66
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420060.0
+      },
+      "z": 100.6,
+      "id": 67
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420060.0
+      },
+      "z": 100.8,
+      "id": 68
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420060.0
+      },
+      "z": 101.0,
+      "id": 69
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 101.19999999999999,
+      "id": 70
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.0
+      },
+      "z": 101.39999999999999,
+      "id": 71
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420060.0
+      },
+      "z": 101.6,
+      "id": 72
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 73
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420060.0
+      },
+      "z": 102.0,
+      "id": 74
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420060.0
+      },
+      "z": 102.19999999999999,
+      "id": 75
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420060.0
+      },
+      "z": 102.39999999999999,
+      "id": 76
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420060.0
+      },
+      "z": 102.6,
+      "id": 77
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420070.0
+      },
+      "z": 100.7,
+      "id": 78
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420070.0
+      },
+      "z": 100.9,
+      "id": 79
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420070.0
+      },
+      "z": 101.10000000000001,
+      "id": 80
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420070.0
+      },
+      "z": 101.3,
+      "id": 81
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420070.0
+      },
+      "z": 101.5,
+      "id": 82
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420070.0
+      },
+      "z": 101.7,
+      "id": 83
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420070.0
+      },
+      "z": 101.9,
+      "id": 84
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420070.0
+      },
+      "z": 102.10000000000001,
+      "id": 85
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420070.0
+      },
+      "z": 102.3,
+      "id": 86
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420070.0
+      },
+      "z": 102.5,
+      "id": 87
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420070.0
+      },
+      "z": 102.7,
+      "id": 88
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420080.0
+      },
+      "z": 100.8,
+      "id": 89
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420080.0
+      },
+      "z": 101.0,
+      "id": 90
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420080.0
+      },
+      "z": 101.2,
+      "id": 91
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420080.0
+      },
+      "z": 101.39999999999999,
+      "id": 92
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420080.0
+      },
+      "z": 101.6,
+      "id": 93
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420080.0
+      },
+      "z": 101.8,
+      "id": 94
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420080.0
+      },
+      "z": 102.0,
+      "id": 95
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420080.0
+      },
+      "z": 102.2,
+      "id": 96
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420080.0
+      },
+      "z": 102.39999999999999,
+      "id": 97
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420080.0
+      },
+      "z": 102.6,
+      "id": 98
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420080.0
+      },
+      "z": 102.8,
+      "id": 99
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420090.0
+      },
+      "z": 100.9,
+      "id": 100
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420090.0
+      },
+      "z": 101.10000000000001,
+      "id": 101
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420090.0
+      },
+      "z": 101.30000000000001,
+      "id": 102
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420090.0
+      },
+      "z": 101.5,
+      "id": 103
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420090.0
+      },
+      "z": 101.7,
+      "id": 104
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420090.0
+      },
+      "z": 101.9,
+      "id": 105
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420090.0
+      },
+      "z": 102.10000000000001,
+      "id": 106
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420090.0
+      },
+      "z": 102.30000000000001,
+      "id": 107
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420090.0
+      },
+      "z": 102.5,
+      "id": 108
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420090.0
+      },
+      "z": 102.7,
+      "id": 109
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420090.0
+      },
+      "z": 102.9,
+      "id": 110
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420100.0
+      },
+      "z": 101.0,
+      "id": 111
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420100.0
+      },
+      "z": 101.2,
+      "id": 112
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420100.0
+      },
+      "z": 101.4,
+      "id": 113
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420100.0
+      },
+      "z": 101.6,
+      "id": 114
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420100.0
+      },
+      "z": 101.8,
+      "id": 115
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420100.0
+      },
+      "z": 102.0,
+      "id": 116
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420100.0
+      },
+      "z": 102.2,
+      "id": 117
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420100.0
+      },
+      "z": 102.4,
+      "id": 118
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420100.0
+      },
+      "z": 102.6,
+      "id": 119
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420100.0
+      },
+      "z": 102.8,
+      "id": 120
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420100.0
+      },
+      "z": 103.0,
+      "id": 121
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P1"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      "z": 100.3,
+      "id": 122
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P2"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420010.0
+      },
+      "z": 100.5,
+      "id": 123
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420010.0
+      },
+      "z": 100.7,
+      "id": 124
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P4"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "z": 100.9,
+      "id": 125
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P5"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 126
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P6"
+      },
+      "p": {
+       "x": 487060.6,
+       "y": 4420060.0
+      },
+      "z": 101.812,
+      "id": 127
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P7"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420080.0
+      },
+      "z": 102.4,
+      "id": 128
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P8"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420010.0
+      },
+      "id": 129
+     },
+     {
+      "kind": "polyline",
+      "layerId": "bordur",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 130
+     },
+     {
+      "kind": "line",
+      "layerId": "bordur",
+      "attrs": {},
+      "a": {
+       "x": 487050.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420090.0
+      },
+      "id": 131
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Hassasiyet": "0.01"
+      },
+      "p": {
+       "x": 487010.01,
+       "y": 4420010.0
+      },
+      "z": 100.31,
+      "id": 132
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Hassasiyet": "0.01"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420010.05
+      },
+      "z": 100.5,
+      "id": 133
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420010.0
+      },
+      "z": 100.74,
+      "id": 134
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "p4x"
+      },
+      "p": {
+       "x": 487040.1,
+       "y": 4420010.05
+      },
+      "z": 100.9,
+      "id": 135
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "X9"
+      },
+      "p": {
+       "x": 487060.3,
+       "y": 4420060.1
+      },
+      "z": 101.8,
+      "id": 136
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "R1"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420020.0
+      },
+      "z": 101.6,
+      "id": 137
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "S1"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420020.0
+      },
+      "id": 138
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Hassasiyet": "0.08"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420010.0
+      },
+      "z": 101.9,
+      "id": 139
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "B1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420029.97
+      },
+      "z": 100.8,
+      "id": 140
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "B2",
+       "Hassasiyet": "0,02"
+      },
+      "p": {
+       "x": 487050.01,
+       "y": 4420060.0
+      },
+      "z": 101.6,
+      "id": 141
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M1"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420060.0
+      },
+      "z": 100.0,
+      "id": 142
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M2"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420060.0
+      },
+      "z": 100.5,
+      "id": 143
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 101.0,
+      "id": 144
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M4"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.0
+      },
+      "z": 101.2,
+      "id": 145
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M5"
+      },
+      "p": {
+       "x": 487050.0,
+       "y": 4420060.0
+      },
+      "z": 101.4,
+      "id": 146
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 147
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420050.0
+      },
+      "z": 99.5,
+      "id": 148
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M1",
+       "Hassasiyet": "0.002"
+      },
+      "p": {
+       "x": 487010.003,
+       "y": 4420060.004
+      },
+      "z": 99.998,
+      "id": 149
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M2",
+       "Hassasiyet": "0.002"
+      },
+      "p": {
+       "x": 487020.02,
+       "y": 4420060.015
+      },
+      "z": 100.5,
+      "id": 150
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 100.985,
+      "id": 151
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M4",
+       "Hassasiyet": "0.012"
+      },
+      "p": {
+       "x": 487040.001,
+       "y": 4420060.0
+      },
+      "z": 101.201,
+      "id": 152
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "K1",
+       "Hassasiyet": "0.001"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 153
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "K2",
+       "Hassasiyet": "0.001"
+      },
+      "p": {
+       "x": 487060.006,
+       "y": 4420050.008
+      },
+      "z": 99.5,
+      "id": 154
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M6"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420060.0
+      },
+      "z": 101.6,
+      "id": 155
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M1"
+      },
+      "p": {
+       "x": 487010.006,
+       "y": 4420060.008
+      },
+      "z": 99.995,
+      "id": 156
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M2"
+      },
+      "p": {
+       "x": 487020.03,
+       "y": 4420060.022
+      },
+      "z": 100.498,
+      "id": 157
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 100.97,
+      "id": 158
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M4"
+      },
+      "p": {
+       "x": 487040.001,
+       "y": 4420060.001
+      },
+      "z": 101.2,
+      "id": 159
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M5"
+      },
+      "p": {
+       "x": 487050.002,
+       "y": 4420060.0
+      },
+      "z": 101.39,
+      "id": 160
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 161
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 487060.006,
+       "y": 4420050.008
+      },
+      "z": 99.5,
+      "id": 162
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M6"
+      },
+      "p": {
+       "x": 487070.004,
+       "y": 4420060.0
+      },
+      "z": 101.598,
+      "id": 163
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M7"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 164
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M1"
+      },
+      "p": {
+       "x": 487010.009,
+       "y": 4420060.012
+      },
+      "z": 99.992,
+      "id": 165
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M2"
+      },
+      "p": {
+       "x": 487020.041,
+       "y": 4420060.03
+      },
+      "z": 100.497,
+      "id": 166
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 100.952,
+      "id": 167
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M4"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.002
+      },
+      "z": 101.2,
+      "id": 168
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M5"
+      },
+      "p": {
+       "x": 487050.001,
+       "y": 4420060.001
+      },
+      "z": 101.39,
+      "id": 169
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 170
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 487060.006,
+       "y": 4420050.008
+      },
+      "z": 99.5,
+      "id": 171
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M6"
+      },
+      "p": {
+       "x": 487070.007,
+       "y": 4420060.0
+      },
+      "z": 101.597,
+      "id": 172
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M7"
+      },
+      "p": {
+       "x": 487080.002,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 173
+     }
+    ],
+    "uids": [
+     "0192f700-1700-7000-8000-000000000001",
+     "0192f700-1700-7000-8000-000000000002",
+     "0192f700-1700-7000-8000-000000000003",
+     "0192f700-1700-7000-8000-000000000004",
+     "0192f700-1700-7000-8000-000000000005",
+     "0192f700-1700-7000-8000-000000000006",
+     "0192f700-1700-7000-8000-000000000007",
+     "0192f700-1700-7000-8000-000000000008",
+     "0192f700-1700-7000-8000-000000000009",
+     "0192f700-1700-7000-8000-00000000000a",
+     "0192f700-1700-7000-8000-00000000000b",
+     "0192f700-1700-7000-8000-00000000000c",
+     "0192f700-1700-7000-8000-00000000000d",
+     "0192f700-1700-7000-8000-00000000000e",
+     "0192f700-1700-7000-8000-00000000000f",
+     "0192f700-1700-7000-8000-000000000010",
+     "0192f700-1700-7000-8000-000000000011",
+     "0192f700-1700-7000-8000-000000000012",
+     "0192f700-1700-7000-8000-000000000013",
+     "0192f700-1700-7000-8000-000000000014",
+     "0192f700-1700-7000-8000-000000000015",
+     "0192f700-1700-7000-8000-000000000016",
+     "0192f700-1700-7000-8000-000000000017",
+     "0192f700-1700-7000-8000-000000000018",
+     "0192f700-1700-7000-8000-000000000019",
+     "0192f700-1700-7000-8000-00000000001a",
+     "0192f700-1700-7000-8000-00000000001b",
+     "0192f700-1700-7000-8000-00000000001c",
+     "0192f700-1700-7000-8000-00000000001d",
+     "0192f700-1700-7000-8000-00000000001e",
+     "0192f700-1700-7000-8000-00000000001f",
+     "0192f700-1700-7000-8000-000000000020",
+     "0192f700-1700-7000-8000-000000000021",
+     "0192f700-1700-7000-8000-000000000022",
+     "0192f700-1700-7000-8000-000000000023",
+     "0192f700-1700-7000-8000-000000000024",
+     "0192f700-1700-7000-8000-000000000025",
+     "0192f700-1700-7000-8000-000000000026",
+     "0192f700-1700-7000-8000-000000000027",
+     "0192f700-1700-7000-8000-000000000028",
+     "0192f700-1700-7000-8000-000000000029",
+     "0192f700-1700-7000-8000-00000000002a",
+     "0192f700-1700-7000-8000-00000000002b",
+     "0192f700-1700-7000-8000-00000000002c",
+     "0192f700-1700-7000-8000-00000000002d",
+     "0192f700-1700-7000-8000-00000000002e",
+     "0192f700-1700-7000-8000-00000000002f",
+     "0192f700-1700-7000-8000-000000000030",
+     "0192f700-1700-7000-8000-000000000031",
+     "0192f700-1700-7000-8000-000000000032",
+     "0192f700-1700-7000-8000-000000000033",
+     "0192f700-1700-7000-8000-000000000034",
+     "0192f700-1700-7000-8000-000000000035",
+     "0192f700-1700-7000-8000-000000000036",
+     "0192f700-1700-7000-8000-000000000037",
+     "0192f700-1700-7000-8000-000000000038",
+     "0192f700-1700-7000-8000-000000000039",
+     "0192f700-1700-7000-8000-00000000003a",
+     "0192f700-1700-7000-8000-00000000003b",
+     "0192f700-1700-7000-8000-00000000003c",
+     "0192f700-1700-7000-8000-00000000003d",
+     "0192f700-1700-7000-8000-00000000003e",
+     "0192f700-1700-7000-8000-00000000003f",
+     "0192f700-1700-7000-8000-000000000040",
+     "0192f700-1700-7000-8000-000000000041",
+     "0192f700-1700-7000-8000-000000000042",
+     "0192f700-1700-7000-8000-000000000043",
+     "0192f700-1700-7000-8000-000000000044",
+     "0192f700-1700-7000-8000-000000000045",
+     "0192f700-1700-7000-8000-000000000046",
+     "0192f700-1700-7000-8000-000000000047",
+     "0192f700-1700-7000-8000-000000000048",
+     "0192f700-1700-7000-8000-000000000049",
+     "0192f700-1700-7000-8000-00000000004a",
+     "0192f700-1700-7000-8000-00000000004b",
+     "0192f700-1700-7000-8000-00000000004c",
+     "0192f700-1700-7000-8000-00000000004d",
+     "0192f700-1700-7000-8000-00000000004e",
+     "0192f700-1700-7000-8000-00000000004f",
+     "0192f700-1700-7000-8000-000000000050",
+     "0192f700-1700-7000-8000-000000000051",
+     "0192f700-1700-7000-8000-000000000052",
+     "0192f700-1700-7000-8000-000000000053",
+     "0192f700-1700-7000-8000-000000000054",
+     "0192f700-1700-7000-8000-000000000055",
+     "0192f700-1700-7000-8000-000000000056",
+     "0192f700-1700-7000-8000-000000000057",
+     "0192f700-1700-7000-8000-000000000058",
+     "0192f700-1700-7000-8000-000000000059",
+     "0192f700-1700-7000-8000-00000000005a",
+     "0192f700-1700-7000-8000-00000000005b",
+     "0192f700-1700-7000-8000-00000000005c",
+     "0192f700-1700-7000-8000-00000000005d",
+     "0192f700-1700-7000-8000-00000000005e",
+     "0192f700-1700-7000-8000-00000000005f",
+     "0192f700-1700-7000-8000-000000000060",
+     "0192f700-1700-7000-8000-000000000061",
+     "0192f700-1700-7000-8000-000000000062",
+     "0192f700-1700-7000-8000-000000000063",
+     "0192f700-1700-7000-8000-000000000064",
+     "0192f700-1700-7000-8000-000000000065",
+     "0192f700-1700-7000-8000-000000000066",
+     "0192f700-1700-7000-8000-000000000067",
+     "0192f700-1700-7000-8000-000000000068",
+     "0192f700-1700-7000-8000-000000000069",
+     "0192f700-1700-7000-8000-00000000006a",
+     "0192f700-1700-7000-8000-00000000006b",
+     "0192f700-1700-7000-8000-00000000006c",
+     "0192f700-1700-7000-8000-00000000006d",
+     "0192f700-1700-7000-8000-00000000006e",
+     "0192f700-1700-7000-8000-00000000006f",
+     "0192f700-1700-7000-8000-000000000070",
+     "0192f700-1700-7000-8000-000000000071",
+     "0192f700-1700-7000-8000-000000000072",
+     "0192f700-1700-7000-8000-000000000073",
+     "0192f700-1700-7000-8000-000000000074",
+     "0192f700-1700-7000-8000-000000000075",
+     "0192f700-1700-7000-8000-000000000076",
+     "0192f700-1700-7000-8000-000000000077",
+     "0192f700-1700-7000-8000-000000000078",
+     "0192f700-1700-7000-8000-000000000079",
+     "0192f700-1700-7000-8000-00000000007a",
+     "0192f700-1700-7000-8000-00000000007b",
+     "0192f700-1700-7000-8000-00000000007c",
+     "0192f700-1700-7000-8000-00000000007d",
+     "0192f700-1700-7000-8000-00000000007e",
+     "0192f700-1700-7000-8000-00000000007f",
+     "0192f700-1700-7000-8000-000000000080",
+     "0192f700-1700-7000-8000-000000000081",
+     "0192f700-1700-7000-8000-000000000082",
+     "0192f700-1700-7000-8000-000000000083",
+     "0192f700-1700-7000-8000-000000000084",
+     "0192f700-1700-7000-8000-000000000085",
+     "0192f700-1700-7000-8000-000000000086",
+     "0192f700-1700-7000-8000-000000000087",
+     "0192f700-1700-7000-8000-000000000088",
+     "0192f700-1700-7000-8000-000000000089",
+     "0192f700-1700-7000-8000-00000000008a",
+     "0192f700-1700-7000-8000-00000000008b",
+     "0192f700-1700-7000-8000-00000000008c",
+     "0192f700-1700-7000-8000-00000000008d",
+     "0192f700-1700-7000-8000-00000000008e",
+     "0192f700-1700-7000-8000-00000000008f",
+     "0192f700-1700-7000-8000-000000000090",
+     "0192f700-1700-7000-8000-000000000091",
+     "0192f700-1700-7000-8000-000000000092",
+     "0192f700-1700-7000-8000-000000000093",
+     "0192f700-1700-7000-8000-000000000094",
+     "0192f700-1700-7000-8000-000000000095",
+     "0192f700-1700-7000-8000-000000000096",
+     "0192f700-1700-7000-8000-000000000097",
+     "0192f700-1700-7000-8000-000000000098",
+     "0192f700-1700-7000-8000-000000000099",
+     "0192f700-1700-7000-8000-00000000009a",
+     "0192f700-1700-7000-8000-00000000009b",
+     "0192f700-1700-7000-8000-00000000009c",
+     "0192f700-1700-7000-8000-00000000009d",
+     "0192f700-1700-7000-8000-00000000009e",
+     "0192f700-1700-7000-8000-00000000009f",
+     "0192f700-1700-7000-8000-0000000000a0",
+     "0192f700-1700-7000-8000-0000000000a1",
+     "0192f700-1700-7000-8000-0000000000a2",
+     "0192f700-1700-7000-8000-0000000000a3",
+     "0192f700-1700-7000-8000-0000000000a4",
+     "0192f700-1700-7000-8000-0000000000a5",
+     "0192f700-1700-7000-8000-0000000000a6",
+     "0192f700-1700-7000-8000-0000000000a7",
+     "0192f700-1700-7000-8000-0000000000a8",
+     "0192f700-1700-7000-8000-0000000000a9",
+     "0192f700-1700-7000-8000-0000000000aa",
+     "0192f700-1700-7000-8000-0000000000ab",
+     "0192f700-1700-7000-8000-0000000000ac",
+     "0192f700-1700-7000-8000-0000000000ad"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "doğru: güven %50, aynı noktalar daha kolay anlamlı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "trend": {
+       "confidence": 0.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "c3ced75a5e629a4e0d04c368f8dffe2f88233e5857e674088c757f1a0e7bb4de",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009c",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-000000000095",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0040000000000048885,
+         "horizontal": 0.005000000000003979,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009d",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-000000000096",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010000000000001563,
+         "dn": 0.006999999999997897,
+         "horizontal": 0.012206555615733777,
+         "dh": -0.001999999999995339,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009e",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-000000000097",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.015000000000000568,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009f",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-000000000098",
+         "designName": "M4",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0009999999999976694,
+         "dh": -0.000999999999990564,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a0",
+         "name": "M5",
+         "status": "unmatched",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a1",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-000000000099",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a2",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-00000000009a",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a3",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-00000000009b",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0040000000000048885,
+         "dn": 0.0,
+         "horizontal": 0.0040000000000048885,
+         "dh": -0.001999999999995339,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a4",
+         "name": "M7",
+         "status": "unmatched",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 5,
+       "outside": 2,
+       "unmatched": 2,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005223572942510246,
+       "rmsVertical": 0.005891883036371328,
+       "maxHorizontal": 0.012206555615733777,
+       "maxVertical": 0.015000000000000568,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": -0.010089779005515685,
+         "fit": {
+          "epochs": 3,
+          "east": 0.01210761161531933,
+          "north": 0.016143482153763915,
+          "up": -0.010093392617303935,
+          "sigmaEast": 3.862062334446466e-05,
+          "sigmaNorth": 5.149416445102307e-05,
+          "sigmaUp": 0.0011328716181098384,
+          "speed": 0.02017935269220273,
+          "moving": [
+           "east",
+           "north",
+           "up"
+          ]
+         }
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.07507229536556803,
+         "rateVertical": -0.004035911602200539,
+         "fit": {
+          "epochs": 3,
+          "east": 0.06050089536445633,
+          "north": 0.04436484575312049,
+          "up": -0.004043303080858266,
+          "sigmaEast": 0.011843657825632988,
+          "sigmaNorth": 0.00946205271939652,
+          "sigmaUp": 0.0023172374006623754,
+          "speed": 0.07502398202307757,
+          "moving": [
+           "east",
+           "north",
+           "up"
+          ]
+         }
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06053867403315147,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0,
+          "north": 0.0,
+          "up": -0.06053805807659665,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.00019310311672232633,
+          "speed": 0.0,
+          "moving": [
+           "up"
+          ]
+         }
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          }
+         ],
+         "rateHorizontal": 0.0028538204621854648,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.002014218998001085,
+          "north": 0.002021651540429133,
+          "up": -7.4325424279955e-06,
+          "sigmaEast": 0.0011714922414459788,
+          "sigmaNorth": 0.0011586187003311877,
+          "sigmaUp": 0.00233011094176061,
+          "speed": 0.002853796265122649,
+          "moving": [
+           "east",
+           "north"
+          ]
+         }
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0040359116022148775,
+         "rateVertical": -0.02017955801106005
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0,
+          "north": 0.0,
+          "up": 0.0,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0,
+          "speed": 0.0
+         }
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.012085313988035131,
+          "north": 0.016113751984051614,
+          "up": 0.0,
+          "sigmaEast": 0.00702895344869252,
+          "sigmaNorth": 0.009371937931592801,
+          "sigmaUp": 0.0,
+          "speed": 0.02014218998006237,
+          "moving": [
+           "east",
+           "north"
+          ]
+         }
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          }
+         ],
+         "rateHorizontal": 0.016054945054964676,
+         "rateVertical": -0.00802747252745382
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "eşikler: yatay ve düşey hareketle uyarı ve alarm",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "thresholds": {
+       "warning": {
+        "horizontal": 0.0075,
+        "vertical": 0.012
+       },
+       "alarm": {
+        "horizontal": 0.03,
+        "vertical": 0.04
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "c3ced75a5e629a4e0d04c368f8dffe2f88233e5857e674088c757f1a0e7bb4de",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009c",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-000000000095",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0040000000000048885,
+         "horizontal": 0.005000000000003979,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009d",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-000000000096",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010000000000001563,
+         "dn": 0.006999999999997897,
+         "horizontal": 0.012206555615733777,
+         "dh": -0.001999999999995339,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009e",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-000000000097",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.015000000000000568,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009f",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-000000000098",
+         "designName": "M4",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0009999999999976694,
+         "dh": -0.000999999999990564,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a0",
+         "name": "M5",
+         "status": "unmatched",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a1",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-000000000099",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a2",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-00000000009a",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a3",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-00000000009b",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0040000000000048885,
+         "dn": 0.0,
+         "horizontal": 0.0040000000000048885,
+         "dh": -0.001999999999995339,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a4",
+         "name": "M7",
+         "status": "unmatched",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 5,
+       "outside": 2,
+       "unmatched": 2,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005223572942510246,
+       "rmsVertical": 0.005891883036371328,
+       "maxHorizontal": 0.012206555615733777,
+       "maxVertical": 0.015000000000000568,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": -0.010089779005515685,
+         "state": "warning",
+         "exceeded": [
+          "horizontal"
+         ]
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.07507229536556803,
+         "rateVertical": -0.004035911602200539,
+         "state": "alarm",
+         "exceeded": [
+          "horizontal"
+         ]
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06053867403315147,
+         "state": "warning",
+         "exceeded": [
+          "vertical"
+         ]
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          }
+         ],
+         "rateHorizontal": 0.0028538204621854648,
+         "rateVertical": 0.0,
+         "state": "normal"
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0040359116022148775,
+         "rateVertical": -0.02017955801106005,
+         "state": "normal"
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "state": "normal"
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": 0.0,
+         "state": "warning",
+         "exceeded": [
+          "horizontal"
+         ]
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          }
+         ],
+         "rateHorizontal": 0.016054945054964676,
+         "rateVertical": -0.00802747252745382,
+         "state": "normal"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "eşikler: hızla, doğrunun hızı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "trend": {
+       "confidence": 0.95
+      },
+      "thresholds": {
+       "warning": {
+        "horizontalRate": 0.015,
+        "verticalRate": 0.05
+       },
+       "alarm": {
+        "horizontalRate": 0.06,
+        "verticalRate": 0.08
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "c3ced75a5e629a4e0d04c368f8dffe2f88233e5857e674088c757f1a0e7bb4de",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009c",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-000000000095",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0040000000000048885,
+         "horizontal": 0.005000000000003979,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009d",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-000000000096",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010000000000001563,
+         "dn": 0.006999999999997897,
+         "horizontal": 0.012206555615733777,
+         "dh": -0.001999999999995339,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009e",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-000000000097",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.015000000000000568,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009f",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-000000000098",
+         "designName": "M4",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0009999999999976694,
+         "dh": -0.000999999999990564,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a0",
+         "name": "M5",
+         "status": "unmatched",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a1",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-000000000099",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a2",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-00000000009a",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a3",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-00000000009b",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0040000000000048885,
+         "dn": 0.0,
+         "horizontal": 0.0040000000000048885,
+         "dh": -0.001999999999995339,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a4",
+         "name": "M7",
+         "status": "unmatched",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 5,
+       "outside": 2,
+       "unmatched": 2,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005223572942510246,
+       "rmsVertical": 0.005891883036371328,
+       "maxHorizontal": 0.012206555615733777,
+       "maxVertical": 0.015000000000000568,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": -0.010089779005515685,
+         "fit": {
+          "epochs": 3,
+          "east": 0.01210761161531933,
+          "north": 0.016143482153763915,
+          "up": -0.010093392617303935,
+          "sigmaEast": 3.862062334446466e-05,
+          "sigmaNorth": 5.149416445102307e-05,
+          "sigmaUp": 0.0011328716181098384,
+          "speed": 0.02017935269220273,
+          "moving": [
+           "east",
+           "north"
+          ]
+         },
+         "state": "warning",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.07507229536556803,
+         "rateVertical": -0.004035911602200539,
+         "fit": {
+          "epochs": 3,
+          "east": 0.06050089536445633,
+          "north": 0.04436484575312049,
+          "up": -0.004043303080858266,
+          "sigmaEast": 0.011843657825632988,
+          "sigmaNorth": 0.00946205271939652,
+          "sigmaUp": 0.0023172374006623754,
+          "speed": 0.07502398202307757
+         },
+         "state": "alarm",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06053867403315147,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0,
+          "north": 0.0,
+          "up": -0.06053805807659665,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.00019310311672232633,
+          "speed": 0.0,
+          "moving": [
+           "up"
+          ]
+         },
+         "state": "warning",
+         "exceeded": [
+          "verticalRate"
+         ]
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          }
+         ],
+         "rateHorizontal": 0.0028538204621854648,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.002014218998001085,
+          "north": 0.002021651540429133,
+          "up": -7.4325424279955e-06,
+          "sigmaEast": 0.0011714922414459788,
+          "sigmaNorth": 0.0011586187003311877,
+          "sigmaUp": 0.00233011094176061,
+          "speed": 0.002853796265122649
+         },
+         "state": "normal"
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0040359116022148775,
+         "rateVertical": -0.02017955801106005,
+         "state": "normal"
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0,
+          "north": 0.0,
+          "up": 0.0,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0,
+          "speed": 0.0
+         },
+         "state": "normal"
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 3,
+          "east": 0.012085313988035131,
+          "north": 0.016113751984051614,
+          "up": 0.0,
+          "sigmaEast": 0.00702895344869252,
+          "sigmaNorth": 0.009371937931592801,
+          "sigmaUp": 0.0,
+          "speed": 0.02014218998006237
+         },
+         "state": "warning",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          }
+         ],
+         "rateHorizontal": 0.016054945054964676,
+         "rateVertical": -0.00802747252745382,
+         "state": "warning",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "eşikler: hızla, doğru istenmeden ortalama hız",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "thresholds": {
+       "warning": {
+        "horizontalRate": 0.015,
+        "verticalRate": 0.05
+       },
+       "alarm": {
+        "horizontalRate": 0.06,
+        "verticalRate": 0.08
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "c3ced75a5e629a4e0d04c368f8dffe2f88233e5857e674088c757f1a0e7bb4de",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009c",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-000000000095",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0040000000000048885,
+         "horizontal": 0.005000000000003979,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009d",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-000000000096",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010000000000001563,
+         "dn": 0.006999999999997897,
+         "horizontal": 0.012206555615733777,
+         "dh": -0.001999999999995339,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009e",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-000000000097",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.015000000000000568,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-00000000009f",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-000000000098",
+         "designName": "M4",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0009999999999976694,
+         "dh": -0.000999999999990564,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a0",
+         "name": "M5",
+         "status": "unmatched",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a1",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-000000000099",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a2",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-00000000009a",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a3",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-00000000009b",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0040000000000048885,
+         "dn": 0.0,
+         "horizontal": 0.0040000000000048885,
+         "dh": -0.001999999999995339,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a4",
+         "name": "M7",
+         "status": "unmatched",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 5,
+       "outside": 2,
+       "unmatched": 2,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005223572942510246,
+       "rmsVertical": 0.005891883036371328,
+       "maxHorizontal": 0.012206555615733777,
+       "maxVertical": 0.015000000000000568,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": -0.010089779005515685,
+         "state": "warning",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.07507229536556803,
+         "rateVertical": -0.004035911602200539,
+         "state": "alarm",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06053867403315147,
+         "state": "warning",
+         "exceeded": [
+          "verticalRate"
+         ]
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          }
+         ],
+         "rateHorizontal": 0.0028538204621854648,
+         "rateVertical": 0.0,
+         "state": "normal"
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0040359116022148775,
+         "rateVertical": -0.02017955801106005,
+         "state": "normal"
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "state": "normal"
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.020179558011054314,
+         "rateVertical": 0.0,
+         "state": "warning",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          }
+         ],
+         "rateHorizontal": 0.016054945054964676,
+         "rateVertical": -0.00802747252745382,
+         "state": "warning",
+         "exceeded": [
+          "horizontalRate"
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "doğru ve eşikler birlikte, dört dönem",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem4",
+      "design": "donem3",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       },
+       {
+        "layer": "donem3",
+        "date": "2026-07-15"
+       }
+      ],
+      "date": "2026-10-15",
+      "trend": {
+       "confidence": 0.95
+      },
+      "thresholds": {
+       "warning": {
+        "horizontal": 0.0075,
+        "vertical": 0.012,
+        "horizontalRate": 0.015,
+        "verticalRate": 0.05
+       },
+       "alarm": {
+        "horizontal": 0.03,
+        "vertical": 0.04,
+        "horizontalRate": 0.06,
+        "verticalRate": 0.08
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "designDigest": "976cf56b5e930211b177a93452c0360db9546ed70b837946c4216f9a11eee5c0",
+       "points": [
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a5",
+         "name": "M1",
+         "designUid": "0192f700-1700-7000-8000-00000000009c",
+         "designName": "M1",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.003999999999997783,
+         "horizontal": 0.004999999999998295,
+         "dh": -0.0030000000000001137,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a6",
+         "name": "M2",
+         "designUid": "0192f700-1700-7000-8000-00000000009d",
+         "designName": "M2",
+         "by": "name",
+         "de": 0.010999999999999233,
+         "dn": 0.008000000000002672,
+         "horizontal": 0.013601470508736394,
+         "dh": -0.0010000000000047748,
+         "status": "outside",
+         "flags": [
+          "outsideHorizontal"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a7",
+         "name": "M3",
+         "designUid": "0192f700-1700-7000-8000-00000000009e",
+         "designName": "M3",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": -0.018000000000000682,
+         "status": "outside",
+         "flags": [
+          "outsideVertical"
+         ]
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a8",
+         "name": "M4",
+         "designUid": "0192f700-1700-7000-8000-00000000009f",
+         "designName": "M4",
+         "by": "name",
+         "de": -0.0009999999999976694,
+         "dn": 0.0010000000000047748,
+         "horizontal": 0.0014142135623748235,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000a9",
+         "name": "M5",
+         "designUid": "0192f700-1700-7000-8000-0000000000a0",
+         "designName": "M5",
+         "by": "name",
+         "de": -0.0010000000000047748,
+         "dn": 0.0009999999999976694,
+         "horizontal": 0.0014142135623748235,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000aa",
+         "name": "K1",
+         "designUid": "0192f700-1700-7000-8000-0000000000a1",
+         "designName": "K1",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000ab",
+         "name": "K2",
+         "designUid": "0192f700-1700-7000-8000-0000000000a2",
+         "designName": "K2",
+         "by": "name",
+         "de": 0.0,
+         "dn": 0.0,
+         "horizontal": 0.0,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000ac",
+         "name": "M6",
+         "designUid": "0192f700-1700-7000-8000-0000000000a3",
+         "designName": "M6",
+         "by": "name",
+         "de": 0.0030000000000001137,
+         "dn": 0.0,
+         "horizontal": 0.0030000000000001137,
+         "dh": -0.0010000000000047748,
+         "status": "within",
+         "flags": []
+        },
+        {
+         "uid": "0192f700-1700-7000-8000-0000000000ad",
+         "name": "M7",
+         "designUid": "0192f700-1700-7000-8000-0000000000a4",
+         "designName": "M7",
+         "by": "name",
+         "de": 0.001999999999995339,
+         "dn": 0.0,
+         "horizontal": 0.001999999999995339,
+         "dh": 0.0,
+         "status": "within",
+         "flags": []
+        }
+       ],
+       "missing": [],
+       "within": 7,
+       "outside": 2,
+       "unmatched": 0,
+       "ambiguous": 0,
+       "lowQuality": 0,
+       "rmsHorizontal": 0.005022173057773128,
+       "rmsVertical": 0.006101001739241446,
+       "maxHorizontal": 0.013601470508736394,
+       "maxVertical": 0.018000000000000682,
+       "kind": "monitoring",
+       "control": {
+        "checked": [
+         "K1",
+         "K2"
+        ],
+        "moved": [],
+        "missing": []
+       },
+       "tracks": [
+        {
+         "name": "M1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0030000000000001137,
+           "dn": 0.003999999999997783,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.004999999999998295
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": -0.0049999999999954525,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.009000000000000341,
+           "dn": 0.012000000000000455,
+           "dz": -0.007999999999995566,
+           "horizontal": 0.015000000000000568,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.02006868131868208,
+         "rateVertical": -0.010703296703290772,
+         "fit": {
+          "epochs": 4,
+          "east": 0.012040917982901486,
+          "north": 0.016054557310537215,
+          "up": -0.010841236777273385,
+          "sigmaEast": 4.1842555983790606e-05,
+          "sigmaNorth": 5.579007464506075e-05,
+          "sigmaUp": 0.0006609858443141008,
+          "speed": 0.020068196638170662,
+          "moving": [
+           "east",
+           "north",
+           "up"
+          ]
+         },
+         "state": "warning",
+         "exceeded": [
+          "horizontal",
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.019999999999999574,
+           "dn": 0.015000000000000568,
+           "dz": 0.0,
+           "horizontal": 0.025,
+           "outside": true
+          },
+          {
+           "de": 0.030000000000001137,
+           "dn": 0.021999999999998465,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.03720215047547656,
+           "outside": true
+          },
+          {
+           "de": 0.04100000000000037,
+           "dn": 0.030000000000001137,
+           "dz": -0.0030000000000001137,
+           "horizontal": 0.05080354318352312,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.06797067453399934,
+         "rateVertical": -0.004013736263736416,
+         "fit": {
+          "epochs": 4,
+          "east": 0.053341707723519406,
+          "north": 0.038901427329373094,
+          "up": -0.004419413853063061,
+          "sigmaEast": 0.006672413335254625,
+          "sigmaNorth": 0.005242005621450626,
+          "sigmaUp": 0.001052820572515292,
+          "speed": 0.06602013958727947,
+          "moving": [
+           "east",
+           "north"
+          ]
+         },
+         "state": "alarm",
+         "exceeded": [
+          "horizontal",
+          "horizontalRate"
+         ]
+        },
+        {
+         "name": "M3",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.015000000000000568,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.030000000000001137,
+           "horizontal": 0.0,
+           "outside": true
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": -0.04800000000000182,
+           "horizontal": 0.0,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": -0.06421978021978265,
+         "fit": {
+          "epochs": 4,
+          "east": 0.0,
+          "north": 0.0,
+          "up": -0.06383009708738106,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.001885284606418903,
+          "speed": 0.0,
+          "moving": [
+           "up"
+          ]
+         },
+         "state": "alarm",
+         "exceeded": [
+          "vertical"
+         ]
+        },
+        {
+         "name": "M4",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0,
+           "dz": 0.000999999999990564,
+           "horizontal": 0.0009999999999976694
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": 0.0,
+           "horizontal": 0.001414213562369799
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0020000000000024443,
+           "dz": 0.0,
+           "horizontal": 0.0020000000000024443
+          }
+         ],
+         "rateHorizontal": 0.002675824175827446,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 4,
+          "east": -8.821185335437998e-06,
+          "north": 0.002813958122013332,
+          "up": -0.0004057745254272681,
+          "sigmaEast": 0.0012692241981719628,
+          "sigmaNorth": 0.0006862831168533383,
+          "sigmaUp": 0.0010610844670196785,
+          "speed": 0.0028139719482886674
+         },
+         "state": "normal"
+        },
+        {
+         "name": "M5",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          null,
+          {
+           "de": 0.0020000000000024443,
+           "dn": 0.0,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.0020000000000024443,
+           "outside": true
+          },
+          {
+           "de": 0.0009999999999976694,
+           "dn": 0.0009999999999976694,
+           "dz": -0.010000000000005116,
+           "horizontal": 0.001414213562369799,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.0018920934199837696,
+         "rateVertical": -0.013379120879127725,
+         "fit": {
+          "epochs": 3,
+          "east": 0.0017133813950253882,
+          "north": 0.001151720458901544,
+          "up": -0.014325509269665398,
+          "sigmaEast": 0.0019948383509446185,
+          "sigmaNorth": 0.0009892212096412523,
+          "sigmaUp": 0.005028085706478112,
+          "speed": 0.002064494083370434
+         },
+         "state": "normal"
+        },
+        {
+         "name": "K1",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          }
+         ],
+         "rateHorizontal": 0.0,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 4,
+          "east": 0.0,
+          "north": 0.0,
+          "up": 0.0,
+          "sigmaEast": 0.0,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0,
+          "speed": 0.0
+         },
+         "state": "normal"
+        },
+        {
+         "name": "K2",
+         "from": 0,
+         "steps": [
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          },
+          {
+           "de": 0.006000000000000227,
+           "dn": 0.008000000000002672,
+           "dz": 0.0,
+           "horizontal": 0.010000000000002274,
+           "outside": true
+          }
+         ],
+         "rateHorizontal": 0.013379120879123923,
+         "rateVertical": 0.0,
+         "fit": {
+          "epochs": 4,
+          "east": 0.007198087233734514,
+          "north": 0.009597449644982195,
+          "up": 0.0,
+          "sigmaEast": 0.004194035327552329,
+          "sigmaNorth": 0.005592047103404761,
+          "sigmaUp": 0.0,
+          "speed": 0.011996812056226465
+         },
+         "state": "warning",
+         "exceeded": [
+          "horizontal"
+         ]
+        },
+        {
+         "name": "M6",
+         "from": 1,
+         "steps": [
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.0040000000000048885,
+           "dn": 0.0,
+           "dz": -0.001999999999995339,
+           "horizontal": 0.0040000000000048885
+          },
+          {
+           "de": 0.007000000000005002,
+           "dn": 0.0,
+           "dz": -0.0030000000000001137,
+           "horizontal": 0.007000000000005002
+          }
+         ],
+         "rateHorizontal": 0.01397131147541982,
+         "rateVertical": -0.005987704918033014,
+         "fit": {
+          "epochs": 3,
+          "east": 0.013967536927190763,
+          "north": 0.0,
+          "up": -0.0059840098339772494,
+          "sigmaEast": 0.0011964008034281261,
+          "sigmaNorth": 0.0,
+          "sigmaUp": 0.0011712134180765083,
+          "speed": 0.013967536927190763
+         },
+         "state": "normal"
+        },
+        {
+         "name": "M7",
+         "from": 2,
+         "steps": [
+          null,
+          null,
+          {
+           "de": 0.0,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.0
+          },
+          {
+           "de": 0.001999999999995339,
+           "dn": 0.0,
+           "dz": 0.0,
+           "horizontal": 0.001999999999995339
+          }
+         ],
+         "rateHorizontal": 0.007940217391285843,
+         "rateVertical": 0.0,
+         "state": "normal"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Uygulama",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Tasarım",
+        "points": {
+         "layers": [
+          "zemin"
+         ]
+        }
+       },
+       {
+        "id": "t-2",
+        "name": "Boş",
+        "points": {
+         "layers": [
+          "bos"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Tasarım yüzeyi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "tasarim",
+      "name": "Tasarım noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bordur",
+      "name": "Bordür",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçülen",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bos",
+      "name": "Boş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem1",
+      "name": "Birinci dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem2",
+      "name": "İkinci dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem3",
+      "name": "Üçüncü dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donem4",
+      "name": "Dördüncü dönem",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "z": 100.0,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "z": 100.2,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420000.0
+      },
+      "z": 100.4,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420000.0
+      },
+      "z": 100.6,
+      "id": 4
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "z": 100.8,
+      "id": 5
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420000.0
+      },
+      "z": 101.0,
+      "id": 6
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420000.0
+      },
+      "z": 101.2,
+      "id": 7
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420000.0
+      },
+      "z": 101.4,
+      "id": 8
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420000.0
+      },
+      "z": 101.6,
+      "id": 9
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420000.0
+      },
+      "z": 101.8,
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420000.0
+      },
+      "z": 102.0,
+      "id": 11
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420010.0
+      },
+      "z": 100.1,
+      "id": 12
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      "z": 100.3,
+      "id": 13
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420010.0
+      },
+      "z": 100.5,
+      "id": 14
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420010.0
+      },
+      "z": 100.69999999999999,
+      "id": 15
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "z": 100.89999999999999,
+      "id": 16
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420010.0
+      },
+      "z": 101.1,
+      "id": 17
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420010.0
+      },
+      "z": 101.3,
+      "id": 18
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420010.0
+      },
+      "z": 101.5,
+      "id": 19
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420010.0
+      },
+      "z": 101.69999999999999,
+      "id": 20
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420010.0
+      },
+      "z": 101.89999999999999,
+      "id": 21
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420010.0
+      },
+      "z": 102.1,
+      "id": 22
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420020.0
+      },
+      "z": 100.2,
+      "id": 23
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420020.0
+      },
+      "z": 100.4,
+      "id": 24
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420020.0
+      },
+      "z": 100.60000000000001,
+      "id": 25
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420020.0
+      },
+      "z": 100.8,
+      "id": 26
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420020.0
+      },
+      "z": 101.0,
+      "id": 27
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420020.0
+      },
+      "z": 101.2,
+      "id": 28
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420020.0
+      },
+      "z": 101.4,
+      "id": 29
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420020.0
+      },
+      "z": 101.60000000000001,
+      "id": 30
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420020.0
+      },
+      "z": 101.8,
+      "id": 31
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420020.0
+      },
+      "z": 102.0,
+      "id": 32
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420020.0
+      },
+      "z": 102.2,
+      "id": 33
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420030.0
+      },
+      "z": 100.3,
+      "id": 34
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420030.0
+      },
+      "z": 100.5,
+      "id": 35
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420030.0
+      },
+      "z": 100.7,
+      "id": 36
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420030.0
+      },
+      "z": 100.89999999999999,
+      "id": 37
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420030.0
+      },
+      "z": 101.1,
+      "id": 38
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420030.0
+      },
+      "z": 101.3,
+      "id": 39
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420030.0
+      },
+      "z": 101.5,
+      "id": 40
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420030.0
+      },
+      "z": 101.7,
+      "id": 41
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420030.0
+      },
+      "z": 101.89999999999999,
+      "id": 42
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420030.0
+      },
+      "z": 102.1,
+      "id": 43
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420030.0
+      },
+      "z": 102.3,
+      "id": 44
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420040.0
+      },
+      "z": 100.4,
+      "id": 45
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "z": 100.60000000000001,
+      "id": 46
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420040.0
+      },
+      "z": 100.80000000000001,
+      "id": 47
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420040.0
+      },
+      "z": 101.0,
+      "id": 48
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420040.0
+      },
+      "z": 101.2,
+      "id": 49
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420040.0
+      },
+      "z": 101.4,
+      "id": 50
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420040.0
+      },
+      "z": 101.60000000000001,
+      "id": 51
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420040.0
+      },
+      "z": 101.80000000000001,
+      "id": 52
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420040.0
+      },
+      "z": 102.0,
+      "id": 53
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420040.0
+      },
+      "z": 102.2,
+      "id": 54
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420040.0
+      },
+      "z": 102.4,
+      "id": 55
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 100.5,
+      "id": 56
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420050.0
+      },
+      "z": 100.7,
+      "id": 57
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420050.0
+      },
+      "z": 100.9,
+      "id": 58
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420050.0
+      },
+      "z": 101.1,
+      "id": 59
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420050.0
+      },
+      "z": 101.3,
+      "id": 60
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420050.0
+      },
+      "z": 101.5,
+      "id": 61
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420050.0
+      },
+      "z": 101.7,
+      "id": 62
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420050.0
+      },
+      "z": 101.9,
+      "id": 63
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420050.0
+      },
+      "z": 102.1,
+      "id": 64
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420050.0
+      },
+      "z": 102.3,
+      "id": 65
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420050.0
+      },
+      "z": 102.5,
+      "id": 66
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420060.0
+      },
+      "z": 100.6,
+      "id": 67
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420060.0
+      },
+      "z": 100.8,
+      "id": 68
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420060.0
+      },
+      "z": 101.0,
+      "id": 69
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 101.19999999999999,
+      "id": 70
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.0
+      },
+      "z": 101.39999999999999,
+      "id": 71
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420060.0
+      },
+      "z": 101.6,
+      "id": 72
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 73
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420060.0
+      },
+      "z": 102.0,
+      "id": 74
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420060.0
+      },
+      "z": 102.19999999999999,
+      "id": 75
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420060.0
+      },
+      "z": 102.39999999999999,
+      "id": 76
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420060.0
+      },
+      "z": 102.6,
+      "id": 77
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420070.0
+      },
+      "z": 100.7,
+      "id": 78
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420070.0
+      },
+      "z": 100.9,
+      "id": 79
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420070.0
+      },
+      "z": 101.10000000000001,
+      "id": 80
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420070.0
+      },
+      "z": 101.3,
+      "id": 81
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420070.0
+      },
+      "z": 101.5,
+      "id": 82
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420070.0
+      },
+      "z": 101.7,
+      "id": 83
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420070.0
+      },
+      "z": 101.9,
+      "id": 84
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420070.0
+      },
+      "z": 102.10000000000001,
+      "id": 85
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420070.0
+      },
+      "z": 102.3,
+      "id": 86
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420070.0
+      },
+      "z": 102.5,
+      "id": 87
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420070.0
+      },
+      "z": 102.7,
+      "id": 88
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420080.0
+      },
+      "z": 100.8,
+      "id": 89
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420080.0
+      },
+      "z": 101.0,
+      "id": 90
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420080.0
+      },
+      "z": 101.2,
+      "id": 91
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420080.0
+      },
+      "z": 101.39999999999999,
+      "id": 92
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420080.0
+      },
+      "z": 101.6,
+      "id": 93
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420080.0
+      },
+      "z": 101.8,
+      "id": 94
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420080.0
+      },
+      "z": 102.0,
+      "id": 95
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420080.0
+      },
+      "z": 102.2,
+      "id": 96
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420080.0
+      },
+      "z": 102.39999999999999,
+      "id": 97
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420080.0
+      },
+      "z": 102.6,
+      "id": 98
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420080.0
+      },
+      "z": 102.8,
+      "id": 99
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420090.0
+      },
+      "z": 100.9,
+      "id": 100
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420090.0
+      },
+      "z": 101.10000000000001,
+      "id": 101
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420090.0
+      },
+      "z": 101.30000000000001,
+      "id": 102
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420090.0
+      },
+      "z": 101.5,
+      "id": 103
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420090.0
+      },
+      "z": 101.7,
+      "id": 104
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420090.0
+      },
+      "z": 101.9,
+      "id": 105
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420090.0
+      },
+      "z": 102.10000000000001,
+      "id": 106
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420090.0
+      },
+      "z": 102.30000000000001,
+      "id": 107
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420090.0
+      },
+      "z": 102.5,
+      "id": 108
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420090.0
+      },
+      "z": 102.7,
+      "id": 109
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420090.0
+      },
+      "z": 102.9,
+      "id": 110
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420100.0
+      },
+      "z": 101.0,
+      "id": 111
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487010.0,
+       "y": 4420100.0
+      },
+      "z": 101.2,
+      "id": 112
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487020.0,
+       "y": 4420100.0
+      },
+      "z": 101.4,
+      "id": 113
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487030.0,
+       "y": 4420100.0
+      },
+      "z": 101.6,
+      "id": 114
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487040.0,
+       "y": 4420100.0
+      },
+      "z": 101.8,
+      "id": 115
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487050.0,
+       "y": 4420100.0
+      },
+      "z": 102.0,
+      "id": 116
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487060.0,
+       "y": 4420100.0
+      },
+      "z": 102.2,
+      "id": 117
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487070.0,
+       "y": 4420100.0
+      },
+      "z": 102.4,
+      "id": 118
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487080.0,
+       "y": 4420100.0
+      },
+      "z": 102.6,
+      "id": 119
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487090.0,
+       "y": 4420100.0
+      },
+      "z": 102.8,
+      "id": 120
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {},
+      "p": {
+       "x": 487100.0,
+       "y": 4420100.0
+      },
+      "z": 103.0,
+      "id": 121
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P1"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      "z": 100.3,
+      "id": 122
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P2"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420010.0
+      },
+      "z": 100.5,
+      "id": 123
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420010.0
+      },
+      "z": 100.7,
+      "id": 124
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P4"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "z": 100.9,
+      "id": 125
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P5"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 126
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P6"
+      },
+      "p": {
+       "x": 487060.6,
+       "y": 4420060.0
+      },
+      "z": 101.812,
+      "id": 127
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P7"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420080.0
+      },
+      "z": 102.4,
+      "id": 128
+     },
+     {
+      "kind": "point",
+      "layerId": "tasarim",
+      "attrs": {
+       "Ad": "P8"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420010.0
+      },
+      "id": 129
+     },
+     {
+      "kind": "polyline",
+      "layerId": "bordur",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       }
+      ],
+      "id": 130
+     },
+     {
+      "kind": "line",
+      "layerId": "bordur",
+      "attrs": {},
+      "a": {
+       "x": 487050.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420090.0
+      },
+      "id": 131
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Hassasiyet": "0.01"
+      },
+      "p": {
+       "x": 487010.01,
+       "y": 4420010.0
+      },
+      "z": 100.31,
+      "id": 132
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Hassasiyet": "0.01"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420010.05
+      },
+      "z": 100.5,
+      "id": 133
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420010.0
+      },
+      "z": 100.74,
+      "id": 134
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "p4x"
+      },
+      "p": {
+       "x": 487040.1,
+       "y": 4420010.05
+      },
+      "z": 100.9,
+      "id": 135
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "X9"
+      },
+      "p": {
+       "x": 487060.3,
+       "y": 4420060.1
+      },
+      "z": 101.8,
+      "id": 136
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "R1"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420020.0
+      },
+      "z": 101.6,
+      "id": 137
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "S1"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420020.0
+      },
+      "id": 138
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Hassasiyet": "0.08"
+      },
+      "p": {
+       "x": 487090.0,
+       "y": 4420010.0
+      },
+      "z": 101.9,
+      "id": 139
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "B1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420029.97
+      },
+      "z": 100.8,
+      "id": 140
+     },
+     {
+      "kind": "point",
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "B2",
+       "Hassasiyet": "0,02"
+      },
+      "p": {
+       "x": 487050.01,
+       "y": 4420060.0
+      },
+      "z": 101.6,
+      "id": 141
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M1"
+      },
+      "p": {
+       "x": 487010.0,
+       "y": 4420060.0
+      },
+      "z": 100.0,
+      "id": 142
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M2"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420060.0
+      },
+      "z": 100.5,
+      "id": 143
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 101.0,
+      "id": 144
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M4"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.0
+      },
+      "z": 101.2,
+      "id": 145
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "M5"
+      },
+      "p": {
+       "x": 487050.0,
+       "y": 4420060.0
+      },
+      "z": 101.4,
+      "id": 146
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 147
+     },
+     {
+      "kind": "point",
+      "layerId": "donem1",
+      "attrs": {
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420050.0
+      },
+      "z": 99.5,
+      "id": 148
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M1",
+       "Hassasiyet": "0.002"
+      },
+      "p": {
+       "x": 487010.003,
+       "y": 4420060.004
+      },
+      "z": 99.998,
+      "id": 149
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M2",
+       "Hassasiyet": "0.002"
+      },
+      "p": {
+       "x": 487020.02,
+       "y": 4420060.015
+      },
+      "z": 100.5,
+      "id": 150
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 100.985,
+      "id": 151
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M4",
+       "Hassasiyet": "0.012"
+      },
+      "p": {
+       "x": 487040.001,
+       "y": 4420060.0
+      },
+      "z": 101.201,
+      "id": 152
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "K1",
+       "Hassasiyet": "0.001"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 153
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "K2",
+       "Hassasiyet": "0.001"
+      },
+      "p": {
+       "x": 487060.006,
+       "y": 4420050.008
+      },
+      "z": 99.5,
+      "id": 154
+     },
+     {
+      "kind": "point",
+      "layerId": "donem2",
+      "attrs": {
+       "Ad": "M6"
+      },
+      "p": {
+       "x": 487070.0,
+       "y": 4420060.0
+      },
+      "z": 101.6,
+      "id": 155
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M1"
+      },
+      "p": {
+       "x": 487010.006,
+       "y": 4420060.008
+      },
+      "z": 99.995,
+      "id": 156
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M2"
+      },
+      "p": {
+       "x": 487020.03,
+       "y": 4420060.022
+      },
+      "z": 100.498,
+      "id": 157
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 100.97,
+      "id": 158
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M4"
+      },
+      "p": {
+       "x": 487040.001,
+       "y": 4420060.001
+      },
+      "z": 101.2,
+      "id": 159
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M5"
+      },
+      "p": {
+       "x": 487050.002,
+       "y": 4420060.0
+      },
+      "z": 101.39,
+      "id": 160
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 161
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 487060.006,
+       "y": 4420050.008
+      },
+      "z": 99.5,
+      "id": 162
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M6"
+      },
+      "p": {
+       "x": 487070.004,
+       "y": 4420060.0
+      },
+      "z": 101.598,
+      "id": 163
+     },
+     {
+      "kind": "point",
+      "layerId": "donem3",
+      "attrs": {
+       "Ad": "M7"
+      },
+      "p": {
+       "x": 487080.0,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 164
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M1"
+      },
+      "p": {
+       "x": 487010.009,
+       "y": 4420060.012
+      },
+      "z": 99.992,
+      "id": 165
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M2"
+      },
+      "p": {
+       "x": 487020.041,
+       "y": 4420060.03
+      },
+      "z": 100.497,
+      "id": 166
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M3"
+      },
+      "p": {
+       "x": 487030.0,
+       "y": 4420060.0
+      },
+      "z": 100.952,
+      "id": 167
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M4"
+      },
+      "p": {
+       "x": 487040.0,
+       "y": 4420060.002
+      },
+      "z": 101.2,
+      "id": 168
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M5"
+      },
+      "p": {
+       "x": 487050.001,
+       "y": 4420060.001
+      },
+      "z": 101.39,
+      "id": 169
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "z": 99.0,
+      "id": 170
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "K2"
+      },
+      "p": {
+       "x": 487060.006,
+       "y": 4420050.008
+      },
+      "z": 99.5,
+      "id": 171
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M6"
+      },
+      "p": {
+       "x": 487070.007,
+       "y": 4420060.0
+      },
+      "z": 101.597,
+      "id": 172
+     },
+     {
+      "kind": "point",
+      "layerId": "donem4",
+      "attrs": {
+       "Ad": "M7"
+      },
+      "p": {
+       "x": 487080.002,
+       "y": 4420060.0
+      },
+      "z": 101.8,
+      "id": 173
+     }
+    ],
+    "uids": [
+     "0192f700-1700-7000-8000-000000000001",
+     "0192f700-1700-7000-8000-000000000002",
+     "0192f700-1700-7000-8000-000000000003",
+     "0192f700-1700-7000-8000-000000000004",
+     "0192f700-1700-7000-8000-000000000005",
+     "0192f700-1700-7000-8000-000000000006",
+     "0192f700-1700-7000-8000-000000000007",
+     "0192f700-1700-7000-8000-000000000008",
+     "0192f700-1700-7000-8000-000000000009",
+     "0192f700-1700-7000-8000-00000000000a",
+     "0192f700-1700-7000-8000-00000000000b",
+     "0192f700-1700-7000-8000-00000000000c",
+     "0192f700-1700-7000-8000-00000000000d",
+     "0192f700-1700-7000-8000-00000000000e",
+     "0192f700-1700-7000-8000-00000000000f",
+     "0192f700-1700-7000-8000-000000000010",
+     "0192f700-1700-7000-8000-000000000011",
+     "0192f700-1700-7000-8000-000000000012",
+     "0192f700-1700-7000-8000-000000000013",
+     "0192f700-1700-7000-8000-000000000014",
+     "0192f700-1700-7000-8000-000000000015",
+     "0192f700-1700-7000-8000-000000000016",
+     "0192f700-1700-7000-8000-000000000017",
+     "0192f700-1700-7000-8000-000000000018",
+     "0192f700-1700-7000-8000-000000000019",
+     "0192f700-1700-7000-8000-00000000001a",
+     "0192f700-1700-7000-8000-00000000001b",
+     "0192f700-1700-7000-8000-00000000001c",
+     "0192f700-1700-7000-8000-00000000001d",
+     "0192f700-1700-7000-8000-00000000001e",
+     "0192f700-1700-7000-8000-00000000001f",
+     "0192f700-1700-7000-8000-000000000020",
+     "0192f700-1700-7000-8000-000000000021",
+     "0192f700-1700-7000-8000-000000000022",
+     "0192f700-1700-7000-8000-000000000023",
+     "0192f700-1700-7000-8000-000000000024",
+     "0192f700-1700-7000-8000-000000000025",
+     "0192f700-1700-7000-8000-000000000026",
+     "0192f700-1700-7000-8000-000000000027",
+     "0192f700-1700-7000-8000-000000000028",
+     "0192f700-1700-7000-8000-000000000029",
+     "0192f700-1700-7000-8000-00000000002a",
+     "0192f700-1700-7000-8000-00000000002b",
+     "0192f700-1700-7000-8000-00000000002c",
+     "0192f700-1700-7000-8000-00000000002d",
+     "0192f700-1700-7000-8000-00000000002e",
+     "0192f700-1700-7000-8000-00000000002f",
+     "0192f700-1700-7000-8000-000000000030",
+     "0192f700-1700-7000-8000-000000000031",
+     "0192f700-1700-7000-8000-000000000032",
+     "0192f700-1700-7000-8000-000000000033",
+     "0192f700-1700-7000-8000-000000000034",
+     "0192f700-1700-7000-8000-000000000035",
+     "0192f700-1700-7000-8000-000000000036",
+     "0192f700-1700-7000-8000-000000000037",
+     "0192f700-1700-7000-8000-000000000038",
+     "0192f700-1700-7000-8000-000000000039",
+     "0192f700-1700-7000-8000-00000000003a",
+     "0192f700-1700-7000-8000-00000000003b",
+     "0192f700-1700-7000-8000-00000000003c",
+     "0192f700-1700-7000-8000-00000000003d",
+     "0192f700-1700-7000-8000-00000000003e",
+     "0192f700-1700-7000-8000-00000000003f",
+     "0192f700-1700-7000-8000-000000000040",
+     "0192f700-1700-7000-8000-000000000041",
+     "0192f700-1700-7000-8000-000000000042",
+     "0192f700-1700-7000-8000-000000000043",
+     "0192f700-1700-7000-8000-000000000044",
+     "0192f700-1700-7000-8000-000000000045",
+     "0192f700-1700-7000-8000-000000000046",
+     "0192f700-1700-7000-8000-000000000047",
+     "0192f700-1700-7000-8000-000000000048",
+     "0192f700-1700-7000-8000-000000000049",
+     "0192f700-1700-7000-8000-00000000004a",
+     "0192f700-1700-7000-8000-00000000004b",
+     "0192f700-1700-7000-8000-00000000004c",
+     "0192f700-1700-7000-8000-00000000004d",
+     "0192f700-1700-7000-8000-00000000004e",
+     "0192f700-1700-7000-8000-00000000004f",
+     "0192f700-1700-7000-8000-000000000050",
+     "0192f700-1700-7000-8000-000000000051",
+     "0192f700-1700-7000-8000-000000000052",
+     "0192f700-1700-7000-8000-000000000053",
+     "0192f700-1700-7000-8000-000000000054",
+     "0192f700-1700-7000-8000-000000000055",
+     "0192f700-1700-7000-8000-000000000056",
+     "0192f700-1700-7000-8000-000000000057",
+     "0192f700-1700-7000-8000-000000000058",
+     "0192f700-1700-7000-8000-000000000059",
+     "0192f700-1700-7000-8000-00000000005a",
+     "0192f700-1700-7000-8000-00000000005b",
+     "0192f700-1700-7000-8000-00000000005c",
+     "0192f700-1700-7000-8000-00000000005d",
+     "0192f700-1700-7000-8000-00000000005e",
+     "0192f700-1700-7000-8000-00000000005f",
+     "0192f700-1700-7000-8000-000000000060",
+     "0192f700-1700-7000-8000-000000000061",
+     "0192f700-1700-7000-8000-000000000062",
+     "0192f700-1700-7000-8000-000000000063",
+     "0192f700-1700-7000-8000-000000000064",
+     "0192f700-1700-7000-8000-000000000065",
+     "0192f700-1700-7000-8000-000000000066",
+     "0192f700-1700-7000-8000-000000000067",
+     "0192f700-1700-7000-8000-000000000068",
+     "0192f700-1700-7000-8000-000000000069",
+     "0192f700-1700-7000-8000-00000000006a",
+     "0192f700-1700-7000-8000-00000000006b",
+     "0192f700-1700-7000-8000-00000000006c",
+     "0192f700-1700-7000-8000-00000000006d",
+     "0192f700-1700-7000-8000-00000000006e",
+     "0192f700-1700-7000-8000-00000000006f",
+     "0192f700-1700-7000-8000-000000000070",
+     "0192f700-1700-7000-8000-000000000071",
+     "0192f700-1700-7000-8000-000000000072",
+     "0192f700-1700-7000-8000-000000000073",
+     "0192f700-1700-7000-8000-000000000074",
+     "0192f700-1700-7000-8000-000000000075",
+     "0192f700-1700-7000-8000-000000000076",
+     "0192f700-1700-7000-8000-000000000077",
+     "0192f700-1700-7000-8000-000000000078",
+     "0192f700-1700-7000-8000-000000000079",
+     "0192f700-1700-7000-8000-00000000007a",
+     "0192f700-1700-7000-8000-00000000007b",
+     "0192f700-1700-7000-8000-00000000007c",
+     "0192f700-1700-7000-8000-00000000007d",
+     "0192f700-1700-7000-8000-00000000007e",
+     "0192f700-1700-7000-8000-00000000007f",
+     "0192f700-1700-7000-8000-000000000080",
+     "0192f700-1700-7000-8000-000000000081",
+     "0192f700-1700-7000-8000-000000000082",
+     "0192f700-1700-7000-8000-000000000083",
+     "0192f700-1700-7000-8000-000000000084",
+     "0192f700-1700-7000-8000-000000000085",
+     "0192f700-1700-7000-8000-000000000086",
+     "0192f700-1700-7000-8000-000000000087",
+     "0192f700-1700-7000-8000-000000000088",
+     "0192f700-1700-7000-8000-000000000089",
+     "0192f700-1700-7000-8000-00000000008a",
+     "0192f700-1700-7000-8000-00000000008b",
+     "0192f700-1700-7000-8000-00000000008c",
+     "0192f700-1700-7000-8000-00000000008d",
+     "0192f700-1700-7000-8000-00000000008e",
+     "0192f700-1700-7000-8000-00000000008f",
+     "0192f700-1700-7000-8000-000000000090",
+     "0192f700-1700-7000-8000-000000000091",
+     "0192f700-1700-7000-8000-000000000092",
+     "0192f700-1700-7000-8000-000000000093",
+     "0192f700-1700-7000-8000-000000000094",
+     "0192f700-1700-7000-8000-000000000095",
+     "0192f700-1700-7000-8000-000000000096",
+     "0192f700-1700-7000-8000-000000000097",
+     "0192f700-1700-7000-8000-000000000098",
+     "0192f700-1700-7000-8000-000000000099",
+     "0192f700-1700-7000-8000-00000000009a",
+     "0192f700-1700-7000-8000-00000000009b",
+     "0192f700-1700-7000-8000-00000000009c",
+     "0192f700-1700-7000-8000-00000000009d",
+     "0192f700-1700-7000-8000-00000000009e",
+     "0192f700-1700-7000-8000-00000000009f",
+     "0192f700-1700-7000-8000-0000000000a0",
+     "0192f700-1700-7000-8000-0000000000a1",
+     "0192f700-1700-7000-8000-0000000000a2",
+     "0192f700-1700-7000-8000-0000000000a3",
+     "0192f700-1700-7000-8000-0000000000a4",
+     "0192f700-1700-7000-8000-0000000000a5",
+     "0192f700-1700-7000-8000-0000000000a6",
+     "0192f700-1700-7000-8000-0000000000a7",
+     "0192f700-1700-7000-8000-0000000000a8",
+     "0192f700-1700-7000-8000-0000000000a9",
+     "0192f700-1700-7000-8000-0000000000aa",
+     "0192f700-1700-7000-8000-0000000000ab",
+     "0192f700-1700-7000-8000-0000000000ac",
+     "0192f700-1700-7000-8000-0000000000ad"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "doğru dizisiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "trend": {
+       "confidence": 0.95
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_asbuilt_check",
+       "message": "Doğru uydurma ve eşikler izleme işinin dönem dizisinindir (kind: monitoring ve önceki dönemler, epochs).",
+       "path": "trend"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eşikler dizisiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "thresholds": {
+       "warning": {
+        "horizontal": 0.0075,
+        "vertical": 0.012
+       },
+       "alarm": {
+        "horizontal": 0.03,
+        "vertical": 0.04
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_asbuilt_check",
+       "message": "Doğru uydurma ve eşikler izleme işinin dönem dizisinindir (kind: monitoring ve önceki dönemler, epochs).",
+       "path": "thresholds"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "güven düzeyi 1'den büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "trend": {
+       "confidence": 95.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_asbuilt_check",
+       "message": "Güven düzeyi 0 ile 1 arasında bir sayı olmalı (ör. 0.95).",
+       "path": "trend.confidence"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksi eşik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "thresholds": {
+       "warning": {
+        "vertical": -0.01
+       },
+       "alarm": {}
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_asbuilt_check",
+       "message": "Düşey hareketin uyarı eşiği 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın.",
+       "path": "thresholds.warning.vertical"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "uyarı alarmdan büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "monitoring",
+      "measured": "donem3",
+      "design": "donem2",
+      "horizontal": 0.008,
+      "vertical": 0.01,
+      "control": [
+       "K1",
+       "K2"
+      ],
+      "epochs": [
+       {
+        "layer": "donem1",
+        "date": "2026-01-15"
+       },
+       {
+        "layer": "donem2",
+        "date": "2026-04-15"
+       }
+      ],
+      "date": "2026-07-15",
+      "thresholds": {
+       "warning": {
+        "horizontalRate": 0.05
+       },
+       "alarm": {
+        "horizontalRate": 0.02
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_asbuilt_check",
+       "message": "Yatay hızın uyarı eşiği alarm eşiğinden küçük olmalı.",
+       "path": "thresholds.warning.horizontalRate"
       }
      },
      "expect": {

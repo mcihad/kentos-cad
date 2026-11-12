@@ -101,6 +101,13 @@ pub trait ToolHost: Send + Sync {
         doc: &Document,
         id: &str,
     ) -> Result<(NetworkDef, kentos_geometry_core::ops::network::NetworkSession), String>;
+    /// A network built from the definition `def` over the drawing as it is, as `network` builds a project's
+    /// (docs/adr/5060: a scenario's side, its layers standing for the network's).
+    fn network_of(
+        &self,
+        doc: &Document,
+        def: &NetworkDef,
+    ) -> Result<kentos_geometry_core::ops::network::NetworkSession, String>;
 }
 
 static TOOLS: OnceLock<Box<dyn ToolHost>> = OnceLock::new();

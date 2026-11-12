@@ -130,7 +130,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.exportDxf",
             "DXF olarak dışa aktar",
-            "Bütün çizimi AutoCAD 2007 DXF olarak yazar: nesneler katmanlarıyla, masaüstünün DXF dışa \
+            "Bütün çizimi DXF (R2007, AC1021) olarak yazar: nesneler katmanlarıyla, masaüstünün DXF dışa \
              aktar'ı gibi (aynı yazıcı). DXF'in tutamadıkları KentOS verisiyle gider; yolda değişenler \
              cevabın report'undadır. Dışa aktarma kayıt değildir: çizim kaydedilmemişse öyle kalır.",
             object(
@@ -706,6 +706,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.drape"
             // Sembolü karardan ver writes over the decision areas' symbols (docs/adr/4240).
             | "cad.zoning.symbolize"
+            // Plan değişikliği taslağı replaces the project's draft of the id, or takes it out (docs/adr/5040).
+            | "cad.zoning.draft"
             // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
             | "cad.rasters.mosaic"
             // With overwrite it writes over an existing GeoTIFF (docs/adr/0644 §3).

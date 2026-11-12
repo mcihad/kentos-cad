@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `245`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-246.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `253`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-254.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -994,6 +994,58 @@ seçer; 216 ve öncesi alanı `unknown_field` sayar (`broken/plan-cut-in-schema-
 başkası `bad_value`, `broken/line-groups-unknown.kcad`). Yoksa her nesne kendi kalemindedir; yeni Mimari projesi
 `byScale` yazar. Yazıcı 218'i ayar `lineGroups` taşıyınca seçer; 217 ve öncesi alanı `unknown_field` sayar
 (`broken/line-groups-in-schema-217.kcad`). Örnek `line-groups.json/.kcad`.
+
+**Şema 246** (ADR 4740; MAP-14): pafta eğrilerinin çizimi (`road.terrains.sheetcontours`), yol ya da harita projesinin
+`road.drawings`'inde kaynaklarının damgalarıyla. Kaynak türlerine `layer` eklenir: ana kaynak yüzeydir; eğrilerin okuduğu
+katmanlar (detay, şev üstü ve dibi, seçilen noktalar, yerleşik alan, yol) öbür kaynaklardır, kimlikleri katmanın
+kimliğidir (boşluk taşıyabilir, en çok 256 karakter). Katmanın damgası, katmandaki nesnelerin çizim sırasıyla, her birinin
+tabanının alanları çıkarılmış JSON'unun (türü ve geometrisi) listesinin kanonik JSON'unun (sayılar kayan noktalı)
+SHA-256'sının ilk 16 hanesidir. `road.rebuildWhole` (mantıksal; yalnız `true` yazılır): yeniden üretim, elle de
+kendiliğinden de her çizimi bütün çizer; yazılmamışsa yalnız değişeni yazar (ADR 4320). Yazıcı 246'yı böyle bir çizim,
+`layer` kaynağı ya da `rebuildWhole` varken seçer; 245 ve öncesi üçünü de `bad_value` sayar
+(`broken/sheet-contour-drawing-in-schema-245.kcad`). Örnek `map-sheet-contours.json/.kcad`.
+
+**Şema 250** (ADR 5040; MAP-09): imar planının projede saklanan verisi, `settings.zoningPlan` (JSON'u olduğu gibi;
+boşsa yazılmaz): `symbols` (kullanıcının sembol seçimleri: `level`, `use`, `symbol`, her biri boşluksuz başlayıp biten
+1–200 karakter; aynı kademe ve kullanım bir kez; en çok 1000) ve `drafts` (plan değişikliği taslakları, en çok 100: `id`
+1–64 karakter, tek; `plan` planın `PlanKimlik`'i; `revision` taslağın yapıldığı çizim sürümü, tamsayı yazısı; `reason`
+gerekçe, 1–4000 karakter; `changes` 1–10000 değişiklik: `area` karar alanının küçük harfli UUID'si, `field` `Kullanim`,
+`Nizam`, `TAKS`, `KAKS`, `KatAdedi`, `Hmax`, `OnCekme`, `YanCekme` ya da `ArkaCekme`, `before` (boş olabilir) ve `after`
+(boş olmaz) en çok 200 karakter ve birbirinden farklı; aynı alanın aynı alanı bir kez). Taslak yürürlükteki karar
+alanlarını değiştirmez. Yazıcı 250'yi veri varken seçer; 249 ve öncesi alanı `unknown_field` sayar
+(`broken/zoning-plan-in-schema-249.kcad`); gerekçesiz taslak, taslağın değiştirmediği alan ve iki kez seçilen kademe ve
+kullanım `bad_value`. Örnek `zoning-plan.json/.kcad`.
+
+**Şema 249** (ADR 5020; MAP-08): parsel kayıtlarının (`settings.parcelRegister`) belgelerin yazdığı kenar ölçüleri
+(`lengths`: `boundary`, `document`, `length` metre olarak sıfırdan büyük düz ondalık, yazıldığı gibi; belge sınırdan önce
+gelmez; bir sınıra bir belgeden bir kez), belge taslakları (`drafts`: belgelerden ayrı `number`; adı belgeler ve
+taslaklar arasında tek; `create` alanların kimliği, belgedeki alanı, halkaları `pts` ve isteğe bağlı `bulges` ile ve
+kenar ölçüleri `lengths` (`ring`, `edge`, `length`); `close` kayıtlı parseller, her biri bir kez; en az biri) ve belgenin
+dışarıda verilen onayı (`documents[].approval`: `reference` 1–64 karakter, isteğe bağlı `date` 64, `by` 120). Yazıcı
+249'u bunlardan biri varken seçer; 248 ve öncesi `unknown_field` sayar (`broken/parcel-drafts-in-schema-248.kcad`);
+sıfır ölçü ve belgeyle aynı adlı taslak `bad_value`. Örnek `parcel-drafts.json/.kcad`.
+
+**Şema 251** (ADR 5100; MAP-13): nokta bulutu dosyasının çizimdeki konumu (`sources[].pose`): dosyayı yeniden yazmadan
+dosyanın noktalarını çizime götüren katı dönüşüm, satır satır 16 sayı (sol üst 3 × 3 dönme, dördüncü sütun öteleme, son
+satır 0 0 0 1; RᵀR = I 10⁻⁹ içinde, determinant artı); bulutun `bounds`'u dosyaların konumdaki kutularının birleşimidir.
+Yazıcı 251'i bir dosyanın konumu varken seçer; 250 ve öncesi alanı `unknown_field` sayar
+(`broken/pointcloud-pose-in-schema-250.kcad`); ölçekli konum ve 15 sayı `bad_value`. Örnek `pointcloud-poses.json/.kcad`.
+
+**Şema 248** (ADR 4920; MAP-03): GNSS arşivinin baz oturumları (`mapSurvey.baselineSessions`: `bo-N`, arazi ölçümü,
+dosyadaki adı `name`, isteğe bağlı `start`/`end`, 2–100 bazı `baselines` (bir baz en çok bir oturumda), korelasyon
+blokları `blocks` (`row`, `col`: oturumun iki ayrı bazı, her çift bir kez, en çok n(n − 1)/2; `r`: satır satır dokuz
+korelasyon, −1 ile 1 arasında), isteğe bağlı GVX `file`); ağ dengelemesinin oturumları (`adjustments[].sessions`);
+bilinen noktaların kabul farkı sınırı (`mapSurvey.tolerance`: `horizontal` ve/veya `vertical` 0'dan büyük metre,
+`source` 1–500 karakter); ağ noktasının hızı (`points[].result.velocity`: `enu` m/yıl, her biri en çok 1; `grid` adı ve
+SHA-256'sı). Yazıcı 248'i bunlardan biri varken seçer; 247 ve öncesi alanları `unknown_field` sayar
+(`broken/map-survey-sessions-in-schema-247.kcad`); tek bazlı oturum, 1'i aşan korelasyon ve 0 sınır `bad_value`. Örnek
+`map-survey-sessions.json/.kcad`.
+
+**Şema 247** (ADR 4880; MAP-01): harita işi öğesinin tipli katman profili (`mapWork.items[].profile`): `name` (veri
+profilinin adı, başında ve sonunda boşluk olmayan 1–200 karakter) ve `classes` (sınıf kimlikleri, her biri bir kez, en
+çok 64; boş liste yazılmaz: hepsi demektir). Yazıcı 247'yi bir öğenin profili varken seçer; 246 ve öncesi alanı
+`unknown_field` sayar (`broken/map-work-profile-in-schema-246.kcad`); boş liste, iki kez yazılmış sınıf ve boşluklu ad
+`bad_value`. Örnek `map-work-profile.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

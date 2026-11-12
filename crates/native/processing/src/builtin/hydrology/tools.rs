@@ -120,7 +120,7 @@ fn method(first: &str) -> ParamDef {
 
 fn exponent() -> ParamDef {
     number("exponent", "Çoklu yönün üssü", 0.0, 0.0, 100.0, "")
-        .describe("0: uyarlanan (Qin ve ark. 2007, ArcGIS Pro'nunki); 0,1–100: sabit üs (1: Quinn ve ark. 1991).")
+        .describe("0: uyarlanan (Qin ve ark. 2007); 0,1–100: sabit üs (1: Quinn ve ark. 1991).")
         .shown_when(|v| text(v, "method", "d8") == "mfd")
 }
 
@@ -297,7 +297,7 @@ pub fn accumulation() -> Tool {
         ),
         "Her hücreden geçen suyun geldiği alanı yazar: hücre sayısı, alan ya da özgül havza alanı.",
         &[
-            "Birikim hücrenin kendisi ve yukarısındaki hücrelerin paylarıdır (hücre kendini sayar; ArcGIS'in Flow Accumulation'ı saymaz, onunki bir eksiktir). Özgül havza alanı alan / hücrenin genişliğidir.",
+            "Birikim hücrenin kendisi ve yukarısındaki hücrelerin paylarıdır (hücre kendini sayar; saymayan tanımlarda değer bir eksiktir). Özgül havza alanı alan / hücrenin genişliğidir.",
             "D8: bütün pay yönüne. D∞ (Tarboton 1997): sekiz üçgen yüzün en dik alçalanı, pay iki komşu arasında açıyla. Çoklu yön: pay L·tᵖ ile orantılı (t eğim, L Quinn ve ark.'nın kontur uzunluğu: dikte 0,5, çaprazda 0,354); üs sabit ya da uyarlanan p = 8,9·min(e, 1) + 1,1 (Qin ve ark. 2007, e hücrenin en dik eğimi). Alçak komşusu olmayan hücrenin payı D8 yönüne.",
             HELP_FILL,
             HELP_EMPTY,
@@ -416,7 +416,7 @@ pub fn pour_point() -> Tool {
         ("hydrology.pourPoint", "Döküm noktası", "pourPoint"),
         "Noktaları yakındaki en büyük akış birikimli hücreye taşır: havzanın çıkışı derenin üstüne gelir.",
         &[
-            "Yaklaştırma 0'da noktanın hücresi; artı bir uzaklıkta merkezi bu uzaklıkta olan hücrelerden D8 birikimi en büyük olanı (eşitse noktaya en yakın, o da eşitse satır satır ilki; ArcGIS'in Snap Pour Point'i).",
+            "Yaklaştırma 0'da noktanın hücresi; artı bir uzaklıkta merkezi bu uzaklıkta olan hücrelerden D8 birikimi en büyük olanı (eşitse noktaya en yakın, o da eşitse satır satır ilki).",
             "Her nokta hücresinin merkezine yazılır; öznitelikleri Nokta (girdideki sırası), Birikim (hücre), Alan (m²) ve Uzaklık (m). Rasterin dışındaki ya da değersiz hücreye düşen nokta atlanır.",
             HELP_FILL,
             HELP_SIZE,
@@ -467,7 +467,7 @@ pub fn watershed() -> Tool {
         ("hydrology.watershed", "Noktadan havza", "watershed"),
         "Her döküm noktasının havzasını alan olarak yazar: suyu o noktadan geçen bütün hücreler.",
         &[
-            "Hücre D8 yolundaki ilk döküm noktasının havzasındadır: yukarıdaki nokta aşağıdakinin havzasından kendi havzasını ayırır (ArcGIS'in Watershed'i). İki nokta aynı hücreye düşerse hücre girdide sonra gelenindir; öbürünün havzası boş kalır, söylenir.",
+            "Hücre D8 yolundaki ilk döküm noktasının havzasındadır: yukarıdaki nokta aşağıdakinin havzasından kendi havzasını ayırır. İki nokta aynı hücreye düşerse hücre girdide sonra gelenindir; öbürünün havzası boş kalır, söylenir.",
             "Yaklaştırma Döküm noktası'nınkidir. Alanlar hücre kenarlarındandır (8 komşu); öznitelikleri Havza (noktanın girdideki sırası) ve Alan (m²).",
             HELP_FILL,
             HELP_SIZE,
@@ -524,7 +524,7 @@ pub fn basins() -> Tool {
         ("hydrology.basins", "Havzalar", "basins"),
         "Bütün havzaları, dere kollarının alt havzalarını ya da bir güzergâhı kesen derelerin havzalarını alan olarak yazar.",
         &[
-            "Ana havzalar: her hücre D8 yolunun bittiği hücreye göre (dışarı akan çıkış ya da yönsüz hücre); tek hücrelik havza da havzadır (ArcGIS'in Basin'i). Alt havzalar: Dere ağı'nın her kolunun kendi havzası (Bağ, Sıra). Güzergâhı kesen dereler: güzergâhın geçtiği dere hücrelerinden dere boyunca en aşağıdakiler geçiştir; her geçişin bütün havzası (menfez ve köprünün beslenme alanı, örtüşebilir), Km güzergâhtaki yeri, Sıra kolun Strahler sırası.",
+            "Ana havzalar: her hücre D8 yolunun bittiği hücreye göre (dışarı akan çıkış ya da yönsüz hücre); tek hücrelik havza da havzadır. Alt havzalar: Dere ağı'nın her kolunun kendi havzası (Bağ, Sıra). Güzergâhı kesen dereler: güzergâhın geçtiği dere hücrelerinden dere boyunca en aşağıdakiler geçiştir; her geçişin bütün havzası (menfez ve köprünün beslenme alanı, örtüşebilir), Km güzergâhtaki yeri, Sıra kolun Strahler sırası.",
             "En küçük alandan küçük havza yazılmaz, sayısı söylenir. Alanlar hücre kenarlarındandır.",
             HELP_FILL,
             HELP_SIZE,

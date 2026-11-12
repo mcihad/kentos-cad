@@ -8,6 +8,18 @@
 //! transformation of the coordinates (CLAUDE.md §5).
 
 pub(crate) mod arch;
+mod area_map;
+
+/// docs/adr/5300: the EPSG extents the area map of a system (and the way to a second one) reads, for the tests.
+#[cfg(test)]
+pub(crate) fn area_map_of(srid: u32, second: Option<u32>) -> (Option<u32>, Option<u32>) {
+    let m = area_map::AreaMap::of(srid, second);
+    let op = m.operation.and_then(|(_, r)| match r {
+        kentos_project::crs::Region::Area(a) => a.extent,
+        kentos_project::crs::Region::Box(_) => None,
+    });
+    (m.area.and_then(|a| a.extent), op)
+}
 mod ask_type;
 pub(crate) mod ask_work;
 mod choices;

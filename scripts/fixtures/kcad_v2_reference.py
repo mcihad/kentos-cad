@@ -53,7 +53,7 @@ DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordin
 SCHEMA_9_STYLES = DIMENSION_STYLES[5:10]
 # Schema 62 (docs/adr/0322): the centre mark, the axis and the level.
 SCHEMA_62_STYLES = DIMENSION_STYLES[10:]
-# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added AutoCAD's
+# A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added the DXF
 # others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
 LEADER_ARROWS_30 = ("closed", "open30", "open90", "dotSmall", "dotBlank", "oblique", "archTick", "boxFilled", "boxBlank", "datumFilled")
@@ -373,6 +373,12 @@ def settings(s):
                 "mapSurvey": (opaque, False),
                 # Schema 216 (docs/adr/4220): the parcel register, as its JSON.
                 "parcelRegister": (opaque, False),
+                # Schema 250 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, as their JSON.
+                "zoningPlan": (opaque, False),
+                # Schema 252 (docs/adr/5200): the adjustments the project keeps, as their JSON.
+                "surveyAdjustments": (opaque, False),
+                # Schema 253 (docs/adr/5220): the monitoring reviews the project keeps, as their JSON.
+                "monitoringReviews": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -448,6 +454,8 @@ def cloud_source(f):
         "format": (enum(CLOUD_FORMATS), True),
         "count": (uint, True),
         "bounds": (floats, True),
+        # Schema 251 (docs/adr/5100): the file's place in the drawing, 16 numbers row by row.
+        "pose": (floats, False),
     }
     return cmap(fields(f, table, "nokta bulutunun dosyası"))
 
@@ -1965,7 +1973,7 @@ KINDS = {
     # Schema 72 (docs/adr/0410 §2): a record without a geometry, only in the drawing; no fields of its own.
     "record": {},
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
-    # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
+    # Schema 30 (docs/adr/0205 §7): the DXF arrowheads, the arrowhead's size times the note's height.
     "leader": {
         "pts": (points, True),
         "text": (text, False),
@@ -2544,6 +2552,12 @@ def document(d):
     if any("velocity" in k for k in surveyed.get("known", [])):
         # A known point's own velocity (docs/adr/2520).
         schema = max(schema, 207)
+    if surveyed.get("baselineSessions") or "tolerance" in surveyed or any(
+            a.get("sessions") for a in surveyed.get("adjustments", [])) or any(
+            "velocity" in r for p in surveyed.get("points", []) for r in [p["result"], *p.get("history", [])]):
+        # A GNSS archive's baseline sessions, an adjustment's sessions, the kept place limits, a point's velocity
+        # (docs/adr/4920).
+        schema = max(schema, 248)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -2751,6 +2765,18 @@ def document(d):
     if any(e["kind"] == "railing" for e in d["entities"]):
         # A free-standing railing (docs/adr/8045 §3).
         schema = max(schema, 242)
+    kept = d["settings"].get("road", {})
+    if kept.get("rebuildWhole") or any(
+            x.get("command") == "road.terrains.sheetcontours" or any(s.get("kind") == "layer" for s in x.get("sources", []))
+            for x in kept.get("drawings", [])):
+        # A sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing again whole (docs/adr/4740).
+        schema = max(schema, 246)
+    if any("profile" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
+        # A map work item's typed layers' profile (docs/adr/4880).
+        schema = max(schema, 247)
+    if any(e["kind"] == "pointcloud" and any("pose" in s for s in e["sources"]) for e in d["entities"]):
+        # A point cloud file's place in the drawing (docs/adr/5100); 241 and 242 are other work's.
+        schema = max(schema, 251)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -2805,6 +2831,19 @@ def document(d):
     if "parcelRegister" in d["settings"]:
         # The parcel register (docs/adr/4220).
         schema = max(schema, 216)
+        register = d["settings"]["parcelRegister"]
+        if register.get("lengths") or register.get("drafts") or any("approval" in x for x in register["documents"]):
+            # Its stated lengths, drafts, a document's approval (docs/adr/5020).
+            schema = max(schema, 249)
+    if "zoningPlan" in d["settings"]:
+        # A zoning plan's kept symbol choices and plan change drafts (docs/adr/5040).
+        schema = max(schema, 250)
+    if d["settings"].get("surveyAdjustments"):
+        # The adjustments the project keeps (docs/adr/5200).
+        schema = max(schema, 252)
+    if d["settings"].get("monitoringReviews"):
+        # The monitoring reviews the project keeps (docs/adr/5220).
+        schema = max(schema, 253)
 
     def built(e):
         if e["kind"] == "wall":
@@ -2967,7 +3006,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     from a map service or one whose objects came from
     a source, or the project's connections (docs/adr/0208 §2), 31 with a point cloud or a raster read from an address, only in the
     drawing (docs/adr/0207), 30 with the project's annotation heights, a dimension style's or a
-    dimension's lines, a leader's arrowhead's size or one of AutoCAD's arrowheads, in the drawing or a block definition
+    dimension's lines, a leader's arrowhead's size or one of the DXF arrowheads, in the drawing or a block definition
     (docs/adr/0205), 29 with a raster, only in the drawing (docs/adr/0204 §2), 28 with the
     survey settings' a priori standard deviations (docs/adr/0203 §1), 27 with the project's topology settings (docs/adr/0202 §7), 26 with a
     layer's fields (docs/adr/0199 §1), 25 with a text along a
@@ -3666,7 +3705,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-246.kcad"] = container(root(cmap(parts), version=uint(246)))
+    files["schema-version-254.kcad"] = container(root(cmap(parts), version=uint(254)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5024,7 +5063,7 @@ def broken(minimal_content, minimal_file):
     files["topology-rule-angle-too-large.kcad"] = with_settings(27, topology=cmap({"rules": array([trule(kind="mustNotHaveSmallAngles", value=f64(2.0))])}))
     files["topology-exception-unknown-rule.kcad"] = with_settings(27, topology=cmap({"rules": array([trule()]), "exceptions": array([cmap({
         "at": array([f64(500000.0), f64(4400000.0)]), "rule": text("r9"), "objects": array([blob(uid_bytes(m["uids"][0]))])})])}))
-    # The annotation heights, a dimension's lines and a leader's AutoCAD arrowheads are schema 30's (docs/adr/0205): in
+    # The annotation heights, a dimension's lines and a leader's DXF arrowheads are schema 30's (docs/adr/0205): in
     # schema 29 unknown fields and unknown values; heights not empty, of a known kind, floats over 0 and at most 100 mm;
     # colours #RRGGBB, weights 0 to 100 mm, line types by name; an arrowhead's size 0.1 to 10 times the note's height.
     files["annotation-in-schema-29.kcad"] = with_settings(29, annotation=cmap({"text": f64(3.5)}))
@@ -6051,6 +6090,34 @@ def build():
     one_area = copy.deepcopy(registered)
     one_area["settings"]["parcelRegister"]["parcels"][2]["uid"] = "0192f5c0-4220-7000-8000-000000000101"
     out["broken/parcel-register-one-area.kcad"] = container(document(one_area))
+    # Schema 249 (docs/adr/5020): the same register with the lengths 2026/145 ifraz states for its boundaries 5–9, its
+    # approval as written outside, and a draft (2026/160 tevhit) that would close 101/8 and 101/9 and make 101/10 from
+    # one 20 × 10 m area, stating its south edge. Schema 248 refuses them; a length of 0 and a draft named as a document
+    # are refused.
+    drafted = copy.deepcopy(registered)
+    drafted["name"] = "Parsel taslakları"
+    reg_ = drafted["settings"]["parcelRegister"]
+    reg_["documents"][1]["approval"] = {"reference": "2026/145-K", "date": "2026-03-20", "by": "Kadastro Müdürlüğü"}
+    reg_["lengths"] = [{"boundary": b, "document": 2, "length": text_}
+                       for b, text_ in ((5, "10,00"), (6, "10.00"), (7, "10,01"), (8, "10,00"), (9, "9,99"))]
+    reg_["drafts"] = [{
+        "number": 1, "name": "2026/160 tevhit", "kind": "Değişiklik", "close": [2, 3],
+        "create": [{"uid": "0192f5c0-4220-7000-8000-000000000103", "il": "Ankara", "ilce": "Çankaya",
+                    "mahalle": "Kızılay", "ada": "101", "parsel": "10", "statedArea": "200,01",
+                    "rings": [{"pts": [corner(0, 0), corner(20, 0), corner(20, 10), corner(0, 10)]}],
+                    "lengths": [{"edge": 0, "length": "20,00"}]}]}]
+    out["parcel-drafts.json"] = json_text(drafted).encode("utf-8")
+    drafted_data = document(drafted)
+    assert drafted_data.count(b"\x67version\x18\xf9") == 1, "a parcel draft is schema 249"
+    out["parcel-drafts.kcad"] = container(drafted_data)
+    out["broken/parcel-drafts-in-schema-248.kcad"] = container(
+        drafted_data.replace(b"\x67version\x18\xf9", b"\x67version\x18\xf8"))
+    zero = copy.deepcopy(drafted)
+    zero["settings"]["parcelRegister"]["lengths"][0]["length"] = "0,00"
+    out["broken/parcel-drafts-length-zero.kcad"] = container(document(zero))
+    named_ = copy.deepcopy(drafted)
+    named_["settings"]["parcelRegister"]["drafts"][0]["name"] = "Kadastro 1985"
+    out["broken/parcel-drafts-name-taken.kcad"] = container(document(named_))
     # Schema 189 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
     # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
     # reason and an unknown decision are refused.
@@ -6199,6 +6266,150 @@ def build():
         broken_moving = copy.deepcopy(moving)
         change(broken_moving)
         out[f"broken/map-survey-{name}.kcad"] = container(document(broken_moving))
+    # Schema 248 (docs/adr/4920): the velocity archive with a baseline session of its first two baselines (one block,
+    # row by row), the adjustment made with it, the known points' place limits kept with their source and the network
+    # point's velocity read from the campaign's grid; schema 247 refuses them, and a session of one baseline, a
+    # correlation above 1 and a limit of 0 are refused.
+    sessioned = copy.deepcopy(moving)
+    ms_ = sessioned["settings"]["mapSurvey"]
+    ms_["baselineSessions"] = [{
+        "id": "bo-1", "campaign": "kp-1", "name": "O1", "start": "2026-11-03T08:00:00.00Z",
+        "end": "2026-11-03T10:00:00.00Z", "baselines": ["bz-1", "bz-2"],
+        "blocks": [{"row": "bz-1", "col": "bz-2", "r": [0.12, -0.03, 0.01, 0.02, 0.15, -0.04, 0.0, 0.05, 0.18]}],
+        "file": {"path": "/veri/gnss/ag-2026-11.gvx",
+                 "revision": "5e0b3c2a8f1d4e6b7a9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a", "format": "gvx"}}]
+    ms_["adjustments"][0]["sessions"] = ["bo-1"]
+    ms_["tolerance"] = {"horizontal": 0.02, "vertical": 0.03,
+                        "source": "İdarenin şartnamesi (örnek), BÖHHBÜY m. 103(1)(c)"}
+    network_point = next(x for x in ms_["points"] if x["result"].get("method") == "network")
+    network_point["result"]["velocity"] = {"enu": [0.0213, 0.0105, -0.0012],
+                                          "grid": {"name": "tr-hiz-ornek.tif", "sha256": "1" * 64}}
+    # Schema 251 (docs/adr/5100): a virtual cloud's two files placed in the drawing without writing them — a quarter
+    # turn about the first file's middle and a lift, a small move; the cloud's box their placed boxes; schema 248
+    # refuses the field; a place that scales, and one of 15 numbers, are refused.
+    posed = load("pointclouds.json")
+    ada = next(e for e in posed["entities"] if e["id"] == 2)
+    ada["sources"][0]["pose"] = [0.0, -1.0, 0.0, 4908150.0, 1.0, 0.0, 0.0, 3932550.0, 0.0, 0.0, 1.0, 0.5,
+                                 0.0, 0.0, 0.0, 1.0]
+    ada["sources"][1]["pose"] = [1.0, 0.0, 0.0, 0.25, 0.0, 1.0, 0.0, -0.5, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    def placed_box(m, b):
+        pts = [[sum(m[4 * i + k] * p[k] for k in range(3)) + m[4 * i + 3] for i in range(3)]
+               for p in ([b[0] if j & 1 == 0 else b[3], b[1] if j & 2 == 0 else b[4], b[2] if j & 4 == 0 else b[5]]
+                         for j in range(8))]
+        return [min(p[a] for p in pts) for a in range(3)] + [max(p[a] for p in pts) for a in range(3)]
+
+    boxes = [placed_box(s["pose"], s["bounds"]) for s in ada["sources"]]
+    ada["bounds"] = [min(b[a] for b in boxes) for a in range(3)] + [max(b[a + 3] for b in boxes) for a in range(3)]
+    out["pointcloud-poses.json"] = json_text(posed).encode("utf-8")
+    posed_data = document(posed)
+    assert posed_data.count(b"\x67version\x18\xfb") == 1, "a cloud file's place is schema 251"
+    out["pointcloud-poses.kcad"] = container(posed_data)
+    out["broken/pointcloud-pose-in-schema-250.kcad"] = container(
+        posed_data.replace(b"\x67version\x18\xfb", b"\x67version\x18\xfa"))
+    for name, change in (("pose-scaled", lambda s: s.__setitem__(0, 2.0)), ("pose-fifteen", lambda s: s.pop())):
+        broken_posed = copy.deepcopy(posed)
+        change(next(e for e in broken_posed["entities"] if e["id"] == 2)["sources"][1]["pose"])
+        out[f"broken/pointcloud-{name}.kcad"] = container(document(broken_posed))
+    out["map-survey-sessions.json"] = json_text(sessioned).encode("utf-8")
+    sessioned_data = document(sessioned)
+    assert sessioned_data.count(b"\x67version\x18\xf8") == 1, "a baseline session is schema 248"
+    out["map-survey-sessions.kcad"] = container(sessioned_data)
+    out["broken/map-survey-sessions-in-schema-247.kcad"] = container(
+        sessioned_data.replace(b"\x67version\x18\xf8", b"\x67version\x18\xf7"))
+    for name, change in (
+            ("session-one-baseline", lambda m: (m["baselineSessions"][0].update({"baselines": ["bz-1"], "blocks": []}))),
+            ("correlation-above-one", lambda m: m["baselineSessions"][0]["blocks"][0]["r"].__setitem__(4, 1.25)),
+            ("tolerance-zero", lambda m: m["tolerance"].update({"horizontal": 0.0}))):
+        broken_sessioned = copy.deepcopy(sessioned)
+        change(broken_sessioned["settings"]["mapSurvey"])
+        out[f"broken/map-survey-{name}.kcad"] = container(document(broken_sessioned))
+    # Schema 250 (docs/adr/5040): a zoning plan's kept symbol choice and a plan change draft (a use and a KAKS change);
+    # schema 249 refuses them, and a draft without a reason, a change to a field a draft does not change and the same
+    # use and level chosen twice are refused.
+    zoned = copy.deepcopy(minimal)
+    zoned["name"] = "İmar planı verisi"
+    zoned["settings"]["zoningPlan"] = {
+        "symbols": [{"level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani"}],
+        "drafts": [{"id": "T-1", "plan": "UİP-1", "revision": "12",
+                    "reason": "Parkın yerinin değişmesi (plan raporunun gerekçesi).",
+                    "changes": [{"area": "0192f5c0-5040-7000-8000-000000000005", "field": "Kullanim",
+                                 "before": "park", "after": "ticaret"},
+                                {"area": "0192f5c0-5040-7000-8000-000000000006", "field": "KAKS", "before": "",
+                                 "after": "1.50"}]}]}
+    out["zoning-plan.json"] = json_text(zoned).encode("utf-8")
+    zoned_data = document(zoned)
+    assert zoned_data.count(b"\x67version\x18\xfa") == 1, "a zoning plan's data is schema 250"
+    out["zoning-plan.kcad"] = container(zoned_data)
+    out["broken/zoning-plan-in-schema-249.kcad"] = container(
+        zoned_data.replace(b"\x67version\x18\xfa", b"\x67version\x18\xf9"))
+    for name, change in (
+            ("draft-no-reason", lambda z: z["drafts"][0].update({"reason": ""})),
+            ("draft-field-plan", lambda z: z["drafts"][0]["changes"][0].update({"field": "Plan"})),
+            ("symbol-twice", lambda z: z["symbols"].append(dict(z["symbols"][0])))):
+        broken_zoned = copy.deepcopy(zoned)
+        change(broken_zoned["settings"]["zoningPlan"])
+        out[f"broken/zoning-plan-{name}.kcad"] = container(document(broken_zoned))
+    # Schema 252 (docs/adr/5200): a horizontal and a height adjustment kept in the project; schema 251 refuses them, a
+    # height point with a place, a negative σ and two of one name are refused.
+    kept = copy.deepcopy(minimal)
+    kept["name"] = "Dengeleme kayıtları"
+    kept["settings"]["surveyAdjustments"] = [
+        {"name": "Poligon 2026/1", "kind": "horizontal", "revision": "7",
+         "points": [{"name": "Y1", "at": {"x": 487029.9984, "y": 4420350.0007}, "sigma": 0.00197},
+                    {"name": "Y2", "at": {"x": 487419.9988, "y": 4420380.0005}, "sigma": 0.00241}],
+         "f": 10, "m0": 0.4868, "passed": True},
+        {"name": "Nivelman A", "kind": "height", "revision": "9",
+         "points": [{"name": "N1", "h": 1012.3456, "sigma": 0.0012}], "f": 2, "m0": 1.1, "passed": True}]
+    out["kept-adjustments.json"] = json_text(kept).encode("utf-8")
+    kept_data = document(kept)
+    assert kept_data.count(b"\x67version\x18\xfc") == 1, "kept adjustments are schema 252"
+    out["kept-adjustments.kcad"] = container(kept_data)
+    out["broken/kept-adjustments-in-schema-251.kcad"] = container(
+        kept_data.replace(b"\x67version\x18\xfc", b"\x67version\x18\xfb"))
+    for name, change in (
+            ("height-with-place", lambda k: k[1]["points"][0].update({"at": {"x": 1.0, "y": 2.0}})),
+            ("negative-sigma", lambda k: k[0]["points"][0].update({"sigma": -0.001})),
+            ("name-twice", lambda k: k[1].update({"name": "Poligon 2026/1"}))):
+        broken_kept = copy.deepcopy(kept)
+        change(broken_kept["settings"]["surveyAdjustments"])
+        out[f"broken/kept-adjustments-{name}.kcad"] = container(document(broken_kept))
+    # Schema 253 (docs/adr/5220): two monitoring reviews kept in the project; schema 252 refuses them, a digest not
+    # 64 lowercase hex, a day not on the calendar, a threshold without a source and two of one name are refused.
+    reviewed = copy.deepcopy(minimal)
+    reviewed["name"] = "İzleme incelemeleri"
+    reviewed["settings"]["monitoringReviews"] = [
+        {"name": "Temmuz incelemesi",
+         "job": {"measured": "donem3", "design": "donem2",
+                 "epochs": [{"layer": "donem1", "date": "2026-01-15"}, {"layer": "donem2", "date": "2026-04-15"}],
+                 "date": "2026-07-15", "control": ["K1", "K2"], "horizontal": 0.008, "vertical": 0.01, "confidence": 0.95,
+                 "thresholds": {"warning": {"horizontal": 0.0075, "vertical": 0.012},
+                                "alarm": {"horizontal": 0.03, "vertical": 0.04},
+                                "source": "İdarenin izleme şartnamesi (2026/14), madde 7"}},
+         "digest": "6afa7635116f1df0a50c02eba7406a42989499ea796d3614d038eb1fb3ac6d78",
+         "marks": [{"name": "M1", "horizontal": 0.01, "vertical": -0.005, "speed": 0.0258, "state": "warning",
+                    "exceeded": ["horizontal"]},
+                   {"name": "K1", "horizontal": 0.0, "vertical": 0.0, "speed": 0.0, "state": "normal"}],
+         "reviewer": {"role": "control", "title": "Harita Mühendisi", "name": "A. Yılmaz", "date": "2026-10-20",
+                      "phrase": "checked", "signature": "wet"}},
+        {"name": "Nisan incelemesi", "job": {"measured": "donem2", "design": "donem1"},
+         "digest": "0" * 64, "marks": [{"name": "M1", "horizontal": 0.005, "vertical": -0.002}],
+         "reviewer": {"role": "approver", "title": "Müdür", "name": "B. Kaya", "date": "2026-04-20", "phrase": "seen",
+                      "signature": "electronic", "note": "Ek ölçü istendi.\nİkinci satır."}}]
+    out["monitoring-reviews.json"] = json_text(reviewed).encode("utf-8")
+    reviewed_data = document(reviewed)
+    assert reviewed_data.count(b"\x67version\x18\xfd") == 1, "monitoring reviews are schema 253"
+    out["monitoring-reviews.kcad"] = container(reviewed_data)
+    out["broken/monitoring-reviews-in-schema-252.kcad"] = container(
+        reviewed_data.replace(b"\x67version\x18\xfd", b"\x67version\x18\xfc"))
+    for name, change in (
+            ("digest-upper", lambda r: r[0].update({"digest": "A" * 64})),
+            ("day-not-on-calendar", lambda r: r[1]["reviewer"].update({"date": "2026-02-30"})),
+            ("threshold-without-source", lambda r: r[0]["job"]["thresholds"].update({"source": ""})),
+            ("name-twice", lambda r: r[1].update({"name": "Temmuz incelemesi"}))):
+        broken_reviewed = copy.deepcopy(reviewed)
+        change(broken_reviewed["settings"]["monitoringReviews"])
+        out[f"broken/monitoring-reviews-{name}.kcad"] = container(document(broken_reviewed))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")
@@ -6348,6 +6559,25 @@ def build():
         broken_values = copy.deepcopy(kept_values)
         change(broken_values)
         out[f"broken/map-work-approved-values-{name}.kcad"] = container(document(broken_values))
+    # Schema 247 (docs/adr/4880): a map work item's typed layers' profile (a data profile's name and its classes);
+    # schema 246 refuses the field, an empty class list, a class given twice and a name with a space at its end too.
+    profiled = copy.deepcopy(mapped)
+    profiled["settings"]["mapWork"]["items"][0]["profile"] = {"name": "harita-varliklari",
+                                                              "classes": ["kontrol-noktasi", "rogar"]}
+    profiled["settings"]["mapWork"]["items"][2]["profile"] = {"name": "imar-plani"}
+    out["map-work-profile.json"] = json_text(profiled).encode("utf-8")
+    profiled_data = document(profiled)
+    assert profiled_data.count(b"\x67version\x18\xf7") == 1, "an item's profile is schema 247"
+    out["map-work-profile.kcad"] = container(profiled_data)
+    out["broken/map-work-profile-in-schema-246.kcad"] = container(
+        profiled_data.replace(b"\x67version\x18\xf7", b"\x67version\x18\xf6"))
+    for name, change in (
+            ("classes-empty", lambda p: p.update({"classes": []})),
+            ("class-twice", lambda p: p.update({"classes": ["kontrol-noktasi", "kontrol-noktasi"]})),
+            ("name-spaced", lambda p: p.update({"name": "harita-varliklari "}))):
+        broken_profile = copy.deepcopy(profiled)
+        change(broken_profile["settings"]["mapWork"]["items"][0]["profile"])
+        out[f"broken/map-work-profile-{name}.kcad"] = container(document(broken_profile))
     # Schema 212 (docs/adr/3560): a pipe run profile kept as a drawing, its network a source; 211 knows neither.
     piped = document(load("map-pipe-profile.json"))
     assert piped.count(b"\x67version\x18\xd4") == 1, "a pipe run profile's drawing is schema 212"
@@ -6796,6 +7026,13 @@ def build():
     assert railing_objects.count(b"\x67version\x18\xf2") == 1, "free-standing railings are schema 242"
     out["railing-objects.kcad"] = container(railing_objects)
     out["broken/railing-objects-in-schema-241.kcad"] = container(railing_objects.replace(b"\x67version\x18\xf2", b"\x67version\x18\xf1"))
+    # Schema 246 (docs/adr/4740): a sheet's contour lines kept as a drawing with a layer among its sources, and drawing
+    # again whole; schema 245 knows neither.
+    sheeted = document(load("map-sheet-contours.json"))
+    assert sheeted.count(b"\x67version\x18\xf6") == 1, "a sheet's contour drawing is schema 246"
+    out["map-sheet-contours.kcad"] = container(sheeted)
+    out["broken/sheet-contour-drawing-in-schema-245.kcad"] = container(
+        sheeted.replace(b"\x67version\x18\xf6", b"\x67version\x18\xf5"))
     # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
     assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"

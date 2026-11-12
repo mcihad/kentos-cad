@@ -6,10 +6,19 @@
 //! planes triangle by triangle, so the difference `d = z_comparison − z_base` is linear between the places where the
 //! section crosses an edge of either: each piece where both are is integrated exactly, split where `d` is zero, the
 //! fill where `d > 0`, the cut where `d < 0` (m²). Between two consecutive sections the volume is the average end area
-//! `L·(A₀ + A₁)/2` or the prismoidal `L/6·(A₀ + 4·Aₘ + A₁)` with a section at the middle (`volume::prismoidal`).
+//! `L·(A₀ + A₁)/2`, the prismoidal `L/6·(A₀ + 4·Aₘ + A₁)` with a section at the middle (`volume::prismoidal`) or
+//! (docs/adr/5140) the frustum's `L/3·(A₀ + A₁ + √(A₀·A₁))`, cut and fill each on its own.
 //!
 //! The places are measured from the comparison's first corner, so large map coordinates keep their digits; the four
 //! quarters' axes are exact (0°, 90°, 180°, 270°).
+//!
+//! Along a drawn axis (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the axis is a line or an open
+//! polyline whose segments may be arcs (a bulge: the tangent of a quarter of the arc's angle, counterclockwise above 0).
+//! The sections stand at its stations, from its start every `interval` while short of its end, then its end, and asked
+//! for at its inner corners too. Each section is square to the axis there (on an arc along its radius; at a corner
+//! square to the bisector of the two segments, at the ends to their segment) and runs `left` metres to the left and
+//! `right` to the right of it; its areas are reckoned as above on that segment of the line. Between two sections the
+//! length is their stations' difference along the axis (no correction for the axis's curvature).
 
 use crate::volume::{self, SectionAreas, Triangle};
 
@@ -22,6 +31,147 @@ pub enum SectionsError {
     Azimuth,
     /// More sections than allowed.
     TooMany,
+    /// A width is not a length of zero or more, or both are zero.
+    Width,
+    /// The axis has no length, or a bulge is not finite.
+    Axis,
+}
+
+/// How the volume between two sections is reckoned (docs/adr/4340, 5140).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Formula {
+    EndArea,
+    Prismoidal,
+    Frustum,
+}
+
+/// The frustum's volume between two sections of areas `a0` and `a1`, `l` apart: `l/3·(a0 + a1 + √(a0·a1))`.
+pub fn frustum(a0: f64, a1: f64, l: f64) -> f64 {
+    l / 3.0 * (a0 + a1 + (a0 * a1).sqrt())
+}
+
+/// A drawn axis (docs/adr/4760): its corners in order and each segment's bulge (none: all straight).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Axis {
+    pub pts: Vec<[f64; 2]>,
+    pub bulges: Vec<f64>,
+}
+
+/// A section along a drawn axis: its station (metres from the axis's start along it), the axis's place there, the
+/// section's left and right ends, and its cut and fill areas (m²).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AxisRow {
+    pub station: f64,
+    pub at: [f64; 2],
+    pub left: [f64; 2],
+    pub right: [f64; 2],
+    pub cut: f64,
+    pub fill: f64,
+}
+
+/// The sections along a drawn axis, the cut and fill volume between each two in order (m³), their sums and the axis's
+/// length.
+#[derive(Clone, Debug, PartialEq)]
+pub struct AxisSections {
+    pub rows: Vec<AxisRow>,
+    pub between: Vec<[f64; 2]>,
+    pub cut: f64,
+    pub fill: f64,
+    pub length: f64,
+}
+
+/// A segment of the axis: straight from `a` to `b`, or an arc of its centre, radius, start angle and signed sweep.
+#[derive(Clone, Copy, Debug)]
+enum Segment {
+    Line { a: [f64; 2], b: [f64; 2], len: f64 },
+    Arc { c: [f64; 2], r: f64, start: f64, sweep: f64, len: f64 },
+}
+
+impl Segment {
+    fn of(a: [f64; 2], b: [f64; 2], bulge: f64) -> Option<Segment> {
+        let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+        let chord = dx.hypot(dy);
+        if !(chord > 0.0) {
+            return None;
+        }
+        if bulge == 0.0 {
+            return Some(Segment::Line { a, b, len: chord });
+        }
+        // The arc's angle, counterclockwise above 0; its centre left of the chord for a counterclockwise arc.
+        let sweep = 4.0 * bulge.atan();
+        let r = chord / (2.0 * (sweep / 2.0).sin()).abs();
+        let m = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
+        let along = (chord / 2.0) / (sweep / 2.0).tan();
+        let left = [-dy / chord, dx / chord];
+        let c = [m[0] + left[0] * along, m[1] + left[1] * along];
+        let start = (a[1] - c[1]).atan2(a[0] - c[0]);
+        Some(Segment::Arc { c, r, start, sweep, len: r * sweep.abs() })
+    }
+
+    fn len(&self) -> f64 {
+        match self {
+            Segment::Line { len, .. } | Segment::Arc { len, .. } => *len,
+        }
+    }
+
+    /// The place and the unit direction `l` metres from the segment's start.
+    fn at(&self, l: f64) -> ([f64; 2], [f64; 2]) {
+        match *self {
+            Segment::Line { a, b, len } => {
+                let u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+                if l == len {
+                    return (b, u);
+                }
+                ([a[0] + u[0] * l, a[1] + u[1] * l], u)
+            }
+            Segment::Arc { c, r, start, sweep, .. } => {
+                let turn = sweep.signum();
+                let angle = start + turn * l / r;
+                let p = [c[0] + r * angle.cos(), c[1] + r * angle.sin()];
+                // Counterclockwise the way is the radius turned left; clockwise turned right.
+                (p, [-turn * angle.sin(), turn * angle.cos()])
+            }
+        }
+    }
+}
+
+/// The unit vector of `v`, or none for a zero vector.
+fn unit(v: [f64; 2]) -> Option<[f64; 2]> {
+    let n = v[0].hypot(v[1]);
+    (n > 0.0).then(|| [v[0] / n, v[1] / n])
+}
+
+/// The axis's segments (zero-length ones left out) and each one's start station.
+fn segments(axis: &Axis) -> Result<(Vec<Segment>, Vec<f64>), SectionsError> {
+    if !axis.bulges.is_empty() && axis.bulges.len() + 1 != axis.pts.len() || axis.bulges.iter().any(|b| !b.is_finite()) {
+        return Err(SectionsError::Axis);
+    }
+    let mut out = Vec::new();
+    let mut starts = Vec::new();
+    let mut s = 0.0;
+    for (k, w) in axis.pts.windows(2).enumerate() {
+        if let Some(seg) = Segment::of(w[0], w[1], axis.bulges.get(k).copied().unwrap_or(0.0)) {
+            starts.push(s);
+            s += seg.len();
+            out.push(seg);
+        }
+    }
+    if out.is_empty() || !(s.is_finite() && s > 0.0) {
+        return Err(SectionsError::Axis);
+    }
+    Ok((out, starts))
+}
+
+/// The place and the unit way of the axis at station `s` (within its length): inside a segment its own; at an inner
+/// corner the bisector of the two segments' ways (the later one's when they turn back); at the ends their segments'.
+fn place(segs: &[Segment], starts: &[f64], s: f64) -> ([f64; 2], [f64; 2]) {
+    let k = starts.partition_point(|x| *x <= s).saturating_sub(1).min(segs.len() - 1);
+    let (p, u) = segs[k].at((s - starts[k]).min(segs[k].len()));
+    if k > 0 && s == starts[k] {
+        let (_, before) = segs[k - 1].at(segs[k - 1].len());
+        return (p, unit([before[0] + u[0], before[1] + u[1]]).unwrap_or(u));
+    }
+    (p, u)
 }
 
 /// A section: its distance from the first along the axis, its cut and fill areas (m²).
@@ -190,9 +340,10 @@ pub fn measure(
     base: &[Triangle],
     azimuth: f64,
     interval: f64,
-    prismoidal: bool,
+    formula: Formula,
     most: f64,
 ) -> Result<Sections, SectionsError> {
+    let prismoidal = formula == Formula::Prismoidal;
     if !(interval.is_finite() && interval > 0.0) {
         return Err(SectionsError::Interval);
     }
@@ -247,6 +398,12 @@ pub fn measure(
             cut += volume::prismoidal(w[0].cut, mc, w[1].cut, l);
             fill += volume::prismoidal(w[0].fill, mf, w[1].fill, l);
         }
+    } else if formula == Formula::Frustum {
+        for w in rows.windows(2) {
+            let l = w[1].station - w[0].station;
+            cut += frustum(w[0].cut, w[1].cut, l);
+            fill += frustum(w[0].fill, w[1].fill, l);
+        }
     } else {
         let sections: Vec<SectionAreas> =
             rows.iter().map(|r| SectionAreas { station: r.station, areas: Some((r.cut, r.fill)) }).collect();
@@ -258,6 +415,118 @@ pub fn measure(
         }
     }
     Ok(Sections { rows, cut, fill })
+}
+
+/// The pieces cut back to `lo..hi` across the section.
+fn clip(pieces: Vec<Piece>, lo: f64, hi: f64) -> Vec<Piece> {
+    pieces
+        .into_iter()
+        .filter_map(|p| {
+            let (t0, t1) = (p.t0.max(lo), p.t1.min(hi));
+            (t1 > t0).then(|| Piece { t0, z0: p.z(t0), t1, z1: p.z(t1) })
+        })
+        .collect()
+}
+
+/// The cut and fill areas of the section through `o` square to the way `u`, from `left` metres left of it to `right`
+/// metres right: the triangles whose box meets the section's, in the section's frame.
+fn section_at(comparison: &[Triangle], base: &[Triangle], o: [f64; 2], u: [f64; 2], left: f64, right: f64) -> (f64, f64) {
+    let n = [u[1], -u[0]];
+    let (a, b) = ([o[0] - n[0] * left, o[1] - n[1] * left], [o[0] + n[0] * right, o[1] + n[1] * right]);
+    let (x0, x1, y0, y1) = (a[0].min(b[0]), a[0].max(b[0]), a[1].min(b[1]), a[1].max(b[1]));
+    let near = |tris: &[Triangle]| -> Vec<Triangle> {
+        tris.iter()
+            .filter(|t| {
+                let (tx0, tx1) = (t[0][0].min(t[1][0]).min(t[2][0]), t[0][0].max(t[1][0]).max(t[2][0]));
+                let (ty0, ty1) = (t[0][1].min(t[1][1]).min(t[2][1]), t[0][1].max(t[1][1]).max(t[2][1]));
+                tx1 >= x0 && tx0 <= x1 && ty1 >= y0 && ty0 <= y1
+            })
+            .copied()
+            .collect()
+    };
+    let (c, bl) = (local(&near(comparison), o, u), local(&near(base), o, u));
+    let all = |l: &[Local]| (0..l.len() as u32).collect::<Vec<u32>>();
+    let (pc, pb) = (clip(along(&c, &all(&c), 0.0), -left, right), clip(along(&bl, &all(&bl), 0.0), -left, right));
+    areas(&pc, &pb)
+}
+
+/// The comparison's volume over the base by sections along a drawn axis (the module's rules); `most` sections at most.
+#[allow(clippy::too_many_arguments)]
+pub fn along_axis(
+    comparison: &[Triangle],
+    base: &[Triangle],
+    axis: &Axis,
+    interval: f64,
+    left: f64,
+    right: f64,
+    corners: bool,
+    formula: Formula,
+    most: f64,
+) -> Result<AxisSections, SectionsError> {
+    if !(interval.is_finite() && interval > 0.0) {
+        return Err(SectionsError::Interval);
+    }
+    if !(left.is_finite() && right.is_finite() && left >= 0.0 && right >= 0.0 && left + right > 0.0) {
+        return Err(SectionsError::Width);
+    }
+    let (segs, starts) = segments(axis)?;
+    let length = starts.last().copied().unwrap_or(0.0) + segs.last().map_or(0.0, Segment::len);
+    let inner = if corners { starts.len().saturating_sub(1) } else { 0 };
+    if length / interval + 2.0 + inner as f64 > most {
+        return Err(SectionsError::TooMany);
+    }
+    // The stations: every interval while short of the end, then the end; asked for, the inner corners too.
+    let mut stations: Vec<f64> = Vec::new();
+    let mut k = 0u32;
+    while f64::from(k) * interval < length {
+        stations.push(f64::from(k) * interval);
+        k += 1;
+    }
+    stations.push(length);
+    if corners {
+        stations.extend(starts.iter().skip(1).copied());
+    }
+    stations.sort_by(f64::total_cmp);
+    stations.dedup();
+    let section = |s: f64| -> AxisRow {
+        let (at, u) = place(&segs, &starts, s);
+        let n = [u[1], -u[0]];
+        let (cut, fill) = section_at(comparison, base, at, u, left, right);
+        AxisRow {
+            station: s,
+            at,
+            left: [at[0] - n[0] * left, at[1] - n[1] * left],
+            right: [at[0] + n[0] * right, at[1] + n[1] * right],
+            cut,
+            fill,
+        }
+    };
+    let rows: Vec<AxisRow> = stations.iter().map(|s| section(*s)).collect();
+    let mut between: Vec<[f64; 2]> = Vec::with_capacity(rows.len().saturating_sub(1));
+    if formula == Formula::Frustum {
+        for w in rows.windows(2) {
+            let l = w[1].station - w[0].station;
+            between.push([frustum(w[0].cut, w[1].cut, l), frustum(w[0].fill, w[1].fill, l)]);
+        }
+    } else if formula == Formula::Prismoidal {
+        for w in rows.windows(2) {
+            let m = section((w[0].station + w[1].station) / 2.0);
+            let l = w[1].station - w[0].station;
+            between.push([volume::prismoidal(w[0].cut, m.cut, w[1].cut, l), volume::prismoidal(w[0].fill, m.fill, w[1].fill, l)]);
+        }
+    } else {
+        let sections: Vec<SectionAreas> =
+            rows.iter().map(|r| SectionAreas { station: r.station, areas: Some((r.cut, r.fill)) }).collect();
+        for b in volume::end_areas(&sections) {
+            between.push(b.volumes.map_or([0.0, 0.0], |(k, f)| [k, f]));
+        }
+    }
+    let (mut cut, mut fill) = (0.0, 0.0);
+    for [k, f] in &between {
+        cut += k;
+        fill += f;
+    }
+    Ok(AxisSections { rows, between, cut, fill, length })
 }
 
 #[cfg(test)]
@@ -277,11 +546,11 @@ mod tests {
         let base = rect(-5.0, -5.0, 45.0, 35.0, |_, _| 100.0);
         let comparison = rect(0.0, 0.0, 40.0, 30.0, |x, _| 101.0 + 0.05 * x);
         for az in [0.0, 90.0, 180.0, 270.0] {
-            let s = measure(&comparison, &base, az, 10.0, false, 1e4).expect("measured");
+            let s = measure(&comparison, &base, az, 10.0, Formula::EndArea, 1e4).expect("measured");
             assert!((s.fill - 2400.0).abs() < 1e-9, "{az}: {}", s.fill);
             assert_eq!(s.cut, 0.0);
         }
-        let s = measure(&comparison, &base, 90.0, 10.0, false, 1e4).expect("measured");
+        let s = measure(&comparison, &base, 90.0, 10.0, Formula::EndArea, 1e4).expect("measured");
         let stations: Vec<f64> = s.rows.iter().map(|r| r.station).collect();
         assert_eq!(stations, [0.0, 10.0, 20.0, 30.0, 40.0]);
         assert!((s.rows[0].fill - 30.0).abs() < 1e-12 && (s.rows[4].fill - 90.0).abs() < 1e-12);
@@ -296,10 +565,10 @@ mod tests {
         let p = |x: f64, y: f64| [x, y, 1.0 + 0.05 * x];
         let comparison = vec![[p(0.0, 0.0), p(40.0, 0.0), p(0.0, 30.0)]];
         let exact = 1000.0;
-        let s = measure(&comparison, &base, 90.0, 10.0, true, 1e4).expect("measured");
+        let s = measure(&comparison, &base, 90.0, 10.0, Formula::Prismoidal, 1e4).expect("measured");
         assert!((s.fill - exact).abs() < 1e-9, "{}", s.fill);
         // A(x) = 30(1 − x/40)(1 + 0.05x): A″ = −2·30·0.05/40 = −0.075; four stretches of 10 m: 4·10³/12·0.075 = 25.
-        let e = measure(&comparison, &base, 90.0, 10.0, false, 1e4).expect("measured");
+        let e = measure(&comparison, &base, 90.0, 10.0, Formula::EndArea, 1e4).expect("measured");
         assert!((e.fill - (exact - 25.0)).abs() < 1e-9, "{}", e.fill);
     }
 
@@ -308,7 +577,7 @@ mod tests {
     fn a_section_is_split_where_the_difference_is_zero() {
         let base = rect(0.0, 0.0, 10.0, 10.0, |_, _| 100.0);
         let comparison = rect(0.0, 0.0, 10.0, 10.0, |x, _| 99.0 + 0.2 * x);
-        let s = measure(&comparison, &base, 0.0, 5.0, false, 1e4).expect("measured");
+        let s = measure(&comparison, &base, 0.0, 5.0, Formula::EndArea, 1e4).expect("measured");
         // Along y the area is constant: the cut 2.5 m² (x 0..5), the fill 2.5 m²; volumes 25 and 25.
         for r in &s.rows {
             assert!((r.cut - 2.5).abs() < 1e-12 && (r.fill - 2.5).abs() < 1e-12, "{r:?}");
@@ -316,11 +585,89 @@ mod tests {
         assert!((s.cut - 25.0).abs() < 1e-9 && (s.fill - 25.0).abs() < 1e-9);
     }
 
+    /// A straight axis gives the parallel sections' answer: the plane over the rectangle along x (an axis from (0, 15)
+    /// to (40, 15), 20 m each side) is 2400 m³ whatever the axis, its areas 30·(1 + 0.05x).
+    #[test]
+    fn a_straight_axis_is_the_parallel_sections() {
+        let base = rect(-5.0, -5.0, 45.0, 35.0, |_, _| 100.0);
+        let comparison = rect(0.0, 0.0, 40.0, 30.0, |x, _| 101.0 + 0.05 * x);
+        let axis = Axis { pts: vec![[0.0, 15.0], [40.0, 15.0]], bulges: Vec::new() };
+        let s = along_axis(&comparison, &base, &axis, 10.0, 20.0, 20.0, false, Formula::EndArea, 1e4).expect("measured");
+        assert!((s.fill - 2400.0).abs() < 1e-9, "{}", s.fill);
+        assert_eq!(s.rows.iter().map(|r| r.station).collect::<Vec<_>>(), [0.0, 10.0, 20.0, 30.0, 40.0]);
+        assert!((s.rows[2].fill - 60.0).abs() < 1e-12, "{:?}", s.rows[2]);
+        // Square to an eastward axis: the left end north, the right end south.
+        assert_eq!((s.rows[1].left, s.rows[1].right), ([10.0, 35.0], [10.0, -5.0]));
+        // Narrower than the surfaces: only the width counts, 10 m each side.
+        let n = along_axis(&comparison, &base, &axis, 10.0, 10.0, 10.0, false, Formula::EndArea, 1e4).expect("measured");
+        assert!((n.fill - 2400.0 * 20.0 / 30.0).abs() < 1e-9, "{}", n.fill);
+    }
+
+    /// On an arc the sections run along its radius: a ring of radii 10 and 30 round (0, 0) a little more than half
+    /// round, one metre of fill, measured along the middle arc (radius 20) from (20, 0) to (−20, 0) counterclockwise,
+    /// 10 m each side: every section's fill is 20 m², the axis 20π long, the volume 20·20π (the half ring's area
+    /// ½π(30² − 10²) = 400π, a metre high, is the same: on a circle the middle radius's length is exact).
+    #[test]
+    fn on_an_arc_the_sections_follow_the_radius() {
+        let p = |r: f64, a: f64| [r * a.cos(), r * a.sin(), 1.0];
+        let mut comparison = Vec::new();
+        let n = 720;
+        let (from, span) = (-0.1, std::f64::consts::PI + 0.2);
+        for k in 0..n {
+            let (a0, a1) = (from + span * k as f64 / n as f64, from + span * (k + 1) as f64 / n as f64);
+            comparison.push([p(10.0, a0), p(30.0, a0), p(30.0, a1)]);
+            comparison.push([p(10.0, a0), p(30.0, a1), p(10.0, a1)]);
+        }
+        let base = rect(-40.0, -15.0, 40.0, 40.0, |_, _| 0.0);
+        let axis = Axis { pts: vec![[20.0, 0.0], [-20.0, 0.0]], bulges: vec![1.0] };
+        let s = along_axis(&comparison, &base, &axis, 5.0, 10.0, 10.0, false, Formula::EndArea, 1e5).expect("measured");
+        assert!((s.length - 20.0 * std::f64::consts::PI).abs() < 1e-9, "{}", s.length);
+        for r in &s.rows {
+            // The polygonal ring's chords leave a sliver at its edges: within 0.002 m².
+            assert!((r.fill - 20.0).abs() < 2e-3, "{r:?}");
+            let radius = r.at[0].hypot(r.at[1]);
+            assert!((radius - 20.0).abs() < 1e-9, "{r:?}");
+            // The left end towards the centre (counterclockwise), the right end out.
+            assert!((r.left[0].hypot(r.left[1]) - 10.0).abs() < 1e-9 && (r.right[0].hypot(r.right[1]) - 30.0).abs() < 1e-9, "{r:?}");
+        }
+        assert!((s.fill - 400.0 * std::f64::consts::PI).abs() < 0.2, "{}", s.fill);
+    }
+
+    /// At an inner corner asked for, the section stands square to the bisector.
+    #[test]
+    fn a_corner_s_section_is_square_to_the_bisector() {
+        let base = rect(-50.0, -50.0, 50.0, 50.0, |_, _| 0.0);
+        let comparison = rect(-50.0, -50.0, 50.0, 50.0, |_, _| 1.0);
+        let axis = Axis { pts: vec![[-30.0, 0.0], [0.0, 0.0], [0.0, 30.0]], bulges: Vec::new() };
+        let s = along_axis(&comparison, &base, &axis, 100.0, 5.0, 5.0, true, Formula::EndArea, 1e4).expect("measured");
+        assert_eq!(s.rows.iter().map(|r| r.station).collect::<Vec<_>>(), [0.0, 30.0, 60.0]);
+        let c = s.rows[1];
+        let h = 5.0 / 2f64.sqrt();
+        assert!((c.left[0] + h).abs() < 1e-12 && (c.left[1] - h).abs() < 1e-12, "{c:?}");
+        assert!((c.fill - 10.0).abs() < 1e-12, "{c:?}");
+    }
+
     #[test]
     fn the_refusals() {
         let t = rect(0.0, 0.0, 10.0, 10.0, |_, _| 1.0);
-        assert_eq!(measure(&t, &t, 0.0, 0.0, false, 1e4), Err(SectionsError::Interval));
-        assert_eq!(measure(&t, &t, 360.0, 1.0, false, 1e4), Err(SectionsError::Azimuth));
-        assert_eq!(measure(&t, &t, 0.0, 0.001, false, 1e4), Err(SectionsError::TooMany));
+        assert_eq!(measure(&t, &t, 0.0, 0.0, Formula::EndArea, 1e4), Err(SectionsError::Interval));
+        assert_eq!(measure(&t, &t, 360.0, 1.0, Formula::EndArea, 1e4), Err(SectionsError::Azimuth));
+        assert_eq!(measure(&t, &t, 0.0, 0.001, Formula::EndArea, 1e4), Err(SectionsError::TooMany));
+        let a = Axis { pts: vec![[0.0, 0.0], [10.0, 0.0]], bulges: Vec::new() };
+        assert_eq!(along_axis(&t, &t, &a, 1.0, 0.0, 0.0, false, Formula::EndArea, 1e4), Err(SectionsError::Width));
+        assert_eq!(along_axis(&t, &t, &a, 1.0, -1.0, 2.0, false, Formula::EndArea, 1e4), Err(SectionsError::Width));
+        let dot = Axis { pts: vec![[1.0, 1.0], [1.0, 1.0]], bulges: Vec::new() };
+        assert_eq!(along_axis(&t, &t, &dot, 1.0, 1.0, 1.0, false, Formula::EndArea, 1e4), Err(SectionsError::Axis));
+        assert_eq!(along_axis(&t, &t, &a, 0.0001, 1.0, 1.0, false, Formula::EndArea, 1e4), Err(SectionsError::TooMany));
+    }
+
+    /// The frustum's formula is exact for a pyramid's frustum (areas a² and b², height h: h/3·(a² + b² + ab)) and is
+    /// the end area for equal areas.
+    #[test]
+    fn the_frustum_is_a_pyramid_s_frustum() {
+        let (a, b, h) = (2.0_f64, 5.0_f64, 7.0_f64);
+        assert!((frustum(a * a, b * b, h) - h / 3.0 * (a * a + b * b + a * b)).abs() < 1e-12);
+        assert_eq!(frustum(4.0, 4.0, 3.0), 12.0);
+        assert_eq!(frustum(0.0, 9.0, 3.0), 9.0);
     }
 }

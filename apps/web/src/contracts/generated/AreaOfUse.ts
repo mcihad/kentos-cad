@@ -3,4 +3,8 @@
 /**
  * Where an operation may be used: its name and box (degrees, west, south, east, north).
  */
-export type AreaOfUse = { name: string, west: number, south: number, east: number, north: number, };
+export type AreaOfUse = { name: string, west: number, south: number, east: number, north: number, 
+/**
+ * docs/adr/5300: the EPSG extent whose polygon a point is read against (the box: approximate, for selecting).
+ */
+extent?: number, };

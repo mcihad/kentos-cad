@@ -285,6 +285,15 @@ def cases():
     out.append(refused("epok 1850", {"coordinateEpoch": 1850}, "invalid_epoch",
                        "Epok: koordinat epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2023.5 gibi); 0 epoku kaldırır.",
                        "coordinateEpoch"))
+    # docs/adr/4900: the project's refraction coefficient, a measured one written (Poligon hesabı's Projeye yaz);
+    # within [−1, 1]; the default 0.13 is not written (the settings' rule, docs/adr/0169 §3).
+    out.append({"name": "Kırılma katsayısı (ADR 4900): ölçülen k projeye yazılır; 0,13 öntanımlıdır, yazılmaz",
+                "steps": [step("execute", {"refraction": 0.1625}, done(["refraction"]),
+                               {**FLAGS, "settings": {"survey": {"refraction": 0.1625}}}),
+                          step("execute", {"refraction": 0.13}, done(["refraction"]),
+                               {"settings": {"survey": None}, "revision": "changed"})]})
+    out.append(refused("kırılma katsayısı 1'den büyük", {"refraction": 1.5}, "invalid_refraction",
+                       "Kırılma katsayısı k −1 ile 1 arasında olmalı; 1.5 verildi.", "refraction"))
     need = ("Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun "
             "elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin.")
     out.append(refused("yerel projede elipsoit yüksekliği", {"srid": 0, "heights": {"kind": "ellipsoidal"}},

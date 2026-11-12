@@ -769,22 +769,75 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İzlemede dönemlerden doğru ve iki eşik (10 Kasım 2026; MAP-19, [ADR 4840](../../docs/adr/4840-monitoring-trend-and-thresholds.md)).**
+  İzleme dizisine `trend` (güven): üç ya da daha çok günlü dönemde noktanın doğu, kuzey ve kot doğrusu, σ'ları, Student
+  t'yle anlamlı hareket (`fit`); `thresholds` (uyarı, alarm) her noktaya `state` ve `exceeded`. Eşikler kullanıcının,
+  yönetmelik değeri yok. Uygulama kontrolü › İzleme › Dönem dizisi. Harita + Yol + CBS.
+- **Atlas sayfasının görünüşü (10 Kasım 2026; MAP-18, [ADR 4820](../../docs/adr/4820-atlas-page-look.md)).**
+  `file.export.atlas` sayfalar yapılınca her sayfanın `look`'u (çizdiğinin SHA-256'sı, yayının damgaları dışarıda) ve
+  değişen sayfanın `changes[].look`'u (same: yalnız çizmediği değişti); kayıtta da. CAD + CBS.
+- **Kurum eşlemesinde ad dönüşümünün biçimi (11 Kasım 2026; MAP-17, [ADR 5180](../../docs/adr/5180-institution-name-form.md)).**
+  Eşlemenin `names`'i (`lowerCamelCase`: TUCBS VTS §5.2.3; `upperSnakeCase`: BÖHHBÜY Ek-1'in yazımı, kural değil;
+  `letters` keep ya da ascii) eşlemenin yazmadığı alan adlarını yazar; eşlemenin kendi adları önce. Yazılamayan ya da
+  katlanmış adla çakışan ad eşlemeyi geçersiz kılar. `cad.profiles.names` salt okunur tablo; Veri profili › Kurum adları,
+  Biçimi eşlemeye yaz. Ek-1 kodları türetilmez, eşlemede yazılır. CAD + CBS.
+- **Tanımlı özniteliğin boşluklu etiketinin geri adı (10 Kasım 2026; MAP-17, [ADR 4800](../../docs/adr/4800-dxf-defined-attribute-name-back.md)).**
+  Etiketi adından başka yazılan ATTDEF'in KentOS verisinde `tagname`; geri okumada tanım ve eklemelerin değerleri adı alır,
+  dosya kazanır (büyük harfli etiket uyar, değişen etiket ad olur ve söylenir). İstem ad kaynağı değil. CAD + CBS.
+- **Dış çap, hattın dış duvarı, kanal yönetmeliklerinin kural paketi (10 Kasım 2026; MAP-16, [ADR 4780](../../docs/adr/4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)).**
+  `diameter.outer` (et = (dış − iç) / 2; etle uyuşmazsa `wallMismatch`); hat profilinde kendi borularının dış duvarları;
+  `cad.pipes.check`'in `rules`'u `catalog/v1/rules/kanal-csb-2017.json`'dan (atıksu EK-1, yağmursuyu Çizelge 1.4):
+  yazılmayan sınırlar paketten, `class`, `noRule`, `exceptionalSlope`, `longSpan`. Boru hattı denetimi › Kural. Harita +
+  Yol + CBS.
 - **Ayırma çapında sığmayan numara kılavuzla dışarıda (10 Kasım 2026; MAP-11, [ADR 4680](../../docs/adr/4680-separation-number-on-a-leader.md)).**
   `cad.readjustment.sheets`'in `numberLeader`'ı: numara tam boyda sığmazsa küçültülmeden, yatay, kılavuzla dışarıda
   (uç parçanın etiket yeri, iniş doğu sınırdan bir boy öte); cevapta `leader`. Düzenleme › Ayırma çapı › Sığmayan
   numara. Harita ve CBS.
+- **Senaryo ölçülerinde ağ üzerinden erişim, eğim haritası, ölçüler çizimde (11 Kasım 2026; MAP-10, [ADR 5060](../../docs/adr/5060-scenario-network-access-slope-map-and-record.md)).**
+  `cad.scenarios.impact`'in `access.network`/`connect`'i (projenin Ağlar'daki ağı boyunca; merkez ağa bağlanır,
+  kullanıcının sınırından uzaksa ağa bağlanamaz, eksik; yollar `reach`'te) ve `slope.map`'i (parçalar sınıfıyla); yeni
+  `cad.scenarios.record` (Ölçüleri çizime yaz: tablo, damgalar öznitelikte, `.kcad` şeması aynı); `records` tablonun
+  güncel ya da eskimiş olduğunu söyler. Senaryo ölçüleri › Erişim ağı / bağlanma, Eğimi çizimde göster. Harita + CBS.
+- **Dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (11 Kasım 2026; MAP-11, [ADR 5080](../../docs/adr/5080-separation-number-clear-and-value-distribution.md)).**
+  `cad.readjustment.sheets`'in kılavuzlu numarası en yakın temiz yere (1–3 boy; doğu, batı, kuzey, güney, ara yönler):
+  çizimin gösterilen çizgileri, alan sınırları, yazıları, kılavuzları, noktaları ve paftanın öbür numaraları engel;
+  temiz yer yoksa en aza değen yer, `clear`/`clashes` ve `number_crowded`. `cad.readjustment.distribute`'a `basis: value`:
+  kütle değer oranında (BauGB § 56–57), değerler ve kaynakları kullanıcının, her cevapta `value_basis_not_a_rule`
+  (yönetmelikte kural değil). Harita ve CBS.
 - **Senaryo ölçülerinde eğim sınıfları ve bakı (10 Kasım 2026; MAP-10, [ADR 4660](../../docs/adr/4660-scenario-slope-classes-and-aspect.md)).**
   `cad.scenarios.impact`'in `slope.classes`'ı (kullanıcının sınırları, %) ve `slope.aspect`'i (sekiz yön ve Düz, ArcGIS'in
   Surface Aspect'i) ölçü satırları olarak. Senaryo ölçüleri › Eğim sınıfları (%) / bakı. Harita + CBS.
 - **İmar denetiminde sembol uyuşmazlığı; hata katmanları GeoPackage'a (10 Kasım 2026; MAP-09, [ADR 4640](../../docs/adr/4640-zoning-symbol-mismatch-and-error-geopackage.md)).**
   `cad.zoning.check`'in `symbolMismatch`'i (sembol karardan, tablo ADR 4240'ın); imar ve topoloji hata katmanları İşlem'in
   Sonucun yeri ile GeoPackage tablosu olur, çizim değişmez. Harita + CBS.
+- **Plan değişikliği taslağı; sembol seçimleri projede (11 Kasım 2026; MAP-09, [ADR 5040](../../docs/adr/5040-zoning-plan-change-draft-and-kept-symbols.md)).**
+  `.kcad` şema 250 `settings.zoningPlan`: `cad.zoning.symbolize`'ın `keep`'i
+  seçimleri projede saklar, saklı seçim tablodan önce okunur (`from` `project`, geçersizi `kept_symbol_ignored`); yeni
+  `cad.zoning.draft` taslağı (plan, sürüm, MPYY m. 9(4) gerekçesi, alanın önce ve sonra değeri) saklar ya da siler,
+  yürürlükteki karar alanlarına yazmaz; kullanıma göre alanlar ve m. 26 konuları (`infrastructureLess`, `densityUp`,
+  `heightUp`); denetimin `draftStale`'i. Taslak onaylı değişiklik değildir. Harita + CBS.
 - **İfrazda komşunun sınırının bölünmesi (10 Kasım 2026; MAP-08, [ADR 4620](../../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
   `cad.parcels.record`: yeni köşe güncel komşunun düz sınırının içindeyse (1 µm) ve parçalar belgenin sınırlarıysa
   sınır bölünür, komşunun halkası parçaları alır, eski sınır kapanır; `boundariesSplit`, `neighbours`. Harita + CBS.
+- **Belge taslağı ve onayı, belgedeki kenar ölçüleri, yaylı sınırın bölünmesi (11 Kasım 2026; MAP-08, [ADR 5020](../../docs/adr/5020-parcel-document-drafts-lengths-and-arc-split.md)).**
+  `cad.parcels.record`'un `lengths`'i (ya da alanın Kenar ölçüleri (m)'si) belgenin kenar ölçülerini yazar; `cad.parcels.records`
+  her ölçüyü sınırın boyuyla BÖHHBÜY m. 48(1)'in d = 0,05 + 0,001·S m sınırına göre okur (`overLimit`). `draft` belgeyi
+  taslak yazar, güncel kayıt değişmez; `cad.parcels.approve` dışarıda verilen onayı yazar (taslak sıradaki numarayla
+  belge olur; KentOS onay vermez), `cad.parcels.withdraw` taslağı kaldırır. Yeni köşe komşunun yaylı sınırının çemberine
+  düşerse yay bölünür. `.kcad` şema 249. Harita + CBS.
+- **Köşe sil'de aynı dairenin iki yayı tek yay (11 Kasım 2026; MAP-07, [ADR 5000](../../docs/adr/5000-vertex-delete-joins-arcs-of-one-circle.md)).**
+  `cad.entities.vertex`'in `joinArcs`'ı (uzunluk toleransı, yalnız Köşeyi sil): aynı yöne dönen, merkez ve yarıçapı
+  tolerans içinde iki yay süpürmeleri toplanarak tek yay olur; olmazsa kenar düz, `arcs_not_joined` uyarısı. Aynı yayları
+  paylaşan komşu Topolojik düzenlemeyle tek yayı alır (`Change::Join`). Masaüstünde tutamaç menüsü, Köşe ekle/sil aracı
+  ve Köşe tablosunun Sil'i (silinen dizinin yayları) Topolojik temizlik'in toleransını verir. Köşe tablosu açıkken nesnenin her kenarında köşelerin gidiş yönüne ok (yalnız
+  görünüm, §7). CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi.
 - **Topoloji bulgusunun Öznitelikler'den işaretlenmesi (10 Kasım 2026; MAP-07, [ADR 4600](../../docs/adr/4600-topology-findings-marked-from-attributes.md)).**
   Öznitelikler › Topoloji: Gerekçe satırı ve bulgunun durumu açılır listede (`cad.topology.exceptions`); çoklu seçimde
   bulgular duruma göre sayılır. Komut değişmedi. Harita + CBS.
+- **Kot araçlarında çok parçalı nesne (11 Kasım 2026; MAP-06, [ADR 4980](../../docs/adr/4980-range-on-any-part-and-ring.md)).**
+  `cad.entities.grade`, `cad.entities.raise` ve `cad.entities.drape`'in `range`'i `part` ve `ring` alır: çok parçalı nesnenin herhangi bir
+  parçasının dış halkası ya da deliği; öbür halkalar olduğu gibi; olmayan parça ya da delik `wrong_place`. Eğimle kot
+  ver › Halka; Sahneden seç'in ilk tıklaması halkayı seçer. CAD (Harita + Yol).
 - **Yüzeyden kot ver'de göreli kot ve aralık (10 Kasım 2026; MAP-06, [ADR 4580](../../docs/adr/4580-drape-relative-height-and-range.md)).**
   `cad.entities.drape`'in `offset`'i (yüzeyin kotu artı fark) ve `range`'i (tek nesnenin köşe aralığı, dış halka; kırık
   noktası yalnız aradaki kenarlarda); yeni `wrong_place`. Eğimle kot ver › Yüzeyden › Kot farkı ve Aralık. Kotlar yüzeye
@@ -792,22 +845,120 @@
 - **GNSS ağının seyrek çözümü (10 Kasım 2026; MAP-05, [ADR 4560](../../docs/adr/4560-gnss-network-sparse-solution.md)).**
   `gnss::adjust`: ters Cuthill–McKee sırası, zarfında Cholesky, Takahashi ile seçili ters; 1500 bilinmeyen sınırı yerine
   zarf en çok 30 milyon girdi (19 600 istasyon 6 s, sürüm). GNSS baz ağı özeti ağın büyüklüğünü söyler. Harita + CBS.
+- **GNSS ağının dayanıklı kestirimi (11 Kasım 2026; MAP-05, [ADR 4960](../../docs/adr/4960-gnss-network-robust-estimation.md)).**
+  `cad.survey.baselines`'ın `robust`'u (huber | danish, c; öntanım 1,5 / 2,0): yinelemeli yeniden ağırlıklandırma,
+  bazın tümüne tek çarpan, standart artık bileşenlerin |v|/σ'sının en büyüğü; 10⁻⁹'da durur (en çok 100 adım). Baz
+  silinmez; cevapta `factor` ve `robust`. GNSS baz ağı › Dayanıklı kestirim, Ağırlık çarpanı sütunu. Oturumlu ağda ve
+  `map.survey.network`'te yok. Harita + CBS.
+- **Katalog geçiş raporu (11 Kasım 2026; MAP-04, [ADR 4940](../../docs/adr/4940-catalog-migration-report.md)).**
+  `cad.profiles.compare` (salt okunur): eski ve yeni katalog (veri profili); sınıf kalıcı kimliğiyle, yoksa saha
+  kodlarıyla izlenir (same, changed, renamed, split, merged, retired, added); alanlar, liste kodları ve Detay
+  eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli. Taşımaz. Katalog geçiş raporu… (Ölçme ›
+  Noktalar ▾; CBS Veri › Standart). Harita + CBS.
 - **Detay eşleştirmede kayıtlı kararların yeniden uygulanması (10 Kasım 2026; MAP-04, [ADR 4540](../../docs/adr/4540-reapply-recorded-reconcile-decisions.md)).**
   `map.features.reconcile`'in `reapply`'ı: yeni çıkarımın kararsız adayı aynı kaynağın yakınındaki eşleştirilmiş
   adayının notundaki kararı alır (gruplama kuralı, en yakını); çıktı `reapplied`, yeni not önceki notu anar. Detay
   eşleştirme › Önceki kararlar. Harita.
+- **GNSS baz oturumlarının korelasyonları, yeni noktaların hızı, sınırın projede saklanması (11 Kasım 2026; MAP-03, [ADR 4920](../../docs/adr/4920-gnss-sessions-new-point-velocity-kept-limits.md)).**
+  GVX'in SESSION/CCM_BLOCK'ları baz oturumu `bo-N` olarak saklanır (şema 248); `map.survey.network` ve `edit network`'te
+  `correlations: session` oturumu tam kovaryansıyla dengeler, bazlar korelasyonlu w-testiyle sınanır (verilmezse `none`,
+  söylenir); `velocities` yeni noktaların hızını arazi ölçümünün hız ızgarasından okur, kabul edilen nokta ızgaranın adı
+  ve SHA-256'sıyla tutar (hız uydurulmaz); `edit tolerance` kabul farkı sınırını kaynağıyla projeye yazar, `places`
+  onu okur. GNSS ağ dengelemesi › Oturum korelasyonları, Yeni noktaların hızı; GNSS arşivi › Projeye yaz. Harita + CBS.
 - **Bilinen noktanın kabul farkı sınırı (10 Kasım 2026; MAP-03, [ADR 4520](../../docs/adr/4520-known-place-tolerance.md)).**
   `map.survey.query`'nin `tolerance`'ı (`places` ile): yatay ve düşey sınır; yerde `horizontal` ve `beyond`. GNSS
   arşivi › Kabul farkı sınırı (oturumluk). Harita.
 - **Poligon hesabında karşılıklı başucu açıları (10 Kasım 2026; MAP-02, [ADR 4500](../../docs/adr/4500-traverse-reciprocal-zenith-angles.md)).**
   `cad.survey.points`'in `heights.back`'i: geri nişanlı kenarın kot farkı iki yönün ortalaması (k düşer), aynı iki uç
   arasındaki çiftin k'sı `refractions`'ta (Baselga vd. 2014, denklem 11). Poligon hesabı › Karşılıklı. CAD + CBS.
+- **EPSG'nin kullanım alanı çokgenleri; ölçülen k (10 Kasım 2026; MAP-02, [ADR 4900](../../docs/adr/4900-crs-area-polygons-and-measured-refraction.md)).**
+  Kayıttaki sistemlerin alanı EPSG çokgeniyle denetlenir (`fixtures/crs/v1/area-polygons.json`, v13.106, IOGP'nin);
+  çokgeni kutusu olanlarda ve ED50 / UTM 35N'de kutu. `cad.survey.points`'te `refraction` (çiftlerin ortalaması),
+  `cad.settings.set`'te `refraction`; Poligon hesabında Projeye yaz. CAD + CBS.
+- **Harita işinde tipli katman profili, köşe köşe kayma ve silinenin şekli (10 Kasım 2026; MAP-01, [ADR 4880](../../docs/adr/4880-map-work-typed-layer-profile-shift-and-removed-shape.md)).**
+  Öğenin veri profili (`profile`, şema 247): `map.work.edit profile` sınıfların katmanını ve alanlarını ekler, öğeye
+  katar; bulgusu olan öğe onaylanmaz (`approval_profile`). `changes.objects[].shift`: köşe köşe en büyük kayma, KOH,
+  kesin Hausdorff (`shape_shift`). Değişenler silinenleri de çizer, kaymaları tabloda gösterir. Yalnız Harita.
 - **Onaydan sonra geometrisi değişenin onaylanan şekli (10 Kasım 2026; MAP-01, [ADR 4480](../../docs/adr/4480-map-work-approved-shape-in-the-drawing.md)).**
   `map.work.query`'nin değişen nesnesinde `approved` (geometrisi değiştiyse); Harita işi › Değişenler onaylanan şekli
   kesik çizgiyle çizimin üstünde gösterir (approved_layer.rs). Yalnız Harita.
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
+- **Aks boyunca kesit; kesitler ve malzeme bölgeleri çizimde (10 Kasım 2026; MAP-15, [ADR 4760](../../docs/adr/4760-sections-along-an-axis-and-materials-drawn.md)).**
+  `road.terrains.compare`'in kesit yöntemi çizimdeki bir eksen boyunca da ölçer (`axis`, `left`, `right`, `corners`;
+  kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
+  cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
+  Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Kataloğa taşı (12 Kasım 2026; MAP-04, [ADR 5340](../../docs/adr/5340-carry-data-between-catalogs.md)).**
+  Yeni `cad.profiles.carry`: raporun sınıf izlemesiyle nesneler yeni sınıfın katmanına (bölünen sınıfınkiler kendi saha
+  koduyla, kalkanınkiler yerinde), hedef katman yoksa alanlarıyla açılır; değerler taşınır, silinmez; tek adım. Katalog
+  geçiş raporu › Kataloğa taşı. Harita + CBS.
+- **Oturumun bağımsız bazları ve blokları (12 Kasım 2026; MAP-03, [ADR 5320](../../docs/adr/5320-independent-baselines-and-session-blocks.md)).**
+  `map.survey.query`'de oturumdaki bazın `independent`'i (n − 1, kısadan uzuna yayılan ağaç); `map.survey.edit`
+  `independent` bağımlıları dengelemeden çıkarır. GNSS ağ dengelemesi › Bazlar'da Bağımsız, Oturumlar sekmesi,
+  Bağımsız bazları seç. Harita + CBS.
+- **Datum dönüşümünün alan çokgeni ve haritası; atlamalı nivelman (12 Kasım 2026; MAP-02, [ADR 5300](../../docs/adr/5300-datum-operation-area-polygon-and-leapfrog-levelling.md)).**
+  Datum işlemlerinin alanı EPSG 1237'nin çokgeniyle okunur (`operation_region`, kaydın `area.extent`'i); Proje ayarları ›
+  Koordinat sistemi › Kullanım alanı haritası. `cad.survey.adjust` kot ağında `leapfrog` (alet iki noktanın arasında,
+  `fieldbook::leapfrog`); Kot ağı dengelemesi › Atlamalı nivelman. CAD + CBS.
+- **Harita işinde kayma sınırı ve önerilen profil (12 Kasım 2026; MAP-01, [ADR 5280](../../docs/adr/5280-map-work-shift-limit-and-suggested-profile.md)).**
+  `map.work.query`'nin `limit`'i: kendi değer, BÖHHBÜY m. 46(1), m. 78(1)(h) × ölçek ya da Yanılma Sınırı m. 9(1)
+  tablosu (`catalog/v1/rules/konum-dogrulugu-2022.json`); `shift.beyond`, `over`, `changes.beyond`. `suggest`: profil
+  sınıfının `work`'ü öğe türünü söyler, kurum profili de önerir. Harita işi › Önerilen, Kayma sınırı. Yalnız Harita.
+- **Birleşme çizgisi ağı ve NoData'dan ayak izi (11 Kasım 2026; MAP-12, [ADR 5260](../../docs/adr/5260-seamline-network-and-footprint-from-nodata.md)).**
+  Yeni `cad.orthophoto.network` (2–50 ortofoto; her yer, onu kaplayan görüntülerden ayak izinin merkezi en yakın olanın;
+  `junctions`) ve `cad.orthophoto.footprint` (NoData olmayan piksellerin sınırı, 4 komşuluk; `hull` dışbükey zarf).
+  Mozaik birleşme çizgisi › İki görüntü | Ağ | Ayak izi. CAD + CBS.
+- **Tarifin katmanının değer bileşimleri, kuralları, dizinleri ve formları; eksik alanlar (11 Kasım 2026; MAP-20, [ADR 5240](../../docs/adr/5240-recipe-layer-rules-forms-and-missing-fields.md)).**
+  `road.project.graph`'ın tarifi katmanın `contingents`, `rules`, `indexes` ve formlarının taslağını (`forms`) taşır;
+  `road.project.produce` eklediği katmana verir (form taslak, kimliği doluysa `-2`; `formsAdded`); `addFields` bulunan
+  katmana tarifin eksik alanlarını ekler (`fieldsAdded`, `recipe_layer_fields_added`). İş grafiği › Bulunan katman. Harita + Yol.
+- **İzleme incelemesinin kaydı, eşiklerin kaynağı, zaman grafiği (11 Kasım 2026; MAP-19, [ADR 5220](../../docs/adr/5220-monitoring-review-record-and-time-chart.md)).**
+  Yeni `cad.asbuilt.review`: izleme işi eşikleri ve kaynağıyla, noktaların durumu, okunan noktaların özeti ve inceleyenin
+  beyanıyla (rol, unvan, ad, gün, ibare, imza) `settings.monitoringReviews`'a; `current` özetten; `.kcad` şema 245.
+  İzleme penceresinde Eşiklerin kaynağı, İnceleme bölümü ve Grafik. KentOS yetkiyi ve imzayı doğrulamaz. Harita + Yol + CBS.
+- **Dengelemenin sonucu projede saklanır (11 Kasım 2026; MAP-18, [ADR 5200](../../docs/adr/5200-kept-survey-adjustments.md)).**
+  `cad.survey.adjust`'ın `keep`'i sonucu (noktalar, σ, f, m0, test) `settings.surveyAdjustments`'a aynı adımda yazar;
+  `.kcad` şema 252; ağ pencerelerinde Projede sakla.
+- **Hat profilinde kesişen borunun taraması (11 Kasım 2026; MAP-16, [ADR 5160](../../docs/adr/5160-crossing-pipe-fill-choice.md)).**
+  `cad.pipes.profile`'ın `crossing.hatch`'i: `wall` (öntanım, halka), `inside`, `whole`, `none`; masaüstünde Kesişen
+  borunun taraması. Harita + Yol + CBS.
+- **Kesik koni formülü ve Brükner değeri (11 Kasım 2026; MAP-15, [ADR 5140](../../docs/adr/5140-frustum-formula-and-bruckner-value.md)).**
+  `formula: frustum` iki kesit arasında L/3·(A₀ + A₁ + √(A₀·A₁)) (karşılaştırma ve kazı-dolgu kesitleri); kazı-dolgu
+  kesitlerinde `mass`: birikimli kazı × `cutFactor` − birikimli dolgu × `fillFactor`, cetvelde Brükner sütunu. Harita + Yol.
+- **Kesit kontrolü; m. 63(2) ızgarasının taban noktası ve dönmesi (11 Kasım 2026; MAP-14, [ADR 5120](../../docs/adr/5120-section-check-and-turned-built-up-grid.md)).**
+  `road.terrains.sectioncheck` (salt okunur): iki kontrol noktası arasındaki kesitte noktaların kotu kesitin kestiği iki
+  komşu eğri arasında enterpolasyonla; KOH 1,5 · KOH_Z'yle (m. 93(1)(c)), aralık paketin 20 m'siyle (m. 93(1)(b),
+  paket sürüm 5); uyarılar `section_check_exceeded`, `section_spacing_exceeded`. `builtUp.origin` ve `rotation`
+  ızgarayı kaydırır ve döndürür. Katman damgası katman dizininden. Harita + Yol.
+- **Pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması (10 Kasım 2026; MAP-14, [ADR 4740](../../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
+  `road.terrains.sheetcontours` çizimi yüzeyin ve okuduğu katmanların damgasıyla tutulur (yeni kaynak türü `layer`),
+  eskir ve yeniden üretilir. Yalnız değişeni yaz sırayı korur: aynı renkli yazısız çizgiler kalır, maskeli yazı ve nokta
+  bir çizgi yazılınca yeniden yazılır; Proje ağacı'ndaki kutu projenin ayarıdır (`road.rebuildWhole`, `road.project.edit`
+  `regional`; kendiliğinden yeniden üretim de uyar; `.kcad` şema 246). `builtUp`: yollarda ve yerleşik alanda paftada
+  2 cm'de bir kot; `check`: seçilen noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin sınırına göre (uyarı
+  `section_check_exceeded`). Pafta eğrileri › Yerleşik alan (63/2). Harita + Yol.
+- **Bulutun dosyasız konumu, Euler açıları, ağda dış döngü (11 Kasım 2026; MAP-13, [ADR 5100](../../docs/adr/5100-point-cloud-pose-euler-and-network-rounds.md)).**
+  Nokta bulutu dosyasının çizimdeki konumu dosya başına, dosya yazılmadan tutulur (`.kcad` şema 251 `sources[].pose`,
+  katı dönüşüm); yeni `cad.pointclouds.place` (matris, eksen ve açı, Euler açıları; Konumu kaldır; tek geri alma adımı).
+  Euler sözleşmesi OGC GeoPose 1.0 Basic-YPR: ENU, z → y′ → x″, derece = R = Rz·Ry·Rx (Sapma, Yunuslama, Yatış). Komutlar,
+  çizim ve XYZ sor konumu izler; Dönüşüm uygula onu dosyaya yazar, öbür araçlar reddeder. Tarama ağı'na `rounds` (dış
+  döngü) ve Nesnede tut. Kontrol noktaları ağa henüz girmez. Harita + CBS.
+- **Tarama ağı dengelemesi (10 Kasım 2026; MAP-13, [ADR 4720](../../docs/adr/4720-scan-network-adjustment.md)).**
+  Yeni `cad.pointclouds.network`: üç ve daha çok tarama bir GNSS ağı gibi birlikte dengelenir; bağlar Tarama kaydı gibi
+  kaydedilip normal matrisleriyle ağırlıklanır, sabit taramalar yerinde kalır; döngü kapanmaları ve her taramanın yatay
+  gücü söylenir. Nokta bulutu › Tarama ağı; Dönüşüm uygula taramayı matrisiyle taşır. Harita + CBS.
+- **Birleşme çizgisi ve mozaik elemanlarının KentOS'ta kurulması (10 Kasım 2026; MAP-12, [ADR 4700](../../docs/adr/4700-orthophoto-seamline-polygons-built.md)).**
+  Yeni `cad.orthophoto.seamlines`: iki ortofotonun birleşme çizgisi ve mozaik elemanları (TUCBS Ortogörüntü), eşit uzaklık
+  (Voronoi; Pan ve ark. 2009, düz kesimler kesin) ya da radyometrik fark (en büyük farkın en küçüğü, sonra en az maliyet;
+  arama bandı, geçilmeyecek alanlar); tek geri alma adımında Mozaik elemanları katmanına. Raster › Birleşme çizgisi.
+  Terimler: birleşme çizgisi, mozaik elemanı, ayak izi (TUCBS “ayakizi”), kayıklık; Ortofoto karşılaştırması'nın “dikiş”
+  sözleri de değişti. Mevzuat çizginin yerine kural koymaz (BÖHHBÜY m. 67(6)). CAD + CBS.
+- **Yedi çizimin kendi hesabının içinde durması; tarifin katmanının alanları (10 Kasım 2026; MAP-20, [ADR 4860](../../docs/adr/4860-stop-within-seven-drawings-and-recipe-layer-fields.md)).**
+  Etiket, boykesit, otokorkuluk, menfez, kavşak, platform ve boru hattı profili çizimleri durdurmayı kendi hesabının
+  içinde duyar. Tarif katmanın alanlarını (bağlı tablonun sütunu hariç), değer listelerini ve alt türlerini taşır;
+  Tariften üret aynı değerli listeye bağlar, başka değerlinin yanına “<ad>_1” ekler. Harita + Yol.
 - **Tarifin katmanının saydamlığı, türü ve Yazdır'ı (10 Kasım 2026; MAP-20, [ADR 4440](../../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
   İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz), türünü ve Yazdır'ını taşır; Tariften üret
   eklediği katmana verir. Çizimin nesnesini katmanının türü tutmuyorsa `layer_geometry_mismatch`, plan da. Harita + Yol.
@@ -2778,7 +2929,7 @@
   söylenir; takma ad ve seçenek harfi çakışmaları testte (ADR 0281);
   AutoCAD takma adları: Uygulama ayarları › Görünüm › Komut satırı'nda kapalı başlayan tercih (`drafting.autocadAliases`); komut satırı
   AutoCAD'in acad.pgp adlarını da alır (RECTANG, LA, DT, U, UNDO, QSAVE; yöntemiyle JOG), profil veridir
-  (`catalog/v1/aliases-autocad.json`), KentOS'un adları, yöntem adları ve tek tuş kısayolları önce gelir (B, CP, D, I, P, POLYGON, S, T
+  (`catalog/v1/aliases-classic.json`), KentOS'un adları, yöntem adları ve tek tuş kısayolları önce gelir (B, CP, D, I, P, POLYGON, S, T
   eklenmez); öneri listesinde ve F1'de görünür, tuşlar ve seçenek harfleri değişmez (`alias_profile.rs`, ADR 0282);
   şeffaf komutlar: Kaydır, Pencere yakınlaştır, Mesafe ölç, Açı ölç ve Koordinat oku çalışan komutun ya da sıcak tutamacın üstünde
   çalışır (`Session::start_over`, `TRANSPARENT`), komut noktaları, seçenekleri, istemi, kilitleri, referansı ve Yapım kipiyle bekler,

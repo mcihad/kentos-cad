@@ -1,12 +1,12 @@
 //! Eğimle kot ver's Hedef Referanstan (docs/adr/3780; grade_window.rs): the selected line, polyline or area raised or
-//! lowered whole from a reference point by `cad.entities.raise`, as Civil 3D's Raise/Lower by Reference. The chosen
-//! vertex takes the reference's elevation plus the grade times its horizontal distance from it (or plus the
+//! lowered whole from a reference point by `cad.entities.raise`. The chosen vertex (on the ring Halka names, docs/adr/4980)
+//! takes the reference's elevation plus the grade times its horizontal distance from it (or plus the
 //! difference); every other elevation moves by as much, so the object's own grades stay.
 //!
 //! - The reference is a place and its elevation: typed (Y, X, kot), or by Sahneden seç's first click, the nearest point
 //!   or vertex with an elevation within the pick aperture; a click by none takes the place and leaves the elevation to
 //!   type. The second click takes the vertex, as the range's clicks do.
-//! - After Uygula the reference stays for the next object (Civil 3D keeps it active); Vazgeç lets it go.
+//! - After Uygula the reference stays for the next object; Vazgeç lets it go.
 //! - On the drawing the reference and the vertex are ringed, the line between them drawn over.
 
 use std::fmt;
@@ -50,6 +50,8 @@ impl App {
         EntitiesRaise {
             uid: s.uid.clone(),
             at: (s.at.max(1.0) as u32) - 1,
+            part: s.ring.0,
+            ring: s.ring.1,
             reference: RaiseReference { x: s.east, y: s.north, z: s.height },
             grade: (s.by == By::Grade).then_some(s.percent / 100.0),
             difference: (s.by == By::Difference).then_some(s.difference),
@@ -195,11 +197,16 @@ impl App {
                     .spacing(8)
                     .align_y(iced::Center),
             )
-            .field("Referans kotu (m)", number(s.height, Event::Height, 0.1))
+            .field("Referans kotu (m)", number(s.height, Event::Height, 0.1));
+        // Docs/adr/4980: the vertex's ring, when the object has more than one.
+        let place = self.ring_place();
+        let form = self
+            .ring_field(form)
             .field("Köşe", NumberInput::new(s.at, |v| msg(Event::At(v))).step(1.0).decimals(0).width(width))
             .help(format!(
-                "Nesnenin {} köşesi var, 1'den sayılır; seçili köşe{vertex}. Sahneden seç iki tıkla alır: önce referans (kotlu bir nokta ya da köşe), sonra köşe.",
-                s.vertices
+                "{} {} köşesi var{place}, 1'den sayılır; seçili köşe{vertex}. Sahneden seç iki tıkla alır: önce referans (kotlu bir nokta ya da köşe), sonra köşe.",
+                if place.is_empty() { "Nesnenin" } else { "Halkanın" },
+                self.grade_vertices().len(),
             ))
             .field("Fark", Segmented::new([By::Grade, By::Difference], s.by, |b| msg(Event::By(b))));
         let form = match s.by {

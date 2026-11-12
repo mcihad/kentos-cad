@@ -247,14 +247,14 @@ compose = _LayersCompose()
 
 
 class _LayersContingents(LocalCommand[LayersContingents, LayersComposed, LayersComposePlan]):
-    """``cad.layers.contingents`` v1. Değer bileşimleri: Katmanın değer gruplarını yazar
-    (ArcGIS'in contingent values'u): her grup (name) 2–8 değer listeli alanı (fields,
-    anahtarlarıyla) ve birlikte geçerli bileşimlerini (rows: cells, alan başına kind
-    code ve code, kind any ya da kind empty; isteğe bağlı subtype) tutar. Grubun
-    alanlarını değiştiren yazma, bileşimlerden birine uymuyorsa kısıtlayıcı grupta
-    (restrictive) reddedilir (invalid_combination), öbüründe uyarılır
-    (combination_unmet); formun ve tablonun seçenekleri öbür değerlere göre daralır. Boş
-    liste kaldırır; tek geri alma adımı “Değer bileşimleri”.
+    """``cad.layers.contingents`` v1. Değer bileşimleri: Katmanın değer gruplarını yazar:
+    her grup (name) 2–8 değer listeli alanı (fields, anahtarlarıyla) ve birlikte geçerli
+    bileşimlerini (rows: cells, alan başına kind code ve code, kind any ya da kind
+    empty; isteğe bağlı subtype) tutar. Grubun alanlarını değiştiren yazma,
+    bileşimlerden birine uymuyorsa kısıtlayıcı grupta (restrictive) reddedilir
+    (invalid_combination), öbüründe uyarılır (combination_unmet); formun ve tablonun
+    seçenekleri öbür değerlere göre daralır. Boş liste kaldırır; tek geri alma adımı
+    “Değer bileşimleri”.
     """
     __slots__ = ()
     id = "cad.layers.contingents"
@@ -276,14 +276,13 @@ class _LayersContingents(LocalCommand[LayersContingents, LayersComposed, LayersC
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LayersComposed:
-        """Değer bileşimleri: Katmanın değer gruplarını yazar (ArcGIS'in contingent values'u):
-        her grup (name) 2–8 değer listeli alanı (fields, anahtarlarıyla) ve birlikte geçerli
-        bileşimlerini (rows: cells, alan başına kind code ve code, kind any ya da kind
-        empty; isteğe bağlı subtype) tutar. Grubun alanlarını değiştiren yazma,
-        bileşimlerden birine uymuyorsa kısıtlayıcı grupta (restrictive) reddedilir
-        (invalid_combination), öbüründe uyarılır (combination_unmet); formun ve tablonun
-        seçenekleri öbür değerlere göre daralır. Boş liste kaldırır; tek geri alma adımı
-        “Değer bileşimleri”.
+        """Değer bileşimleri: Katmanın değer gruplarını yazar: her grup (name) 2–8 değer
+        listeli alanı (fields, anahtarlarıyla) ve birlikte geçerli bileşimlerini (rows:
+        cells, alan başına kind code ve code, kind any ya da kind empty; isteğe bağlı
+        subtype) tutar. Grubun alanlarını değiştiren yazma, bileşimlerden birine uymuyorsa
+        kısıtlayıcı grupta (restrictive) reddedilir (invalid_combination), öbüründe uyarılır
+        (combination_unmet); formun ve tablonun seçenekleri öbür değerlere göre daralır. Boş
+        liste kaldırır; tek geri alma adımı “Değer bileşimleri”.
 
         Args:
             doc: The drawing it works on.
@@ -934,15 +933,14 @@ filter = _LayersFilter()
 
 class _LayersFind(LocalCommand[LayersFind, LayersFound, LayersFound]):
     """``cad.layers.find`` v1. Katmanları bul: Katmanları adlarının örüntüsüyle ve
-    özellikleriyle bulur (AutoCAD'in katman süzgeçleri): name AutoCAD'in wcmatch
-    örüntüsüdür (* herhangi bir dizi, ? bir karakter, # rakam, @ harf, . ikisi de değil,
-    [..] ve [~..] kümeler, ` kaçış, virgülle seçenekler, başta ~ değili; harfler Türkçe
-    katlanır); group yalnız o grubun altındakiler; color, lineType, lineWeight katmanın
-    kendi stili; on görünür (gözü ve üstündeki grupların gözü açık), frozen ve locked
-    kendisi ya da üstündeki bir grup, plot üstündekilerle birlikte yazdırılıyor, empty
-    nesnesiz (servis katmanı boş sayılmaz). Yalnız katmanlar bulunur, ağacın sırasıyla,
-    yolları, nesne sayıları ve özellikleriyle. Çizimi değiştirmez; plan aynı cevabı
-    verir.
+    özellikleriyle bulur: name joker örüntüsüdür (* herhangi bir dizi, ? bir karakter, #
+    rakam, @ harf, . ikisi de değil, [..] ve [~..] kümeler, ` kaçış, virgülle
+    seçenekler, başta ~ değili; harfler Türkçe katlanır); group yalnız o grubun
+    altındakiler; color, lineType, lineWeight katmanın kendi stili; on görünür (gözü ve
+    üstündeki grupların gözü açık), frozen ve locked kendisi ya da üstündeki bir grup,
+    plot üstündekilerle birlikte yazdırılıyor, empty nesnesiz (servis katmanı boş
+    sayılmaz). Yalnız katmanlar bulunur, ağacın sırasıyla, yolları, nesne sayıları ve
+    özellikleriyle. Çizimi değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.layers.find"
@@ -971,15 +969,15 @@ class _LayersFind(LocalCommand[LayersFind, LayersFound, LayersFound]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LayersFound:
-        """Katmanları bul: Katmanları adlarının örüntüsüyle ve özellikleriyle bulur (AutoCAD'in
-        katman süzgeçleri): name AutoCAD'in wcmatch örüntüsüdür (* herhangi bir dizi, ? bir
-        karakter, # rakam, @ harf, . ikisi de değil, [..] ve [~..] kümeler, ` kaçış,
-        virgülle seçenekler, başta ~ değili; harfler Türkçe katlanır); group yalnız o grubun
-        altındakiler; color, lineType, lineWeight katmanın kendi stili; on görünür (gözü ve
-        üstündeki grupların gözü açık), frozen ve locked kendisi ya da üstündeki bir grup,
-        plot üstündekilerle birlikte yazdırılıyor, empty nesnesiz (servis katmanı boş
-        sayılmaz). Yalnız katmanlar bulunur, ağacın sırasıyla, yolları, nesne sayıları ve
-        özellikleriyle. Çizimi değiştirmez; plan aynı cevabı verir.
+        """Katmanları bul: Katmanları adlarının örüntüsüyle ve özellikleriyle bulur: name joker
+        örüntüsüdür (* herhangi bir dizi, ? bir karakter, # rakam, @ harf, . ikisi de değil,
+        [..] ve [~..] kümeler, ` kaçış, virgülle seçenekler, başta ~ değili; harfler Türkçe
+        katlanır); group yalnız o grubun altındakiler; color, lineType, lineWeight katmanın
+        kendi stili; on görünür (gözü ve üstündeki grupların gözü açık), frozen ve locked
+        kendisi ya da üstündeki bir grup, plot üstündekilerle birlikte yazdırılıyor, empty
+        nesnesiz (servis katmanı boş sayılmaz). Yalnız katmanlar bulunur, ağacın sırasıyla,
+        yolları, nesne sayıları ve özellikleriyle. Çizimi değiştirmez; plan aynı cevabı
+        verir.
 
         Args:
             doc: The drawing it works on.
@@ -1125,15 +1123,14 @@ find = _LayersFind()
 
 
 class _LayersIndexes(LocalCommand[LayersIndexes, LayersComposed, LayersComposePlan]):
-    """``cad.layers.indexes`` v1. Dizinler: Katmanın dizinlerini yazar (ArcGIS'in öznitelik
-    dizini, veritabanının CREATE INDEX'i): her dizin (name) 1–32 alanı (fields,
-    anahtarlarıyla, sırayla) tutar; tekil olanı (unique) katmanın anahtarıdır:
-    alanlarında başka bir kaydın değerlerini veren yazma, kaynağı ne olursa olsun (form,
-    tablo, komut, içe aktarma, Python, ajan) reddedilir (not_unique). Boş değer değer
-    sayılmaz; nullsEqual boşları aynı sayar (PostgreSQL'in NULLS NOT DISTINCT'i).
-    Kayıtların zaten bozduğu yeni tekil dizin reddedilir (index_not_unique, kayıtların
-    kimlikleriyle). GeoPackage'a yazılan katmanın tablosu dizinlerini alır, okunan
-    tablonun dizinleri katmana gelir. Boş liste kaldırır; tek geri alma adımı
+    """``cad.layers.indexes`` v1. Dizinler: Katmanın dizinlerini yazar: her dizin (name)
+    1–32 alanı (fields, anahtarlarıyla, sırayla) tutar; tekil olanı (unique) katmanın
+    anahtarıdır: alanlarında başka bir kaydın değerlerini veren yazma, kaynağı ne olursa
+    olsun (form, tablo, komut, içe aktarma, Python, ajan) reddedilir (not_unique). Boş
+    değer değer sayılmaz; nullsEqual boşları aynı sayar (PostgreSQL'in NULLS NOT
+    DISTINCT'i). Kayıtların zaten bozduğu yeni tekil dizin reddedilir (index_not_unique,
+    kayıtların kimlikleriyle). GeoPackage'a yazılan katmanın tablosu dizinlerini alır,
+    okunan tablonun dizinleri katmana gelir. Boş liste kaldırır; tek geri alma adımı
     “Dizinler”.
     """
     __slots__ = ()
@@ -1156,15 +1153,15 @@ class _LayersIndexes(LocalCommand[LayersIndexes, LayersComposed, LayersComposePl
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LayersComposed:
-        """Dizinler: Katmanın dizinlerini yazar (ArcGIS'in öznitelik dizini, veritabanının
-        CREATE INDEX'i): her dizin (name) 1–32 alanı (fields, anahtarlarıyla, sırayla)
-        tutar; tekil olanı (unique) katmanın anahtarıdır: alanlarında başka bir kaydın
-        değerlerini veren yazma, kaynağı ne olursa olsun (form, tablo, komut, içe aktarma,
-        Python, ajan) reddedilir (not_unique). Boş değer değer sayılmaz; nullsEqual boşları
-        aynı sayar (PostgreSQL'in NULLS NOT DISTINCT'i). Kayıtların zaten bozduğu yeni tekil
-        dizin reddedilir (index_not_unique, kayıtların kimlikleriyle). GeoPackage'a yazılan
-        katmanın tablosu dizinlerini alır, okunan tablonun dizinleri katmana gelir. Boş
-        liste kaldırır; tek geri alma adımı “Dizinler”.
+        """Dizinler: Katmanın dizinlerini yazar: her dizin (name) 1–32 alanı (fields,
+        anahtarlarıyla, sırayla) tutar; tekil olanı (unique) katmanın anahtarıdır:
+        alanlarında başka bir kaydın değerlerini veren yazma, kaynağı ne olursa olsun (form,
+        tablo, komut, içe aktarma, Python, ajan) reddedilir (not_unique). Boş değer değer
+        sayılmaz; nullsEqual boşları aynı sayar (PostgreSQL'in NULLS NOT DISTINCT'i).
+        Kayıtların zaten bozduğu yeni tekil dizin reddedilir (index_not_unique, kayıtların
+        kimlikleriyle). GeoPackage'a yazılan katmanın tablosu dizinlerini alır, okunan
+        tablonun dizinleri katmana gelir. Boş liste kaldırır; tek geri alma adımı
+        “Dizinler”.
 
         Args:
             doc: The drawing it works on.
@@ -1688,15 +1685,15 @@ class _LayersReproject(LocalCommand[LayersReproject, LayersReprojected, LayersRe
     (sistemin ya da ızgaranın dışında; yay, daire, yazı, blok gibi türden) varsa hiçbir
     şey yazılmaz: crs_unreached her nedeni sayısıyla söyler, uids nesneleri verir.
     Katmanın kaynak sistemi from olur. Tek geri alma adımı “Katmanın koordinatlarını
-    dönüştür”. Cevap önizlemedir, plan da aynısını verir (ADR 2500): her nesnenin ilk
-    noktasının şimdiki ve yeni yeri, kayması, noktalarının en küçük ve en büyük kayması;
-    noktaları EPSG kullanım alanlarının dışına düşen nesnenin notları
-    (outside_source_area, outside_operation_area, outside_project_area; outside_area
-    uyarısı); bütün noktaların ortalama, en küçük ve en büyük kayması; dönüşüm
-    zincirinin kararı (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000
-    nesne listelenir, notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa
-    ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    dönüştür”. Cevap önizlemedir, plan da aynısını verir: her nesnenin ilk noktasının
+    şimdiki ve yeni yeri, kayması, noktalarının en küçük ve en büyük kayması; noktaları
+    EPSG kullanım alanlarının dışına düşen nesnenin notları (outside_source_area,
+    outside_operation_area, outside_project_area; outside_area uyarısı); bütün
+    noktaların ortalama, en küçük ve en büyük kayması; dönüşüm zincirinin kararı
+    (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000 nesne listelenir,
+    notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa ya da from
+    projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.reproject"
@@ -1725,15 +1722,15 @@ class _LayersReproject(LocalCommand[LayersReproject, LayersReprojected, LayersRe
         yay, daire, yazı, blok gibi türden) varsa hiçbir şey yazılmaz: crs_unreached her
         nedeni sayısıyla söyler, uids nesneleri verir. Katmanın kaynak sistemi from olur.
         Tek geri alma adımı “Katmanın koordinatlarını dönüştür”. Cevap önizlemedir, plan da
-        aynısını verir (ADR 2500): her nesnenin ilk noktasının şimdiki ve yeni yeri,
-        kayması, noktalarının en küçük ve en büyük kayması; noktaları EPSG kullanım
-        alanlarının dışına düşen nesnenin notları (outside_source_area,
-        outside_operation_area, outside_project_area; outside_area uyarısı); bütün
-        noktaların ortalama, en küçük ve en büyük kayması; dönüşüm zincirinin kararı
-        (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000 nesne listelenir,
-        notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa ya da from
-        projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        aynısını verir: her nesnenin ilk noktasının şimdiki ve yeni yeri, kayması,
+        noktalarının en küçük ve en büyük kayması; noktaları EPSG kullanım alanlarının
+        dışına düşen nesnenin notları (outside_source_area, outside_operation_area,
+        outside_project_area; outside_area uyarısı); bütün noktaların ortalama, en küçük ve
+        en büyük kayması; dönüşüm zincirinin kararı (status, reasons; sınırlıysa
+        chain_limited uyarısı). En çok 1000 nesne listelenir, notlular önce. Kilitli katman
+        reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -1952,7 +1949,7 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
     """``cad.layers.service`` v1. Servis katmanı: Katman ağacına bir harita servisinden
     çizilen katman ekler (add: XYZ ve TMS, WMTS, WMS, OGC API Tiles, ArcGIS REST,
     Google'ın 2B karoları, vektör karolar), nesneleri bir servisten alınan katman ekler
-    (addFeed: WFS, OGC API Features, ArcGIS katmanı, GeoJSON adresi; alanlarıyla),
+    (addFeed: WFS, OGC API Features, ArcGIS REST katmanı, GeoJSON adresi; alanlarıyla),
     birini değiştirir (update: ad, servis ya da kaynak) ya da bir servis katmanını siler
     (remove); tek geri alma adımı, adı işlemin. parent katmanın gireceği grup (ya da
     yanına gireceği katman), index gruptaki yeri: ilki en üstte çizilir, verilmezse en
@@ -1995,14 +1992,14 @@ class _LayersService(LocalCommand[LayersService, LayersServiced, LayersServicePl
         """Servis katmanı: Katman ağacına bir harita servisinden çizilen katman ekler (add: XYZ
         ve TMS, WMTS, WMS, OGC API Tiles, ArcGIS REST, Google'ın 2B karoları, vektör
         karolar), nesneleri bir servisten alınan katman ekler (addFeed: WFS, OGC API
-        Features, ArcGIS katmanı, GeoJSON adresi; alanlarıyla), birini değiştirir (update:
-        ad, servis ya da kaynak) ya da bir servis katmanını siler (remove); tek geri alma
-        adımı, adı işlemin. parent katmanın gireceği grup (ya da yanına gireceği katman),
-        index gruptaki yeri: ilki en üstte çizilir, verilmezse en sona, her şeyin altına
-        girer. connections projenin bağlantılarına eklenir ya da aynı kimliklisinin yerini
-        alır; bağlantı yalnız doğrulamanın türünü ve gizli olmayan adları taşır, gizli
-        değerler çizime yazılmaz. Servis katmanı nesne tutmaz; servis ya da kaynak projenin
-        bağlantılarından birini adlandırır. Nesneler servisten alındıktan sonra
+        Features, ArcGIS REST katmanı, GeoJSON adresi; alanlarıyla), birini değiştirir
+        (update: ad, servis ya da kaynak) ya da bir servis katmanını siler (remove); tek
+        geri alma adımı, adı işlemin. parent katmanın gireceği grup (ya da yanına gireceği
+        katman), index gruptaki yeri: ilki en üstte çizilir, verilmezse en sona, her şeyin
+        altına girer. connections projenin bağlantılarına eklenir ya da aynı kimliklisinin
+        yerini alır; bağlantı yalnız doğrulamanın türünü ve gizli olmayan adları taşır,
+        gizli değerler çizime yazılmaz. Servis katmanı nesne tutmaz; servis ya da kaynak
+        projenin bağlantılarından birini adlandırır. Nesneler servisten alındıktan sonra
         cad.entities.create ile yazılır; aynı işlem grubunda tek adım olur. expectedRevision
         verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
         Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
@@ -2514,14 +2511,13 @@ states = _LayersStates()
 
 
 class _LayersSubtypes(LocalCommand[LayersSubtypes, LayersComposed, LayersComposePlan]):
-    """``cad.layers.subtypes`` v1. Alt türler: Katmanın alt türlerini yazar (ArcGIS'in
-    subtype'ı): değer listeli tek değerli bir alan (field, alanın anahtarı) kayıtları
-    türlerine ayırır; her alt tür (types: code, listenin bir değeri; label) öbür
-    alanları o türün kayıtları için daraltır: sunulan değerler (values), yeni kaydın
-    varsayılanı (default), zorunluluk (required). Alt türün sunmadığı değer kayda
-    yeniden yazılamaz; tür değişince eski değerler kalır ve subtype_misfit uyarısıyla
-    söylenir. subtypes verilmezse kaldırılır. Tek geri alma adımı “Alt türler”; aynıysa
-    hiçbir şey yazılmaz.
+    """``cad.layers.subtypes`` v1. Alt türler: Katmanın alt türlerini yazar: değer listeli
+    tek değerli bir alan (field, alanın anahtarı) kayıtları türlerine ayırır; her alt
+    tür (types: code, listenin bir değeri; label) öbür alanları o türün kayıtları için
+    daraltır: sunulan değerler (values), yeni kaydın varsayılanı (default), zorunluluk
+    (required). Alt türün sunmadığı değer kayda yeniden yazılamaz; tür değişince eski
+    değerler kalır ve subtype_misfit uyarısıyla söylenir. subtypes verilmezse
+    kaldırılır. Tek geri alma adımı “Alt türler”; aynıysa hiçbir şey yazılmaz.
     """
     __slots__ = ()
     id = "cad.layers.subtypes"
@@ -2543,13 +2539,13 @@ class _LayersSubtypes(LocalCommand[LayersSubtypes, LayersComposed, LayersCompose
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LayersComposed:
-        """Alt türler: Katmanın alt türlerini yazar (ArcGIS'in subtype'ı): değer listeli tek
-        değerli bir alan (field, alanın anahtarı) kayıtları türlerine ayırır; her alt tür
-        (types: code, listenin bir değeri; label) öbür alanları o türün kayıtları için
-        daraltır: sunulan değerler (values), yeni kaydın varsayılanı (default), zorunluluk
-        (required). Alt türün sunmadığı değer kayda yeniden yazılamaz; tür değişince eski
-        değerler kalır ve subtype_misfit uyarısıyla söylenir. subtypes verilmezse
-        kaldırılır. Tek geri alma adımı “Alt türler”; aynıysa hiçbir şey yazılmaz.
+        """Alt türler: Katmanın alt türlerini yazar: değer listeli tek değerli bir alan (field,
+        alanın anahtarı) kayıtları türlerine ayırır; her alt tür (types: code, listenin bir
+        değeri; label) öbür alanları o türün kayıtları için daraltır: sunulan değerler
+        (values), yeni kaydın varsayılanı (default), zorunluluk (required). Alt türün
+        sunmadığı değer kayda yeniden yazılamaz; tür değişince eski değerler kalır ve
+        subtype_misfit uyarısıyla söylenir. subtypes verilmezse kaldırılır. Tek geri alma
+        adımı “Alt türler”; aynıysa hiçbir şey yazılmaz.
 
         Args:
             doc: The drawing it works on.
@@ -2640,14 +2636,14 @@ subtypes = _LayersSubtypes()
 
 class _LayersTable(LocalCommand[LayersTable, LayersComposed, LayersComposePlan]):
     """``cad.layers.table`` v1. Koşullu biçim: Öznitelik tablosunun katmanın satırlarını ve
-    hücrelerini koşullarla nasıl göstereceğini yazar (QGIS'in koşullu biçimi). Her
-    kural: koşul (condition; katmanın alanları adlarıyla, ifade dili), uygulandığı yer
-    (field: bir alanın hücresi; verilmezse bütün satır), zemin rengi (background), yazı
-    rengi (color, #RRGGBB) ve kalınlık (bold). Bir hücrenin her biri için tutan ilk
-    kural verir; alanın kuralları satırınkilerden önce gelir. En çok 50 kural.
-    Kuralların listesi verilen olur; boş liste kaldırır. Katman ağacının değişikliğidir:
-    tek geri alma adımı “Koşullu biçim”; aynıysa hiçbir şey yazılmaz. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    hücrelerini koşullarla nasıl göstereceğini yazar. Her kural: koşul (condition;
+    katmanın alanları adlarıyla, ifade dili), uygulandığı yer (field: bir alanın
+    hücresi; verilmezse bütün satır), zemin rengi (background), yazı rengi (color,
+    #RRGGBB) ve kalınlık (bold). Bir hücrenin her biri için tutan ilk kural verir;
+    alanın kuralları satırınkilerden önce gelir. En çok 50 kural. Kuralların listesi
+    verilen olur; boş liste kaldırır. Katman ağacının değişikliğidir: tek geri alma
+    adımı “Koşullu biçim”; aynıysa hiçbir şey yazılmaz. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.table"
@@ -2670,14 +2666,14 @@ class _LayersTable(LocalCommand[LayersTable, LayersComposed, LayersComposePlan])
         expected: Expected | None = None,
     ) -> LayersComposed:
         """Koşullu biçim: Öznitelik tablosunun katmanın satırlarını ve hücrelerini koşullarla
-        nasıl göstereceğini yazar (QGIS'in koşullu biçimi). Her kural: koşul (condition;
-        katmanın alanları adlarıyla, ifade dili), uygulandığı yer (field: bir alanın
-        hücresi; verilmezse bütün satır), zemin rengi (background), yazı rengi (color,
-        #RRGGBB) ve kalınlık (bold). Bir hücrenin her biri için tutan ilk kural verir;
-        alanın kuralları satırınkilerden önce gelir. En çok 50 kural. Kuralların listesi
-        verilen olur; boş liste kaldırır. Katman ağacının değişikliğidir: tek geri alma
-        adımı “Koşullu biçim”; aynıysa hiçbir şey yazılmaz. expectedRevision verilmişse ve
-        çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        nasıl göstereceğini yazar. Her kural: koşul (condition; katmanın alanları adlarıyla,
+        ifade dili), uygulandığı yer (field: bir alanın hücresi; verilmezse bütün satır),
+        zemin rengi (background), yazı rengi (color, #RRGGBB) ve kalınlık (bold). Bir
+        hücrenin her biri için tutan ilk kural verir; alanın kuralları satırınkilerden önce
+        gelir. En çok 50 kural. Kuralların listesi verilen olur; boş liste kaldırır. Katman
+        ağacının değişikliğidir: tek geri alma adımı “Koşullu biçim”; aynıysa hiçbir şey
+        yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -2899,17 +2895,17 @@ time = _LayersTime()
 
 class _LayersTranslate(LocalCommand[LayersTranslate, LayersTranslated, LayersTranslated]):
     """``cad.layers.translate`` v1. Katmanları çevir: Katmanları kurallarla bir çizim
-    standardının katmanlarına birleştirir (AutoCAD'in LAYTRANS'ı): nesne tutan her
-    katman adına uyan ilk kuralı alır (from bir ad örüntüsüdür; adı kuralın to'su olan
-    katman standart katmanın kendisidir); kuralın standart katmanı to adlı ilk
-    katmandır, yoksa ve kuralı bir katman alırsa parent grubunun sonuna (verilmezse en
-    üste) kuralın stiliyle (verilmeyen alanlar ilk kaynağınki) eklenir; var olanı
-    kuralın verilen stilini alır. Kaynakların nesneleri standart katmana taşınır,
-    kaynaklar silinir; etkin katman kaynaksa standart katman etkin olur; hepsi tek geri
-    alma adımı (“Katmanları çevir”). Kilitli bir kaynak ya da standart katman hiçbir
-    şeyi yazdırmaz (layer_locked). plan önizlemedir: neyin nereye gideceği, nesne
-    sayıları, eklenecek ve stili değişecek katmanlar. expectedRevision verilmişse ve
-    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    standardının katmanlarına birleştirir: nesne tutan her katman adına uyan ilk kuralı
+    alır (from bir ad örüntüsüdür; adı kuralın to'su olan katman standart katmanın
+    kendisidir); kuralın standart katmanı to adlı ilk katmandır, yoksa ve kuralı bir
+    katman alırsa parent grubunun sonuna (verilmezse en üste) kuralın stiliyle
+    (verilmeyen alanlar ilk kaynağınki) eklenir; var olanı kuralın verilen stilini alır.
+    Kaynakların nesneleri standart katmana taşınır, kaynaklar silinir; etkin katman
+    kaynaksa standart katman etkin olur; hepsi tek geri alma adımı (“Katmanları çevir”).
+    Kilitli bir kaynak ya da standart katman hiçbir şeyi yazdırmaz (layer_locked). plan
+    önizlemedir: neyin nereye gideceği, nesne sayıları, eklenecek ve stili değişecek
+    katmanlar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.translate"
@@ -2932,17 +2928,16 @@ class _LayersTranslate(LocalCommand[LayersTranslate, LayersTranslated, LayersTra
         expected: Expected | None = None,
     ) -> LayersTranslated:
         """Katmanları çevir: Katmanları kurallarla bir çizim standardının katmanlarına
-        birleştirir (AutoCAD'in LAYTRANS'ı): nesne tutan her katman adına uyan ilk kuralı
-        alır (from bir ad örüntüsüdür; adı kuralın to'su olan katman standart katmanın
-        kendisidir); kuralın standart katmanı to adlı ilk katmandır, yoksa ve kuralı bir
-        katman alırsa parent grubunun sonuna (verilmezse en üste) kuralın stiliyle
-        (verilmeyen alanlar ilk kaynağınki) eklenir; var olanı kuralın verilen stilini alır.
-        Kaynakların nesneleri standart katmana taşınır, kaynaklar silinir; etkin katman
-        kaynaksa standart katman etkin olur; hepsi tek geri alma adımı (“Katmanları çevir”).
-        Kilitli bir kaynak ya da standart katman hiçbir şeyi yazdırmaz (layer_locked). plan
-        önizlemedir: neyin nereye gideceği, nesne sayıları, eklenecek ve stili değişecek
-        katmanlar. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        birleştirir: nesne tutan her katman adına uyan ilk kuralı alır (from bir ad
+        örüntüsüdür; adı kuralın to'su olan katman standart katmanın kendisidir); kuralın
+        standart katmanı to adlı ilk katmandır, yoksa ve kuralı bir katman alırsa parent
+        grubunun sonuna (verilmezse en üste) kuralın stiliyle (verilmeyen alanlar ilk
+        kaynağınki) eklenir; var olanı kuralın verilen stilini alır. Kaynakların nesneleri
+        standart katmana taşınır, kaynaklar silinir; etkin katman kaynaksa standart katman
+        etkin olur; hepsi tek geri alma adımı (“Katmanları çevir”). Kilitli bir kaynak ya da
+        standart katman hiçbir şeyi yazdırmaz (layer_locked). plan önizlemedir: neyin nereye
+        gideceği, nesne sayıları, eklenecek ve stili değişecek katmanlar. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

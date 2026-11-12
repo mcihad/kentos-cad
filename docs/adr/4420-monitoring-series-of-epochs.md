@@ -75,7 +75,8 @@ Tarih: 2026-11-10. plan/map-cad.md MAP-19, sekizinci tur. Durum: taslak. ADR 402
 
 ## Sonra
 
-- Dönemlerden doğru uydurma (hız ve belirsizliği), uyarı ve alarm eşikleri (TBC'nin sarı ve kırmızısı).
-- Yetkili inceleme kaydı (MAP-19'un öbür maddesi).
+- Dönemlerden doğru uydurma (hız ve belirsizliği), uyarı ve alarm eşikleri (TBC'nin sarı ve kırmızısı): yapıldı,
+  [ADR 4840](4840-monitoring-trend-and-thresholds.md).
+- Yetkili inceleme kaydı (MAP-19'un öbür maddesi): açık, ADR 4840'ın “Sonra”sı.
 - Hareketin zaman grafiği (nokta başına).
 - Web (TODOS §0.2).

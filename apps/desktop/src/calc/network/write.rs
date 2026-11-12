@@ -68,6 +68,23 @@ fn level_work(form: &LevelForm) -> AdjustWork {
             length: number(cell(r, 3)).unwrap_or(f64::NAN),
         })
         .collect();
+    // docs/adr/5300: the leap-frog setups, Trigonometrik only.
+    let leapfrog = if form.kind == LevelKind::Trigonometric {
+        form.leapfrog
+            .filled()
+            .map(|(_, r)| {
+                let n = |c: usize| number(cell(r, c)).unwrap_or(f64::NAN);
+                kentos_commands::AdjustLeapfrog {
+                    from: cell(r, 0).to_owned(),
+                    to: cell(r, 1).to_owned(),
+                    back: kentos_commands::AdjustSight { distance: n(2), zenith: n(3), target: n(4) },
+                    fore: kentos_commands::AdjustSight { distance: n(5), zenith: n(6), target: n(7) },
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     AdjustWork::Level {
         method: match form.kind {
             LevelKind::Geometric => LevelMethod::Geometric,
@@ -75,6 +92,7 @@ fn level_work(form: &LevelForm) -> AdjustWork {
         },
         known,
         rows,
+        leapfrog,
     }
 }
 
@@ -125,6 +143,7 @@ impl App {
             work: network_work(form),
             layer_id: form.layer.clone(),
             unit: None,
+            keep: (!form.keep.trim().is_empty()).then(|| form.keep.trim().to_owned()),
             expected_revision: None,
         };
         let Some(done) = self.adjust(input) else {
@@ -140,7 +159,8 @@ impl App {
         self.say(
             Level::Success,
             format!(
-                "{NETWORK_TITLE}: {moved} nokta dengelenmiş yerine taşındı, {added} nokta eklendi (Ctrl+Z geri alır)."
+                "{NETWORK_TITLE}: {moved} nokta dengelenmiş yerine taşındı, {added} nokta eklendi{} (Ctrl+Z geri alır).",
+                kept_words(&done.kept)
             ),
         );
         self.calc.open = None;
@@ -157,6 +177,7 @@ impl App {
             work: level_work(form),
             layer_id: None,
             unit: None,
+            keep: (!form.keep.trim().is_empty()).then(|| form.keep.trim().to_owned()),
             expected_revision: None,
         };
         let Some(done) = self.adjust(input) else {
@@ -179,7 +200,7 @@ impl App {
         self.selection.set(written);
         self.say(
             Level::Success,
-            format!("{LEVEL_TITLE}: {n} noktanın kotu yazıldı (Ctrl+Z geri alır)."),
+            format!("{LEVEL_TITLE}: {n} noktanın kotu yazıldı{} (Ctrl+Z geri alır).", kept_words(&done.kept)),
         );
         if let Some(absent) = absent {
             self.warn(absent);
@@ -187,4 +208,9 @@ impl App {
         self.calc.open = None;
         self.dialog = None;
     }
+}
+
+/// Docs/adr/5200: the kept adjustment said.
+fn kept_words(kept: &Option<String>) -> String {
+    kept.as_ref().map_or_else(String::new, |n| format!("; sonuç “{n}” adıyla projede saklandı"))
 }

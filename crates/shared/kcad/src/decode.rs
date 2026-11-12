@@ -735,6 +735,15 @@ pub(crate) fn road_has_cloud_heights(road: &kentos_contracts::RoadSettings) -> b
     road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.vertical.is_some()))
 }
 
+/// Whether a road project's settings hold what schema 246 brought (docs/adr/4740): a sheet's contour lines kept as a
+/// drawing, a layer as a drawing's source, drawing again whole.
+pub(crate) fn road_has_sheet_contour_drawings(r: &kentos_contracts::RoadSettings) -> bool {
+    r.rebuild_whole
+        || r.drawings.iter().any(|d| {
+            d.command == "road.terrains.sheetcontours" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Layer)
+        })
+}
+
 /// Whether road settings carry schema 201's fields: an alignment's places beyond its ends (docs/adr/1028).
 pub(crate) fn road_has_places(road: &kentos_contracts::RoadSettings) -> bool {
     road.alignments.iter().any(|a| a.start_place.is_some() || a.end_place.is_some())
@@ -874,6 +883,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut map_work = None;
     let mut map_survey = None;
     let mut parcel_register = None;
+    let mut zoning_plan = None;
+    let mut survey_adjustments = Vec::new();
+    let mut monitoring_reviews = Vec::new();
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1126,10 +1138,52 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş parsel kayıtları yazılmaz"));
                 }
+                // Schema 249 (docs/adr/5020): stated lengths, drafts, an approval.
+                if !has.parcel_drafts && v.has_drafts() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "parsel kayıtlarında lengths, drafts ya da belgenin approval'ı (şema 249'dan önce yok)",
+                    ));
+                }
                 if let Some(problem) = kentos_contracts::parcel_register_problem(&v) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 parcel_register = Some(v);
+            }
+            // Schema 250 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts, read whole and
+            // checked.
+            "zoningPlan" if has.zoning_drafts => {
+                let (v, at): (kentos_contracts::ZoningPlanData, usize) = objects::json_part(r, "imar planı verisi")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş imar planı verisi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::zoning_plan_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                zoning_plan = Some(v);
+            }
+            // Schema 252 (docs/adr/5200): the adjustments the project keeps, read whole and checked.
+            // Schema 253 (docs/adr/5220): the reviews the project keeps of its monitoring jobs, read whole and checked.
+            "monitoringReviews" if has.monitoring_reviews => {
+                let (v, at): (Vec<kentos_contracts::MonitoringReview>, usize) = objects::json_part(r, "izleme incelemeleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş izleme incelemeleri yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::monitoring_reviews_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                monitoring_reviews = v;
+            }
+            "surveyAdjustments" if has.kept_adjustments => {
+                let (v, at): (Vec<kentos_contracts::KeptAdjustment>, usize) = objects::json_part(r, "dengeleme kayıtları")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş dengeleme kayıtları yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::kept_adjustments_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                survey_adjustments = v;
             }
             "mapSurvey" if has.map_survey => {
                 let (v, at): (kentos_contracts::MapSurvey, usize) = objects::json_part(r, "GNSS arşivi")?;
@@ -1150,6 +1204,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 // Schema 207 (docs/adr/2520): a known point's own velocity.
                 if !has.known_velocities && v.has_velocities() {
                     return Err(r.fail_at(Code::UnknownField, at, "bilinen noktada velocity (şema 207'den önce yok)"));
+                }
+                // Schema 248 (docs/adr/4920): baseline sessions, an adjustment's sessions, kept limits, a point's velocity.
+                if !has.gnss_sessions && v.has_sessions() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "GNSS arşivinde baselineSessions, dengelemenin sessions'ı, tolerance ya da noktanın velocity'si (şema 248'den önce yok)",
+                    ));
                 }
                 map_survey = Some(v);
             }
@@ -1180,6 +1242,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 // Schema 213 (docs/adr/3680): an approval's objects' values.
                 if !has.approved_values && v.has_approved_values() {
                     return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedValues (şema 213'ten önce yok)"));
+                }
+                // Schema 247 (docs/adr/4880): an item's typed layers' profile.
+                if !has.work_profiles && v.has_profiles() {
+                    return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde profile (şema 247'den önce yok)"));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
@@ -2071,6 +2137,15 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         {
             return Err(relation("road", "hat profili çizimi ve ağ kaynağı şema 212'den önce yazılmaz (cad.pipes.profile)", r));
         }
+        // A sheet's contour lines kept as a drawing, a layer as a drawing's source and drawing again whole
+        // (docs/adr/4740) are schema 246's, in any project.
+        if !has.sheet_contour_drawings && road_has_sheet_contour_drawings(v) {
+            return Err(relation(
+                "road",
+                "pafta eğrileri çizimi, katman kaynağı ve bütün yeniden üretim şema 246'dan önce yazılmaz (road.terrains.sheetcontours)",
+                r,
+            ));
+        }
         // A drawing record's version and revision (docs/adr/2840) are schema 209's.
         if !has.drawing_provenance && v.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some()) {
             return Err(relation("road", "çizim kaydının işlem sürümü ve çıktı revizyonu şema 209'dan önce yazılmaz", r));
@@ -2099,6 +2174,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         map_work,
         map_survey,
         parcel_register,
+        zoning_plan,
+        survey_adjustments,
+        monitoring_reviews,
         source_bases,
         heights,
         coordinate_epoch,

@@ -7,7 +7,7 @@ tam çözünürlükte okuma), [ADR 1480](1480-orthophoto-accuracy-check.md) (kur
 
 ## Dayanak
 
-- **Türk mevzuatı:** BÖHHBÜY (RG 26.06.2018/30460 Mük.) LiDAR'ı yalnız tanımlar (m. 4/h); şerit uyumu ya da nokta
+- **Türk mevzuatı:** BÖHHBÜY (RG 26.06.2018/30460 Mük.) LiDAR'ı tanımlar (m. 7(1)(h); 2026-11-10 düzeltmesi: önce “m. 4/h” yazılmıştı); şerit uyumu ya da nokta
   bulutu doğruluğu için ölçüt vermez (metin harita.gov.tr'den okundu). Harita ürününün düşey doğruluğu için m. 91(2)
   geçerlidir: KOH_Z ≤ 1,33·KOH_X,Y(S). Türk kurumlarının LiDAR şartnamelerinde sayısal şerit uyumu ölçütü bulunamadı
   (arama 6 Kasım 2026).

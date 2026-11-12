@@ -2,10 +2,10 @@
 //! project's relations between the layers it writes as OGC 18-000 related tables (`kentos_references`: the child's
 //! table the base, the parent's the related one, a mapping by fid) with a KentOS document of each (its id, name, field
 //! and deletion rule; `gpkg_metadata`, standard [`RELATION_STANDARD`]: a KentOS extension, documented, other readers
-//! pass it over), and each feature table's look as QGIS's default style (`layer_styles`, QGIS's own table: the QML and
+//! pass it over), and each feature table's look as its default layer style (`layer_styles`, the style table: the QML and
 //! the SLD). `file.import.gpkg` takes them back: a KentOS relation as the project's; another writer's many-to-many
-//! relation (QGIS's, GDAL's) as a multi-valued reference field of the base table's layer, named after its mapping
-//! table, filled from the mapping's rows, and a relation; a table's default QGIS style as the look of the layer the
+//! relation (other writers') as a multi-valued reference field of the base table's layer, named after its mapping
+//! table, filled from the mapping's rows, and a relation; a table's default layer style as the look of the layer the
 //! import makes for it. What is not taken is said, never dropped quietly; a form is not written (its package is
 //! `cad.forms.export`'s).
 
@@ -52,7 +52,7 @@ pub struct RelationDocument {
 pub struct ProfileWritten {
     /// Each relation written: its mapping table, base (child) and related (parent) table, and its rows.
     pub relations: Vec<(String, String, String, u32)>,
-    /// The feature tables given a QGIS style.
+    /// The feature tables given a layer style.
     pub styles: u32,
     /// What was not written, and why.
     pub left: Vec<String>,
@@ -242,8 +242,8 @@ pub fn write_profile(
             pairs.len() as u32,
         ));
     }
-    // Each feature table's look as QGIS's default style (an attribute table has none). A layer that keeps the
-    // drawing's default look (no renderer, the theme's colour) has no look of its own to give: QGIS draws it with its
+    // Each feature table's look as its default layer style (an attribute table has none). A layer that keeps the
+    // drawing's default look (no renderer, the theme's colour) has no look of its own to give: a GIS reader draws it with its
     // own default.
     let mut rows = Vec::new();
     for t in tables.iter().filter(|t| t.geometry.is_some()) {
@@ -266,7 +266,7 @@ pub fn write_profile(
                 sld: crate::sld::export(doc, layer).ok().map(|(_, s)| s.xml),
             }),
             Err(e) => out.left.push(format!(
-                "“{}” katmanının görünüşü QGIS stili olarak yazılmadı: {}",
+                "“{}” katmanının görünüşü katman stili (QML) olarak yazılmadı: {}",
                 layer_name(layer),
                 e.message
             )),
@@ -359,7 +359,7 @@ pub fn read_profile(path: &Path) -> Result<Profile, String> {
             Ok(read) => {
                 if let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer) {
                     out.left
-                        .push(format!("“{table}” tablosunun QGIS stili alınmadı: {why}"));
+                        .push(format!("“{table}” tablosunun katman stili (QML) alınmadı: {why}"));
                     continue;
                 }
                 out.styles.insert(
@@ -373,7 +373,7 @@ pub fn read_profile(path: &Path) -> Result<Profile, String> {
             }
             Err(why) => out
                 .left
-                .push(format!("“{table}” tablosunun QGIS stili okunmadı: {why}")),
+                .push(format!("“{table}” tablosunun katman stili (QML) okunmadı: {why}")),
         }
     }
     Ok(out)

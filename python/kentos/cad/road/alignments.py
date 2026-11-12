@@ -236,16 +236,16 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
     kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. ove:
     true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne
     dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür,
-    ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A,
-    boy, başladığı km ve iki dairenin arası. designSpeed yolun proje hızıdır (km/sa,
-    0'dan büyük, en çok 200; ADR 0985); bir PI'nın speed'i yalnız kendi kurbu içindir
-    (KGM aynı yolda bir kurba V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin
-    V'si budur; paralel aksın hızı kaynağınındır. offsetOf {alignment, offset} bir aksın
-    paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını
-    izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini
-    keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back:
-    eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar
-    mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp,
+    ortadaki aliyman klotoidin başlangıç teğetidir); cevapta bağın ove'si A, boy,
+    başladığı km ve iki dairenin arası. designSpeed yolun proje hızıdır (km/sa, 0'dan
+    büyük, en çok 200); bir PI'nın speed'i yalnız kendi kurbu içindir (KGM aynı yolda
+    bir kurba V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin V'si budur;
+    paralel aksın hızı kaynağınındır. offsetOf {alignment, offset} bir aksın paralelini
+    kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si
+    kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse
+    offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin
+    olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı).
+    Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp,
     p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu
     (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa),
     km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve
@@ -288,23 +288,23 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         içe R+p kadar ötelenmiş doğrularının kesişimidir. ove: true bir PI'nın kurbunu
         sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı,
         aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin
-        başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki
-        dairenin arası. designSpeed yolun proje hızıdır (km/sa, 0'dan büyük, en çok 200; ADR
-        0985); bir PI'nın speed'i yalnız kendi kurbu içindir (KGM aynı yolda bir kurba
-        V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin V'si budur; paralel aksın
-        hızı kaynağınındır. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa
-        artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si
-        kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse
-        offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin
-        olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı).
-        Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp,
-        p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu
-        (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa),
-        km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve
-        bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks
-        oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project,
-        invalid_alignment, alignment_spirals_long, alignment_curves_overlap,
-        invalid_stationing, offset_cusp, invalid_revision, revision_conflict.
+        başlangıç teğetidir); cevapta bağın ove'si A, boy, başladığı km ve iki dairenin
+        arası. designSpeed yolun proje hızıdır (km/sa, 0'dan büyük, en çok 200); bir PI'nın
+        speed'i yalnız kendi kurbu içindir (KGM aynı yolda bir kurba V=110, kavşaktakine
+        V=50 yazar); paftadaki some bilgisinin V'si budur; paralel aksın hızı kaynağınındır.
+        offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m):
+        kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun
+        yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç
+        km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead:
+        sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden
+        türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın raporudur: boy
+        (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama
+        elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları,
+        TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı.
+        Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır.
+        Retler: not_a_road_project, invalid_alignment, alignment_spirals_long,
+        alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -446,18 +446,17 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
     kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel
     aksta offset, designSpeed) aksınkinin yerini alır; boş stationing km'yi sıfırlar,
     designSpeed 0 proje hızını kaldırır; proje hızı ve PI'ların speed'i geometri
-    değildir, aksın revizyonu artmaz (ADR 0985). reverse: aks ters çevrilir (PI'lar ters
-    sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır,
-    eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks
-    varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her
-    eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed
-    (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km
-    aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini
-    kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar.
-    Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment,
-    invalid_alignment, alignment_spirals_long, alignment_curves_overlap,
-    invalid_stationing, offset_cusp, alignment_in_use, invalid_revision,
-    revision_conflict.
+    değildir, aksın revizyonu artmaz. reverse: aks ters çevrilir (PI'lar ters sırada,
+    her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler
+    gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken
+    alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman
+    kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi
+    değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents
+    aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile
+    reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı
+    düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment,
+    alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp,
+    alignment_in_use, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.alignments.edit"
@@ -489,18 +488,18 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         """Aksı düzenle: Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler.
         set: verilen alanlar (name, pis, stationing, paralel aksta offset, designSpeed)
         aksınkinin yerini alır; boş stationing km'yi sıfırlar, designSpeed 0 proje hızını
-        kaldırır; proje hızı ve PI'ların speed'i geometri değildir, aksın revizyonu artmaz
-        (ADR 0985). reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve
-        çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider:
-        equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken
-        alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman
-        kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi
-        değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents
-        aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile
-        reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı
-        düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment,
-        alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp,
-        alignment_in_use, invalid_revision, revision_conflict.
+        kaldırır; proje hızı ve PI'ların speed'i geometri değildir, aksın revizyonu artmaz.
+        reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi
+        yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove:
+        aks kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i
+        düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı),
+        moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da
+        reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel
+        akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın
+        revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler:
+        not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long,
+        alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use,
+        invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -649,17 +648,17 @@ edit = _RoadAlignmentsEdit()
 class _RoadAlignmentsFit(LocalCommand[AlignmentsFit, AlignmentFitted, AlignmentFitted]):
     """``road.alignments.fit`` v1. Çizgiden aks: Çizimin bir çizgisinden ya da açık çoklu
     çizgisinden aks kurar (DWG ya da DGN'den gelen yol ekseni); çizgi silinmez. method
-    elements (Civil 3D'nin Create Alignment from Objects'i): düz parçalar aliyman, yay
-    parçaları (büküm) daire kurbu; yaysız buluşan iki aliymana radius verilirse o
-    yarıçapta kurp. method bestFit (Create Best Fit Alignment): köşe, komşularıyla geçen
-    çember maxRadius'tan küçükse kurpta, değilse aliymanda; her aliyman koşusundan en
-    küçük karelerle doğru, doğruların kesişimleri PI, kurbun yarıçapı iki doğruya teğet
-    yayın köşelere en yakın olanı; klotoid yok. reverse çizginin sonundan başlatır; name
-    (yoksa ‹n›. aks), start başlangıç km'si. Cevap aksın PI'larını, aliyman ve kurp
-    sayısını, boyunu ve çizginin köşelerinin (ve yayların ortasının) aksa en büyük
-    uzaklığını yeriyle verir; tolerance aşılırsa alignment_fit_deviation. Tek geri alma
-    adımı “Çizgiden aks”. Retler: invalid_revision, revision_conflict,
-    not_a_road_project, entity_not_found, invalid_alignment_fit.
+    elements: düz parçalar aliyman, yay parçaları (büküm) daire kurbu; yaysız buluşan
+    iki aliymana radius verilirse o yarıçapta kurp. method bestFit (Create Best Fit
+    Alignment): köşe, komşularıyla geçen çember maxRadius'tan küçükse kurpta, değilse
+    aliymanda; her aliyman koşusundan en küçük karelerle doğru, doğruların kesişimleri
+    PI, kurbun yarıçapı iki doğruya teğet yayın köşelere en yakın olanı; klotoid yok.
+    reverse çizginin sonundan başlatır; name (yoksa ‹n›. aks), start başlangıç km'si.
+    Cevap aksın PI'larını, aliyman ve kurp sayısını, boyunu ve çizginin köşelerinin (ve
+    yayların ortasının) aksa en büyük uzaklığını yeriyle verir; tolerance aşılırsa
+    alignment_fit_deviation. Tek geri alma adımı “Çizgiden aks”. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, entity_not_found,
+    invalid_alignment_fit.
     """
     __slots__ = ()
     id = "road.alignments.fit"
@@ -688,18 +687,17 @@ class _RoadAlignmentsFit(LocalCommand[AlignmentsFit, AlignmentFitted, AlignmentF
         expected: Expected | None = None,
     ) -> AlignmentFitted:
         """Çizgiden aks: Çizimin bir çizgisinden ya da açık çoklu çizgisinden aks kurar (DWG ya
-        da DGN'den gelen yol ekseni); çizgi silinmez. method elements (Civil 3D'nin Create
-        Alignment from Objects'i): düz parçalar aliyman, yay parçaları (büküm) daire kurbu;
-        yaysız buluşan iki aliymana radius verilirse o yarıçapta kurp. method bestFit
-        (Create Best Fit Alignment): köşe, komşularıyla geçen çember maxRadius'tan küçükse
-        kurpta, değilse aliymanda; her aliyman koşusundan en küçük karelerle doğru,
-        doğruların kesişimleri PI, kurbun yarıçapı iki doğruya teğet yayın köşelere en yakın
-        olanı; klotoid yok. reverse çizginin sonundan başlatır; name (yoksa ‹n›. aks), start
-        başlangıç km'si. Cevap aksın PI'larını, aliyman ve kurp sayısını, boyunu ve çizginin
-        köşelerinin (ve yayların ortasının) aksa en büyük uzaklığını yeriyle verir;
-        tolerance aşılırsa alignment_fit_deviation. Tek geri alma adımı “Çizgiden aks”.
-        Retler: invalid_revision, revision_conflict, not_a_road_project, entity_not_found,
-        invalid_alignment_fit.
+        da DGN'den gelen yol ekseni); çizgi silinmez. method elements: düz parçalar aliyman,
+        yay parçaları (büküm) daire kurbu; yaysız buluşan iki aliymana radius verilirse o
+        yarıçapta kurp. method bestFit (Create Best Fit Alignment): köşe, komşularıyla geçen
+        çember maxRadius'tan küçükse kurpta, değilse aliymanda; her aliyman koşusundan en
+        küçük karelerle doğru, doğruların kesişimleri PI, kurbun yarıçapı iki doğruya teğet
+        yayın köşelere en yakın olanı; klotoid yok. reverse çizginin sonundan başlatır; name
+        (yoksa ‹n›. aks), start başlangıç km'si. Cevap aksın PI'larını, aliyman ve kurp
+        sayısını, boyunu ve çizginin köşelerinin (ve yayların ortasının) aksa en büyük
+        uzaklığını yeriyle verir; tolerance aşılırsa alignment_fit_deviation. Tek geri alma
+        adımı “Çizgiden aks”. Retler: invalid_revision, revision_conflict,
+        not_a_road_project, entity_not_found, invalid_alignment_fit.
 
         Args:
             doc: The drawing it works on.
@@ -994,14 +992,14 @@ class _RoadAlignmentsImport(LocalCommand[AlignmentsImport, AlignmentsImported, A
     Aksı adıyla anan Roadway'in DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond
     3,6 ile km/sa'e çevrilir) en uzun aralığınki aksın proje hızı, dairesel kısmının
     ortası başka hızlı aralığa düşen kurbun kendi hızı olur; 0'dan büyük, en çok 200
-    km/sa olmayan landxml_left ile alınmaz (ADR 0988). Km denklemleri ve withoutProfiles
-    verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler
-    iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer
-    (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid,
-    klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile
-    söylenir. Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project,
-    file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment,
-    invalid_revision, revision_conflict.
+    km/sa olmayan landxml_left ile alınmaz. Km denklemleri ve withoutProfiles verilmezse
+    boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den
+    aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa
+    hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid
+    olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir.
+    Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found,
+    import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision,
+    revision_conflict.
     """
     __slots__ = ()
     id = "road.alignments.import"
@@ -1032,14 +1030,13 @@ class _RoadAlignmentsImport(LocalCommand[AlignmentsImport, AlignmentsImported, A
         DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond 3,6 ile km/sa'e çevrilir) en
         uzun aralığınki aksın proje hızı, dairesel kısmının ortası başka hızlı aralığa düşen
         kurbun kendi hızı olur; 0'dan büyük, en çok 200 km/sa olmayan landxml_left ile
-        alınmaz (ADR 0988). Km denklemleri ve withoutProfiles verilmezse boykesitleri
-        (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna
-        çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi).
-        Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan
-        geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri
-        alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found,
-        import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision,
-        revision_conflict.
+        alınmaz. Km denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve
+        parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de
+        gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman
+        olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz
+        çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks
+        al”. Retler: not_a_road_project, file_not_found, import_unreadable,
+        landxml_no_alignment, invalid_alignment, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.

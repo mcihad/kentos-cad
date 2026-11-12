@@ -242,7 +242,7 @@ pub fn fuzzy_membership() -> Tool {
         "Rasterin değerlerini bir işlevle 0–1 arası üyeliğe çevirir: ölçütü ortak ölçeğe getirmenin bulanık yolu.",
         &[
             "Doğrusal: alt değerde 0, üst değerde 1, arada doğrusal (alt değer büyükse azalan). Üslü: doğrusal üyelik üssüne yükseltilir. Gauss: e^(−yayılım·(x − orta)²). Büyük: 1 / (1 + (x / orta)^(−diklik)), 0 ve altı 0. Küçük: 1 / (1 + (x / orta)^diklik), 0 ve altı 1. Yakın: 1 / (1 + yayılım·(x − orta)²).",
-            "Varsayılanlar ArcGIS'in Fuzzy Membership'iyle aynıdır: Gauss ve Yakın'da yayılım 0,1, Büyük ve Küçük'te diklik 5.",
+            "Varsayılanlar bulanık üyeliğin yaygın değerleridir: Gauss ve Yakın'da yayılım 0,1, Büyük ve Küçük'te diklik 5.",
             HELP_EMPTY,
             HELP_OUTPUT,
         ],

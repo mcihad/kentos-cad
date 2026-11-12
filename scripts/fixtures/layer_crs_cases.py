@@ -28,6 +28,7 @@ from pyproj.crs import CoordinateOperation
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import crs_area_test as AT  # noqa: E402
 import crs_chain_rules as rules  # noqa: E402
 import crs_transform_cases as ct  # noqa: E402
 
@@ -294,15 +295,16 @@ def area(srid):
 
 
 def operation_area(src):
-    """The box of the datum transformation's EPSG operations from `src` into the project's system (all of the path's
-    operations', which agree); none when the datum stays."""
+    """The area of the datum transformation's EPSG operations from `src` into the project's system (all of the path's
+    operations', which agree; their extent's polygon, docs/adr/5300); none when the datum stays."""
     a, b = ct.datum(REGISTRY[src]), ct.datum(REGISTRY[PROJECT])
     if a == b:
         return None
     codes = [int(c.strip().split(":")[1]) for c in ct.PATHS[frozenset([a, b])][2].split("+")]
     boxes = {tuple(CoordinateOperation.from_epsg(c).area_of_use.bounds) for c in codes}
     assert len(boxes) == 1, (src, boxes)
-    return boxes.pop()
+    # docs/adr/5300: the operations' extent (1237, EPSG's registry) is read by its polygon where carried.
+    return AT.extent_of(1237, boxes.pop())
 
 
 def lonlat(srid, x, y):
@@ -316,6 +318,9 @@ EDGE = 1e-9
 
 
 def holds(box, lon, lat):
+    """docs/adr/4900: a registry system's area is its polygon where carried (crs_area_test.py), else its box."""
+    if box[0] == "rings" or box[0] == "box":
+        return AT.holds(box, lon, lat)
     west, south, east, north = box[0] - EDGE, box[1] - EDGE, box[2] + EDGE, box[3] + EDGE
     along = west <= lon <= east if west <= east else (lon >= west or lon <= east)
     return along and south <= lat <= north
@@ -347,7 +352,7 @@ def verdict(src):
 def reprojected(layer_id, src):
     """`cad.layers.reproject`'s answer for a layer of the setup moved from `src`, and its warnings."""
     ents = [e for e in setup()["entities"] if e["layerId"] == layer_id]
-    boxes = (area(src), operation_area(src), area(PROJECT))
+    boxes = (AT.area_of(src, area(src)), operation_area(src), AT.area_of(PROJECT, area(PROJECT)))
     noted, plain = [], []
     total, sx, sy, least, most = 0, 0.0, 0.0, None, None
     for e in ents:

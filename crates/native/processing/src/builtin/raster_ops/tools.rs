@@ -382,7 +382,7 @@ pub fn resample() -> Tool {
         ("raster.resample", "Yeniden örnekle", "resample", OPS),
         "Rasteri yeni bir hücre boyuyla yeniden örnekler: en yakın, çift doğrusal, kübik ya da örtüşen hücrelerin ortalaması, çoğunluğu, en küçüğü, en büyüğü.",
         &[
-            "Sonucun sol üst köşesi ve eksenleri rasterinkidir; rasteri bütünüyle kapsar. Kübik, Keys'in evrişimidir (a = −½, GDAL'ın cubic'i).",
+            "Sonucun sol üst köşesi ve eksenleri rasterinkidir; rasteri bütünüyle kapsar. Kübik, Keys'in evrişimidir (a = −½).",
             "Değeri olmayan komşular dışarıda kalır, kalanların ağırlıkları toplamlarına bölünür. Tam sayılı rasterde değerler yarımlar sıfırdan uzağa yuvarlanır.",
             HELP_OUTPUT,
         ],
@@ -427,7 +427,7 @@ pub fn save_cog() -> Tool {
         "Rasteri bulut için düzenlenmiş GeoTIFF (COG) olarak yazar: karolu, Deflate, önizleme katlarıyla; dizinler başta, en küçük katın karoları önce.",
         &[
             "Hücreler, bantlar, değerler, değeri olmayan hücre ve konum olduğu gibi kalır; önizleme katları her katta 2 × 2 hücrenin ortalamasıdır (değersizler dışarıda).",
-            "Dosya bir adresten parça parça okunacak biçimdedir: ilk okumada bütün dizinler, her kat kendi karolarıyla bir arada. GDAL'ın COG denetleyicisi (validate_cloud_optimized_geotiff.py) dosyayı geçerli bulur.",
+            "Dosya bir adresten parça parça okunacak biçimdedir: ilk okumada bütün dizinler, her kat kendi karolarıyla bir arada. COG denetleyicisi dosyayı geçerli bulur.",
             "PNG, JPEG, şeritli ya da önizlemesiz TIFF ve NetCDF dilimi de COG'a çevrilir.",
             HELP_OUTPUT,
         ],
@@ -625,7 +625,7 @@ pub fn focal_statistics() -> Tool {
         "Her hücreye çevresindeki pencerenin istatistiğini yazar: ortalama, toplam, en küçük, en büyük, aralık, standart sapma, ortanca, çoğunluk, azınlık, çeşit.",
         &[
             "Pencere dikdörtgen (tek kenarlı), daire (merkezi r hücre içinde olanlar) ya da halkadır (iç ve dış yarıçap arası). Rasterin dışı pencerede sayılmaz.",
-            "Değersizleri yok say açıkken değersiz merkez de çevresinde değer varsa değer alır (ArcGIS'in varsayılanı).",
+            "Değersizleri yok say açıkken değersiz merkez de çevresinde değer varsa değer alır.",
             HELP_OUTPUT,
         ],
         &[

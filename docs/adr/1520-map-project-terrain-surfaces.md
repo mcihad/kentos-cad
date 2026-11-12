@@ -8,7 +8,7 @@ boşluklar, en uzun kenar, kot toleransı, nokta bulutu; üçgenler kaydedilmez,
 ## Dayanak
 
 - **Türk mevzuatı:** BÖHHBÜY (RG 26.06.2018/30460) şunları söyler (metin harita.gov.tr'den okundu):
-  - **m. 4(1)(l):** sayısal arazi modeli, çıplak arazinin “karesel düzenli bir grid yapıda veya düzensiz üçgensel
+  - **m. 6(1)(l)** (2026-11-10 düzeltmesi: önce “m. 4(1)(l)” yazılmıştı): sayısal arazi modeli, çıplak arazinin “karesel düzenli bir grid yapıda veya düzensiz üçgensel
     formdaki” yükseklik verisidir. TIN biçimi haritacılığın kendi tanımıdır, yalnız yol projesinin değil.
   - **m. 45(1)(c):** eş yükseklik eğrisi için ölçülen detay noktası 25 nokta/ha'dan az olamaz; desen ve karakteristik
     noktalar da ölçülür. Kırık hat bunların taşıyıcısıdır.

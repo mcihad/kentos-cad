@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.entities.drape` (Yüzeyden kot ver; plan/map-cad.md MAP-06, docs/adr/4180 and 4580),
+"""The shared cases of `cad.entities.drape` (Yüzeyden kot ver; plan/map-cad.md MAP-06, docs/adr/4180, 4580 and 4980),
 without KentOS code.
 
     python3 scripts/fixtures/drape_cases.py           # writes fixtures/commands/v1/cad.entities.drape.json
@@ -8,8 +8,7 @@ without KentOS code.
 A Harita project (TUREF / TM30, from X0, Y0) whose terrain surface “Zemin” (t-1) is made of four points on `zemin`:
 A (0, 0, 100), B (100, 0, 104), C (100, 80, 112), D (0, 100, 106). Its triangles are Delaunay's, decided here by the
 empty circle: D lies outside the circle through A, B, C (and B outside A, C, D's), so the diagonal is AC and the
-triangles ABC (z = 100 + 0.04 x + 0.1 y) and ACD (z = 100 + 0.072 x + 0.06 y). The rules, by hand (Civil 3D's
-Elevations From Surface):
+triangles ABC (z = 100 + 0.04 x + 0.1 y) and ACD (z = 100 + 0.072 x + 0.06 y). The rules, by hand (ADR 4180):
 
 - each vertex of the objects (a point, a line's ends, every part's and hole's of a polyline or an area) inside a
   triangle (its edges too) takes that triangle's plane's height; one outside every triangle keeps its own;
@@ -19,10 +18,14 @@ Elevations From Surface):
   split; a point, a line and a polyline with measures take none and are `unsplit`;
 - the answer: each object's vertices set, outside and inserted, the totals and the surface's id; no vertex on the
   surface: `off_surface`;
-- ADR 4580 (Civil 3D's Relative Elevation to Surface offset and Partial): with `offset` every height taken (vertices
+- ADR 4580 (the height over the surface and the range): with `offset` every height taken (vertices
   and break points) is the surface's plus it; with `range` (one object; a line's ends, a polyline's or an area's outer
   ring's vertices, 0-based, from < to) only the vertices from `from` to `to` take heights and are counted, only the edges
-  between them (never the closing one) take break points, holes and further parts are left as they were.
+  between them (never the closing one) take break points, holes and further parts are left as they were;
+- ADR 4980 (multi-part objects): the range's ring is `part` (0: the object's own vertices, 1 on: `parts` in order) and
+  `ring` (0: that part's outer ring, 1 on: its holes in order), both 0 when absent; a hole is closed, a polyline's
+  further part open, an area's closed; every other ring is left as it was. No such part or ring, or a line's part or
+  ring not 0: `wrong_place` on `range.part` or `range.ring`; a range past the ring's vertices: `wrong_place`.
 
 Heights and crossings are exact fractions in the project's own coordinates (from X0, Y0).
 """
@@ -166,8 +169,25 @@ def ring(pts, zs, bulges, closed, split, offset=F(0), rng=None):
     return out_p, out_z, out_b, s, o, ins
 
 
-def draped(e, split, offset=F(0), rng=None):
-    """The object after and its row (without the uid); `offset` and `rng` as ADR 4580's."""
+def ring_of(e, at):
+    """ADR 4980: the ring `at` (part, ring) of a polyline or an area and whether it closes; None when there is none."""
+    part, ring_ = at
+    area = e["kind"] == "polygon"
+    if part == 0:
+        owner, closed = e, area or e.get("closed", False)
+    else:
+        parts = e.get("parts", [])
+        if part > len(parts):
+            return None
+        owner, closed = parts[part - 1], area
+    if ring_ == 0:
+        return owner, closed
+    holes = owner.get("holes", [])
+    return (holes[ring_ - 1], True) if ring_ <= len(holes) else None
+
+
+def draped(e, split, offset=F(0), rng=None, at=(0, 0)):
+    """The object after and its row (without the uid); `offset` and `rng` as ADR 4580's, `at` ADR 4980's ring."""
     after = copy.deepcopy(e)
     row = {"set": 0, "outside": 0, "inserted": 0}
 
@@ -205,11 +225,17 @@ def draped(e, split, offset=F(0), rng=None):
             if bulges is not None:
                 r["bulges"] = bulges
             add(s, o, i)
-        do(after, area or e.get("closed", False), rng)
-        # With a range only the outer ring (the first part's) takes heights.
-        for h in ([] if rng is not None else after.get("holes", [])):
+        if rng is not None:
+            # With a range only the ring it names takes heights (ADR 4980).
+            r, closed = ring_of(after, at)
+            do(r, closed, rng)
+            if split and measured:
+                row["unsplit"] = True
+            return after, row
+        do(after, area or e.get("closed", False))
+        for h in after.get("holes", []):
             do(h, True)
-        for part in ([] if rng is not None else after.get("parts", [])):
+        for part in after.get("parts", []):
             do(part, area)
             for h in part.get("holes", []):
                 do(h, True)
@@ -239,9 +265,14 @@ CLOSED = {"kind": "polyline", "layerId": "cizim", "attrs": {}, "pts": [P(20, 10)
           "closed": True}
 PARTS = {"kind": "polyline", "layerId": "cizim", "attrs": {}, "pts": [P(10, 90), P(40, 60)],
          "parts": [{"pts": [P(60, 20), P(70, 70)]}]}
-ENTS = SURFACE + [P1, P2, LINE, PL, POLY, ARC, MS, TEXT, LOCKED, FAR, KOTLU, CLOSED, PARTS]
+# ADR 4980: a two-part area, each part with a hole; the second part and its hole cross the diagonal AC.
+ADA = {"kind": "polygon", "layerId": "cizim", "attrs": {}, "pts": [P(5, 5), P(25, 5), P(25, 25), P(5, 25)],
+       "holes": [{"pts": [P(10, 10), P(20, 10), P(20, 20), P(10, 20)]}],
+       "parts": [{"pts": [P(50, 15), P(95, 15), P(95, 80), P(50, 80)],
+                  "holes": [{"pts": [P(65, 35), P(85, 35), P(85, 65), P(65, 65)]}]}]}
+ENTS = SURFACE + [P1, P2, LINE, PL, POLY, ARC, MS, TEXT, LOCKED, FAR, KOTLU, CLOSED, PARTS, ADA]
 SLOT = {name: i + 1 for i, name in enumerate(["A", "B", "C", "D", "P1", "P2", "LINE", "PL", "POLY", "ARC", "MS",
-                                               "TEXT", "LOCKED", "FAR", "KOTLU", "CLOSED", "PARTS"])}
+                                               "TEXT", "LOCKED", "FAR", "KOTLU", "CLOSED", "PARTS", "ADA"])}
 for i, e in enumerate(ENTS, 1):
     e["id"] = i
 
@@ -264,11 +295,11 @@ def setup(work="map", extra_surface=False):
 KEYS = ["z", "za", "zb", "pts", "zs", "bulges", "holes", "parts", "ms"]
 
 
-def ok(name, names, breaks=False, op="execute", surface="t-1", note=None, offset=None, rng=None):
+def ok(name, names, breaks=False, op="execute", surface="t-1", note=None, offset=None, rng=None, at=(0, 0)):
     rows, fields = [], {}
     for n in names:
         e = ENTS[SLOT[n] - 1]
-        after, row = draped(e, breaks, F(str(offset)) if offset is not None else F(0), rng)
+        after, row = draped(e, breaks, F(str(offset)) if offset is not None else F(0), rng, at)
         rows.append(dict({"uid": uid(SLOT[n])}, **row))
         fields[str(SLOT[n])] = {k: after[k] for k in KEYS if k in after}
     totals = {k: sum(r[k] for r in rows) for k in ("set", "outside", "inserted")}
@@ -280,6 +311,10 @@ def ok(name, names, breaks=False, op="execute", surface="t-1", note=None, offset
         input_["offset"] = offset
     if rng is not None:
         input_["range"] = {"from": rng[0], "to": rng[1]}
+        if at[0]:
+            input_["range"]["part"] = at[0]
+        if at[1]:
+            input_["range"]["ring"] = at[1]
     if op == "validate":
         result = {"status": "completed", "output": None, "warnings": []}
     else:
@@ -362,11 +397,11 @@ def cases():
                 "seçin.", "uids"),
         refused("Kilitli katman", {"uids": [uid(SLOT["P1"]), uid(SLOT["LOCKED"])], "surface": "t-1"}, "layer_locked",
                 "“Kilitli” katmanı kilitli: nesnenin kotları yazılamaz. Kilidi açın.", "uids[1]"),
-    ] + relative_cases()
+    ] + relative_cases() + part_cases()
 
 
 def relative_cases():
-    """ADR 4580: the height over the surface (Relative Elevation to Surface's offset) and the range (Partial)."""
+    """ADR 4580: the height over the surface and the range."""
     pl, poly, point = uid(SLOT["PL"]), uid(SLOT["POLY"]), uid(SLOT["P1"])
     off_nan = refused("Kot farkı sonlu değil", {"uids": [point], "surface": "t-1", "offset": 0.0}, "invalid_input",
                       "Yüzeyle kot farkı sonlu bir sayı olmalı (m).", "offset")
@@ -402,9 +437,34 @@ def relative_cases():
     ]
 
 
+def part_cases():
+    """ADR 4980: the range on a multi-part object's further part or on a hole."""
+    parts, ada, line = uid(SLOT["PARTS"]), uid(SLOT["ADA"]), uid(SLOT["LINE"])
+    return [
+        ok("Aralık, iki parçalı çoklu çizginin ikinci parçası: yalnız o kot alır, köşegeni kestiği yerde ara kırık noktası",
+           ["PARTS"], breaks=True, rng=(0, 1), at=(1, 0)),
+        ok("Aralık, iki parçalı alanın ikinci parçası 0–2: köşegeni kesen kenar bölünür; kapanış kenarı, delikler ve ilk "
+           "parça olduğu gibi", ["ADA"], breaks=True, rng=(0, 2), at=(1, 0)),
+        ok("Aralık, ikinci parçanın deliği 1–3, kot farkıyla: köşegeni kesen kenar bölünür, ilk köşe olduğu gibi",
+           ["ADA"], breaks=True, offset=0.15, rng=(1, 3), at=(1, 1)),
+        ok("Aralık, ilk parçanın deliği 0–2", ["ADA"], rng=(0, 2), at=(0, 1)),
+        ok("Delikteki aralık plan yazmaz", ["ADA"], breaks=True, rng=(1, 3), at=(1, 1), op="plan"),
+        refused("Olmayan parça", {"uids": [parts], "surface": "t-1", "range": {"from": 0, "to": 1, "part": 2}},
+                "wrong_place", "Nesnenin 2 parçası var (0'dan): 2. parça yok.", "range.part"),
+        refused("Olmayan delik", {"uids": [ada], "surface": "t-1", "range": {"from": 0, "to": 1, "ring": 2}},
+                "wrong_place", "0. parçanın 1 deliği var: 2. halka yok (0 dış halka, 1'den delikler).", "range.ring"),
+        refused("Çizginin ikinci parçası yok", {"uids": [line], "surface": "t-1", "range": {"from": 0, "to": 1, "part": 1}},
+                "wrong_place", "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.", "range.part"),
+        refused("Delikte aralık köşelerin dışında", {"uids": [ada], "surface": "t-1",
+                                                    "range": {"from": 2, "to": 4, "part": 1, "ring": 1}},
+                "wrong_place", "Köşe aralığı 2–4 olamaz: 1. parçanın 1. halkasının 4 köşesi var (0'dan), başlangıç "
+                "bitişten önce olmalı.", "range"),
+    ]
+
+
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.entities.drape", "commandVersion": 1,
-           "title": "Yüzeyden kot ver", "note": "ADR 4180 ve 4580. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört "
+           "title": "Yüzeyden kot ver", "note": "ADR 4180, 4580 ve 4980. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört "
            "noktanın Delaunay üçgenleri boş çember sınamasıyla, düzlem kotları ve kenar kesişimleri kesirlerle; "
            "KentOS kodu yok.", "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

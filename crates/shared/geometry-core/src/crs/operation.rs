@@ -56,6 +56,10 @@ pub const TURKIYE: (&str, [f64; 4]) = (
     [25.62, 34.42, 44.83, 43.45],
 );
 
+/// The EPSG extent of the four operations' area of use (1237, “Turkey”; read from EPSG's registry 12 November 2026,
+/// docs/adr/5300): its polygon, not only its box, is what a point is read against where the polygon is carried.
+pub const TURKIYE_EXTENT: u32 = 1237;
+
 /// A transformation as a record.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Operation {
@@ -68,6 +72,8 @@ pub struct Operation {
     /// The ids (SHA-256) of the grids it reads, in their order.
     pub grids: Vec<String>,
     pub area: Option<(&'static str, [f64; 4])>,
+    /// The area's EPSG extent code (docs/adr/5300).
+    pub extent: Option<u32>,
     /// The datum steps' summed accuracy (m), to the millimetre; none when a step's is not known.
     pub accuracy: Option<f64>,
     pub unofficial: bool,
@@ -316,6 +322,7 @@ pub fn operation_with(
         pipeline,
         grids,
         area: epsg.then_some(TURKIYE),
+        extent: epsg.then_some(TURKIYE_EXTENT),
         // A velocity grid's accuracy is not known: neither is the way's.
         accuracy: path.accuracy.filter(|_| extras.velocity.is_none()),
         unofficial: path.unofficial,
@@ -378,6 +385,7 @@ mod tests {
         assert_eq!(op.accuracy, Some(2.1));
         assert!(op.unofficial);
         assert_eq!(op.area, Some(TURKIYE));
+        assert_eq!(op.extent, Some(TURKIYE_EXTENT));
         let kinds: Vec<_> = op.steps.iter().map(|s| (s.kind, s.reverse)).collect();
         assert_eq!(
             kinds,

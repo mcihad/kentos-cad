@@ -96,6 +96,8 @@ pub enum GradingError {
     NoArea,
     /// A slope, the step, the fan or the reach not positive (or the fan above 90°).
     BadValue { what: &'static str },
+    /// [`grade_told`]'s `tick` asked it to stop (docs/adr/4860): nothing graded.
+    Stopped,
 }
 
 impl std::fmt::Display for GradingError {
@@ -107,6 +109,7 @@ impl std::fmt::Display for GradingError {
             Self::Crossing { a, b } => write!(f, "Platformun sınırı kendini kesiyor: {}. ve {}. kenar.", a + 1, b + 1),
             Self::NoArea => f.write_str("Platformun sınırının alanı yok."),
             Self::BadValue { what } => write!(f, "Platformun {what} sıfırdan büyük olmalı."),
+            Self::Stopped => f.write_str("Platformun tesviyesi durduruldu."),
         }
     }
 }
@@ -226,8 +229,17 @@ fn daylight(terrain: &Surface, from: [f64; 2], dir: [f64; 2], z0: f64, p: &Platf
 
 /// The pad graded on `terrain`, raised by `offset`.
 pub fn grade(p: &Platform, terrain: &Surface, offset: f64) -> Result<Graded, GradingError> {
+    // Nothing asks it to stop: never `Stopped`.
+    grade_told(p, terrain, offset, &|_, _| false)
+}
+
+/// [`grade`] telling `tick` how far it has come (docs/adr/4860): `done` of the corners and two, a corner's slope lines
+/// at a time, then the design surface, then its volumes against the terrain; `tick` answering true stops it there,
+/// [`GradingError::Stopped`]. The pad graded is [`grade`]'s.
+pub fn grade_told(p: &Platform, terrain: &Surface, offset: f64, tick: &dyn Fn(u64, u64) -> bool) -> Result<Graded, GradingError> {
     let ring = ring_of(p)?;
     let n = ring.len();
+    let whole = n as u64 + 2;
     let z = |q: [f64; 2]| plane_z(p, q[0], q[1], offset);
     let mut lines = Vec::new();
     let mut push = |at: [f64; 2], dir: [f64; 2], corner: usize, at_corner: bool| {
@@ -243,6 +255,9 @@ pub fn grade(p: &Platform, terrain: &Surface, offset: f64) -> Result<Graded, Gra
         });
     };
     for i in 0..n {
+        if tick(i as u64, whole) {
+            return Err(GradingError::Stopped);
+        }
         let (prev, here, next) = (ring[(i + n - 1) % n], ring[i], ring[(i + 1) % n]);
         let (n1, n2) = (outward(prev, here), outward(here, next));
         let turn = (here[0] - prev[0]) * (next[1] - here[1]) - (here[1] - prev[1]) * (next[0] - here[0]);
@@ -313,11 +328,17 @@ pub fn grade(p: &Platform, terrain: &Surface, offset: f64) -> Result<Graded, Gra
         edges: Vec::new(),
         removed: Vec::new(),
     };
+    if tick(n as u64, whole) {
+        return Err(GradingError::Stopped);
+    }
     match surface::build(&input) {
         Ok(design) => {
             let tris = |s: &Surface| -> Vec<Triangle> {
                 s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect()
             };
+            if tick(n as u64 + 1, whole) {
+                return Err(GradingError::Stopped);
+            }
             graded.volumes = Some(volume::between_surfaces(&tris(&design), &tris(terrain)));
             graded.design = Some(design);
         }

@@ -24,26 +24,25 @@ if TYPE_CHECKING:
 
 
 class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLaid]):
-    """``road.sheets.plan`` v1. Yol paftaları: Aksı plan–boykesit paftalarına dizer (Civil
-    3D'nin Create View Frames ve Create Sheets'i gibi): bir paftanın aralığı şablonun
-    plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası
-    aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap
-    kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit
-    görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki
-    at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı
-    ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri
-    KGM'nin 2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir
-    (ADR 0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar, A3 şablonun boykesit
-    haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit, bands:
-    kgm ile KGM'nin A1 paftası sys:yol-plan-boykesit-kgm (plan 791 × 230 mm, boykesit
-    791 × 318 mm, sağ üstte KGM klişesi; ADR 0981); paftalar first'ten (yoksa Y-101)
-    numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol
-    ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı
-    “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
-    road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision,
-    revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile,
-    invalid_road_sheets, katmanın retleri, unknown_template, invalid_options,
-    not_fixed_map, bad_drawing_info.
+    """``road.sheets.plan`` v1. Yol paftaları: Aksı plan–boykesit paftalarına dizer: bir
+    paftanın aralığı şablonun plan haritasının genişliğinin scale ölçeğindeki zemin
+    boyudur, her plan haritası aralığın kirişinin ortasında, aks soldan sağa akacak
+    biçimde döndürülür; overlap kadar bindirilir. profile verilince (aynı aksta) her
+    paftanın km'lerinin boykesit görünümü (road.profiles.draw'ın from ve to'suyla)
+    layerId katmanına çizilir, ilki at'ta, her biri bir öncekinin bantlarının altına;
+    şablonun ikinci haritası onu aynı ölçekte gösterir, bir km planda ve boykesitte üst
+    üste düşer. bands: kgm görünümleri KGM'nin 2019 bantlarıyla çizer, superelevation
+    onların Dever bandının çizelgesidir; KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm
+    tutar, A3 şablonun boykesit haritasına sığmaz (road_sheet_outside). Şablon yoksa
+    sys:yol-plan-boykesit, bands: kgm ile KGM'nin A1 paftası sys:yol-plan-boykesit-kgm
+    (plan 791 × 230 mm, boykesit 791 × 318 mm, sağ üstte KGM klişesi); paftalar
+    first'ten (yoksa Y-101) numaralanır, Yol › aks altında. Pafta takımı aksın ve
+    boykesitin revizyonlarıyla yol ayarlarında saklanır. Boykesit görünümleri, takım ve
+    paftalar tek geri alma adımı “Yol paftaları” (paftanın kendi düzenlemeleri geri alma
+    adımı değildir). Uyarılar: road_sheet_outside, layer_hidden, profile_stale. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, unknown_alignment,
+    unknown_road_profile, invalid_road_sheets, katmanın retleri, unknown_template,
+    invalid_options, not_fixed_map, bad_drawing_info.
     """
     __slots__ = ()
     id = "road.sheets.plan"
@@ -81,22 +80,21 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadSheetsLaid:
-        """Yol paftaları: Aksı plan–boykesit paftalarına dizer (Civil 3D'nin Create View Frames
-        ve Create Sheets'i gibi): bir paftanın aralığı şablonun plan haritasının
-        genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası aralığın kirişinin
-        ortasında, aks soldan sağa akacak biçimde döndürülür; overlap kadar bindirilir.
-        profile verilince (aynı aksta) her paftanın km'lerinin boykesit görünümü
-        (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki at'ta, her
-        biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı ölçekte
-        gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri KGM'nin
-        2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir (ADR
-        0980); KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar, A3 şablonun boykesit
-        haritasına sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit, bands:
-        kgm ile KGM'nin A1 paftası sys:yol-plan-boykesit-kgm (plan 791 × 230 mm, boykesit
-        791 × 318 mm, sağ üstte KGM klişesi; ADR 0981); paftalar first'ten (yoksa Y-101)
-        numaralanır, Yol › aks altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol
-        ayarlarında saklanır. Boykesit görünümleri, takım ve paftalar tek geri alma adımı
-        “Yol paftaları” (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
+        """Yol paftaları: Aksı plan–boykesit paftalarına dizer: bir paftanın aralığı şablonun
+        plan haritasının genişliğinin scale ölçeğindeki zemin boyudur, her plan haritası
+        aralığın kirişinin ortasında, aks soldan sağa akacak biçimde döndürülür; overlap
+        kadar bindirilir. profile verilince (aynı aksta) her paftanın km'lerinin boykesit
+        görünümü (road.profiles.draw'ın from ve to'suyla) layerId katmanına çizilir, ilki
+        at'ta, her biri bir öncekinin bantlarının altına; şablonun ikinci haritası onu aynı
+        ölçekte gösterir, bir km planda ve boykesitte üst üste düşer. bands: kgm görünümleri
+        KGM'nin 2019 bantlarıyla çizer, superelevation onların Dever bandının çizelgesidir;
+        KGM bantları kâğıtta 2,5 mm yazıyla 107,5 mm tutar, A3 şablonun boykesit haritasına
+        sığmaz (road_sheet_outside). Şablon yoksa sys:yol-plan-boykesit, bands: kgm ile
+        KGM'nin A1 paftası sys:yol-plan-boykesit-kgm (plan 791 × 230 mm, boykesit 791 × 318
+        mm, sağ üstte KGM klişesi); paftalar first'ten (yoksa Y-101) numaralanır, Yol › aks
+        altında. Pafta takımı aksın ve boykesitin revizyonlarıyla yol ayarlarında saklanır.
+        Boykesit görünümleri, takım ve paftalar tek geri alma adımı “Yol paftaları”
+        (paftanın kendi düzenlemeleri geri alma adımı değildir). Uyarılar:
         road_sheet_outside, layer_hidden, profile_stale. Retler: invalid_revision,
         revision_conflict, not_a_road_project, unknown_alignment, unknown_road_profile,
         invalid_road_sheets, katmanın retleri, unknown_template, invalid_options,
@@ -321,19 +319,18 @@ plan = _RoadSheetsPlan()
 
 class _RoadSheetsSections(LocalCommand[RoadSheetsSections, RoadSheetsLaid, RoadSheetsLaid]):
     """``road.sheets.sections`` v1. Enkesit paftaları: Kesit takımının enkesit
-    görünümlerini paftalara dizer (Civil 3D'nin üretim enkesit görünümleri ve Create
-    Section Sheets'i gibi): bir takımın görünümleri aynı boydadır (road.sections.draw:
-    şerit genişliği × en yüksek kot aralığı), her pafta şablonun haritasının scale
-    ölçeğindeki zemin boyuna sığan kadar sütun ve satır alır; görünümler layerId
-    katmanına grup grup çizilir, ilk grubun sol üstü at'ta, her biri bir öncekinin bir
-    harita yüksekliği ve aralık altında; her paftanın haritası kendi grubunu gösterir.
-    stations (yoksa takımın hepsi), exaggeration, height road.sections.draw'ınki. Şablon
-    yoksa sys:cad-teknik; paftalar first'ten (yoksa E-101) numaralanır. Takım kesit
-    takımının revizyonuyla yol ayarlarında saklanır; görünümler, takım ve paftalar tek
-    geri alma adımı “Enkesit paftaları”. Retler: invalid_revision, revision_conflict,
-    not_a_road_project, unknown_section_set, invalid_label, invalid_places, no_terrain,
-    katmanın retleri, invalid_road_sheets, unknown_template, invalid_options,
-    not_fixed_map, bad_drawing_info.
+    görünümlerini paftalara dizer: bir takımın görünümleri aynı boydadır
+    (road.sections.draw: şerit genişliği × en yüksek kot aralığı), her pafta şablonun
+    haritasının scale ölçeğindeki zemin boyuna sığan kadar sütun ve satır alır;
+    görünümler layerId katmanına grup grup çizilir, ilk grubun sol üstü at'ta, her biri
+    bir öncekinin bir harita yüksekliği ve aralık altında; her paftanın haritası kendi
+    grubunu gösterir. stations (yoksa takımın hepsi), exaggeration, height
+    road.sections.draw'ınki. Şablon yoksa sys:cad-teknik; paftalar first'ten (yoksa
+    E-101) numaralanır. Takım kesit takımının revizyonuyla yol ayarlarında saklanır;
+    görünümler, takım ve paftalar tek geri alma adımı “Enkesit paftaları”. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, unknown_section_set,
+    invalid_label, invalid_places, no_terrain, katmanın retleri, invalid_road_sheets,
+    unknown_template, invalid_options, not_fixed_map, bad_drawing_info.
     """
     __slots__ = ()
     id = "road.sheets.sections"
@@ -364,15 +361,14 @@ class _RoadSheetsSections(LocalCommand[RoadSheetsSections, RoadSheetsLaid, RoadS
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadSheetsLaid:
-        """Enkesit paftaları: Kesit takımının enkesit görünümlerini paftalara dizer (Civil
-        3D'nin üretim enkesit görünümleri ve Create Section Sheets'i gibi): bir takımın
-        görünümleri aynı boydadır (road.sections.draw: şerit genişliği × en yüksek kot
-        aralığı), her pafta şablonun haritasının scale ölçeğindeki zemin boyuna sığan kadar
-        sütun ve satır alır; görünümler layerId katmanına grup grup çizilir, ilk grubun sol
-        üstü at'ta, her biri bir öncekinin bir harita yüksekliği ve aralık altında; her
-        paftanın haritası kendi grubunu gösterir. stations (yoksa takımın hepsi),
-        exaggeration, height road.sections.draw'ınki. Şablon yoksa sys:cad-teknik; paftalar
-        first'ten (yoksa E-101) numaralanır. Takım kesit takımının revizyonuyla yol
+        """Enkesit paftaları: Kesit takımının enkesit görünümlerini paftalara dizer: bir
+        takımın görünümleri aynı boydadır (road.sections.draw: şerit genişliği × en yüksek
+        kot aralığı), her pafta şablonun haritasının scale ölçeğindeki zemin boyuna sığan
+        kadar sütun ve satır alır; görünümler layerId katmanına grup grup çizilir, ilk
+        grubun sol üstü at'ta, her biri bir öncekinin bir harita yüksekliği ve aralık
+        altında; her paftanın haritası kendi grubunu gösterir. stations (yoksa takımın
+        hepsi), exaggeration, height road.sections.draw'ınki. Şablon yoksa sys:cad-teknik;
+        paftalar first'ten (yoksa E-101) numaralanır. Takım kesit takımının revizyonuyla yol
         ayarlarında saklanır; görünümler, takım ve paftalar tek geri alma adımı “Enkesit
         paftaları”. Retler: invalid_revision, revision_conflict, not_a_road_project,
         unknown_section_set, invalid_label, invalid_places, no_terrain, katmanın retleri,

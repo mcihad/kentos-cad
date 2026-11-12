@@ -50,7 +50,7 @@ const MAX_ARRAY: i64 = 10_000;
 /// Curves sampled into points stay within this of the true curve (1 mm).
 const SAMPLE_TOLERANCE: f64 = 1e-3;
 /// Width of a DXF text in ems: measured in Arimo, the app's face with Arial's widths, the metrics of
-/// AutoCAD's Standard style (the file does not say which face drew it).
+/// DXF's Standard style (the file does not say which face drew it).
 fn text_em(text: &str) -> f64 {
     kentos_geometry_core::text::width_em(text, kentos_geometry_core::text::Font::from_id("arimo"))
 }
@@ -569,7 +569,7 @@ pub struct Emitter<'l> {
     /// in the order met: each one's place is its reader id's number.
     pub text_used: Vec<String>,
     pub dim_used: Vec<String>,
-    /// What AutoCAD's own blocks (“_…”) said while read: the drawing's only
+    /// What the format's own blocks (“_…”) said while read: the drawing's only
     /// if an insert places them (`keep_used`), a leader's arrow block not.
     aside: HashMap<BlockId, Report>,
     /// A closed LWPOLYLINE or POLYLINE KentOS did not mark is a closed line,
@@ -577,6 +577,9 @@ pub struct Emitter<'l> {
     pub closed_lines: bool,
     /// Whether a block's objects carry heights (docs/adr/2100 §2), by upper-case name, worked out once.
     heights: HashMap<String, bool>,
+    /// The block read as a definition: its attribute definitions' names KentOS kept for their tags (docs/adr/4800),
+    /// upper-case tag → name.
+    named: HashMap<String, String>,
 }
 
 impl<'l> Emitter<'l> {
@@ -594,7 +597,46 @@ impl<'l> Emitter<'l> {
             aside: HashMap::new(),
             closed_lines: false,
             heights: HashMap::new(),
+            named: HashMap::new(),
         }
+    }
+
+    /// The names KentOS kept for a block's attribute tags DXF's tags could not hold (docs/adr/4800): each ATTDEF's own
+    /// KentOS data holds its name under the tag it was written with. The file wins: the name is taken only while the
+    /// ATTDEF's tag is still that one, case-blind as DXF's tags are (DXF writers write them in capitals), and no other
+    /// ATTDEF of the block has the name as its tag (KentOS's data edited by hand); a name taken by an earlier tag is
+    /// not given twice. Upper-case tag → name; and the tags whose record no longer fits (tag, the record's tag, its
+    /// name), to be said.
+    fn defined_names(&self, block: &str) -> (HashMap<String, String>, Vec<(String, String, String)>) {
+        let mut names = HashMap::new();
+        let mut stale = Vec::new();
+        let Some(block) = self.lib.blocks.get(&block.to_uppercase()) else {
+            return (names, stale);
+        };
+        let defs: Vec<(&str, Option<&crate::dxf::xdata::Meta>)> = block
+            .entities
+            .iter()
+            .filter_map(|x| match &x.kind {
+                Kind::Text { prompt: Some(_), constant: false, tag, .. } if !tag.trim().is_empty() => {
+                    Some((tag.trim(), x.meta.as_ref()))
+                }
+                _ => None,
+            })
+            .collect();
+        for (tag, meta) in &defs {
+            let Some(m) = meta else { continue };
+            for (written, name) in &m.tag_names {
+                if written.to_uppercase() != tag.to_uppercase() {
+                    stale.push(((*tag).to_owned(), written.clone(), name.clone()));
+                    continue;
+                }
+                let taken = defs.iter().any(|(other, _)| *other == name.as_str()) || names.values().any(|n| n == name);
+                if !taken {
+                    names.insert(tag.to_uppercase(), name.clone());
+                }
+            }
+        }
+        (names, stale)
     }
 
     /// Whether the block `key`'s own objects carry heights KentOS keeps (a line's ends, a point, a polyline's
@@ -804,7 +846,7 @@ impl<'l> Emitter<'l> {
     /// external reference) as a definition, in the file's order: its objects
     /// in its own frame, on layer 0 (docs/adr/0144 §5), ids 1, 2, … as the
     /// reader numbers them. An insert inside one that would make a block hold
-    /// itself is left out, and said. AutoCAD's own blocks (a name starting
+    /// itself is left out, and said. the format's own blocks (a name starting
     /// with “_”: dimension arrows) are left out unless an insert places them.
     /// None, and the file's inserts opened, when blocks nest deeper than a
     /// drawing allows (the caller reads again with Blokları patlat).
@@ -825,14 +867,26 @@ impl<'l> Emitter<'l> {
             let handles = std::mem::take(&mut self.out.handles);
             let holes = std::mem::take(&mut self.out.holes);
             let pending = std::mem::take(&mut self.pending);
-            // What AutoCAD's own block says is set aside until an insert is known to place it.
+            // What the format's own block says is set aside until an insert is known to place it.
             let own = n.starts_with('_');
             let outer = own.then(|| std::mem::take(&mut self.out.report));
             self.defining = true;
+            // Docs/adr/4800: its attribute definitions' names KentOS kept for their tags; a record whose tag the file
+            // changed since is said and not taken.
+            let (named, stale) = self.defined_names(n);
+            self.named = named;
+            for (tag, written, name) in stale {
+                let why = format!(
+                    "“{}” bloğunun “{tag}” etiketi KentOS'un yazdığı “{written}” değil (başka bir programda değişmiş); KentOS verisindeki “{name}” adı alınmadı, etiket ad oldu",
+                    block.name
+                );
+                self.note("Öznitelik etiketi", &why, 0);
+            }
             let ctx = Ctx::definition(n);
             if !block.xref {
                 for x in &block.entities { self.emit(x, &ctx); }
             }
+            self.named.clear();
             self.notes_done();
             // The rings KentOS wrote as polylines of their own go back into their polygons, as in the drawing.
             self.merge_holes();
@@ -879,7 +933,7 @@ impl<'l> Emitter<'l> {
         Some(defs)
     }
 
-    /// Leaves out AutoCAD's own blocks (“_…”) that no insert places, in the
+    /// Leaves out the format's own blocks (“_…”) that no insert places, in the
     /// drawing or in a definition kept; says how many blocks came and how many
     /// of them nothing places.
     pub fn keep_used(&mut self, defs: Vec<BlockDefinition>) -> Vec<BlockDefinition> {
@@ -899,7 +953,7 @@ impl<'l> Emitter<'l> {
             .zip(used)
             .filter(|(d, used)| *used || !d.name.starts_with('_'))
             .collect();
-        // What AutoCAD's own blocks kept said; the others' goes with them.
+        // What the format's own blocks kept said; the others' goes with them.
         for (d, _) in &kept {
             if let Some(said) = self.aside.remove(&d.id) {
                 self.out.report.absorb(said);
@@ -907,7 +961,7 @@ impl<'l> Emitter<'l> {
         }
         self.aside.clear();
         let unused = kept.iter().filter(|(_, used)| !used).count();
-        // A definition's object on a layer of its own shows as AutoCAD shows it: with that layer's look, while that
+        // A definition's object on a layer of its own shows as DXF readers show it: with that layer's look, while that
         // layer shows (docs/adr/0315 §2); nothing to say.
         if !kept.is_empty() {
             let mut fact = format!("{} tanım", kept.len());
@@ -1660,6 +1714,17 @@ impl<'l> Emitter<'l> {
                         }
                     }
                 }
+                // Docs/adr/4800: the values of its definition's attributes take the names its ATTDEFs keep, by the
+                // same rule (the file's tag still the one KentOS wrote; a name already there left as it is).
+                for (wanted, named) in self.defined_names(name).0 {
+                    let found = attrs.keys().find(|k| k.to_uppercase() == wanted).cloned();
+                    if let Some(k) = found
+                        && !attrs.contains_key(&named)
+                        && let Some(v) = attrs.remove(&k)
+                    {
+                        attrs.insert(named, v);
+                    }
+                }
                 let placed = Placed {
                     p: *p,
                     scale: *scale,
@@ -1845,7 +1910,7 @@ impl<'l> Emitter<'l> {
                     | "EXTRUDEDSURFACE" | "LOFTEDSURFACE" | "REVOLVEDSURFACE" | "SWEPTSURFACE"
                     | "MESH" | "POLYFACE" => "3B katı, yüzey ve bölge nesneleri alınmaz",
                     "MLINE" => {
-                        "çoklu çizgi (MLINE) alınmaz; AutoCAD'de patlatıp (EXPLODE) yeniden kaydedin"
+                        "çoklu çizgi (MLINE) alınmaz; çizim programında patlatıp (EXPLODE) yeniden kaydedin"
                     }
                     "VIEWPORT" => "görünüm pencereleri pafta düzenine aittir",
                     "SHAPE" => "şekil (SHAPE) yazı tipi dosyası gerektirir; alınmaz",
@@ -2322,7 +2387,7 @@ impl<'l> Emitter<'l> {
                 return self.skip(
                     "Eğri (SPLINE)",
                     &format!(
-                        "derecesi {p}; en çok {} okunur (AutoCAD en çok 11 yazar)",
+                        "derecesi {p}; en çok {} okunur (DXF yazıcıları en çok 11 yazar)",
                         nurbs::MAX_DEGREE
                     ),
                     e.line,
@@ -2516,9 +2581,10 @@ impl<'l> Emitter<'l> {
             });
         }
         let align = justify::align_of(t.halign, t.valign);
-        // AutoCAD writes a justified text's start (10) as it draws it; where the text stands is 11. Another program
-        // finds its baseline a share of the file's height (the capitals') under 11, KentOS a share of its em: KentOS's
-        // point is that much higher (docs/adr/8046 §3), its own exactly while the file has it where KentOS put it.
+        // DXF writers write a justified text's start (10) as it draws it; where the text stands is 11. Another
+        // program finds its baseline a share of the file's height (the capitals') under 11, KentOS a share of its em:
+        // KentOS's point is that much higher (docs/adr/8046 §3), its own exactly while the file has it where KentOS put
+        // it.
         let anchor = match align {
             Some(a) => {
                 let at = second.unwrap_or(start);
@@ -2592,6 +2658,9 @@ impl<'l> Emitter<'l> {
         if tag.is_empty() {
             return self.skip(WHAT, "etiketi yok", e.line);
         }
+        // Docs/adr/4800: the name KentOS kept for a tag DXF's tags could not hold, while the file's tag is still it.
+        let named = self.named.get(&tag.to_uppercase()).cloned();
+        let tag = named.as_deref().unwrap_or(tag);
         if self.out.attributes.iter().any(|a| a.tag == tag) {
             let why = format!("“{tag}” etiketi blokta ikinci kez var; ilki alındı");
             return self.skip(WHAT, &why, e.line);

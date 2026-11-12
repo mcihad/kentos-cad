@@ -230,6 +230,19 @@ pub enum AtlasPageState {
     New,
 }
 
+/// Whether a changed page also looks other (docs/adr/4820): its look's digest against the previous atlas's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AtlasLook {
+    /// It draws the same: only what it does not draw changed (an attribute no text, table or label shows).
+    Same,
+    /// It draws otherwise.
+    Changed,
+}
+
 /// A page against the previous atlas (docs/adr/4000), ADR 1320's rule: the objects it listed then and lists now
 /// whose digest changed (`changed`), the ones it lists now and not then (`added`), then and not now (`removed`), by
 /// persistent id in the order listed; `changed` too when the project's parts the pages read changed.
@@ -252,6 +265,11 @@ pub struct AtlasPageChange {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
+    /// A changed page's look against the previous atlas's (docs/adr/4820), when both runs made the page and knew its
+    /// look; none otherwise (a previous record without looks, a page the previous update did not make).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub look: Option<AtlasLook>,
 }
 
 /// The changes since a previous atlas (docs/adr/4000): its PDF's name, SHA-256 and day; the project's parts the pages
@@ -319,6 +337,14 @@ pub struct AtlasPageInfo {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub sources: Vec<String>,
+    /// The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list
+    /// with the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an
+    /// empty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps
+    /// that stand still on every page. None where the pages were not made (a check), and for a page an update did not
+    /// make whose previous record had none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub look: Option<String>,
 }
 
 /// What a run was bound to, written into the output (`Keywords`) and given back.

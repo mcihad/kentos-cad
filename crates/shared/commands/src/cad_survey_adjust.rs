@@ -98,6 +98,38 @@ pub struct AdjustDifference {
     pub length: f64,
 }
 
+/// One sight of a leap-frog setup (docs/adr/5300): the slope distance (m), the zenith angle (the adjustment's angle
+/// unit, 0 straight up) and the target's height (m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AdjustSight {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub distance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
+    pub zenith: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub target: f64,
+}
+
+/// A leap-frog setup (atlamalı trigonometrik nivelman, docs/adr/5300): the instrument set up between two points, on
+/// neither, sighting `from` back and `to` forward. The height difference from `from` to `to` is the fore sight's less
+/// the back sight's, each `S·cos z + (1 − k)·D²/2R − t` (D = S·sin z, the project's k, R 6 371 000 m): the instrument's
+/// height falls out. Its length is the two horizontal distances' sum.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AdjustLeapfrog {
+    pub from: String,
+    pub to: String,
+    pub back: AdjustSight,
+    pub fore: AdjustSight,
+}
+
 /// How a levelling network's height differences were measured (docs/adr/0203 §5).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -130,6 +162,10 @@ pub enum AdjustWork {
         method: LevelMethod,
         known: Vec<AdjustKnownHeight>,
         rows: Vec<AdjustDifference>,
+        /// Leap-frog setups (docs/adr/5300), each a height difference after `rows`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AdjustLeapfrog>>", optional))]
+        leapfrog: Vec<AdjustLeapfrog>,
     },
 }
 
@@ -154,6 +190,11 @@ pub struct SurveyAdjust {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<crate::AngleUnit>,
+    /// Docs/adr/5200: the name the adjustment is kept under in the project (`settings.surveyAdjustments`; one of that
+    /// name is replaced), in the same undo step; none: not kept. At most 120 characters, no control character.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub keep: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -198,6 +239,10 @@ pub struct SurveyAdjusted {
     pub ids: Vec<u32>,
     /// Kot ağı: the new points the drawing has not; their heights are not written.
     pub absent: Vec<String>,
+    /// Kot ağı (docs/adr/5300): each leap-frog setup's height difference and length, as the adjustment took them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AdjustDifference>>", optional))]
+    pub leapfrog: Vec<AdjustDifference>,
     /// The degrees of freedom, the a posteriori standard deviation of unit weight and the model test (none without
     /// redundancy).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -209,6 +254,10 @@ pub struct SurveyAdjusted {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub passed: Option<bool>,
+    /// Docs/adr/5200: the name the adjustment was kept under.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kept: Option<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

@@ -109,7 +109,8 @@ pub struct RoadNode {
 
 /// Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are
 /// stale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be
-/// drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.
+/// drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, whether drawing again
+/// writes only what changed (docs/adr/4740), and the revision read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -125,6 +126,7 @@ pub struct RoadProjectTree {
     pub rebuildable: u32,
     pub deep: bool,
     pub auto_rebuild: bool,
+    pub regional: bool,
     pub revision: String,
 }
 
@@ -134,10 +136,12 @@ pub struct RoadProjectTree {
 /// its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
 ///
 /// `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
-/// first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
-/// drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
-/// draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
-/// changed is drawn whole, so its objects keep the command's drawing order.
+/// first; one whose objects come out as they are is not written (its record takes its sources' stamps now). Otherwise,
+/// in the command's order, a new object takes the first old one exactly alike not taken yet and stays where that is,
+/// unless an object before it in the order is written, or stays from a later place, and the two could draw another
+/// picture in the other order (docs/adr/4740): only lines and polylines without a label and of one colour and
+/// transparency draw the same picture in any order. The old objects left are removed, the new ones left written at the
+/// drawing's end in its order.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
 /// `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
@@ -215,9 +219,12 @@ pub struct RoadProjectRebuilt {
 }
 
 /// Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in
-/// the step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.
+/// the step of the write that left them stale, on or off; `regional` (docs/adr/4740) chooses whether drawing again, by
+/// itself or from the project tree, writes only what changed (docs/adr/4320; the project's first choice) or draws each
+/// drawing whole. One undo step: “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” or, both changed, “Yeniden üretim”.
 ///
-/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set` (neither
+/// given, or what is given is already so: at `autoRebuild` when it is given, else at `regional`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -229,10 +236,14 @@ pub struct RoadProjectEdit {
     pub auto_rebuild: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    pub regional: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
-/// Output of `road.project.edit` v1: drawing again by itself now, and the revision after.
+/// Output of `road.project.edit` v1: drawing again by itself now, whether drawing again writes only what changed
+/// (docs/adr/4740), and the revision after.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -240,5 +251,6 @@ pub struct RoadProjectEdit {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProjectEdited {
     pub auto_rebuild: bool,
+    pub regional: bool,
     pub revision: String,
 }

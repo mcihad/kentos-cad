@@ -128,7 +128,7 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
             // Drawn in another face than the one named: said, never silently.
             if named != Some(s.font.id()) && !embedded {
                 let what = match how {
-                    FontMatch::Shx => "AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor",
+                    FontMatch::Shx => "SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor",
                     FontMatch::Missing => "KentOS'ta yok",
                     FontMatch::Own | FontMatch::Equivalent => {
                         "stil başka bir yazı tipine çevrilmiş"

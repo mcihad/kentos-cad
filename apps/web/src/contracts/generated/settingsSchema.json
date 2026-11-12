@@ -223,8 +223,8 @@
       ],
       "version": 1,
       "group": "drafting",
-      "title": "AutoCAD takma adları",
-      "description": "Komut satırına AutoCAD'in İngilizce komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
+      "title": "Klasik CAD komut adları",
+      "description": "Komut satırına klasik İngilizce CAD komut adları ve kısaltmaları da yazılabilir (RECTANG, LA, JOG, DT…). KentOS'un kendi adları ve tek harf kısayolları her zaman önce gelir: KentOS'ta başka bir işi olan ad (T, S, P, CP, POLYGON…) eklenmez.",
       "sensitive": false,
       "apply": "live"
     },
@@ -1004,7 +1004,7 @@
       "version": 1,
       "group": "appearance",
       "title": "Çizim zemini",
-      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: projenin türüne göre (CAD'de arduvaz, CBS'de tema; ADR 0165), temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
+      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: projenin türüne göre (CAD'de arduvaz, CBS'de tema), temaya uyar, arduvaz, siyah ya da kâğıt.",
       "sensitive": false,
       "apply": "live"
     },
@@ -1135,7 +1135,7 @@
       "version": 1,
       "group": "newProjects",
       "title": "Proje türü",
-      "description": "Yeni proje sihirbazında önce seçili gelen tür; proje kendi türünü saklar (ADR 0165).",
+      "description": "Yeni proje sihirbazında önce seçili gelen tür: proje kendi türünü saklar.",
       "sensitive": false,
       "apply": "live"
     },
@@ -1173,7 +1173,7 @@
       "version": 1,
       "group": "newProjects",
       "title": "Çizim birimi",
-      "description": "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar (ADR 0165, 0626, 0802).",
+      "description": "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar.",
       "sensitive": false,
       "apply": "live"
     },
@@ -1752,7 +1752,7 @@
       "version": 1,
       "group": "project",
       "title": "Proje türü",
-      "description": "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir (ADR 0165).",
+      "description": "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir.",
       "sensitive": false,
       "apply": "live"
     },

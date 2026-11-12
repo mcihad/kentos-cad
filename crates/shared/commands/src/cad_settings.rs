@@ -64,6 +64,7 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
 ///   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
 /// - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+/// - `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).
 /// - `standardDocs`: the entire ordered list of versioned drawing-standard
 ///   documents retained by the project; an empty list removes all bindings.
 ///   An ordered, byte-identical subset may remove unsupported existing
@@ -77,7 +78,7 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
 /// (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
 /// (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
-/// view without levels), `invalid_heights`, `invalid_epoch`; then
+/// view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `project_type_locked` (an existing project type changed),
 /// `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
@@ -171,6 +172,12 @@ pub struct SettingsSet {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub coordinate_epoch: Option<f64>,
+    /// The refraction coefficient k of trigonometric heights (docs/adr/0169 §3, 4900), within [−1, 1]: a measured one
+    /// written to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub refraction: Option<f64>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

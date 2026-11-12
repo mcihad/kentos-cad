@@ -24,49 +24,48 @@ if TYPE_CHECKING:
 
 class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
     """``cad.modules.edit`` v1. Oda modülü: Bir banyoyu ya da odayı bir kez çizip bağlı
-    örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda
-    modülü”. operation: define (name, id isteğe bağlı, uids: bir ya da birkaç kattaki
-    duvarlar (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatılar,
-    kolonlar, merdivenler, rampalar, döşemeler, ölçüler, etiketler ve yazılar; akslara
-    bağlı kolon module_kind (docs/adr/8050); seçimdeki mutfak dizisi bütünüyle alınır ve
-    modülün runs'ında tarif olarak durur, her örnek onu kendi duvarlarına yeniden kurar
-    (aynada yanı ve tek kapakların menteşesi ters), dizinin bir kısmı ya da seçim
-    dışındaki duvara dayanan dizi module_outside; base taban noktası; nesneler yerinde
-    kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya
-    da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation
-    radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase tadilat durumu,
-    numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal
-    kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module,
-    from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü
-    bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların
-    görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır:
-    module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna
-    yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler
-    kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır,
-    bağları kopuk: sourceGone). addMembers (module, instance, uids: örnekte çizilen yeni
-    nesneler tanıma katılır; öbür bağlı örneklere kendi matrisleriyle yerleşir;
-    docs/adr/0779), removeMembers (uids: örneğin nesneleri anahtarlarıyla tanımdan
-    çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları silinir,
-    istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan bir üye
-    ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules: süzgeç, to:
-    hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module,
-    instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her
-    hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş
-    module_repeat_taken; loose: kattaki modülsüz duvar, açıklık, mahal, donatı, ölçü ve
-    etiketler de düz kopya olarak her hedefe gider, birbirlerine ve tekrarlanan
-    örneklerin nesnelerine bağları kopyalara çevrilir, numaraları hedefin numbering'iyle
-    (yoksa katın mahal öneki değişir); kilitli, başka türden, tekrarlanmayan örneğin ya
-    da dışarıya bağlı olan kalır: report.left, module_repeat_left; cevabın copied'ı;
-    docs/adr/0796). Birden çok kattaki nesneler çok katlı modül olur (taban en alçak
-    kat; duvar, mahal ve donatının storey'i taban katının kaç kat üstünde olduğu; katlar
-    kotlarına göre sıralanır); place ve repeat üst katları hedefin üstündeki katlara
-    koyar, yetmeyen kat module_storey_missing; katlı ile katsız nesne birlikte
-    module_levels. place ve repeat'in unit'i bina programının bölümü: örneğin mahalleri
-    o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi
-    güncellemede kaynağın değeriyle yazılır ve söylenir: module_drift_overwritten. Plan
-    yazmadan yapılacakları (created, changed, placed, report.updated, skipped,
-    conflicts, changedKeys, addedKeys, removedKeys, released, deleted) gösterir. Tasarım
-    alternatifi kapsam dışıdır.
+    örnekler olarak yeniden kullanır; her yazma tek geri alma adımı “Oda modülü”.
+    operation: define (name, id isteğe bağlı, uids: bir ya da birkaç kattaki duvarlar
+    (eğri olanlar da), açıklıklar, mahaller, mahal ayırıcılar, donatılar, kolonlar,
+    merdivenler, rampalar, döşemeler, ölçüler, etiketler ve yazılar; akslara bağlı kolon
+    module_kind; seçimdeki mutfak dizisi bütünüyle alınır ve modülün runs'ında tarif
+    olarak durur, her örnek onu kendi duvarlarına yeniden kurar (aynada yanı ve tek
+    kapakların menteşesi ters), dizinin bir kısmı ya da seçim dışındaki duvara dayanan
+    dizi module_outside; base taban noktası; nesneler yerinde kalır ve ilk örnek olur;
+    açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi
+    seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi
+    y ekseninde aynalı, level hedef kat, phase tadilat durumu, numbering: prefix ve
+    suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket
+    bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren
+    örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı
+    örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur,
+    kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve
+    restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach
+    (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım
+    silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone).
+    addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır;
+    öbür bağlı örneklere kendi matrisleriyle yerleşir), removeMembers (uids: örneğin
+    nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak kalır, öbür
+    örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest kalır:
+    module_member_released; kalan bir üye ona bağlıysa module_member_needed), repeat
+    (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering, unit ve
+    örneğe özel satırlar instances: module, instance, numbering, unit; kattaki bağlı
+    örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat
+    module_repeat_empty, zaten yerleşmiş module_repeat_taken; loose: kattaki modülsüz
+    duvar, açıklık, mahal, donatı, ölçü ve etiketler de düz kopya olarak her hedefe
+    gider, birbirlerine ve tekrarlanan örneklerin nesnelerine bağları kopyalara
+    çevrilir, numaraları hedefin numbering'iyle (yoksa katın mahal öneki değişir);
+    kilitli, başka türden, tekrarlanmayan örneğin ya da dışarıya bağlı olan kalır:
+    report.left, module_repeat_left; cevabın copied'ı). Birden çok kattaki nesneler çok
+    katlı modül olur (taban en alçak kat; duvar, mahal ve donatının storey'i taban
+    katının kaç kat üstünde olduğu; katlar kotlarına göre sıralanır); place ve repeat
+    üst katları hedefin üstündeki katlara koyar, yetmeyen kat module_storey_missing;
+    katlı ile katsız nesne birlikte module_levels. place ve repeat'in unit'i bina
+    programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle değişmiş
+    (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır ve
+    söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created, changed,
+    placed, report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys,
+    released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır.
     """
     __slots__ = ()
     id = "cad.modules.edit"
@@ -88,43 +87,42 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
         expected: Expected | None = None,
     ) -> ModulesEdited:
         """Oda modülü: Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden
-        kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation:
-        define (name, id isteğe bağlı, uids: bir ya da birkaç kattaki duvarlar (eğri olanlar
-        da), açıklıklar, mahaller, mahal ayırıcılar, donatılar, kolonlar, merdivenler,
-        rampalar, döşemeler, ölçüler, etiketler ve yazılar; akslara bağlı kolon module_kind
-        (docs/adr/8050); seçimdeki mutfak dizisi bütünüyle alınır ve modülün runs'ında tarif
-        olarak durur, her örnek onu kendi duvarlarına yeniden kurar (aynada yanı ve tek
-        kapakların menteşesi ters), dizinin bir kısmı ya da seçim dışındaki duvara dayanan
-        dizi module_outside; base taban noktası; nesneler yerinde kalır ve ilk örnek olur;
-        açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi
-        seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi
-        y ekseninde aynalı, level hedef kat, phase tadilat durumu, numbering: prefix ve
-        suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket
-        bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren
-        örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı
-        örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur,
-        kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve
-        restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach
-        (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım
-        silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone).
-        addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır;
-        öbür bağlı örneklere kendi matrisleriyle yerleşir; docs/adr/0779), removeMembers
-        (uids: örneğin nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak
-        kalır, öbür örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest
-        kalır: module_member_released; kalan bir üye ona bağlıysa module_member_needed),
-        repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering,
-        unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki
-        bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat
-        module_repeat_empty, zaten yerleşmiş module_repeat_taken; loose: kattaki modülsüz
-        duvar, açıklık, mahal, donatı, ölçü ve etiketler de düz kopya olarak her hedefe
-        gider, birbirlerine ve tekrarlanan örneklerin nesnelerine bağları kopyalara
-        çevrilir, numaraları hedefin numbering'iyle (yoksa katın mahal öneki değişir);
-        kilitli, başka türden, tekrarlanmayan örneğin ya da dışarıya bağlı olan kalır:
-        report.left, module_repeat_left; cevabın copied'ı; docs/adr/0796). Birden çok
-        kattaki nesneler çok katlı modül olur (taban en alçak kat; duvar, mahal ve donatının
-        storey'i taban katının kaç kat üstünde olduğu; katlar kotlarına göre sıralanır);
-        place ve repeat üst katları hedefin üstündeki katlara koyar, yetmeyen kat
-        module_storey_missing; katlı ile katsız nesne birlikte module_levels. place ve
+        kullanır; her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id
+        isteğe bağlı, uids: bir ya da birkaç kattaki duvarlar (eğri olanlar da), açıklıklar,
+        mahaller, mahal ayırıcılar, donatılar, kolonlar, merdivenler, rampalar, döşemeler,
+        ölçüler, etiketler ve yazılar; akslara bağlı kolon module_kind; seçimdeki mutfak
+        dizisi bütünüyle alınır ve modülün runs'ında tarif olarak durur, her örnek onu kendi
+        duvarlarına yeniden kurar (aynada yanı ve tek kapakların menteşesi ters), dizinin
+        bir kısmı ya da seçim dışındaki duvara dayanan dizi module_outside; base taban
+        noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin
+        kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa
+        module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde
+        aynalı, level hedef kat, phase tadilat durumu, numbering: prefix ve suffix mahal,
+        açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin
+        kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances:
+        güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı
+        alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki
+        örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin
+        nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek
+        modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin
+        nesneleri son hâliyle kalır, bağları kopuk: sourceGone). addMembers (module,
+        instance, uids: örnekte çizilen yeni nesneler tanıma katılır; öbür bağlı örneklere
+        kendi matrisleriyle yerleşir), removeMembers (uids: örneğin nesneleri anahtarlarıyla
+        tanımdan çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları
+        silinir, istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan
+        bir üye ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules:
+        süzgeç, to: hedef katlar, her birinde numbering, unit ve örneğe özel satırlar
+        instances: module, instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş
+        ve aynayla her hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş
+        module_repeat_taken; loose: kattaki modülsüz duvar, açıklık, mahal, donatı, ölçü ve
+        etiketler de düz kopya olarak her hedefe gider, birbirlerine ve tekrarlanan
+        örneklerin nesnelerine bağları kopyalara çevrilir, numaraları hedefin numbering'iyle
+        (yoksa katın mahal öneki değişir); kilitli, başka türden, tekrarlanmayan örneğin ya
+        da dışarıya bağlı olan kalır: report.left, module_repeat_left; cevabın copied'ı).
+        Birden çok kattaki nesneler çok katlı modül olur (taban en alçak kat; duvar, mahal
+        ve donatının storey'i taban katının kaç kat üstünde olduğu; katlar kotlarına göre
+        sıralanır); place ve repeat üst katları hedefin üstündeki katlara koyar, yetmeyen
+        kat module_storey_missing; katlı ile katsız nesne birlikte module_levels. place ve
         repeat'in unit'i bina programının bölümü: örneğin mahalleri o bölümde olur (daire
         modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın
         değeriyle yazılır ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları
@@ -213,13 +211,13 @@ edit = _ModulesEdit()
 
 class _ModulesQuery(LocalCommand[ModulesQuery, ModulesQueried, ModulesQueried]):
     """``cad.modules.query`` v1. Oda modüllerini oku: Projenin oda modüllerini örnekleriyle
-    okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin
-    hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale
-    (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş
-    anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779),
-    broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; çok
-    katlı modülde storeys (kat sayısı) ve örneğin levels'ı (durduğu katlar, taban önce;
-    docs/adr/0796); uid ile drifted o nesnenin elle değişip değişmediği.
+    okur; çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi
+    örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne
+    sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle
+    değişmiş, istisna olmayan nesneler), broken (sourceGone), unit (bina programının
+    bölümü), katı, aynalı olup olmadığı; çok katlı modülde storeys (kat sayısı) ve
+    örneğin levels'ı (durduğu katlar, taban önce); uid ile drifted o nesnenin elle
+    değişip değişmediği.
     """
     __slots__ = ()
     id = "cad.modules.query"
@@ -240,14 +238,13 @@ class _ModulesQuery(LocalCommand[ModulesQuery, ModulesQueried, ModulesQueried]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ModulesQueried:
-        """Oda modüllerini oku: Projenin oda modüllerini örnekleriyle okur (docs/adr/0775);
-        çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi
-        örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne
-        sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle
-        değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina
-        programının bölümü), katı, aynalı olup olmadığı; çok katlı modülde storeys (kat
-        sayısı) ve örneğin levels'ı (durduğu katlar, taban önce; docs/adr/0796); uid ile
-        drifted o nesnenin elle değişip değişmediği.
+        """Oda modüllerini oku: Projenin oda modüllerini örnekleriyle okur; çizimi değiştirmez.
+        module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi
+        anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel
+        istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle değişmiş, istisna
+        olmayan nesneler), broken (sourceGone), unit (bina programının bölümü), katı, aynalı
+        olup olmadığı; çok katlı modülde storeys (kat sayısı) ve örneğin levels'ı (durduğu
+        katlar, taban önce); uid ile drifted o nesnenin elle değişip değişmediği.
 
         Args:
             doc: The drawing it works on.

@@ -39,19 +39,19 @@ if TYPE_CHECKING:
 class _DrawingAudit(LocalCommand[DrawingAudit, DrawingAudited, DrawingAudited]):
     """``cad.drawing.audit`` v1. Denetle: Çizimin bozuk ilişkilerini ve kayıp tanımlarını
     bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri
-    temizler (AutoCAD'in AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı
-    (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı
-    yazısı çizimde olmayan tarama (missingCutout) ve kendi bağlı etiketini boş bırakan
-    tarama (hatchTextCycle; döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension),
-    projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). fix
-    ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı
-    taramanın listesinden çıkar ve tarama yeniden kesilir, ölçü bağı “nesne yok”
-    nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne
-    onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen
-    bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin
-    adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri
-    siler, bu bir proje ayarıdır. Retler: invalid_revision; expectedRevision verilmişse
-    ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    temizler. Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan
+    ilişkili tarama (brokenHatch), boş bıraktığı yazısı çizimde olmayan tarama
+    (missingCutout) ve kendi bağlı etiketini boş bırakan tarama (hatchTextCycle; döngü),
+    nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü
+    stili (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri alma
+    adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar ve
+    tarama yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur,
+    görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar: boş
+    katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün
+    bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri;
+    purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler:
+    invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.drawing.audit"
@@ -74,18 +74,18 @@ class _DrawingAudit(LocalCommand[DrawingAudit, DrawingAudited, DrawingAudited]):
         expected: Expected | None = None,
     ) -> DrawingAudited:
         """Denetle: Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır;
-        kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in
-        AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır
-        nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı yazısı çizimde olmayan
-        tarama (missingCutout) ve kendi bağlı etiketini boş bırakan tarama (hatchTextCycle;
-        döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya
-        da ölçü stili (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri
-        alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar
-        ve tarama yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart
-        olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar:
-        boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün
-        bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri;
-        purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler:
+        kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler. Bulunanlar:
+        nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama
+        (brokenHatch), boş bıraktığı yazısı çizimde olmayan tarama (missingCutout) ve kendi
+        bağlı etiketini boş bırakan tarama (hatchTextCycle; döngü), nesnesi olmayan canlı
+        ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili
+        (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri alma adımıdır,
+        “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar ve tarama
+        yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş
+        kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar
+        ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli
+        olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge
+        (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler:
         invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
         yazılmaz, sonuç conflict olur.
 
@@ -184,19 +184,19 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
     çizim dosyasıdır (file: mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı
     kimlikleriyle eşlenir: şimdi olup öbüründe olmayan eklenmiş (added), öbüründe olup
     şimdi olmayan silinmiş (removed), ikisinde olup ayrılan değişmiş (changed). Değişim,
-    veri karşılaştırmanın kuralıyla (ADR 0179) bulunur: geometri tolerance (metre;
-    varsayılan 0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik
-    gibi sayılır (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve
-    kimlik listelerini verir; her liste limit'te kesilir ve truncated bunu söyler.
-    Pafta, viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı
-    projectChanges listesindedir. matchSearch verilirse farklı UUID'li eşlenmemiş
-    nesneler için matchCandidates önerilir; kimlikler ve model sayıları değişmez. search
-    metre, key kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır.
-    Birden çok karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün
-    aramadan hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap
-    birimiyle sınırlı, native Job'da durdurulabilir. Retler: invalid_tolerance,
-    invalid_limit, no_such_step (geri alma geçmişi o kadar adım tutmuyor),
-    invalid_file_path, file_not_found, import_unreadable.
+    veri karşılaştırmanın kuralıyla bulunur: geometri tolerance (metre; varsayılan
+    0,001) içinde aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır
+    (fields'ta layer). Cevap sayıları (same, changed, added, removed) ve kimlik
+    listelerini verir; her liste limit'te kesilir ve truncated bunu söyler. Pafta,
+    viewport, kayıtlı görünüş ve şablon farkları model sayılarından ayrı projectChanges
+    listesindedir. matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için
+    matchCandidates önerilir; kimlikler ve model sayıları değişmez. search metre, key
+    kaynak kimliği özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok
+    karşılık ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan
+    hesaplanır. Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle
+    sınırlı, native Job'da durdurulabilir. Retler: invalid_tolerance, invalid_limit,
+    no_such_step (geri alma geçmişi o kadar adım tutmuyor), invalid_file_path,
+    file_not_found, import_unreadable.
     """
     __slots__ = ()
     id = "cad.drawing.compare"
@@ -225,19 +225,18 @@ class _DrawingCompare(LocalCommand[DrawingCompare, DrawingCompared, DrawingCompa
         mutlak yol, .kcad v2 ya da v1 JSON). Nesneler kalıcı kimlikleriyle eşlenir: şimdi
         olup öbüründe olmayan eklenmiş (added), öbüründe olup şimdi olmayan silinmiş
         (removed), ikisinde olup ayrılan değişmiş (changed). Değişim, veri karşılaştırmanın
-        kuralıyla (ADR 0179) bulunur: geometri tolerance (metre; varsayılan 0,001) içinde
-        aynıysa ve öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta
-        layer). Cevap sayıları (same, changed, added, removed) ve kimlik listelerini verir;
-        her liste limit'te kesilir ve truncated bunu söyler. Pafta, viewport, kayıtlı
-        görünüş ve şablon farkları model sayılarından ayrı projectChanges listesindedir.
-        matchSearch verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates
-        önerilir; kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği
-        özniteliği, oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık
-        ambiguous olarak kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır.
-        Arama her tarafta en çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native
-        Job'da durdurulabilir. Retler: invalid_tolerance, invalid_limit, no_such_step (geri
-        alma geçmişi o kadar adım tutmuyor), invalid_file_path, file_not_found,
-        import_unreadable.
+        kuralıyla bulunur: geometri tolerance (metre; varsayılan 0,001) içinde aynıysa ve
+        öznitelikler eşitse aynı; katman bir öznitelik gibi sayılır (fields'ta layer). Cevap
+        sayıları (same, changed, added, removed) ve kimlik listelerini verir; her liste
+        limit'te kesilir ve truncated bunu söyler. Pafta, viewport, kayıtlı görünüş ve
+        şablon farkları model sayılarından ayrı projectChanges listesindedir. matchSearch
+        verilirse farklı UUID'li eşlenmemiş nesneler için matchCandidates önerilir;
+        kimlikler ve model sayıları değişmez. search metre, key kaynak kimliği özniteliği,
+        oldUids/newUids isteğe bağlı aday kapsamıdır. Birden çok karşılık ambiguous olarak
+        kalır; liste kesilse de belirsizlik bütün aramadan hesaplanır. Arama her tarafta en
+        çok 5000 nesne ve iki milyon hesap birimiyle sınırlı, native Job'da durdurulabilir.
+        Retler: invalid_tolerance, invalid_limit, no_such_step (geri alma geçmişi o kadar
+        adım tutmuyor), invalid_file_path, file_not_found, import_unreadable.
 
         Args:
             doc: The drawing it works on.

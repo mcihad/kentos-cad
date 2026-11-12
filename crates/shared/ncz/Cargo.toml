@@ -1,6 +1,6 @@
 [package]
 name = "kentos-ncz"
-description = "Netcad NCZ drawings read into the app's objects: the NCZ Reader plugin's parser ported to Rust, with Netcad 8's smart objects drawn as the symbols they are"
+description = "NCZ drawings read into the app's objects: the NCZ Reader plugin's parser ported to Rust, with NCZ 8's smart objects drawn as the symbols they are"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
