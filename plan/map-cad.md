@@ -34,7 +34,7 @@ başladı (ADR 5280–).
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880, 5280 | sınırın projede saklanması; aplikasyon yanılma sınırı (m. 11) | nesnenin üretim yönteminin kaydı ve Ek-1 URETIM_YONTEMI eşlemesi (kurum kodları); içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900 | datum dönüşümlerinin alan çokgenleri ve koordinat sistemi penceresinde harita; atlamalı trigonometrik nivelman | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900, 5300 | kurulumdan kırılma kestirimi; karşılıklı-eşzamanlı ve atlamalının birleşimi | haritada il sınırları (idari sınır verisi); zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920 | bağımsız baz önerisi (oturum başına n − 1); oturumun bloklarının pencerede gösterilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
@@ -467,6 +467,18 @@ denetlenmesi (`cad.crs.transform`, `cad.layers.reproject`, Koordinat dönüştü
 ortalaması (`refraction`), `cad.settings.set`'in `refraction`'ı, Poligon hesabında Projeye yaz. Bağımsız başvurular,
 Python, MCP, masaüstü. Açık: datum dönüşümlerinin çokgeni, atlamalı nivelman, zamana bağlı Helmert'in resmî parametreleri
 (sahip/kurum).
+
+**12 Kasım 2026, on birinci tur — datum dönüşümünün alan çokgeni ve haritası; atlamalı nivelman ([ADR 5300](../docs/adr/5300-datum-operation-area-polygon-and-leapfrog-levelling.md)).**
+Kapsam: **CAD + CBS**. Dayanak: EPSG'nin dört Türkiye işleminin (1783, 1784, 5260, 5261) kullanımı alan 1237, çokgeni
+taşınanla aynı (845 köşe); BÖHHBÜY m. 28(1)(f), 29(1) (atlamalı yöntem için ayrı kural yok); ortadan yöntemde alet
+yüksekliği düşer, dengeli nişanda eğrilik ve kırılma götürülür. Kanıtlanan: işlem kaydı alan kodunu taşır, noktalar
+datum dönüşümünün alanında 1237'nin çokgeniyle okunur (`cad.crs.transform`, `cad.layers.reproject`, Koordinat
+dönüştür), kaydın `area.extent`'i; Proje ayarları › Koordinat sistemi'nde Kullanım alanı haritası (sistemin alanı dolu,
+dönüşümün alanı kesikli); `cad.survey.adjust`'un kot ağında `leapfrog` (geri ve ileri nişan, k ile; alet yüksekliği
+düşer; çekirdeğin `fieldbook::leapfrog`'u); Kot ağı dengelemesi'nde Atlamalı nivelman tablosu. Bağımsız başvurular
+(adjust 11, transform 1 yeni durum), Python, MCP, masaüstü. Açık: kurulumdan kırılma kestirimi, il sınırları, zamana bağlı
+Helmert (sahip/kurum).
+
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

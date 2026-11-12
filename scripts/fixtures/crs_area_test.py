@@ -11,8 +11,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 EDGE = 1e-9
-POLYGONS = {s: x["rings"] for x in json.loads((ROOT / "fixtures/crs/v1/area-polygons.json").read_text("utf-8"))["extents"]
-            for s in x["srids"]}
+_EXTENTS = json.loads((ROOT / "fixtures/crs/v1/area-polygons.json").read_text("utf-8"))["extents"]
+POLYGONS = {s: x["rings"] for x in _EXTENTS for s in x["srids"]}
+# docs/adr/5300: an EPSG extent's polygon by its code (a datum operation's area).
+EXTENTS = {x["code"]: x["rings"] for x in _EXTENTS}
 
 
 def box_holds(b, lon, lat):
@@ -37,6 +39,11 @@ def rings_hold(rings, x, y):
             if (x - x1 - vx * t) ** 2 + (y - y1 - vy * t) ** 2 <= EDGE * EDGE:
                 return True
     return False
+
+
+def extent_of(code, box):
+    """docs/adr/5300: a datum operation's area: its extent's polygon where carried, else its box."""
+    return ("rings", EXTENTS[code]) if code in EXTENTS else ("box", box)
 
 
 def area_of(srid, box):

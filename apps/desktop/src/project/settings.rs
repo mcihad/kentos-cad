@@ -1333,6 +1333,12 @@ impl App {
                     on_edit: event(Event::EditDefinition(Target::Own)),
                 },
             ),
+            // docs/adr/5300: the system's area of use and the datum transformation's on a small map.
+            {
+                let map = super::area_map::AreaMap::of(s.settings.srid, s.settings.second_srid);
+                (map.area.is_some() || map.operation.is_some())
+                    .then(|| group("Kullanım alanı", super::area_map::view(map)))
+            },
             // The second system and the new projects' default where the program has them (module_surfaces.rs).
             self.shows_cell(crate::module_surfaces::Cell::SecondCrs)
                 .then(|| second_group(s)),

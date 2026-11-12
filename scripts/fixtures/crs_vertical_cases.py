@@ -140,6 +140,9 @@ def helmert_of(code):
 
 
 TURKIYE = ("Türkiye (Turkey) - onshore and offshore.", (25.62, 34.42, 44.83, 43.45))
+# docs/adr/5300: the four operations' usage is EPSG extent 1237 “Turkey” (EPSG's registry, read 12 November 2026); its
+# polygon is the one area-polygons.json carries for TUREF's geographic system.
+TURKIYE_EXTENT = 1237
 for _code in (5261, 1784, 1783, 5260):
     _a = CoordinateOperation.from_epsg(_code).area_of_use
     assert (_a.name, tuple(_a.bounds)) == TURKIYE, (_code, _a)
@@ -239,6 +242,8 @@ def operation(src, dst, keep_height, unit=None):
     if shifts:
         rec["area"] = {"name": TURKIYE[0], "west": TURKIYE[1][0], "south": TURKIYE[1][1], "east": TURKIYE[1][2],
                        "north": TURKIYE[1][3]}
+        if TURKIYE_EXTENT in AT.EXTENTS:
+            rec["area"]["extent"] = TURKIYE_EXTENT
     return rec
 
 
@@ -472,8 +477,9 @@ def area_notes(src, dst, rec, points, out):
     """docs/adr/3700: each transformed point against the source's, the operation's and the target's areas of use."""
     # docs/adr/4900: a registry system's area is its polygon where carried (crs_area_test.py); the operation's a box.
     reg = lambda srid: None if registry_box(srid) is None else AT.area_of(srid, registry_box(srid))  # noqa: E731
-    op = ("box", (rec["area"]["west"], rec["area"]["south"], rec["area"]["east"], rec["area"]["north"])) \
-        if "area" in rec else None
+    # docs/adr/5300: the operation's extent's polygon where carried.
+    op = AT.extent_of(rec["area"].get("extent"), (rec["area"]["west"], rec["area"]["south"], rec["area"]["east"],
+                                                    rec["area"]["north"])) if "area" in rec else None
     boxes = (reg(src), op, reg(dst))
     flagged = []
     for i, (q, p) in enumerate(zip(points, out)):
@@ -546,6 +552,11 @@ def cases():
     plovdiv = place(32635, 42.1354, 24.7453)
     out.append(case("Nokta datum dönüşümünün kullanım alanının dışında: WGS 84 / UTM 35N'de Filibe TUREF'e (hedefin de)",
                     transformed([pt(*plovdiv)], frm={"srid": 32635}, to={"srid": 5252})))
+    # docs/adr/5300: Burgas (Bulgaria) is in the datum operations' box but not in their extent's polygon.
+    burgas = place(32635, 42.5, 27.47)
+    assert AT.box_holds(TURKIYE[1], 27.47, 42.5) and not AT.holds(AT.extent_of(TURKIYE_EXTENT, TURKIYE[1]), 27.47, 42.5)
+    out.append(case("Nokta datum dönüşümünün kullanım alanı çokgeninin dışında: WGS 84 / UTM 35N'de Burgaz (kutunun "
+                    "içinde) TUREF'e", transformed([pt(*burgas)], frm={"srid": 32635}, to={"srid": 5252})))
     # docs/adr/4900: TUREF / TM30's extent is its land; the Sea of Marmara is in its box but not in its polygon.
     marmara = place(5254, 40.75, 28.9)
     assert AT.box_holds(registry_box(5254), 28.9, 40.75) and not AT.holds(AT.area_of(5254, registry_box(5254)), 28.9, 40.75)

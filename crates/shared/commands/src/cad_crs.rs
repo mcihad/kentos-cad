@@ -203,6 +203,11 @@ pub struct AreaOfUse {
     pub east: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
     pub north: f64,
+    /// docs/adr/5300: the EPSG extent whose polygon a point is read against (the box: approximate, for selecting).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub extent: Option<u32>,
 }
 
 /// How heights went: not at all (none given, or neither side says what they are), the same vertical reference,

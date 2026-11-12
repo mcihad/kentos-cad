@@ -222,10 +222,10 @@ pub(crate) fn preview(
     let settings = doc.settings();
     let areas = Areas {
         source: kentos_project::crs::area(from).map(Region::Area),
+        // docs/adr/5300: the operation's extent's polygon where carried.
         operation: core::operation::operation(&mover.source, &mover.project, &mover.choices, false)
             .ok()
-            .and_then(|o| o.area)
-            .map(|(_, b)| Region::Box(b)),
+            .and_then(|o| kentos_project::crs::operation_region(&o)),
         project: kentos_project::crs::area(settings.srid).map(Region::Area),
     };
     let mut changes = Vec::new();

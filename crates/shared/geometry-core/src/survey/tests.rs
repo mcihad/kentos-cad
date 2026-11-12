@@ -733,3 +733,25 @@ fn back_sights_are_refused_as_their_rules_say() {
     );
     assert!(said(vec![sight(100.0, f64::NAN), None]).starts_with("1. kenarın geri nişandaki işaret yüksekliği"));
 }
+
+/// docs/adr/5300: a leap-frog setup with its two sights alike but for the zenith's side: the curvature falls out with
+/// k, the difference is the two vertical components'; a sight without length is refused.
+#[test]
+fn a_leapfrog_setup_s_difference_is_fore_less_back() {
+    use super::fieldbook::{Sight, leapfrog};
+    let back = Sight { slope: 50.0, zenith: 98.0, target: 1.5 };
+    let fore = Sight { slope: 50.0, zenith: 102.0, target: 1.5 };
+    let (dh, length) = leapfrog(back, fore, Unit::GRAD, 0.13).expect("a setup");
+    let a = 2.0 * std::f64::consts::PI / 400.0 * 2.0;
+    assert!((dh + 2.0 * 50.0 * a.sin()).abs() < 1e-12, "{dh}");
+    assert!((length - 100.0 * a.cos()).abs() < 1e-12, "{length}");
+    let (dh0, _) = leapfrog(back, fore, Unit::GRAD, 0.0).expect("a setup");
+    assert!((dh - dh0).abs() < 1e-12, "equal distances: k falls out");
+    // Unequal: the curvature of the longer stays.
+    let far = Sight { slope: 300.0, ..fore };
+    let (d1, _) = leapfrog(back, far, Unit::GRAD, 0.13).expect("a setup");
+    let (d2, _) = leapfrog(back, far, Unit::GRAD, 0.0).expect("a setup");
+    assert!(d2 > d1, "k lowers the curvature's term");
+    assert!(leapfrog(Sight { slope: 0.0, ..back }, fore, Unit::GRAD, 0.13).expect_err("no length").starts_with("Geri"));
+    assert!(leapfrog(back, Sight { zenith: 200.0, ..fore }, Unit::GRAD, 0.13).expect_err("down").starts_with("İleri"));
+}

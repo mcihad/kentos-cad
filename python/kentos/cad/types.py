@@ -13909,6 +13909,36 @@ class AdjustKnownPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AdjustLeapfrog(_Model):
+    """A leap-frog setup (atlamalı trigonometrik nivelman, docs/adr/5300): the instrument set up between two points, on
+    neither, sighting `from` back and `to` forward. The height difference from `from` to `to` is the fore sight's less
+    the back sight's, each `S·cos z + (1 − k)·D²/2R − t` (D = S·sin z, the project's k, R 6 371 000 m): the instrument's
+    height falls out. Its length is the two horizontal distances' sum.
+    """
+    from_: str
+    to: str
+    back: AdjustSight
+    fore: AdjustSight
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["back"] = self.back.to_json()
+        out["fore"] = self.fore.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustLeapfrog:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            back=AdjustSight.from_json(data["back"]),
+            fore=AdjustSight.from_json(data["fore"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AdjustObservation(_Model):
     """An observation of a horizontal network: from the station to the target, a direction reading in the input's angle
     unit, a horizontal distance (m), either or both.
@@ -13938,6 +13968,35 @@ class AdjustObservation(_Model):
             target=data["target"],
             direction=UNSET if "direction" not in data else None if data["direction"] is None else float(data["direction"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustSight(_Model):
+    """One sight of a leap-frog setup (docs/adr/5300): the slope distance (m), the zenith angle (the adjustment's angle
+    unit, 0 straight up) and the target's height (m).
+    Attributes:
+        distance: Unit: m.
+        zenith: Unit: survey-angle.
+        target: Unit: m.
+    """
+    distance: float
+    zenith: float
+    target: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["zenith"] = float(self.zenith)
+        out["target"] = float(self.target)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustSight:
+        return cls(
+            distance=float(data["distance"]),
+            zenith=float(data["zenith"]),
+            target=float(data["target"]),
         )
 
 
@@ -17006,12 +17065,14 @@ class AreaOfUse(_Model):
         south: Unit: deg.
         east: Unit: deg.
         north: Unit: deg.
+        extent: docs/adr/5300: the EPSG extent whose polygon a point is read against (the box: approximate, for selecting). Unit: 1.
     """
     name: str
     west: float
     south: float
     east: float
     north: float
+    extent: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17020,6 +17081,8 @@ class AreaOfUse(_Model):
         out["south"] = float(self.south)
         out["east"] = float(self.east)
         out["north"] = float(self.north)
+        if self.extent is not UNSET:
+            out["extent"] = self.extent
         return out
 
     @classmethod
@@ -17030,6 +17093,7 @@ class AreaOfUse(_Model):
             south=float(data["south"]),
             east=float(data["east"]),
             north=float(data["north"]),
+            extent=data.get("extent", UNSET),
         )
 
 
@@ -102455,6 +102519,7 @@ class SurveyAdjusted(_Model):
         f: The degrees of freedom, the a posteriori standard deviation of unit weight and the model test (none without
             redundancy). Unit: count.
         kept: Docs/adr/5200: the name the adjustment was kept under.
+        leapfrog: Kot ağı (docs/adr/5300): each leap-frog setup's height difference and length, as the adjustment took them.
         m0: Unit: 1.
     """
     points: list[SurveyAdjustedPoint]
@@ -102465,6 +102530,7 @@ class SurveyAdjusted(_Model):
     f: int
     revision: str
     kept: str | None | Unset = UNSET
+    leapfrog: list[AdjustDifference] | Unset = UNSET
     m0: float | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
 
@@ -102479,6 +102545,8 @@ class SurveyAdjusted(_Model):
         out["revision"] = self.revision
         if self.kept is not UNSET:
             out["kept"] = self.kept
+        if self.leapfrog is not UNSET:
+            out["leapfrog"] = [e0.to_json() for e0 in self.leapfrog]
         if self.m0 is not UNSET:
             out["m0"] = None if self.m0 is None else float(self.m0)
         if self.passed is not UNSET:
@@ -102496,6 +102564,7 @@ class SurveyAdjusted(_Model):
             f=data["f"],
             revision=data["revision"],
             kept=data.get("kept", UNSET),
+            leapfrog=[AdjustDifference.from_json(e0) for e0 in data["leapfrog"]] if "leapfrog" in data else UNSET,
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             passed=data.get("passed", UNSET),
         )
@@ -118494,16 +118563,22 @@ class HorizontalAdjustWork(AdjustWork):
 
 @dataclass(kw_only=True, slots=True)
 class LevelAdjustWork(AdjustWork):
-    """Kot ağı dengelemesi: height differences."""
+    """Kot ağı dengelemesi: height differences.
+    Attributes:
+        leapfrog: Leap-frog setups (docs/adr/5300), each a height difference after `rows`.
+    """
     TAG_VALUE: ClassVar[str] = "level"
     known: list[AdjustKnownHeight]
     rows: list[AdjustDifference]
+    leapfrog: list[AdjustLeapfrog] | Unset = UNSET
     method: LevelMethod | LevelMethodName = LevelMethod.GEOMETRIC
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "level"}
         out["known"] = [e0.to_json() for e0 in self.known]
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.leapfrog is not UNSET:
+            out["leapfrog"] = [e0.to_json() for e0 in self.leapfrog]
         out["method"] = _enum_out(self.method)
         return out
 
@@ -118512,6 +118587,7 @@ class LevelAdjustWork(AdjustWork):
         return cls(
             known=[AdjustKnownHeight.from_json(e0) for e0 in data["known"]],
             rows=[AdjustDifference.from_json(e0) for e0 in data["rows"]],
+            leapfrog=[AdjustLeapfrog.from_json(e0) for e0 in data["leapfrog"]] if "leapfrog" in data else UNSET,
             method=_enum_in(LevelMethod, data["method"]) if "method" in data else LevelMethod.GEOMETRIC,
         )
 
@@ -139601,8 +139677,10 @@ __all__ = [
     "AdjustDifference",
     "AdjustKnownHeight",
     "AdjustKnownPoint",
+    "AdjustLeapfrog",
     "AdjustMapSurveyOperation",
     "AdjustObservation",
+    "AdjustSight",
     "AdjustWork",
     "AdjustedGnssStation",
     "AdoptMaterialsOperation",

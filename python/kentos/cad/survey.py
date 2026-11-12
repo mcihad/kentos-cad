@@ -45,6 +45,11 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
     aynı adlı noktalara kotlarını, köşelerine ve Z (m)'lerine de yazar, çizimde
     olmayanları söyler. Çıktı yeni noktaların yerleri ya da kotları ve standart
     sapmaları, serbestlik, m0 ve model testi. Tek geri alma adımı, pencerenin adıyla.
+    Kot ağında leapfrog (atlamalı trigonometrik nivelman, yalnız method trigonometric):
+    alet iki noktanın arasında; her kurulumun geri ve ileri nişanı (eğik uzunluk, başucu
+    açısı, işaret yüksekliği); kot farkı ileri nişanın S·cos z + (1 − k)·D²/2R −
+    t'sinden geri nişanınki (projenin k'sı, alet yüksekliği düşer), uzunluğu iki yatay
+    uzunluğun toplamı; kot farklarının ardından dengelenir, çıktının leapfrog'u.
     """
     __slots__ = ()
     id = "cad.survey.adjust"
@@ -77,7 +82,12 @@ class _SurveyAdjust(LocalCommand[SurveyAdjust, SurveyAdjusted, EntitiesEditPlan]
         olmayanları layerId'ye Ağ noktası olarak ekler; kot ağı aynı adlı noktalara
         kotlarını, köşelerine ve Z (m)'lerine de yazar, çizimde olmayanları söyler. Çıktı
         yeni noktaların yerleri ya da kotları ve standart sapmaları, serbestlik, m0 ve model
-        testi. Tek geri alma adımı, pencerenin adıyla.
+        testi. Tek geri alma adımı, pencerenin adıyla. Kot ağında leapfrog (atlamalı
+        trigonometrik nivelman, yalnız method trigonometric): alet iki noktanın arasında;
+        her kurulumun geri ve ileri nişanı (eğik uzunluk, başucu açısı, işaret yüksekliği);
+        kot farkı ileri nişanın S·cos z + (1 − k)·D²/2R − t'sinden geri nişanınki (projenin
+        k'sı, alet yüksekliği düşer), uzunluğu iki yatay uzunluğun toplamı; kot farklarının
+        ardından dengelenir, çıktının leapfrog'u.
 
         Args:
             doc: The drawing it works on.

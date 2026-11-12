@@ -224,6 +224,21 @@ pub fn areas() -> &'static [AreaOfUse] {
     })
 }
 
+/// docs/adr/5300: the area of an EPSG extent whose polygon is carried (a registry system's area of that extent).
+pub fn extent_area(code: u32) -> Option<&'static AreaOfUse> {
+    areas().iter().find(|a| a.extent == Some(code))
+}
+
+/// docs/adr/5300: the region a datum operation's points are read against: its extent's polygon where carried, else
+/// its box; none for an operation without an area (the datum stays).
+pub fn operation_region(op: &kentos_geometry_core::crs::operation::Operation) -> Option<Region> {
+    match (op.extent.and_then(extent_area), op.area) {
+        (Some(a), _) => Some(Region::Area(a)),
+        (None, Some((_, b))) => Some(Region::Box(b)),
+        (None, None) => None,
+    }
+}
+
 /// EPSG's area of use of a registry system; none for the local system and a code the registry does not hold.
 pub fn area(srid: u32) -> Option<&'static AreaOfUse> {
     areas().iter().find(|a| a.srid == srid)
@@ -384,6 +399,23 @@ mod tests {
         assert!(tm30.holds_near(29.5, 39.5), "Kütahya's plain");
         // A band whose polygon is its box carries none.
         assert!(area(32636).expect("UTM 36N").polygon.is_empty());
+    }
+
+    /// docs/adr/5300: the datum operations' area is extent 1237's polygon: Burgas is in their box, not in it.
+    #[test]
+    fn a_datum_operation_reads_its_extent_s_polygon() {
+        let ed50 = system(23035).and_then(System::transform_system).expect("ED50 / UTM 35N");
+        let turef = system(5252).and_then(System::transform_system).expect("TUREF");
+        let op = kentos_geometry_core::crs::operation::operation(&ed50, &turef, &[], false).expect("a way");
+        let region = operation_region(&op).expect("an area");
+        assert!(matches!(region, Region::Area(a) if a.extent == Some(1237)));
+        assert!(box_holds(op.area.expect("a box").1, 27.47, 42.5), "Burgas is in the box");
+        assert!(!region.holds_near(27.47, 42.5), "not in the polygon");
+        assert!(region.holds_near(32.86, 39.93), "Ankara");
+        // The same datum: no operation's area.
+        let tm30 = system(5254).and_then(System::transform_system).expect("TM30");
+        let same = kentos_geometry_core::crs::operation::operation(&tm30, &turef, &[], false).expect("a way");
+        assert!(operation_region(&same).is_none());
     }
 
     /// Every registry system but the local one has EPSG's area of use (docs/adr/2500 §3); the boxes hold their own

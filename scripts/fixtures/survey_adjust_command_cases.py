@@ -18,12 +18,32 @@ command's contract:
   vertices on it the same, a `Z (m)` it has the height in three decimals, and says the names it has not;
 - one undo step named after the window; nothing to write writes nothing;
 - the refusals in the contract's order, the adjustment's in the reference's words.
+
+ADR 5300 adds leap-frog setups (atlamalı trigonometrik nivelman): each a height difference from the back point to the
+fore point, the fore sight's `S·cos z + (1 − k)·(S·sin z)²/2R − t` less the back sight's (the project's k, 0.13 when it
+names none; R 6 371 000 m), its length the two horizontal distances' sum, worked out here with mpmath at 50 digits and
+adjusted by the reference's own levelling (network_adjust_cases.levelling). So this script needs mpmath:
+
+    uv run --no-project --python 3.11 --with mpmath python3 scripts/fixtures/survey_adjust_command_cases.py
 """
+import importlib.util
 import json
 import sys
 from pathlib import Path
 
+import mpmath as mp
+
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load(name):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).with_name(f"{name}.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+NA = _load("network_adjust_cases")
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.survey.adjust.json"
 REFERENCE = json.loads((ROOT / "fixtures" / "network-adjust" / "v1" / "cases.json").read_text(encoding="utf-8"))
 WITHIN = 1e-6
@@ -304,6 +324,115 @@ def refusal(name, step_input, result, non_finite=None, before=None, note=None):
     return c
 
 
+# ── Leap-frog setups (ADR 5300) ──────────────────────────────────────────────────────────────────────────────────
+
+mp.mp.dps = 50
+K = mp.mpf("0.13")
+R = mp.mpf(6371000)
+# Three setups from R1 to R2 through N1 and N2: each (from, to, back (S, z, t), fore (S, z, t)), zeniths in grad.
+SETUPS = [
+    ("R1", "N1", (62.415, 101.2345, 1.5), (58.902, 97.1234, 1.5)),
+    ("N1", "N2", (71.31, 98.7654, 1.7), (69.88, 102.4321, 1.7)),
+    ("N2", "R2", (55.12, 100.9876, 1.5), (61.045, 105.1191, 1.6)),
+]
+
+
+def num_words(x):
+    t = repr(float(x))
+    return t[:-2] if t.endswith(".0") else t
+
+
+def leap(back, fore, full=400):
+    """A setup's (dh, length) with mpmath: each sight S·cos z + (1 − k)·D²/2R − t, D = S·sin z."""
+    parts = []
+    for slope, zenith, target in (back, fore):
+        z = mp.mpf(zenith) * 2 * mp.pi / full
+        d = mp.mpf(slope) * mp.sin(z)
+        parts.append((mp.mpf(slope) * mp.cos(z) + (1 - K) * d * d / (2 * R) - mp.mpf(target), d))
+    return parts[1][0] - parts[0][0], parts[0][1] + parts[1][1]
+
+
+def sight(s):
+    return {"distance": s[0], "zenith": s[1], "target": s[2]}
+
+
+def wire_setup(f, t, b, fo, scale=1.0):
+    return {"from": f, "to": t, "back": sight((b[0], b[1] * scale, b[2])), "fore": sight((fo[0], fo[1] * scale, fo[2]))}
+
+
+def leap_case(name, setups, rows=(), unit=None, note=None):
+    """R1 and R2 known by their names (the drawing's heights); the setups' differences after `rows`."""
+    full = 360 if unit == "deg" else 400
+    scale = 0.9 if unit == "deg" else 1.0
+    made = []
+    for f, t, b, fo in setups:
+        dh, length = leap((b[0], b[1] * scale, b[2]), (fo[0], fo[1] * scale, fo[2]), full)
+        made.append({"from": f, "to": t, "dh": float(dh), "length": float(length)})
+    known = [{"name": n, "h": next(e["z"] for e in ENTITIES if e.get("label") == n)} for n in ("R1", "R2")]
+    case = {"kind": "level", "levelKind": "trigonometric", "known": known, "rows": list(rows) + made,
+            "sigma": REFERENCE["defaults"]}
+    case["expect"] = NA.levelling(case)
+    case["expect"] = json.loads(json.dumps(case["expect"], default=float))
+    case["rows"] = list(rows)
+    c = level_case(name, case, by_name=True, note=note)
+    work = c["steps"][0]["input"]["work"]
+    work["leapfrog"] = [wire_setup(f, t, b, fo, scale) for f, t, b, fo in setups]
+    if not rows:
+        work["rows"] = []
+    if unit:
+        c["steps"][0]["input"]["unit"] = unit
+    c["steps"][0]["result"]["output"]["leapfrog"] = made
+    return c
+
+
+def leap_refusal(name, setups, result, non_finite=None, method="trigonometric", unit=None):
+    work = {"kind": "level", "method": method, "known": [{"name": "R1"}, {"name": "R2"}], "rows": [],
+            "leapfrog": setups}
+    step_input = {"work": work}
+    if unit:
+        step_input["unit"] = unit
+    return refusal(name, step_input, result, non_finite)
+
+
+def leap_cases():
+    wired = [wire_setup(*x) for x in SETUPS]
+    bent = lambda i, side, field, v: [  # noqa: E731
+        {**w, side: {**w[side], field: v}} if k == i else w for k, w in enumerate(wired)]
+    # A direct difference from R1 to N2 beside the first two setups (the reference's own row).
+    direct = {"from": "R1", "to": "N2", "dh": -0.6789, "length": 260.0}
+    return [
+        leap_case("Atlamalı nivelman: iki reper arasında üç kurulum; N1 ve N2 kotlarını alır", SETUPS,
+                  note="Alet noktaların üstünde değil: her kurulumun kot farkı ileri nişanınkinden geri nişanınki "
+                       "çıkarılarak, alet yüksekliği düşer; uzunluk iki yatay uzunluğun toplamı."),
+        leap_case("Atlamalı kurulumlar kot farklarıyla birlikte dengelenir", SETUPS[:2], rows=[direct]),
+        leap_case("Atlamalı nivelman derece birimiyle (unit deg): aynı kurulumlar, aynı kotlar", SETUPS, unit="deg"),
+        leap_refusal("Atlamalı kurulumun geri eğik uzunluğu sonlu değil", wired,
+                     refused("not_finite", "Eğik uzunluk sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı "
+                             "verin.", "work.leapfrog[0].back.distance"), {"work.leapfrog[0].back.distance": "NaN"}),
+        leap_refusal("Atlamalı kurulumun ileri başucu açısı sonlu değil", wired,
+                     refused("not_finite", "Başucu açısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı "
+                             "verin.", "work.leapfrog[1].fore.zenith"), {"work.leapfrog[1].fore.zenith": "Infinity"}),
+        leap_refusal("Atlamalı kurulumun işaret yüksekliği sonlu değil", wired,
+                     refused("not_finite", "İşaret yüksekliği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir "
+                             "sayı verin.", "work.leapfrog[2].back.target"), {"work.leapfrog[2].back.target": "NaN"}),
+        leap_refusal("Atlamalı kurulumun geri eğik uzunluğu sıfır", bent(0, "back", "distance", 0.0),
+                     refused("survey_refused", "Geri nişanın eğik uzunluğu 0: sıfırdan büyük olmalı.",
+                             "work.leapfrog[0]")),
+        leap_refusal("Atlamalı kurulumun ileri başucu açısı tam aşağı (200 grad)", bent(1, "fore", "zenith", 200.0),
+                     refused("survey_refused", "İleri nişanın başucu açısı 200: 0 ile 200 arasında olmalı (0 tam "
+                             "yukarı).", "work.leapfrog[1]")),
+        leap_refusal("Atlamalı kurulumun geri başucu açısı eksi", bent(2, "back", "zenith", -5.0),
+                     refused("survey_refused", "Geri nişanın başucu açısı -5: 0 ile 200 arasında olmalı (0 tam "
+                             "yukarı).", "work.leapfrog[2]")),
+        leap_refusal("Derece biriminde başucu açısı 180", bent(0, "fore", "zenith", 180.0),
+                     refused("survey_refused", "İleri nişanın başucu açısı 180: 0 ile 180 arasında olmalı (0 tam "
+                             "yukarı).", "work.leapfrog[0]"), unit="deg"),
+        leap_refusal("Geometrik nivelmanda atlamalı kurulum", wired,
+                     refused("invalid_input", "Atlamalı kurulumların kot farkı trigonometriktir; method trigonometric "
+                             "verin.", "work.method"), method="geometric"),
+    ]
+
+
 def build_cases():
     quad = reference("Çaprazlı dörtgen")
     weighted = reference("Ağırlıklı kontrol")
@@ -413,7 +542,7 @@ def build_cases():
                                                        "keep": "  "},
                          refused("invalid_input", "Dengeleme kaydının adı boş olmaz; en çok 120 karakterdir, denetim "
                                  "karakteri taşımaz.", "keep")))
-    return cases + kept_cases
+    return cases + kept_cases + leap_cases()
 
 
 def compact(v):

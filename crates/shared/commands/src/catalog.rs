@@ -14861,7 +14861,11 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       üzerlerindeki çizgi, çoklu çizgi ve alan köşeleriyle dengelenmiş yerlerine taşır, olmayanları \
                       layerId'ye Ağ noktası olarak ekler; kot ağı aynı adlı noktalara kotlarını, köşelerine ve Z (m)'lerine \
                       de yazar, çizimde olmayanları söyler. Çıktı yeni noktaların yerleri ya da kotları ve standart \
-                      sapmaları, serbestlik, m0 ve model testi. Tek geri alma adımı, pencerenin adıyla."
+                      sapmaları, serbestlik, m0 ve model testi. Tek geri alma adımı, pencerenin adıyla. \
+                      Kot ağında leapfrog (atlamalı trigonometrik nivelman, yalnız method trigonometric): alet iki noktanın \
+                      arasında; her kurulumun geri ve ileri nişanı (eğik uzunluk, başucu açısı, işaret yüksekliği); kot farkı \
+                      ileri nişanın S·cos z + (1 − k)·D²/2R − t'sinden geri nişanınki (projenin k'sı, alet yüksekliği düşer), \
+                      uzunluğu iki yatay uzunluğun toplamı; kot farklarının ardından dengelenir, çıktının leapfrog'u."
                 .into(),
             aliases: vec!["ag-dengelemesi".into(), "adjust".into()],
             effect: CommandEffect::Document,
@@ -15254,7 +15258,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  \
                       Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  \
                       Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  \
-                      Zincir (chain): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar: her dönüştürülen nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak sistemin ve datum dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin alanı vardığı yerde; kenara 10⁻⁹° yakın kenardadır); dışında kalan flagged'de sırası ve notlarıyla (outside_source_area, outside_operation_area, outside_target_area) söylenir, yine dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir."
+                      Zincir (chain): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar: her dönüştürülen nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak sistemin ve datum dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin alanı vardığı yerde; kenara 10⁻⁹° yakın kenardadır; datum dönüşümünün alanı EPSG alanının çokgenidir, kaydın area.extent'i); dışında kalan flagged'de sırası ve notlarıyla (outside_source_area, outside_operation_area, outside_target_area) söylenir, yine dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["koordinat-donustur".into(), "cs2cs".into()],
             effect: CommandEffect::Query,

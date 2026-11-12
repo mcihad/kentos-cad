@@ -295,15 +295,16 @@ def area(srid):
 
 
 def operation_area(src):
-    """The box of the datum transformation's EPSG operations from `src` into the project's system (all of the path's
-    operations', which agree); none when the datum stays."""
+    """The area of the datum transformation's EPSG operations from `src` into the project's system (all of the path's
+    operations', which agree; their extent's polygon, docs/adr/5300); none when the datum stays."""
     a, b = ct.datum(REGISTRY[src]), ct.datum(REGISTRY[PROJECT])
     if a == b:
         return None
     codes = [int(c.strip().split(":")[1]) for c in ct.PATHS[frozenset([a, b])][2].split("+")]
     boxes = {tuple(CoordinateOperation.from_epsg(c).area_of_use.bounds) for c in codes}
     assert len(boxes) == 1, (src, boxes)
-    return boxes.pop()
+    # docs/adr/5300: the operations' extent (1237, EPSG's registry) is read by its polygon where carried.
+    return AT.extent_of(1237, boxes.pop())
 
 
 def lonlat(srid, x, y):

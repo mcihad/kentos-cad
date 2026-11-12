@@ -238,7 +238,8 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
     zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar: her dönüştürülen
     nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak sistemin ve datum
     dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin alanı vardığı yerde;
-    kenara 10⁻⁹° yakın kenardadır); dışında kalan flagged'de sırası ve notlarıyla
+    kenara 10⁻⁹° yakın kenardadır; datum dönüşümünün alanı EPSG alanının çokgenidir,
+    kaydın area.extent'i); dışında kalan flagged'de sırası ve notlarıyla
     (outside_source_area, outside_operation_area, outside_target_area) söylenir, yine
     dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu KentOS'un çözdüğü
     sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir.
@@ -295,7 +296,8 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         zincir hassas dönüşüm değildir (chain_limited). Nokta başına karar: her dönüştürülen
         nokta EPSG'nin kullanım alanlarına karşı okunur (kaynak sistemin ve datum
         dönüşümünün alanı noktanın kaynaktaki yerinde, hedef sistemin alanı vardığı yerde;
-        kenara 10⁻⁹° yakın kenardadır); dışında kalan flagged'de sırası ve notlarıyla
+        kenara 10⁻⁹° yakın kenardadır; datum dönüşümünün alanı EPSG alanının çokgenidir,
+        kaydın area.extent'i); dışında kalan flagged'de sırası ve notlarıyla
         (outside_source_area, outside_operation_area, outside_target_area) söylenir, yine
         dönüştürülür, outside_area uyarısı sayar. Projenin kayıtlı kodu KentOS'un çözdüğü
         sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir.

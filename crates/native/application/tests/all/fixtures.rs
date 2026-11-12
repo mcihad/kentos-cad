@@ -2324,6 +2324,22 @@ impl Input for kentos_commands::SurveyAdjust {
                 known.get_mut(i)?.at.as_mut().map(|a| &mut a.x)
             }
             (W::Level { rows, .. }, "rows", "dh") => Some(&mut rows.get_mut(i)?.dh),
+            // docs/adr/5300: a leap-frog setup's sight.
+            (W::Level { leapfrog, .. }, "leapfrog", f) => {
+                let setup = leapfrog.get_mut(i)?;
+                let (side, what) = f.split_once('.')?;
+                let s = match side {
+                    "back" => &mut setup.back,
+                    "fore" => &mut setup.fore,
+                    _ => return None,
+                };
+                match what {
+                    "distance" => Some(&mut s.distance),
+                    "zenith" => Some(&mut s.zenith),
+                    "target" => Some(&mut s.target),
+                    _ => None,
+                }
+            }
             _ => None,
         }
     }

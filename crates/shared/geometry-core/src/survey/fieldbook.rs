@@ -24,6 +24,39 @@ pub fn curvature(horizontal: f64, k: f64) -> f64 {
     (1.0 - k) * horizontal * horizontal / (2.0 * EARTH_RADIUS)
 }
 
+/// One sight of a leap-frog setup (docs/adr/5300): the slope distance (m), the zenith angle (in the unit) and the
+/// target's height (m).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Sight {
+    pub slope: f64,
+    pub zenith: f64,
+    pub target: f64,
+}
+
+/// A leap-frog setup's height difference from the back point to the fore point and its length (the two horizontal
+/// distances), atlamalı trigonometrik nivelman (docs/adr/5300): each sight's `S·cos z + (1 − k)·D²/2R − t` with
+/// D = S·sin z, the fore's less the back's; the instrument's height falls out. A sight whose distance is not above
+/// zero or whose zenith angle is not strictly between straight up and straight down is refused, the side said.
+pub fn leapfrog(back: Sight, fore: Sight, unit: Unit, k: f64) -> Result<(f64, f64), String> {
+    let mut parts = [(0.0, 0.0); 2];
+    for (n, (side, s)) in [("Geri", back), ("İleri", fore)].into_iter().enumerate() {
+        if !(s.slope > 0.0) {
+            return Err(format!("{side} nişanın eğik uzunluğu {}: sıfırdan büyük olmalı.", s.slope));
+        }
+        if !(s.zenith > 0.0 && s.zenith < unit.full() / 2.0) {
+            return Err(format!(
+                "{side} nişanın başucu açısı {}: 0 ile {} arasında olmalı (0 tam yukarı).",
+                s.zenith,
+                unit.full() / 2.0
+            ));
+        }
+        let z = unit.rad(s.zenith);
+        let d = s.slope * sin(z);
+        parts[n] = (s.slope * cos(z) + curvature(d, k) - s.target, d);
+    }
+    Ok((parts[1].0 - parts[0].0, parts[0].1 + parts[1].1))
+}
+
 /// An observation as the instrument wrote it: the target, the horizontal
 /// reading, the zenith angle (0 straight up; none: a direction only), the
 /// slope distance, the target (reflector) height, a code, and the line of

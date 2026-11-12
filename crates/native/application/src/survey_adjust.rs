@@ -116,7 +116,7 @@ fn numbers(work: &AdjustWork) -> Result<(), Stop> {
                 }
             }
         }
-        AdjustWork::Level { known, rows, .. } => {
+        AdjustWork::Level { known, rows, leapfrog, .. } => {
             for (i, k) in known.iter().enumerate() {
                 if let Some(h) = k.h {
                     finite(h, "Bilinen kot", format!("work.known[{i}].h"))?;
@@ -128,6 +128,14 @@ fn numbers(work: &AdjustWork) -> Result<(), Stop> {
             for (i, r) in rows.iter().enumerate() {
                 finite(r.dh, "Kot farkı", format!("work.rows[{i}].dh"))?;
                 finite(r.length, "Uzunluk", format!("work.rows[{i}].length"))?;
+            }
+            // docs/adr/5300: the leap-frog setups' sights.
+            for (i, r) in leapfrog.iter().enumerate() {
+                for (side, s) in [("back", &r.back), ("fore", &r.fore)] {
+                    finite(s.distance, "Eğik uzunluk", format!("work.leapfrog[{i}].{side}.distance"))?;
+                    finite(s.zenith, "Başucu açısı", format!("work.leapfrog[{i}].{side}.zenith"))?;
+                    finite(s.target, "İşaret yüksekliği", format!("work.leapfrog[{i}].{side}.target"))?;
+                }
             }
         }
     }
@@ -150,6 +158,8 @@ struct Adjusted {
     changes: Vec<Change>,
     adds: Vec<NewPoint>,
     absent: Vec<String>,
+    /// docs/adr/5300: the leap-frog setups' differences.
+    leapfrog: Vec<kentos_commands::AdjustDifference>,
     f: u32,
     m0: Option<f64>,
     passed: Option<bool>,
@@ -275,6 +285,7 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                 changes,
                 adds,
                 absent: Vec::new(),
+                leapfrog: Vec::new(),
                 f: result.f as u32,
                 m0: result.m0,
                 passed: result.passed,
@@ -284,6 +295,7 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
             method,
             known,
             rows,
+            leapfrog,
         } => {
             let mut given = Vec::with_capacity(known.len());
             for (i, k) in known.iter().enumerate() {
@@ -309,6 +321,34 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                     sigma: k.sigma,
                 });
             }
+            // docs/adr/5300: each leap-frog setup a height difference after the rows, the project's k.
+            let unit = match input.unit.unwrap_or(doc.settings().angle_unit) {
+                AngleUnit::Grad => kentos_geometry_core::survey::Unit::GRAD,
+                AngleUnit::Deg => kentos_geometry_core::survey::Unit::DEG,
+            };
+            if !leapfrog.is_empty() && *method != LevelMethod::Trigonometric {
+                return Err(refuse(
+                    codes::INVALID_INPUT,
+                    "Atlamalı kurulumların kot farkı trigonometriktir; method trigonometric verin.",
+                    "work.method",
+                ));
+            }
+            let mut setups = Vec::with_capacity(leapfrog.len());
+            for (i, r) in leapfrog.iter().enumerate() {
+                let sight = |s: &kentos_commands::AdjustSight| kentos_geometry_core::survey::fieldbook::Sight {
+                    slope: s.distance,
+                    zenith: s.zenith,
+                    target: s.target,
+                };
+                let (dh, length) = kentos_geometry_core::survey::fieldbook::leapfrog(
+                    sight(&r.back),
+                    sight(&r.fore),
+                    unit,
+                    doc.settings().refraction(),
+                )
+                .map_err(|e| refuse(codes::SURVEY_REFUSED, e, &format!("work.leapfrog[{i}]")))?;
+                setups.push(kentos_commands::AdjustDifference { from: r.from.clone(), to: r.to.clone(), dh, length });
+            }
             let network = LevelInput {
                 kind: match method {
                     LevelMethod::Geometric => "geometric",
@@ -327,6 +367,13 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                         length: r.length,
                         line: Some(i + 1),
                     })
+                    .chain(setups.iter().enumerate().map(|(i, r)| LevelRow {
+                        from: r.from.clone(),
+                        to: r.to.clone(),
+                        dh: r.dh,
+                        length: r.length,
+                        line: Some(rows.len() + i + 1),
+                    }))
                     .collect(),
             };
             let result = levelling::adjust(&network)
@@ -365,6 +412,7 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                 changes,
                 adds: Vec::new(),
                 absent,
+                leapfrog: setups,
                 f: result.f as u32,
                 m0: result.m0,
                 passed: result.passed,
@@ -696,6 +744,7 @@ fn write_execute(
             created,
             ids,
             absent: a.absent,
+            leapfrog: a.leapfrog,
             f: a.f,
             m0: a.m0,
             passed: a.passed,

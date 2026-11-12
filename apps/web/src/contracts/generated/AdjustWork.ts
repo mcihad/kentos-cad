@@ -2,10 +2,15 @@
 import type { AdjustDifference } from "./AdjustDifference";
 import type { AdjustKnownHeight } from "./AdjustKnownHeight";
 import type { AdjustKnownPoint } from "./AdjustKnownPoint";
+import type { AdjustLeapfrog } from "./AdjustLeapfrog";
 import type { AdjustObservation } from "./AdjustObservation";
 import type { LevelMethod } from "./LevelMethod";
 
 /**
  * The network.
  */
-export type AdjustWork = { "kind": "horizontal", known: Array<AdjustKnownPoint>, rows: Array<AdjustObservation>, } | { "kind": "level", method: LevelMethod, known: Array<AdjustKnownHeight>, rows: Array<AdjustDifference>, };
+export type AdjustWork = { "kind": "horizontal", known: Array<AdjustKnownPoint>, rows: Array<AdjustObservation>, } | { "kind": "level", method: LevelMethod, known: Array<AdjustKnownHeight>, rows: Array<AdjustDifference>, 
+/**
+ * Leap-frog setups (docs/adr/5300), each a height difference after `rows`.
+ */
+leapfrog?: Array<AdjustLeapfrog>, };

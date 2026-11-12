@@ -36,7 +36,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 /// The areas a transformed point is read against (docs/adr/3700, the rule of a layer's objects in docs/adr/2500 §3):
 /// EPSG's areas of use of the source system and of the target system (their polygons where the registry carries them,
 /// docs/adr/4900), the datum transformation's operation's box; none where not known (a definition of the project's
-/// own, the same datum).
+/// own, the same datum); docs/adr/5300: the operation's extent's polygon where carried.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PointAreas {
     pub source: Option<kentos_project::crs::Region>,
@@ -45,10 +45,10 @@ pub struct PointAreas {
 }
 
 impl PointAreas {
-    /// The boxes of the systems `from_srid` and `to_srid` (the registry's codes) and of the operation's area.
-    pub fn of(from_srid: Option<u32>, to_srid: Option<u32>, operation: Option<[f64; 4]>) -> Self {
+    /// The areas of the systems `from_srid` and `to_srid` (the registry's codes) and of the operation's area.
+    pub fn of(from_srid: Option<u32>, to_srid: Option<u32>, operation: Option<kentos_project::crs::Region>) -> Self {
         let area = |srid: Option<u32>| srid.and_then(kentos_project::crs::area).map(kentos_project::crs::Region::Area);
-        PointAreas { source: area(from_srid), operation: operation.map(kentos_project::crs::Region::Box), target: area(to_srid) }
+        PointAreas { source: area(from_srid), operation, target: area(to_srid) }
     }
 
     /// The notes of a point at `at` in `from` that landed at `moved` in `to`, in [`CRS_POINT_NOTES`]' order: the source's
@@ -503,7 +503,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
     let mut points = Vec::with_capacity(input.points.len());
     let mut unreached = Vec::new();
     // docs/adr/3700: the boxes each point is read against.
-    let areas = PointAreas::of(p.from.srid, p.to.srid, p.operation.area.map(|(_, b)| b));
+    let areas = PointAreas::of(p.from.srid, p.to.srid, kentos_project::crs::operation_region(&p.operation));
     let mut flagged: Vec<CrsPointNotes> = Vec::new();
     let grid = |id: &str| geoid::get(id);
     let from_geoid = match &p.heights {
@@ -785,6 +785,8 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
                     south: s,
                     east: e,
                     north: n,
+                    // docs/adr/5300: the extent whose polygon the points are read against.
+                    extent: op.extent.filter(|c| kentos_project::crs::extent_area(*c).is_some()),
                 }),
                 accuracy: op.accuracy,
                 heights: method,

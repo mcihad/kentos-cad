@@ -734,6 +734,10 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Datum dönüşümünün alan çokgeni ve haritası; atlamalı nivelman (12 Kasım 2026; MAP-02, [ADR 5300](../../docs/adr/5300-datum-operation-area-polygon-and-leapfrog-levelling.md)).**
+  Datum işlemlerinin alanı EPSG 1237'nin çokgeniyle okunur (`operation_region`, kaydın `area.extent`'i); Proje ayarları ›
+  Koordinat sistemi › Kullanım alanı haritası. `cad.survey.adjust` kot ağında `leapfrog` (alet iki noktanın arasında,
+  `fieldbook::leapfrog`); Kot ağı dengelemesi › Atlamalı nivelman. CAD + CBS.
 - **Harita işinde kayma sınırı ve önerilen profil (12 Kasım 2026; MAP-01, [ADR 5280](../../docs/adr/5280-map-work-shift-limit-and-suggested-profile.md)).**
   `map.work.query`'nin `limit`'i: kendi değer, BÖHHBÜY m. 46(1), m. 78(1)(h) × ölçek ya da Yanılma Sınırı m. 9(1)
   tablosu (`catalog/v1/rules/konum-dogrulugu-2022.json`); `shift.beyond`, `over`, `changes.beyond`. `suggest`: profil

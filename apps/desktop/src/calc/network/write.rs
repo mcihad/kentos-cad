@@ -68,6 +68,23 @@ fn level_work(form: &LevelForm) -> AdjustWork {
             length: number(cell(r, 3)).unwrap_or(f64::NAN),
         })
         .collect();
+    // docs/adr/5300: the leap-frog setups, Trigonometrik only.
+    let leapfrog = if form.kind == LevelKind::Trigonometric {
+        form.leapfrog
+            .filled()
+            .map(|(_, r)| {
+                let n = |c: usize| number(cell(r, c)).unwrap_or(f64::NAN);
+                kentos_commands::AdjustLeapfrog {
+                    from: cell(r, 0).to_owned(),
+                    to: cell(r, 1).to_owned(),
+                    back: kentos_commands::AdjustSight { distance: n(2), zenith: n(3), target: n(4) },
+                    fore: kentos_commands::AdjustSight { distance: n(5), zenith: n(6), target: n(7) },
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     AdjustWork::Level {
         method: match form.kind {
             LevelKind::Geometric => LevelMethod::Geometric,
@@ -75,6 +92,7 @@ fn level_work(form: &LevelForm) -> AdjustWork {
         },
         known,
         rows,
+        leapfrog,
     }
 }
 
