@@ -1494,6 +1494,43 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             next.tolerance = Some(t);
             Ok(Change::new(next, "Kabul farkı sınırı"))
         }
+        Op::Independent { session } => {
+            // docs/adr/5320: the session's (every session's) independent baselines in, its dependent ones out.
+            let sessions: Vec<&kentos_commands::SurveyBaselineSession> = match session {
+                Some(id) => vec![now.baseline_sessions.iter().find(|s| s.id == *id).ok_or_else(|| {
+                    unknown("baz oturumu", id, "operation.session")
+                })?],
+                None => now.baseline_sessions.iter().collect(),
+            };
+            if sessions.is_empty() {
+                return Err(fail(
+                    codes::UNKNOWN_SURVEY_RECORD,
+                    "GNSS arşivinde baz oturumu yok: oturumları GVX dosyasıyla okuyun.".into(),
+                    "operation",
+                ));
+            }
+            let mut changed = 0usize;
+            for s in sessions {
+                let (free, tied) = crate::map_survey_sessions::independent(&now, s);
+                for b in next.baselines.iter_mut() {
+                    let want = if free.contains(&b.id) {
+                        true
+                    } else if tied.contains(&b.id) {
+                        false
+                    } else {
+                        continue;
+                    };
+                    if b.adjust != want {
+                        b.adjust = want;
+                        changed += 1;
+                    }
+                }
+            }
+            if changed == 0 {
+                return Err(nothing());
+            }
+            Ok(Change { id: session.clone(), ..Change::new(next, "Bağımsız bazlar") })
+        }
         Op::Remove { id } => {
             let removed: usize;
             let at = "operation.id";

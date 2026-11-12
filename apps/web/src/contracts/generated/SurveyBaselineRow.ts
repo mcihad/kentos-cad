@@ -10,4 +10,9 @@ export type SurveyBaselineRow = { id: string, campaign: string, from: string, to
 /**
  * The baseline session `bo-N` it is in (docs/adr/4920).
  */
-session?: string, };
+session?: string, 
+/**
+ * docs/adr/5320: in a session and not excluded, whether it is one of the session's n − 1 independent baselines
+ * (the shortest spanning tree of the session's marks, by length, the lower id of equals) or a dependent one.
+ */
+independent?: boolean, };

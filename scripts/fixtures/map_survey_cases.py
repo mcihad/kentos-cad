@@ -884,9 +884,12 @@ class Model:
                 if used:
                     row["adjustments"] = used
                 # docs/adr/4920: the baseline session it is in.
-                inside = [x["id"] for x in sv.get("baselineSessions", []) if b["id"] in x["baselines"]]
+                inside = [x for x in sv.get("baselineSessions", []) if b["id"] in x["baselines"]]
                 if inside:
-                    row["session"] = inside[0]
+                    row["session"] = inside[0]["id"]
+                    # docs/adr/5320: one of the session's n − 1 independent baselines, or a dependent one.
+                    if "excluded" not in b:
+                        row["independent"] = b["id"] in independent_of(sv, inside[0])[0]
                 rows.append(row)
             out["baselines"] = rows
         if sv.get("known"):
@@ -965,6 +968,30 @@ def replay(s):
     if nominal is not None:
         out["nominal"] = nominal / 1000.0
     return out
+
+
+def independent_of(sv, session):
+    """docs/adr/5320: a baseline session's (independent, dependent) baselines: its baselines in the archive and not
+    excluded, shortest first (the lower id number of equals); one joining two marks not yet joined is independent
+    (a spanning forest grown by length), the rest dependent."""
+    by_id = {b["id"]: b for b in sv.get("baselines", [])}
+    members = [by_id[i] for i in session["baselines"] if i in by_id and "excluded" not in by_id[i]]
+    members.sort(key=lambda b: (math.sqrt(sum(x * x for x in b["d"])), int(b["id"].split("-")[-1])))
+    group = {}
+
+    def find(x):
+        while group.setdefault(x, x) != x:
+            x = group[x]
+        return x
+    free, tied = [], []
+    for b in members:
+        a, c = find(b["from"]), find(b["to"])
+        if a == c:
+            tied.append(b["id"])
+        else:
+            group[a] = c
+            free.append(b["id"])
+    return free, tied
 
 
 def file_state(f, deep, files):

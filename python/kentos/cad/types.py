@@ -10871,6 +10871,7 @@ class MapSurveyOperation(_Union):
     - :class:`RegenerateMapSurveyOperation` (``op: regenerate``)
     - :class:`UseMapSurveyOperation` (``op: use``)
     - :class:`ToleranceMapSurveyOperation` (``op: tolerance``)
+    - :class:`IndependentMapSurveyOperation` (``op: independent``)
     - :class:`RemoveMapSurveyOperation` (``op: remove``)
     """
     __slots__ = ()
@@ -102861,6 +102862,8 @@ class SurveyBaselineRow(_Model):
     Attributes:
         length: Unit: m.
         sigma: Unit: m.
+        independent: docs/adr/5320: in a session and not excluded, whether it is one of the session's n − 1 independent baselines
+            (the shortest spanning tree of the session's marks, by length, the lower id of equals) or a dependent one.
         session: The baseline session `bo-N` it is in (docs/adr/4920).
     """
     id: str
@@ -102873,6 +102876,7 @@ class SurveyBaselineRow(_Model):
     adjustments: list[str] | Unset = UNSET
     excluded: str | None | Unset = UNSET
     file: SurveyFileRow | None | Unset = UNSET
+    independent: bool | None | Unset = UNSET
     session: str | None | Unset = UNSET
     source: str | None | Unset = UNSET
 
@@ -102891,6 +102895,8 @@ class SurveyBaselineRow(_Model):
             out["excluded"] = self.excluded
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
+        if self.independent is not UNSET:
+            out["independent"] = self.independent
         if self.session is not UNSET:
             out["session"] = self.session
         if self.source is not UNSET:
@@ -102910,6 +102916,7 @@ class SurveyBaselineRow(_Model):
             adjustments=list(data["adjustments"]) if "adjustments" in data else UNSET,
             excluded=data.get("excluded", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else SurveyFileRow.from_json(data["file"]),
+            independent=data.get("independent", UNSET),
             session=data.get("session", UNSET),
             source=data.get("source", UNSET),
         )
@@ -128081,6 +128088,27 @@ class ToleranceMapSurveyOperation(MapSurveyOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class IndependentMapSurveyOperation(MapSurveyOperation):
+    """docs/adr/5320: a baseline session's (none: every session's) adjustment choice set to its independent baselines:
+    they go into the adjustment, its dependent ones do not (excluded baselines stay out). One undo step.
+    """
+    TAG_VALUE: ClassVar[str] = "independent"
+    session: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "independent"}
+        if self.session is not UNSET:
+            out["session"] = self.session
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IndependentMapSurveyOperation:
+        return cls(
+            session=data.get("session", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RemoveMapSurveyOperation(MapSurveyOperation):
     """A record taken away: a campaign (with its sessions, solutions, baselines and baseline sessions), a session (with
     its solutions), a solution, an accepted point's record (its object stays), a use or a baseline session. What an
@@ -139358,7 +139386,7 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
-_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "baselines": BaselinesMapSurveyOperation, "baseline": BaselineMapSurveyOperation, "known": KnownMapSurveyOperation, "network": NetworkMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "tolerance": ToleranceMapSurveyOperation, "remove": RemoveMapSurveyOperation}
+_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "baselines": BaselinesMapSurveyOperation, "baseline": BaselineMapSurveyOperation, "known": KnownMapSurveyOperation, "network": NetworkMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "tolerance": ToleranceMapSurveyOperation, "independent": IndependentMapSurveyOperation, "remove": RemoveMapSurveyOperation}
 
 
 _MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "profile": ProfileMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
@@ -141185,6 +141213,7 @@ __all__ = [
     "ImportSld",
     "ImportedLayer",
     "IncludeMapSurveyOperation",
+    "IndependentMapSurveyOperation",
     "InfoCard",
     "InputSpaceNumberOrder",
     "InputState",

@@ -1632,6 +1632,7 @@ __all__ = [
     "ImportSld",
     "ImportedLayer",
     "IncludeMapSurveyOperation",
+    "IndependentMapSurveyOperation",
     "InfoCard",
     "InputSpaceNumberOrder",
     "InputState",

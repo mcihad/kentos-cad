@@ -734,6 +734,10 @@
   kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
   cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
   Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
+- **Oturumun bağımsız bazları ve blokları (12 Kasım 2026; MAP-03, [ADR 5320](../../docs/adr/5320-independent-baselines-and-session-blocks.md)).**
+  `map.survey.query`'de oturumdaki bazın `independent`'i (n − 1, kısadan uzuna yayılan ağaç); `map.survey.edit`
+  `independent` bağımlıları dengelemeden çıkarır. GNSS ağ dengelemesi › Bazlar'da Bağımsız, Oturumlar sekmesi,
+  Bağımsız bazları seç. Harita + CBS.
 - **Datum dönüşümünün alan çokgeni ve haritası; atlamalı nivelman (12 Kasım 2026; MAP-02, [ADR 5300](../../docs/adr/5300-datum-operation-area-polygon-and-leapfrog-levelling.md)).**
   Datum işlemlerinin alanı EPSG 1237'nin çokgeniyle okunur (`operation_region`, kaydın `area.extent`'i); Proje ayarları ›
   Koordinat sistemi › Kullanım alanı haritası. `cad.survey.adjust` kot ağında `leapfrog` (alet iki noktanın arasında,

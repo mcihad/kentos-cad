@@ -35,7 +35,7 @@ başladı (ADR 5280–).
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880, 5280 | sınırın projede saklanması; aplikasyon yanılma sınırı (m. 11) | nesnenin üretim yönteminin kaydı ve Ek-1 URETIM_YONTEMI eşlemesi (kurum kodları); içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900, 5300 | kurulumdan kırılma kestirimi; karşılıklı-eşzamanlı ve atlamalının birleşimi | haritada il sınırları (idari sınır verisi); zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920 | bağımsız baz önerisi (oturum başına n − 1); oturumun bloklarının pencerede gösterilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920, 5320 | işleme istatistiğiyle ağırlıklı bağımsız baz seçimi; oturumsuz bazların eş zamanlılığı; C2/C3 “en az iki bağımsız baz” denetimi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580, 4980 | dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot; Paralel kaydır'da çok parçalı nesne | — |
@@ -638,6 +638,16 @@ Baarda/Teunissen'in korelasyonlu w-testi, BÖHHBÜY m. 15, 19, 21 (2025), 22, 10
   hızı, Bazlar'da Oturum, GNSS arşivi'nde Kaynak ve Projeye yaz; resimler `.run/gui-evidence/gnss-oturum-hiz-4920/`.
 Açık: bağımsız baz önerisi, oturum bloklarının pencerede gösterilmesi, HGM hız modelinin dosyası (sahibin işi, beklemede),
 web (TODOS §0.2). Madde `[ ]` kalır.
+
+**12 Kasım 2026, on birinci tur — oturumun bağımsız bazları ve blokları ([ADR 5320](../docs/adr/5320-independent-baselines-and-session-blocks.md)).**
+Kapsam: **Harita + CBS**. Dayanak: BÖHHBÜY'de C1 ağı bağımsız bazlardan, C2/C3 en az iki bağımsız bazla (seçim
+yazılmaz); n alıcının oturumunda n − 1 bağımsız baz, bağımlılar dengelemeden çıkarılır (ölçme yazılımı yardımı, GEOG 862).
+Kanıtlanan: `map.survey.query`'de oturumdaki bazın `independent`'i (kısadan uzuna yayılan ağaç); `map.survey.edit`
+`independent` bağımsızları dengelemeye alır, bağımlıları çıkarır (tek adım); GNSS ağ dengelemesi'nde Bazlar › Bağımsız
+sütunu, Oturumlar sekmesi (blokların dokuz korelasyonu) ve Bağımsız bazları seç. Bağımsız başvuru (edit 144), Python,
+MCP, masaüstü. Açık: işleme istatistiğiyle seçim, oturumsuz bazların eş zamanlılığı, C2/C3 denetimi; canlı RTK ve gerçek
+alıcı (sahip/cihaz).
+
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

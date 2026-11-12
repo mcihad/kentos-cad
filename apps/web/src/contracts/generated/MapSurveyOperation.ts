@@ -29,4 +29,4 @@ velocities?: boolean, layer?: string,
 /**
  * Each point's error ellipse drawn in the same step (docs/adr/2960).
  */
-ellipses?: NetworkEllipses, } | { "op": "accept", mark: string, solutions: Array<string>, method?: AcceptMethod, layer?: string, } | { "op": "regenerate", point: string, solutions?: Array<string>, method?: AcceptMethod, } | { "op": "use", uids: Array<string>, points: Array<string>, operation: string, } | { "op": "tolerance", horizontal?: number, vertical?: number, source?: string, } | { "op": "remove", id: string, };
+ellipses?: NetworkEllipses, } | { "op": "accept", mark: string, solutions: Array<string>, method?: AcceptMethod, layer?: string, } | { "op": "regenerate", point: string, solutions?: Array<string>, method?: AcceptMethod, } | { "op": "use", uids: Array<string>, points: Array<string>, operation: string, } | { "op": "tolerance", horizontal?: number, vertical?: number, source?: string, } | { "op": "independent", session?: string, } | { "op": "remove", id: string, };

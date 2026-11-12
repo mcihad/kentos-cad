@@ -280,6 +280,11 @@ pub struct SurveyBaselineRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub session: Option<String>,
+    /// docs/adr/5320: in a session and not excluded, whether it is one of the session's n − 1 independent baselines
+    /// (the shortest spanning tree of the session's marks, by length, the lower id of equals) or a dependent one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub independent: Option<bool>,
 }
 
 /// A mark: its sessions in the archive's order, its solutions, its accepted point.
@@ -733,6 +738,13 @@ pub enum MapSurveyOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         source: Option<String>,
+    },
+    /// docs/adr/5320: a baseline session's (none: every session's) adjustment choice set to its independent baselines:
+    /// they go into the adjustment, its dependent ones do not (excluded baselines stay out). One undo step.
+    Independent {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        session: Option<String>,
     },
     /// A record taken away: a campaign (with its sessions, solutions, baselines and baseline sessions), a session (with
     /// its solutions), a solution, an accepted point's record (its object stays), a use or a baseline session. What an

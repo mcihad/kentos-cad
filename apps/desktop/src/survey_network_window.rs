@@ -53,6 +53,8 @@ pub enum View {
     Marks,
     Baselines,
     Known,
+    /// docs/adr/5320: the baseline sessions, each block's correlations.
+    Sessions,
 }
 
 impl std::fmt::Display for View {
@@ -61,6 +63,7 @@ impl std::fmt::Display for View {
             View::Marks => "Noktalar",
             View::Baselines => "Bazlar",
             View::Known => "Bilinen noktalar",
+            View::Sessions => "Oturumlar",
         })
     }
 }
@@ -173,6 +176,8 @@ pub enum Event {
     Imported(Option<PathBuf>),
     Exclude(String),
     Include(String),
+    /// docs/adr/5320: every session's independent baselines into the adjustment, the dependent ones out.
+    Independent,
     Known(Field, String),
     AddKnown,
     /// The error ellipses drawn by Kabul et, and their magnification (docs/adr/2960).
@@ -319,6 +324,8 @@ pub(crate) fn sessions_line(a: &MapSurveyNetworked) -> Option<(Kind, String)> {
 /// A row of Bazlar: an archive baseline and, when it went into the network, its free stage's test.
 struct BaselineRow {
     id: String,
+    /// docs/adr/5320: Bağımsız, Bağımlı or nothing (no session, excluded).
+    independent: String,
     session: String,
     from: String,
     to: String,
@@ -537,6 +544,10 @@ impl App {
                     .and_then(|b| b.free.w.map(|w| format!("Serbest dengelemede uyuşumsuz (w = {w:.2}); GNSS ağ dengelemesi penceresinden.")))
                     .unwrap_or_else(|| "GNSS ağ dengelemesi penceresinden dışlandı.".to_owned());
                 self.map_survey_edit(Op::Exclude { solution: id, reason });
+                self.survey_network_run();
+            }
+            Event::Independent => {
+                self.map_survey_edit(Op::Independent { session: None });
                 self.survey_network_run();
             }
             Event::Include(id) => {
@@ -766,8 +777,17 @@ impl App {
                                             (None, true, Some(_)) => "Geçti",
                                             (None, true, None) => "Başka ölçüm",
                                         };
+                                        // docs/adr/5320: one of its session's n − 1 independent baselines, or dependent.
+                                        let independent = sv
+                                            .session_of(&b.id)
+                                            .filter(|_| b.excluded.is_none())
+                                            .and_then(|x| kentos_native_application::map_survey::independent_baselines(sv, &x.id))
+                                            .map_or(String::new(), |(free, _)| {
+                                                if free.contains(&b.id) { "Bağımsız".into() } else { "Bağımlı".into() }
+                                            });
                                         BaselineRow {
                                             id: b.id.clone(),
+                                            independent,
                                             session: sv.session_of(&b.id).map(|x| x.id.clone()).unwrap_or_default(),
                                             from: b.from.clone(),
                                             to: b.to.clone(),
@@ -786,6 +806,7 @@ impl App {
                             vec![
                                 col("Baz", 56.0),
                                 col("Oturum", 56.0),
+                                col("Bağımsız", 76.0),
                                 col("Başlangıç", 80.0),
                                 col("Bitiş", 80.0),
                                 num("Uzunluk (m)", 96.0),
@@ -803,13 +824,14 @@ impl App {
                                 match k {
                                     0 => text(b.id.clone()),
                                     1 => text(b.session.clone()),
-                                    2 => text(b.from.clone()),
-                                    3 => text(b.to.clone()),
-                                    4 => number(format!("{:.3}", b.length)),
-                                    5 => number(b.up.map_or(String::new(), mm)),
-                                    6 => number(b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))),
-                                    7 => text(b.state.to_owned()),
-                                    8 => text(b.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() })),
+                                    2 => text(b.independent.clone()),
+                                    3 => text(b.from.clone()),
+                                    4 => text(b.to.clone()),
+                                    5 => number(format!("{:.3}", b.length)),
+                                    6 => number(b.up.map_or(String::new(), mm)),
+                                    7 => number(b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))),
+                                    8 => text(b.state.to_owned()),
+                                    9 => text(b.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() })),
                                     _ => {
                                         let (words, event) = if b.excluded {
                                             ("Geri al", Event::Include(b.id.clone()))
@@ -884,6 +906,50 @@ impl App {
                         "Bilinen nokta yok.",
                         200.0,
                     ),
+                    // docs/adr/5320: each session's blocks, the nine correlations row by row.
+                    View::Sessions => sheet(
+                        vec![
+                            col("Oturum", 56.0),
+                            col("Ad", 70.0),
+                            col("Satır", 56.0),
+                            col("Sütun", 56.0),
+                            num("ρ X·(X Y Z)", 150.0),
+                            num("ρ Y·(X Y Z)", 150.0),
+                            num("ρ Z·(X Y Z)", 150.0),
+                            num("En büyük |ρ|", 90.0),
+                        ],
+                        survey
+                            .map(|sv| {
+                                sv.baseline_sessions
+                                    .iter()
+                                    .flat_map(|o| {
+                                        o.blocks.iter().map(move |b| {
+                                            let three = |k: usize| {
+                                                b.r[k * 3..k * 3 + 3]
+                                                    .iter()
+                                                    .map(|v| format!("{v:.3}").replace('.', ","))
+                                                    .collect::<Vec<_>>()
+                                                    .join("  ")
+                                            };
+                                            let most = b.r.iter().fold(0.0_f64, |m, v| m.max(v.abs()));
+                                            vec![
+                                                o.id.clone(),
+                                                o.name.clone(),
+                                                b.row.clone(),
+                                                b.col.clone(),
+                                                three(0),
+                                                three(1),
+                                                three(2),
+                                                format!("{most:.3}").replace('.', ","),
+                                            ]
+                                        })
+                                    })
+                                    .collect()
+                            })
+                            .unwrap_or_default(),
+                        "Arşivde baz oturumu yok: GVX dosyasıyla okunur.",
+                        200.0,
+                    ),
                 };
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
@@ -940,10 +1006,25 @@ impl App {
             .width(Fill)
             .push(head)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Marks, View::Baselines, View::Known], s.view, |v| msg(Event::View(v))));
+            .push(Segmented::new([View::Marks, View::Baselines, View::Known, View::Sessions], s.view, |v| msg(Event::View(v))));
         body = body.push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         if s.view == View::Known {
             body = body.push(known);
+        }
+        // docs/adr/5320: n receivers of a session give n − 1 independent baselines; the rest go out of the adjustment.
+        if s.view == View::Sessions {
+            body = body.push(
+                row![
+                    words::secondary("Bağımsız bazları seç", Some(msg(Event::Independent))),
+                    label::caption(
+                        "n alıcılı oturumda n − 1 bağımsız baz: kısadan uzuna, işaretleri henüz bağlanmamış ikisini \
+                         bağlayan baz bağımsızdır; bağımlılar dengelemeden çıkar (geri alınabilir)."
+                    )
+                    .width(Fill),
+                ]
+                .spacing(12)
+                .align_y(Center),
+            );
         }
         Frame::new(TITLE)
             .scroll(body)

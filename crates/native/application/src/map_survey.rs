@@ -393,6 +393,12 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
     })
 }
 
+/// docs/adr/5320: a baseline session's independent and dependent baselines (by its id), for a window.
+pub fn independent_baselines(survey: &MapSurvey, session: &str) -> Option<(Vec<String>, Vec<String>)> {
+    let s = survey.baseline_sessions.iter().find(|x| x.id == session)?;
+    Some(crate::map_survey_sessions::independent(survey, s))
+}
+
 /// A baseline's length (m).
 pub(crate) fn baseline_length(b: &SurveyBaseline) -> f64 {
     (b.d[0] * b.d[0] + b.d[1] * b.d[1] + b.d[2] * b.d[2]).sqrt()
@@ -420,6 +426,10 @@ fn baseline_row(survey: &MapSurvey, b: &SurveyBaseline, deep: bool) -> SurveyBas
         source: b.source.clone(),
         adjustments: survey.adjustments.iter().filter(|a| a.baselines.contains(&b.id)).map(|a| a.id.clone()).collect(),
         session: survey.session_of(&b.id).map(|s| s.id.clone()),
+        // docs/adr/5320: one of its session's n − 1 independent baselines, or a dependent one.
+        independent: survey.session_of(&b.id).filter(|_| b.excluded.is_none()).map(|s| {
+            crate::map_survey_sessions::independent(survey, s).0.contains(&b.id)
+        }),
     }
 }
 

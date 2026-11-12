@@ -382,6 +382,8 @@ mod road_project_regional_tests;
 #[cfg(test)]
 mod map_work_panel_tests;
 #[cfg(test)]
+mod independent_baselines_tests;
+#[cfg(test)]
 mod map_work_limit_tests;
 #[cfg(test)]
 mod map_work_tools_tests;

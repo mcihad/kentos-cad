@@ -1392,7 +1392,7 @@ def height_bar(mark, da, at, e, with_):
     return {"kind": "polyline", "layerId": with_["layer"], "attrs": attrs, "pts": [{"x": a, "y": b} for a, b in pts]}
 
 
-# ADR 4160: the places round an ellipse a label tries, in order: east (ADR 3760's, QGIS's middle right), then QGIS's
+# ADR 4160: the places round an ellipse a label tries, in order: east (ADR 3760's, middle right), then the
 # cartographic order (top right, top left, bottom right, bottom left, middle left, top, bottom); the unit direction
 # from the point and the alignment there.
 S2 = math.sqrt(0.5)
@@ -1996,6 +1996,45 @@ def edit_cases():
         "“bz-6” bazı “bo-2” baz oturumunda; önce oturumu çıkarın ya da bazı dışlayın.", "operation.id")], d=sess))
     gone = sess.clone()
     gone.survey["baselineSessions"] = [x for x in gone.survey["baselineSessions"] if x["id"] != "bo-2"]
+    # ADR 5320: a session's independent baselines go into the adjustment, its dependent ones do not.
+    def chosen(m, only=None):
+        after_i = m.clone()
+        for se in after_i.survey["baselineSessions"]:
+            if only and se["id"] != only:
+                continue
+            free, tied = ms.independent_of(m.survey, se)
+            for b in after_i.survey["baselines"]:
+                if b["id"] in free:
+                    b["adjust"] = True
+                elif b["id"] in tied:
+                    b["adjust"] = False
+        return after_i
+    # A session of three receivers on BN1, N1 and N4: bz-1, bz-5 and bz-3 close a triangle; bz-3, the longest, is
+    # dependent.
+    tri = sess.clone()
+    tri.survey["baselineSessions"][0].update(
+        baselines=["bz-1", "bz-3", "bz-5"],
+        blocks=[{"row": "bz-1", "col": "bz-3", "r": list(BLOCK_A)}, {"row": "bz-1", "col": "bz-5", "r": list(BLOCK_A)},
+                {"row": "bz-3", "col": "bz-5", "r": list(BLOCK_A)}])
+    assert ms.independent_of(tri.survey, tri.survey["baselineSessions"][0]) == (["bz-5", "bz-1"], ["bz-3"])
+    one = chosen(tri, "bo-1")
+    out.append(ms.case("Bağımsız bazlar: üç alıcılı bo-1'in bağımlı bazı (en uzunu, bz-3) dengelemeden çıkar",
+                       write(tri, one, {"op": "independent", "session": "bo-1"}, {"id": "bo-1"}, "Bağımsız bazlar"),
+                       d=tri))
+    every = chosen(tri)
+    out.append(ms.case("Bağımsız bazlar: bütün oturumlar", write(tri, every, {"op": "independent"}, {},
+                                                                  "Bağımsız bazlar"), d=tri))
+    # The query says which are independent (docs/adr/5320).
+    out.append(ms.case("Arşivde oturumun bağımsız ve bağımlı bazları", [ms.step(
+        "execute", {}, ms.done(tri.tree()), ms.UNCHANGED, command="map.survey.query")], d=tri))
+    out.append(ms.case("Bağımsız bazlar zaten seçili: değişecek bir şey yok", [refusal(
+        {"op": "independent", "session": "bo-1"}, "nothing_to_set", "Değişecek bir şey yok.", "operation")], d=one))
+    out.append(ms.case("Bağımsız bazlar: oturum yok", [refusal(
+        {"op": "independent", "session": "bo-9"}, "unknown_survey_record",
+        "GNSS arşivinde “bo-9” kimlikli baz oturumu yok.", "operation.session")], d=sess))
+    out.append(ms.case("Bağımsız bazlar: arşivde baz oturumu yok", [refusal(
+        {"op": "independent"}, "unknown_survey_record",
+        "GNSS arşivinde baz oturumu yok: oturumları GVX dosyasıyla okuyun.", "operation")], d=with_known))
     out.append(ms.case("Baz oturumu arşivden çıkar: bazları kalır, korelasyonları gider",
                        write(sess, gone, {"op": "remove", "id": "bo-2"}, {"id": "bo-2", "removed": 1}, "Arşivden çıkar"),
                        d=sess))

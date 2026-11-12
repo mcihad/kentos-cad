@@ -100,3 +100,47 @@ pub(crate) fn no_grid(path: &str) -> Stop {
         path,
     )
 }
+
+/// docs/adr/5320: a baseline session's independent and dependent baselines: of its baselines in the archive and not
+/// excluded, by length (the lower id number of equals), each one that joins two marks not yet joined is independent
+/// (Kruskal's shortest spanning tree: n − 1 for n marks tied together), the rest dependent; mark names compared as
+/// written.
+pub(crate) fn independent(survey: &MapSurvey, session: &kentos_commands::SurveyBaselineSession) -> (Vec<String>, Vec<String>) {
+    let number = |id: &str| id.rsplit('-').next().and_then(|n| n.parse::<u64>().ok()).unwrap_or(u64::MAX);
+    let mut members: Vec<&SurveyBaseline> = session
+        .baselines
+        .iter()
+        .filter_map(|id| survey.baselines.iter().find(|b| b.id == *id))
+        .filter(|b| b.excluded.is_none())
+        .collect();
+    members.sort_by(|a, b| {
+        crate::map_survey::baseline_length(a)
+            .total_cmp(&crate::map_survey::baseline_length(b))
+            .then(number(&a.id).cmp(&number(&b.id)))
+    });
+    let mut parent: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
+    fn root<'a>(parent: &mut std::collections::HashMap<&'a str, &'a str>, x: &'a str) -> &'a str {
+        let mut r = x;
+        while let Some(&p) = parent.get(r) {
+            if p == r {
+                break;
+            }
+            r = p;
+        }
+        parent.insert(x, r);
+        r
+    }
+    let (mut free, mut tied) = (Vec::new(), Vec::new());
+    for b in members {
+        parent.entry(&b.from).or_insert(&b.from);
+        parent.entry(&b.to).or_insert(&b.to);
+        let (a, c) = (root(&mut parent, &b.from), root(&mut parent, &b.to));
+        if a == c {
+            tied.push(b.id.clone());
+        } else {
+            parent.insert(a, c);
+            free.push(b.id.clone());
+        }
+    }
+    (free, tied)
+}

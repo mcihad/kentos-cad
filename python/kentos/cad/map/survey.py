@@ -81,18 +81,22 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
     noktaların kabul farkı sınırı (horizontal, vertical metre; source: yönetmelik
     maddesi ya da idarenin şartnamesi, zorunlu) projeye yazılır, map.survey.query'nin
     places'i girdide sınır yoksa onunla değerlendirir; üçü de verilmezse saklı sınır
-    kalkar. Retler: invalid_revision, revision_conflict, not_a_map_project,
-    unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value,
-    invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set,
-    survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height,
-    solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ,
-    antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked,
-    no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines,
-    no_velocity_grid, datum_missing, known_differ, unknown_rule_class,
-    duplicate_station, invalid_covariance, session_blocks_missing,
-    session_covariance_invalid, network_too_large, network_disconnected,
-    network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri
-    (epoch_unsupported, velocity_missing, geoid_missing, no_system).
+    kalkar. independent: bir baz oturumunun (session verilmezse bütün oturumların)
+    bağımsız bazları dengelemeye girer, bağımlıları girmez (n alıcılı oturumda n − 1
+    bağımsız baz: dışlanmamış bazlar kısadan uzuna, işaretleri henüz bağlanmamış ikisini
+    bağlayan bağımsızdır; dışlananlar dışarıda kalır); tek geri alma adımı. Retler:
+    invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record,
+    unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path,
+    file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame,
+    no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch,
+    method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
+    already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
+    entity_not_found, survey_full, ağın retleri (no_baselines, no_velocity_grid,
+    datum_missing, known_differ, unknown_rule_class, duplicate_station,
+    invalid_covariance, session_blocks_missing, session_covariance_invalid,
+    network_too_large, network_disconnected, network_blunder, network_test_failed) ve
+    koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing,
+    geoid_missing, no_system).
     """
     __slots__ = ()
     id = "map.survey.edit"
@@ -164,7 +168,11 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
         adı ve SHA-256'sı) tutar. tolerance: bilinen noktaların kabul farkı sınırı
         (horizontal, vertical metre; source: yönetmelik maddesi ya da idarenin şartnamesi,
         zorunlu) projeye yazılır, map.survey.query'nin places'i girdide sınır yoksa onunla
-        değerlendirir; üçü de verilmezse saklı sınır kalkar. Retler: invalid_revision,
+        değerlendirir; üçü de verilmezse saklı sınır kalkar. independent: bir baz oturumunun
+        (session verilmezse bütün oturumların) bağımsız bazları dengelemeye girer,
+        bağımlıları girmez (n alıcılı oturumda n − 1 bağımsız baz: dışlanmamış bazlar
+        kısadan uzuna, işaretleri henüz bağlanmamış ikisini bağlayan bağımsızdır;
+        dışlananlar dışarıda kalır); tek geri alma adımı. Retler: invalid_revision,
         revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item,
         invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found,
         unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations,
@@ -491,8 +499,10 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
     uzaklığı) ya da neden yeri olmadığı; tolerance ile kullanıcının yatay ve düşey
     sınırını aşan yer beyond; girdide sınır yoksa projede saklı sınır (tolerance,
     kaynağıyla) kullanılır. Ağaç baz oturumlarını (baselineSessions) ve bazın oturumunu
-    da verir. Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil),
-    not_a_map_project, invalid_uid, entity_not_found.
+    da verir; oturumdaki dışlanmamış bazın independent'i oturumun n − 1 bağımsız
+    bazından mı (kısadan uzuna yayılan ağaç) yoksa bağımlı mı olduğunu söyler. Retler:
+    invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project,
+    invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.survey.query"
@@ -530,9 +540,10 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı;
         tolerance ile kullanıcının yatay ve düşey sınırını aşan yer beyond; girdide sınır
         yoksa projede saklı sınır (tolerance, kaynağıyla) kullanılır. Ağaç baz oturumlarını
-        (baselineSessions) ve bazın oturumunu da verir. Retler: invalid_input (sınır
-        places'siz, boş ya da 0'dan büyük değil), not_a_map_project, invalid_uid,
-        entity_not_found.
+        (baselineSessions) ve bazın oturumunu da verir; oturumdaki dışlanmamış bazın
+        independent'i oturumun n − 1 bağımsız bazından mı (kısadan uzuna yayılan ağaç) yoksa
+        bağımlı mı olduğunu söyler. Retler: invalid_input (sınır places'siz, boş ya da 0'dan
+        büyük değil), not_a_map_project, invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.
